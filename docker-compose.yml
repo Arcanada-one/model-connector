@@ -6,6 +6,8 @@ services:
       - "127.0.0.1:3900:3900"
     env_file:
       - .env
+    volumes:
+      - claude-auth:/home/connector/.claude
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3900/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
@@ -16,3 +18,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  claude-auth:
