@@ -15,16 +15,20 @@ class TestCursorConnector extends CursorConnector {
   public testClassifyError(msg: string, code: number) {
     return this.classifyError(msg, code);
   }
+
+  public testGetEnv() {
+    return this.getEnv();
+  }
 }
 
 describe('CursorConnector', () => {
   const connector = new TestCursorConnector();
 
   describe('buildArgs', () => {
-    it('should build args for basic prompt', () => {
+    it('should build args for basic prompt (no agent subcommand — standalone binary)', () => {
       const args = connector.testBuildArgs({ prompt: 'hello' });
       expect(args).toEqual([
-        'agent', '--print', '--output-format', 'json', '--force', 'hello',
+        '--print', '--output-format', 'json', '--force', 'hello',
       ]);
     });
 
@@ -106,6 +110,21 @@ describe('CursorConnector', () => {
       expect(caps.supportsTools).toBe(true);
       expect(caps.models).toContain('cursor-auto');
       expect(caps.maxTimeout).toBeGreaterThan(0);
+    });
+  });
+
+  describe('getEnv', () => {
+    it('should pass CURSOR_API_KEY when set', () => {
+      process.env.CURSOR_API_KEY = 'test-key-123';
+      const env = connector.testGetEnv();
+      expect(env).toEqual({ CURSOR_API_KEY: 'test-key-123' });
+      delete process.env.CURSOR_API_KEY;
+    });
+
+    it('should return empty object when CURSOR_API_KEY not set', () => {
+      delete process.env.CURSOR_API_KEY;
+      const env = connector.testGetEnv();
+      expect(env).toEqual({});
     });
   });
 

@@ -19,11 +19,11 @@ export class CursorConnector extends BaseCliConnector {
   readonly name = 'cursor';
 
   protected getBinaryPath(): string {
-    return process.env.CURSOR_BINARY_PATH || 'cursor';
+    return process.env.CURSOR_BINARY_PATH || 'cursor-agent';
   }
 
   protected buildArgs(request: ConnectorRequest): string[] {
-    const args = ['agent', '--print', '--output-format', 'json', '--force'];
+    const args = ['--print', '--output-format', 'json', '--force'];
 
     if (request.model) {
       args.push('--model', request.model);
@@ -85,6 +85,14 @@ export class CursorConnector extends BaseCliConnector {
         errorMessage: 'Failed to parse Cursor JSON output',
       };
     }
+  }
+
+  protected getEnv(): Record<string, string> {
+    const env: Record<string, string> = {};
+    if (process.env.CURSOR_API_KEY) {
+      env.CURSOR_API_KEY = process.env.CURSOR_API_KEY;
+    }
+    return env;
   }
 
   protected classifyError(message: string, exitCode: number): string {

@@ -19,6 +19,9 @@ ENV NODE_ENV=production
 # Install CLI tools for connectors (glibc required — hence node:22-slim, not alpine)
 RUN npm install -g @anthropic-ai/claude-code
 
+# Install Cursor CLI (standalone agent binary for headless execution)
+RUN curl -fsSL https://cursor.com/install | bash || true
+
 # Run as non-root (Claude CLI refuses --dangerously-skip-permissions as root)
 RUN useradd -m -s /bin/bash connector
 COPY --from=build --chown=connector /app/dist ./dist
