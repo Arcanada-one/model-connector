@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UsePipes } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { ConnectorsService } from './connectors.service';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import {
@@ -23,10 +23,9 @@ export class ConnectorsController {
   }
 
   @Post('connectors/:name/execute')
-  @UsePipes(new ZodValidationPipe(perConnectorExecuteSchema))
   async executePerConnector(
     @Param('name') name: string,
-    @Body() body: PerConnectorExecuteDto,
+    @Body(new ZodValidationPipe(perConnectorExecuteSchema)) body: PerConnectorExecuteDto,
     @Req() req: any,
   ) {
     const apiKeyId = req.apiKey?.id ?? 'unknown';
@@ -34,8 +33,10 @@ export class ConnectorsController {
   }
 
   @Post('execute')
-  @UsePipes(new ZodValidationPipe(executeRequestSchema))
-  async executeUniversal(@Body() body: ExecuteRequestDto, @Req() req: any) {
+  async executeUniversal(
+    @Body(new ZodValidationPipe(executeRequestSchema)) body: ExecuteRequestDto,
+    @Req() req: any,
+  ) {
     const apiKeyId = req.apiKey?.id ?? 'unknown';
     const { connector, ...request } = body;
     return this.connectorsService.execute(connector, request, apiKeyId);
