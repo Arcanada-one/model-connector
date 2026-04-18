@@ -8,6 +8,7 @@ export const envSchema = z.object({
 
   REDIS_HOST: z.string().default('127.0.0.1'),
   REDIS_PORT: z.coerce.number().default(6379),
+  REDIS_PASSWORD: z.string().optional(),
   REDIS_PREFIX: z.string().default('conn:'),
 
   API_KEY_SALT_ROUNDS: z.coerce.number().min(4).max(14).default(10),

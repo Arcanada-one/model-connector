@@ -16,6 +16,7 @@ import { getConfig } from './config/env.schema';
       connection: {
         host: getConfig().REDIS_HOST,
         port: getConfig().REDIS_PORT,
+        ...(getConfig().REDIS_PASSWORD && { password: getConfig().REDIS_PASSWORD }),
       },
       prefix: getConfig().REDIS_PREFIX,
     }),
