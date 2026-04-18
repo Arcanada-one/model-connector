@@ -15,6 +15,9 @@ export const envSchema = z.object({
 
   CONNECTOR_TIMEOUT_MS: z.coerce.number().min(5_000).max(600_000).default(300_000),
   CONNECTOR_MAX_CONCURRENCY: z.coerce.number().min(1).max(10).default(1),
+
+  EMBEDDING_API_URL: z.string().url().default('http://100.70.137.104:8300'),
+  EMBEDDING_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).default(30_000),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
