@@ -1,4 +1,4 @@
-FROM node:22-alpine AS base
+FROM node:22-slim AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
@@ -15,6 +15,10 @@ RUN npx prisma generate && pnpm build
 
 FROM base AS production
 ENV NODE_ENV=production
+
+# Install CLI tools for connectors (glibc required — hence node:22-slim, not alpine)
+RUN npm install -g @anthropic-ai/claude-code
+
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
