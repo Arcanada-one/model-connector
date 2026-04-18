@@ -4,10 +4,11 @@ import { ConnectorsController } from './connectors.controller';
 import { QueueModule } from '../queue/queue.module';
 import { CursorModule } from './cursor/cursor.module';
 import { ClaudeCodeModule } from './claude-code/claude-code.module';
+import { GeminiModule } from './gemini/gemini.module';
 import { EmbeddingModule } from './embedding/embedding.module';
 
 @Module({
-  imports: [QueueModule, CursorModule, ClaudeCodeModule, EmbeddingModule],
+  imports: [QueueModule, CursorModule, ClaudeCodeModule, GeminiModule, EmbeddingModule],
   controllers: [ConnectorsController],
   providers: [ConnectorsService],
   exports: [ConnectorsService],
