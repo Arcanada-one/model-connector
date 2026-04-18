@@ -67,7 +67,8 @@ jobs:
       - name: Create DB schema
         run: |
           docker run --rm --network=host \
-            model-connector-e2e npx prisma db push --url postgresql://test:test@localhost:5432/connector_test
+            -e DATABASE_URL=postgresql://test:test@localhost:5432/connector_test \
+            model-connector-e2e npx prisma db push
 
       - name: Start container
         run: |
