@@ -32,6 +32,96 @@ jobs:
       - name: Test
         run: pnpm test
 
+  docker-e2e:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: connector_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t model-connector-e2e .
+
+      - name: Create DB schema
+        run: |
+          npm install -g prisma
+          DATABASE_URL=postgresql://test:test@localhost:5432/connector_test npx prisma db push --skip-generate
+
+      - name: Start container
+        run: |
+          docker run -d --name mc-e2e --network=host \
+            -e DATABASE_URL=postgresql://test:test@localhost:5432/connector_test \
+            -e REDIS_HOST=localhost \
+            -e REDIS_PORT=6379 \
+            -e NODE_ENV=test \
+            -e PORT=3900 \
+            model-connector-e2e
+
+      - name: Wait for healthy
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3900/health > /dev/null 2>&1; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Health check failed after 60s"
+          docker logs mc-e2e
+          exit 1
+
+      - name: Smoke tests
+        run: |
+          echo "=== GET /health ==="
+          curl -fsS http://localhost:3900/health | jq .
+
+          echo "=== GET /health/ready ==="
+          curl -fsS http://localhost:3900/health/ready | jq .
+
+          echo "=== POST /execute without auth → expect 401 ==="
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3900/execute \
+            -H 'Content-Type: application/json' \
+            -d '{"connector":"claude-code","prompt":"test"}')
+          if [ "$STATUS" != "401" ]; then
+            echo "Expected 401, got $STATUS"
+            exit 1
+          fi
+          echo "Auth guard OK: 401"
+
+          echo "=== GET /connectors → expect 401 ==="
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3900/connectors)
+          if [ "$STATUS" != "401" ]; then
+            echo "Expected 401, got $STATUS"
+            exit 1
+          fi
+          echo "Connectors guard OK: 401"
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f mc-e2e || true
+
   deploy:
     needs: lint-and-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
