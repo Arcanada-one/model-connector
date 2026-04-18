@@ -21,7 +21,8 @@ RUN npm install -g @anthropic-ai/claude-code
 
 # Install Cursor CLI (standalone agent binary for headless execution)
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
-    && curl -fsSL https://cursor.com/install | bash || true \
+    && curl -fsSL https://cursor.com/install | bash \
+    && ln -sf /root/.local/share/cursor-agent/versions/*/cursor-agent /usr/local/bin/cursor-agent \
     && apt-get purge -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Run as non-root (Claude CLI refuses --dangerously-skip-permissions as root)
