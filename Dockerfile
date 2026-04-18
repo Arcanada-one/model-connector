@@ -28,7 +28,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
     && apt-get purge -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Run as non-root (Claude CLI refuses --dangerously-skip-permissions as root)
-RUN useradd -m -s /bin/bash connector
+RUN useradd -m -s /bin/bash connector \
+    && mkdir -p /home/connector/.claude /home/connector/.cursor \
+    && chown -R connector:connector /home/connector
 COPY --from=build --chown=connector /app/dist ./dist
 COPY --from=build --chown=connector /app/node_modules ./node_modules
 COPY --from=build --chown=connector /app/package.json ./
