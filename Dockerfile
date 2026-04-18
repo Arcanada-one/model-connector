@@ -19,11 +19,14 @@ ENV NODE_ENV=production
 # Install CLI tools for connectors (glibc required — hence node:22-slim, not alpine)
 RUN npm install -g @anthropic-ai/claude-code
 
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/package.json ./
-COPY --from=build /app/prisma ./prisma
-COPY --from=build /app/prisma.config.ts ./
+# Run as non-root (Claude CLI refuses --dangerously-skip-permissions as root)
+RUN useradd -m -s /bin/bash connector
+COPY --from=build --chown=connector /app/dist ./dist
+COPY --from=build --chown=connector /app/node_modules ./node_modules
+COPY --from=build --chown=connector /app/package.json ./
+COPY --from=build --chown=connector /app/prisma ./prisma
+COPY --from=build --chown=connector /app/prisma.config.ts ./
 
+USER connector
 EXPOSE 3900
 CMD ["node", "dist/src/main.js"]
