@@ -20,7 +20,9 @@ ENV NODE_ENV=production
 RUN npm install -g @anthropic-ai/claude-code
 
 # Install Cursor CLI (standalone agent binary for headless execution)
-RUN curl -fsSL https://cursor.com/install | bash || true
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+    && curl -fsSL https://cursor.com/install | bash || true \
+    && apt-get purge -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Run as non-root (Claude CLI refuses --dangerously-skip-permissions as root)
 RUN useradd -m -s /bin/bash connector
