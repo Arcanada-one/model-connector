@@ -1,14 +1,8 @@
-import { mkdtemp, rm } from 'fs/promises';
-import { join } from 'path';
-import { tmpdir } from 'os';
-import { spawn } from 'child_process';
-import { BaseCliConnector, ParsedCliOutput, SpawnResult } from '../base-cli.connector';
+import { BaseCliConnector, ParsedCliOutput } from '../base-cli.connector';
 import {
   ConnectorCapabilities,
   ConnectorRequest,
-  ConnectorResponse,
 } from '../interfaces/connector.interface';
-import { randomUUID } from 'crypto';
 
 interface GeminiTokenStats {
   input: number;
@@ -196,111 +190,6 @@ export class GeminiConnector extends BaseCliConnector {
       return 'model_not_found';
     }
     return super.classifyError(message, exitCode);
-  }
-
-  async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
-    const id = randomUUID();
-    const timeout = request.timeout ?? 300_000;
-    const start = Date.now();
-
-    // CWD isolation: spawn from temp dir to prevent workspace scanning
-    const cwdPath = await mkdtemp(join(tmpdir(), 'gemini_'));
-
-    this.activeJobs++;
-    try {
-      const { stdout, stderr, exitCode } = await this.spawnWithCwd(
-        this.getBinaryPath(),
-        this.buildArgs(request),
-        timeout,
-        this.getEnv(request),
-        cwdPath,
-      );
-
-      const latencyMs = Date.now() - start;
-      const parsed = this.parseOutput(stdout, stderr);
-
-      const base: ConnectorResponse = {
-        id,
-        connector: this.name,
-        model: parsed.model || request.model || DEFAULT_MODEL,
-        result: parsed.text,
-        structured: parsed.structured,
-        usage: {
-          inputTokens: parsed.inputTokens,
-          outputTokens: parsed.outputTokens,
-          totalTokens: parsed.inputTokens + parsed.outputTokens,
-          costUsd: parsed.costUsd,
-        },
-        latencyMs,
-        status: 'success',
-      };
-
-      if (parsed.isError || exitCode !== 0) {
-        const errorType = this.classifyError(parsed.errorMessage || stderr, exitCode);
-        base.status = errorType === 'rate_limited' ? 'rate_limited' : 'error';
-        base.error = {
-          type: errorType,
-          message: parsed.errorMessage || stderr.slice(0, 500),
-        };
-      }
-
-      return base;
-    } catch (err) {
-      const latencyMs = Date.now() - start;
-      const message = err instanceof Error ? err.message : String(err);
-      return {
-        id,
-        connector: this.name,
-        model: request.model || DEFAULT_MODEL,
-        result: '',
-        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
-        latencyMs,
-        status: message.includes('timeout') ? 'timeout' : 'error',
-        error: { type: message.includes('timeout') ? 'timeout' : 'spawn_error', message },
-      };
-    } finally {
-      this.activeJobs--;
-      rm(cwdPath, { recursive: true, force: true }).catch(() => {});
-    }
-  }
-
-  private spawnWithCwd(
-    binary: string,
-    args: string[],
-    timeout: number,
-    env: Record<string, string>,
-    cwd: string,
-  ): Promise<SpawnResult> {
-    return new Promise((resolve, reject) => {
-      const proc = spawn(binary, args, {
-        env: { ...process.env, ...env },
-        stdio: ['ignore', 'pipe', 'pipe'],
-        timeout,
-        cwd,
-      });
-
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout.on('data', (chunk: Buffer) => {
-        stdout += chunk.toString();
-      });
-      proc.stderr.on('data', (chunk: Buffer) => {
-        stderr += chunk.toString();
-      });
-
-      proc.on('close', (code) => {
-        resolve({ stdout, stderr, exitCode: code ?? 1 });
-      });
-
-      proc.on('error', (err) => {
-        if ((err as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
-          reject(new Error(`Process timeout after ${timeout}ms`));
-        } else {
-          reject(err);
-        }
-      });
-    });
   }
 
   getCapabilities(): ConnectorCapabilities {
