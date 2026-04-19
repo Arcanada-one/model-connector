@@ -31,6 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Run as non-root (Claude CLI refuses --dangerously-skip-permissions as root)
 RUN useradd -m -s /bin/bash connector \
     && mkdir -p /home/connector/.claude /home/connector/.cursor /home/connector/.gemini \
+                /home/connector/.local/share/keyrings \
     && chown -R connector:connector /home/connector
 COPY --from=build --chown=connector /app/dist ./dist
 COPY --from=build --chown=connector /app/node_modules ./node_modules
