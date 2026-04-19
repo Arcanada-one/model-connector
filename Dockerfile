@@ -19,8 +19,9 @@ ENV NODE_ENV=production
 # Install CLI tools for connectors (glibc required — hence node:22-slim, not alpine)
 RUN npm install -g @anthropic-ai/claude-code @google/gemini-cli
 
-# Install Cursor CLI (standalone agent binary for headless execution)
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+# Install Cursor CLI + keyring for persistent auth (Cursor stores tokens in OS keyring)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl ca-certificates dbus gnome-keyring libsecret-1-0 \
     && curl -fsSL https://cursor.com/install | bash \
     && cp -r /root/.local/share/cursor-agent /opt/cursor-agent \
     && ln -sf /opt/cursor-agent/versions/*/cursor-agent /usr/local/bin/cursor-agent \
@@ -29,7 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 
 # Run as non-root (Claude CLI refuses --dangerously-skip-permissions as root)
 RUN useradd -m -s /bin/bash connector \
-    && mkdir -p /home/connector/.claude /home/connector/.cursor /home/connector/.config/gemini \
+    && mkdir -p /home/connector/.claude /home/connector/.cursor /home/connector/.gemini \
     && chown -R connector:connector /home/connector
 COPY --from=build --chown=connector /app/dist ./dist
 COPY --from=build --chown=connector /app/node_modules ./node_modules
