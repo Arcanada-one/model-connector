@@ -21,7 +21,7 @@ RUN npm install -g @anthropic-ai/claude-code @google/gemini-cli
 
 # Install Cursor CLI + keyring for persistent auth (Cursor stores tokens in OS keyring)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl ca-certificates dbus gnome-keyring libsecret-1-0 \
+        curl ca-certificates dbus dbus-x11 gnome-keyring libsecret-1-0 \
     && curl -fsSL https://cursor.com/install | bash \
     && cp -r /root/.local/share/cursor-agent /opt/cursor-agent \
     && ln -sf /opt/cursor-agent/versions/*/cursor-agent /usr/local/bin/cursor-agent \
@@ -38,6 +38,9 @@ COPY --from=build --chown=connector /app/package.json ./
 COPY --from=build --chown=connector /app/prisma ./prisma
 COPY --from=build --chown=connector /app/prisma.config.ts ./
 
+COPY --chown=connector entrypoint.sh /usr/local/bin/entrypoint.sh
+
 USER connector
 EXPOSE 3900
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["node", "dist/src/main.js"]
