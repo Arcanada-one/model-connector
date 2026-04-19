@@ -17,7 +17,7 @@ FROM base AS production
 ENV NODE_ENV=production
 
 # Install CLI tools for connectors (glibc required — hence node:22-slim, not alpine)
-RUN npm install -g @anthropic-ai/claude-code
+RUN npm install -g @anthropic-ai/claude-code @google/gemini-cli
 
 # Install Cursor CLI (standalone agent binary for headless execution)
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 
 # Run as non-root (Claude CLI refuses --dangerously-skip-permissions as root)
 RUN useradd -m -s /bin/bash connector \
-    && mkdir -p /home/connector/.claude /home/connector/.cursor \
+    && mkdir -p /home/connector/.claude /home/connector/.cursor /home/connector/.config/gemini \
     && chown -R connector:connector /home/connector
 COPY --from=build --chown=connector /app/dist ./dist
 COPY --from=build --chown=connector /app/node_modules ./node_modules
