@@ -9,8 +9,8 @@ services:
     volumes:
       - claude-auth:/home/connector/.claude
       - cursor-auth:/home/connector/.cursor
+      - cursor-config:/home/connector/.config/cursor
       - gemini-auth:/home/connector/.gemini
-      - keyring-data:/home/connector/.local/share/keyrings
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3900/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
@@ -25,5 +25,5 @@ services:
 volumes:
   claude-auth:
   cursor-auth:
+  cursor-config:
   gemini-auth:
-  keyring-data:
