@@ -1,5 +1,8 @@
 import { spawn } from 'child_process';
 import { createHash, randomUUID } from 'crypto';
+import { mkdtemp, rm } from 'fs/promises';
+import { join } from 'path';
+import { tmpdir } from 'os';
 import {
   ConnectorCapabilities,
   ConnectorRequest,
@@ -42,6 +45,9 @@ export abstract class BaseCliConnector implements IConnector {
     const timeout = request.timeout ?? 300_000;
     const start = Date.now();
 
+    // CWD isolation: spawn from temp dir to prevent CLI workspace scanning
+    const cwdPath = await mkdtemp(join(tmpdir(), `${this.name}_`));
+
     this.activeJobs++;
     try {
       const { stdout, stderr, exitCode } = await this.spawnProcess(
@@ -49,6 +55,7 @@ export abstract class BaseCliConnector implements IConnector {
         this.buildArgs(request),
         timeout,
         this.getEnv(request),
+        cwdPath,
       );
 
       const latencyMs = Date.now() - start;
@@ -95,6 +102,7 @@ export abstract class BaseCliConnector implements IConnector {
       };
     } finally {
       this.activeJobs--;
+      rm(cwdPath, { recursive: true, force: true }).catch(() => {});
     }
   }
 
@@ -117,12 +125,14 @@ export abstract class BaseCliConnector implements IConnector {
     args: string[],
     timeout: number,
     env: Record<string, string>,
+    cwd?: string,
   ): Promise<SpawnResult> {
     return new Promise((resolve, reject) => {
       const proc = spawn(binary, args, {
         env: { ...process.env, ...env },
         stdio: ['ignore', 'pipe', 'pipe'],
         timeout,
+        ...(cwd && { cwd }),
       });
 
       let stdout = '';
