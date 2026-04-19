@@ -107,7 +107,15 @@ export class CursorConnector extends BaseCliConnector {
     return {
       name: 'cursor',
       type: 'cli',
-      models: ['cursor-auto', 'gpt-5', 'sonnet-4', 'sonnet-4-thinking'],
+      // Subset of stable models; full list via `cursor-agent --list-models`
+      models: [
+        'auto',
+        'composer-2-fast',
+        'claude-4.6-opus-high',
+        'claude-4.6-sonnet-medium',
+        'gpt-5.4-medium',
+        'gemini-3.1-pro',
+      ],
       supportsStreaming: false,
       supportsJsonSchema: false,
       supportsTools: true,
