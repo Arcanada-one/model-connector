@@ -78,7 +78,7 @@ export class ClaudeCodeConnector extends BaseCliConnector {
         : 'bypassPermissions';
     args.push('--permission-mode', permissionMode);
 
-    if (request.model) {
+    if (request.model && request.model !== 'auto') {
       args.push('--model', request.model);
     }
 
