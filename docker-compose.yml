@@ -9,7 +9,7 @@ services:
     volumes:
       - claude-auth:/home/connector/.claude
       - cursor-auth:/home/connector/.cursor
-      - gemini-auth:/home/connector/.config/gemini
+      - gemini-auth:/home/connector/.gemini
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3900/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
