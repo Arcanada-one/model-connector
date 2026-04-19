@@ -131,14 +131,14 @@ jobs:
       group: deploy-model-connector
       cancel-in-progress: false
     steps:
-      - name: Deploy to Arcanada AI
+      - name: Deploy to Arcanada PROD
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cd /opt/model-connector/code
+            cd /srv/apps/model-connector
             git pull --ff-only origin main
             docker compose up -d --build
             sleep 10
