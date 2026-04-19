@@ -10,6 +10,34 @@ import {
   ConnectorStatus,
   IConnector,
 } from './interfaces/connector.interface';
+import { getConfig } from '../config/env.schema';
+
+class Semaphore {
+  private current = 0;
+  private queue: Array<() => void> = [];
+  constructor(private readonly max: number) {}
+
+  async acquire(): Promise<void> {
+    if (this.current < this.max) {
+      this.current++;
+      return;
+    }
+    return new Promise<void>((resolve) => this.queue.push(resolve));
+  }
+
+  release(): void {
+    this.current--;
+    const next = this.queue.shift();
+    if (next) {
+      this.current++;
+      next();
+    }
+  }
+
+  get pending(): number {
+    return this.queue.length;
+  }
+}
 
 export interface ParsedCliOutput {
   text: string;
@@ -34,6 +62,23 @@ export abstract class BaseCliConnector implements IConnector {
   abstract readonly name: string;
 
   protected activeJobs = 0;
+  private _semaphore?: Semaphore;
+
+  protected get semaphore(): Semaphore {
+    if (!this._semaphore) {
+      try {
+        this._semaphore = new Semaphore(getConfig().CONNECTOR_MAX_CONCURRENCY);
+      } catch {
+        this._semaphore = new Semaphore(1);
+      }
+    }
+    return this._semaphore;
+  }
+
+  /** @internal For testing only — override the concurrency limit */
+  setSemaphore(max: number): void {
+    this._semaphore = new Semaphore(max);
+  }
 
   protected abstract getBinaryPath(): string;
   protected abstract buildArgs(request: ConnectorRequest): string[];
@@ -41,6 +86,7 @@ export abstract class BaseCliConnector implements IConnector {
   abstract getCapabilities(): ConnectorCapabilities;
 
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
+    await this.semaphore.acquire();
     const id = randomUUID();
     const timeout = request.timeout ?? 300_000;
     const start = Date.now();
@@ -102,6 +148,7 @@ export abstract class BaseCliConnector implements IConnector {
       };
     } finally {
       this.activeJobs--;
+      this.semaphore.release();
       rm(cwdPath, { recursive: true, force: true }).catch(() => {});
     }
   }
@@ -111,7 +158,7 @@ export abstract class BaseCliConnector implements IConnector {
       name: this.name,
       healthy: true,
       activeJobs: this.activeJobs,
-      queuedJobs: 0,
+      queuedJobs: this.semaphore.pending,
       rateLimitStatus: 'ok',
     };
   }
