@@ -33,10 +33,10 @@ describe('CursorConnector', () => {
     });
 
     it('should include --model when model is specified', () => {
-      const args = connector.testBuildArgs({ prompt: 'hi', model: 'sonnet-4' });
+      const args = connector.testBuildArgs({ prompt: 'hi', model: 'claude-4.6-opus-high' });
       expect(args).toContain('--model');
-      expect(args).toContain('sonnet-4');
-      expect(args.indexOf('--model')).toBe(args.indexOf('sonnet-4') - 1);
+      expect(args).toContain('claude-4.6-opus-high');
+      expect(args.indexOf('--model')).toBe(args.indexOf('claude-4.6-opus-high') - 1);
     });
 
     it('should include --workspace from extra', () => {
@@ -108,7 +108,7 @@ describe('CursorConnector', () => {
       expect(caps.supportsStreaming).toBe(false);
       expect(caps.supportsJsonSchema).toBe(false);
       expect(caps.supportsTools).toBe(true);
-      expect(caps.models).toContain('cursor-auto');
+      expect(caps.models).toContain('auto');
       expect(caps.maxTimeout).toBeGreaterThan(0);
     });
   });
