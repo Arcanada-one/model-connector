@@ -108,9 +108,11 @@ export abstract class BaseApiConnector implements IConnector {
         latencyMs,
         status: isAbort ? 'timeout' : 'error',
         error: {
-          type: isAbort ? 'timeout' : message.includes('SyntaxError') || message.includes('Unexpected')
-            ? 'parse_error'
-            : 'network_error',
+          type: isAbort
+            ? 'timeout'
+            : message.includes('SyntaxError') || message.includes('Unexpected')
+              ? 'parse_error'
+              : 'network_error',
           message,
         },
       };

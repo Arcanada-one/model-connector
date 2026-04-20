@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthService } from './auth.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { hash } from 'bcryptjs';
 
 describe('AuthService', () => {
@@ -11,7 +12,7 @@ describe('AuthService', () => {
   };
 
   beforeEach(() => {
-    service = new AuthService(mockPrisma as any);
+    service = new AuthService(mockPrisma as unknown as PrismaService);
     vi.clearAllMocks();
   });
 

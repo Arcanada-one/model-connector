@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { BaseCliConnector, ParsedCliOutput, SpawnResult } from './base-cli.connector';
 import { ConnectorCapabilities, ConnectorRequest } from './interfaces/connector.interface';
 
@@ -43,7 +43,13 @@ class TestConnector extends BaseCliConnector {
 
   // Expose spawnProcess for mocking in concurrency tests
   public mockSpawnProcess(
-    fn: (binary: string, args: string[], timeout: number, env: Record<string, string>, cwd?: string) => Promise<SpawnResult>,
+    fn: (
+      binary: string,
+      args: string[],
+      timeout: number,
+      env: Record<string, string>,
+      cwd?: string,
+    ) => Promise<SpawnResult>,
   ) {
     this.spawnProcess = fn;
   }
@@ -170,9 +176,12 @@ describe('BaseCliConnector', () => {
       c.setSemaphore(1);
 
       const resolvers: Array<() => void> = [];
-      c.mockSpawnProcess(() => new Promise((resolve) => {
-        resolvers.push(() => resolve({ stdout: 'ok', stderr: '', exitCode: 0 }));
-      }));
+      c.mockSpawnProcess(
+        () =>
+          new Promise((resolve) => {
+            resolvers.push(() => resolve({ stdout: 'ok', stderr: '', exitCode: 0 }));
+          }),
+      );
 
       // Start first call — occupies the semaphore
       const p1 = c.execute(req);

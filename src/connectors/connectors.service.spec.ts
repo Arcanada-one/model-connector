@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Queue } from 'bullmq';
 import { ConnectorsService } from './connectors.service';
 import { NotFoundException } from '@nestjs/common';
 import { IConnector } from './interfaces/connector.interface';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('ConnectorsService', () => {
   let service: ConnectorsService;
@@ -20,12 +22,29 @@ describe('ConnectorsService', () => {
       latencyMs: 50,
       status: 'success',
     }),
-    getStatus: vi.fn().mockResolvedValue({ name: 'test', healthy: true, activeJobs: 0, queuedJobs: 0, rateLimitStatus: 'ok' }),
-    getCapabilities: vi.fn().mockReturnValue({ name: 'test', type: 'cli', models: [], supportsStreaming: false, supportsJsonSchema: false, supportsTools: false, maxTimeout: 300000 }),
+    getStatus: vi.fn().mockResolvedValue({
+      name: 'test',
+      healthy: true,
+      activeJobs: 0,
+      queuedJobs: 0,
+      rateLimitStatus: 'ok',
+    }),
+    getCapabilities: vi.fn().mockReturnValue({
+      name: 'test',
+      type: 'cli',
+      models: [],
+      supportsStreaming: false,
+      supportsJsonSchema: false,
+      supportsTools: false,
+      maxTimeout: 300000,
+    }),
   };
 
   beforeEach(() => {
-    service = new ConnectorsService(mockQueue as any, mockPrisma as any);
+    service = new ConnectorsService(
+      mockQueue as unknown as Queue,
+      mockPrisma as unknown as PrismaService,
+    );
     vi.clearAllMocks();
   });
 

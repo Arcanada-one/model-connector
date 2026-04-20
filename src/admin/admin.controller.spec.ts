@@ -44,7 +44,9 @@ describe('AdminController', () => {
     });
 
     it('should throw BadRequestException for invalid rateLimit', async () => {
-      await expect(controller.create({ name: 'test', rateLimit: -1 })).rejects.toThrow(BadRequestException);
+      await expect(controller.create({ name: 'test', rateLimit: -1 })).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

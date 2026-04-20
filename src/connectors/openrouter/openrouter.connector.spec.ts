@@ -58,9 +58,7 @@ describe('OpenRouterConnector', () => {
     it('should use OpenRouter chat completions endpoint', async () => {
       mockOk(chatResponse);
       await connector.execute({ prompt: 'hello' });
-      expect(fetchSpy.mock.calls[0][0]).toBe(
-        'https://openrouter.ai/api/v1/chat/completions',
-      );
+      expect(fetchSpy.mock.calls[0][0]).toBe('https://openrouter.ai/api/v1/chat/completions');
     });
   });
 
@@ -83,9 +81,7 @@ describe('OpenRouterConnector', () => {
       mockOk(chatResponse);
       await connector.execute({ prompt: 'What is 2+2?' });
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
-      expect(body.messages).toEqual([
-        { role: 'user', content: 'What is 2+2?' },
-      ]);
+      expect(body.messages).toEqual([{ role: 'user', content: 'What is 2+2?' }]);
     });
 
     it('should include systemPrompt as system message', async () => {

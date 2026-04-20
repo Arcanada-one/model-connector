@@ -27,9 +27,7 @@ describe('CursorConnector', () => {
   describe('buildArgs', () => {
     it('should build args for basic prompt (no agent subcommand — standalone binary)', () => {
       const args = connector.testBuildArgs({ prompt: 'hello' });
-      expect(args).toEqual([
-        '--print', '--output-format', 'json', '--force', 'hello',
-      ]);
+      expect(args).toEqual(['--print', '--output-format', 'json', '--force', 'hello']);
     });
 
     it('should include --model when model is specified', () => {

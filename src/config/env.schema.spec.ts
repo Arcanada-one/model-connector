@@ -22,7 +22,7 @@ describe('envSchema', () => {
   });
 
   it('should throw on missing DATABASE_URL', () => {
-    const { DATABASE_URL: _, ...incomplete } = validEnv;
+    const { DATABASE_URL: _url, ...incomplete } = validEnv;
     expect(() => validateEnv(incomplete)).toThrow('Invalid environment variables');
   });
 

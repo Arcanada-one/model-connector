@@ -16,12 +16,25 @@ interface ConnectorMetrics {
 export class MetricsService {
   private metrics = new Map<string, ConnectorMetrics>();
 
-  record(connector: string, status: string, inputTokens: number, outputTokens: number, costUsd: number, latencyMs: number) {
+  record(
+    connector: string,
+    status: string,
+    inputTokens: number,
+    outputTokens: number,
+    costUsd: number,
+    latencyMs: number,
+  ) {
     if (!this.metrics.has(connector)) {
       this.metrics.set(connector, {
-        totalRequests: 0, successCount: 0, errorCount: 0,
-        timeoutCount: 0, rateLimitedCount: 0,
-        totalInputTokens: 0, totalOutputTokens: 0, totalCostUsd: 0, totalLatencyMs: 0,
+        totalRequests: 0,
+        successCount: 0,
+        errorCount: 0,
+        timeoutCount: 0,
+        rateLimitedCount: 0,
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        totalCostUsd: 0,
+        totalLatencyMs: 0,
       });
     }
     const m = this.metrics.get(connector)!;
