@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConnectorsModule } from './connectors/connectors.module';
 import { HealthModule } from './health/health.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { AdminModule } from './admin/admin.module';
 import { getConfig } from './config/env.schema';
 
 @Module({
@@ -24,6 +25,7 @@ import { getConfig } from './config/env.schema';
     ConnectorsModule,
     HealthModule,
     MetricsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
