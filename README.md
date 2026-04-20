@@ -10,12 +10,13 @@ Model Connector wraps AI CLI tools as connectors behind a REST API. Each connect
 
 **Supported connectors:**
 
-| Connector | CLI Tool | Models | Auth |
-|-----------|----------|--------|------|
-| `claude-code` | Claude Code CLI | claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5 | Subscription (Docker volume) |
-| `cursor` | Cursor Agent CLI | cursor-auto, gpt-5, sonnet-4, sonnet-4-thinking | API key |
-| `gemini` | Gemini CLI | gemini-2.5-flash, gemini-3-flash-preview, gemini-2.5-flash-lite | OAuth (~/.gemini/) |
-| `embedding` | OpenAI-compatible API | text-embedding-3-small, etc. | API key |
+| Connector | Type | Models | Auth | Avg Latency |
+|-----------|------|--------|------|-------------|
+| `claude-code` | CLI | claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5 | Subscription (Docker volume) | ~4s |
+| `cursor` | CLI | cursor-auto, gpt-5, sonnet-4, sonnet-4-thinking | API key | ~10s |
+| `gemini` | CLI | gemini-2.5-flash, gemini-3-flash-preview, gemini-2.5-flash-lite | OAuth (~/.gemini/) | ~8-22s |
+| `openrouter` | API | 200+ models (Claude, GPT, Gemini, Llama, Mistral, etc.) | API key (OPENROUTER_API_KEY) | ~0.5-1s |
+| `embedding` | API | bge-m3 (dense, sparse, ColBERT, hybrid) | Internal (Tailscale) | ~0.2s |
 
 ## Quick Start
 
@@ -122,6 +123,11 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
 **gemini:**
 - `sandbox` — `true` to enable sandbox mode
 
+**openrouter:**
+- `max_tokens` — max tokens in response
+- `temperature` — sampling temperature (0-2)
+- `top_p` — nucleus sampling
+
 ### Response Schema
 
 ```json
@@ -160,29 +166,39 @@ Pass the raw key as `Authorization: Bearer <key>` on every request.
 ## Architecture
 
 ```
-┌──────────────────────────────────────────┐
-│              NestJS + Fastify            │
-│                                          │
-│  ┌─────────┐  ┌─────────┐  ┌──────────┐ │
-│  │  Auth    │  │  Health  │  │  Queue   │ │
-│  │  Guard   │  │  /health │  │  BullMQ  │ │
-│  └─────────┘  └─────────┘  └──────────┘ │
-│                                          │
-│  ┌──────────────────────────────────────┐│
-│  │         ConnectorsService            ││
-│  │  register() / execute() / enqueue()  ││
-│  └──────────────────────────────────────┘│
-│       │            │            │        │
-│  ┌────┴───┐  ┌─────┴────┐  ┌───┴──────┐ │
-│  │ Claude  │  │  Cursor   │  │  Gemini  │ │
-│  │ Code    │  │  Agent    │  │  CLI     │ │
-│  └────┬───┘  └─────┬────┘  └───┬──────┘ │
-│       │            │            │        │
-│  ┌────┴────────────┴────────────┴──────┐ │
-│  │        BaseCliConnector             │ │
-│  │  spawn() → parse() → classify()    │ │
-│  └─────────────────────────────────────┘ │
-└──────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────┐
+│                  NestJS + Fastify                      │
+│                                                       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐            │
+│  │  Auth     │  │  Health   │  │  Queue   │            │
+│  │  Guard    │  │  /health  │  │  BullMQ  │            │
+│  └──────────┘  └──────────┘  └──────────┘            │
+│                                                       │
+│  ┌───────────────────────────────────────────────────┐│
+│  │              ConnectorsService                    ││
+│  │       register() / execute() / enqueue()          ││
+│  └───────────────────────────────────────────────────┘│
+│       │            │            │       │        │    │
+│  ┌────┴───┐  ┌─────┴────┐  ┌───┴────┐  │        │    │
+│  │ Claude  │  │  Cursor   │  │ Gemini │  │        │    │
+│  │ Code    │  │  Agent    │  │  CLI   │  │        │    │
+│  └────┬───┘  └─────┬────┘  └───┬────┘  │        │    │
+│       │            │            │       │        │    │
+│  ┌────┴────────────┴────────────┴────┐  │        │    │
+│  │       BaseCliConnector            │  │        │    │
+│  │  spawn() → parse() → classify()  │  │        │    │
+│  └───────────────────────────────────┘  │        │    │
+│                                         │        │    │
+│  ┌──────────────┐  ┌───────────────┐    │        │    │
+│  │  OpenRouter   │  │  Embedding    │◄───┘────────┘    │
+│  │  (200+ models)│  │  (BGE-M3)    │                   │
+│  └──────┬───────┘  └──────┬───────┘                   │
+│         │                  │                           │
+│  ┌──────┴──────────────────┴──────────┐               │
+│  │         BaseApiConnector           │               │
+│  │    fetch() → parse() → classify()  │               │
+│  └────────────────────────────────────┘               │
+└───────────────────────────────────────────────────────┘
 ```
 
 ## Commands
@@ -204,8 +220,8 @@ pnpm db:push      # Push schema to database
 - **ORM:** Prisma 7 (driver adapter pattern)
 - **Validation:** Zod
 - **Queue:** BullMQ + Redis
-- **Testing:** Vitest (104 tests)
-- **CI/CD:** GitHub Actions → SSH deploy to Arcanada AI
+- **Testing:** Vitest (128 tests)
+- **CI/CD:** GitHub Actions → SSH deploy to Arcanada PROD
 
 ## Environment Variables
 
@@ -216,9 +232,187 @@ pnpm db:push      # Push schema to database
 | `REDIS_PORT` | no | Redis port (default: 6379) |
 | `REDIS_PASSWORD` | yes | Redis password |
 | `PORT` | no | Server port (default: 3900) |
+| `OPENROUTER_API_KEY` | yes* | OpenRouter API key (*required for openrouter connector) |
+| `OPENROUTER_TIMEOUT_MS` | no | OpenRouter timeout (default: 120000) |
 | `CLAUDE_BINARY_PATH` | no | Path to Claude CLI (default: `claude`) |
 | `CURSOR_BINARY_PATH` | no | Path to Cursor CLI (default: `cursor-agent`) |
 | `GEMINI_BINARY_PATH` | no | Path to Gemini CLI (default: `gemini`) |
+
+## Integration Guide for Arcanada Projects
+
+Model Connector — единая точка входа для всех AI-моделей в экосистеме. Вместо прямых вызовов к OpenRouter / Anthropic / OpenAI, проекты ходят через MC и получают единый формат ответа, учёт токенов и стоимости, fallback между моделями.
+
+### Базовая настройка
+
+```
+Base URL:  https://connector.arcanada.one
+Auth:      Authorization: Bearer <API_KEY>
+Response:  HTTP 201 (не 200!) для успешных запросов
+```
+
+> **Важно:** MC возвращает HTTP **201 Created**, не 200. Проверяйте `status >= 400` для ошибок.
+
+### OpenRouter — быстрый доступ к 200+ моделям
+
+OpenRouter — самый быстрый LLM-коннектор (~0.5-1s vs 4-22s у CLI). Рекомендуется для задач, где не нужны CLI-инструменты (file access, code execution).
+
+**curl:**
+
+```bash
+# Простой запрос (дефолт: anthropic/claude-sonnet-4)
+curl -X POST https://connector.arcanada.one/connectors/openrouter/execute \
+  -H "Authorization: Bearer $MC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Explain recursion in one sentence"}'
+
+# С выбором модели и системным промптом
+curl -X POST https://connector.arcanada.one/connectors/openrouter/execute \
+  -H "Authorization: Bearer $MC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Classify this text: The server is on fire",
+    "model": "meta-llama/llama-4-maverick",
+    "systemPrompt": "You are a classifier. Respond with: critical/warning/info",
+    "extra": {"temperature": 0, "max_tokens": 10}
+  }'
+```
+
+**TypeScript (NestJS / Node.js):**
+
+```typescript
+const MC_URL = 'https://connector.arcanada.one';
+const MC_KEY = process.env.MC_API_KEY;
+
+async function askOpenRouter(prompt: string, model?: string): Promise<string> {
+  const res = await fetch(`${MC_URL}/connectors/openrouter/execute`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${MC_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      prompt,
+      model: model ?? 'meta-llama/llama-4-maverick', // free
+      extra: { max_tokens: 500 },
+    }),
+  });
+
+  if (res.status >= 400) throw new Error(`MC error: ${res.status}`);
+  const data = await res.json();
+  if (data.status !== 'success') throw new Error(data.error?.message);
+  return data.result;
+}
+```
+
+**Python (httpx / requests):**
+
+```python
+import httpx
+
+MC_URL = "https://connector.arcanada.one"
+MC_KEY = os.environ["MC_API_KEY"]
+
+async def ask_openrouter(prompt: str, model: str = "meta-llama/llama-4-maverick") -> str:
+    async with httpx.AsyncClient(timeout=30) as client:
+        res = await client.post(
+            f"{MC_URL}/connectors/openrouter/execute",
+            headers={"Authorization": f"Bearer {MC_KEY}"},
+            json={
+                "prompt": prompt,
+                "model": model,
+                "extra": {"max_tokens": 500},
+            },
+        )
+        res.raise_for_status()
+        data = res.json()
+        if data["status"] != "success":
+            raise RuntimeError(data.get("error", {}).get("message", "Unknown error"))
+        return data["result"]
+```
+
+### Универсальный endpoint (любой коннектор)
+
+Вместо per-connector endpoints можно использовать `/execute` с полем `connector`:
+
+```bash
+# OpenRouter через универсальный endpoint
+curl -X POST https://connector.arcanada.one/execute \
+  -H "Authorization: Bearer $MC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"connector": "openrouter", "prompt": "Hello", "model": "openai/gpt-4o-mini"}'
+
+# Claude Code через универсальный endpoint
+curl -X POST https://connector.arcanada.one/execute \
+  -H "Authorization: Bearer $MC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"connector": "claude-code", "prompt": "What is 2+2?", "maxTurns": 1}'
+
+# Embeddings через универсальный endpoint
+curl -X POST https://connector.arcanada.one/execute \
+  -H "Authorization: Bearer $MC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"connector": "embedding", "prompt": "your text here"}'
+```
+
+### Какой коннектор выбрать
+
+| Задача | Коннектор | Модель | Почему |
+|--------|-----------|--------|--------|
+| Классификация, NLU, парсинг | `openrouter` | `meta-llama/llama-4-maverick` (free) | Быстро (~0.5s), бесплатно |
+| Генерация текста (качество) | `openrouter` | `anthropic/claude-sonnet-4` | Быстрее CLI, cost tracking |
+| Дешёвая генерация | `openrouter` | `openai/gpt-4o-mini` | $0.15/1M input |
+| Работа с файлами / code execution | `claude-code` | haiku/sonnet | Полный доступ к CLI tools |
+| Embeddings (поиск, similarity) | `embedding` | `bge-m3` | <0.3s, бесплатно (self-hosted) |
+| Agent с Cursor tools | `cursor` | cursor-auto | Cursor-specific features |
+
+### Формат ответа (все коннекторы)
+
+```json
+{
+  "id": "uuid",
+  "connector": "openrouter",
+  "model": "meta-llama/llama-4-maverick-17b-128e-instruct",
+  "result": "Tokyo.",
+  "usage": {
+    "inputTokens": 22,
+    "outputTokens": 3,
+    "totalTokens": 25,
+    "costUsd": 0
+  },
+  "latencyMs": 659,
+  "status": "success"
+}
+```
+
+### Обработка ошибок
+
+```typescript
+const data = await res.json();
+
+switch (data.status) {
+  case 'success':      // все ок
+    return data.result;
+  case 'error':        // ошибка API/модели
+    console.error(data.error?.type, data.error?.message);
+    break;
+  case 'timeout':      // превышен таймаут
+    // retry or fallback
+    break;
+  case 'rate_limited': // лимит превышен
+    const retryAfter = data.error?.retryAfter;
+    break;
+}
+```
+
+### Benchmark (PROD, 2026-04-20)
+
+| Connector | R1 | R2 | R3 | Avg |
+|-----------|----|----|-----|-----|
+| claude-code | 4.0s | 4.3s | 4.4s | 4.2s |
+| cursor | 12.1s | 9.3s | 9.5s | 10.3s |
+| gemini | 6.9s | 22.1s | 21.5s | 16.8s |
+| embedding | 0.27s | 0.25s | 0.22s | 0.25s |
+| openrouter | 0.66s | 0.94s | 0.32s | 0.64s |
 
 ## License
 
