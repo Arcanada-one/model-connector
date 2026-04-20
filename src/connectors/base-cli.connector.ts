@@ -9,20 +9,46 @@ import {
   ConnectorResponse,
   ConnectorStatus,
   IConnector,
+  classifyErrorAction,
 } from './interfaces/connector.interface';
 import { getConfig } from '../config/env.schema';
+import { CircuitBreaker, CircuitOpenError } from '../core/resilience/circuit-breaker';
 
-class Semaphore {
+export class QueueTimeoutError extends Error {
+  constructor(public readonly timeoutMs: number) {
+    super(`Queue wait timeout after ${timeoutMs}ms`);
+    this.name = 'QueueTimeoutError';
+  }
+}
+
+export class Semaphore {
   private current = 0;
   private queue: Array<() => void> = [];
   constructor(private readonly max: number) {}
 
-  async acquire(): Promise<void> {
+  async acquire(timeoutMs?: number): Promise<void> {
     if (this.current < this.max) {
       this.current++;
       return;
     }
-    return new Promise<void>((resolve) => this.queue.push(resolve));
+
+    if (timeoutMs === undefined) {
+      return new Promise<void>((resolve) => this.queue.push(resolve));
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        const idx = this.queue.indexOf(entry);
+        if (idx >= 0) this.queue.splice(idx, 1);
+        reject(new QueueTimeoutError(timeoutMs));
+      }, timeoutMs);
+
+      const entry = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      this.queue.push(entry);
+    });
   }
 
   release(): void {
@@ -36,6 +62,10 @@ class Semaphore {
 
   get pending(): number {
     return this.queue.length;
+  }
+
+  get active(): number {
+    return this.current;
   }
 }
 
@@ -63,16 +93,45 @@ export abstract class BaseCliConnector implements IConnector {
 
   protected activeJobs = 0;
   private _semaphore?: Semaphore;
+  private _circuitBreaker?: CircuitBreaker;
 
   protected get semaphore(): Semaphore {
     if (!this._semaphore) {
       try {
-        this._semaphore = new Semaphore(getConfig().CONNECTOR_MAX_CONCURRENCY);
+        const config = getConfig();
+        const envKey =
+          `${this.name.toUpperCase().replace(/-/g, '_')}_MAX_CONCURRENCY` as keyof typeof config;
+        const limit = (config[envKey] as number | undefined) ?? config.CONNECTOR_MAX_CONCURRENCY;
+        this._semaphore = new Semaphore(limit);
       } catch {
-        this._semaphore = new Semaphore(1);
+        this._semaphore = new Semaphore(4);
       }
     }
     return this._semaphore;
+  }
+
+  protected getQueueTimeout(): number {
+    try {
+      return getConfig().CONNECTOR_QUEUE_TIMEOUT_MS;
+    } catch {
+      return 60_000;
+    }
+  }
+
+  protected get circuitBreaker(): CircuitBreaker {
+    if (!this._circuitBreaker) {
+      try {
+        const config = getConfig();
+        this._circuitBreaker = new CircuitBreaker(
+          config.CIRCUIT_BREAKER_THRESHOLD,
+          config.CIRCUIT_BREAKER_COOLDOWN_MS,
+          this.name,
+        );
+      } catch {
+        this._circuitBreaker = new CircuitBreaker(5, 30_000, this.name);
+      }
+    }
+    return this._circuitBreaker;
   }
 
   /** @internal For testing only — override the concurrency limit */
@@ -86,9 +145,62 @@ export abstract class BaseCliConnector implements IConnector {
   abstract getCapabilities(): ConnectorCapabilities;
 
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
-    await this.semaphore.acquire();
     const id = randomUUID();
-    const timeout = request.timeout ?? 300_000;
+
+    // Circuit breaker check
+    try {
+      this.circuitBreaker.check();
+    } catch (err) {
+      if (err instanceof CircuitOpenError) {
+        const action = classifyErrorAction('circuit_open');
+        return {
+          id,
+          connector: this.name,
+          model: request.model || 'unknown',
+          result: '',
+          usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+          latencyMs: 0,
+          queueWaitMs: 0,
+          status: 'error',
+          error: {
+            type: 'circuit_open',
+            message: err.message,
+            retryAfter: Math.max(0, err.nextRetryAt - Date.now()),
+            ...action,
+          },
+        };
+      }
+      throw err;
+    }
+
+    const queueStart = Date.now();
+
+    try {
+      await this.semaphore.acquire(this.getQueueTimeout());
+    } catch (err) {
+      if (err instanceof QueueTimeoutError) {
+        const action = classifyErrorAction('queue_timeout');
+        return {
+          id,
+          connector: this.name,
+          model: request.model || 'unknown',
+          result: '',
+          usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+          latencyMs: Date.now() - queueStart,
+          queueWaitMs: Date.now() - queueStart,
+          status: 'error',
+          error: {
+            type: 'queue_timeout',
+            message: err.message,
+            ...action,
+          },
+        };
+      }
+      throw err;
+    }
+
+    const queueWaitMs = Date.now() - queueStart;
+    const timeout = request.timeout ?? 120_000;
     const start = Date.now();
 
     // CWD isolation: spawn from temp dir to prevent CLI workspace scanning
@@ -120,6 +232,7 @@ export abstract class BaseCliConnector implements IConnector {
           costUsd: parsed.costUsd,
         },
         latencyMs,
+        queueWaitMs,
         status: 'success',
       };
 
@@ -127,17 +240,25 @@ export abstract class BaseCliConnector implements IConnector {
         const errorType = parsed.errorType
           ? parsed.errorType
           : this.classifyError(parsed.errorMessage || stderr, exitCode);
+        const action = classifyErrorAction(errorType);
         base.status = errorType === 'rate_limited' ? 'rate_limited' : 'error';
         base.error = {
           type: errorType,
           message: parsed.errorMessage || stderr.slice(0, 500),
+          ...action,
         };
+        this.circuitBreaker.recordFailure(errorType);
+      } else {
+        this.circuitBreaker.recordSuccess();
       }
 
       return base;
     } catch (err) {
       const latencyMs = Date.now() - start;
       const message = err instanceof Error ? err.message : String(err);
+      const errorType = message.includes('timeout') ? 'timeout' : 'spawn_error';
+      const action = classifyErrorAction(errorType);
+      this.circuitBreaker.recordFailure(errorType);
       return {
         id,
         connector: this.name,
@@ -145,8 +266,9 @@ export abstract class BaseCliConnector implements IConnector {
         result: '',
         usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
         latencyMs,
+        queueWaitMs,
         status: message.includes('timeout') ? 'timeout' : 'error',
-        error: { type: message.includes('timeout') ? 'timeout' : 'spawn_error', message },
+        error: { type: errorType, message, ...action },
       };
     } finally {
       this.activeJobs--;
@@ -156,12 +278,14 @@ export abstract class BaseCliConnector implements IConnector {
   }
 
   async getStatus(): Promise<ConnectorStatus> {
+    const cbState = this.circuitBreaker.getState();
     return {
       name: this.name,
-      healthy: true,
+      healthy: cbState.state !== 'open',
       activeJobs: this.activeJobs,
       queuedJobs: this.semaphore.pending,
       rateLimitStatus: 'ok',
+      circuitBreaker: cbState,
     };
   }
 

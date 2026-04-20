@@ -12,6 +12,16 @@ export interface ConnectorRequest {
   extra?: Record<string, unknown>;
 }
 
+export type ErrorAction = 'retry' | 'abort' | 'wait' | 'reauth';
+
+export interface ConnectorError {
+  type: string;
+  message: string;
+  retryAfter?: number;
+  retryable: boolean;
+  recommendation: ErrorAction;
+}
+
 export interface ConnectorResponse {
   id: string;
   connector: string;
@@ -25,12 +35,42 @@ export interface ConnectorResponse {
     costUsd: number;
   };
   latencyMs: number;
+  queueWaitMs?: number;
+  attempt?: number;
+  maxAttempts?: number;
   status: 'success' | 'error' | 'timeout' | 'rate_limited';
-  error?: {
-    type: string;
-    message: string;
-    retryAfter?: number;
-  };
+  error?: ConnectorError;
+}
+
+const ERROR_ACTION_MAP: Record<string, { retryable: boolean; recommendation: ErrorAction }> = {
+  rate_limited: { retryable: true, recommendation: 'wait' },
+  timeout: { retryable: true, recommendation: 'retry' },
+  server_error: { retryable: true, recommendation: 'retry' },
+  json_parse_error: { retryable: true, recommendation: 'retry' },
+  execution_error: { retryable: true, recommendation: 'retry' },
+  queue_timeout: { retryable: true, recommendation: 'wait' },
+  network_error: { retryable: true, recommendation: 'retry' },
+  spawn_error: { retryable: true, recommendation: 'retry' },
+  circuit_open: { retryable: false, recommendation: 'wait' },
+  auth_error: { retryable: false, recommendation: 'reauth' },
+  binary_not_found: { retryable: false, recommendation: 'abort' },
+  validation_error: { retryable: false, recommendation: 'abort' },
+  billing_error: { retryable: false, recommendation: 'abort' },
+  budget_exceeded: { retryable: false, recommendation: 'abort' },
+  max_turns_exceeded: { retryable: false, recommendation: 'abort' },
+  max_output_tokens: { retryable: false, recommendation: 'abort' },
+  structured_output_error: { retryable: true, recommendation: 'retry' },
+  parse_error: { retryable: true, recommendation: 'retry' },
+  http_error: { retryable: true, recommendation: 'retry' },
+  model_not_found: { retryable: false, recommendation: 'abort' },
+  api_error: { retryable: true, recommendation: 'retry' },
+};
+
+export function classifyErrorAction(errorType: string): {
+  retryable: boolean;
+  recommendation: ErrorAction;
+} {
+  return ERROR_ACTION_MAP[errorType] ?? { retryable: false, recommendation: 'abort' };
 }
 
 export interface ConnectorStatus {
@@ -41,6 +81,12 @@ export interface ConnectorStatus {
   queuedJobs: number;
   rateLimitStatus: 'ok' | 'approaching' | 'limited';
   rateLimitResetsAt?: string;
+  circuitBreaker?: {
+    state: 'closed' | 'open' | 'half_open';
+    consecutiveFailures: number;
+    nextRetryAt?: number;
+    lastErrorType: string | null;
+  };
 }
 
 export interface ConnectorCapabilities {

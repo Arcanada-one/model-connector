@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { ConnectorsService } from './connectors.service';
+import { ConnectorResponse } from './interfaces/connector.interface';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import {
   ExecuteRequestDto,
@@ -12,6 +13,14 @@ import {
 interface AuthenticatedRequest extends FastifyRequest {
   apiKey?: { id: string };
 }
+
+const HTTP_ERROR_STATUS: Record<string, HttpStatus> = {
+  queue_timeout: HttpStatus.SERVICE_UNAVAILABLE,
+  circuit_open: HttpStatus.SERVICE_UNAVAILABLE,
+  auth_error: HttpStatus.SERVICE_UNAVAILABLE,
+  binary_not_found: HttpStatus.SERVICE_UNAVAILABLE,
+  rate_limited: HttpStatus.TOO_MANY_REQUESTS,
+};
 
 @Controller()
 export class ConnectorsController {
@@ -34,7 +43,8 @@ export class ConnectorsController {
     @Req() req: AuthenticatedRequest,
   ) {
     const apiKeyId = req.apiKey?.id ?? 'unknown';
-    return this.connectorsService.execute(name, body, apiKeyId);
+    const response = await this.connectorsService.execute(name, body, apiKeyId);
+    return this.mapResponseStatus(response);
   }
 
   @Post('execute')
@@ -44,6 +54,15 @@ export class ConnectorsController {
   ) {
     const apiKeyId = req.apiKey?.id ?? 'unknown';
     const { connector, ...request } = body;
-    return this.connectorsService.execute(connector, request, apiKeyId);
+    const response = await this.connectorsService.execute(connector, request, apiKeyId);
+    return this.mapResponseStatus(response);
+  }
+
+  private mapResponseStatus(response: ConnectorResponse): ConnectorResponse {
+    const errorType = response.error?.type;
+    if (errorType && errorType in HTTP_ERROR_STATUS) {
+      throw new HttpException(response, HTTP_ERROR_STATUS[errorType]);
+    }
+    return response;
   }
 }

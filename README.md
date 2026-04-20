@@ -105,7 +105,7 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
 | `effort` | string | no | `low`, `medium`, or `high` |
 | `jsonSchema` | object | no | JSON schema for structured output (Claude Code only) |
 | `responseFormat` | object | no | `{ type: "json_object" }` — request JSON output |
-| `timeout` | number | no | Timeout in ms (5000-600000, default: 300000) |
+| `timeout` | number | no | Timeout in ms (5000-600000, default: 120000) |
 | `extra` | object | no | Connector-specific options (see below) |
 
 ### Connector-Specific `extra` Options
@@ -165,12 +165,76 @@ curl -X POST https://connector.arcanada.one/execute \
     "costUsd": 0
   },
   "latencyMs": 2400,
+  "queueWaitMs": 5,
+  "attempt": 1,
+  "maxAttempts": 2,
   "status": "success",
   "error": null
 }
 ```
 
 **Status values:** `success`, `error`, `timeout`, `rate_limited`
+
+**New response fields (CONN-0026):**
+- `queueWaitMs` — time spent waiting in concurrency queue (ms)
+- `attempt` — current attempt number (1-based)
+- `maxAttempts` — total attempts allowed (1 + CONNECTOR_MAX_RETRIES)
+
+### Error Response
+
+When `status` is not `success`, the `error` object includes:
+
+```json
+{
+  "error": {
+    "type": "json_parse_error",
+    "message": "Failed to parse JSON response",
+    "retryable": true,
+    "recommendation": "retry"
+  }
+}
+```
+
+| error.type | retryable | recommendation | HTTP status |
+|---|---|---|---|
+| `rate_limited` | true | `wait` | 429 |
+| `timeout` | true | `retry` | 201 |
+| `server_error` | true | `retry` | 201 |
+| `json_parse_error` | true | `retry` | 201 |
+| `execution_error` | true | `retry` | 201 |
+| `queue_timeout` | true | `wait` | 503 |
+| `circuit_open` | false | `wait` | 503 |
+| `auth_error` | false | `reauth` | 503 |
+| `binary_not_found` | false | `abort` | 503 |
+| `validation_error` | false | `abort` | 400 |
+
+**`recommendation` values:**
+- `retry` — resend the same request after a short delay
+- `wait` — wait for `retryAfter` ms or the indicated cooldown, then retry
+- `abort` — do not retry; fix the request or configuration
+- `reauth` — re-authenticate the connector (CLI login expired)
+
+### Circuit Breaker
+
+Each connector has an independent circuit breaker. After `CIRCUIT_BREAKER_THRESHOLD` consecutive errors (default: 5), the connector enters `open` state and rejects requests with `circuit_open` for `CIRCUIT_BREAKER_COOLDOWN_MS` (default: 30s). After cooldown, one probe request is allowed (`half_open`). Success resets the breaker; failure re-opens it.
+
+`auth_error` and `binary_not_found` instantly open the circuit (no threshold wait).
+
+Check circuit state: `GET /connectors/:name/status` → `circuitBreaker: { state, consecutiveFailures, nextRetryAt }`
+
+### Auto-Retry
+
+MC automatically retries transient errors (json_parse_error, rate_limited, timeout, server_error) up to `CONNECTOR_MAX_RETRIES` times (default: 1). Exponential backoff with jitter: 1s, 2s, 4s (max 8s). Non-retryable errors (auth_error, validation_error, etc.) are returned immediately.
+
+### JSON Sanitization
+
+When `responseFormat: { type: "json_object" }` is set, MC sanitizes the response:
+1. Strips BOM and whitespace
+2. Removes markdown code fences (` ```json ... ``` `)
+3. Extracts JSON by bracket matching
+4. Validates with `JSON.parse()`
+
+The cleaned JSON is placed in `response.structured`. If sanitization fails after all retries, `error.type` is `json_parse_error`.
 
 ## Authentication
 
@@ -293,7 +357,7 @@ pnpm db:push      # Push schema to database
 - **ORM:** Prisma 7 (driver adapter pattern)
 - **Validation:** Zod
 - **Queue:** BullMQ + Redis
-- **Testing:** Vitest (128 tests)
+- **Testing:** Vitest (188 tests)
 - **CI/CD:** GitHub Actions → SSH deploy to Arcanada PROD
 
 ## Environment Variables
@@ -310,6 +374,17 @@ pnpm db:push      # Push schema to database
 | `CLAUDE_BINARY_PATH` | no | Path to Claude CLI (default: `claude`) |
 | `CURSOR_BINARY_PATH` | no | Path to Cursor CLI (default: `cursor-agent`) |
 | `GEMINI_BINARY_PATH` | no | Path to Gemini CLI (default: `gemini`) |
+| `CONNECTOR_TIMEOUT_MS` | no | Default execution timeout (default: 120000) |
+| `CONNECTOR_MAX_CONCURRENCY` | no | Global fallback concurrency limit (default: 4) |
+| `CLAUDE_CODE_MAX_CONCURRENCY` | no | Claude Code CLI concurrent limit (default: 4) |
+| `CURSOR_MAX_CONCURRENCY` | no | Cursor CLI concurrent limit (default: 1) |
+| `GEMINI_MAX_CONCURRENCY` | no | Gemini CLI concurrent limit (default: 4) |
+| `OPENROUTER_MAX_CONCURRENCY` | no | OpenRouter API concurrent limit (default: 10) |
+| `EMBEDDING_MAX_CONCURRENCY` | no | Embedding API concurrent limit (default: 8) |
+| `CONNECTOR_QUEUE_TIMEOUT_MS` | no | Max wait time in concurrency queue (default: 60000) |
+| `CONNECTOR_MAX_RETRIES` | no | Auto-retries on transient errors (default: 1, 0=disabled) |
+| `CIRCUIT_BREAKER_THRESHOLD` | no | Consecutive failures to open circuit (default: 5) |
+| `CIRCUIT_BREAKER_COOLDOWN_MS` | no | Circuit breaker cooldown (default: 30000) |
 
 ## Integration Guide for Arcanada Projects
 
