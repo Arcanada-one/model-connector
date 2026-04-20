@@ -185,6 +185,38 @@ describe('ClaudeCodeConnector', () => {
       });
       expect(args[args.length - 1]).toBe('my prompt');
     });
+
+    it('should prepend JSON instruction to system prompt when responseFormat is json_object', () => {
+      const args = connector.testBuildArgs({
+        prompt: 'list users',
+        responseFormat: { type: 'json_object' },
+      });
+      expect(args).toContain('--system-prompt');
+      const spIdx = args.indexOf('--system-prompt');
+      expect(args[spIdx + 1]).toContain('valid JSON only');
+    });
+
+    it('should merge JSON instruction with existing systemPrompt when responseFormat is json_object', () => {
+      const args = connector.testBuildArgs({
+        prompt: 'list users',
+        systemPrompt: 'Be concise',
+        responseFormat: { type: 'json_object' },
+      });
+      const spIdx = args.indexOf('--system-prompt');
+      expect(args[spIdx + 1]).toContain('valid JSON only');
+      expect(args[spIdx + 1]).toContain('Be concise');
+    });
+
+    it('should NOT add JSON instruction when jsonSchema is present (jsonSchema takes priority)', () => {
+      const args = connector.testBuildArgs({
+        prompt: 'list users',
+        jsonSchema: { type: 'object' },
+        responseFormat: { type: 'json_object' },
+      });
+      const spIdx = args.indexOf('--system-prompt');
+      expect(spIdx).toBe(-1); // no system prompt added
+      expect(args).toContain('--json-schema'); // jsonSchema still works
+    });
   });
 
   // --- parseOutput tests (T11-T15) ---

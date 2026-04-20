@@ -82,8 +82,9 @@ export class ClaudeCodeConnector extends BaseCliConnector {
       args.push('--model', request.model);
     }
 
-    if (request.systemPrompt) {
-      args.push('--system-prompt', request.systemPrompt);
+    const systemPrompt = this.buildSystemPromptWithJsonMode(request);
+    if (systemPrompt) {
+      args.push('--system-prompt', systemPrompt);
     }
 
     if (request.maxTurns != null) {

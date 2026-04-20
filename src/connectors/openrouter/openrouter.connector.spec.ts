@@ -134,6 +134,33 @@ describe('OpenRouterConnector', () => {
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
       expect(body.temperature).toBe(0.7);
     });
+
+    it('should include response_format when responseFormat is json_object', async () => {
+      mockOk(chatResponse);
+      await connector.execute({
+        prompt: 'list items',
+        responseFormat: { type: 'json_object' },
+      });
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
+      expect(body.response_format).toEqual({ type: 'json_object' });
+    });
+
+    it('should NOT include response_format when responseFormat is text', async () => {
+      mockOk(chatResponse);
+      await connector.execute({
+        prompt: 'hello',
+        responseFormat: { type: 'text' },
+      });
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
+      expect(body.response_format).toBeUndefined();
+    });
+
+    it('should NOT include response_format when not specified', async () => {
+      mockOk(chatResponse);
+      await connector.execute({ prompt: 'hello' });
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
+      expect(body.response_format).toBeUndefined();
+    });
   });
 
   // --- Response parsing ---

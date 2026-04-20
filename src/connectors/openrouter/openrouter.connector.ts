@@ -55,6 +55,10 @@ export class OpenRouterConnector extends BaseApiConnector {
       messages,
     };
 
+    if (request.responseFormat?.type === 'json_object') {
+      body.response_format = { type: 'json_object' };
+    }
+
     if (request.extra?.max_tokens != null) {
       body.max_tokens = request.extra.max_tokens;
     }

@@ -103,7 +103,8 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
 | `maxTurns` | number | no | Max agent turns (1-100) |
 | `maxBudgetUsd` | number | no | Budget cap in USD (0-100) |
 | `effort` | string | no | `low`, `medium`, or `high` |
-| `jsonSchema` | object | no | JSON schema for structured output |
+| `jsonSchema` | object | no | JSON schema for structured output (Claude Code only) |
+| `responseFormat` | object | no | `{ type: "json_object" }` — request JSON output |
 | `timeout` | number | no | Timeout in ms (5000-600000, default: 300000) |
 | `extra` | object | no | Connector-specific options (see below) |
 
@@ -127,6 +128,26 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
 - `max_tokens` — max tokens in response
 - `temperature` — sampling temperature (0-2)
 - `top_p` — nucleus sampling
+
+### JSON Mode (Structured Output)
+
+Request JSON output from any connector:
+
+```bash
+curl -X POST https://connector.arcanada.one/execute \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "connector": "openrouter",
+    "prompt": "List 3 programming languages with year created",
+    "responseFormat": { "type": "json_object" }
+  }'
+```
+
+**Behavior by connector:**
+- **OpenRouter** — passes `response_format: { type: "json_object" }` to API (native support)
+- **Claude Code** — uses `--json-schema` if `jsonSchema` provided; otherwise prepends JSON system prompt
+- **Cursor / Gemini** — prepends JSON instruction to prompt (no native JSON mode)
 
 ### Response Schema
 
