@@ -327,6 +327,32 @@ describe('ClaudeCodeConnector', () => {
     });
   });
 
+  // --- CONN-0025: exit code vs parsed result priority ---
+
+  describe('exit code handling (CONN-0025)', () => {
+    it('should return success when CLI produces valid JSON with is_error:false despite exit code 1', async () => {
+      const c = new TestClaudeCodeConnector();
+      c.setSemaphore(1);
+      // Simulate: CLI returns valid success JSON but exits with code 1
+      (c as any).spawnProcess = async () => ({
+        stdout: successFixture,
+        stderr: 'success',
+        exitCode: 1,
+      });
+
+      const result = await c.execute({
+        prompt: 'Return JSON',
+        model: 'haiku',
+        maxTurns: 1,
+        responseFormat: { type: 'json_object' },
+      });
+
+      expect(result.status).toBe('success');
+      expect(result.result).toBe('hello');
+      expect(result.error).toBeUndefined();
+    });
+  });
+
   // --- getEnv test ---
 
   describe('getEnv', () => {
