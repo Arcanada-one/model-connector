@@ -166,39 +166,39 @@ Pass the raw key as `Authorization: Bearer <key>` on every request.
 ## Architecture
 
 ```
-┌───────────────────────────────────────────────────────┐
-│                  NestJS + Fastify                      │
-│                                                       │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐            │
-│  │  Auth     │  │  Health   │  │  Queue   │            │
-│  │  Guard    │  │  /health  │  │  BullMQ  │            │
-│  └──────────┘  └──────────┘  └──────────┘            │
-│                                                       │
-│  ┌───────────────────────────────────────────────────┐│
-│  │              ConnectorsService                    ││
-│  │       register() / execute() / enqueue()          ││
-│  └───────────────────────────────────────────────────┘│
-│       │            │            │       │        │    │
-│  ┌────┴───┐  ┌─────┴────┐  ┌───┴────┐  │        │    │
-│  │ Claude  │  │  Cursor   │  │ Gemini │  │        │    │
-│  │ Code    │  │  Agent    │  │  CLI   │  │        │    │
-│  └────┬───┘  └─────┬────┘  └───┬────┘  │        │    │
-│       │            │            │       │        │    │
-│  ┌────┴────────────┴────────────┴────┐  │        │    │
-│  │       BaseCliConnector            │  │        │    │
-│  │  spawn() → parse() → classify()  │  │        │    │
-│  └───────────────────────────────────┘  │        │    │
-│                                         │        │    │
-│  ┌──────────────┐  ┌───────────────┐    │        │    │
-│  │  OpenRouter   │  │  Embedding    │◄───┘────────┘    │
-│  │  (200+ models)│  │  (BGE-M3)    │                   │
-│  └──────┬───────┘  └──────┬───────┘                   │
-│         │                  │                           │
-│  ┌──────┴──────────────────┴──────────┐               │
-│  │         BaseApiConnector           │               │
-│  │    fetch() → parse() → classify()  │               │
-│  └────────────────────────────────────┘               │
-└───────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│                NestJS + Fastify                   │
+│                                                  │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐          │
+│  │  Auth   │  │ Health  │  │  Queue  │          │
+│  │  Guard  │  │ /health │  │ BullMQ  │          │
+│  └─────────┘  └─────────┘  └─────────┘          │
+│                                                  │
+│  ┌──────────────────────────────────────────┐    │
+│  │          ConnectorsService               │    │
+│  │   register() / execute() / enqueue()     │    │
+│  └──────────────────────────────────────────┘    │
+│       │           │           │                  │
+│  ┌────┴──┐  ┌─────┴───┐  ┌───┴─────┐            │
+│  │Claude │  │ Cursor  │  │ Gemini  │            │
+│  │ Code  │  │  Agent  │  │  CLI    │            │
+│  └───┬───┘  └────┬────┘  └───┬────┘            │
+│      │           │            │                  │
+│  ┌───┴───────────┴────────────┴──┐               │
+│  │      BaseCliConnector         │               │
+│  │ spawn() → parse() → classify()│               │
+│  └───────────────────────────────┘               │
+│                                                  │
+│  ┌──────────────┐  ┌──────────────┐              │
+│  │ OpenRouter   │  │  Embedding   │              │
+│  │ (200+ models)│  │  (BGE-M3)   │              │
+│  └──────┬───────┘  └──────┬──────┘              │
+│         │                  │                     │
+│  ┌──────┴──────────────────┴──────┐              │
+│  │       BaseApiConnector         │              │
+│  │ fetch() → parse() → classify() │              │
+│  └────────────────────────────────┘              │
+└──────────────────────────────────────────────────┘
 ```
 
 ## Commands
@@ -240,50 +240,67 @@ pnpm db:push      # Push schema to database
 
 ## Integration Guide for Arcanada Projects
 
-Model Connector — единая точка входа для всех AI-моделей в экосистеме. Вместо прямых вызовов к OpenRouter / Anthropic / OpenAI, проекты ходят через MC и получают единый формат ответа, учёт токенов и стоимости, fallback между моделями.
+### Подключение
 
-### Базовая настройка
+| Параметр | Из интернета | Из Tailscale (серверы экосистемы) |
+|----------|-------------|----------------------------------|
+| **URL** | `https://connector.arcanada.one` | `http://100.121.155.54:3900` |
+| **Протокол** | HTTPS (Cloudflare → nginx → :3900) | HTTP напрямую (без прокси) |
+| **Auth** | `Authorization: Bearer <API_KEY>` | `Authorization: Bearer <API_KEY>` |
+| **Таймаут Cloudflare** | ~100s (HTTP 524 при превышении) | нет ограничения |
+| **Для кого** | внешние клиенты, локальная разработка | Ops Bot, Scrutator, LTM, Email Agent, PA |
+
+> **HTTP 201**, не 200 — MC возвращает 201 Created на успешный `/execute`. Проверяйте `status >= 400` для ошибок.
+
+**API-ключ** — bcrypt-хеш в PostgreSQL таблице `ApiKey` на arcana-db. Создать новый:
+
+```sql
+-- На arcana-db (100.70.137.104), база arcanada_connector
+INSERT INTO "ApiKey" (id, name, "hashedKey", "createdAt")
+VALUES (gen_random_uuid(), 'my-service', '$2b$10$<bcrypt-hash>', NOW());
+```
+
+### Endpoints
 
 ```
-Base URL:  https://connector.arcanada.one
-Auth:      Authorization: Bearer <API_KEY>
-Response:  HTTP 201 (не 200!) для успешных запросов
+GET  /health                        → health check (без auth)
+GET  /connectors                    → список коннекторов и capabilities
+POST /connectors/:name/execute      → запрос к конкретному коннектору
+POST /execute                       → универсальный (поле "connector" в body)
 ```
 
-> **Важно:** MC возвращает HTTP **201 Created**, не 200. Проверяйте `status >= 400` для ошибок.
-
-### OpenRouter — быстрый доступ к 200+ моделям
-
-OpenRouter — самый быстрый LLM-коннектор (~0.5-1s vs 4-22s у CLI). Рекомендуется для задач, где не нужны CLI-инструменты (file access, code execution).
+### Примеры: OpenRouter (рекомендован для большинства задач)
 
 **curl:**
 
 ```bash
-# Простой запрос (дефолт: anthropic/claude-sonnet-4)
-curl -X POST https://connector.arcanada.one/connectors/openrouter/execute \
-  -H "Authorization: Bearer $MC_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "Explain recursion in one sentence"}'
-
-# С выбором модели и системным промптом
+# Из интернета / с локальной машины:
 curl -X POST https://connector.arcanada.one/connectors/openrouter/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "prompt": "Classify this text: The server is on fire",
+    "prompt": "Classify: The server is on fire",
     "model": "meta-llama/llama-4-maverick",
-    "systemPrompt": "You are a classifier. Respond with: critical/warning/info",
+    "systemPrompt": "Respond: critical/warning/info",
     "extra": {"temperature": 0, "max_tokens": 10}
   }'
+
+# С сервера экосистемы (Tailscale, без Cloudflare):
+curl -X POST http://100.121.155.54:3900/connectors/openrouter/execute \
+  -H "Authorization: Bearer $MC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Hello", "model": "meta-llama/llama-4-maverick"}'
 ```
 
 **TypeScript (NestJS / Node.js):**
 
 ```typescript
-const MC_URL = 'https://connector.arcanada.one';
+// .env: MC_API_KEY=your-key
+// С сервера экосистемы используйте http://100.121.155.54:3900
+const MC_URL = process.env.MC_URL || 'https://connector.arcanada.one';
 const MC_KEY = process.env.MC_API_KEY;
 
-async function askOpenRouter(prompt: string, model?: string): Promise<string> {
+async function askLLM(prompt: string, model?: string): Promise<string> {
   const res = await fetch(`${MC_URL}/connectors/openrouter/execute`, {
     method: 'POST',
     headers: {
@@ -292,7 +309,7 @@ async function askOpenRouter(prompt: string, model?: string): Promise<string> {
     },
     body: JSON.stringify({
       prompt,
-      model: model ?? 'meta-llama/llama-4-maverick', // free
+      model: model ?? 'meta-llama/llama-4-maverick',
       extra: { max_tokens: 500 },
     }),
   });
@@ -304,72 +321,73 @@ async function askOpenRouter(prompt: string, model?: string): Promise<string> {
 }
 ```
 
-**Python (httpx / requests):**
+**Python (httpx):**
 
 ```python
-import httpx
+import os, httpx
 
-MC_URL = "https://connector.arcanada.one"
+# С сервера экосистемы используйте http://100.121.155.54:3900
+MC_URL = os.environ.get("MC_URL", "https://connector.arcanada.one")
 MC_KEY = os.environ["MC_API_KEY"]
 
-async def ask_openrouter(prompt: str, model: str = "meta-llama/llama-4-maverick") -> str:
+async def ask_llm(prompt: str, model: str = "meta-llama/llama-4-maverick") -> str:
     async with httpx.AsyncClient(timeout=30) as client:
         res = await client.post(
             f"{MC_URL}/connectors/openrouter/execute",
             headers={"Authorization": f"Bearer {MC_KEY}"},
-            json={
-                "prompt": prompt,
-                "model": model,
-                "extra": {"max_tokens": 500},
-            },
+            json={"prompt": prompt, "model": model, "extra": {"max_tokens": 500}},
         )
         res.raise_for_status()
         data = res.json()
         if data["status"] != "success":
-            raise RuntimeError(data.get("error", {}).get("message", "Unknown error"))
+            raise RuntimeError(data.get("error", {}).get("message"))
         return data["result"]
 ```
 
-### Универсальный endpoint (любой коннектор)
-
-Вместо per-connector endpoints можно использовать `/execute` с полем `connector`:
+### Примеры: другие коннекторы
 
 ```bash
-# OpenRouter через универсальный endpoint
+# Claude Code (CLI, ~4s, нужен для file access / code execution)
+curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
+  -H "Authorization: Bearer $MC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "What is 2+2?", "maxTurns": 1}'
+
+# Embedding (BGE-M3, ~0.2s, self-hosted на arcana-db)
+curl -X POST https://connector.arcanada.one/connectors/embedding/execute \
+  -H "Authorization: Bearer $MC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "your text here"}'
+
+# Embedding — sparse / hybrid / colbert режимы
+curl -X POST https://connector.arcanada.one/connectors/embedding/execute \
+  -H "Authorization: Bearer $MC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "text", "extra": {"embeddingType": "hybrid"}}'
+
+# Универсальный endpoint (connector в body)
 curl -X POST https://connector.arcanada.one/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"connector": "openrouter", "prompt": "Hello", "model": "openai/gpt-4o-mini"}'
-
-# Claude Code через универсальный endpoint
-curl -X POST https://connector.arcanada.one/execute \
-  -H "Authorization: Bearer $MC_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"connector": "claude-code", "prompt": "What is 2+2?", "maxTurns": 1}'
-
-# Embeddings через универсальный endpoint
-curl -X POST https://connector.arcanada.one/execute \
-  -H "Authorization: Bearer $MC_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"connector": "embedding", "prompt": "your text here"}'
 ```
 
 ### Какой коннектор выбрать
 
-| Задача | Коннектор | Модель | Почему |
-|--------|-----------|--------|--------|
-| Классификация, NLU, парсинг | `openrouter` | `meta-llama/llama-4-maverick` (free) | Быстро (~0.5s), бесплатно |
-| Генерация текста (качество) | `openrouter` | `anthropic/claude-sonnet-4` | Быстрее CLI, cost tracking |
-| Дешёвая генерация | `openrouter` | `openai/gpt-4o-mini` | $0.15/1M input |
-| Работа с файлами / code execution | `claude-code` | haiku/sonnet | Полный доступ к CLI tools |
-| Embeddings (поиск, similarity) | `embedding` | `bge-m3` | <0.3s, бесплатно (self-hosted) |
-| Agent с Cursor tools | `cursor` | cursor-auto | Cursor-specific features |
+| Задача | Коннектор | Модель | Latency | Цена |
+|--------|-----------|--------|---------|------|
+| NLU, классификация, парсинг | `openrouter` | `meta-llama/llama-4-maverick` | ~0.5s | free |
+| Генерация текста (качество) | `openrouter` | `anthropic/claude-sonnet-4` | ~1s | $3/1M in |
+| Дешёвая генерация | `openrouter` | `openai/gpt-4o-mini` | ~0.5s | $0.15/1M in |
+| Работа с файлами / code exec | `claude-code` | haiku/sonnet | ~4s | subscription |
+| Embeddings (поиск, similarity) | `embedding` | `bge-m3` | ~0.2s | free (self-hosted) |
+| Agent с Cursor tools | `cursor` | cursor-auto | ~10s | subscription |
 
-### Формат ответа (все коннекторы)
+### Формат ответа (единый для всех коннекторов)
 
 ```json
 {
-  "id": "uuid",
+  "id": "9f3858e7-03af-4560-a5f1-aeeb3eff5840",
   "connector": "openrouter",
   "model": "meta-llama/llama-4-maverick-17b-128e-instruct",
   "result": "Tokyo.",
@@ -384,35 +402,32 @@ curl -X POST https://connector.arcanada.one/execute \
 }
 ```
 
+`status`: `success` | `error` | `timeout` | `rate_limited`
+
 ### Обработка ошибок
 
 ```typescript
-const data = await res.json();
+const res = await fetch(`${MC_URL}/connectors/openrouter/execute`, { ... });
 
-switch (data.status) {
-  case 'success':      // все ок
-    return data.result;
-  case 'error':        // ошибка API/модели
-    console.error(data.error?.type, data.error?.message);
-    break;
-  case 'timeout':      // превышен таймаут
-    // retry or fallback
-    break;
-  case 'rate_limited': // лимит превышен
-    const retryAfter = data.error?.retryAfter;
-    break;
-}
+// HTTP-уровень: MC вернёт 4xx/5xx при невалидном запросе или внутренней ошибке
+if (res.status >= 400) throw new Error(`MC HTTP ${res.status}`);
+
+// Бизнес-уровень: коннектор выполнился, но модель вернула ошибку
+const data = await res.json();
+if (data.status === 'rate_limited') { /* подождать data.error.retryAfter */ }
+if (data.status === 'timeout')      { /* retry или fallback-коннектор */ }
+if (data.status === 'error')        { /* data.error.type + data.error.message */ }
 ```
 
 ### Benchmark (PROD, 2026-04-20)
 
 | Connector | R1 | R2 | R3 | Avg |
 |-----------|----|----|-----|-----|
-| claude-code | 4.0s | 4.3s | 4.4s | 4.2s |
-| cursor | 12.1s | 9.3s | 9.5s | 10.3s |
-| gemini | 6.9s | 22.1s | 21.5s | 16.8s |
-| embedding | 0.27s | 0.25s | 0.22s | 0.25s |
-| openrouter | 0.66s | 0.94s | 0.32s | 0.64s |
+| openrouter | 0.66s | 0.94s | 0.32s | **0.64s** |
+| embedding | 0.27s | 0.25s | 0.22s | **0.25s** |
+| claude-code | 4.0s | 4.3s | 4.4s | **4.2s** |
+| cursor | 12.1s | 9.3s | 9.5s | **10.3s** |
+| gemini | 6.9s | 22.1s | 21.5s | **16.8s** |
 
 ## License
 
