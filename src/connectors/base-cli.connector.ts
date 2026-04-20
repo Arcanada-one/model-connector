@@ -223,6 +223,16 @@ export abstract class BaseCliConnector implements IConnector {
     return 'execution_error';
   }
 
+  protected buildPromptWithJsonMode(request: ConnectorRequest): string {
+    const jsonInstruction =
+      'You must respond with valid JSON only. No markdown, no code fences, no explanation — output raw JSON.';
+
+    if (request.responseFormat?.type === 'json_object') {
+      return `${jsonInstruction}\n\n${request.prompt}`;
+    }
+    return request.prompt;
+  }
+
   protected buildSystemPromptWithJsonMode(request: ConnectorRequest): string | undefined {
     const jsonInstruction =
       'You must respond with valid JSON only. No markdown, no code fences, no explanation — output raw JSON.';
