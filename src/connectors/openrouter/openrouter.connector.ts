@@ -34,7 +34,7 @@ export class OpenRouterConnector extends BaseApiConnector {
     const apiKey = process.env.OPENROUTER_API_KEY || '';
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     };
   }
 

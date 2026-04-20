@@ -1,7 +1,11 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { ConnectorRequest, ConnectorResponse, IConnector } from '../connectors/interfaces/connector.interface';
+import {
+  ConnectorRequest,
+  ConnectorResponse,
+  IConnector,
+} from '../connectors/interfaces/connector.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { BaseCliConnector } from '../connectors/base-cli.connector';
 export interface ConnectorJobData {

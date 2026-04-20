@@ -1,8 +1,5 @@
 import { BaseCliConnector, ParsedCliOutput } from '../base-cli.connector';
-import {
-  ConnectorCapabilities,
-  ConnectorRequest,
-} from '../interfaces/connector.interface';
+import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
 
 interface ClaudeUsage {
   input_tokens: number;
@@ -73,9 +70,7 @@ export class ClaudeCodeConnector extends BaseCliConnector {
 
     const extra = request.extra ?? {};
     const permissionMode =
-      typeof extra.permissionMode === 'string'
-        ? extra.permissionMode
-        : 'bypassPermissions';
+      typeof extra.permissionMode === 'string' ? extra.permissionMode : 'bypassPermissions';
     args.push('--permission-mode', permissionMode);
 
     if (request.model && request.model !== 'auto') {

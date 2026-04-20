@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ClaudeCodeConnector } from './claude-code.connector';
 import { ConnectorRequest } from '../interfaces/connector.interface';
+import { SpawnResult } from '../base-cli.connector';
 
 // Expose protected methods for testing
 class TestClaudeCodeConnector extends ClaudeCodeConnector {
@@ -18,6 +19,10 @@ class TestClaudeCodeConnector extends ClaudeCodeConnector {
 
   public testGetEnv(request: ConnectorRequest) {
     return this.getEnv(request);
+  }
+
+  public mockSpawnProcess(fn: () => Promise<SpawnResult>) {
+    this.spawnProcess = fn as typeof this.spawnProcess;
   }
 }
 
@@ -113,8 +118,11 @@ describe('ClaudeCodeConnector', () => {
     it('should build args for basic prompt with mandatory flags', () => {
       const args = connector.testBuildArgs({ prompt: 'hello' });
       expect(args).toEqual([
-        '-p', '--output-format', 'json',
-        '--permission-mode', 'bypassPermissions',
+        '-p',
+        '--output-format',
+        'json',
+        '--permission-mode',
+        'bypassPermissions',
         'hello',
       ]);
     });
@@ -274,7 +282,12 @@ describe('ClaudeCodeConnector', () => {
         result: '{"name":"test"}',
         stop_reason: 'end_turn',
         total_cost_usd: 0.01,
-        usage: { input_tokens: 10, output_tokens: 5, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+        usage: {
+          input_tokens: 10,
+          output_tokens: 5,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 0,
+        },
         modelUsage: {},
         permission_denials: [],
         structured_output: { name: 'test' },
@@ -290,7 +303,9 @@ describe('ClaudeCodeConnector', () => {
 
   describe('classifyError', () => {
     it('should classify billing_error', () => {
-      expect(connector.testClassifyError('billing_error: account suspended', 1)).toBe('billing_error');
+      expect(connector.testClassifyError('billing_error: account suspended', 1)).toBe(
+        'billing_error',
+      );
       expect(connector.testClassifyError('Insufficient credit balance', 1)).toBe('billing_error');
     });
 
@@ -334,11 +349,11 @@ describe('ClaudeCodeConnector', () => {
       const c = new TestClaudeCodeConnector();
       c.setSemaphore(1);
       // Simulate: CLI returns valid success JSON but exits with code 1
-      (c as any).spawnProcess = async () => ({
+      c.mockSpawnProcess(async () => ({
         stdout: successFixture,
         stderr: 'success',
         exitCode: 1,
-      });
+      }));
 
       const result = await c.execute({
         prompt: 'Return JSON',

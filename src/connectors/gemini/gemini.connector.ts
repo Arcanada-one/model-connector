@@ -1,8 +1,5 @@
 import { BaseCliConnector, ParsedCliOutput } from '../base-cli.connector';
-import {
-  ConnectorCapabilities,
-  ConnectorRequest,
-} from '../interfaces/connector.interface';
+import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
 
 interface GeminiTokenStats {
   input: number;
@@ -58,7 +55,6 @@ export class GeminiConnector extends BaseCliConnector {
 
     return args;
   }
-
 
   protected parseOutput(stdout: string, stderr: string): ParsedCliOutput {
     const trimmed = stdout.trim();
@@ -178,7 +174,9 @@ export class GeminiConnector extends BaseCliConnector {
   private filterIdeNoise(stderr: string): string {
     return stderr
       .split('\n')
-      .filter((line) => !line.includes('[IDEClient]') && !line.includes('Loaded cached credentials'))
+      .filter(
+        (line) => !line.includes('[IDEClient]') && !line.includes('Loaded cached credentials'),
+      )
       .join('\n')
       .trim();
   }

@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ConnectorJobProcessor } from './connector-job.processor';
+import { Job } from 'bullmq';
+import { ConnectorJobProcessor, ConnectorJobData } from './connector-job.processor';
 import { IConnector, ConnectorResponse } from '../connectors/interfaces/connector.interface';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('ConnectorJobProcessor', () => {
   const mockPrisma = {
@@ -10,7 +12,7 @@ describe('ConnectorJobProcessor', () => {
   let processor: ConnectorJobProcessor;
 
   beforeEach(() => {
-    processor = new ConnectorJobProcessor(mockPrisma as any);
+    processor = new ConnectorJobProcessor(mockPrisma as unknown as PrismaService);
     vi.clearAllMocks();
   });
 
@@ -44,7 +46,7 @@ describe('ConnectorJobProcessor', () => {
       },
     };
 
-    const result = await processor.process(job as any);
+    const result = await processor.process(job as unknown as Job<ConnectorJobData>);
     expect(result.status).toBe('success');
     expect(result.result).toBe('hello');
     expect(mockPrisma.request.create).toHaveBeenCalledOnce();

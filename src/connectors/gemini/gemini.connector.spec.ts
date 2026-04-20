@@ -26,8 +26,13 @@ const successFixture = JSON.stringify({
       'gemini-2.5-flash': {
         api: { totalRequests: 1, totalErrors: 0, totalLatencyMs: 1391 },
         tokens: {
-          input: 5181, prompt: 5181, candidates: 2,
-          total: 5215, cached: 0, thoughts: 32, tool: 0,
+          input: 5181,
+          prompt: 5181,
+          candidates: 2,
+          total: 5215,
+          cached: 0,
+          thoughts: 32,
+          tool: 0,
         },
       },
     },
@@ -57,7 +62,12 @@ describe('GeminiConnector', () => {
     it('should build args for basic prompt', () => {
       const args = connector.testBuildArgs({ prompt: 'hello world' });
       expect(args).toEqual([
-        '-p', 'hello world', '-m', 'gemini-2.5-flash', '--output-format', 'json',
+        '-p',
+        'hello world',
+        '-m',
+        'gemini-2.5-flash',
+        '--output-format',
+        'json',
       ]);
     });
 
@@ -161,8 +171,12 @@ describe('GeminiConnector', () => {
     });
 
     it('should classify model not found errors', () => {
-      expect(connector.testClassifyError('Requested entity was not found.', 1)).toBe('model_not_found');
-      expect(connector.testClassifyError('ModelNotFoundError: not found', 1)).toBe('model_not_found');
+      expect(connector.testClassifyError('Requested entity was not found.', 1)).toBe(
+        'model_not_found',
+      );
+      expect(connector.testClassifyError('ModelNotFoundError: not found', 1)).toBe(
+        'model_not_found',
+      );
     });
 
     it('should classify auth errors', () => {

@@ -1,8 +1,5 @@
 import { BaseCliConnector, ParsedCliOutput } from '../base-cli.connector';
-import {
-  ConnectorCapabilities,
-  ConnectorRequest,
-} from '../interfaces/connector.interface';
+import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
 
 interface CursorJsonResult {
   type: 'result';
@@ -42,7 +39,6 @@ export class CursorConnector extends BaseCliConnector {
     args.push(this.buildPromptWithJsonMode(request));
     return args;
   }
-
 
   protected parseOutput(stdout: string, stderr: string): ParsedCliOutput {
     const trimmed = stdout.trim();

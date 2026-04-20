@@ -9,7 +9,14 @@ import { EmbeddingModule } from './embedding/embedding.module';
 import { OpenRouterModule } from './openrouter/openrouter.module';
 
 @Module({
-  imports: [QueueModule, CursorModule, ClaudeCodeModule, GeminiModule, EmbeddingModule, OpenRouterModule],
+  imports: [
+    QueueModule,
+    CursorModule,
+    ClaudeCodeModule,
+    GeminiModule,
+    EmbeddingModule,
+    OpenRouterModule,
+  ],
   controllers: [ConnectorsController],
   providers: [ConnectorsService],
   exports: [ConnectorsService],

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AdminService } from './admin.service';
 import { NotFoundException } from '@nestjs/common';
 import { compare } from 'bcryptjs';
+import { PrismaService } from '../prisma/prisma.service';
 
 const mockPrisma = {
   apiKey: {
@@ -21,7 +22,7 @@ describe('AdminService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    service = new AdminService(mockPrisma as any);
+    service = new AdminService(mockPrisma as unknown as PrismaService);
   });
 
   describe('createKey', () => {

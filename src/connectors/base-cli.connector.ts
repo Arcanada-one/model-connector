@@ -239,8 +239,7 @@ export abstract class BaseCliConnector implements IConnector {
     const jsonInstruction =
       'You must respond with valid JSON only. No markdown, no code fences, no explanation — output raw JSON.';
 
-    const needsJsonMode =
-      request.responseFormat?.type === 'json_object' && !request.jsonSchema;
+    const needsJsonMode = request.responseFormat?.type === 'json_object' && !request.jsonSchema;
 
     if (needsJsonMode && request.systemPrompt) {
       return `${jsonInstruction}\n\n${request.systemPrompt}`;

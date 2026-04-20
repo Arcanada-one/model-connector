@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
+import { FastifyRequest } from 'fastify';
 import { ConnectorsService } from './connectors.service';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import {
@@ -7,6 +8,10 @@ import {
   PerConnectorExecuteDto,
   perConnectorExecuteSchema,
 } from './dto/execute.dto';
+
+interface AuthenticatedRequest extends FastifyRequest {
+  apiKey?: { id: string };
+}
 
 @Controller()
 export class ConnectorsController {
@@ -26,7 +31,7 @@ export class ConnectorsController {
   async executePerConnector(
     @Param('name') name: string,
     @Body(new ZodValidationPipe(perConnectorExecuteSchema)) body: PerConnectorExecuteDto,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     const apiKeyId = req.apiKey?.id ?? 'unknown';
     return this.connectorsService.execute(name, body, apiKeyId);
@@ -35,7 +40,7 @@ export class ConnectorsController {
   @Post('execute')
   async executeUniversal(
     @Body(new ZodValidationPipe(executeRequestSchema)) body: ExecuteRequestDto,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     const apiKeyId = req.apiKey?.id ?? 'unknown';
     const { connector, ...request } = body;

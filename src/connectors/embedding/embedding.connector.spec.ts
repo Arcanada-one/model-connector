@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { EmbeddingConnector } from './embedding.connector';
-import { ConnectorRequest } from '../interfaces/connector.interface';
 
 describe('EmbeddingConnector', () => {
   let connector: EmbeddingConnector;
@@ -155,7 +154,10 @@ describe('EmbeddingConnector', () => {
   describe('parseResponse (sparse)', () => {
     it('should return sparse weights in structured', async () => {
       mockOk(sparseResponse);
-      const response = await connector.execute({ prompt: 'test', extra: { embeddingType: 'sparse' } });
+      const response = await connector.execute({
+        prompt: 'test',
+        extra: { embeddingType: 'sparse' },
+      });
 
       expect(response.status).toBe('success');
       expect(response.structured).toEqual(sparseResponse.data);
@@ -165,7 +167,10 @@ describe('EmbeddingConnector', () => {
   describe('parseResponse (hybrid)', () => {
     it('should return all three embedding types in structured', async () => {
       mockOk(hybridResponse);
-      const response = await connector.execute({ prompt: 'test', extra: { embeddingType: 'hybrid' } });
+      const response = await connector.execute({
+        prompt: 'test',
+        extra: { embeddingType: 'hybrid' },
+      });
 
       expect(response.status).toBe('success');
       const data = response.structured as typeof hybridResponse.data;

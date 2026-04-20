@@ -8,7 +8,10 @@ import { getConfig } from '../config/env.schema';
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createKey(name: string, rateLimit?: number): Promise<{ id: string; name: string; key: string }> {
+  async createKey(
+    name: string,
+    rateLimit?: number,
+  ): Promise<{ id: string; name: string; key: string }> {
     const raw = `mc-${randomBytes(16).toString('hex')}`;
     const keyHash = await hash(raw, getConfig().API_KEY_SALT_ROUNDS);
     const record = await this.prisma.apiKey.create({
@@ -17,7 +20,9 @@ export class AdminService {
     return { id: record.id, name: record.name, key: raw };
   }
 
-  async listKeys(): Promise<Array<{ id: string; name: string; rateLimit: number; active: boolean; createdAt: Date }>> {
+  async listKeys(): Promise<
+    Array<{ id: string; name: string; rateLimit: number; active: boolean; createdAt: Date }>
+  > {
     return this.prisma.apiKey.findMany({
       select: { id: true, name: true, rateLimit: true, active: true, createdAt: true },
       orderBy: { createdAt: 'desc' },

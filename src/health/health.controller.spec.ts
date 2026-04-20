@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HealthController } from './health.controller';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('HealthController', () => {
   const mockPrisma = {
@@ -9,7 +10,7 @@ describe('HealthController', () => {
   let controller: HealthController;
 
   beforeEach(() => {
-    controller = new HealthController(mockPrisma as any);
+    controller = new HealthController(mockPrisma as unknown as PrismaService);
     vi.clearAllMocks();
   });
 
