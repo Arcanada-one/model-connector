@@ -306,13 +306,7 @@ pnpm db:push      # Push schema to database
 
 > **API-ключ:** см. раздел [Authentication](#authentication) выше — пошаговая инструкция создания ключа для вашего сервиса.
 
-**API-ключ** — bcrypt-хеш в PostgreSQL таблице `ApiKey` на arcana-db. Создать новый:
-
-```sql
--- На arcana-db (100.70.137.104), база arcanada_connector
-INSERT INTO "ApiKey" (id, name, "hashedKey", "createdAt")
-VALUES (gen_random_uuid(), 'my-service', '$2b$10$<bcrypt-hash>', NOW());
-```
+**API-ключ** — bcrypt-хеш в PostgreSQL таблице `ApiKey` на arcana-db. Создать через [Admin API](#admin-api--управление-ключами) (рекомендуется) или вручную через SQL.
 
 ### Endpoints
 
@@ -471,6 +465,49 @@ const data = await res.json();
 if (data.status === 'rate_limited') { /* подождать data.error.retryAfter */ }
 if (data.status === 'timeout')      { /* retry или fallback-коннектор */ }
 if (data.status === 'error')        { /* data.error.type + data.error.message */ }
+```
+
+### Admin API — Управление ключами
+
+Вместо ручного SQL теперь можно управлять ключами через REST API.
+
+**Требование:** переменная `ADMIN_TOKEN` (≥32 символов) в `.env` на сервере.
+
+```bash
+# Генерация admin token:
+openssl rand -hex 32
+# → добавить в .env: ADMIN_TOKEN=<value>
+```
+
+**Создать ключ:**
+
+```bash
+curl -X POST https://connector.arcanada.one/admin/keys \
+  -H "X-Admin-Token: $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "my-service", "rateLimit": 120}'
+
+# Ответ (201):
+# {"id": "uuid", "name": "my-service", "key": "mc-a1b2c3d4e5f6..."}
+# ⚠️ key возвращается ТОЛЬКО в этом ответе — сохраните его!
+```
+
+**Список ключей:**
+
+```bash
+curl https://connector.arcanada.one/admin/keys \
+  -H "X-Admin-Token: $ADMIN_TOKEN"
+
+# Ответ: [{"id": "...", "name": "my-service", "rateLimit": 120, "active": true, "createdAt": "..."}]
+```
+
+**Деактивировать ключ:**
+
+```bash
+curl -X DELETE https://connector.arcanada.one/admin/keys/<id> \
+  -H "X-Admin-Token: $ADMIN_TOKEN"
+
+# Ответ: 204 No Content
 ```
 
 ### Benchmark (PROD, 2026-04-20)

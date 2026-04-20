@@ -18,6 +18,8 @@ export const envSchema = z.object({
 
   EMBEDDING_API_URL: z.string().url().default('http://100.70.137.104:8300'),
   EMBEDDING_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).default(30_000),
+
+  ADMIN_TOKEN: z.string().min(32).optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
