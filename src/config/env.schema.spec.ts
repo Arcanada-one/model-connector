@@ -31,6 +31,15 @@ describe('envSchema', () => {
     expect(config.PORT).toBe(3900);
     expect(config.NODE_ENV).toBe('development');
     expect(config.REDIS_HOST).toBe('127.0.0.1');
-    expect(config.CONNECTOR_MAX_CONCURRENCY).toBe(1);
+    expect(config.CONNECTOR_MAX_CONCURRENCY).toBe(4);
+    expect(config.CONNECTOR_QUEUE_TIMEOUT_MS).toBe(60_000);
+    expect(config.CONNECTOR_MAX_RETRIES).toBe(1);
+    expect(config.CLAUDE_CODE_MAX_CONCURRENCY).toBe(4);
+    expect(config.CURSOR_MAX_CONCURRENCY).toBe(1);
+    expect(config.GEMINI_MAX_CONCURRENCY).toBe(4);
+    expect(config.OPENROUTER_MAX_CONCURRENCY).toBe(10);
+    expect(config.EMBEDDING_MAX_CONCURRENCY).toBe(8);
+    expect(config.CIRCUIT_BREAKER_THRESHOLD).toBe(5);
+    expect(config.CIRCUIT_BREAKER_COOLDOWN_MS).toBe(30_000);
   });
 });

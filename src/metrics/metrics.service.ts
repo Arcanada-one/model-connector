@@ -1,53 +1,69 @@
 import { Injectable } from '@nestjs/common';
 
-interface ConnectorMetrics {
+export interface ConnectorMetrics {
   totalRequests: number;
   successCount: number;
   errorCount: number;
   timeoutCount: number;
   rateLimitedCount: number;
+  circuitOpenCount: number;
+  queueTimeoutCount: number;
+  retryCount: number;
   totalInputTokens: number;
   totalOutputTokens: number;
   totalCostUsd: number;
   totalLatencyMs: number;
+  totalQueueWaitMs: number;
 }
 
 @Injectable()
 export class MetricsService {
   private metrics = new Map<string, ConnectorMetrics>();
 
-  record(
-    connector: string,
-    status: string,
-    inputTokens: number,
-    outputTokens: number,
-    costUsd: number,
-    latencyMs: number,
-  ) {
-    if (!this.metrics.has(connector)) {
-      this.metrics.set(connector, {
+  record(opts: {
+    connector: string;
+    status: string;
+    errorType?: string;
+    inputTokens: number;
+    outputTokens: number;
+    costUsd: number;
+    latencyMs: number;
+    queueWaitMs?: number;
+    attempt?: number;
+  }) {
+    if (!this.metrics.has(opts.connector)) {
+      this.metrics.set(opts.connector, {
         totalRequests: 0,
         successCount: 0,
         errorCount: 0,
         timeoutCount: 0,
         rateLimitedCount: 0,
+        circuitOpenCount: 0,
+        queueTimeoutCount: 0,
+        retryCount: 0,
         totalInputTokens: 0,
         totalOutputTokens: 0,
         totalCostUsd: 0,
         totalLatencyMs: 0,
+        totalQueueWaitMs: 0,
       });
     }
-    const m = this.metrics.get(connector)!;
+    const m = this.metrics.get(opts.connector)!;
     m.totalRequests++;
-    m.totalInputTokens += inputTokens;
-    m.totalOutputTokens += outputTokens;
-    m.totalCostUsd += costUsd;
-    m.totalLatencyMs += latencyMs;
+    m.totalInputTokens += opts.inputTokens;
+    m.totalOutputTokens += opts.outputTokens;
+    m.totalCostUsd += opts.costUsd;
+    m.totalLatencyMs += opts.latencyMs;
+    m.totalQueueWaitMs += opts.queueWaitMs ?? 0;
 
-    if (status === 'success') m.successCount++;
-    else if (status === 'timeout') m.timeoutCount++;
-    else if (status === 'rate_limited') m.rateLimitedCount++;
+    if (opts.status === 'success') m.successCount++;
+    else if (opts.status === 'timeout') m.timeoutCount++;
+    else if (opts.status === 'rate_limited') m.rateLimitedCount++;
     else m.errorCount++;
+
+    if (opts.errorType === 'circuit_open') m.circuitOpenCount++;
+    if (opts.errorType === 'queue_timeout') m.queueTimeoutCount++;
+    if ((opts.attempt ?? 1) > 1) m.retryCount++;
   }
 
   getAll(): Record<string, ConnectorMetrics & { avgLatencyMs: number }> {

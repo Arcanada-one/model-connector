@@ -13,8 +13,19 @@ export const envSchema = z.object({
 
   API_KEY_SALT_ROUNDS: z.coerce.number().min(4).max(14).default(10),
 
-  CONNECTOR_TIMEOUT_MS: z.coerce.number().min(5_000).max(600_000).default(300_000),
-  CONNECTOR_MAX_CONCURRENCY: z.coerce.number().min(1).max(10).default(1),
+  CONNECTOR_TIMEOUT_MS: z.coerce.number().min(5_000).max(600_000).default(120_000),
+  CONNECTOR_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
+  CONNECTOR_QUEUE_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(60_000),
+  CONNECTOR_MAX_RETRIES: z.coerce.number().min(0).max(5).default(1),
+
+  CLAUDE_CODE_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
+  CURSOR_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(1),
+  GEMINI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
+  OPENROUTER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+  EMBEDDING_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(8),
+
+  CIRCUIT_BREAKER_THRESHOLD: z.coerce.number().min(1).max(50).default(5),
+  CIRCUIT_BREAKER_COOLDOWN_MS: z.coerce.number().min(1_000).max(300_000).default(30_000),
 
   EMBEDDING_API_URL: z.string().url().default('http://100.70.137.104:8300'),
   EMBEDDING_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).default(30_000),

@@ -6,10 +6,29 @@ import {
   ConnectorResponse,
   ConnectorStatus,
   IConnector,
+  classifyErrorAction,
 } from './interfaces/connector.interface';
 import { ConnectorJobData } from '../queue/connector-job.processor';
 import { PrismaService } from '../prisma/prisma.service';
 import { BaseCliConnector } from './base-cli.connector';
+import { sanitizeJsonResponse, JsonSanitizeError } from '../core/utils/json-sanitizer';
+import { getConfig } from '../config/env.schema';
+import { MetricsService } from '../metrics/metrics.service';
+
+const RETRYABLE_ERRORS = new Set([
+  'json_parse_error',
+  'rate_limited',
+  'timeout',
+  'server_error',
+  'execution_error',
+  'network_error',
+  'spawn_error',
+  'parse_error',
+  'http_error',
+  'api_error',
+  'structured_output_error',
+]);
+
 @Injectable()
 export class ConnectorsService {
   private readonly logger = new Logger(ConnectorsService.name);
@@ -18,6 +37,7 @@ export class ConnectorsService {
   constructor(
     @InjectQueue('connector-jobs') private readonly jobQueue: Queue,
     private readonly prisma: PrismaService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   register(connector: IConnector) {
@@ -57,7 +77,60 @@ export class ConnectorsService {
     apiKeyId: string,
   ): Promise<ConnectorResponse> {
     const connector = this.get(connectorName);
-    const response = await connector.execute(request);
+    let maxRetries: number;
+    try {
+      maxRetries = getConfig().CONNECTOR_MAX_RETRIES;
+    } catch {
+      maxRetries = 1;
+    }
+    const totalAttempts = Math.max(1, maxRetries + 1);
+
+    let lastResponse: ConnectorResponse | undefined;
+
+    for (let attempt = 1; attempt <= totalAttempts; attempt++) {
+      let response = await connector.execute(request);
+
+      // JSON sanitization if responseFormat requested
+      if (request.responseFormat?.type === 'json_object' && response.status === 'success') {
+        response = this.applySanitization(response);
+      }
+
+      response.attempt = attempt;
+      response.maxAttempts = totalAttempts;
+      lastResponse = response;
+
+      // Success — done
+      if (response.status === 'success') {
+        break;
+      }
+
+      // Non-retryable error or last attempt — done
+      const errorType = response.error?.type ?? '';
+      if (!RETRYABLE_ERRORS.has(errorType) || attempt >= totalAttempts) {
+        break;
+      }
+
+      // Retry with exponential backoff + jitter
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+      const jitter = Math.random() * delay * 0.3;
+      this.logger.warn(`Retry ${attempt}/${maxRetries} for ${connectorName}: ${errorType}`);
+      await new Promise((r) => setTimeout(r, delay + jitter));
+    }
+
+    const response = lastResponse!;
+
+    // Metrics recording
+    this.metricsService.record({
+      connector: connectorName,
+      status: response.status,
+      errorType: response.error?.type,
+      inputTokens: response.usage.inputTokens,
+      outputTokens: response.usage.outputTokens,
+      costUsd: response.usage.costUsd,
+      latencyMs: response.latencyMs,
+      queueWaitMs: response.queueWaitMs,
+      attempt: response.attempt,
+    });
 
     // Fire-and-forget DB logging
     this.logRequest(response, request, apiKeyId).catch((err) =>
@@ -65,6 +138,28 @@ export class ConnectorsService {
     );
 
     return response;
+  }
+
+  private applySanitization(response: ConnectorResponse): ConnectorResponse {
+    try {
+      const result = sanitizeJsonResponse(response.result);
+      return {
+        ...response,
+        result: result.sanitized,
+        structured: result.json,
+      };
+    } catch (err) {
+      const action = classifyErrorAction('json_parse_error');
+      return {
+        ...response,
+        status: 'error',
+        error: {
+          type: 'json_parse_error',
+          message: err instanceof JsonSanitizeError ? err.message : 'Failed to parse JSON response',
+          ...action,
+        },
+      };
+    }
   }
 
   async enqueue(
