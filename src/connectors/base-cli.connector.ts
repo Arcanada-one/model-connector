@@ -123,8 +123,10 @@ export abstract class BaseCliConnector implements IConnector {
         status: 'success',
       };
 
-      if (parsed.isError || exitCode !== 0) {
-        const errorType = this.classifyError(parsed.errorMessage || stderr, exitCode);
+      if (parsed.isError || (exitCode !== 0 && !parsed.text)) {
+        const errorType = parsed.errorType
+          ? parsed.errorType
+          : this.classifyError(parsed.errorMessage || stderr, exitCode);
         base.status = errorType === 'rate_limited' ? 'rate_limited' : 'error';
         base.error = {
           type: errorType,

@@ -74,6 +74,39 @@ describe('BaseCliConnector', () => {
     expect(hash).not.toBe(BaseCliConnector.hashPrompt('world'));
   });
 
+  describe('exit code handling', () => {
+    it('should treat response as success when parseOutput succeeds despite non-zero exitCode', async () => {
+      const c = new TestConnector();
+      c.setSemaphore(1);
+      c.mockSpawnProcess(async () => ({
+        stdout: 'valid response text',
+        stderr: 'success',
+        exitCode: 1,
+      }));
+
+      const result = await c.execute({ prompt: 'test' });
+      expect(result.status).toBe('success');
+      expect(result.result).toBe('valid response text');
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should treat as error when parseOutput returns empty text and exitCode is non-zero', async () => {
+      const c = new TestConnector();
+      c.setSemaphore(1);
+      // Override parseOutput to return empty text (simulating parse failure)
+      c.mockSpawnProcess(async () => ({
+        stdout: '',
+        stderr: 'binary not found',
+        exitCode: 127,
+      }));
+      // TestConnector.parseOutput returns stdout.trim() as text — empty stdout → empty text
+      // BUT it also returns isError: false. With the fix, empty text + non-zero exit → error.
+      const result = await c.execute({ prompt: 'test' });
+      expect(result.status).toBe('error');
+      expect(result.error?.type).toBe('binary_not_found');
+    });
+  });
+
   describe('semaphore concurrency', () => {
     function makeDelayConnector(delayMs: number): TestConnector {
       const c = new TestConnector();
