@@ -223,6 +223,22 @@ export abstract class BaseCliConnector implements IConnector {
     return 'execution_error';
   }
 
+  protected buildSystemPromptWithJsonMode(request: ConnectorRequest): string | undefined {
+    const jsonInstruction =
+      'You must respond with valid JSON only. No markdown, no code fences, no explanation — output raw JSON.';
+
+    const needsJsonMode =
+      request.responseFormat?.type === 'json_object' && !request.jsonSchema;
+
+    if (needsJsonMode && request.systemPrompt) {
+      return `${jsonInstruction}\n\n${request.systemPrompt}`;
+    }
+    if (needsJsonMode) {
+      return jsonInstruction;
+    }
+    return request.systemPrompt;
+  }
+
   static hashPrompt(prompt: string): string {
     return createHash('sha256').update(prompt).digest('hex');
   }

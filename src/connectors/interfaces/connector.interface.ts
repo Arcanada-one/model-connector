@@ -7,6 +7,7 @@ export interface ConnectorRequest {
   maxBudgetUsd?: number;
   effort?: 'low' | 'medium' | 'high';
   jsonSchema?: Record<string, unknown>;
+  responseFormat?: { type: 'json_object' | 'text' };
   timeout?: number;
   extra?: Record<string, unknown>;
 }

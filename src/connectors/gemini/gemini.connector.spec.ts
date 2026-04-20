@@ -71,6 +71,22 @@ describe('GeminiConnector', () => {
       const args = connector.testBuildArgs({ prompt: 'hi', extra: { sandbox: true } });
       expect(args).toContain('--sandbox');
     });
+
+    it('should prepend JSON instruction to prompt when responseFormat is json_object', () => {
+      const args = connector.testBuildArgs({
+        prompt: 'list items',
+        responseFormat: { type: 'json_object' },
+      });
+      const promptIdx = args.indexOf('-p') + 1;
+      expect(args[promptIdx]).toContain('valid JSON only');
+      expect(args[promptIdx]).toContain('list items');
+    });
+
+    it('should NOT modify prompt when responseFormat is not set', () => {
+      const args = connector.testBuildArgs({ prompt: 'hello' });
+      const promptIdx = args.indexOf('-p') + 1;
+      expect(args[promptIdx]).toBe('hello');
+    });
   });
 
   describe('parseOutput — success', () => {

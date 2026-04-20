@@ -10,6 +10,7 @@ export const executeRequestSchema = z.object({
   maxBudgetUsd: z.number().min(0).max(100).optional(),
   effort: z.enum(['low', 'medium', 'high']).optional(),
   jsonSchema: z.record(z.string(), z.unknown()).optional(),
+  responseFormat: z.object({ type: z.enum(['json_object', 'text']) }).optional(),
   timeout: z.number().int().min(5_000).max(600_000).optional(),
   extra: z.record(z.string(), z.unknown()).optional(),
 });

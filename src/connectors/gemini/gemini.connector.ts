@@ -47,7 +47,8 @@ export class GeminiConnector extends BaseCliConnector {
 
   protected buildArgs(request: ConnectorRequest): string[] {
     const model = request.model || DEFAULT_MODEL;
-    const args = ['-p', request.prompt, '-m', model, '--output-format', 'json'];
+    const prompt = this.buildPromptWithJsonMode(request);
+    const args = ['-p', prompt, '-m', model, '--output-format', 'json'];
 
     const extra = request.extra ?? {};
 
@@ -56,6 +57,16 @@ export class GeminiConnector extends BaseCliConnector {
     }
 
     return args;
+  }
+
+  private buildPromptWithJsonMode(request: ConnectorRequest): string {
+    const jsonInstruction =
+      'You must respond with valid JSON only. No markdown, no code fences, no explanation — output raw JSON.';
+
+    if (request.responseFormat?.type === 'json_object') {
+      return `${jsonInstruction}\n\n${request.prompt}`;
+    }
+    return request.prompt;
   }
 
   protected parseOutput(stdout: string, stderr: string): ParsedCliOutput {

@@ -56,6 +56,24 @@ describe('CursorConnector', () => {
       expect(args).toContain('--mode');
       expect(args).toContain('plan');
     });
+
+    it('should prepend JSON instruction to prompt when responseFormat is json_object', () => {
+      const args = connector.testBuildArgs({
+        prompt: 'list items',
+        responseFormat: { type: 'json_object' },
+      });
+      const prompt = args[args.length - 1];
+      expect(prompt).toContain('valid JSON only');
+      expect(prompt).toContain('list items');
+    });
+
+    it('should NOT modify prompt when responseFormat is text', () => {
+      const args = connector.testBuildArgs({
+        prompt: 'hello',
+        responseFormat: { type: 'text' },
+      });
+      expect(args[args.length - 1]).toBe('hello');
+    });
   });
 
   describe('parseOutput', () => {

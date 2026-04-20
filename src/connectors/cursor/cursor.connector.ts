@@ -39,8 +39,18 @@ export class CursorConnector extends BaseCliConnector {
       args.push('--workspace', extra.workspace);
     }
 
-    args.push(request.prompt);
+    args.push(this.buildPromptWithJsonMode(request));
     return args;
+  }
+
+  private buildPromptWithJsonMode(request: ConnectorRequest): string {
+    const jsonInstruction =
+      'You must respond with valid JSON only. No markdown, no code fences, no explanation — output raw JSON.';
+
+    if (request.responseFormat?.type === 'json_object') {
+      return `${jsonInstruction}\n\n${request.prompt}`;
+    }
+    return request.prompt;
   }
 
   protected parseOutput(stdout: string, stderr: string): ParsedCliOutput {
