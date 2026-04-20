@@ -153,15 +153,67 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
 
 ## Authentication
 
-API keys are stored bcrypt-hashed in the `ApiKey` PostgreSQL table. To create a key:
+API keys are stored bcrypt-hashed in the `ApiKey` PostgreSQL table on arcana-db. Every request (кроме `/health`) требует заголовок `Authorization: Bearer <key>`.
 
-```sql
--- Generate a bcrypt hash of your key, then insert:
-INSERT INTO "ApiKey" (id, name, "hashedKey", "createdAt")
-VALUES (gen_random_uuid(), 'my-client', '$2b$10$...', NOW());
+### Как получить ключ
+
+**Шаг 1. Сгенерировать случайный ключ:**
+
+```bash
+# Формат: mc-<service-name>-<random>
+openssl rand -hex 16 | sed 's/^/mc-myservice-/'
+# Пример результата: mc-myservice-a3f8b12c9e4d7601
 ```
 
-Pass the raw key as `Authorization: Bearer <key>` on every request.
+**Шаг 2. Получить bcrypt-хеш** (на PROD сервере):
+
+```bash
+ssh root@65.108.236.39
+docker exec model-connector-model-connector-1 node -e \
+  "const b=require('bcryptjs');b.hash('mc-myservice-a3f8b12c9e4d7601',10).then(h=>console.log(h))"
+# → $2b$10$4IDeokFW7NPv6958W56LS.QcOHxzqVFwBkoF6YfzYGDQDgZrdViDu
+```
+
+**Шаг 3. Вставить в базу:**
+
+```bash
+# Подключение к БД (с любого сервера в Tailscale)
+psql "postgresql://connector:+7bkWQu+GCHU60abfjTb2Ff8aqJESmQi@100.70.137.104:5432/arcanada_connector"
+```
+
+```sql
+INSERT INTO "ApiKey" (id, name, "hashedKey", "createdAt")
+VALUES (
+  gen_random_uuid(),
+  'myservice',                    -- человекочитаемое имя
+  '$2b$10$4IDeo...<полный хеш>', -- результат шага 2
+  NOW()
+);
+```
+
+**Шаг 4. Использовать** в `.env` вашего проекта:
+
+```env
+MC_URL=http://100.121.155.54:3900    # для серверов в Tailscale
+MC_API_KEY=mc-myservice-a3f8b12c9e4d7601  # raw ключ (не хеш!)
+```
+
+### Проверить ключ
+
+```bash
+curl -s https://connector.arcanada.one/connectors \
+  -H "Authorization: Bearer mc-myservice-a3f8b12c9e4d7601"
+# 200 + JSON → ключ работает
+# 401 → ключ невалиден
+```
+
+### Существующие ключи
+
+| Имя | Назначение | Создан |
+|-----|-----------|--------|
+| `demo-test` | тестирование / smoke tests | 2026-04-20 |
+
+> **Безопасность:** raw-ключ знает только владелец сервиса. В базе хранится только bcrypt-хеш. При компрометации — удалите строку из `ApiKey` и создайте новый ключ.
 
 ## Architecture
 
@@ -251,6 +303,8 @@ pnpm db:push      # Push schema to database
 | **Для кого** | внешние клиенты, локальная разработка | Ops Bot, Scrutator, LTM, Email Agent, PA |
 
 > **HTTP 201**, не 200 — MC возвращает 201 Created на успешный `/execute`. Проверяйте `status >= 400` для ошибок.
+
+> **API-ключ:** см. раздел [Authentication](#authentication) выше — пошаговая инструкция создания ключа для вашего сервиса.
 
 **API-ключ** — bcrypt-хеш в PostgreSQL таблице `ApiKey` на arcana-db. Создать новый:
 
