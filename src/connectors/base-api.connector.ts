@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import {
+  CircuitBreakerResetEntry,
   ConnectorCapabilities,
   ConnectorRequest,
   ConnectorResponse,
@@ -265,6 +266,17 @@ export abstract class BaseApiConnector implements IConnector {
         circuitBreakers: perModel,
       };
     }
+  }
+
+  resetCircuitBreaker(model?: string): CircuitBreakerResetEntry[] {
+    const results = model
+      ? [this.cbManager.resetModel(model)].filter(Boolean)
+      : this.cbManager.resetAll();
+    return results.map((r) => ({
+      connector: this.name,
+      model: r!.model,
+      previousState: r!.previousState,
+    }));
   }
 
   protected classifyHttpError(status: number, _body: string): string {

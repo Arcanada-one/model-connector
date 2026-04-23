@@ -6,3 +6,10 @@ export const CreateKeySchema = z.object({
 });
 
 export type CreateKeyDto = z.infer<typeof CreateKeySchema>;
+
+export const ResetCircuitBreakerSchema = z.object({
+  connector: z.string().min(1).max(100).optional(),
+  model: z.string().min(1).max(200).optional(),
+});
+
+export type ResetCircuitBreakerDto = z.infer<typeof ResetCircuitBreakerSchema>;
