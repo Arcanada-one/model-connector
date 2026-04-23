@@ -5,6 +5,7 @@ import { QueueModule } from '../queue/queue.module';
 import { CursorModule } from './cursor/cursor.module';
 import { ClaudeCodeModule } from './claude-code/claude-code.module';
 import { GeminiModule } from './gemini/gemini.module';
+import { CodexModule } from './codex/codex.module';
 import { EmbeddingModule } from './embedding/embedding.module';
 import { OpenRouterModule } from './openrouter/openrouter.module';
 
@@ -14,6 +15,7 @@ import { OpenRouterModule } from './openrouter/openrouter.module';
     CursorModule,
     ClaudeCodeModule,
     GeminiModule,
+    CodexModule,
     EmbeddingModule,
     OpenRouterModule,
   ],
