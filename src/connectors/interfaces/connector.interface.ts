@@ -73,6 +73,13 @@ export function classifyErrorAction(errorType: string): {
   return ERROR_ACTION_MAP[errorType] ?? { retryable: false, recommendation: 'abort' };
 }
 
+export interface CircuitBreakerState {
+  state: 'closed' | 'open' | 'half_open';
+  consecutiveFailures: number;
+  nextRetryAt?: number;
+  lastErrorType: string | null;
+}
+
 export interface ConnectorStatus {
   name: string;
   healthy: boolean;
@@ -81,12 +88,8 @@ export interface ConnectorStatus {
   queuedJobs: number;
   rateLimitStatus: 'ok' | 'approaching' | 'limited';
   rateLimitResetsAt?: string;
-  circuitBreaker?: {
-    state: 'closed' | 'open' | 'half_open';
-    consecutiveFailures: number;
-    nextRetryAt?: number;
-    lastErrorType: string | null;
-  };
+  circuitBreaker?: CircuitBreakerState;
+  circuitBreakers?: Record<string, CircuitBreakerState>;
 }
 
 export interface ConnectorCapabilities {

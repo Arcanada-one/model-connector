@@ -164,6 +164,54 @@ describe('BaseApiConnector', () => {
     });
   });
 
+  describe('per-model circuit breaker', () => {
+    it('should isolate circuit breaker per model', async () => {
+      // Trip circuit for model-a via auth error (instant open)
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        text: () => Promise.resolve('unauthorized'),
+      });
+      await connector.execute({ prompt: 'test', model: 'model-a' });
+
+      // model-a should be blocked
+      const blocked = await connector.execute({ prompt: 'test', model: 'model-a' });
+      expect(blocked.error?.type).toBe('circuit_open');
+
+      // model-b should still work
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ result: 'hello', tokens: 5 }),
+      });
+      const ok = await connector.execute({ prompt: 'test', model: 'model-b' });
+      expect(ok.status).toBe('success');
+    });
+
+    it('should return per-model circuit breaker states in getStatus', async () => {
+      // Make requests with two models
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ result: 'ok', tokens: 1 }),
+      });
+      await connector.execute({ prompt: 'test', model: 'gpt-4' });
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ result: 'ok', tokens: 1 }),
+      });
+      await connector.execute({ prompt: 'test', model: 'claude' });
+
+      fetchSpy.mockResolvedValueOnce({ ok: true, status: 200 }); // health check
+      const status = await connector.getStatus();
+      expect(status.circuitBreakers).toBeDefined();
+      expect(status.circuitBreakers!['gpt-4'].state).toBe('closed');
+      expect(status.circuitBreakers!['claude'].state).toBe('closed');
+    });
+  });
+
   describe('getStatus', () => {
     it('should return healthy when /health responds ok', async () => {
       fetchSpy.mockResolvedValueOnce({

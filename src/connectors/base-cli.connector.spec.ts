@@ -113,6 +113,105 @@ describe('BaseCliConnector', () => {
     });
   });
 
+  describe('per-model circuit breaker', () => {
+    it('should isolate circuit breaker per model — model A open does not block model B', async () => {
+      const c = new TestConnector();
+      c.setSemaphore(1);
+      let callCount = 0;
+      c.mockSpawnProcess(async () => {
+        callCount++;
+        if (callCount <= 5) {
+          // First 5 calls fail (model-a) — threshold is 5 by default
+          return { stdout: '', stderr: 'rate limit exceeded', exitCode: 1 };
+        }
+        return { stdout: 'ok', stderr: '', exitCode: 0 };
+      });
+
+      // Trip circuit breaker for model-a (5 failures = threshold)
+      for (let i = 0; i < 5; i++) {
+        await c.execute({ prompt: 'test', model: 'model-a' });
+      }
+
+      // model-a should be blocked
+      const blockedResult = await c.execute({ prompt: 'test', model: 'model-a' });
+      expect(blockedResult.status).toBe('error');
+      expect(blockedResult.error?.type).toBe('circuit_open');
+
+      // model-b should still work
+      const okResult = await c.execute({ prompt: 'test', model: 'model-b' });
+      expect(okResult.status).toBe('success');
+      expect(okResult.result).toBe('ok');
+    });
+
+    it('should return per-model circuit breaker states in getStatus', async () => {
+      const c = new TestConnector();
+      c.setSemaphore(1);
+      c.mockSpawnProcess(async () => ({
+        stdout: 'ok',
+        stderr: '',
+        exitCode: 0,
+      }));
+
+      // Make requests with different models to create CB entries
+      await c.execute({ prompt: 'test', model: 'model-x' });
+      await c.execute({ prompt: 'test', model: 'model-y' });
+
+      const status = await c.getStatus();
+      expect(status.circuitBreakers).toBeDefined();
+      expect(status.circuitBreakers!['model-x']).toBeDefined();
+      expect(status.circuitBreakers!['model-y']).toBeDefined();
+      expect(status.circuitBreakers!['model-x'].state).toBe('closed');
+      expect(status.circuitBreakers!['model-y'].state).toBe('closed');
+    });
+
+    it('should show aggregate as open when any model is open', async () => {
+      const c = new TestConnector();
+      c.setSemaphore(1);
+      let callCount = 0;
+      c.mockSpawnProcess(async () => {
+        callCount++;
+        if (callCount === 1) {
+          // First call (model-a) fails with auth_error → instant open
+          return { stdout: '', stderr: 'unauthorized', exitCode: 1 };
+        }
+        return { stdout: 'ok', stderr: '', exitCode: 0 };
+      });
+
+      // Open circuit for model-a via auth_error (instant open)
+      await c.execute({ prompt: 'test', model: 'model-a' });
+
+      // model-b succeeds
+      await c.execute({ prompt: 'test', model: 'model-b' });
+
+      const status = await c.getStatus();
+      expect(status.circuitBreaker?.state).toBe('open');
+      expect(status.circuitBreakers!['model-a'].state).toBe('open');
+      expect(status.circuitBreakers!['model-b'].state).toBe('closed');
+      // Connector is unhealthy because aggregate shows worst state
+      expect(status.healthy).toBe(false);
+    });
+
+    it('should lazy-create circuit breaker per model', async () => {
+      const c = new TestConnector();
+      c.setSemaphore(1);
+      c.mockSpawnProcess(async () => ({
+        stdout: 'ok',
+        stderr: '',
+        exitCode: 0,
+      }));
+
+      // Initially no circuit breakers
+      const statusBefore = await c.getStatus();
+      expect(Object.keys(statusBefore.circuitBreakers ?? {})).toHaveLength(0);
+
+      // After one request, one CB created
+      await c.execute({ prompt: 'test', model: 'gpt-4' });
+      const statusAfter = await c.getStatus();
+      expect(Object.keys(statusAfter.circuitBreakers ?? {})).toHaveLength(1);
+      expect(statusAfter.circuitBreakers!['gpt-4']).toBeDefined();
+    });
+  });
+
   describe('semaphore concurrency', () => {
     function makeDelayConnector(delayMs: number): TestConnector {
       const c = new TestConnector();

@@ -119,9 +119,10 @@ export class ConnectorsService {
 
     const response = lastResponse!;
 
-    // Metrics recording
+    // Metrics recording (per-model)
     this.metricsService.record({
       connector: connectorName,
+      model: response.model,
       status: response.status,
       errorType: response.error?.type,
       inputTokens: response.usage.inputTokens,
