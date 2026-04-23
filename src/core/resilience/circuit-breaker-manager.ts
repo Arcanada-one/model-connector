@@ -1,5 +1,10 @@
 import { CircuitBreaker, type CircuitState } from './circuit-breaker';
 
+export interface CircuitBreakerResetResult {
+  model: string;
+  previousState: CircuitState;
+}
+
 export class CircuitBreakerManager {
   private _circuitBreakers = new Map<string, CircuitBreaker>();
 
@@ -17,6 +22,24 @@ export class CircuitBreakerManager {
       this._circuitBreakers.set(key, cb);
     }
     return cb;
+  }
+
+  resetAll(): CircuitBreakerResetResult[] {
+    const results: CircuitBreakerResetResult[] = [];
+    for (const [model, cb] of this._circuitBreakers) {
+      results.push({ model, previousState: cb.getState().state });
+      cb.reset();
+    }
+    return results;
+  }
+
+  resetModel(model: string): CircuitBreakerResetResult | null {
+    const key = model || 'default';
+    const cb = this._circuitBreakers.get(key);
+    if (!cb) return null;
+    const previousState = cb.getState().state;
+    cb.reset();
+    return { model: key, previousState };
   }
 
   getStates(): {

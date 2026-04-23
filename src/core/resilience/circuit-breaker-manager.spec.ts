@@ -101,4 +101,68 @@ describe('CircuitBreakerManager', () => {
       expect(aggregate.lastErrorType).not.toBeNull();
     });
   });
+
+  describe('resetAll', () => {
+    it('should reset all models to closed and return previous states', () => {
+      const cb1 = manager.getCircuitBreaker('model-a');
+      const cb2 = manager.getCircuitBreaker('model-b');
+
+      // Open both
+      cb1.recordFailure('timeout');
+      cb1.recordFailure('timeout');
+      cb1.recordFailure('timeout');
+      cb2.recordFailure('rate_limited');
+      cb2.recordFailure('rate_limited');
+      cb2.recordFailure('rate_limited');
+
+      const results = manager.resetAll();
+
+      expect(results).toHaveLength(2);
+      expect(results).toEqual(
+        expect.arrayContaining([
+          { model: 'model-a', previousState: 'open' },
+          { model: 'model-b', previousState: 'open' },
+        ]),
+      );
+
+      // Verify all are now closed
+      const { aggregate } = manager.getStates();
+      expect(aggregate.state).toBe('closed');
+      expect(aggregate.consecutiveFailures).toBe(0);
+    });
+
+    it('should return empty array when no circuit breakers exist', () => {
+      const results = manager.resetAll();
+      expect(results).toEqual([]);
+    });
+  });
+
+  describe('resetModel', () => {
+    it('should reset specific model and return previous state', () => {
+      const cb1 = manager.getCircuitBreaker('model-a');
+      const cb2 = manager.getCircuitBreaker('model-b');
+
+      // Open both
+      cb1.recordFailure('timeout');
+      cb1.recordFailure('timeout');
+      cb1.recordFailure('timeout');
+      cb2.recordFailure('rate_limited');
+      cb2.recordFailure('rate_limited');
+      cb2.recordFailure('rate_limited');
+
+      const result = manager.resetModel('model-a');
+
+      expect(result).toEqual({ model: 'model-a', previousState: 'open' });
+
+      // model-a is closed, model-b still open
+      expect(cb1.getState().state).toBe('closed');
+      expect(cb2.getState().state).toBe('open');
+    });
+
+    it('should return null for unknown model', () => {
+      manager.getCircuitBreaker('model-a');
+      const result = manager.resetModel('unknown-model');
+      expect(result).toBeNull();
+    });
+  });
 });

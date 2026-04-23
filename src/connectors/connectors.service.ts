@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import {
+  CircuitBreakerResetEntry,
   ConnectorRequest,
   ConnectorResponse,
   ConnectorStatus,
@@ -69,6 +70,17 @@ export class ConnectorsService {
 
   async getStatus(name: string): Promise<ConnectorStatus> {
     return this.get(name).getStatus();
+  }
+
+  resetCircuitBreaker(connectorName?: string, model?: string): CircuitBreakerResetEntry[] {
+    if (connectorName) {
+      return this.get(connectorName).resetCircuitBreaker(model);
+    }
+    const results: CircuitBreakerResetEntry[] = [];
+    for (const connector of this.connectors.values()) {
+      results.push(...connector.resetCircuitBreaker(model));
+    }
+    return results;
   }
 
   async execute(

@@ -102,6 +102,12 @@ export interface ConnectorCapabilities {
   maxTimeout: number;
 }
 
+export interface CircuitBreakerResetEntry {
+  connector: string;
+  model: string;
+  previousState: 'closed' | 'open' | 'half_open';
+}
+
 export interface IConnector {
   readonly name: string;
   readonly type: 'cli' | 'api';
@@ -109,4 +115,5 @@ export interface IConnector {
   execute(request: ConnectorRequest): Promise<ConnectorResponse>;
   getStatus(): Promise<ConnectorStatus>;
   getCapabilities(): ConnectorCapabilities;
+  resetCircuitBreaker(model?: string): CircuitBreakerResetEntry[];
 }
