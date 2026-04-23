@@ -93,7 +93,7 @@ export abstract class BaseCliConnector implements IConnector {
 
   protected activeJobs = 0;
   private _semaphore?: Semaphore;
-  private _circuitBreaker?: CircuitBreaker;
+  private _circuitBreakers = new Map<string, CircuitBreaker>();
 
   protected get semaphore(): Semaphore {
     if (!this._semaphore) {
@@ -118,20 +118,23 @@ export abstract class BaseCliConnector implements IConnector {
     }
   }
 
-  protected get circuitBreaker(): CircuitBreaker {
-    if (!this._circuitBreaker) {
+  protected getCircuitBreaker(model: string): CircuitBreaker {
+    const key = model || 'default';
+    let cb = this._circuitBreakers.get(key);
+    if (!cb) {
       try {
         const config = getConfig();
-        this._circuitBreaker = new CircuitBreaker(
+        cb = new CircuitBreaker(
           config.CIRCUIT_BREAKER_THRESHOLD,
           config.CIRCUIT_BREAKER_COOLDOWN_MS,
-          this.name,
+          `${this.name}:${key}`,
         );
       } catch {
-        this._circuitBreaker = new CircuitBreaker(5, 30_000, this.name);
+        cb = new CircuitBreaker(5, 30_000, `${this.name}:${key}`);
       }
+      this._circuitBreakers.set(key, cb);
     }
-    return this._circuitBreaker;
+    return cb;
   }
 
   /** @internal For testing only — override the concurrency limit */
@@ -147,9 +150,10 @@ export abstract class BaseCliConnector implements IConnector {
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
     const id = randomUUID();
 
-    // Circuit breaker check
+    // Circuit breaker check (per-model)
+    const modelCb = this.getCircuitBreaker(request.model ?? '');
     try {
-      this.circuitBreaker.check();
+      modelCb.check();
     } catch (err) {
       if (err instanceof CircuitOpenError) {
         const action = classifyErrorAction('circuit_open');
@@ -247,9 +251,9 @@ export abstract class BaseCliConnector implements IConnector {
           message: parsed.errorMessage || stderr.slice(0, 500),
           ...action,
         };
-        this.circuitBreaker.recordFailure(errorType);
+        modelCb.recordFailure(errorType);
       } else {
-        this.circuitBreaker.recordSuccess();
+        modelCb.recordSuccess();
       }
 
       return base;
@@ -258,7 +262,7 @@ export abstract class BaseCliConnector implements IConnector {
       const message = err instanceof Error ? err.message : String(err);
       const errorType = message.includes('timeout') ? 'timeout' : 'spawn_error';
       const action = classifyErrorAction(errorType);
-      this.circuitBreaker.recordFailure(errorType);
+      modelCb.recordFailure(errorType);
       return {
         id,
         connector: this.name,
@@ -278,15 +282,40 @@ export abstract class BaseCliConnector implements IConnector {
   }
 
   async getStatus(): Promise<ConnectorStatus> {
-    const cbState = this.circuitBreaker.getState();
+    const { aggregate, perModel } = this.getCircuitBreakerStates();
     return {
       name: this.name,
-      healthy: cbState.state !== 'open',
+      healthy: aggregate.state !== 'open',
       activeJobs: this.activeJobs,
       queuedJobs: this.semaphore.pending,
       rateLimitStatus: 'ok',
-      circuitBreaker: cbState,
+      circuitBreaker: aggregate,
+      circuitBreakers: perModel,
     };
+  }
+
+  private getCircuitBreakerStates() {
+    const perModel: Record<string, ReturnType<CircuitBreaker['getState']>> = {};
+    let worstState: 'closed' | 'half_open' | 'open' = 'closed';
+    let totalFailures = 0;
+    let lastError: string | null = null;
+
+    for (const [model, cb] of this._circuitBreakers) {
+      const s = cb.getState();
+      perModel[model] = s;
+      totalFailures += s.consecutiveFailures;
+      if (s.lastErrorType) lastError = s.lastErrorType;
+      if (s.state === 'open') worstState = 'open';
+      else if (s.state === 'half_open' && worstState !== 'open') worstState = 'half_open';
+    }
+
+    const aggregate = {
+      state: worstState,
+      consecutiveFailures: totalFailures,
+      lastErrorType: lastError,
+    };
+
+    return { aggregate, perModel };
   }
 
   protected getEnv(_request: ConnectorRequest): Record<string, string> {

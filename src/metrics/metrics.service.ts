@@ -22,6 +22,7 @@ export class MetricsService {
 
   record(opts: {
     connector: string;
+    model?: string;
     status: string;
     errorType?: string;
     inputTokens: number;
@@ -31,8 +32,9 @@ export class MetricsService {
     queueWaitMs?: number;
     attempt?: number;
   }) {
-    if (!this.metrics.has(opts.connector)) {
-      this.metrics.set(opts.connector, {
+    const key = opts.model ? `${opts.connector}:${opts.model}` : opts.connector;
+    if (!this.metrics.has(key)) {
+      this.metrics.set(key, {
         totalRequests: 0,
         successCount: 0,
         errorCount: 0,
@@ -48,7 +50,7 @@ export class MetricsService {
         totalQueueWaitMs: 0,
       });
     }
-    const m = this.metrics.get(opts.connector)!;
+    const m = this.metrics.get(key)!;
     m.totalRequests++;
     m.totalInputTokens += opts.inputTokens;
     m.totalOutputTokens += opts.outputTokens;
