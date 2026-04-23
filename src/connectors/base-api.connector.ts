@@ -9,7 +9,8 @@ import {
 } from './interfaces/connector.interface';
 import { Semaphore, QueueTimeoutError } from './base-cli.connector';
 import { getConfig } from '../config/env.schema';
-import { CircuitBreaker, CircuitOpenError } from '../core/resilience/circuit-breaker';
+import { CircuitOpenError } from '../core/resilience/circuit-breaker';
+import { CircuitBreakerManager } from '../core/resilience/circuit-breaker-manager';
 
 export interface ParsedApiOutput {
   text: string;
@@ -28,7 +29,7 @@ export abstract class BaseApiConnector implements IConnector {
 
   protected activeJobs = 0;
   private _semaphore?: Semaphore;
-  private _circuitBreakers = new Map<string, CircuitBreaker>();
+  private _cbManager?: CircuitBreakerManager;
 
   protected get semaphore(): Semaphore {
     if (!this._semaphore) {
@@ -58,23 +59,20 @@ export abstract class BaseApiConnector implements IConnector {
     }
   }
 
-  protected getCircuitBreaker(model: string): CircuitBreaker {
-    const key = model || 'default';
-    let cb = this._circuitBreakers.get(key);
-    if (!cb) {
+  protected get cbManager(): CircuitBreakerManager {
+    if (!this._cbManager) {
       try {
         const config = getConfig();
-        cb = new CircuitBreaker(
+        this._cbManager = new CircuitBreakerManager(
+          this.name,
           config.CIRCUIT_BREAKER_THRESHOLD,
           config.CIRCUIT_BREAKER_COOLDOWN_MS,
-          `${this.name}:${key}`,
         );
       } catch {
-        cb = new CircuitBreaker(5, 30_000, `${this.name}:${key}`);
+        this._cbManager = new CircuitBreakerManager(this.name, 5, 30_000);
       }
-      this._circuitBreakers.set(key, cb);
     }
-    return cb;
+    return this._cbManager;
   }
 
   protected abstract getBaseUrl(): string;
@@ -95,7 +93,7 @@ export abstract class BaseApiConnector implements IConnector {
     const id = randomUUID();
 
     // Circuit breaker check (per-model)
-    const modelCb = this.getCircuitBreaker(request.model ?? '');
+    const modelCb = this.cbManager.getCircuitBreaker(request.model ?? '');
     try {
       modelCb.check();
     } catch (err) {
@@ -240,7 +238,7 @@ export abstract class BaseApiConnector implements IConnector {
   }
 
   async getStatus(): Promise<ConnectorStatus> {
-    const { aggregate, perModel } = this.getCircuitBreakerStates();
+    const { aggregate, perModel } = this.cbManager.getStates();
     try {
       const res = await fetch(`${this.getBaseUrl()}/health`, {
         method: 'GET',
@@ -267,30 +265,6 @@ export abstract class BaseApiConnector implements IConnector {
         circuitBreakers: perModel,
       };
     }
-  }
-
-  private getCircuitBreakerStates() {
-    const perModel: Record<string, ReturnType<CircuitBreaker['getState']>> = {};
-    let worstState: 'closed' | 'half_open' | 'open' = 'closed';
-    let totalFailures = 0;
-    let lastError: string | null = null;
-
-    for (const [model, cb] of this._circuitBreakers) {
-      const s = cb.getState();
-      perModel[model] = s;
-      totalFailures += s.consecutiveFailures;
-      if (s.lastErrorType) lastError = s.lastErrorType;
-      if (s.state === 'open') worstState = 'open';
-      else if (s.state === 'half_open' && worstState !== 'open') worstState = 'half_open';
-    }
-
-    const aggregate = {
-      state: worstState,
-      consecutiveFailures: totalFailures,
-      lastErrorType: lastError,
-    };
-
-    return { aggregate, perModel };
   }
 
   protected classifyHttpError(status: number, _body: string): string {
