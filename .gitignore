@@ -4,3 +4,4 @@ dist/
 *.js.map
 coverage/
 .swc/
+*.sync-conflict-*
