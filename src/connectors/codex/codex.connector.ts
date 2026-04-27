@@ -35,7 +35,7 @@ export class CodexConnector extends BaseCliConnector {
     ];
   }
 
-  protected parseOutput(stdout: string, _stderr: string): ParsedCliOutput {
+  protected parseOutput(stdout: string, stderr: string): ParsedCliOutput {
     const trimmed = stdout.trim();
 
     if (!trimmed) {
@@ -46,7 +46,7 @@ export class CodexConnector extends BaseCliConnector {
         outputTokens: 0,
         costUsd: 0,
         isError: true,
-        errorMessage: 'No output',
+        errorMessage: this.extractStderrError(stderr) || 'No output',
       };
     }
 
@@ -60,7 +60,7 @@ export class CodexConnector extends BaseCliConnector {
         outputTokens: 0,
         costUsd: 0,
         isError: true,
-        errorMessage: 'Failed to parse Codex JSONL output',
+        errorMessage: this.extractStderrError(stderr) || 'Failed to parse Codex JSONL output',
       };
     }
 
@@ -142,7 +142,18 @@ export class CodexConnector extends BaseCliConnector {
     if (lower.includes('model metadata') && lower.includes('not found')) {
       return 'model_not_found';
     }
+    if (lower.includes('output schema') && lower.includes('not valid json')) {
+      return 'validation_error';
+    }
     return super.classifyError(message, exitCode);
+  }
+
+  private extractStderrError(stderr: string): string {
+    const lines = stderr
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith('Reading additional input'));
+    return lines.join(' ').slice(0, 500);
   }
 
   getCapabilities(): ConnectorCapabilities {

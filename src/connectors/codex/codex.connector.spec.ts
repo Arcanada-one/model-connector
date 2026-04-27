@@ -41,6 +41,15 @@ const stderrNoise = [
   '2026-04-23T22:22:39.277039Z ERROR codex_core::models_manager::manager: failed to refresh available models',
 ].join('\n');
 
+// Fixture: stderr-only client-side error (P8-d malformed --output-schema, captured live)
+const stderrMalformedSchema = [
+  'Reading additional input from stdin...',
+  'Output schema file /var/folders/jx/rjnc0jxj6bl40hcw0bf523wh0000gn/T/tmp.K3oGfSXidc.json is not valid JSON: EOF while parsing a list at line 2 column 0',
+].join('\n');
+
+// Fixture: stderr-only auth failure (Codex exits fast with no JSONL when not authenticated)
+const stderrNotLoggedIn = ['Reading additional input from stdin...', 'Not logged in'].join('\n');
+
 describe('CodexConnector', () => {
   const connector = new TestCodexConnector();
 
@@ -145,6 +154,26 @@ describe('CodexConnector', () => {
       expect(parsed.isError).toBe(true);
     });
 
+    it('should surface stderr error when stdout is empty (malformed --output-schema, P8-d)', () => {
+      const parsed = connector.testParseOutput('', stderrMalformedSchema);
+      expect(parsed.isError).toBe(true);
+      expect(parsed.errorMessage).toContain('Output schema');
+      expect(parsed.errorMessage).toContain('not valid JSON');
+      expect(parsed.errorMessage).not.toContain('Reading additional input');
+    });
+
+    it('should surface stderr error when stdout is empty (not logged in)', () => {
+      const parsed = connector.testParseOutput('', stderrNotLoggedIn);
+      expect(parsed.isError).toBe(true);
+      expect(parsed.errorMessage).toContain('Not logged in');
+    });
+
+    it('should fall back to "No output" when both stdout and stderr are empty', () => {
+      const parsed = connector.testParseOutput('', '');
+      expect(parsed.isError).toBe(true);
+      expect(parsed.errorMessage).toBe('No output');
+    });
+
     it('should handle item.completed with type error as non-fatal warning', () => {
       // item.completed with type:"error" is a warning, not a fatal error
       const warningThenSuccess = [
@@ -179,6 +208,16 @@ describe('CodexConnector', () => {
       expect(connector.testClassifyError('Model metadata for `o4-mini` not found', 0)).toBe(
         'model_not_found',
       );
+    });
+
+    it('should classify malformed --output-schema as validation_error (P8-d)', () => {
+      const stderrLine =
+        'Output schema file /tmp/tmp.K3oGfSXidc.json is not valid JSON: EOF while parsing a list at line 2 column 0';
+      expect(connector.testClassifyError(stderrLine, 1)).toBe('validation_error');
+    });
+
+    it('should classify stderr "Not logged in" as auth_error via base classifier', () => {
+      expect(connector.testClassifyError('Not logged in', 1)).toBe('auth_error');
     });
 
     it('should classify rate limit errors', () => {
