@@ -8,6 +8,7 @@ import { GeminiModule } from './gemini/gemini.module';
 import { CodexModule } from './codex/codex.module';
 import { EmbeddingModule } from './embedding/embedding.module';
 import { OpenRouterModule } from './openrouter/openrouter.module';
+import { GroqModule } from './groq/groq.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { OpenRouterModule } from './openrouter/openrouter.module';
     CodexModule,
     EmbeddingModule,
     OpenRouterModule,
+    GroqModule,
   ],
   controllers: [ConnectorsController],
   providers: [ConnectorsService],
