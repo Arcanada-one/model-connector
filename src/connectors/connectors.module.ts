@@ -9,6 +9,7 @@ import { CodexModule } from './codex/codex.module';
 import { EmbeddingModule } from './embedding/embedding.module';
 import { OpenRouterModule } from './openrouter/openrouter.module';
 import { GroqModule } from './groq/groq.module';
+import { GrokModule } from './grok/grok.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { GroqModule } from './groq/groq.module';
     EmbeddingModule,
     OpenRouterModule,
     GroqModule,
+    GrokModule,
   ],
   controllers: [ConnectorsController],
   providers: [ConnectorsService],

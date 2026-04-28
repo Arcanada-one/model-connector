@@ -23,6 +23,7 @@ export const envSchema = z.object({
   GEMINI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
   OPENROUTER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
   GROQ_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+  GROK_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
   EMBEDDING_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(8),
 
   CIRCUIT_BREAKER_THRESHOLD: z.coerce.number().min(1).max(50).default(5),

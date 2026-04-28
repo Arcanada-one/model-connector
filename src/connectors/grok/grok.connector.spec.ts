@@ -1,50 +1,42 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { GroqConnector } from './groq.connector';
+import { GrokConnector } from './grok.connector';
 
-describe('GroqConnector', () => {
-  let connector: GroqConnector;
+describe('GrokConnector', () => {
+  let connector: GrokConnector;
   let fetchSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    process.env.GROQ_API_KEY = 'gsk_test_key';
-    connector = new GroqConnector();
+    process.env.XAI_API_KEY = 'xai_test_key';
+    connector = new GrokConnector();
     fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    delete process.env.GROQ_API_KEY;
+    delete process.env.XAI_API_KEY;
   });
 
-  // --- Fixtures (Groq OpenAI-compatible response, see datarim/tasks/CONN-0047-fixtures.md) ---
+  // Fixtures derived from datarim/tasks/CONN-0048-fixtures.md (live xAI capture 2026-04-28).
 
   const chatResponse = {
-    id: 'chatcmpl-b2d1ed13-69b7-4d05-b554-ae3da5cf3cd1',
+    id: 'e387cd62-1427-78ab-1a26-1b51f19b2ff1',
     object: 'chat.completion',
-    created: 1777308983,
-    model: 'llama-3.3-70b-versatile',
+    created: 1777386205,
+    model: 'grok-4-fast-reasoning',
     choices: [
       {
         index: 0,
-        message: { role: 'assistant', content: 'ok' },
-        logprobs: null,
+        message: { role: 'assistant', content: 'ok', refusal: null },
         finish_reason: 'stop',
       },
     ],
     usage: {
-      queue_time: 0.048107039,
-      prompt_tokens: 39,
-      prompt_time: 0.001679552,
-      completion_tokens: 2,
-      completion_time: 0.014530901,
-      total_tokens: 41,
-      total_time: 0.016210453,
+      prompt_tokens: 161,
+      completion_tokens: 1,
+      total_tokens: 250,
     },
-    usage_breakdown: null,
-    system_fingerprint: 'fp_f8b414701e',
-    x_groq: { id: 'req_01kq7xxrkyehmtzjeqb9gwdawx', seed: 341981848 },
-    service_tier: 'on_demand',
+    system_fingerprint: 'fp_e4f661d783',
   };
 
   function mockOk(body: unknown) {
@@ -55,39 +47,42 @@ describe('GroqConnector', () => {
     });
   }
 
-  // --- URL building ---
-
   describe('buildRequestUrl', () => {
-    it('should use Groq chat completions endpoint', async () => {
+    it('should hit xAI chat completions endpoint', async () => {
       mockOk(chatResponse);
       await connector.execute({ prompt: 'hello' });
-      expect(fetchSpy.mock.calls[0][0]).toBe('https://api.groq.com/openai/v1/chat/completions');
+      expect(fetchSpy.mock.calls[0][0]).toBe('https://api.x.ai/v1/chat/completions');
     });
   });
 
-  // --- Headers ---
-
   describe('headers', () => {
-    it('should include Authorization Bearer and Content-Type', async () => {
+    it('should include Authorization Bearer XAI_API_KEY and Content-Type', async () => {
       mockOk(chatResponse);
       await connector.execute({ prompt: 'hello' });
       const headers = fetchSpy.mock.calls[0][1].headers;
       expect(headers['Content-Type']).toBe('application/json');
-      expect(headers['Authorization']).toBe('Bearer gsk_test_key');
+      expect(headers['Authorization']).toBe('Bearer xai_test_key');
+    });
+
+    it('should send empty Bearer when XAI_API_KEY not set', async () => {
+      delete process.env.XAI_API_KEY;
+      connector = new GrokConnector();
+      mockOk(chatResponse);
+      await connector.execute({ prompt: 'hello' });
+      const headers = fetchSpy.mock.calls[0][1].headers;
+      expect(headers['Authorization']).toBe('Bearer ');
     });
   });
 
-  // --- Request body ---
-
   describe('buildRequestBody', () => {
-    it('should build messages from prompt', async () => {
+    it('should build messages from prompt only', async () => {
       mockOk(chatResponse);
       await connector.execute({ prompt: 'reply with ok only' });
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
       expect(body.messages).toEqual([{ role: 'user', content: 'reply with ok only' }]);
     });
 
-    it('should include systemPrompt as system message', async () => {
+    it('should prepend systemPrompt as system message', async () => {
       mockOk(chatResponse);
       await connector.execute({
         prompt: 'hello',
@@ -100,18 +95,18 @@ describe('GroqConnector', () => {
       ]);
     });
 
-    it('should default model to llama-3.3-70b-versatile', async () => {
+    it('should default model to grok-4-fast', async () => {
       mockOk(chatResponse);
       await connector.execute({ prompt: 'hello' });
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
-      expect(body.model).toBe('llama-3.3-70b-versatile');
+      expect(body.model).toBe('grok-4-fast');
     });
 
     it('should use request.model when specified', async () => {
       mockOk(chatResponse);
-      await connector.execute({ prompt: 'hello', model: 'openai/gpt-oss-120b' });
+      await connector.execute({ prompt: 'hello', model: 'grok-4-fast-mini' });
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
-      expect(body.model).toBe('openai/gpt-oss-120b');
+      expect(body.model).toBe('grok-4-fast-mini');
     });
 
     it('should pass max_tokens, temperature, top_p from extra', async () => {
@@ -142,9 +137,16 @@ describe('GroqConnector', () => {
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
       expect(body.response_format).toBeUndefined();
     });
-  });
 
-  // --- Response parsing ---
+    it('should not include extras when not provided', async () => {
+      mockOk(chatResponse);
+      await connector.execute({ prompt: 'hello' });
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
+      expect(body.max_tokens).toBeUndefined();
+      expect(body.temperature).toBeUndefined();
+      expect(body.top_p).toBeUndefined();
+    });
+  });
 
   describe('parseResponse', () => {
     it('should extract text from choices[0].message.content', async () => {
@@ -152,29 +154,31 @@ describe('GroqConnector', () => {
       const response = await connector.execute({ prompt: 'hello' });
       expect(response.status).toBe('success');
       expect(response.result).toBe('ok');
-      expect(response.model).toBe('llama-3.3-70b-versatile');
+    });
+
+    it('should pass through server-resolved model alias (grok-4-fast → grok-4-fast-reasoning)', async () => {
+      mockOk(chatResponse);
+      const response = await connector.execute({ prompt: 'hello', model: 'grok-4-fast' });
+      expect(response.model).toBe('grok-4-fast-reasoning');
     });
 
     it('should extract token usage from prompt_tokens / completion_tokens', async () => {
       mockOk(chatResponse);
       const response = await connector.execute({ prompt: 'hello' });
-      expect(response.usage.inputTokens).toBe(39);
-      expect(response.usage.outputTokens).toBe(2);
-      expect(response.usage.totalTokens).toBe(41);
+      expect(response.usage.inputTokens).toBe(161);
+      expect(response.usage.outputTokens).toBe(1);
+      expect(response.usage.totalTokens).toBe(162);
     });
 
-    it('should always default costUsd to 0 (Groq free tier, no total_cost field)', async () => {
+    it('should default costUsd to 0 (xAI cost_in_usd_ticks not yet wired)', async () => {
       mockOk(chatResponse);
       const response = await connector.execute({ prompt: 'hello' });
       expect(response.usage.costUsd).toBe(0);
     });
 
-    it('should ignore Groq-specific extras (x_groq, system_fingerprint, service_tier)', async () => {
+    it('should ignore xAI-specific extras (system_fingerprint)', async () => {
       mockOk(chatResponse);
       const response = await connector.execute({ prompt: 'hello' });
-      // These fields are present in response but should not leak into ConnectorResponse
-      expect(response.result).toBe('ok');
-      expect(response).not.toHaveProperty('x_groq');
       expect(response).not.toHaveProperty('system_fingerprint');
     });
 
@@ -186,77 +190,96 @@ describe('GroqConnector', () => {
     });
 
     it('should handle null content in message gracefully', async () => {
-      const nullContent = {
+      mockOk({
         ...chatResponse,
         choices: [
           {
             index: 0,
             message: { role: 'assistant', content: null },
-            logprobs: null,
             finish_reason: 'stop',
           },
         ],
-      };
-      mockOk(nullContent);
+      });
       const response = await connector.execute({ prompt: 'hello' });
       expect(response.status).toBe('success');
       expect(response.result).toBe('');
     });
+
+    it('should handle missing usage object gracefully', async () => {
+      const noUsage = { ...chatResponse, usage: undefined };
+      mockOk(noUsage);
+      const response = await connector.execute({ prompt: 'hello' });
+      expect(response.usage.inputTokens).toBe(0);
+      expect(response.usage.outputTokens).toBe(0);
+    });
   });
 
-  // --- Error handling ---
-
   describe('error handling', () => {
-    it('should return auth_error on HTTP 401 (Invalid API Key)', async () => {
+    // xAI deviates from OpenAI: invalid model returns HTTP 400 (not 404).
+    // Existing classifyHttpError 400 → validation_error path covers this without bundle.
+    it('should return validation_error on HTTP 400 (xAI invalid model)', async () => {
       fetchSpy.mockResolvedValueOnce({
         ok: false,
-        status: 401,
+        status: 400,
         text: () =>
           Promise.resolve(
-            '{"error":{"message":"Invalid API Key","type":"invalid_request_error","code":"invalid_api_key"}}',
+            '{"code":"Client specified an invalid argument","error":"Model not found: nonexistent-model-xyz"}',
+          ),
+      });
+      const response = await connector.execute({ prompt: 'hello', model: 'nonexistent-model-xyz' });
+      expect(response.status).toBe('error');
+      expect(response.error?.type).toBe('validation_error');
+    });
+
+    it('should return validation_error on HTTP 400 (xAI invalid API key surfaces as 400)', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: () =>
+          Promise.resolve(
+            '{"code":"Client specified an invalid argument","error":"Incorrect API key provided: xa***ST."}',
           ),
       });
       const response = await connector.execute({ prompt: 'hello' });
       expect(response.status).toBe('error');
-      expect(response.error?.type).toBe('auth_error');
+      expect(response.error?.type).toBe('validation_error');
     });
 
     it('should return rate_limited on HTTP 429', async () => {
       fetchSpy.mockResolvedValueOnce({
         ok: false,
         status: 429,
-        text: () => Promise.resolve('rate limited'),
+        text: () => Promise.resolve('{"code":"resource_exhausted","error":"Rate limit"}'),
       });
       const response = await connector.execute({ prompt: 'hello' });
       expect(response.status).toBe('rate_limited');
       expect(response.error?.type).toBe('rate_limited');
     });
 
-    it('should return validation_error on HTTP 404 with code=model_not_found (CONN-0048 bundle: fast-fail, retryable=false)', async () => {
+    it('should return server_error on HTTP 500', async () => {
       fetchSpy.mockResolvedValueOnce({
         ok: false,
-        status: 404,
+        status: 500,
+        text: () => Promise.resolve('{"error":"internal"}'),
+      });
+      const response = await connector.execute({ prompt: 'hello' });
+      expect(response.status).toBe('error');
+      expect(response.error?.type).toBe('server_error');
+    });
+
+    it('should never echo XAI_API_KEY in errorMessage (T1 redaction)', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
         text: () =>
           Promise.resolve(
-            '{"error":{"message":"The model `nonexistent-model` does not exist or you do not have access to it.","type":"invalid_request_error","code":"model_not_found"}}',
+            '{"code":"Client specified an invalid argument","error":"Incorrect API key provided: xa***ST."}',
           ),
       });
-      const response = await connector.execute({ prompt: 'hello', model: 'nonexistent-model' });
-      expect(response.status).toBe('error');
-      expect(response.error?.type).toBe('validation_error');
-    });
-
-    it('should send empty Bearer when GROQ_API_KEY not set', async () => {
-      delete process.env.GROQ_API_KEY;
-      connector = new GroqConnector();
-      mockOk(chatResponse);
-      await connector.execute({ prompt: 'hello' });
-      const headers = fetchSpy.mock.calls[0][1].headers;
-      expect(headers['Authorization']).toBe('Bearer ');
+      const response = await connector.execute({ prompt: 'hello' });
+      expect(response.error?.message ?? '').not.toContain('xai_test_key');
     });
   });
-
-  // --- Config ---
 
   describe('configuration', () => {
     it('should use default timeout of 120s', async () => {
@@ -265,26 +288,24 @@ describe('GroqConnector', () => {
       expect(fetchSpy).toHaveBeenCalledOnce();
     });
 
-    it('should respect GROQ_TIMEOUT_MS from env', async () => {
-      process.env.GROQ_TIMEOUT_MS = '45000';
-      connector = new GroqConnector();
+    it('should respect GROK_TIMEOUT_MS from env', async () => {
+      process.env.GROK_TIMEOUT_MS = '45000';
+      connector = new GrokConnector();
       mockOk(chatResponse);
       await connector.execute({ prompt: 'hello' });
       expect(fetchSpy).toHaveBeenCalledOnce();
-      delete process.env.GROQ_TIMEOUT_MS;
+      delete process.env.GROK_TIMEOUT_MS;
     });
   });
 
-  // --- Capabilities ---
-
   describe('getCapabilities', () => {
-    it('should report Groq capability schema (json_schema + tools, no streaming)', () => {
+    it('should report Grok capability schema (json_schema + tools, no streaming)', () => {
       const caps = connector.getCapabilities();
-      expect(caps.name).toBe('groq');
+      expect(caps.name).toBe('grok');
       expect(caps.type).toBe('api');
-      expect(caps.models).toContain('llama-3.3-70b-versatile');
-      expect(caps.models).toContain('openai/gpt-oss-120b');
-      expect(caps.models).toContain('qwen/qwen3-32b');
+      expect(caps.models).toContain('grok-4-fast');
+      expect(caps.models).toContain('grok-4-fast-mini');
+      expect(caps.models).toContain('grok-4');
       expect(caps.supportsStreaming).toBe(false);
       expect(caps.supportsJsonSchema).toBe(true);
       expect(caps.supportsTools).toBe(true);
@@ -292,13 +313,11 @@ describe('GroqConnector', () => {
     });
   });
 
-  // --- Status ---
-
   describe('getStatus', () => {
-    it('should query Groq health endpoint', async () => {
+    it('should query xAI health endpoint', async () => {
       fetchSpy.mockResolvedValueOnce({ ok: true, status: 200 });
       const status = await connector.getStatus();
-      expect(status.name).toBe('groq');
+      expect(status.name).toBe('grok');
       expect(status.healthy).toBe(true);
     });
   });
