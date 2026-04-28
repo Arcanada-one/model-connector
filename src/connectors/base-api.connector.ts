@@ -279,10 +279,22 @@ export abstract class BaseApiConnector implements IConnector {
     }));
   }
 
-  protected classifyHttpError(status: number, _body: string): string {
+  protected classifyHttpError(status: number, body: string): string {
     if (status === 429) return 'rate_limited';
     if (status === 401 || status === 403) return 'auth_error';
     if (status === 400 || status === 422) return 'validation_error';
+    if (status === 404) {
+      try {
+        const parsed = JSON.parse(body) as { error?: { code?: string; message?: string } };
+        const code = parsed.error?.code ?? '';
+        const msg = parsed.error?.message ?? '';
+        if (code === 'model_not_found' || /model[^a-z]*not[^a-z]*found/i.test(msg)) {
+          return 'validation_error';
+        }
+      } catch {
+        if (/model[^a-z]*not[^a-z]*found/i.test(body)) return 'validation_error';
+      }
+    }
     if (status >= 500) return 'server_error';
     return 'http_error';
   }

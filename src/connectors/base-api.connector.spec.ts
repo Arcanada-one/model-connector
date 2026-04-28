@@ -162,6 +162,48 @@ describe('BaseApiConnector', () => {
       expect(response.status).toBe('error');
       expect(response.error?.type).toBe('parse_error');
     });
+
+    // Bundle (CONN-0048): 404 + model_not_found semantics → validation_error fast-fail.
+    // Targets Groq/OpenRouter/OpenAI nested envelope shape (verified Groq fixture
+    // datarim/tasks/CONN-0048-fixtures.md cross-reference).
+    it('should classify HTTP 404 with error.code=model_not_found as validation_error', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        text: () =>
+          Promise.resolve(
+            '{"error":{"message":"The model `nonexistent` does not exist or you do not have access to it.","type":"invalid_request_error","code":"model_not_found"}}',
+          ),
+      });
+      const response = await connector.execute({ prompt: 'hello', model: 'nonexistent' });
+      expect(response.status).toBe('error');
+      expect(response.error?.type).toBe('validation_error');
+    });
+
+    it('should classify HTTP 404 with model-not-found phrase (no code) as validation_error', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        text: () => Promise.resolve('{"error":{"message":"Model not found: nonexistent-xyz"}}'),
+      });
+      const response = await connector.execute({ prompt: 'hello', model: 'nonexistent-xyz' });
+      expect(response.status).toBe('error');
+      expect(response.error?.type).toBe('validation_error');
+    });
+
+    it('should keep HTTP 404 with unrelated error code as http_error', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        text: () =>
+          Promise.resolve(
+            '{"error":{"message":"Endpoint not configured","code":"route_not_found"}}',
+          ),
+      });
+      const response = await connector.execute({ prompt: 'hello' });
+      expect(response.status).toBe('error');
+      expect(response.error?.type).toBe('http_error');
+    });
   });
 
   describe('per-model circuit breaker', () => {
