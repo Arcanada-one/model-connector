@@ -101,7 +101,17 @@ export class GrokConnector extends BaseApiConnector {
     return {
       name: 'grok',
       type: 'api',
-      models: ['grok-4-fast', 'grok-4-fast-mini', 'grok-4', 'grok-3', 'grok-2-vision-1212'],
+      models: [
+        'grok-4-fast',
+        'grok-4-fast-reasoning',
+        'grok-4-fast-non-reasoning',
+        'grok-4-1-fast-reasoning',
+        'grok-4-1-fast-non-reasoning',
+        'grok-4-0709',
+        'grok-3',
+        'grok-3-mini',
+        'grok-code-fast-1',
+      ],
       supportsStreaming: false,
       supportsJsonSchema: true,
       supportsTools: true,
