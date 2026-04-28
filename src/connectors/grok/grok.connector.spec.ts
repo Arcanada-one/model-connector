@@ -104,9 +104,9 @@ describe('GrokConnector', () => {
 
     it('should use request.model when specified', async () => {
       mockOk(chatResponse);
-      await connector.execute({ prompt: 'hello', model: 'grok-4-fast-mini' });
+      await connector.execute({ prompt: 'hello', model: 'grok-4-fast-non-reasoning' });
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
-      expect(body.model).toBe('grok-4-fast-mini');
+      expect(body.model).toBe('grok-4-fast-non-reasoning');
     });
 
     it('should pass max_tokens, temperature, top_p from extra', async () => {
@@ -304,8 +304,9 @@ describe('GrokConnector', () => {
       expect(caps.name).toBe('grok');
       expect(caps.type).toBe('api');
       expect(caps.models).toContain('grok-4-fast');
-      expect(caps.models).toContain('grok-4-fast-mini');
-      expect(caps.models).toContain('grok-4');
+      expect(caps.models).toContain('grok-4-fast-reasoning');
+      expect(caps.models).toContain('grok-4-fast-non-reasoning');
+      expect(caps.models).toContain('grok-3-mini');
       expect(caps.supportsStreaming).toBe(false);
       expect(caps.supportsJsonSchema).toBe(true);
       expect(caps.supportsTools).toBe(true);
