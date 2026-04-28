@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint-and-test:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, arcana-ai]
     steps:
       - uses: actions/checkout@v4
 
@@ -33,7 +33,7 @@ jobs:
         run: pnpm test
 
   docker-e2e:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, arcana-prod]
     needs: lint-and-test
     services:
       postgres:
@@ -126,7 +126,7 @@ jobs:
   deploy:
     needs: lint-and-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, arcana-prod]
     concurrency:
       group: deploy-model-connector
       cancel-in-progress: false
