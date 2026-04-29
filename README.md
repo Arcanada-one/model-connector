@@ -8,15 +8,20 @@ Unified API server for AI CLI agents and cloud model providers. Send prompts to 
 
 Model Connector wraps AI CLI tools as connectors behind a REST API. Each connector handles spawning the CLI process, parsing its output, classifying errors, and reporting token usage — so callers don't need to know the quirks of each tool.
 
-**Supported connectors:**
+**Supported connectors** (8 total — see [docs/capability-matrix.md](docs/capability-matrix.md) for full comparison):
 
 | Connector | Type | Models | Auth | Avg Latency |
 |-----------|------|--------|------|-------------|
 | `claude-code` | CLI | claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5 | Subscription (Docker volume) | ~4s |
-| `cursor` | CLI | cursor-auto, gpt-5, sonnet-4, sonnet-4-thinking | API key | ~10s |
-| `gemini` | CLI | gemini-2.5-flash, gemini-3-flash-preview, gemini-2.5-flash-lite | OAuth (~/.gemini/) | ~8-22s |
-| `openrouter` | API | 200+ models (Claude, GPT, Gemini, Llama, Mistral, etc.) | API key (OPENROUTER_API_KEY) | ~0.5-1s |
+| `cursor` | CLI | auto, composer-2-fast, claude-4.6-sonnet/opus, gpt-5.4, gemini-3.1-pro | Subscription | ~10s |
+| `gemini` | CLI | gemini-2.5-flash, gemini-3-flash-preview, gemini-2.5-flash-lite | Google OAuth (~/.gemini/) | ~8–22s |
+| `codex` | CLI | o4-mini, o3, codex-mini-latest | OpenAI OAuth or `OPENAI_API_KEY` | ~6–12s |
+| `openrouter` | API | 200+ models (Claude, GPT, Gemini, Llama, Mistral, etc.) | `OPENROUTER_API_KEY` | ~0.5–1s |
+| `groq` | API | llama-3.3-70b, llama-3.1-8b, gpt-oss-120b/20b, qwen3-32b, groq/compound | `GROQ_API_KEY` (free tier) | ~0.15–0.7s |
+| `grok` | API | grok-4-fast (+reasoning), grok-3, grok-3-mini, grok-code-fast-1 | `XAI_API_KEY` | ~0.5–2s |
 | `embedding` | API | bge-m3 (dense, sparse, ColBERT, hybrid) | Internal (Tailscale) | ~0.2s |
+
+Per-connector docs: `docs/connectors/<name>.md`. Architecture: `docs/architecture.md`.
 
 ## Quick Start
 
@@ -124,10 +129,13 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
 **gemini:**
 - `sandbox` — `true` to enable sandbox mode
 
-**openrouter:**
+**openrouter / groq / grok:**
 - `max_tokens` — max tokens in response
-- `temperature` — sampling temperature (0-2)
+- `temperature` — sampling temperature (0–2)
 - `top_p` — nucleus sampling
+
+**codex:**
+- `codexFlags` — extra raw CLI flags (passed through after `--full-auto --ephemeral --skip-git-repo-check`)
 
 ### JSON Mode (Structured Output)
 
@@ -145,9 +153,10 @@ curl -X POST https://connector.arcanada.one/execute \
 ```
 
 **Behavior by connector:**
-- **OpenRouter** — passes `response_format: { type: "json_object" }` to API (native support)
+- **OpenRouter / Groq / Grok** — pass `response_format: { type: "json_object" }` (or `json_schema` strict) to provider API (native, server-validated)
 - **Claude Code** — uses `--json-schema` if `jsonSchema` provided; otherwise prepends JSON system prompt
-- **Cursor / Gemini** — prepends JSON instruction to prompt (no native JSON mode)
+- **Cursor / Gemini / Codex** — prepends JSON instruction to prompt (no native JSON mode; not server-validated, may return malformed JSON)
+- **Embedding** — n/a (returns vector, not LLM text)
 
 ### Response Schema
 
@@ -303,40 +312,49 @@ curl -s https://connector.arcanada.one/connectors \
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────┐
-│                NestJS + Fastify                   │
-│                                                  │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐          │
-│  │  Auth   │  │ Health  │  │  Queue  │          │
-│  │  Guard  │  │ /health │  │ BullMQ  │          │
-│  └─────────┘  └─────────┘  └─────────┘          │
-│                                                  │
-│  ┌──────────────────────────────────────────┐    │
-│  │          ConnectorsService               │    │
-│  │   register() / execute() / enqueue()     │    │
-│  └──────────────────────────────────────────┘    │
-│       │           │           │                  │
-│  ┌────┴──┐  ┌─────┴───┐  ┌───┴─────┐            │
-│  │Claude │  │ Cursor  │  │ Gemini  │            │
-│  │ Code  │  │  Agent  │  │  CLI    │            │
-│  └───┬───┘  └────┬────┘  └───┬────┘            │
-│      │           │            │                  │
-│  ┌───┴───────────┴────────────┴──┐               │
-│  │      BaseCliConnector         │               │
-│  │ spawn() → parse() → classify()│               │
-│  └───────────────────────────────┘               │
-│                                                  │
-│  ┌──────────────┐  ┌──────────────┐              │
-│  │ OpenRouter   │  │  Embedding   │              │
-│  │ (200+ models)│  │  (BGE-M3)   │              │
-│  └──────┬───────┘  └──────┬──────┘              │
-│         │                  │                     │
-│  ┌──────┴──────────────────┴──────┐              │
-│  │       BaseApiConnector         │              │
-│  │ fetch() → parse() → classify() │              │
-│  └────────────────────────────────┘              │
-└──────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│                   NestJS + Fastify                          │
+│                                                            │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐                    │
+│  │  Auth   │  │ Health  │  │  Queue  │                    │
+│  │  Guard  │  │ /health │  │ BullMQ  │                    │
+│  └─────────┘  └─────────┘  └─────────┘                    │
+│                                                            │
+│  ┌────────────────────────────────────────────┐            │
+│  │            ConnectorsService               │            │
+│  │  register() / execute() / retry / metrics  │            │
+│  └────────────────────────────────────────────┘            │
+│       │             │           │           │              │
+│   ┌───┴───┐  ┌──────┴──┐  ┌────┴───┐  ┌───┴───┐           │
+│   │Claude │  │ Cursor  │  │ Gemini │  │ Codex │ ← CLI     │
+│   │ Code  │  │  Agent  │  │  CLI   │  │  CLI  │           │
+│   └───┬───┘  └────┬────┘  └────┬───┘  └───┬───┘           │
+│       └───────────┴────────────┴──────────┘                │
+│                       │                                    │
+│           ┌───────────┴────────────┐                       │
+│           │   BaseCliConnector     │                       │
+│           │ spawn → parse → classify│                      │
+│           └────────────────────────┘                       │
+│                                                            │
+│   ┌──────────┐  ┌──────┐  ┌──────┐  ┌──────────┐          │
+│   │OpenRouter│  │ Groq │  │ Grok │  │Embedding │ ← API    │
+│   │200+ mdls │  │free  │  │ xAI  │  │ BGE-M3   │          │
+│   └─────┬────┘  └──┬───┘  └──┬───┘  └────┬─────┘          │
+│         └──────────┴─────────┴───────────┘                 │
+│                       │                                    │
+│           ┌───────────┴────────────┐                       │
+│           │   BaseApiConnector     │                       │
+│           │ fetch → parse → classify│                      │
+│           └────────────────────────┘                       │
+│                                                            │
+│   Both base classes share:                                 │
+│   • Semaphore (concurrency + queue timeout)                │
+│   • CircuitBreakerManager (per connector:model)            │
+│   • Error classifier (17+ error types)                     │
+└────────────────────────────────────────────────────────────┘
 ```
+
+Подробнее: [docs/architecture.md](docs/architecture.md).
 
 ## Commands
 
@@ -369,17 +387,24 @@ pnpm db:push      # Push schema to database
 | `REDIS_PORT` | no | Redis port (default: 6379) |
 | `REDIS_PASSWORD` | yes | Redis password |
 | `PORT` | no | Server port (default: 3900) |
-| `OPENROUTER_API_KEY` | yes* | OpenRouter API key (*required for openrouter connector) |
+| `OPENROUTER_API_KEY` | yes* | OpenRouter API key (*required for `openrouter` connector) |
 | `OPENROUTER_TIMEOUT_MS` | no | OpenRouter timeout (default: 120000) |
+| `GROQ_API_KEY` | yes* | Groq API key (*required for `groq` connector — https://console.groq.com/keys) |
+| `GROQ_TIMEOUT_MS` | no | Groq timeout (default: 120000) |
+| `XAI_API_KEY` | yes* | xAI API key (*required for `grok` connector — https://console.x.ai/) |
+| `GROK_TIMEOUT_MS` | no | Grok timeout (default: 120000) |
+| `OPENAI_API_KEY` | no | Optional for `codex` (otherwise OAuth via chatgpt.com) |
 | `CLAUDE_BINARY_PATH` | no | Path to Claude CLI (default: `claude`) |
 | `CURSOR_BINARY_PATH` | no | Path to Cursor CLI (default: `cursor-agent`) |
 | `GEMINI_BINARY_PATH` | no | Path to Gemini CLI (default: `gemini`) |
 | `CONNECTOR_TIMEOUT_MS` | no | Default execution timeout (default: 120000) |
 | `CONNECTOR_MAX_CONCURRENCY` | no | Global fallback concurrency limit (default: 4) |
 | `CLAUDE_CODE_MAX_CONCURRENCY` | no | Claude Code CLI concurrent limit (default: 4) |
-| `CURSOR_MAX_CONCURRENCY` | no | Cursor CLI concurrent limit (default: 1) |
+| `CURSOR_MAX_CONCURRENCY` | no | Cursor CLI concurrent limit (default: **1** — DO NOT INCREASE) |
 | `GEMINI_MAX_CONCURRENCY` | no | Gemini CLI concurrent limit (default: 4) |
 | `OPENROUTER_MAX_CONCURRENCY` | no | OpenRouter API concurrent limit (default: 10) |
+| `GROQ_MAX_CONCURRENCY` | no | Groq API concurrent limit (default: 10) |
+| `GROK_MAX_CONCURRENCY` | no | Grok API concurrent limit (default: 10) |
 | `EMBEDDING_MAX_CONCURRENCY` | no | Embedding API concurrent limit (default: 8) |
 | `CONNECTOR_QUEUE_TIMEOUT_MS` | no | Max wait time in concurrency queue (default: 60000) |
 | `CONNECTOR_MAX_RETRIES` | no | Auto-retries on transient errors (default: 1, 0=disabled) |
@@ -520,12 +545,18 @@ curl -X POST https://connector.arcanada.one/execute \
 
 | Задача | Коннектор | Модель | Latency | Цена |
 |--------|-----------|--------|---------|------|
-| NLU, классификация, парсинг | `openrouter` | `meta-llama/llama-4-maverick` | ~0.5s | free |
-| Генерация текста (качество) | `openrouter` | `anthropic/claude-sonnet-4` | ~1s | $3/1M in |
-| Дешёвая генерация | `openrouter` | `openai/gpt-4o-mini` | ~0.5s | $0.15/1M in |
-| Работа с файлами / code exec | `claude-code` | haiku/sonnet | ~4s | subscription |
+| NLU, классификация, парсинг (free) | `groq` | `llama-3.1-8b-instant` | ~0.15s | **free tier** |
+| NLU, классификация, парсинг (catalog) | `openrouter` | `meta-llama/llama-4-maverick` | ~0.5s | free |
+| Генерация текста (качество) | `openrouter` | `anthropic/claude-sonnet-4` | ~1s | $3 / 1M in |
+| Дешёвая генерация | `openrouter` | `openai/gpt-4o-mini` | ~0.5s | $0.15 / 1M in |
+| Reasoning (математика, планирование) | `grok` | `grok-4-fast-reasoning` | ~1–2s | xAI per-token |
+| Структурированный вывод (json_schema) | `openrouter` / `groq` / `grok` | любая | ~0.5–1s | per-model |
+| Работа с файлами / code exec | `claude-code` | sonnet / haiku | ~4s | subscription |
 | Embeddings (поиск, similarity) | `embedding` | `bge-m3` | ~0.2s | free (self-hosted) |
-| Agent с Cursor tools | `cursor` | cursor-auto | ~10s | subscription |
+| Agent с Cursor tools | `cursor` | `auto` | ~10s | subscription |
+| OpenAI reasoning (`o3`, `o4-mini`) | `codex` | `o4-mini` | ~6–12s | ChatGPT-tier |
+
+Развёрнутая таблица: [docs/capability-matrix.md](docs/capability-matrix.md).
 
 ### Формат ответа (единый для всех коннекторов)
 
@@ -606,7 +637,9 @@ curl -X DELETE https://connector.arcanada.one/admin/keys/<id> \
 # Ответ: 204 No Content
 ```
 
-### Benchmark (PROD, 2026-04-20)
+### Benchmark (PROD)
+
+Snapshot 2026-04-20 (CONN-0036 audit):
 
 | Connector | R1 | R2 | R3 | Avg |
 |-----------|----|----|-----|-----|
@@ -615,6 +648,13 @@ curl -X DELETE https://connector.arcanada.one/admin/keys/<id> \
 | claude-code | 4.0s | 4.3s | 4.4s | **4.2s** |
 | cursor | 12.1s | 9.3s | 9.5s | **10.3s** |
 | gemini | 6.9s | 22.1s | 21.5s | **16.8s** |
+
+Live smoke (CONN-0047 / CONN-0048, 2026-04-27 → 2026-04-29):
+
+| Connector | Default model | First call | Notes |
+|-----------|---------------|------------|-------|
+| groq | `llama-3.3-70b-versatile` | ~0.74s | free tier, json_object verified |
+| grok | `grok-4-fast` | ~0.5–2s | json_schema strict supported |
 
 ## License
 
