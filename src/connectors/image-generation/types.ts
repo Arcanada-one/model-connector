@@ -35,7 +35,7 @@ export const imageGenerationRequestSchema = z.object({
   seed: z.number().int().optional(),
   outputFormat: z.enum(['url', 'inline_base64']).default('url'),
   outputAsync: z.enum(['auto', 'force', 'never']).default('auto'),
-  maxBudgetUsd: z.number().min(0).max(100).optional(),
+  maxBudgetUsd: z.number().gt(0).max(100).optional(),
   // Allow caller to pin a specific model (bypasses tier routing)
   model: z.string().optional(),
 });
@@ -47,6 +47,14 @@ export interface RoutingDecision {
   chosenModel: string;
   fallbackUsed: boolean;
   reason: string;
+  /** Resolved candidate — enriched shape per creative-routing-policy §5. Stored as JSONB. */
+  candidate: {
+    modelId: string;
+    providerId: ProviderId;
+    tier: string;
+  };
+  /** Estimated cost for 1 image at this model (USD). 0 if model unknown in pricing table. */
+  costUsd: number;
 }
 
 export interface ImageGenerationResult {

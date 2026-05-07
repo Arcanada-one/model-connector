@@ -38,7 +38,7 @@ export const imageGenerateRequestSchema = z.object({
   seed: z.number().int().optional(),
   outputFormat: z.enum(['url', 'inline_base64']).default('url'),
   outputAsync: z.enum(['auto', 'force', 'never']).default('auto'),
-  maxBudgetUsd: z.number().min(0).max(100).optional(),
+  maxBudgetUsd: z.number().gt(0).max(100).optional(),
   model: z.string().max(100).optional(),
 });
 

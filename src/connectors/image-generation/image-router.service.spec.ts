@@ -74,4 +74,39 @@ describe('ImageRouterService', () => {
       expect(decision.reason).toContain('pinned');
     });
   });
+
+  describe('A1 — RoutingDecision shape enrichment', () => {
+    it('includes candidate.modelId, candidate.providerId, candidate.tier in tier routing', () => {
+      const decision = router.route('mid', {});
+      expect(decision.candidate).toBeDefined();
+      expect(decision.candidate.modelId).toBe('vertex:imagen-4-fast');
+      expect(decision.candidate.providerId).toBe('vertex');
+      expect(decision.candidate.tier).toBe('mid');
+    });
+
+    it('includes costUsd (>0) for known model', () => {
+      const decision = router.route('mid', {});
+      expect(decision.costUsd).toBeGreaterThan(0);
+      expect(decision.costUsd).toBeCloseTo(0.02); // vertex:imagen-4-fast pricing
+    });
+
+    it('includes candidate and costUsd in pinned-model path', () => {
+      const decision = router.route('cheap', { model: 'vertex:nano-banana' });
+      expect(decision.candidate.modelId).toBe('vertex:nano-banana');
+      expect(decision.candidate.tier).toBe('cheap');
+      expect(decision.costUsd).toBeCloseTo(0.039);
+    });
+
+    it('includes candidate and costUsd in fallback path', () => {
+      const cbManager = new CircuitBreakerManager('image-router', 1, 999_999);
+      const cb = cbManager.getCircuitBreaker('vertex:imagen-4-ultra');
+      for (let i = 0; i < 5; i++) cb.recordFailure('server_error');
+      router = new ImageRouterService(cbManager);
+
+      const decision = router.route('premium', {});
+      expect(decision.fallbackUsed).toBe(true);
+      expect(decision.candidate.modelId).toBe(decision.chosenModel);
+      expect(decision.costUsd).toBeGreaterThan(0);
+    });
+  });
 });

@@ -2,6 +2,7 @@ import { CircuitBreakerManager } from '../../core/resilience/circuit-breaker-man
 import { CircuitOpenError } from '../../core/resilience/circuit-breaker';
 import type { Tier, ProviderId, RoutingDecision } from './types';
 import { IMAGE_CAPABILITIES } from './capabilities';
+import { calculateCostUsd } from './pricing';
 
 export class ImageRoutingError extends Error {
   constructor(message: string) {
@@ -67,6 +68,8 @@ export class ImageRouterService {
         chosenModel: options.model,
         fallbackUsed: false,
         reason: `pinned to model ${options.model}`,
+        candidate: { modelId: options.model, providerId: provider, tier },
+        costUsd: calculateCostUsd(options.model, 1),
       };
     }
 
@@ -88,6 +91,8 @@ export class ImageRouterService {
           reason: firstOpen
             ? `fallback to ${candidate.model} (primary circuit open)`
             : `tier ${tier} primary`,
+          candidate: { modelId: candidate.model, providerId: candidate.provider, tier },
+          costUsd: calculateCostUsd(candidate.model, 1),
         };
       } catch (err) {
         if (err instanceof CircuitOpenError) {
