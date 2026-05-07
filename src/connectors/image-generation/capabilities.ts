@@ -159,7 +159,8 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     costPerImageUsd: 0.011,
     latencyP95Ms: 10000,
     asyncThresholdMs: 30000,
-    enabledByDefault: false,
+    // true = connector active; no creds → ProviderNotProvisionedError (not disabled)
+    enabledByDefault: true,
     lastValidated: '2026-05-07',
   },
 
@@ -181,7 +182,7 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     costPerImageUsd: 0.06,
     latencyP95Ms: 20000,
     asyncThresholdMs: 30000,
-    enabledByDefault: false,
+    enabledByDefault: true,
     lastValidated: '2026-05-07',
   },
 
@@ -203,7 +204,7 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     costPerImageUsd: 0.25,
     latencyP95Ms: 60000,
     asyncThresholdMs: 60000,
-    enabledByDefault: false,
+    enabledByDefault: true,
     lastValidated: '2026-05-07',
   },
 };

@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { VertexImageConnector } from './vertex-image.connector';
 import { CircuitBreakerManager } from '../../../core/resilience/circuit-breaker-manager';
+import { ProviderNotProvisionedError } from '../errors/provider-not-provisioned.error';
 
 // ─── Mock google-auth-library ─────────────────────────────────────────────────
 vi.mock('google-auth-library', () => {
@@ -65,7 +66,12 @@ describe('VertexImageConnector', () => {
     connector = new VertexImageConnector(
       'test-project',
       'us-central1',
-      JSON.stringify({ type: 'service_account', project_id: 'test-project' }),
+      JSON.stringify({
+        type: 'service_account',
+        project_id: 'test-project',
+        client_email: 'test@test.iam.gserviceaccount.com',
+        private_key: '-----BEGIN RSA PRIVATE KEY-----\nmock-key\n-----END RSA PRIVATE KEY-----',
+      }),
       cbManager,
     );
   });
@@ -137,5 +143,61 @@ describe('VertexImageConnector', () => {
         outputAsync: 'auto',
       }),
     ).rejects.toThrow();
+  });
+});
+
+// ─── Placeholder detection ────────────────────────────────────────────────────
+
+describe('VertexImageConnector — placeholder credential detection', () => {
+  it('throws ProviderNotProvisionedError when private_key is PLACEHOLDER', async () => {
+    const cbManager = new CircuitBreakerManager('vertex-ph', 5, 30_000);
+    const connectorWithPlaceholder = new VertexImageConnector(
+      'test-project',
+      'us-central1',
+      JSON.stringify({
+        type: 'service_account',
+        private_key: 'PLACEHOLDER_CONN-0052',
+        client_email: 'test@test.iam.gserviceaccount.com',
+      }),
+      cbManager,
+    );
+
+    await expect(
+      connectorWithPlaceholder.generate({
+        tier: 'mid',
+        prompt: 'test prompt',
+        quality: 'medium',
+        count: 1,
+        outputFormat: 'url',
+        outputAsync: 'auto',
+      }),
+    ).rejects.toThrow(ProviderNotProvisionedError);
+  });
+
+  it('proceeds to API call when real credentials provided (mocked)', async () => {
+    const cbManager = new CircuitBreakerManager('vertex-real', 5, 30_000);
+    const connectorWithReal = new VertexImageConnector(
+      'test-project',
+      'us-central1',
+      JSON.stringify({
+        type: 'service_account',
+        private_key:
+          '-----BEGIN RSA PRIVATE KEY-----\nmock-real-key\n-----END RSA PRIVATE KEY-----',
+        client_email: 'test@test.iam.gserviceaccount.com',
+      }),
+      cbManager,
+    );
+
+    // Should NOT throw ProviderNotProvisionedError — will reach API call (MSW mocked above)
+    const result = await connectorWithReal.generate({
+      tier: 'mid',
+      prompt: 'real creds test',
+      quality: 'medium',
+      count: 1,
+      outputFormat: 'url',
+      outputAsync: 'auto',
+    });
+
+    expect(result.routing.chosenProvider).toBe('vertex');
   });
 });

@@ -3,6 +3,10 @@ import { BaseImageConnector } from '../base-image.connector';
 import { VertexAuthService } from './vertex-auth.service';
 import type { ImageGenerationRequest, ImageGenerationResult, ProviderId } from '../types';
 import { calculateCostUsd } from '../pricing';
+import { isPlaceholder } from '../errors/is-placeholder';
+import { ProviderNotProvisionedError } from '../errors/provider-not-provisioned.error';
+
+const VAULT_PATH = 'arcanada/prod/env/model-connector-vertex';
 
 /**
  * Maps our internal model IDs to Vertex AI endpoint model identifiers.
@@ -23,6 +27,7 @@ const DEFAULT_MODEL = 'vertex:imagen-4-fast';
  */
 export class VertexImageConnector extends BaseImageConnector {
   private readonly authService: VertexAuthService;
+  private readonly serviceAccountJson: string | undefined;
 
   constructor(
     projectId: string,
@@ -31,10 +36,27 @@ export class VertexImageConnector extends BaseImageConnector {
     cbManager: CircuitBreakerManager,
   ) {
     super(cbManager);
+    this.serviceAccountJson = serviceAccountJson;
     this.authService = new VertexAuthService(projectId, location, serviceAccountJson);
   }
 
   async generate(req: ImageGenerationRequest): Promise<ImageGenerationResult> {
+    // Placeholder detection: check private_key field in SA JSON
+    if (this.serviceAccountJson) {
+      try {
+        const sa = JSON.parse(this.serviceAccountJson) as Record<string, string>;
+        if (isPlaceholder(sa.private_key ?? '')) {
+          throw new ProviderNotProvisionedError('vertex', VAULT_PATH);
+        }
+      } catch (e) {
+        if (e instanceof ProviderNotProvisionedError) throw e;
+        // Malformed JSON = treat as unprovisioned
+        throw new ProviderNotProvisionedError('vertex', VAULT_PATH);
+      }
+    } else {
+      throw new ProviderNotProvisionedError('vertex', VAULT_PATH);
+    }
+
     const modelId = req.model ?? DEFAULT_MODEL;
     const vertexModel = VERTEX_MODEL_MAP[modelId] ?? 'imagen-4-fast';
     const startMs = Date.now();
@@ -101,6 +123,8 @@ export class VertexImageConnector extends BaseImageConnector {
           chosenModel: modelId,
           fallbackUsed: false,
           reason: `vertex model ${vertexModel}`,
+          candidate: { modelId, providerId: 'vertex' as ProviderId, tier: req.tier },
+          costUsd,
         },
       };
     });

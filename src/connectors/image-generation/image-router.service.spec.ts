@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ImageRouterService } from './image-router.service';
+import { ImageRouterService, ImageRoutingError } from './image-router.service';
 import { CircuitBreakerManager } from '../../core/resilience/circuit-breaker-manager';
 
 describe('ImageRouterService', () => {
@@ -72,6 +72,25 @@ describe('ImageRouterService', () => {
       expect(decision.chosenProvider).toBe('replicate');
       expect(decision.fallbackUsed).toBe(false);
       expect(decision.reason).toContain('pinned');
+    });
+  });
+
+  describe('routeExcluding — skip unprovisioned providers', () => {
+    it('skips excluded provider and returns next in tier', () => {
+      const decision = router.routeExcluding('premium', {}, ['vertex']);
+      // vertex:imagen-4-ultra is excluded → should fallback to replicate or openai-images
+      expect(decision.chosenProvider).not.toBe('vertex');
+      expect(decision.fallbackUsed).toBe(true);
+    });
+
+    it('throws ImageRoutingError when all providers excluded', () => {
+      expect(() => router.routeExcluding('cheap', {}, ['vertex'])).toThrow(ImageRoutingError);
+    });
+
+    it('returns primary if not excluded', () => {
+      const decision = router.routeExcluding('cheap', {}, ['replicate']);
+      // replicate is excluded but cheap tier only has vertex — should still route to vertex
+      expect(decision.chosenProvider).toBe('vertex');
     });
   });
 

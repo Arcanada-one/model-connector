@@ -3,12 +3,13 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { uuidv7 } from 'uuidv7';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ImageRouterService, ASYNC_PROVIDERS } from './image-router.service';
+import { ImageRouterService, ASYNC_PROVIDERS, ImageRoutingError } from './image-router.service';
 import { VertexImageConnector } from './vertex/vertex-image.connector';
 import { ReplicateFluxConnector } from './replicate/replicate-flux.connector';
 import { OpenAIImagesConnector } from './openai-images/openai-images.connector';
 import { CircuitBreakerManager } from '../../core/resilience/circuit-breaker-manager';
 import { getConfig } from '../../config/env.schema';
+import { ProviderNotProvisionedError } from './errors/provider-not-provisioned.error';
 import type { ImageGenerationRequest, ImageGenerationResult, ProviderId } from './types';
 import type { ImageJobData } from './jobs/image-job.processor';
 import type { IImageGenerationService } from './jobs/image-job.processor';
@@ -65,17 +66,58 @@ export class ImageGenerationService implements IImageGenerationService {
   /**
    * Entry point for HTTP-triggered image generation.
    * Decides sync vs async, creates DB record, dispatches.
+   * Implements fallback when a provider throws ProviderNotProvisionedError.
    */
   async handleRequest(
     req: ImageGenerationRequest,
     apiKeyId: string,
   ): Promise<ImageGenerationResult> {
-    const routing = this.router.route(req.tier, { model: req.model });
-    const asyncMode = req.outputAsync ?? 'auto';
-    const runAsync = this.shouldRunAsync(routing.chosenModel, asyncMode);
+    // Fallback loop: try each provider in tier order until one succeeds or all unprovisioned
+    const excludedProviders: string[] = [];
+    let routing = this.router.route(req.tier, { model: req.model });
 
+    while (true) {
+      const asyncMode = req.outputAsync ?? 'auto';
+      const runAsync = this.shouldRunAsync(routing.chosenModel, asyncMode);
+      const generationId = uuidv7();
+
+      try {
+        return await this._handleWithRouting(req, apiKeyId, routing, generationId, runAsync);
+      } catch (err) {
+        if (err instanceof ProviderNotProvisionedError) {
+          excludedProviders.push(routing.chosenProvider);
+          this.logger.warn(
+            `Provider ${routing.chosenProvider} unprovisioned, trying fallback. Excluded: ${excludedProviders.join(', ')}`,
+          );
+          try {
+            routing = this.router.routeExcluding(req.tier, { model: req.model }, excludedProviders);
+          } catch (routingErr) {
+            if (routingErr instanceof ImageRoutingError) {
+              // All providers exhausted — throw aggregate error
+              const allProviders = excludedProviders.join(', ');
+              throw new ProviderNotProvisionedError(
+                `[${allProviders}]` as never,
+                `All providers for tier ${req.tier} unprovisioned: ${allProviders}`,
+              );
+            }
+            throw routingErr;
+          }
+          continue;
+        }
+        throw err;
+      }
+    }
+  }
+
+  /** Internal: execute one routing attempt (sync or async). */
+  private async _handleWithRouting(
+    req: ImageGenerationRequest,
+    apiKeyId: string,
+    routing: ReturnType<ImageRouterService['route']>,
+    generationId: string,
+    runAsync: boolean,
+  ): Promise<ImageGenerationResult> {
     // Create DB record (UUID v7 per memory feedback_uuid_v7_app_side_generation)
-    const generationId = uuidv7();
     await this.prisma.imageGeneration.create({
       data: {
         id: generationId,

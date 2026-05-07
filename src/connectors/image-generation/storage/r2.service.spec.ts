@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
 import { R2StorageService } from './r2.service';
+import { ProviderNotProvisionedError } from '../errors/provider-not-provisioned.error';
 
 const s3Mock = mockClient(S3Client);
 
@@ -59,5 +60,37 @@ describe('R2StorageService', () => {
       expect(typeof url).toBe('string');
       expect(url.length).toBeGreaterThan(0);
     });
+  });
+});
+
+// ─── Placeholder detection ────────────────────────────────────────────────────
+
+describe('R2StorageService — placeholder credential detection', () => {
+  it('throws ProviderNotProvisionedError on uploadBuffer when access_key_id is PLACEHOLDER', async () => {
+    const service = new R2StorageService(
+      'test-account',
+      'PLACEHOLDER_CONN-0052',
+      'PLACEHOLDER_CONN-0052',
+      'test-bucket',
+      'https://test.r2.cloudflarestorage.com',
+    );
+
+    await expect(
+      service.uploadBuffer(Buffer.from('data'), 'image/png', 'req-123', 0),
+    ).rejects.toThrow(ProviderNotProvisionedError);
+  });
+
+  it('throws ProviderNotProvisionedError on getPresignedUrl when access_key_id is PLACEHOLDER', async () => {
+    const service = new R2StorageService(
+      'test-account',
+      'PLACEHOLDER_CONN-0052',
+      'PLACEHOLDER_CONN-0052',
+      'test-bucket',
+      'https://test.r2.cloudflarestorage.com',
+    );
+
+    await expect(service.getPresignedUrl('images/2026/05/07/req/0.png', 3600)).rejects.toThrow(
+      ProviderNotProvisionedError,
+    );
   });
 });

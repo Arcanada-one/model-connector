@@ -7,6 +7,10 @@ import { CircuitBreakerManager } from '../../../core/resilience/circuit-breaker-
 import { BaseImageConnector } from '../base-image.connector';
 import type { ImageGenerationRequest, ImageGenerationResult, ProviderId } from '../types';
 import { calculateCostUsd } from '../pricing';
+import { isPlaceholder } from '../errors/is-placeholder';
+import { ProviderNotProvisionedError } from '../errors/provider-not-provisioned.error';
+
+const VAULT_PATH = 'arcanada/prod/env/model-connector-openai-images';
 
 // Quality map: our internal quality → OpenAI quality param
 const QUALITY_MAP: Record<string, string> = {
@@ -28,13 +32,19 @@ const MODEL_ID_MAP: Record<string, string> = {
  */
 export class OpenAIImagesConnector extends BaseImageConnector {
   private readonly client: OpenAIWithKey;
+  private readonly apiKey: string;
 
   constructor(apiKey: string, cbManager: CircuitBreakerManager) {
     super(cbManager);
+    this.apiKey = apiKey;
     this.client = new OpenAI({ apiKey }) as OpenAIWithKey;
   }
 
   async generate(req: ImageGenerationRequest): Promise<ImageGenerationResult> {
+    if (isPlaceholder(this.apiKey)) {
+      throw new ProviderNotProvisionedError('openai-images', VAULT_PATH);
+    }
+
     const quality = req.quality ?? 'high';
     const modelId = MODEL_ID_MAP[quality] ?? 'openai:gpt-image-1-high';
     const startMs = Date.now();
@@ -101,6 +111,8 @@ export class OpenAIImagesConnector extends BaseImageConnector {
           chosenModel: modelId,
           fallbackUsed: false,
           reason: `openai gpt-image-1 quality=${quality}`,
+          candidate: { modelId, providerId: 'openai-images' as ProviderId, tier: req.tier },
+          costUsd,
         },
       };
     });

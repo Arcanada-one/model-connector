@@ -7,6 +7,10 @@ import { CircuitBreakerManager } from '../../../core/resilience/circuit-breaker-
 import { BaseImageConnector } from '../base-image.connector';
 import type { ImageGenerationRequest, ImageGenerationResult, ProviderId } from '../types';
 import { calculateCostUsd } from '../pricing';
+import { isPlaceholder } from '../errors/is-placeholder';
+import { ProviderNotProvisionedError } from '../errors/provider-not-provisioned.error';
+
+const VAULT_PATH = 'arcanada/prod/env/model-connector-replicate';
 
 const MODEL_ID = 'replicate:flux-pro';
 const REPLICATE_MODEL = 'black-forest-labs/flux-pro';
@@ -17,13 +21,19 @@ const REPLICATE_MODEL = 'black-forest-labs/flux-pro';
  */
 export class ReplicateFluxConnector extends BaseImageConnector {
   private readonly client: ReplicateWithAuth;
+  private readonly apiToken: string;
 
   constructor(apiToken: string, cbManager: CircuitBreakerManager) {
     super(cbManager);
+    this.apiToken = apiToken;
     this.client = new Replicate({ auth: apiToken }) as ReplicateWithAuth;
   }
 
   async generate(req: ImageGenerationRequest): Promise<ImageGenerationResult> {
+    if (isPlaceholder(this.apiToken)) {
+      throw new ProviderNotProvisionedError('replicate', VAULT_PATH);
+    }
+
     const startMs = Date.now();
     const count = req.count ?? 1;
 
@@ -81,6 +91,8 @@ export class ReplicateFluxConnector extends BaseImageConnector {
           chosenModel: MODEL_ID,
           fallbackUsed: false,
           reason: 'replicate flux-pro',
+          candidate: { modelId: MODEL_ID, providerId: 'replicate' as ProviderId, tier: req.tier },
+          costUsd,
         },
       };
     });

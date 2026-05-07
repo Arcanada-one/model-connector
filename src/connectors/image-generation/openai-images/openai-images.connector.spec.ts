@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { OpenAIImagesConnector } from './openai-images.connector';
 import { CircuitBreakerManager } from '../../../core/resilience/circuit-breaker-manager';
+import { ProviderNotProvisionedError } from '../errors/provider-not-provisioned.error';
 
 // ─── Mock openai package ──────────────────────────────────────────────────────
 vi.mock('openai', () => {
@@ -116,5 +117,41 @@ describe('OpenAIImagesConnector', () => {
         outputAsync: 'auto',
       }),
     ).rejects.toThrow();
+  });
+});
+
+// ─── Placeholder detection ────────────────────────────────────────────────────
+
+describe('OpenAIImagesConnector — placeholder credential detection', () => {
+  it('throws ProviderNotProvisionedError when api_key is PLACEHOLDER', async () => {
+    const cbManager = new CircuitBreakerManager('openai-images-ph', 5, 30_000);
+    const connectorWithPlaceholder = new OpenAIImagesConnector('PLACEHOLDER_CONN-0052', cbManager);
+
+    await expect(
+      connectorWithPlaceholder.generate({
+        tier: 'premium',
+        prompt: 'test',
+        quality: 'high',
+        count: 1,
+        outputFormat: 'url',
+        outputAsync: 'auto',
+      }),
+    ).rejects.toThrow(ProviderNotProvisionedError);
+  });
+
+  it('proceeds to API call when real key provided (mocked)', async () => {
+    const cbManager = new CircuitBreakerManager('openai-images-real', 5, 30_000);
+    const connectorWithReal = new OpenAIImagesConnector('sk-proj-real123abc', cbManager);
+
+    const result = await connectorWithReal.generate({
+      tier: 'premium',
+      prompt: 'real key test',
+      quality: 'high',
+      count: 1,
+      outputFormat: 'url',
+      outputAsync: 'auto',
+    });
+
+    expect(result.routing.chosenProvider).toBe('openai-images');
   });
 });

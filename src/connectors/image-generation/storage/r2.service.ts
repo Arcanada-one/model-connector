@@ -1,8 +1,11 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { isPlaceholder } from '../errors/is-placeholder';
+import { ProviderNotProvisionedError } from '../errors/provider-not-provisioned.error';
 
 const DEFAULT_PRESIGNED_TTL_SECONDS = 86400; // 24 hours
+const VAULT_PATH = 'arcanada/prod/env/model-connector-r2';
 const MIME_TO_EXT: Record<string, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
@@ -18,6 +21,7 @@ export class R2StorageService {
   private readonly client: S3Client;
   private readonly bucket: string;
   private readonly publicEndpoint: string;
+  private readonly accessKeyId: string;
 
   constructor(
     accountId: string,
@@ -28,6 +32,14 @@ export class R2StorageService {
   ) {
     this.bucket = bucket;
     this.publicEndpoint = endpoint;
+    this.accessKeyId = accessKeyId;
+
+    if (isPlaceholder(accessKeyId)) {
+      // Mark as unprovisioned — methods will throw on first use
+      this.client = null as unknown as S3Client;
+      return;
+    }
+
     this.client = new S3Client({
       region: 'auto',
       endpoint,
@@ -41,6 +53,7 @@ export class R2StorageService {
   /**
    * Upload a Buffer to R2.
    * Returns the R2 object key.
+   * Throws ProviderNotProvisionedError if credentials are PLACEHOLDER.
    */
   async uploadBuffer(
     data: Buffer,
@@ -48,6 +61,9 @@ export class R2StorageService {
     requestId: string,
     index: number,
   ): Promise<string> {
+    if (isPlaceholder(this.accessKeyId)) {
+      throw new ProviderNotProvisionedError('r2' as never, VAULT_PATH);
+    }
     const ext = MIME_TO_EXT[mimeType] ?? 'png';
     const now = new Date();
     const yyyy = now.getUTCFullYear();
@@ -79,8 +95,12 @@ export class R2StorageService {
    * Returns a time-limited presigned URL for downloading the object.
    * @param key    R2 object key
    * @param ttlSeconds  URL validity in seconds (default 24h, max 7d)
+   * Throws ProviderNotProvisionedError if credentials are PLACEHOLDER.
    */
   async getPresignedUrl(key: string, ttlSeconds = DEFAULT_PRESIGNED_TTL_SECONDS): Promise<string> {
+    if (isPlaceholder(this.accessKeyId)) {
+      throw new ProviderNotProvisionedError('r2' as never, VAULT_PATH);
+    }
     const clampedTtl = Math.min(Math.max(ttlSeconds, 3600), 604800);
     return getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: key }), {
       expiresIn: clampedTtl,

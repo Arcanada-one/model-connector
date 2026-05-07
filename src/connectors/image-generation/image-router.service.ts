@@ -58,6 +58,53 @@ export class ImageRouterService {
     this.cbManager = cbManager ?? new CircuitBreakerManager('image-router', 5, 30_000);
   }
 
+  /**
+   * Like route(), but skips providers in the `excludedProviders` set.
+   * Used to implement fallback when a provider throws ProviderNotProvisionedError.
+   */
+  routeExcluding(tier: Tier, options: RouteOptions, excludedProviders: string[]): RoutingDecision {
+    if (options.model) {
+      // Model pin bypass — exclusions don't apply
+      return this.route(tier, options);
+    }
+
+    const candidates = TIER_MAP[tier];
+    if (!candidates || candidates.length === 0) {
+      throw new ImageRoutingError(`No candidates configured for tier "${tier}"`);
+    }
+
+    const excluded = new Set(excludedProviders);
+    let firstSkipped = false;
+
+    for (const candidate of candidates) {
+      if (excluded.has(candidate.provider)) {
+        firstSkipped = true;
+        continue;
+      }
+      const cb = this.cbManager.getCircuitBreaker(candidate.model);
+      try {
+        cb.check();
+        return {
+          chosenProvider: candidate.provider,
+          chosenModel: candidate.model,
+          fallbackUsed: firstSkipped,
+          reason: firstSkipped
+            ? `fallback to ${candidate.model} (${excludedProviders.join(', ')} unprovisioned or circuit open)`
+            : `tier ${tier} primary`,
+          candidate: { modelId: candidate.model, providerId: candidate.provider, tier },
+          costUsd: calculateCostUsd(candidate.model, 1),
+        };
+      } catch {
+        firstSkipped = true;
+        continue;
+      }
+    }
+
+    throw new ImageRoutingError(
+      `All providers for tier "${tier}" unprovisioned or have open circuits: ${candidates.map((c) => c.provider).join(', ')}`,
+    );
+  }
+
   route(tier: Tier, options: RouteOptions): RoutingDecision {
     // Model pin: bypass tier routing entirely
     if (options.model) {

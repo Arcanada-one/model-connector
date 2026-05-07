@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { ReplicateFluxConnector } from './replicate-flux.connector';
 import { CircuitBreakerManager } from '../../../core/resilience/circuit-breaker-manager';
+import { ProviderNotProvisionedError } from '../errors/provider-not-provisioned.error';
 
 // ─── Mock replicate npm package ───────────────────────────────────────────────
 vi.mock('replicate', () => {
@@ -120,5 +121,41 @@ describe('ReplicateFluxConnector', () => {
         outputAsync: 'auto',
       }),
     ).rejects.toThrow();
+  });
+});
+
+// ─── Placeholder detection ────────────────────────────────────────────────────
+
+describe('ReplicateFluxConnector — placeholder credential detection', () => {
+  it('throws ProviderNotProvisionedError when api_token is PLACEHOLDER', async () => {
+    const cbManager = new CircuitBreakerManager('replicate-ph', 5, 30_000);
+    const connectorWithPlaceholder = new ReplicateFluxConnector('PLACEHOLDER_CONN-0052', cbManager);
+
+    await expect(
+      connectorWithPlaceholder.generate({
+        tier: 'premium',
+        prompt: 'test',
+        quality: 'high',
+        count: 1,
+        outputFormat: 'url',
+        outputAsync: 'auto',
+      }),
+    ).rejects.toThrow(ProviderNotProvisionedError);
+  });
+
+  it('proceeds to API call when real token provided (mocked)', async () => {
+    const cbManager = new CircuitBreakerManager('replicate-real', 5, 30_000);
+    const connectorWithReal = new ReplicateFluxConnector('r8_real_token_abc123', cbManager);
+
+    const result = await connectorWithReal.generate({
+      tier: 'premium',
+      prompt: 'real token test',
+      quality: 'high',
+      count: 1,
+      outputFormat: 'url',
+      outputAsync: 'auto',
+    });
+
+    expect(result.routing.chosenProvider).toBe('replicate');
   });
 });

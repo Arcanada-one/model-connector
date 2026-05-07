@@ -36,7 +36,13 @@ vi.mock('../../config/env.schema', () => ({
   }),
 }));
 
+vi.mock('./errors/provider-not-provisioned.error', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./errors/provider-not-provisioned.error')>();
+  return actual;
+});
+
 import { ImageGenerationService } from './image-generation.service';
+import { ProviderNotProvisionedError } from './errors/provider-not-provisioned.error';
 
 const prismaMock = {
   imageGeneration: {
@@ -55,6 +61,68 @@ describe('ImageGenerationService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     service = new ImageGenerationService(prismaMock, queueMock);
+  });
+
+  describe('handleRequest — ProviderNotProvisionedError fallback', () => {
+    it('propagates ProviderNotProvisionedError when all cheap providers unprovisioned', async () => {
+      // Override processRequest to simulate vertex being unprovisioned
+      vi.spyOn(service as never, 'processRequest').mockRejectedValue(
+        new ProviderNotProvisionedError('vertex', 'arcanada/prod/env/model-connector-vertex'),
+      );
+
+      await expect(
+        service.handleRequest(
+          {
+            tier: 'cheap',
+            prompt: 'test',
+            quality: 'medium',
+            count: 1,
+            outputFormat: 'url',
+            outputAsync: 'never',
+          },
+          'test-api-key',
+        ),
+      ).rejects.toThrow(ProviderNotProvisionedError);
+    });
+
+    it('falls back to next provider when primary is unprovisioned', async () => {
+      // First call (vertex) throws unprovisioned; second (replicate:flux-pro) succeeds
+      const mockProcessRequest = vi
+        .spyOn(service as never, 'processRequest')
+        .mockRejectedValueOnce(
+          new ProviderNotProvisionedError('vertex', 'arcanada/prod/env/model-connector-vertex'),
+        )
+        .mockResolvedValueOnce({
+          requestId: 'fallback-result',
+          status: 'completed',
+          urls: ['https://example.com/image.png'],
+          costUsd: 0.04,
+          latencyMs: 5000,
+          routing: {
+            chosenProvider: 'replicate',
+            chosenModel: 'replicate:flux-pro',
+            fallbackUsed: true,
+            reason: 'fallback',
+            candidate: { modelId: 'replicate:flux-pro', providerId: 'replicate', tier: 'premium' },
+            costUsd: 0.04,
+          },
+        });
+
+      const result = await service.handleRequest(
+        {
+          tier: 'premium',
+          prompt: 'test fallback',
+          quality: 'high',
+          count: 1,
+          outputFormat: 'url',
+          outputAsync: 'never',
+        },
+        'test-api-key',
+      );
+
+      expect(mockProcessRequest).toHaveBeenCalledTimes(2);
+      expect(result.routing.chosenProvider).toBe('replicate');
+    });
   });
 
   describe('shouldRunAsync', () => {
