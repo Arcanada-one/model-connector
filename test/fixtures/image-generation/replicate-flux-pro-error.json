@@ -1,0 +1,10 @@
+{
+  "id": "xyz789replicateid",
+  "version": "black-forest-labs/flux-pro",
+  "status": "failed",
+  "error": "NSFW content detected in prompt or output",
+  "output": null,
+  "metrics": {},
+  "created_at": "2026-05-07T10:00:00.000Z",
+  "completed_at": "2026-05-07T10:00:02.100Z"
+}

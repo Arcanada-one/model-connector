@@ -125,6 +125,106 @@ describe('ImageGenerationService', () => {
     });
   });
 
+  describe('routing_decision JSONB persistence', () => {
+    it('creates ImageGeneration row with metadata containing routing decision', async () => {
+      // Service has no connectors enabled (all disabled in mock getConfig)
+      // We spy on prisma.imageGeneration.create to verify routing JSONB
+      const createSpy = vi.spyOn(prismaMock.imageGeneration, 'create').mockResolvedValue({
+        id: 'gen-routing-test',
+      } as never);
+
+      // Override processRequest to succeed immediately after DB create
+      vi.spyOn(service as never, 'processRequest').mockResolvedValue({
+        requestId: 'gen-routing-test',
+        status: 'completed',
+        urls: ['https://r2.example.com/img.png'],
+        costUsd: 0.02,
+        latencyMs: 1000,
+        routing: {
+          chosenProvider: 'vertex',
+          chosenModel: 'vertex:imagen-4-fast',
+          fallbackUsed: false,
+          reason: 'test routing',
+          candidate: { modelId: 'vertex:imagen-4-fast', providerId: 'vertex', tier: 'mid' },
+          costUsd: 0.02,
+        },
+      });
+
+      vi.spyOn(prismaMock.imageGeneration, 'update').mockResolvedValue({} as never);
+
+      await service.handleRequest(
+        {
+          tier: 'mid',
+          prompt: 'routing test',
+          quality: 'medium',
+          count: 1,
+          outputFormat: 'url',
+          outputAsync: 'never',
+        },
+        'test-api-key',
+      );
+
+      // Verify create was called
+      expect(createSpy).toHaveBeenCalledOnce();
+
+      // Verify metadata field contains JSON-encoded routing decision
+      const createCall = createSpy.mock.calls[0][0] as { data: { metadata: string } };
+      expect(createCall.data.metadata).toBeDefined();
+
+      const metadata = JSON.parse(createCall.data.metadata) as {
+        routing: { chosenProvider: string; chosenModel: string };
+      };
+      expect(metadata.routing).toBeDefined();
+      expect(metadata.routing.chosenProvider).toBeTruthy();
+      expect(metadata.routing.chosenModel).toBeTruthy();
+    });
+
+    it('update call includes costUsd and latencyMs after sync completion', async () => {
+      vi.spyOn(prismaMock.imageGeneration, 'create').mockResolvedValue({
+        id: 'gen-update-test',
+      } as never);
+      const updateSpy = vi
+        .spyOn(prismaMock.imageGeneration, 'update')
+        .mockResolvedValue({} as never);
+
+      vi.spyOn(service as never, 'processRequest').mockResolvedValue({
+        requestId: 'gen-update-test',
+        status: 'completed',
+        urls: ['https://r2.example.com/img.png'],
+        costUsd: 0.04,
+        latencyMs: 2500,
+        routing: {
+          chosenProvider: 'vertex',
+          chosenModel: 'vertex:imagen-4',
+          fallbackUsed: false,
+          reason: 'test',
+          candidate: { modelId: 'vertex:imagen-4', providerId: 'vertex', tier: 'mid' },
+          costUsd: 0.04,
+        },
+      });
+
+      await service.handleRequest(
+        {
+          tier: 'mid',
+          prompt: 'update test',
+          quality: 'medium',
+          count: 1,
+          outputFormat: 'url',
+          outputAsync: 'never',
+        },
+        'test-api-key',
+      );
+
+      expect(updateSpy).toHaveBeenCalledOnce();
+      const updateCall = updateSpy.mock.calls[0][0] as {
+        data: { costUsd: number; latencyMs: number; status: string };
+      };
+      expect(updateCall.data.costUsd).toBe(0.04);
+      expect(updateCall.data.latencyMs).toBe(2500);
+      expect(updateCall.data.status).toBe('completed');
+    });
+  });
+
   describe('shouldRunAsync', () => {
     it('returns true for async-provider models', () => {
       expect(service.shouldRunAsync('vertex:imagen-4-ultra', 'auto')).toBe(true);
