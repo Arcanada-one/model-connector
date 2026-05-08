@@ -64,13 +64,15 @@ export class OpenAIImagesConnector extends BaseImageConnector {
         size = '1024x1792';
       }
 
+      // Note: gpt-image-1 does NOT support the response_format parameter.
+      // It always returns b64_json in data[0].b64_json.
+      // (Verified live 2026-05-08: passing response_format → HTTP 400 "Unknown parameter")
       const body = {
         model: 'gpt-image-1',
         prompt: req.prompt,
         n: count,
         quality: QUALITY_MAP[quality] ?? 'high',
         size,
-        response_format: 'url',
       };
 
       const response = await fetch(url, {
@@ -98,7 +100,15 @@ export class OpenAIImagesConnector extends BaseImageConnector {
 
       const latencyMs = Date.now() - startMs;
       const costUsd = calculateCostUsd(modelId, count);
-      const urls = data.data.map((item) => item.url ?? item.b64_json ?? '').filter(Boolean);
+      // gpt-image-1 always returns b64_json (no URL support).
+      // Normalise to data URI so callers get a consistent format.
+      const urls = data.data
+        .map((item) => {
+          if (item.url) return item.url;
+          if (item.b64_json) return `data:image/png;base64,${item.b64_json}`;
+          return '';
+        })
+        .filter(Boolean);
 
       return {
         requestId: crypto.randomUUID(),
