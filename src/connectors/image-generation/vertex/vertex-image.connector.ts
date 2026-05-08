@@ -93,6 +93,11 @@ export class VertexImageConnector extends BaseImageConnector {
 
       if (!response.ok) {
         const errorText = await response.text();
+        // 403 BILLING_DISABLED or PERMISSION_DENIED → treat as ProviderNotProvisionedError
+        // so the router fallback loop can skip vertex and try next provider.
+        if (response.status === 403) {
+          throw new ProviderNotProvisionedError('vertex', VAULT_PATH);
+        }
         throw new Error(`Vertex AI API error ${response.status}: ${errorText}`);
       }
 

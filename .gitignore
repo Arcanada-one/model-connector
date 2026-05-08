@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .env
+.env.integration
 *.js.map
 coverage/
 .swc/

@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts --mode integration",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
@@ -58,6 +59,7 @@
     ]
   },
   "devDependencies": {
+    "@nestjs/testing": "^11.1.19",
     "@swc/cli": "^0.8.1",
     "@swc/core": "^1.15.26",
     "@types/node": "^25.6.0",
