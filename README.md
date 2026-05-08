@@ -356,6 +356,8 @@ curl -s https://connector.arcanada.one/connectors \
 
 Подробнее: [docs/architecture.md](docs/architecture.md).
 
+**Adding a new OpenAI-compat API connector:** copy `templates/api-connector-scaffold/` → `src/connectors/<name>/`, follow the README inside (9 placeholders, post-gen checklist, ≤30 min walkthrough). Origin: CONN-0049.
+
 ## Commands
 
 ```bash
