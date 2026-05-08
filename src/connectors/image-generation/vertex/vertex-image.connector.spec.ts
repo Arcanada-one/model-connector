@@ -4,6 +4,7 @@ import { setupServer } from 'msw/node';
 import { VertexImageConnector } from './vertex-image.connector';
 import { CircuitBreakerManager } from '../../../core/resilience/circuit-breaker-manager';
 import { ProviderNotProvisionedError } from '../errors/provider-not-provisioned.error';
+import { IMAGE_CAPABILITIES } from '../capabilities';
 
 // ─── Mock google-auth-library ─────────────────────────────────────────────────
 vi.mock('google-auth-library', () => {
@@ -19,10 +20,15 @@ vi.mock('google-auth-library', () => {
 
 const MOCK_VERTEX_BASE = 'https://us-central1-aiplatform.googleapis.com';
 
+// Real Vertex AI model IDs as verified in CONN-0052 probe (2026-05-08)
+const VERTEX_FAST_MODEL = 'imagen-4.0-fast-generate-001';
+const VERTEX_STANDARD_MODEL = 'imagen-4.0-generate-001';
+const VERTEX_ULTRA_MODEL = 'imagen-4.0-ultra-generate-001';
+
 const server = setupServer(
-  // Imagen 4 Fast predict endpoint
+  // Imagen 4 Fast predict endpoint — real API model ID (CONN-0052)
   http.post(
-    `${MOCK_VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-4-fast:predict`,
+    `${MOCK_VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/${VERTEX_FAST_MODEL}:predict`,
     async () => {
       return HttpResponse.json({
         predictions: [
@@ -35,14 +41,29 @@ const server = setupServer(
     },
   ),
 
-  // Imagen Nano predict endpoint
+  // Imagen 4 Standard predict endpoint — real API model ID (CONN-0052)
   http.post(
-    `${MOCK_VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-nano:predict`,
+    `${MOCK_VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/${VERTEX_STANDARD_MODEL}:predict`,
     async () => {
       return HttpResponse.json({
         predictions: [
           {
-            bytesBase64Encoded: Buffer.from('fake-nano-image').toString('base64'),
+            bytesBase64Encoded: Buffer.from('fake-standard-image').toString('base64'),
+            mimeType: 'image/png',
+          },
+        ],
+      });
+    },
+  ),
+
+  // Imagen 4 Ultra predict endpoint — real API model ID (CONN-0052)
+  http.post(
+    `${MOCK_VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/${VERTEX_ULTRA_MODEL}:predict`,
+    async () => {
+      return HttpResponse.json({
+        predictions: [
+          {
+            bytesBase64Encoded: Buffer.from('fake-ultra-image').toString('base64'),
             mimeType: 'image/png',
           },
         ],
@@ -106,8 +127,9 @@ describe('VertexImageConnector', () => {
     // Add a handler that captures the request body
     let capturedBody: unknown;
     server.use(
+      // Must use real apiModelName (CONN-0052) — old 'imagen-4-fast' would 404
       http.post(
-        `${MOCK_VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-4-fast:predict`,
+        `${MOCK_VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/${VERTEX_FAST_MODEL}:predict`,
         async ({ request }) => {
           capturedBody = await request.json();
           return HttpResponse.json({
@@ -128,7 +150,7 @@ describe('VertexImageConnector', () => {
   it('handles HTTP 500 from Vertex and throws', async () => {
     server.use(
       http.post(
-        `${MOCK_VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-4-fast:predict`,
+        `${MOCK_VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/${VERTEX_FAST_MODEL}:predict`,
         () => HttpResponse.json({ error: { message: 'Internal error' } }, { status: 500 }),
       ),
     );
@@ -189,6 +211,7 @@ describe('VertexImageConnector — placeholder credential detection', () => {
     );
 
     // Should NOT throw ProviderNotProvisionedError — will reach API call (MSW mocked above)
+    // MSW handler registered for VERTEX_FAST_MODEL (imagen-4.0-fast-generate-001)
     const result = await connectorWithReal.generate({
       tier: 'mid',
       prompt: 'real creds test',
@@ -199,5 +222,80 @@ describe('VertexImageConnector — placeholder credential detection', () => {
     });
 
     expect(result.routing.chosenProvider).toBe('vertex');
+  });
+});
+
+// ─── apiModelName routing correctness ─────────────────────────────────────────
+
+describe('VertexImageConnector — apiModelName routing', () => {
+  const realCreds = JSON.stringify({
+    type: 'service_account',
+    private_key: '-----BEGIN RSA PRIVATE KEY-----\nmock-key\n-----END RSA PRIVATE KEY-----',
+    client_email: 'test@test.iam.gserviceaccount.com',
+  });
+
+  it('capabilities contain correct apiModelName for all Vertex imagen models', () => {
+    expect(IMAGE_CAPABILITIES['vertex:imagen-4-fast'].apiModelName).toBe(
+      'imagen-4.0-fast-generate-001',
+    );
+    expect(IMAGE_CAPABILITIES['vertex:imagen-4'].apiModelName).toBe('imagen-4.0-generate-001');
+    expect(IMAGE_CAPABILITIES['vertex:imagen-4-ultra'].apiModelName).toBe(
+      'imagen-4.0-ultra-generate-001',
+    );
+  });
+
+  it('generates with vertex:imagen-4 using real Standard apiModelName URL', async () => {
+    const cbManager = new CircuitBreakerManager('vertex-std', 5, 30_000);
+    const connector = new VertexImageConnector('test-project', 'us-central1', realCreds, cbManager);
+
+    const result = await connector.generate({
+      tier: 'mid',
+      prompt: 'standard model test',
+      model: 'vertex:imagen-4',
+      quality: 'medium',
+      count: 1,
+      outputFormat: 'url',
+      outputAsync: 'auto',
+    });
+
+    expect(result.status).toBe('completed');
+    expect(result.routing.chosenProvider).toBe('vertex');
+    expect(result.routing.reason).toContain('imagen-4.0-generate-001');
+  });
+
+  it('generates with vertex:imagen-4-ultra using real Ultra apiModelName URL', async () => {
+    const cbManager = new CircuitBreakerManager('vertex-ultra', 5, 30_000);
+    const connector = new VertexImageConnector('test-project', 'us-central1', realCreds, cbManager);
+
+    const result = await connector.generate({
+      tier: 'premium',
+      prompt: 'ultra model test',
+      model: 'vertex:imagen-4-ultra',
+      quality: 'high',
+      count: 1,
+      outputFormat: 'url',
+      outputAsync: 'auto',
+    });
+
+    expect(result.status).toBe('completed');
+    expect(result.routing.chosenProvider).toBe('vertex');
+    expect(result.routing.reason).toContain('imagen-4.0-ultra-generate-001');
+  });
+
+  it('throws descriptive error when vertex:nano-banana is requested (Phase 3 not implemented)', async () => {
+    const cbManager = new CircuitBreakerManager('vertex-nano', 5, 30_000);
+    const connector = new VertexImageConnector('test-project', 'us-central1', realCreds, cbManager);
+
+    await expect(
+      connector.generate({
+        tier: 'cheap',
+        prompt: 'nano test',
+        model: 'vertex:nano-banana',
+        quality: 'low',
+        count: 1,
+        outputFormat: 'url',
+        outputAsync: 'auto',
+      }),
+    ).rejects.toThrow('Nano Banana');
   });
 });

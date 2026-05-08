@@ -5,6 +5,7 @@ import type { ImageProviderCapabilities, ModelId } from './types';
 
 const capabilityEntrySchema = z.object({
   modelId: z.string(),
+  apiModelName: z.string().optional(),
   provider: z.enum(['vertex', 'replicate', 'openai-images']),
   displayName: z.string().min(1),
   sizes: z
@@ -32,6 +33,10 @@ export type CapabilityRecord = Record<string, ImageProviderCapabilities>;
 export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
   'vertex:nano-banana': {
     modelId: 'vertex:nano-banana',
+    // TODO(CONN-0052 Phase 3): Nano Banana = Gemini 2.5 Flash Image.
+    // It uses `:generateContent` endpoint, not `:predict`. Separate connector needed.
+    // See: GD-9 in INSIGHTS-CONN-0052.md
+    apiModelName: 'gemini-2.5-flash-image',
     provider: 'vertex',
     displayName: 'Vertex Imagen Nano (Nano Banana)',
     sizes: [
@@ -49,11 +54,12 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     latencyP95Ms: 8000,
     asyncThresholdMs: 30000,
     enabledByDefault: true,
-    lastValidated: '2026-05-07',
+    lastValidated: '2026-05-08',
   },
 
   'vertex:imagen-4-fast': {
     modelId: 'vertex:imagen-4-fast',
+    apiModelName: 'imagen-4.0-fast-generate-001', // Verified CONN-0052: HTTP 200, 1024×1024 PNG (761KB)
     provider: 'vertex',
     displayName: 'Vertex Imagen 4 Fast',
     sizes: [
@@ -68,15 +74,17 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     supportsSeed: true,
     watermark: 'optional',
     safetyPolicy: 'standard',
+    // NOTE: Google actual pricing $0.025/image (2026-05-08); gap <50% threshold, flagged
     costPerImageUsd: 0.02,
     latencyP95Ms: 6000,
     asyncThresholdMs: 30000,
     enabledByDefault: true,
-    lastValidated: '2026-05-07',
+    lastValidated: '2026-05-08',
   },
 
   'vertex:imagen-4': {
     modelId: 'vertex:imagen-4',
+    apiModelName: 'imagen-4.0-generate-001', // Verified CONN-0052: HTTP 200
     provider: 'vertex',
     displayName: 'Vertex Imagen 4 Standard',
     sizes: [
@@ -95,11 +103,12 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     latencyP95Ms: 15000,
     asyncThresholdMs: 30000,
     enabledByDefault: true,
-    lastValidated: '2026-05-07',
+    lastValidated: '2026-05-08',
   },
 
   'vertex:imagen-4-ultra': {
     modelId: 'vertex:imagen-4-ultra',
+    apiModelName: 'imagen-4.0-ultra-generate-001', // Verified CONN-0052: HTTP 200
     provider: 'vertex',
     displayName: 'Vertex Imagen 4 Ultra',
     sizes: [
@@ -117,11 +126,12 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     latencyP95Ms: 45000,
     asyncThresholdMs: 45000,
     enabledByDefault: true,
-    lastValidated: '2026-05-07',
+    lastValidated: '2026-05-08',
   },
 
   'replicate:flux-pro': {
     modelId: 'replicate:flux-pro',
+    apiModelName: 'black-forest-labs/flux-pro', // Replicate model path used in /v1/models/{path}/predictions
     provider: 'replicate',
     displayName: 'FLUX.1 Pro (Replicate)',
     sizes: [
@@ -143,6 +153,7 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
 
   'openai:gpt-image-1-low': {
     modelId: 'openai:gpt-image-1-low',
+    apiModelName: 'gpt-image-1', // Single real model ID; quality is a separate API param
     provider: 'openai-images',
     displayName: 'GPT Image 1 Low Quality',
     sizes: [
@@ -166,6 +177,7 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
 
   'openai:gpt-image-1-medium': {
     modelId: 'openai:gpt-image-1-medium',
+    apiModelName: 'gpt-image-1', // Single real model ID; quality is a separate API param
     provider: 'openai-images',
     displayName: 'GPT Image 1 Medium Quality',
     sizes: [
@@ -188,6 +200,7 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
 
   'openai:gpt-image-1-high': {
     modelId: 'openai:gpt-image-1-high',
+    apiModelName: 'gpt-image-1', // Single real model ID; quality is a separate API param
     provider: 'openai-images',
     displayName: 'GPT Image 1 High Quality',
     sizes: [

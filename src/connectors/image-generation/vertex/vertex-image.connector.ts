@@ -2,24 +2,39 @@ import { CircuitBreakerManager } from '../../../core/resilience/circuit-breaker-
 import { BaseImageConnector } from '../base-image.connector';
 import { VertexAuthService } from './vertex-auth.service';
 import type { ImageGenerationRequest, ImageGenerationResult, ProviderId } from '../types';
+import { IMAGE_CAPABILITIES } from '../capabilities';
 import { calculateCostUsd } from '../pricing';
 import { isPlaceholder } from '../errors/is-placeholder';
 import { ProviderNotProvisionedError } from '../errors/provider-not-provisioned.error';
 
 const VAULT_PATH = 'arcanada/prod/env/model-connector-vertex';
 
-/**
- * Maps our internal model IDs to Vertex AI endpoint model identifiers.
- * Source: CONN-0052 plan §5.5.
- */
-const VERTEX_MODEL_MAP: Record<string, string> = {
-  'vertex:nano-banana': 'imagen-nano',
-  'vertex:imagen-4-fast': 'imagen-4-fast',
-  'vertex:imagen-4': 'imagen-4',
-  'vertex:imagen-4-ultra': 'imagen-4-ultra',
-};
-
 const DEFAULT_MODEL = 'vertex:imagen-4-fast';
+
+// TODO(CONN-0052 Phase 3): Nano Banana (vertex:nano-banana) uses Gemini 2.5 Flash Image
+// which requires a separate `:generateContent` endpoint with a different request shape.
+// GD-9: create nano-banana.connector.ts with dedicated implementation.
+const NANO_BANANA_MODEL = 'vertex:nano-banana';
+
+/**
+ * Resolve the Vertex AI model identifier for a given internal model ID.
+ * Falls back to apiModelName from capabilities, then a safe default.
+ * Throws if the modelId maps to nano-banana (not implemented via :predict).
+ */
+function resolveVertexApiModel(modelId: string): string {
+  if (modelId === NANO_BANANA_MODEL) {
+    throw new Error(
+      `Vertex model '${modelId}' (Nano Banana / Gemini 2.5 Flash Image) is not yet supported. ` +
+        'It requires a separate :generateContent endpoint. See GD-9 in INSIGHTS-CONN-0052.md.',
+    );
+  }
+  const cap = IMAGE_CAPABILITIES[modelId as keyof typeof IMAGE_CAPABILITIES];
+  if (cap?.apiModelName) {
+    return cap.apiModelName;
+  }
+  // Safe fallback: use the Fast model to avoid 404
+  return IMAGE_CAPABILITIES['vertex:imagen-4-fast'].apiModelName ?? 'imagen-4.0-fast-generate-001';
+}
 
 /**
  * Vertex AI Imagen connector (Imagen 4 family + Nano Banana).
@@ -58,7 +73,7 @@ export class VertexImageConnector extends BaseImageConnector {
     }
 
     const modelId = req.model ?? DEFAULT_MODEL;
-    const vertexModel = VERTEX_MODEL_MAP[modelId] ?? 'imagen-4-fast';
+    const vertexModel = resolveVertexApiModel(modelId);
     const startMs = Date.now();
 
     return this.withCircuit(modelId, async () => {

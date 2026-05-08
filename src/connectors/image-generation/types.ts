@@ -75,6 +75,11 @@ export interface ImageGenerationResult {
 
 export interface ImageProviderCapabilities {
   modelId: ModelId;
+  /** Provider-side model identifier used in API URLs/bodies.
+   *  Distinct from the internal `modelId` routing key.
+   *  E.g. 'imagen-4.0-fast-generate-001' for 'vertex:imagen-4-fast'.
+   *  Optional: connectors that do not use this field ignore it. */
+  apiModelName?: string;
   provider: ProviderId;
   displayName: string;
   sizes: { width: number; height: number }[];

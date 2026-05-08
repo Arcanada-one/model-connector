@@ -110,28 +110,22 @@ describe.skipIf(!shouldRun || !billingEnabled)(
       }
     });
 
-    it('generates image with vertex:nano-banana (Imagen Nano)', async () => {
-      const t0 = Date.now();
-      const result = await connector.generate({
-        tier: 'cheap',
-        prompt: 'a simple blue square on white background',
-        aspectRatio: '1:1',
-        count: 1,
-        quality: 'low',
-        outputFormat: 'url',
-        outputAsync: 'never',
-        model: 'vertex:nano-banana',
-      });
-      const elapsed = Date.now() - t0;
-
-      expect(result.status).toBe('completed');
-      expect(result.urls!.length).toBeGreaterThanOrEqual(1);
-      expect(result.costUsd).toBeGreaterThan(0);
-      expect(result.routing.chosenModel).toBe('vertex:nano-banana');
-      expect(elapsed).toBeLessThan(30_000);
-
-      console.log('[INT] Nano Banana latency:', elapsed, 'ms');
-      console.log('[INT] Cost:', result.costUsd, 'USD');
+    it('vertex:nano-banana throws NotImplemented (Phase 3 pending — GD-9)', async () => {
+      // Nano Banana = Gemini 2.5 Flash Image; requires :generateContent endpoint.
+      // Phase 3 task: create nano-banana.connector.ts with separate implementation.
+      // Until then: connector throws descriptive error, not ProviderNotProvisionedError.
+      await expect(
+        connector.generate({
+          tier: 'cheap',
+          prompt: 'a simple blue square on white background',
+          aspectRatio: '1:1',
+          count: 1,
+          quality: 'low',
+          outputFormat: 'url',
+          outputAsync: 'never',
+          model: 'vertex:nano-banana',
+        }),
+      ).rejects.toThrow(/Nano Banana/);
     });
   },
 );

@@ -131,7 +131,7 @@ describe('Vertex AI connector — fixture replay', () => {
 
     server.use(
       http.post(
-        `${VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-4-fast:predict`,
+        `${VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-4.0-fast-generate-001:predict`,
         () => HttpResponse.json(fixture),
       ),
     );
@@ -163,7 +163,7 @@ describe('Vertex AI connector — fixture replay', () => {
 
     server.use(
       http.post(
-        `${VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-4-fast:predict`,
+        `${VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-4.0-fast-generate-001:predict`,
         () => HttpResponse.json(fixture, { status: 429 }),
       ),
     );
@@ -188,7 +188,7 @@ describe('Vertex AI connector — fixture replay', () => {
 
     server.use(
       http.post(
-        `${VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-4-fast:predict`,
+        `${VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-4.0-fast-generate-001:predict`,
         () => HttpResponse.json(fixture, { status: 401 }),
       ),
     );
@@ -213,7 +213,7 @@ describe('Vertex AI connector — fixture replay', () => {
 
     server.use(
       http.post(
-        `${VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-4-fast:predict`,
+        `${VERTEX_BASE}/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-4.0-fast-generate-001:predict`,
         () => HttpResponse.json(fixture, { status: 503 }),
       ),
     );
