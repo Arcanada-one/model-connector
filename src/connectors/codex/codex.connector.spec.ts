@@ -1,4 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
+import { readFileSync, rmSync, existsSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { CodexConnector } from './codex.connector';
 import { ConnectorRequest } from '../interfaces/connector.interface';
 
@@ -88,6 +91,76 @@ describe('CodexConnector', () => {
       const args = connector.testBuildArgs({ prompt: 'hello' });
       const prompt = args[args.length - 1];
       expect(prompt).toBe('hello');
+    });
+
+    describe('schema injection (CONN-0062)', () => {
+      const schemaDir = join(tmpdir(), 'codex-schemas');
+      const writtenPaths: string[] = [];
+
+      afterEach(() => {
+        for (const p of writtenPaths) {
+          try {
+            rmSync(p, { force: true });
+          } catch {
+            // ignore
+          }
+        }
+        writtenPaths.length = 0;
+      });
+
+      it('should inject --output-schema with tempfile when jsonSchema provided', () => {
+        const args = connector.testBuildArgs({
+          prompt: 'extract',
+          jsonSchema: { type: 'object', properties: { name: { type: 'string' } } },
+        });
+        const idx = args.indexOf('--output-schema');
+        expect(idx).toBeGreaterThan(-1);
+        const path = args[idx + 1];
+        expect(path).toMatch(/codex-schemas[\\/].+\.json$/);
+        expect(existsSync(path)).toBe(true);
+        writtenPaths.push(path);
+      });
+
+      it('should NOT inject --output-schema when jsonSchema absent', () => {
+        const args = connector.testBuildArgs({ prompt: 'hello' });
+        expect(args).not.toContain('--output-schema');
+      });
+
+      it('should write a normalized strict schema to disk', () => {
+        const args = connector.testBuildArgs({
+          prompt: 'p',
+          jsonSchema: {
+            type: 'object',
+            properties: { id: { type: 'string' } },
+          },
+        });
+        const path = args[args.indexOf('--output-schema') + 1];
+        writtenPaths.push(path);
+        const written = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>;
+        expect(written.additionalProperties).toBe(false);
+        expect(written.required).toEqual(['id']);
+      });
+
+      it('should place tempfile inside <tmpdir>/codex-schemas/', () => {
+        const args = connector.testBuildArgs({
+          prompt: 'p',
+          jsonSchema: { type: 'object', properties: { x: { type: 'number' } } },
+        });
+        const path = args[args.indexOf('--output-schema') + 1];
+        writtenPaths.push(path);
+        expect(path.startsWith(schemaDir)).toBe(true);
+      });
+
+      it('should place schema flag before the prompt', () => {
+        const args = connector.testBuildArgs({
+          prompt: 'final',
+          jsonSchema: { type: 'object', properties: { x: { type: 'string' } } },
+        });
+        const schemaIdx = args.indexOf('--output-schema');
+        const promptIdx = args.indexOf('final');
+        writtenPaths.push(args[schemaIdx + 1]);
+        expect(schemaIdx).toBeLessThan(promptIdx);
+      });
     });
   });
 
@@ -228,6 +301,30 @@ describe('CodexConnector', () => {
       expect(connector.testClassifyError('', 127)).toBe('binary_not_found');
       expect(connector.testClassifyError('something unknown', 1)).toBe('execution_error');
     });
+
+    describe('credit_depleted (CONN-0062)', () => {
+      it('should classify "credits exhausted" as credit_depleted', () => {
+        expect(connector.testClassifyError('Your credits are exhausted', 1)).toBe(
+          'credit_depleted',
+        );
+      });
+
+      it('should classify "credit_depleted" token as credit_depleted', () => {
+        expect(connector.testClassifyError('error: credit_depleted', 1)).toBe('credit_depleted');
+      });
+
+      it('should classify "out of credit" as credit_depleted', () => {
+        expect(connector.testClassifyError('Account is out of credit', 1)).toBe('credit_depleted');
+      });
+
+      it('should classify "quota exhausted" as credit_depleted', () => {
+        expect(connector.testClassifyError('quota exhausted for org', 1)).toBe('credit_depleted');
+      });
+
+      it('should keep bare HTTP 429 / rate limit text as rate_limited', () => {
+        expect(connector.testClassifyError('rate limit exceeded HTTP 429', 0)).toBe('rate_limited');
+      });
+    });
   });
 
   describe('getCapabilities', () => {
@@ -237,9 +334,40 @@ describe('CodexConnector', () => {
       expect(caps.type).toBe('cli');
       expect(caps.models).toEqual(['o4-mini', 'o3', 'codex-mini-latest']);
       expect(caps.supportsStreaming).toBe(false);
-      expect(caps.supportsJsonSchema).toBe(false);
+      expect(caps.supportsJsonSchema).toBe(true);
       expect(caps.supportsTools).toBe(true);
       expect(caps.maxTimeout).toBe(600_000);
+    });
+  });
+
+  describe('parseOutput — token envelope (CONN-0062)', () => {
+    it('should surface cachedInputTokens and reasoningOutputTokens via structured', () => {
+      const jsonl = [
+        '{"type":"thread.started","thread_id":"tid-1"}',
+        '{"type":"turn.started"}',
+        '{"type":"message.completed","message":{"id":"m","role":"assistant","content":"ok"}}',
+        '{"type":"turn.completed","usage":{"input_tokens":100,"cached_input_tokens":40,"output_tokens":20,"reasoning_output_tokens":15,"total_tokens":135}}',
+      ].join('\n');
+      const parsed = connector.testParseOutput(jsonl, '');
+      expect(parsed.isError).toBe(false);
+      expect(parsed.inputTokens).toBe(100);
+      expect(parsed.outputTokens).toBe(20);
+      expect(parsed.structured).toMatchObject({
+        threadId: 'tid-1',
+        cachedInputTokens: 40,
+        reasoningOutputTokens: 15,
+        totalTokens: 100 + 20 + 15,
+      });
+    });
+
+    it('should omit reasoning fields from structured when not present', () => {
+      const jsonl = [
+        '{"type":"thread.started","thread_id":"tid-2"}',
+        '{"type":"message.completed","message":{"id":"m","role":"assistant","content":"hi"}}',
+        '{"type":"turn.completed","usage":{"input_tokens":10,"output_tokens":2,"total_tokens":12}}',
+      ].join('\n');
+      const parsed = connector.testParseOutput(jsonl, '');
+      expect(parsed.structured).toEqual({ threadId: 'tid-2' });
     });
   });
 });

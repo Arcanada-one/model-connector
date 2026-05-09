@@ -1,17 +1,29 @@
+import { mkdirSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { randomUUID } from 'crypto';
 import { BaseCliConnector, ParsedCliOutput } from '../base-cli.connector';
 import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
+import { normalizeSchema } from './schema-normalizer';
 
 interface CodexEvent {
   type: string;
   thread_id?: string;
   message?: { id?: string; role?: string; content?: string };
   delta?: { content?: string };
-  usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number };
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+    total_tokens?: number;
+    cached_input_tokens?: number;
+    reasoning_output_tokens?: number;
+  };
   error?: { message?: string };
   item?: { id?: string; type?: string; message?: string };
 }
 
 const DEFAULT_MODEL = 'o4-mini';
+const SCHEMA_TMP_DIR = join(tmpdir(), 'codex-schemas');
 
 export class CodexConnector extends BaseCliConnector {
   readonly name = 'codex';
@@ -23,7 +35,7 @@ export class CodexConnector extends BaseCliConnector {
   protected buildArgs(request: ConnectorRequest): string[] {
     const model = request.model || DEFAULT_MODEL;
     const prompt = this.buildPromptWithJsonMode(request);
-    return [
+    const args = [
       'exec',
       '--model',
       model,
@@ -31,8 +43,21 @@ export class CodexConnector extends BaseCliConnector {
       '--full-auto',
       '--ephemeral',
       '--skip-git-repo-check',
-      prompt,
     ];
+    if (request.jsonSchema) {
+      const schemaPath = this.writeTempSchema(request.jsonSchema);
+      args.push('--output-schema', schemaPath);
+    }
+    args.push(prompt);
+    return args;
+  }
+
+  protected writeTempSchema(schema: Record<string, unknown>): string {
+    const normalized = normalizeSchema(schema);
+    mkdirSync(SCHEMA_TMP_DIR, { recursive: true, mode: 0o700 });
+    const path = join(SCHEMA_TMP_DIR, `${randomUUID()}.json`);
+    writeFileSync(path, JSON.stringify(normalized), { mode: 0o600 });
+    return path;
   }
 
   protected parseOutput(stdout: string, stderr: string): ParsedCliOutput {
@@ -90,7 +115,6 @@ export class CodexConnector extends BaseCliConnector {
     const text = messageCompleted?.message?.content ?? '';
     const usage = turnCompleted?.usage;
 
-    // No message and no error = incomplete response
     if (!text) {
       return {
         text: '',
@@ -104,12 +128,25 @@ export class CodexConnector extends BaseCliConnector {
       };
     }
 
+    const cachedInputTokens = usage?.cached_input_tokens ?? 0;
+    const reasoningOutputTokens = usage?.reasoning_output_tokens ?? 0;
+    const inputTokens = usage?.input_tokens ?? 0;
+    const outputTokens = usage?.output_tokens ?? 0;
+
+    const structured: Record<string, unknown> = {};
+    if (threadId) structured.threadId = threadId;
+    if (cachedInputTokens > 0) structured.cachedInputTokens = cachedInputTokens;
+    if (reasoningOutputTokens > 0) {
+      structured.reasoningOutputTokens = reasoningOutputTokens;
+      structured.totalTokens = inputTokens + outputTokens + reasoningOutputTokens;
+    }
+
     return {
       text,
-      structured: threadId ? { threadId } : undefined,
+      structured: Object.keys(structured).length > 0 ? structured : undefined,
       model: DEFAULT_MODEL,
-      inputTokens: usage?.input_tokens ?? 0,
-      outputTokens: usage?.output_tokens ?? 0,
+      inputTokens,
+      outputTokens,
       costUsd: 0,
       isError: false,
     };
@@ -145,6 +182,13 @@ export class CodexConnector extends BaseCliConnector {
     if (lower.includes('output schema') && lower.includes('not valid json')) {
       return 'validation_error';
     }
+    if (
+      /credit_depleted|credits?\b.{0,20}(exhaust|deplet)|out of credit|quota\b.{0,15}(exhaust|exceed)/i.test(
+        message,
+      )
+    ) {
+      return 'credit_depleted';
+    }
     return super.classifyError(message, exitCode);
   }
 
@@ -162,7 +206,7 @@ export class CodexConnector extends BaseCliConnector {
       type: 'cli',
       models: ['o4-mini', 'o3', 'codex-mini-latest'],
       supportsStreaming: false,
-      supportsJsonSchema: false,
+      supportsJsonSchema: true,
       supportsTools: true,
       maxTimeout: 600_000,
     };

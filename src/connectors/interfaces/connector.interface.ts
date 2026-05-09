@@ -56,6 +56,7 @@ const ERROR_ACTION_MAP: Record<string, { retryable: boolean; recommendation: Err
   binary_not_found: { retryable: false, recommendation: 'abort' },
   validation_error: { retryable: false, recommendation: 'abort' },
   billing_error: { retryable: false, recommendation: 'abort' },
+  credit_depleted: { retryable: false, recommendation: 'abort' },
   budget_exceeded: { retryable: false, recommendation: 'abort' },
   max_turns_exceeded: { retryable: false, recommendation: 'abort' },
   max_output_tokens: { retryable: false, recommendation: 'abort' },

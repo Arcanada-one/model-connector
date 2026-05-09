@@ -21,6 +21,7 @@ export const envSchema = z.object({
   CLAUDE_CODE_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
   CURSOR_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(1),
   GEMINI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
+  CODEX_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
   OPENROUTER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
   GROQ_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
   GROK_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
