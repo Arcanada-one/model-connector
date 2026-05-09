@@ -35,6 +35,9 @@ jobs:
   docker-e2e:
     runs-on: [self-hosted, Linux, arcana-prod]
     needs: lint-and-test
+    concurrency:
+      group: docker-e2e-arcana-prod
+      cancel-in-progress: false
     services:
       postgres:
         image: postgres:16
