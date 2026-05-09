@@ -112,12 +112,17 @@ log "OAuth blob materialised at ${AUTH_TARGET} (mode 600, tmpfs)"
 # the same single-tenant host running as a different UID still cannot read.
 MC_USER_UID="${MC_USER_UID:-1001}"
 MC_USER_GID="${MC_USER_GID:-1001}"
+# Defensive chmod 0700 before chown (host dir may have been auto-created by
+# `compose up` with default 0755 if operator skipped the explicit chmod step).
+# Done while sidecar is still owner — chmod after chown would need CAP_FOWNER
+# which `cap_drop: ALL` strips.
+chmod 0700 "${CODEX_HOME}"
 if ! chown "${MC_USER_UID}:${MC_USER_GID}" "${AUTH_TARGET}" "${CODEX_HOME}"; then
     log "FATAL: chown to ${MC_USER_UID}:${MC_USER_GID} failed — likely missing CAP_CHOWN."
     log "Add 'cap_add: [CHOWN]' to codex-sidecar service in docker-compose.codex.yml."
     exit 73
 fi
-log "Chowned ${CODEX_HOME} + auth.json to ${MC_USER_UID}:${MC_USER_GID} for MC read-access."
+log "Chowned ${CODEX_HOME} + auth.json to ${MC_USER_UID}:${MC_USER_GID} (mode 0700/0600) for MC read-access."
 
 # Quick smoke — codex --version exercises auth.json parse path without spending tokens.
 if ! codex --version >/dev/null 2>&1; then
