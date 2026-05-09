@@ -29,18 +29,19 @@ services:
       VAULT_SECRET_ID: ${CODEX_VAULT_SECRET_ID:?CODEX_VAULT_SECRET_ID required}
       VAULT_KV_PATH: arcanada/prod/env/codex-cli
       CODEX_AUTH_STRATEGY: vault-blob
-      CODEX_HOME: /tmpfs/codex-auth
-    # tmpfs uid/gid options need long-form mount spec; short-form list does not
-    # forward arbitrary mount options consistently across compose versions.
+      CODEX_HOME: /dev/shm/codex-auth
+    # CONN-0068 F-8/F-10: per-container tmpfs cannot be shared with the
+    # model-connector container that actually spawns the codex binary. Bind a
+    # host /dev/shm path (Linux tmpfs by default) so both containers see the
+    # same OAuth blob. Sidecar gets rw, model-connector gets ro. Operator must
+    # `mkdir -p /dev/shm/codex-auth && chmod 0700 /dev/shm/codex-auth` once on
+    # arcana-prod before `compose up` (compose auto-creates with default mode
+    # if missing, but explicit chmod 0700 is required for T-NEW mitigation).
     volumes:
-      - type: tmpfs
-        target: /tmpfs/codex-auth
-        tmpfs:
-          size: 1048576    # 1 MiB
-          mode: 0o700
+      - /dev/shm/codex-auth:/dev/shm/codex-auth
       # Volume init: image pre-populates /codex-sidecar/bin/codex (see Dockerfile);
-      # first mount of fresh named volume copies that into the volume so the api
-      # container can read the binary read-only.
+      # first mount of fresh named volume copies that into the volume so the
+      # model-connector container can read the binary read-only.
       - codex-bin:/codex-sidecar/bin
     # Long-lived process; healthcheck verifies binary + auth materialisation.
     command: ["sleep", "infinity"]
@@ -63,8 +64,15 @@ services:
   model-connector:
     environment:
       CODEX_BINARY_PATH: /codex-sidecar/bin/codex
+      # CONN-0068 F-10: spawned codex needs CODEX_HOME pointing at the shared
+      # /dev/shm bind (sidecar wrote auth.json there). Without this env, codex
+      # falls back to $HOME/.codex/auth.json (does not exist).
+      CODEX_HOME: /dev/shm/codex-auth
     volumes:
       - codex-bin:/codex-sidecar/bin:ro
+      # CONN-0068 F-10: read-only view of the same /dev/shm path the sidecar
+      # populates. T3 mitigation: MC cannot mutate or delete the OAuth blob.
+      - /dev/shm/codex-auth:/dev/shm/codex-auth:ro
     depends_on:
       codex-sidecar:
         condition: service_healthy
