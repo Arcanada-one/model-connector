@@ -71,7 +71,7 @@ RUN apk add --no-cache bash ca-certificates curl jq tini \
 # Pre-populate /codex-sidecar/bin/codex so a fresh named volume mounted at
 # /codex-sidecar/bin (see docker-compose.codex.yml) inherits the binary on
 # first init. The api container then reads it read-only.
-RUN mkdir -p /codex-sidecar/bin /tmpfs/codex-auth /home/codex
+RUN mkdir -p /codex-sidecar/bin /home/codex
 COPY --from=builder /tmp/build/codex /usr/local/bin/codex
 COPY --from=builder /tmp/build/codex /codex-sidecar/bin/codex
 RUN chmod 0755 /usr/local/bin/codex /codex-sidecar/bin/codex \
@@ -84,7 +84,9 @@ RUN chmod 0755 /usr/local/bin/entrypoint.sh
 # no-new-privileges, read_only fs, dropped network isolation via shared netns).
 # Running as root keeps tmpfs ownership trivial; risk surface bounded by compose.
 ENV HOME=/home/codex
-ENV CODEX_HOME=/tmpfs/codex-auth
+# Default; compose overlay (docker-compose.codex.yml) overrides to the
+# /dev/shm bind path that the model-connector container shares (CONN-0068).
+ENV CODEX_HOME=/dev/shm/codex-auth
 WORKDIR /home/codex
 
 LABEL org.opencontainers.image.title="arcanada/codex-cli" \

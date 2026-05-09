@@ -9,12 +9,18 @@
 #   VAULT_ROLE_ID           — AppRole role-id (mounted via secret/env)
 #   VAULT_SECRET_ID         — AppRole secret-id (rotated, short-lived)
 #   VAULT_KV_PATH           — default arcanada/prod/env/codex-cli
-#   CODEX_HOME              — default /tmpfs/codex-auth (set in Dockerfile)
+#   CODEX_HOME              — default /dev/shm/codex-auth (set in compose overlay; CONN-0068)
 #
 # Optional env:
 #   CODEX_AUTH_STRATEGY     — vault-blob (default) | device-code
 #   ALLOW_MISSING_OAUTH     — 1 to skip OAuth fetch (sidecar starts in --help-only mode);
 #                             used by V-12 verification (image-layer probe).
+#   MC_USER_UID             — UID to chown the materialised blob to (default 1001).
+#                             Must match `model-connector` container's runtime user
+#                             (Dockerfile creates `connector` via `useradd -m`,
+#                             which lands at UID 1001 on node:22-slim because the
+#                             base image already occupies UID 1000 with `node`).
+#   MC_USER_GID             — GID for the same chown (default 1001).
 
 set -euo pipefail
 
@@ -51,8 +57,9 @@ is_tmpfs_mount() {
 }
 
 if ! is_tmpfs_mount "${CODEX_HOME}"; then
-    log "FATAL: ${CODEX_HOME} is not a tmpfs mount — refusing to write OAuth blob."
-    log "Compose overlay must declare a tmpfs volume at ${CODEX_HOME}."
+    log "FATAL: ${CODEX_HOME} is not tmpfs-backed — refusing to write OAuth blob."
+    log "Compose overlay must declare a tmpfs volume or a bind from a host tmpfs"
+    log "(e.g. /dev/shm subdirectory) at ${CODEX_HOME}."
     exit 70
 fi
 
@@ -91,6 +98,26 @@ unset OAUTH_BLOB
 unset VAULT_TOKEN
 
 log "OAuth blob materialised at ${AUTH_TARGET} (mode 600, tmpfs)"
+
+# CONN-0068 follow-up: cross-UID readability via /dev/shm bind. The
+# `model-connector` container runs as UID 1001 (`connector` user from
+# `useradd -m connector` on node:22-slim, where UID 1000 is taken by the
+# base `node` user). Sidecar runs as root. Without this chown, MC's spawned
+# `codex` cannot traverse ${CODEX_HOME} (mode 0700, root-owned) nor read
+# auth.json (mode 0600, root-owned) → EACCES at first /execute call.
+#
+# Requires CAP_CHOWN in compose (`cap_add: [CHOWN]`) because `cap_drop: ALL`
+# strips it from root by default. T-NEW preserved: file/dir remain mode
+# 0600/0700; readable only by UID matching MC_USER_UID. Other containers on
+# the same single-tenant host running as a different UID still cannot read.
+MC_USER_UID="${MC_USER_UID:-1001}"
+MC_USER_GID="${MC_USER_GID:-1001}"
+if ! chown "${MC_USER_UID}:${MC_USER_GID}" "${AUTH_TARGET}" "${CODEX_HOME}"; then
+    log "FATAL: chown to ${MC_USER_UID}:${MC_USER_GID} failed — likely missing CAP_CHOWN."
+    log "Add 'cap_add: [CHOWN]' to codex-sidecar service in docker-compose.codex.yml."
+    exit 73
+fi
+log "Chowned ${CODEX_HOME} + auth.json to ${MC_USER_UID}:${MC_USER_GID} for MC read-access."
 
 # Quick smoke — codex --version exercises auth.json parse path without spending tokens.
 if ! codex --version >/dev/null 2>&1; then

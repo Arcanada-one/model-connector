@@ -6,7 +6,10 @@
 #
 # Tier 0 internal-only (Network Exposure Baseline) — NO `ports:` directive.
 # OAuth blob delivered at runtime via Vault AppRole; never baked into image.
-# T1 (blob leak): tmpfs mount on /tmpfs/codex-auth — not persisted to disk.
+# T1 (blob leak): bind from host /dev/shm/codex-auth (Linux tmpfs) — RAM-only,
+# never persisted to disk. CONN-0068 changed from per-container tmpfs to a
+# host /dev/shm bind so the same blob is visible to both `codex-sidecar`
+# (rw) and `model-connector` (ro) containers.
 
 services:
   codex-sidecar:
@@ -30,6 +33,12 @@ services:
       VAULT_KV_PATH: arcanada/prod/env/codex-cli
       CODEX_AUTH_STRATEGY: vault-blob
       CODEX_HOME: /dev/shm/codex-auth
+      # CONN-0068 follow-up: sidecar (root) must chown the materialised blob to
+      # MC connector's UID/GID so the spawned codex (running as `connector`,
+      # UID 1001 on node:22-slim) can read it across the bind mount.
+      # Override here if MC Dockerfile pins a different UID.
+      MC_USER_UID: ${MC_USER_UID:-1001}
+      MC_USER_GID: ${MC_USER_GID:-1001}
     # CONN-0068 F-8/F-10: per-container tmpfs cannot be shared with the
     # model-connector container that actually spawns the codex binary. Bind a
     # host /dev/shm path (Linux tmpfs by default) so both containers see the
@@ -53,6 +62,11 @@ services:
       retries: 3
     cap_drop:
       - ALL
+    cap_add:
+      # CONN-0068 follow-up: required for entrypoint chown of auth.json to
+      # MC_USER_UID:MC_USER_GID (cap_drop: ALL strips CAP_CHOWN from root).
+      # Narrow capability — does not re-grant other root privileges.
+      - CHOWN
     security_opt:
       - no-new-privileges:true
     read_only: true
