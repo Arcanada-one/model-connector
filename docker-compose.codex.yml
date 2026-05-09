@@ -23,9 +23,14 @@ services:
     container_name: model-connector-codex-sidecar
     restart: unless-stopped
     init: true
-    # Share network namespace with MC service so connector can spawn `codex` via
-    # subprocess after the binary appears in the shared volume. No host ports.
-    network_mode: "service:model-connector"
+    # CONN-0070: sidecar joins the default bridge network inherited from the
+    # base compose. Codex binary still spawns from `model-connector` (via
+    # `CODEX_BINARY_PATH=/codex-sidecar/bin/codex` from the shared `codex-bin`
+    # named volume), so the spawned process inherits MC's netns regardless of
+    # this service's network setting. The previous `network_mode: service:model-connector`
+    # was historical (pre-CONN-0068 design where sidecar ran codex itself) and
+    # introduced a `compose config` dependency cycle with MC's `depends_on` on
+    # this service.
     environment:
       VAULT_ADDR: ${VAULT_ADDR:?VAULT_ADDR required}
       VAULT_ROLE_ID: ${CODEX_VAULT_ROLE_ID:?CODEX_VAULT_ROLE_ID required}
