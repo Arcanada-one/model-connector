@@ -10,6 +10,7 @@ import { EmbeddingModule } from './embedding/embedding.module';
 import { OpenRouterModule } from './openrouter/openrouter.module';
 import { GroqModule } from './groq/groq.module';
 import { GrokModule } from './grok/grok.module';
+import { ImageGenerationModule } from './image-generation/image-generation.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { GrokModule } from './grok/grok.module';
     OpenRouterModule,
     GroqModule,
     GrokModule,
+    ImageGenerationModule,
   ],
   controllers: [ConnectorsController],
   providers: [ConnectorsService],

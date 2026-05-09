@@ -21,6 +21,7 @@ export const envSchema = z.object({
   CLAUDE_CODE_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
   CURSOR_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(1),
   GEMINI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
+  CODEX_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
   OPENROUTER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
   GROQ_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
   GROK_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
@@ -33,6 +34,35 @@ export const envSchema = z.object({
   EMBEDDING_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).default(30_000),
 
   ADMIN_TOKEN: z.string().min(32).optional(),
+
+  // CONN-0052: Image Generation providers
+  // Vertex AI (Google Cloud)
+  VERTEX_PROJECT_ID: z.string().optional(),
+  VERTEX_LOCATION: z.string().default('us-central1'),
+  VERTEX_SERVICE_ACCOUNT_JSON: z.string().optional(), // JSON key as string or file path
+
+  // Replicate
+  REPLICATE_API_TOKEN: z.string().optional(),
+
+  // OpenAI Images (gpt-image-1)
+  OPENAI_API_KEY: z.string().optional(),
+
+  // Cloudflare R2 Storage
+  R2_ACCOUNT_ID: z.string().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  R2_BUCKET: z.string().default('arcanada-mc-images'),
+  R2_ENDPOINT: z.string().optional(), // https://<account_id>.r2.cloudflarestorage.com
+
+  // Image provider feature flags
+  IMAGE_PROVIDER_VERTEX_ENABLED: z.coerce.boolean().default(false),
+  IMAGE_PROVIDER_REPLICATE_ENABLED: z.coerce.boolean().default(false),
+  IMAGE_PROVIDER_OPENAI_ENABLED: z.coerce.boolean().default(false),
+  IMAGE_PROVIDER_CODEX_ENABLED: z.coerce.boolean().default(false),
+
+  // Image budget and rate limiting
+  IMAGE_BUDGET_DAILY_USD: z.coerce.number().min(0).max(1000).default(10),
+  IMAGE_RATE_LIMIT_PER_HOUR: z.coerce.number().min(1).max(500).default(50),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

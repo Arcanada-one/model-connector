@@ -8,7 +8,11 @@ import {
   executeRequestSchema,
   PerConnectorExecuteDto,
   perConnectorExecuteSchema,
+  imageGenerateRequestSchema,
+  ImageGenerateRequestDto,
 } from './dto/execute.dto';
+import { ImageGenerationService } from './image-generation/image-generation.service';
+import { IMAGE_CAPABILITIES } from './image-generation/capabilities';
 
 interface AuthenticatedRequest extends FastifyRequest {
   apiKey?: { id: string };
@@ -24,7 +28,10 @@ const HTTP_ERROR_STATUS: Record<string, HttpStatus> = {
 
 @Controller()
 export class ConnectorsController {
-  constructor(private readonly connectorsService: ConnectorsService) {}
+  constructor(
+    private readonly connectorsService: ConnectorsService,
+    private readonly imageGenerationService: ImageGenerationService,
+  ) {}
 
   @Get('connectors')
   async listConnectors() {
@@ -56,6 +63,34 @@ export class ConnectorsController {
     const { connector, ...request } = body;
     const response = await this.connectorsService.execute(connector, request, apiKeyId);
     return this.mapResponseStatus(response);
+  }
+
+  // ─── Image Generation endpoints ──────────────────────────────────────────────
+
+  @Get('connectors/image/capabilities')
+  getImageCapabilities() {
+    return IMAGE_CAPABILITIES;
+  }
+
+  /**
+   * POST /images/generate — image generation entry point.
+   * Returns 201 for async (job created) or 200 for sync (completed immediately).
+   * Per memory feedback_mc_http_201: async → 201, sync → 200.
+   */
+  @Post('images/generate')
+  async generateImage(
+    @Body(new ZodValidationPipe(imageGenerateRequestSchema)) body: ImageGenerateRequestDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const apiKeyId = req.apiKey?.id ?? 'unknown';
+    const result = await this.imageGenerationService.handleRequest(body, apiKeyId);
+
+    if (result.status === 'queued') {
+      // 201 Created — async job enqueued
+      throw new HttpException(result, HttpStatus.CREATED);
+    }
+
+    return result; // 200 OK — sync completed
   }
 
   private mapResponseStatus(response: ConnectorResponse): ConnectorResponse {

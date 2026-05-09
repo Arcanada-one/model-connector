@@ -1,0 +1,9 @@
+{
+  "created": 1746612000,
+  "data": [
+    {
+      "url": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-abc/user-xyz/img-12345.png?st=2026-05-07T10%3A00%3A00Z&se=2026-05-07T12%3A00%3A00Z&sp=r&sv=2021-08-06&sr=b&rscd=inline&rsct=image/png&skoid=abc123",
+      "revised_prompt": "A red cube placed on a clean white background, studio lighting, high resolution"
+    }
+  ]
+}
