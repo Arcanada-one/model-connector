@@ -1,0 +1,68 @@
+# Codex CLI sidecar overlay — CONN-0045 Phase 1 (CONN-0063)
+#
+# Layered onto MC docker-compose.prod.yml on arcana-prod.
+# Compose with:
+#   docker compose -f docker-compose.prod.yml -f docker-compose.codex.yml up -d
+#
+# Tier 0 internal-only (Network Exposure Baseline) — NO `ports:` directive.
+# OAuth blob delivered at runtime via Vault AppRole; never baked into image.
+# T1 (blob leak): tmpfs mount on /tmpfs/codex-auth — not persisted to disk.
+
+services:
+  codex-sidecar:
+    image: arcanada/codex-cli:rust-v0.130.0
+    build:
+      context: .
+      dockerfile: Dockerfile.codex-sidecar
+      args:
+        CODEX_RELEASE_TAG: rust-v0.130.0
+        CODEX_VERSION: "0.130.0"
+    container_name: model-connector-codex-sidecar
+    restart: unless-stopped
+    init: true
+    # Share network namespace with MC api so connector can spawn `codex` over
+    # local IPC; no host ports exposed.
+    network_mode: "service:api"
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      VAULT_ADDR: ${VAULT_ADDR:?VAULT_ADDR required}
+      VAULT_ROLE_ID: ${CODEX_VAULT_ROLE_ID:?CODEX_VAULT_ROLE_ID required}
+      VAULT_SECRET_ID: ${CODEX_VAULT_SECRET_ID:?CODEX_VAULT_SECRET_ID required}
+      VAULT_KV_PATH: arcanada/prod/env/codex-cli
+      CODEX_AUTH_STRATEGY: vault-blob
+      CODEX_HOME: /tmpfs/codex-auth
+    tmpfs:
+      - /tmpfs/codex-auth:rw,noexec,nosuid,size=1m,mode=0700,uid=10001,gid=10001
+    # Shared volume to expose the codex binary path to the api container.
+    # `api` mounts the same volume read-only at /codex-sidecar/bin/codex.
+    volumes:
+      - codex-bin:/codex-sidecar/bin:rw
+    # Run a long-lived sleep so api can spawn codex as a side-process via the
+    # shared binary path; healthcheck still exercises codex --version.
+    command: ["sh", "-c", "cp /usr/local/bin/codex /codex-sidecar/bin/codex && exec sleep infinity"]
+    healthcheck:
+      test: ["CMD", "codex", "--version"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    # Drop all caps; this is a CLI, not a service.
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    user: "10001:10001"
+
+  api:
+    # api container picks up the codex binary from the shared volume.
+    environment:
+      CODEX_BINARY_PATH: /codex-sidecar/bin/codex
+    volumes:
+      - codex-bin:/codex-sidecar/bin:ro
+
+volumes:
+  codex-bin:
+    driver: local
