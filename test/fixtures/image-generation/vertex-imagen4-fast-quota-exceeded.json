@@ -1,0 +1,18 @@
+{
+  "error": {
+    "code": 429,
+    "message": "Quota exceeded for quota metric 'aiplatform.googleapis.com/generate_content_requests' and limit 'GenerateContentRequestsPerMinutePerProject' of service 'aiplatform.googleapis.com'.",
+    "status": "RESOURCE_EXHAUSTED",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.QuotaFailure",
+        "violations": [
+          {
+            "subject": "project:arcanada-platform",
+            "description": "Quota exceeded for quota metric 'aiplatform.googleapis.com/generate_content_requests'"
+          }
+        ]
+      }
+    ]
+  }
+}

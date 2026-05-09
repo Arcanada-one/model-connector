@@ -30,13 +30,14 @@ model Request {
 }
 
 model ApiKey {
-  id        String    @id @default(uuid())
-  name      String
-  keyHash   String    @unique
-  rateLimit Int       @default(60)
-  active    Boolean   @default(true)
-  requests  Request[]
-  createdAt DateTime  @default(now())
+  id               String            @id @default(uuid())
+  name             String
+  keyHash          String            @unique
+  rateLimit        Int               @default(60)
+  active           Boolean           @default(true)
+  requests         Request[]
+  imageGenerations ImageGeneration[]
+  createdAt        DateTime          @default(now())
 }
 
 model ConnectorAccount {
@@ -48,4 +49,58 @@ model ConnectorAccount {
   active         Boolean @default(true)
 
   @@unique([connector, accountName])
+}
+
+// CONN-0052: Image Generation models
+// PK uses app-side UUID v7 (uuidv7 lib) — NOT @default(uuid()) which is v4
+// Migration deferred to Phase 1 (pnpm db:migrate)
+
+model ImageGeneration {
+  id            String   @id // UUID v7, set by application layer
+  apiKeyId      String
+  apiKey        ApiKey   @relation(fields: [apiKeyId], references: [id])
+  provider      String // 'vertex' | 'replicate' | 'openai-images'
+  model         String
+  prompt        String
+  negativePrompt String?
+  width         Int      @default(1024)
+  height        Int      @default(1024)
+  steps         Int?
+  cfg           Float?   // classifier-free guidance scale
+  seed          Int?
+  aspectRatio   String?  // e.g. '16:9', '1:1'
+  outputFormat  String   @default("png") // 'png' | 'jpeg' | 'webp'
+  status        String   // 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+  resultUrl     String?  // presigned R2 URL or direct URL
+  r2Key         String?  // R2 object key for storage management
+  costUsd       Decimal  @default(0) @db.Decimal(10, 6)
+  latencyMs     Int?
+  errorType     String?
+  errorMessage  String?
+  metadata      String?  // JSON blob for provider-specific fields
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  jobs          ImageJob[]
+
+  @@index([provider, createdAt])
+  @@index([apiKeyId, createdAt])
+  @@index([status])
+}
+
+model ImageJob {
+  id              String          @id // UUID v7, set by application layer
+  imageGenerationId String
+  imageGeneration ImageGeneration @relation(fields: [imageGenerationId], references: [id])
+  bullJobId       String?         // BullMQ job ID for async tracking
+  attempt         Int             @default(1)
+  status          String          // 'queued' | 'processing' | 'completed' | 'failed'
+  startedAt       DateTime?
+  completedAt     DateTime?
+  errorMessage    String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([imageGenerationId])
+  @@index([bullJobId])
+  @@index([status, createdAt])
 }
