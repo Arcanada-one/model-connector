@@ -20,12 +20,9 @@ services:
     container_name: model-connector-codex-sidecar
     restart: unless-stopped
     init: true
-    # Share network namespace with MC api so connector can spawn `codex` over
-    # local IPC; no host ports exposed.
-    network_mode: "service:api"
-    depends_on:
-      api:
-        condition: service_started
+    # Share network namespace with MC service so connector can spawn `codex` via
+    # subprocess after the binary appears in the shared volume. No host ports.
+    network_mode: "service:model-connector"
     environment:
       VAULT_ADDR: ${VAULT_ADDR:?VAULT_ADDR required}
       VAULT_ROLE_ID: ${CODEX_VAULT_ROLE_ID:?CODEX_VAULT_ROLE_ID required}
@@ -33,35 +30,44 @@ services:
       VAULT_KV_PATH: arcanada/prod/env/codex-cli
       CODEX_AUTH_STRATEGY: vault-blob
       CODEX_HOME: /tmpfs/codex-auth
-    tmpfs:
-      - /tmpfs/codex-auth:rw,noexec,nosuid,size=1m,mode=0700,uid=10001,gid=10001
-    # Shared volume to expose the codex binary path to the api container.
-    # `api` mounts the same volume read-only at /codex-sidecar/bin/codex.
+    # tmpfs uid/gid options need long-form mount spec; short-form list does not
+    # forward arbitrary mount options consistently across compose versions.
     volumes:
-      - codex-bin:/codex-sidecar/bin:rw
-    # Run a long-lived sleep so api can spawn codex as a side-process via the
-    # shared binary path; healthcheck still exercises codex --version.
-    command: ["sh", "-c", "cp /usr/local/bin/codex /codex-sidecar/bin/codex && exec sleep infinity"]
+      - type: tmpfs
+        target: /tmpfs/codex-auth
+        tmpfs:
+          size: 1048576    # 1 MiB
+          mode: 0o700
+      # Volume init: image pre-populates /codex-sidecar/bin/codex (see Dockerfile);
+      # first mount of fresh named volume copies that into the volume so the api
+      # container can read the binary read-only.
+      - codex-bin:/codex-sidecar/bin
+    # Long-lived process; healthcheck verifies binary + auth materialisation.
+    command: ["sleep", "infinity"]
     healthcheck:
-      test: ["CMD", "codex", "--version"]
+      test: ["CMD-SHELL", "test -x /codex-sidecar/bin/codex && /codex-sidecar/bin/codex --version"]
       interval: 30s
       timeout: 5s
       start_period: 15s
       retries: 3
-    # Drop all caps; this is a CLI, not a service.
     cap_drop:
       - ALL
     security_opt:
       - no-new-privileges:true
     read_only: true
-    user: "10001:10001"
 
-  api:
-    # api container picks up the codex binary from the shared volume.
+  # Augment existing `model-connector` service so it can spawn codex from the
+  # shared volume. The base service is defined in docker-compose.yml; this block
+  # only adds the env var, the read-only mount, and the dependency on the
+  # sidecar reaching healthy state (so the binary is guaranteed present).
+  model-connector:
     environment:
       CODEX_BINARY_PATH: /codex-sidecar/bin/codex
     volumes:
       - codex-bin:/codex-sidecar/bin:ro
+    depends_on:
+      codex-sidecar:
+        condition: service_healthy
 
 volumes:
   codex-bin:

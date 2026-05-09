@@ -68,17 +68,21 @@ RUN apk add --no-cache bash ca-certificates curl jq tini \
     && chmod +x /usr/local/bin/vault \
     && vault --version
 
+# Pre-populate /codex-sidecar/bin/codex so a fresh named volume mounted at
+# /codex-sidecar/bin (see docker-compose.codex.yml) inherits the binary on
+# first init. The api container then reads it read-only.
+RUN mkdir -p /codex-sidecar/bin /tmpfs/codex-auth /home/codex
 COPY --from=builder /tmp/build/codex /usr/local/bin/codex
-RUN chmod +x /usr/local/bin/codex && codex --version
+COPY --from=builder /tmp/build/codex /codex-sidecar/bin/codex
+RUN chmod 0755 /usr/local/bin/codex /codex-sidecar/bin/codex \
+    && codex --version
 
-# Non-root user; OAuth blob written to /tmpfs/codex-auth (tmpfs in compose).
-RUN addgroup -g 10001 codex && adduser -D -u 10001 -G codex codex \
-    && mkdir -p /tmpfs/codex-auth && chown codex:codex /tmpfs/codex-auth
+COPY scripts/codex-sidecar-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 0755 /usr/local/bin/entrypoint.sh
 
-COPY --chown=codex:codex scripts/codex-sidecar-entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-USER codex
+# Sidecar runs as root inside hardened compose context (cap_drop: ALL,
+# no-new-privileges, read_only fs, dropped network isolation via shared netns).
+# Running as root keeps tmpfs ownership trivial; risk surface bounded by compose.
 ENV HOME=/home/codex
 ENV CODEX_HOME=/tmpfs/codex-auth
 WORKDIR /home/codex
