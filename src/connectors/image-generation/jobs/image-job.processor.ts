@@ -1,5 +1,5 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { PrismaService } from '../../../prisma/prisma.service';
 import type { ImageGenerationRequest, ImageGenerationResult } from '../types';
@@ -18,13 +18,18 @@ export interface IImageGenerationService {
   processRequest(req: ImageGenerationRequest, apiKeyId: string): Promise<ImageGenerationResult>;
 }
 
+// DI token — TypeScript interfaces erase at runtime, so a runtime-stable token
+// is required for Nest to resolve `imageService`. The module binds this token
+// to ImageGenerationService via { provide: IMAGE_GEN_SVC, useExisting: ImageGenerationService }.
+export const IMAGE_GEN_SVC = Symbol('IImageGenerationService');
+
 @Processor('image-jobs')
 export class ImageJobProcessor extends WorkerHost {
   private readonly logger = new Logger(ImageJobProcessor.name);
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly imageService: IImageGenerationService,
+    @Inject(IMAGE_GEN_SVC) private readonly imageService: IImageGenerationService,
   ) {
     super();
   }
