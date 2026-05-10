@@ -112,14 +112,21 @@ MC_USER_GID="${MC_USER_GID:-1001}"
 # `mktemp: Permission denied` (EACCES) under `cap_drop: ALL`. T-NEW preserved:
 # auth.json stays MC_UID:MC_GID 0600 — only MC user can read content; group-rx
 # on the dir confers only traversal + readdir (filename `auth.json` is not a
-# secret). Idempotent on re-runs (root remains owner, chmod owner-noop, chown
-# converges).
-chmod 0750 "${CODEX_HOME}"
+# secret).
+#
+# Order matters for the first deploy after CONN-0079: PROD host dir is
+# currently MC_UID:MC_GID 0700 (final state of the last successful pre-fix
+# entrypoint run). chmod first would EPERM under cap_drop=ALL because we are
+# not the owner and CAP_FOWNER is dropped. Reclaim ownership FIRST via
+# CAP_CHOWN (works regardless of current owner), then chmod (we now own → no
+# CAP_FOWNER needed). On steady state (root:MC_GID 0750) all three calls are
+# idempotent.
 if ! chown "0:${MC_USER_GID}" "${CODEX_HOME}"; then
     log "FATAL: chown ${CODEX_HOME} to 0:${MC_USER_GID} failed — likely missing CAP_CHOWN."
     log "Ensure 'cap_add: [CHOWN]' is set on codex-sidecar service in docker-compose.codex.yml."
     exit 73
 fi
+chmod 0750 "${CODEX_HOME}"
 if ! chown "${MC_USER_UID}:${MC_USER_GID}" "${AUTH_TARGET}"; then
     log "FATAL: chown ${AUTH_TARGET} to ${MC_USER_UID}:${MC_USER_GID} failed — likely missing CAP_CHOWN."
     exit 73
