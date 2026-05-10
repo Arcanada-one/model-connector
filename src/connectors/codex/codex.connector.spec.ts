@@ -57,18 +57,17 @@ describe('CodexConnector', () => {
   const connector = new TestCodexConnector();
 
   describe('buildArgs', () => {
-    it('should build args with default model', () => {
+    it('should build args without --model when caller omits it (ChatGPT-account default)', () => {
       const args = connector.testBuildArgs({ prompt: 'hello world' });
       expect(args).toEqual([
         'exec',
-        '--model',
-        'o4-mini',
         '--json',
         '--full-auto',
         '--ephemeral',
         '--skip-git-repo-check',
         'hello world',
       ]);
+      expect(args).not.toContain('--model');
     });
 
     it('should use specified model', () => {
