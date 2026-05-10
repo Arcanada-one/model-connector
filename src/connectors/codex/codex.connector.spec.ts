@@ -194,6 +194,22 @@ describe('CodexConnector', () => {
       expect(parsed.inputTokens).toBe(10);
       expect(parsed.outputTokens).toBe(2);
     });
+
+    it('CONN-0075: should handle codex 0.130.0 item.completed agent_message shape', () => {
+      const v0130 = [
+        '{"type":"thread.started","thread_id":"019e112b-f00b-7f62-9a64-6cf3f8604984"}',
+        '{"type":"turn.started"}',
+        '{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"ping"}}',
+        '{"type":"turn.completed","usage":{"input_tokens":13417,"cached_input_tokens":12160,"output_tokens":5,"reasoning_output_tokens":0}}',
+      ].join('\n');
+      const parsed = connector.testParseOutput(v0130, '');
+      expect(parsed.text).toBe('ping');
+      expect(parsed.isError).toBe(false);
+      expect(parsed.inputTokens).toBe(13417);
+      expect(parsed.outputTokens).toBe(5);
+      expect(parsed.structured?.threadId).toBe('019e112b-f00b-7f62-9a64-6cf3f8604984');
+      expect(parsed.structured?.cachedInputTokens).toBe(12160);
+    });
   });
 
   describe('parseOutput — error', () => {
