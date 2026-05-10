@@ -19,7 +19,7 @@ interface CodexEvent {
     reasoning_output_tokens?: number;
   };
   error?: { message?: string };
-  item?: { id?: string; type?: string; message?: string };
+  item?: { id?: string; type?: string; message?: string; text?: string };
 }
 
 const DEFAULT_MODEL = 'o4-mini';
@@ -93,11 +93,19 @@ export class CodexConnector extends BaseCliConnector {
     const threadId = events.find((e) => e.type === 'thread.started')?.thread_id;
     const fatalError = events.find((e) => e.type === 'error');
     const turnFailed = events.find((e) => e.type === 'turn.failed');
+    // CONN-0075: codex 0.130.0 emits `item.completed` with `item.type === 'agent_message'`
+    // and the assistant text in `item.text`. The earlier `message.completed` /
+    // `message.content` pair was the schema for codex ≤ 0.12x. We accept both
+    // shapes so a future codex revert / older deployment doesn't regress.
     const messageCompleted = events.find((e) => e.type === 'message.completed');
+    const agentItem = events.find(
+      (e) => e.type === 'item.completed' && e.item?.type === 'agent_message',
+    );
     const turnCompleted = events.find((e) => e.type === 'turn.completed');
 
+    const messageText = messageCompleted?.message?.content ?? agentItem?.item?.text ?? '';
     const errorEvent = fatalError || turnFailed;
-    const hasSuccessMessage = !!messageCompleted?.message?.content;
+    const hasSuccessMessage = !!messageText;
 
     if (errorEvent && !hasSuccessMessage) {
       const errorMsg = fatalError?.message ?? turnFailed?.error?.message ?? 'Unknown Codex error';
@@ -113,7 +121,7 @@ export class CodexConnector extends BaseCliConnector {
       };
     }
 
-    const text = messageCompleted?.message?.content ?? '';
+    const text = messageText;
     const usage = turnCompleted?.usage;
 
     if (!text) {
