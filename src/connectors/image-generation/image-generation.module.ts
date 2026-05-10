@@ -1,7 +1,7 @@
 import { Module, OnApplicationBootstrap, Logger } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ImageGenerationService } from './image-generation.service';
-import { ImageJobProcessor } from './jobs/image-job.processor';
+import { ImageJobProcessor, IMAGE_GEN_SVC } from './jobs/image-job.processor';
 import { ImageJobController } from './jobs/image-job.controller';
 import { validateCapabilities } from './capabilities';
 
@@ -16,7 +16,11 @@ import { validateCapabilities } from './capabilities';
       },
     }),
   ],
-  providers: [ImageGenerationService, ImageJobProcessor],
+  providers: [
+    ImageGenerationService,
+    { provide: IMAGE_GEN_SVC, useExisting: ImageGenerationService },
+    ImageJobProcessor,
+  ],
   controllers: [ImageJobController],
   exports: [ImageGenerationService],
 })
