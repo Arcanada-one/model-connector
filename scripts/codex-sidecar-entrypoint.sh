@@ -38,23 +38,15 @@ if [ "${ALLOW_MISSING_OAUTH}" = "1" ]; then
     exec "$@"
 fi
 
-# Verify tmpfs is actually mounted at CODEX_HOME (T1 fail-closed). busybox does
-# bundle `mountpoint`; the /proc/self/mountinfo fallback covers cases where it
-# might be stripped from a future minimal base image. `stat -c %m` is GNU-only
-# and returns the literal "m" on busybox, so it is unsafe as a fallback.
-is_tmpfs_mount() {
-    local target="$1"
-    if command -v mountpoint >/dev/null 2>&1; then
-        mountpoint -q "${target}" || return 1
-    elif [ -r /proc/self/mountinfo ]; then
-        awk -v t="${target}" '$5 == t { found = 1 } END { exit !found }' \
-            /proc/self/mountinfo || return 1
-    else
-        return 1
-    fi
-    awk -v t="${target}" '$5 == t && $9 == "tmpfs" { found = 1 } END { exit !found }' \
-        /proc/self/mountinfo
-}
+# Verify tmpfs is actually mounted at CODEX_HOME (T1 fail-closed). CONN-0079:
+# previously we ran `mountpoint -q` first, but under sidecar caps
+# (`cap_drop=ALL`, `read_only=true`, `security_opt=no-new-privileges`) busybox
+# `mountpoint` exits 1 on `..` traversal (EACCES) for valid tmpfs binds. We now
+# rely on /proc/self/mountinfo only — kernel-authoritative, readable to the
+# calling process, no namespace caveats.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=lib/is_tmpfs_mount.sh
+. "${SCRIPT_DIR}/lib/is_tmpfs_mount.sh"
 
 if ! is_tmpfs_mount "${CODEX_HOME}"; then
     log "FATAL: ${CODEX_HOME} is not tmpfs-backed — refusing to write OAuth blob."
