@@ -78,7 +78,9 @@ RUN chmod 0755 /usr/local/bin/codex /codex-sidecar/bin/codex \
     && codex --version
 
 COPY scripts/codex-sidecar-entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod 0755 /usr/local/bin/entrypoint.sh
+# CONN-0079: ship lib/ alongside entrypoint so SCRIPT_DIR-relative source resolves at runtime.
+COPY scripts/lib/is_tmpfs_mount.sh /usr/local/bin/lib/is_tmpfs_mount.sh
+RUN chmod 0755 /usr/local/bin/entrypoint.sh /usr/local/bin/lib/is_tmpfs_mount.sh
 
 # Sidecar runs as root inside hardened compose context (cap_drop: ALL,
 # no-new-privileges, read_only fs, dropped network isolation via shared netns).
