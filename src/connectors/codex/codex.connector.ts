@@ -33,17 +33,18 @@ export class CodexConnector extends BaseCliConnector {
   }
 
   protected buildArgs(request: ConnectorRequest): string[] {
-    const model = request.model || DEFAULT_MODEL;
     const prompt = this.buildPromptWithJsonMode(request);
-    const args = [
-      'exec',
-      '--model',
-      model,
-      '--json',
-      '--full-auto',
-      '--ephemeral',
-      '--skip-git-repo-check',
-    ];
+    const args = ['exec', '--json', '--full-auto', '--ephemeral', '--skip-git-repo-check'];
+    // CONN-0074: ChatGPT account auth (PRD-CONN-0045 subscription-only) binds
+    // the model to the account; passing `--model` for any other identifier
+    // (o4-mini / o3 / gpt-5 / gpt-5-codex / codex-mini-latest) returns 400
+    // "model is not supported when using Codex with a ChatGPT account".
+    // Only forward `--model` when the caller explicitly requests one (e.g.,
+    // future API-key-mode clients) — bare `codex exec` falls back to the
+    // account default (currently gpt-5.5).
+    if (request.model) {
+      args.push('--model', request.model);
+    }
     if (request.jsonSchema) {
       const schemaPath = this.writeTempSchema(request.jsonSchema);
       args.push('--output-schema', schemaPath);
