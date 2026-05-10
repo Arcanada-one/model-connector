@@ -61,6 +61,24 @@ if [ "${CODEX_AUTH_STRATEGY}" != "vault-blob" ]; then
     exec "$@"
 fi
 
+# CONN-0080: reclaim ownership of ${CODEX_HOME} BEFORE mktemp. After CONN-0079
+# unblocked the materialise step, the prior entrypoint left the dir as
+# MC_UID:MC_GID 0700; on any restart root in container under cap_drop=ALL
+# cannot create a temp file inside a non-owned 0700 dir without
+# CAP_DAC_OVERRIDE — `mktemp: Permission denied` → restart loop. CAP_CHOWN
+# bypasses the owner check, so we can reclaim regardless of current owner.
+# chown FIRST (works on any owner), chmod SECOND (we now own → no CAP_FOWNER
+# needed). End-state: root:MC_GID 0750 — sidecar (root) writes via mktemp
+# while MC (group MC_GID) traverses via group r-x. Idempotent on re-runs.
+MC_USER_UID="${MC_USER_UID:-1001}"
+MC_USER_GID="${MC_USER_GID:-1001}"
+if ! chown "0:${MC_USER_GID}" "${CODEX_HOME}"; then
+    log "FATAL: chown ${CODEX_HOME} to 0:${MC_USER_GID} failed — likely missing CAP_CHOWN."
+    log "Ensure 'cap_add: [CHOWN]' is set on codex-sidecar service in docker-compose.codex.yml."
+    exit 73
+fi
+chmod 0750 "${CODEX_HOME}"
+
 : "${VAULT_ADDR:?VAULT_ADDR is required}"
 : "${VAULT_ROLE_ID:?VAULT_ROLE_ID is required}"
 : "${VAULT_SECRET_ID:?VAULT_SECRET_ID is required}"
@@ -91,42 +109,13 @@ unset VAULT_TOKEN
 
 log "OAuth blob materialised at ${AUTH_TARGET} (mode 600, tmpfs)"
 
-# CONN-0068 follow-up: cross-UID readability via /dev/shm bind. The
-# `model-connector` container runs as UID 1001 (`connector` user from
-# `useradd -m connector` on node:22-slim, where UID 1000 is taken by the
-# base `node` user). Sidecar runs as root. Without this chown, MC's spawned
-# `codex` cannot traverse ${CODEX_HOME} (mode 0700, root-owned) nor read
-# auth.json (mode 0600, root-owned) → EACCES at first /execute call.
-#
-# Requires CAP_CHOWN in compose (`cap_add: [CHOWN]`) because `cap_drop: ALL`
-# strips it from root by default. T-NEW preserved: file/dir remain mode
-# 0600/0700; readable only by UID matching MC_USER_UID. Other containers on
-# the same single-tenant host running as a different UID still cannot read.
-MC_USER_UID="${MC_USER_UID:-1001}"
-MC_USER_GID="${MC_USER_GID:-1001}"
-# CONN-0080: keep ${CODEX_HOME} owned by root in container, share read+traverse
-# with MC via group bit (dir = root:MC_GID 0750). On any restart (CI redeploy,
-# host reboot, restart policy) sidecar enters as root — still owner of the dir
-# → mktemp/mv work without CAP_DAC_OVERRIDE. The previous design chowned the
-# dir to MC_USER_UID, which made subsequent restarts hit
-# `mktemp: Permission denied` (EACCES) under `cap_drop: ALL`. T-NEW preserved:
-# auth.json stays MC_UID:MC_GID 0600 — only MC user can read content; group-rx
-# on the dir confers only traversal + readdir (filename `auth.json` is not a
-# secret).
-#
-# Order matters for the first deploy after CONN-0079: PROD host dir is
-# currently MC_UID:MC_GID 0700 (final state of the last successful pre-fix
-# entrypoint run). chmod first would EPERM under cap_drop=ALL because we are
-# not the owner and CAP_FOWNER is dropped. Reclaim ownership FIRST via
-# CAP_CHOWN (works regardless of current owner), then chmod (we now own → no
-# CAP_FOWNER needed). On steady state (root:MC_GID 0750) all three calls are
-# idempotent.
-if ! chown "0:${MC_USER_GID}" "${CODEX_HOME}"; then
-    log "FATAL: chown ${CODEX_HOME} to 0:${MC_USER_GID} failed — likely missing CAP_CHOWN."
-    log "Ensure 'cap_add: [CHOWN]' is set on codex-sidecar service in docker-compose.codex.yml."
-    exit 73
-fi
-chmod 0750 "${CODEX_HOME}"
+# CONN-0068 + CONN-0080: AUTH_TARGET inherits root ownership via mktemp+mv.
+# Hand off the FILE to MC user so MC's spawned `codex` (running as `connector`,
+# UID 1001 on node:22-slim) can read it across the bind mount. Directory
+# ownership is left at root:MC_GID 0750 (set early, see top-of-script comment)
+# — MC traverses via the group bit, sidecar (root) keeps owner-write across
+# restarts. T-NEW preserved: auth.json stays mode 0600 owned by MC user; only
+# that UID can read content. Requires CAP_CHOWN (`cap_add: [CHOWN]`).
 if ! chown "${MC_USER_UID}:${MC_USER_GID}" "${AUTH_TARGET}"; then
     log "FATAL: chown ${AUTH_TARGET} to ${MC_USER_UID}:${MC_USER_GID} failed — likely missing CAP_CHOWN."
     exit 73
