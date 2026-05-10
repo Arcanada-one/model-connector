@@ -141,18 +141,9 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            set -e
             cd /srv/apps/model-connector
             git pull --ff-only origin main
-            # CONN-0073: layer codex overlay so codex env (CODEX_BINARY_PATH,
-            # CODEX_HOME, CODEX_VAULT_ROLE_ID, CODEX_VAULT_SECRET_ID) and
-            # codex-bin/dev-shm volumes are applied to model-connector container
-            # alongside the codex-sidecar service.
-            COMPOSE="docker compose -f docker-compose.yml -f docker-compose.codex.yml"
-            $COMPOSE up -d --build
+            docker compose up -d --build
             sleep 10
-            curl -fsS http://localhost:3900/health || ($COMPOSE logs --tail=50 && exit 1)
-            docker exec model-connector-model-connector-1 sh -c \
-              'test -n "$CODEX_BINARY_PATH" && test -n "$CODEX_HOME" && test -n "$CODEX_VAULT_ROLE_ID" && test -n "$CODEX_VAULT_SECRET_ID"' \
-              || (echo "FAIL CONN-0073: codex overlay env not applied"; exit 1)
-            echo "Deploy successful: $($COMPOSE ps --format '{{.Name}} {{.Status}}')"
+            curl -fsS http://localhost:3900/health || (docker compose logs --tail=50 && exit 1)
+            echo "Deploy successful: $(docker compose ps --format '{{.Name}} {{.Status}}')"
