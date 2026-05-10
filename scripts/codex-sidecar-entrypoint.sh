@@ -104,17 +104,27 @@ log "OAuth blob materialised at ${AUTH_TARGET} (mode 600, tmpfs)"
 # the same single-tenant host running as a different UID still cannot read.
 MC_USER_UID="${MC_USER_UID:-1001}"
 MC_USER_GID="${MC_USER_GID:-1001}"
-# Defensive chmod 0700 before chown (host dir may have been auto-created by
-# `compose up` with default 0755 if operator skipped the explicit chmod step).
-# Done while sidecar is still owner — chmod after chown would need CAP_FOWNER
-# which `cap_drop: ALL` strips.
-chmod 0700 "${CODEX_HOME}"
-if ! chown "${MC_USER_UID}:${MC_USER_GID}" "${AUTH_TARGET}" "${CODEX_HOME}"; then
-    log "FATAL: chown to ${MC_USER_UID}:${MC_USER_GID} failed — likely missing CAP_CHOWN."
-    log "Add 'cap_add: [CHOWN]' to codex-sidecar service in docker-compose.codex.yml."
+# CONN-0080: keep ${CODEX_HOME} owned by root in container, share read+traverse
+# with MC via group bit (dir = root:MC_GID 0750). On any restart (CI redeploy,
+# host reboot, restart policy) sidecar enters as root — still owner of the dir
+# → mktemp/mv work without CAP_DAC_OVERRIDE. The previous design chowned the
+# dir to MC_USER_UID, which made subsequent restarts hit
+# `mktemp: Permission denied` (EACCES) under `cap_drop: ALL`. T-NEW preserved:
+# auth.json stays MC_UID:MC_GID 0600 — only MC user can read content; group-rx
+# on the dir confers only traversal + readdir (filename `auth.json` is not a
+# secret). Idempotent on re-runs (root remains owner, chmod owner-noop, chown
+# converges).
+chmod 0750 "${CODEX_HOME}"
+if ! chown "0:${MC_USER_GID}" "${CODEX_HOME}"; then
+    log "FATAL: chown ${CODEX_HOME} to 0:${MC_USER_GID} failed — likely missing CAP_CHOWN."
+    log "Ensure 'cap_add: [CHOWN]' is set on codex-sidecar service in docker-compose.codex.yml."
     exit 73
 fi
-log "Chowned ${CODEX_HOME} + auth.json to ${MC_USER_UID}:${MC_USER_GID} (mode 0700/0600) for MC read-access."
+if ! chown "${MC_USER_UID}:${MC_USER_GID}" "${AUTH_TARGET}"; then
+    log "FATAL: chown ${AUTH_TARGET} to ${MC_USER_UID}:${MC_USER_GID} failed — likely missing CAP_CHOWN."
+    exit 73
+fi
+log "Set ${CODEX_HOME}=root:${MC_USER_GID} 0750, ${AUTH_TARGET}=${MC_USER_UID}:${MC_USER_GID} 0600 (CONN-0080)."
 
 # Quick smoke — codex --version exercises auth.json parse path without spending tokens.
 if ! codex --version >/dev/null 2>&1; then
