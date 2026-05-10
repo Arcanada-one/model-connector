@@ -1,0 +1,101 @@
+# Codex CLI sidecar — CONN-0045 Phase 1 (CONN-0063)
+#
+# Pinned release: rust-v0.130.0 (published 2026-05-08)
+# Asset: codex-x86_64-unknown-linux-musl.tar.gz
+# Sigstore bundle: codex-x86_64-unknown-linux-musl.sigstore (Fulcio keyless via GitHub Actions OIDC)
+#
+# Image is internal-only (Tier 0): docker-compose.codex.yml does NOT publish ports.
+# OAuth blob (~/.codex/auth.json) is fetched at runtime from Vault into a tmpfs mount —
+# never baked into image layers.
+
+ARG CODEX_RELEASE_TAG=rust-v0.130.0
+ARG CODEX_VERSION=0.130.0
+ARG COSIGN_VERSION=2.4.1
+
+# ---------- builder: download + verify Codex binary + cosign ----------
+FROM alpine:3.20 AS builder
+ARG CODEX_RELEASE_TAG
+ARG CODEX_VERSION
+ARG COSIGN_VERSION
+ARG TARGETARCH=amd64
+
+RUN apk add --no-cache curl ca-certificates tar zstd
+
+WORKDIR /tmp/build
+
+# Pull cosign for sigstore-bundle verification (Fulcio keyless)
+RUN curl -fsSL -o /usr/local/bin/cosign \
+        "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-${TARGETARCH}" \
+    && chmod +x /usr/local/bin/cosign
+
+# Pin x86_64 musl asset; aarch64 variant available but MC PROD is x86_64
+ENV CODEX_ASSET=codex-x86_64-unknown-linux-musl
+ENV RELEASE_BASE=https://github.com/openai/codex/releases/download
+
+RUN curl -fsSL --retry 3 -o ${CODEX_ASSET}.tar.gz \
+        "${RELEASE_BASE}/${CODEX_RELEASE_TAG}/${CODEX_ASSET}.tar.gz" \
+    && curl -fsSL --retry 3 -o ${CODEX_ASSET}.sigstore \
+        "${RELEASE_BASE}/${CODEX_RELEASE_TAG}/${CODEX_ASSET}.sigstore"
+
+# T2 mitigation — supply-chain integrity. The .sigstore bundle signs the extracted
+# binary (not the tarball), so extract first and verify the binary directly.
+# Fulcio cert identity pattern matches the GitHub Actions workflow that publishes
+# the OpenAI Codex release.
+RUN tar xzf ${CODEX_ASSET}.tar.gz \
+    && cosign verify-blob \
+        --bundle ${CODEX_ASSET}.sigstore \
+        --certificate-identity-regexp 'https://github.com/openai/codex/.*' \
+        --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+        ./${CODEX_ASSET} \
+    && cp ./${CODEX_ASSET} /tmp/build/codex \
+    && chmod +x /tmp/build/codex
+
+RUN /tmp/build/codex --version | grep -q "${CODEX_VERSION}"
+
+# ---------- runtime: minimal image with Codex + Vault CLI + entrypoint ----------
+FROM alpine:3.20 AS runtime
+ARG CODEX_RELEASE_TAG
+ARG CODEX_VERSION
+ARG VAULT_VERSION=1.18.2
+
+# T1: ephemeral fs only — auth.json lives on tmpfs mount, not container layers.
+# bash needed for entrypoint script; curl + ca-certs for Vault HTTPS; jq for kv parsing.
+RUN apk add --no-cache bash ca-certificates curl jq tini \
+    && curl -fsSL -o /tmp/vault.zip \
+        "https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_amd64.zip" \
+    && unzip -d /usr/local/bin /tmp/vault.zip \
+    && rm /tmp/vault.zip \
+    && chmod +x /usr/local/bin/vault \
+    && vault --version
+
+# Pre-populate /codex-sidecar/bin/codex so a fresh named volume mounted at
+# /codex-sidecar/bin (see docker-compose.codex.yml) inherits the binary on
+# first init. The api container then reads it read-only.
+RUN mkdir -p /codex-sidecar/bin /home/codex
+COPY --from=builder /tmp/build/codex /usr/local/bin/codex
+COPY --from=builder /tmp/build/codex /codex-sidecar/bin/codex
+RUN chmod 0755 /usr/local/bin/codex /codex-sidecar/bin/codex \
+    && codex --version
+
+COPY scripts/codex-sidecar-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 0755 /usr/local/bin/entrypoint.sh
+
+# Sidecar runs as root inside hardened compose context (cap_drop: ALL,
+# no-new-privileges, read_only fs, dropped network isolation via shared netns).
+# Running as root keeps tmpfs ownership trivial; risk surface bounded by compose.
+ENV HOME=/home/codex
+# Default; compose overlay (docker-compose.codex.yml) overrides to the
+# /dev/shm bind path that the model-connector container shares (CONN-0068).
+ENV CODEX_HOME=/dev/shm/codex-auth
+WORKDIR /home/codex
+
+LABEL org.opencontainers.image.title="arcanada/codex-cli" \
+      org.opencontainers.image.version="${CODEX_RELEASE_TAG}" \
+      org.opencontainers.image.source="https://github.com/Arcanada-one/model-connector" \
+      org.opencontainers.image.description="Codex CLI sidecar for Model Connector (CONN-0045 Phase 1)"
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD codex --version || exit 1
+
+ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/entrypoint.sh"]
+CMD ["codex", "exec", "--ephemeral", "--help"]
