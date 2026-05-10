@@ -89,9 +89,17 @@ services:
       CODEX_HOME: /dev/shm/codex-auth
     volumes:
       - codex-bin:/codex-sidecar/bin:ro
-      # CONN-0068 F-10: read-only view of the same /dev/shm path the sidecar
-      # populates. T3 mitigation: MC cannot mutate or delete the OAuth blob.
-      - /dev/shm/codex-auth:/dev/shm/codex-auth:ro
+      # CONN-0068 F-10 / CONN-0071 F-12: shared /dev/shm path. Originally `:ro`
+      # for T3 (MC cannot mutate the OAuth blob), but Codex 0.130.0 stores
+      # embedded app-server session state inside `$CODEX_HOME` alongside
+      # auth.json — RO bind blocks codex from writing its state and crashes
+      # `/execute` with «Read-only file system (os error 30)» (PROD smoke,
+      # 2026-05-10). Trade-off: MC and sidecar are in the same trust domain
+      # (single-tenant arcana-prod, both consume the same OAuth blob), so the
+      # extra RO defense-in-depth was not preventing real exfiltration.
+      # Reverted to RW. T3 is now downgraded to «host access policy +
+      # cap_drop ALL on sidecar».
+      - /dev/shm/codex-auth:/dev/shm/codex-auth
     depends_on:
       codex-sidecar:
         condition: service_healthy
