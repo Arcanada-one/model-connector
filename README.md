@@ -110,6 +110,8 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
 | `effort` | string | no | `low`, `medium`, or `high` |
 | `jsonSchema` | object | no | JSON schema for structured output (Claude Code only) |
 | `responseFormat` | object | no | `{ type: "json_object" }` — request JSON output |
+| `output_format` | string | no | Output-guard format: `json` \| `yaml` \| `toml` \| `python` \| `auto` (default: `auto` — inferred from `responseFormat`/`schema`). See [Output Guard](#output-guard). |
+| `schema` | object | no | JSON Schema for output-guard validation + repair (≤32 KiB). Triggers structured-output enforcement. See [Output Guard](#output-guard). |
 | `timeout` | number | no | Timeout in ms (5000-600000, default: 120000) |
 | `extra` | object | no | Connector-specific options (see below) |
 
@@ -158,6 +160,44 @@ curl -X POST https://connector.arcanada.one/execute \
 - **Cursor / Gemini / Codex** — prepends JSON instruction to prompt (no native JSON mode; not server-validated, may return malformed JSON)
 - **Embedding** — n/a (returns vector, not LLM text)
 
+### Output Guard
+
+Since **v0.2.0** (CONN-0089) the `/execute` endpoint runs an **output-guard middleware** that enforces structured output across all connectors — including CLI connectors that lack native JSON-schema support.
+
+**Trigger:** request includes `schema` (JSON Schema) or `output_format` (`json` / `yaml` / `toml` / `python`).
+
+**Pipeline:**
+
+1. **Native pass** — provider-native structured output is used when available (OpenRouter/Groq/Grok `response_format`, Claude Code `--json-schema`).
+2. **Repair pass** — on parse/validation failure, deterministic repair strategies are applied (fence-strip, trailing-comma fix, quote normalisation, balanced-bracket trim, etc.).
+3. **Retry pass** — if still invalid, the request is re-issued to the LLM with a corrective system prompt, up to `OUTPUT_GUARD_MAX_RETRIES` times.
+4. **Surface** — final output + `repair_report` envelope (see [Response Schema](#response-schema)).
+
+**Example — strict JSON Schema:**
+
+```bash
+curl -X POST https://connector.arcanada.one/execute \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "connector": "cursor",
+    "prompt": "List 3 programming languages with year created",
+    "output_format": "json",
+    "schema": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": { "language": {"type": "string"}, "year": {"type": "integer"} },
+        "required": ["language", "year"]
+      }
+    }
+  }'
+```
+
+**Configuration:** see `OUTPUT_GUARD_ENABLED`, `OUTPUT_GUARD_MAX_RETRIES`, `OUTPUT_GUARD_TIMEOUT_MS` in [Environment Variables](#environment-variables).
+
+**Full guide:** [`docs/how-to/use-output-guard.md`](docs/how-to/use-output-guard.md).
+
 ### Response Schema
 
 ```json
@@ -188,6 +228,32 @@ curl -X POST https://connector.arcanada.one/execute \
 - `queueWaitMs` — time spent waiting in concurrency queue (ms)
 - `attempt` — current attempt number (1-based)
 - `maxAttempts` — total attempts allowed (1 + CONNECTOR_MAX_RETRIES)
+
+**Output-guard response field (CONN-0089, v0.2.0):**
+
+When `schema` or `output_format` is set on the request, the response includes a `repair_report` envelope:
+
+```json
+{
+  "repair_report": {
+    "strategies_applied": ["fence-strip", "trailing-comma"],
+    "retries": 1,
+    "final_valid": true,
+    "pass": "guarded",
+    "error": null
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `strategies_applied` | string[] | Repair strategies executed (e.g. `fence-strip`, `trailing-comma`, `quote-fix`) |
+| `retries` | number | Number of LLM retries performed (≤ `OUTPUT_GUARD_MAX_RETRIES`) |
+| `final_valid` | boolean | Whether final output passed schema validation |
+| `pass` | string | `native` (provider-native JSON), `guarded` (post-repair), or `failed` |
+| `error` | string \| null | Failure reason when `pass = "failed"`, else `null` |
+
+See [Output Guard](#output-guard) for full behavior.
 
 ### Error Response
 
@@ -412,6 +478,9 @@ pnpm db:push      # Push schema to database
 | `CONNECTOR_MAX_RETRIES` | no | Auto-retries on transient errors (default: 1, 0=disabled) |
 | `CIRCUIT_BREAKER_THRESHOLD` | no | Consecutive failures to open circuit (default: 5) |
 | `CIRCUIT_BREAKER_COOLDOWN_MS` | no | Circuit breaker cooldown (default: 30000) |
+| `OUTPUT_GUARD_ENABLED` | no | Enable output-guard middleware on `/execute` (default: `true`) |
+| `OUTPUT_GUARD_MAX_RETRIES` | no | Max LLM retries inside output-guard repair pipeline (default: `3`) |
+| `OUTPUT_GUARD_TIMEOUT_MS` | no | Total budget for output-guard pipeline incl. retries (default: `30000`) |
 
 ## Integration Guide for Arcanada Projects
 
