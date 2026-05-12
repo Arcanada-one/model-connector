@@ -4,6 +4,7 @@ import { ConnectorsService } from './connectors.service';
 import { NotFoundException } from '@nestjs/common';
 import { IConnector } from './interfaces/connector.interface';
 import { PrismaService } from '../prisma/prisma.service';
+import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 
 describe('ConnectorsService', () => {
   let service: ConnectorsService;
@@ -46,6 +47,7 @@ describe('ConnectorsService', () => {
       mockQueue as unknown as Queue,
       mockPrisma as unknown as PrismaService,
       mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+      new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
     );
     vi.clearAllMocks();
   });
@@ -207,6 +209,71 @@ describe('ConnectorsService', () => {
       expect(result.status).toBe('success');
       expect(result.structured).toEqual({ sanitized: true });
       expect(result.result).toBe('{"sanitized": true}');
+    });
+  });
+
+  // CONN-0089 ------------------------------------------------------------------
+  describe('output-guard integration (CONN-0089)', () => {
+    function jsonConnector(result: string): IConnector {
+      return {
+        ...mockConnector,
+        execute: vi.fn().mockResolvedValue({
+          id: 'r-og',
+          connector: 'test',
+          model: 'model',
+          result,
+          usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, costUsd: 0 },
+          latencyMs: 10,
+          status: 'success',
+        }),
+      } as IConnector;
+    }
+
+    it('omits repair_report when output_format is absent (V-AC-3 byte-compat)', async () => {
+      service.register(mockConnector);
+      const result = await service.execute('test', { prompt: 'hello' }, 'key-1');
+      expect(result.repair_report).toBeUndefined();
+    });
+
+    it('attaches repair_report when output_format=json (V-AC-2)', async () => {
+      const conn = jsonConnector('{"name":"x","value":1}');
+      service.register(conn);
+      const result = await service.execute(
+        'test',
+        {
+          prompt: 'hello',
+          output_format: 'json',
+          schema: {
+            type: 'object',
+            properties: { name: { type: 'string' }, value: { type: 'number' } },
+            required: ['name', 'value'],
+          },
+        },
+        'key-1',
+      );
+      expect(result.repair_report).toBeDefined();
+      expect(result.repair_report?.final_valid).toBe(true);
+    });
+
+    it('does NOT outer-retry on guard_exhausted (orthogonality)', async () => {
+      const conn = jsonConnector('this is "text" with stuff'); // forces ParseError chain
+      service.register(conn);
+      const result = await service.execute(
+        'test',
+        {
+          prompt: 'hello',
+          output_format: 'json',
+          schema: { type: 'object', required: ['x'] },
+        },
+        'key-1',
+      );
+      expect(result.repair_report?.pass).toBe('failed');
+      expect(result.error?.type).toBe('guard_exhausted');
+      // Middleware itself calls connector.execute (maxRetries+1) times. Outer
+      // ConnectorsService retry loop must NOT add another call on top.
+      // Default OUTPUT_GUARD_MAX_RETRIES=3 → 4 calls. CONNECTOR_MAX_RETRIES=1
+      // would add another 4 calls if outer retry kicked in (we'd see ≥5).
+      expect((conn.execute as ReturnType<typeof vi.fn>).mock.calls.length).toBeLessThanOrEqual(4);
     });
   });
 });

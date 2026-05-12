@@ -2,7 +2,11 @@ import { z } from 'zod';
 
 // ─── Text connector DTO (existing) ────────────────────────────────────────────
 
-export const executeRequestSchema = z.object({
+export const OUTPUT_FORMAT_SCHEMA_SIZE_LIMIT = 32_768;
+
+// Base shape WITHOUT refinement — refinement is attached after `.omit()` so the
+// per-connector variant can be derived (Zod v4 forbids omit on refined schemas).
+const executeRequestBaseShape = {
   connector: z.string().min(1).max(50),
   prompt: z.string().min(1).max(100_000),
   model: z.string().max(100).optional(),
@@ -15,11 +19,37 @@ export const executeRequestSchema = z.object({
   responseFormat: z.object({ type: z.enum(['json_object', 'text']) }).optional(),
   timeout: z.number().int().min(5_000).max(600_000).optional(),
   extra: z.record(z.string(), z.unknown()).optional(),
-});
+  // CONN-0089 output-guard: opt-in structured-output validate-and-repair
+  output_format: z.enum(['json', 'yaml', 'toml', 'python', 'auto']).optional(),
+  schema: z.record(z.string(), z.unknown()).optional(),
+} as const;
+
+const schemaSizeRefine = (
+  val: { schema?: unknown },
+  ctx: {
+    addIssue: (issue: { code: 'custom'; path: (string | number)[]; message: string }) => void;
+  },
+): void => {
+  if (val.schema !== undefined) {
+    const size = JSON.stringify(val.schema).length;
+    if (size > OUTPUT_FORMAT_SCHEMA_SIZE_LIMIT) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['schema'],
+        message: `schema exceeds ${OUTPUT_FORMAT_SCHEMA_SIZE_LIMIT}-byte limit (got ${size} bytes)`,
+      });
+    }
+  }
+};
+
+export const executeRequestSchema = z.object(executeRequestBaseShape).superRefine(schemaSizeRefine);
 
 export type ExecuteRequestDto = z.infer<typeof executeRequestSchema>;
 
-export const perConnectorExecuteSchema = executeRequestSchema.omit({ connector: true });
+const { connector: _connectorOmitted, ...perConnectorBaseShape } = executeRequestBaseShape;
+export const perConnectorExecuteSchema = z
+  .object(perConnectorBaseShape)
+  .superRefine(schemaSizeRefine);
 export type PerConnectorExecuteDto = z.infer<typeof perConnectorExecuteSchema>;
 
 // ─── Image generation DTO ─────────────────────────────────────────────────────

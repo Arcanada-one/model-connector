@@ -18,6 +18,11 @@ export const envSchema = z.object({
   CONNECTOR_QUEUE_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(60_000),
   CONNECTOR_MAX_RETRIES: z.coerce.number().min(0).max(5).default(1),
 
+  // CONN-0089 output-guard middleware
+  OUTPUT_GUARD_ENABLED: z.coerce.boolean().default(true),
+  OUTPUT_GUARD_MAX_RETRIES: z.coerce.number().min(0).max(5).default(3),
+  OUTPUT_GUARD_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).default(30_000),
+
   CLAUDE_CODE_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
   CURSOR_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(1),
   GEMINI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),

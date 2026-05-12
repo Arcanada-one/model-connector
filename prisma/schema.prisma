@@ -22,6 +22,8 @@ model Request {
   errorMessage String?
   apiKeyId     String
   apiKey       ApiKey   @relation(fields: [apiKeyId], references: [id])
+  // CONN-0089 output-guard middleware envelope (nullable for backward-compat)
+  repairReport Json?
   createdAt    DateTime @default(now())
 
   @@index([connector, createdAt])

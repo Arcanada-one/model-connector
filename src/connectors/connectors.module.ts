@@ -11,6 +11,7 @@ import { OpenRouterModule } from './openrouter/openrouter.module';
 import { GroqModule } from './groq/groq.module';
 import { GrokModule } from './grok/grok.module';
 import { ImageGenerationModule } from './image-generation/image-generation.module';
+import { OutputGuardModule } from './output-guard/output-guard.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ImageGenerationModule } from './image-generation/image-generation.modul
     GroqModule,
     GrokModule,
     ImageGenerationModule,
+    OutputGuardModule,
   ],
   controllers: [ConnectorsController],
   providers: [ConnectorsService],

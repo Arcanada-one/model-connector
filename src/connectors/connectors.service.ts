@@ -15,6 +15,14 @@ import { BaseCliConnector } from './base-cli.connector';
 import { sanitizeJsonResponse, JsonSanitizeError } from '../core/utils/json-sanitizer';
 import { getConfig } from '../config/env.schema';
 import { MetricsService } from '../metrics/metrics.service';
+import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
+import type { OutputGuardReport } from './output-guard/types';
+
+// CONN-0089: callers may pass guard-only fields alongside the base request.
+export type ServiceExecuteRequest = ConnectorRequest & {
+  output_format?: 'json' | 'yaml' | 'toml' | 'python' | 'auto';
+  schema?: Record<string, unknown>;
+};
 
 const RETRYABLE_ERRORS = new Set([
   'json_parse_error',
@@ -39,6 +47,7 @@ export class ConnectorsService {
     @InjectQueue('connector-jobs') private readonly jobQueue: Queue,
     private readonly prisma: PrismaService,
     private readonly metricsService: MetricsService,
+    private readonly outputGuardMiddleware: OutputGuardMiddleware,
   ) {}
 
   register(connector: IConnector) {
@@ -85,7 +94,7 @@ export class ConnectorsService {
 
   async execute(
     connectorName: string,
-    request: ConnectorRequest,
+    request: ServiceExecuteRequest,
     apiKeyId: string,
   ): Promise<ConnectorResponse> {
     const connector = this.get(connectorName);
@@ -96,14 +105,29 @@ export class ConnectorsService {
       maxRetries = 1;
     }
     const totalAttempts = Math.max(1, maxRetries + 1);
+    const guardActive = Boolean(request.output_format);
 
     let lastResponse: ConnectorResponse | undefined;
+    let guardReport: OutputGuardReport | null = null;
 
     for (let attempt = 1; attempt <= totalAttempts; attempt++) {
-      let response = await connector.execute(request);
+      let response: ConnectorResponse;
+      if (guardActive) {
+        const outcome = await this.outputGuardMiddleware.wrapExecute(connector, request);
+        response = outcome.response;
+        if (outcome.report) {
+          guardReport = outcome.report;
+        }
+      } else {
+        response = await connector.execute(request);
+      }
 
-      // JSON sanitization if responseFormat requested
-      if (request.responseFormat?.type === 'json_object' && response.status === 'success') {
+      // JSON sanitization if responseFormat requested (legacy path).
+      if (
+        !guardActive &&
+        request.responseFormat?.type === 'json_object' &&
+        response.status === 'success'
+      ) {
         response = this.applySanitization(response);
       }
 
@@ -116,7 +140,9 @@ export class ConnectorsService {
         break;
       }
 
-      // Non-retryable error or last attempt — done
+      // Non-retryable error or last attempt — done.
+      // `guard_exhausted` is intentionally NOT in RETRYABLE_ERRORS — the
+      // middleware already consumed its retry budget.
       const errorType = response.error?.type ?? '';
       if (!RETRYABLE_ERRORS.has(errorType) || attempt >= totalAttempts) {
         break;
@@ -130,6 +156,9 @@ export class ConnectorsService {
     }
 
     const response = lastResponse!;
+    if (guardReport) {
+      response.repair_report = guardReport;
+    }
 
     // Metrics recording (per-model)
     this.metricsService.record({
@@ -143,10 +172,18 @@ export class ConnectorsService {
       latencyMs: response.latencyMs,
       queueWaitMs: response.queueWaitMs,
       attempt: response.attempt,
+      outputGuard: guardReport
+        ? {
+            retries: guardReport.retries,
+            finalValid: guardReport.final_valid,
+            pass: guardReport.pass,
+            strategiesApplied: guardReport.strategies_applied,
+          }
+        : undefined,
     });
 
     // Fire-and-forget DB logging
-    this.logRequest(response, request, apiKeyId).catch((err) =>
+    this.logRequest(response, request, apiKeyId, guardReport).catch((err) =>
       this.logger.error(`Failed to log request: ${err}`),
     );
 
@@ -193,6 +230,7 @@ export class ConnectorsService {
     response: ConnectorResponse,
     request: ConnectorRequest,
     apiKeyId: string,
+    repairReport: OutputGuardReport | null = null,
   ) {
     await this.prisma.request.create({
       data: {
@@ -209,6 +247,7 @@ export class ConnectorsService {
         errorType: response.error?.type,
         errorMessage: response.error?.message?.slice(0, 500),
         apiKeyId,
+        repairReport: repairReport ? (repairReport as unknown as object) : undefined,
       },
     });
   }

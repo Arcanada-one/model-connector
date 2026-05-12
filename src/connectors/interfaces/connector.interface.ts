@@ -40,6 +40,9 @@ export interface ConnectorResponse {
   maxAttempts?: number;
   status: 'success' | 'error' | 'timeout' | 'rate_limited';
   error?: ConnectorError;
+  // CONN-0089 — populated only when the request supplied `output_format`.
+  // Null/undefined preserves byte-identity for legacy callers (V-AC-3).
+  repair_report?: import('../output-guard/types').OutputGuardReport;
 }
 
 const ERROR_ACTION_MAP: Record<string, { retryable: boolean; recommendation: ErrorAction }> = {
