@@ -1,0 +1,97 @@
+name: Publish SDKs
+
+on:
+  push:
+    tags:
+      - 'sdk-v*'
+  pull_request:
+    paths:
+      - 'packages/sdk-ts/**'
+      - 'packages/sdk-python/**'
+      - '.github/workflows/publish-sdks.yml'
+
+concurrency:
+  group: publish-sdk
+  cancel-in-progress: false
+
+jobs:
+  build-ts:
+    name: TypeScript — build + test + dry-run
+    runs-on: [self-hosted, Linux, arcana-ai]
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build SDK
+        run: pnpm --filter @arcanada/model-connector-sdk build
+
+      - name: Test SDK
+        run: pnpm --filter @arcanada/model-connector-sdk test
+
+      - name: Publish dry-run
+        run: pnpm --filter @arcanada/model-connector-sdk publish --dry-run --no-git-checks
+
+      - name: Publish to npm
+        if: startsWith(github.ref, 'refs/tags/sdk-v')
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          pnpm --filter @arcanada/model-connector-sdk publish \
+            --access public \
+            --provenance \
+            --no-git-checks
+
+  build-python:
+    name: Python — build + test + twine check
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    environment:
+      name: pypi-publish
+      url: https://pypi.org/project/arcanada-model-connector/
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+
+      - name: Install package + dev deps
+        working-directory: packages/sdk-python
+        run: pip install -e ".[dev]"
+
+      - name: Run tests
+        working-directory: packages/sdk-python
+        run: pytest
+
+      - name: Build sdist + wheel
+        working-directory: packages/sdk-python
+        run: python -m build
+
+      - name: Twine check
+        working-directory: packages/sdk-python
+        run: twine check dist/*
+
+      - name: Publish to PyPI
+        if: startsWith(github.ref, 'refs/tags/sdk-v')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/sdk-python/dist/

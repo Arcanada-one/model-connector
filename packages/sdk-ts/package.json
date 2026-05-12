@@ -1,0 +1,65 @@
+{
+  "name": "@arcanada/model-connector-sdk",
+  "version": "0.1.0",
+  "description": "Typed TypeScript client SDK for the Arcanada Model Connector — unified API for AI CLI agents and cloud model providers.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "keywords": [
+    "model-connector",
+    "arcanada",
+    "llm",
+    "output-guard",
+    "structured-output",
+    "claude",
+    "cursor",
+    "gemini",
+    "openrouter",
+    "ai-sdk"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arcanada-one/model-connector.git",
+    "directory": "packages/sdk-ts"
+  },
+  "homepage": "https://github.com/Arcanada-one/model-connector/tree/main/packages/sdk-ts#readme",
+  "bugs": {
+    "url": "https://github.com/Arcanada-one/model-connector/issues"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
+    "prepublishOnly": "pnpm build && pnpm test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "msw": "^2.14.4",
+    "tsup": "^8.5.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
