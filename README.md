@@ -52,6 +52,47 @@ docker compose up -d --build
 # Exposes on 127.0.0.1:3900 (use nginx reverse proxy for HTTPS)
 ```
 
+## Client SDKs
+
+First-party typed SDKs are published for TypeScript and Python.
+
+### TypeScript — [`@arcanada/model-connector-sdk`](https://www.npmjs.com/package/@arcanada/model-connector-sdk)
+
+```bash
+pnpm add @arcanada/model-connector-sdk
+```
+
+```ts
+import { Client } from '@arcanada/model-connector-sdk';
+
+const client = new Client({ apiKey: process.env.ARC_API_KEY! });
+const response = await client.execute({
+  connector: 'openrouter',
+  prompt: 'Explain BGE-M3 in 30 words.',
+});
+console.log(response.result);
+```
+
+Requires Node.js >= 20. Zero runtime dependencies (uses global `fetch`). Full guide: [`docs/sdk-typescript.md`](docs/sdk-typescript.md).
+
+### Python — [`arcanada-model-connector`](https://pypi.org/project/arcanada-model-connector/)
+
+```bash
+pip install arcanada-model-connector
+```
+
+```python
+from arcanada_model_connector import Client
+
+client = Client(api_key="arc_api_...")
+response = client.execute({"connector": "openrouter", "prompt": "ping"})
+print(response.result)
+```
+
+Requires Python >= 3.10. Sync + async (`AsyncClient`). Full guide: [`docs/sdk-python.md`](docs/sdk-python.md).
+
+Both SDKs expose the full `/execute` schema, including `output_format` / `schema` / `repair_report` from the CONN-0089 output-guard middleware, and surface typed error envelopes mapped 1:1 from the server contract.
+
 ## API
 
 All endpoints except `/health` require Bearer token authentication.
