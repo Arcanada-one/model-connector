@@ -1,6 +1,6 @@
 # How to: use `output_format` with `/execute`
 
-CONN-0089 — opt-in structured-output validate-and-repair middleware.
+Opt-in structured-output validate-and-repair middleware.
 
 ## What you get
 
@@ -27,7 +27,7 @@ When you POST `/execute` with `output_format`, Model Connector:
 | `schema` | JSON Schema object | optional | Validated via ajv (formats enabled). ≤32 KiB after `JSON.stringify`. |
 
 Existing fields (`connector`, `prompt`, `model`, `systemPrompt`, `extra`, …)
-work unchanged. `responseFormat: { type: "json_object" }` (legacy CONN-0019
+work unchanged. `responseFormat: { type: "json_object" }` (legacy
 path) is bypassed when `output_format` is present.
 
 ## Response envelope
@@ -97,12 +97,12 @@ Typical response:
 
 ## Backward compatibility
 
-Requests omitting `output_format` are byte-identical to the pre-CONN-0089
+Requests omitting `output_format` are byte-identical to the pre-v0.2.0
 contract — `repair_report` is absent, no DB column written.
 
 ## Rollback
 
-Per `datarim/plans/CONN-0089-plan.md` § Rollback Strategy:
+Rollback strategy:
 
 1. `OUTPUT_GUARD_ENABLED=false` in the container env, then `docker compose
    restart model-connector`.

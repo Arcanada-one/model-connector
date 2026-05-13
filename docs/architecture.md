@@ -120,7 +120,7 @@ Triggers:
 - Cooldown: `CIRCUIT_BREAKER_COOLDOWN_MS` (default 30s)
 - **Instant open:** `auth_error`, `binary_not_found` (no point retrying immediately)
 
-Reset via admin API: `POST /admin/circuit-breaker/reset` (CONN-0040).
+Reset via admin API: `POST /admin/circuit-breaker/reset`.
 
 ### Retry
 
@@ -177,7 +177,7 @@ Backoff: `1s, 2s, 4s, 8s` (capped) with jitter. Max attempts: `1 + CONNECTOR_MAX
 9. Update `docs/capability-matrix.md`.
 10. Update README connector table.
 
-See CONN-0048 (Grok) and CONN-0047 (Groq) archives for canonical examples — pure additions, no breaking changes.
+Look at the Grok and Groq connector directories for canonical examples — pure additions, no breaking changes.
 
 ## See Also
 

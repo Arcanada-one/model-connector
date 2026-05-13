@@ -1,6 +1,6 @@
 # Image Generation Connector
 
-CONN-0052 — Unified image generation API for the Model Connector service.
+Unified image generation API for the Model Connector service.
 
 ## Overview
 
@@ -215,6 +215,6 @@ Override with `outputAsync: "never"` (sync; risk of Cloudflare 524 on long jobs)
 
 ## Deployment Notes
 
-- `ImageGeneration` table migration required on first PROD deploy (Phase 7 task: CONN-0052).
+- `ImageGeneration` table migration required on first PROD deploy.
 - DB: `arcanada_connector` on arcana-db via Tailscale.
 - All providers fail-soft on PLACEHOLDER creds — service boots normally, returns 503 per-request.

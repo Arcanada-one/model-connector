@@ -2,7 +2,7 @@
 
 Single-glance comparison of all Model Connector backends. Use this to pick the right connector for a workload.
 
-> Last updated: 2026-04-29 (CONN-0048 — Grok added)
+> Last updated: 2026-04-29 (Grok added)
 
 ## Capability Table
 
@@ -17,7 +17,7 @@ Single-glance comparison of all Model Connector backends. Use this to pick the r
 | `grok` | API | `grok-4-fast` | ✅ | ✅ | ✅ | 10 | `XAI_API_KEY` | ~0.5–2s | per-token (xAI pricing) |
 | `embedding` | API | `bge-m3` | n/a | n/a | ❌ | 8 | Tailscale internal | ~0.2s | free (self-hosted) |
 
-¹ Codex CLI supports `--output-schema` via raw flag, but Model Connector doesn't surface it through `responseFormat` yet; treat as `❌` for now (CONN-0044 / CONN-0045 ecosystem migration tracked).
+¹ Codex CLI supports `--output-schema` via raw flag, but Model Connector doesn't surface it through `responseFormat` yet; treat as `❌` for now.
 
 ## Decision Guide
 

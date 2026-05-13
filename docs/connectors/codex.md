@@ -18,7 +18,7 @@ CLI connector for the [`codex`](https://platform.openai.com/docs/codex) binary �
 
 ## Capabilities
 
-- ❌ JSON Schema (CLI flag `--output-schema` exists but not surfaced via `responseFormat` in MC yet — tracked in CONN-0044 / CONN-0045)
+- ❌ JSON Schema (CLI flag `--output-schema` exists but not surfaced via `responseFormat` in MC yet)
 - ⚠️ JSON object (prompt-injected)
 - ✅ Tool use
 - ✅ JSONL streaming output (parsed and consolidated by connector)
@@ -57,7 +57,7 @@ curl -X POST http://localhost:3900/connectors/codex/execute \
 Codex emits one event per line. The connector:
 1. Collects all event lines.
 2. Extracts `message.completed` (final text) and `turn.completed` (usage stats).
-3. If only stderr is present (binary error / not logged in), surfaces stderr through `extractStderrError()` and classifies (CONN-0046 fix).
+3. If only stderr is present (binary error / not logged in), surfaces stderr through `extractStderrError()` and classifies.
 
 Common stderr classifications:
 
@@ -78,10 +78,9 @@ Common stderr classifications:
 
 1. Not yet in PROD Docker compose (no `~/.codex/` volume).
 2. `--output-schema` not exposed via MC `responseFormat`. Use `extra.codexFlags` workaround if needed.
-3. CONN-0044 capability report identified API-tier model availability gap — re-verify `o4-mini` access on your account tier.
+3. Capability report identified API-tier model availability gap — re-verify `o4-mini` access on your account tier.
 
 ## Source
 
 - Connector: `src/connectors/codex/codex.connector.ts`
 - Tests: `src/connectors/codex/codex.connector.spec.ts`
-- Capability report: `documentation/archive/connectors/archive-CONN-0044.md` (workspace)

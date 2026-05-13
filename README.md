@@ -91,7 +91,7 @@ print(response.result)
 
 Requires Python >= 3.10. Sync + async (`AsyncClient`). Full guide: [`docs/sdk-python.md`](docs/sdk-python.md).
 
-Both SDKs expose the full `/execute` schema, including `output_format` / `schema` / `repair_report` from the CONN-0089 output-guard middleware, and surface typed error envelopes mapped 1:1 from the server contract.
+Both SDKs expose the full `/execute` schema, including `output_format` / `schema` / `repair_report` from the v0.2.0 output-guard middleware, and surface typed error envelopes mapped 1:1 from the server contract.
 
 ## API
 
@@ -203,7 +203,7 @@ curl -X POST https://connector.arcanada.one/execute \
 
 ### Output Guard
 
-Since **v0.2.0** (CONN-0089) the `/execute` endpoint runs an **output-guard middleware** that enforces structured output across all connectors — including CLI connectors that lack native JSON-schema support.
+Since **v0.2.0** the `/execute` endpoint runs an **output-guard middleware** that enforces structured output across all connectors — including CLI connectors that lack native JSON-schema support.
 
 **Trigger:** request includes `schema` (JSON Schema) or `output_format` (`json` / `yaml` / `toml` / `python`).
 
@@ -265,12 +265,12 @@ curl -X POST https://connector.arcanada.one/execute \
 
 **Status values:** `success`, `error`, `timeout`, `rate_limited`
 
-**New response fields (CONN-0026):**
+**New response fields (v0.1.x):**
 - `queueWaitMs` — time spent waiting in concurrency queue (ms)
 - `attempt` — current attempt number (1-based)
 - `maxAttempts` — total attempts allowed (1 + CONNECTOR_MAX_RETRIES)
 
-**Output-guard response field (CONN-0089, v0.2.0):**
+**Output-guard response field (v0.2.0):**
 
 When `schema` or `output_format` is set on the request, the response includes a `repair_report` envelope:
 
@@ -463,7 +463,7 @@ curl -s https://connector.arcanada.one/connectors \
 
 Подробнее: [docs/architecture.md](docs/architecture.md).
 
-**Adding a new OpenAI-compat API connector:** copy `templates/api-connector-scaffold/` → `src/connectors/<name>/`, follow the README inside (9 placeholders, post-gen checklist, ≤30 min walkthrough). Origin: CONN-0049.
+**Adding a new OpenAI-compat API connector:** copy `templates/api-connector-scaffold/` → `src/connectors/<name>/`, follow the README inside (9 placeholders, post-gen checklist, ≤30 min walkthrough).
 
 ## Commands
 
@@ -751,7 +751,7 @@ curl -X DELETE https://connector.arcanada.one/admin/keys/<id> \
 
 ### Benchmark (PROD)
 
-Snapshot 2026-04-20 (CONN-0036 audit):
+Snapshot 2026-04-20:
 
 | Connector | R1 | R2 | R3 | Avg |
 |-----------|----|----|-----|-----|
@@ -761,7 +761,7 @@ Snapshot 2026-04-20 (CONN-0036 audit):
 | cursor | 12.1s | 9.3s | 9.5s | **10.3s** |
 | gemini | 6.9s | 22.1s | 21.5s | **16.8s** |
 
-Live smoke (CONN-0047 / CONN-0048, 2026-04-27 → 2026-04-29):
+Live smoke (2026-04-27 → 2026-04-29):
 
 | Connector | Default model | First call | Notes |
 |-----------|---------------|------------|-------|
