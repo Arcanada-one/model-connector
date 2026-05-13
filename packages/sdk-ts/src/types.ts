@@ -2,7 +2,7 @@
 //   src/connectors/dto/execute.dto.ts:9-25 (executeRequestBaseShape)
 //   src/connectors/interfaces/connector.interface.ts:25-46 (ConnectorResponse)
 //   src/connectors/output-guard/types.ts:16-22 (OutputGuardReport)
-// Schema fidelity: 1:1 wire mirror. Drift requires ADR in datarim/creative/.
+// Schema fidelity: 1:1 wire mirror. Drift requires architecture decision record.
 
 export type OutputFormat = 'json' | 'yaml' | 'toml' | 'python' | 'auto';
 
