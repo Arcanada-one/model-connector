@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "arcanada-model-connector"
-version = "0.1.0"
+version = "0.1.1"
 description = "Typed Python client SDK for the Arcanada Model Connector — unified API for AI CLI agents and cloud model providers."
 readme = "README.md"
 license = { text = "MIT" }

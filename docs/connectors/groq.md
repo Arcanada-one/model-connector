@@ -1,6 +1,6 @@
 # Groq Connector
 
-API connector for [Groq Cloud](https://console.groq.com/) — ultra-fast LPU-backed inference for open-weight models. Added 2026-04-27 (CONN-0047).
+API connector for [Groq Cloud](https://console.groq.com/) — ultra-fast LPU-backed inference for open-weight models. Added 2026-04-27.
 
 ## Overview
 
@@ -96,4 +96,3 @@ Sufficient for almost any Arcanada-scale ecosystem workload. Treat as default fo
 
 - Connector: `src/connectors/groq/groq.connector.ts`
 - Tests: `src/connectors/groq/groq.connector.spec.ts`
-- Capability report: `datarim/reports/CONN-0047-groq-capabilities.md` (workspace)

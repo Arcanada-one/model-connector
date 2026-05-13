@@ -1,6 +1,6 @@
 # Grok (xAI) Connector
 
-API connector for [xAI's Grok](https://docs.x.ai/) family. Added 2026-04-29 (CONN-0048).
+API connector for [xAI's Grok](https://docs.x.ai/) family. Added 2026-04-29.
 
 ## Overview
 
@@ -103,4 +103,3 @@ Standard `BaseApiConnector` error mapping. Notable:
 - Connector: `src/connectors/grok/grok.connector.ts`
 - Module: `src/connectors/grok/grok.module.ts`
 - Tests: `src/connectors/grok/grok.connector.spec.ts`
-- Archive: `documentation/archive/connectors/archive-CONN-0048.md` (workspace)

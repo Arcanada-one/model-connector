@@ -18,7 +18,7 @@ CLI connector for the [`cursor-agent`](https://cursor.com/) binary. Subscription
 
 `cursor-agent` uses file-based state (`~/.cursor/cli-config.json`). Concurrent calls cause `ENOENT: rename cli-config.json.tmp` race condition, followed by **auth loss** requiring re-login.
 
-`CURSOR_MAX_CONCURRENCY=1` is HARD — increasing it will break the connector. (CONN-0017)
+`CURSOR_MAX_CONCURRENCY=1` is HARD — increasing it will break the connector.
 
 ## Capabilities
 

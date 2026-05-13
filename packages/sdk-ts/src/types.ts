@@ -23,7 +23,7 @@ export interface ExecuteRequest {
   responseFormat?: ResponseFormat;
   timeout?: number;
   extra?: Record<string, unknown>;
-  // CONN-0089 output-guard opt-in
+  // output-guard opt-in
   output_format?: OutputFormat;
   schema?: Record<string, unknown>;
 }

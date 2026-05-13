@@ -44,7 +44,7 @@ Successful responses return **HTTP 201** — the SDK parses them transparently.
 
 ## Structured output with `output_format` + `schema`
 
-The `output_format` field activates the CONN-0089 output-guard middleware. Combine it with `schema` to constrain the JSON shape:
+The `output_format` field activates the output-guard middleware. Combine it with `schema` to constrain the JSON shape:
 
 ```ts
 const response = await client.execute({
