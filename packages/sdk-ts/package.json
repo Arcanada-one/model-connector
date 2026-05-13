@@ -1,6 +1,6 @@
 {
   "name": "@arcanada/model-connector-sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Typed TypeScript client SDK for the Arcanada Model Connector — unified API for AI CLI agents and cloud model providers.",
   "license": "MIT",
   "type": "module",
