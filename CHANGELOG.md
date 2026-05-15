@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Notes
 
-- License-aware routing (Silero free vs external paid) and kill switch `SPEECH_BACKEND_ENABLED` live in Transcribator API per PRD-TRANS-0030 § 3 — Connector is agnostic.
+- License-aware routing (Silero free vs external paid) and kill switch `SPEECH_BACKEND_ENABLED` live in Transcribator API — Connector is agnostic to backend selection.
 - Auth currently uses existing `AuthGuard` (API-key Bearer). Migration to Auth Arcana JWKS deferred to AUTH-0031 ecosystem-wide swap.
 - Metrics counter (`mc_speech_proxy_total{endpoint,status_class}`) deferred — `MetricsService` is connector:model-keyed; speech proxy needs separate Prometheus surface, follow-up backlog item.
 
