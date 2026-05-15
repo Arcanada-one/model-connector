@@ -38,6 +38,11 @@ export const envSchema = z.object({
   EMBEDDING_API_URL: z.string().url().default('http://100.70.137.104:8300'),
   EMBEDDING_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).default(30_000),
 
+  // TRANS-0035: Speech proxy to Transcribator API SpeechModule
+  TRANSCRIBATOR_API_URL: z.string().url().default('http://localhost:3700'),
+  SPEECH_INTERNAL_TOKEN: z.string().min(16).optional(),
+  SPEECH_PROXY_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).default(30_000),
+
   ADMIN_TOKEN: z.string().min(32).optional(),
 
   // CONN-0052: Image Generation providers
