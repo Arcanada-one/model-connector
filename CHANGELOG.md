@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Speech proxy endpoints** (TRANS-0035, branch `trans-0035-speech-proxy`):
+  - `POST /v1/speech/tts` — proxy to Transcribator API SpeechModule (`api.transcribator.com/v1/speech/tts`). Streams `audio/wav` from upstream Silero TTS. Inherits global `AuthGuard` (Bearer API key).
+  - `POST /v1/speech/vad` — pass-through to upstream `/v1/speech/vad` (currently returns 501 until TRANS-0036 lands Silero VAD v6).
+  - `POST /v1/speech/stt` — synchronous 501 stub (`error_code: stt_not_yet_routed`, tracking TRANS-0037). Full routing decision deferred to Pilot 1 (`Transcribator Bot STT rewire`).
+  - `TranscribatorProxy` — native `fetch` client with `AbortSignal.timeout(SPEECH_PROXY_TIMEOUT_MS)`, single retry on 502/503/504 + 250 ms backoff, header allowlist (`content-type`, `content-length`, `retry-after`, `x-speech-backend`, `x-speech-model-version`, `x-request-id`), Authorization stripped from client-supplied headers.
+  - 30 new vitest specs (DTOs ×15 / Proxy ×11 / Service ×4) — total `pnpm test` 50 files / 517 tests green.
+- New env vars (`src/config/env.schema.ts`):
+  - `TRANSCRIBATOR_API_URL` (default `http://localhost:3700`).
+  - `SPEECH_INTERNAL_TOKEN` (optional, min 16 chars).
+  - `SPEECH_PROXY_TIMEOUT_MS` (default 30000).
+
+### Notes
+
+- License-aware routing (Silero free vs external paid) and kill switch `SPEECH_BACKEND_ENABLED` live in Transcribator API — Connector is agnostic to backend selection.
+- Auth currently uses existing `AuthGuard` (API-key Bearer). Migration to Auth Arcana JWKS deferred to AUTH-0031 ecosystem-wide swap.
+- Metrics counter (`mc_speech_proxy_total{endpoint,status_class}`) deferred — `MetricsService` is connector:model-keyed; speech proxy needs separate Prometheus surface, follow-up backlog item.
+
 ## [0.3.0] - 2026-05-13
 
 ### Added

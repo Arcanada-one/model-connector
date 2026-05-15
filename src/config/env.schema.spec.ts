@@ -42,4 +42,42 @@ describe('envSchema', () => {
     expect(config.CIRCUIT_BREAKER_THRESHOLD).toBe(5);
     expect(config.CIRCUIT_BREAKER_COOLDOWN_MS).toBe(30_000);
   });
+
+  // TRANS-0035: speech proxy env vars
+  it('should apply defaults for TRANS-0035 speech proxy', () => {
+    const config = validateEnv({ DATABASE_URL: 'postgresql://u:p@localhost/db' });
+    expect(config.TRANSCRIBATOR_API_URL).toBe('http://localhost:3700');
+    expect(config.SPEECH_INTERNAL_TOKEN).toBeUndefined();
+    expect(config.SPEECH_PROXY_TIMEOUT_MS).toBe(30_000);
+  });
+
+  it('should accept custom TRANSCRIBATOR_API_URL and validated token', () => {
+    const config = validateEnv({
+      DATABASE_URL: 'postgresql://u:p@localhost/db',
+      TRANSCRIBATOR_API_URL: 'https://api.transcribator.com',
+      SPEECH_INTERNAL_TOKEN: 'a-secret-token-at-least-16-chars',
+      SPEECH_PROXY_TIMEOUT_MS: '15000',
+    });
+    expect(config.TRANSCRIBATOR_API_URL).toBe('https://api.transcribator.com');
+    expect(config.SPEECH_INTERNAL_TOKEN).toBe('a-secret-token-at-least-16-chars');
+    expect(config.SPEECH_PROXY_TIMEOUT_MS).toBe(15_000);
+  });
+
+  it('should reject SPEECH_INTERNAL_TOKEN shorter than 16 chars', () => {
+    expect(() =>
+      validateEnv({
+        DATABASE_URL: 'postgresql://u:p@localhost/db',
+        SPEECH_INTERNAL_TOKEN: 'short',
+      }),
+    ).toThrow('Invalid environment variables');
+  });
+
+  it('should reject invalid TRANSCRIBATOR_API_URL', () => {
+    expect(() =>
+      validateEnv({
+        DATABASE_URL: 'postgresql://u:p@localhost/db',
+        TRANSCRIBATOR_API_URL: 'not-a-url',
+      }),
+    ).toThrow('Invalid environment variables');
+  });
 });
