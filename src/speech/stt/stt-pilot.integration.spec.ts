@@ -3,10 +3,14 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { SttRouterService } from './stt-router.service';
 import { GroqSttConnector } from './groq-stt.connector';
+import { DeepgramSttConnector } from './deepgram-stt.connector';
+import { AssemblyAiSttConnector } from './assemblyai-stt.connector';
+import { OpenAiSttConnector } from './openai-stt.connector';
 import { validateEnv } from '../../config/env.schema';
 import {
   SttAllProvidersExhausted,
   SttAudioTooLargeError,
+  SttBudgetExhaustedError,
   SttUnsupportedMimeError,
 } from './stt-pilot.errors';
 import type { SttConnectorRequest } from './interfaces/stt-connector.interface';
@@ -91,8 +95,25 @@ describe('STT pilot integration (CONN-0102 — router → connector → MSW Groq
     };
     const metricsStub = { recordStt: vi.fn() };
     const groq = new GroqSttConnector();
-    router = new SttRouterService(groq, prismaStub as never, metricsStub as never);
-    router.setRegistry(new Map([['groq', groq]]));
+    const deepgram = new DeepgramSttConnector();
+    const assemblyai = new AssemblyAiSttConnector();
+    const openai = new OpenAiSttConnector();
+    router = new SttRouterService(
+      groq,
+      deepgram,
+      assemblyai,
+      openai,
+      prismaStub as never,
+      metricsStub as never,
+    );
+    router.setRegistry(
+      new Map([
+        ['groq', groq],
+        ['deepgram', deepgram],
+        ['assemblyai', assemblyai],
+        ['openai', openai],
+      ]),
+    );
   });
 
   afterEach(() => {
@@ -122,6 +143,51 @@ describe('STT pilot integration (CONN-0102 — router → connector → MSW Groq
     await expect(
       router.transcribe(makeReq({ mimeType: 'image/png' }), 'apikey-int-1'),
     ).rejects.toBeInstanceOf(SttUnsupportedMimeError);
+  });
+
+  // CONN-0103 — Phase 1b cascade integration
+  it('cascades Groq 500 → Deepgram 200 and returns deepgram envelope (multi=true)', async () => {
+    validateEnv({
+      DATABASE_URL: 'postgresql://test',
+      STT_GROQ_API_KEY: 'gsk_integration_test_key',
+      STT_DEEPGRAM_API_KEY: 'dg_integration_test_key',
+      STT_PROVIDERS_ORDER: 'groq,deepgram',
+      STT_MULTI_PROVIDER: 'true',
+      STT_PROVIDER_GROQ_ENABLED: 'true',
+      STT_PROVIDER_DEEPGRAM_ENABLED: 'true',
+      STT_DAILY_BUDGET_USD: '10',
+      STT_COST_WARN_THRESHOLD_PCT: '0.8',
+      STT_MAX_AUDIO_BYTES: '26214400',
+    });
+    server.use(
+      http.post(GROQ_URL, () =>
+        HttpResponse.json({ error: { code: 'server_error', message: 'boom' } }, { status: 500 }),
+      ),
+      http.post('https://api.deepgram.com/v1/listen', () =>
+        HttpResponse.json({
+          metadata: { request_id: 'req-dg-int', duration: 1.5 },
+          results: {
+            channels: [{ alternatives: [{ transcript: 'cascade winner' }] }],
+          },
+        }),
+      ),
+    );
+    const envelope = await router.transcribe(makeReq(), 'apikey-int-cascade');
+    expect(envelope.provider).toBe('deepgram');
+    expect(envelope.transcription).toBe('cascade winner');
+    expect(envelope.fallback_count).toBe(1);
+    expect(envelope.model).toBe('nova-3');
+    // Two persists: error row for Groq + success row for Deepgram.
+    expect(prismaStub.sttTranscription.create).toHaveBeenCalledTimes(2);
+  });
+
+  it('hard CB fires SttBudgetExhaustedError when daily cost ≥ STT_DAILY_BUDGET_USD', async () => {
+    prismaStub.sttTranscription.aggregate.mockResolvedValue({ _sum: { costUsd: 11 } });
+    await expect(router.transcribe(makeReq(), 'apikey-int-1')).rejects.toBeInstanceOf(
+      SttBudgetExhaustedError,
+    );
+    // No provider should be called.
+    expect(prismaStub.sttTranscription.create).not.toHaveBeenCalled();
   });
 
   it('throws SttAllProvidersExhausted when Groq returns 401', async () => {
