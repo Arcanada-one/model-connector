@@ -111,11 +111,12 @@ model ImageJob {
 // CONN-0102: STT multi-provider router audit row
 // PK = UUID v7 (app-side via uuidv7 lib) for time-sortable scans.
 // CONN-0103: adds fallbackCount + driftStatus (Phase 1b cascade audit).
+// CONN-0104: adds mode (sync|async) + jobId (uuidv7) for Phase 2 async pipeline.
 model SttTranscription {
   id                   String   @id // UUID v7, set by application layer
   apiKeyId             String
   apiKey               ApiKey   @relation(fields: [apiKeyId], references: [id])
-  provider             String // 'groq' | 'deepgram' | 'assemblyai' | 'openai'
+  provider             String // 'groq' | 'deepgram' | 'assemblyai' | 'openai' | 'local-whisper'
   model                String
   language             String?
   audioBytes           Int
@@ -124,12 +125,14 @@ model SttTranscription {
   transcriptionPreview String // first 80 chars of returned transcription (PII surface — keep short)
   costUsd              Decimal  @default(0) @db.Decimal(10, 6)
   latencyMs            Int
-  status               String // 'success' | 'error'
+  status               String // 'success' | 'error' | 'queued' | 'processing' (async-only states)
   errorType            String? // includes 'drift' from Phase 1b
   errorMessage         String?
   requestId            String?
   fallbackCount        Int      @default(0) // cascade hops before this row landed
   driftStatus          String? // null | 'schema_pass' | 'schema_fail' (Phase 1b drift detection)
+  mode                 String   @default("sync") // 'sync' | 'async' (CONN-0104)
+  jobId                String?  @unique // BullMQ job id (uuidv7) — only set for mode='async'
   createdAt            DateTime @default(now())
 
   @@index([provider, createdAt])

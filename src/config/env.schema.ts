@@ -124,6 +124,15 @@ export const envSchema = z
     STT_OPENAI_PRICE_USD_PER_MIN: z.coerce.number().min(0).max(10).default(0.006),
     STT_OPENAI_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(60_000),
     STT_OPENAI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+
+    // CONN-0104: STT Phase 2 — self-hosted faster-whisper-server on arcana-ai.
+    // No API key (Tailscale-only listener); enablement flag gates the async
+    // pipeline registration. ENABLED defaults false until Phase 2 deploys.
+    STT_PROVIDER_LOCAL_WHISPER_ENABLED: envBool.default(false),
+    LOCAL_WHISPER_BASE_URL: z.string().url().default('http://arcana-ai:8400'),
+    STT_LOCAL_WHISPER_MODEL: z.string().default('Systran/faster-distil-whisper-large-v3'),
+    STT_LOCAL_WHISPER_TIMEOUT_MS: z.coerce.number().min(1_000).max(600_000).default(300_000),
+    STT_LOCAL_WHISPER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(1),
   })
   .superRefine((data, ctx) => {
     // CONN-0103 V-AC-8 — fail-closed boot when a provider is enabled but its API key
