@@ -9,7 +9,9 @@ export type SpeechErrorCode =
   | 'stt_validation_error'
   | 'stt_provider_failed'
   | 'stt_all_providers_exhausted'
-  | 'stt_no_provider_configured';
+  | 'stt_no_provider_configured'
+  // CONN-0103 — hard daily-cost CB.
+  | 'stt_budget_exhausted';
 
 export interface SpeechErrorEnvelope {
   statusCode: number;
@@ -17,4 +19,6 @@ export interface SpeechErrorEnvelope {
   message: string;
   tracking?: string;
   upstream_url?: string;
+  /** CONN-0103 — typed payload extras (budget cap details, providers_tried). */
+  details?: Record<string, unknown>;
 }

@@ -6,6 +6,7 @@ import { SttRouterService } from './stt/stt-router.service';
 import {
   SttAllProvidersExhausted,
   SttAudioTooLargeError,
+  SttBudgetExhaustedError,
   SttProviderError,
   SttUnsupportedMimeError,
 } from './stt/stt-pilot.errors';
@@ -206,13 +207,33 @@ describe('SpeechController', () => {
     expect((sent.body as { error_code: string }).error_code).toBe('stt_unsupported_mime');
   });
 
-  it('STT SttAllProvidersExhausted → 503', async () => {
-    sttRouterMock.transcribe.mockRejectedValueOnce(new SttAllProvidersExhausted(['groq']));
+  it('STT SttAllProvidersExhausted → 503 with providers_tried', async () => {
+    sttRouterMock.transcribe.mockRejectedValueOnce(
+      new SttAllProvidersExhausted(['groq', 'deepgram']),
+    );
     const req = makeMultipartReq({ apiKeyId: 'apikey-1' });
     const { reply, sent } = makeReply();
     await controller.stt(undefined, req, reply);
     expect(sent.status).toBe(503);
-    expect((sent.body as { error_code: string }).error_code).toBe('stt_all_providers_exhausted');
+    const body = sent.body as { error_code: string; details?: { providers_tried?: string[] } };
+    expect(body.error_code).toBe('stt_all_providers_exhausted');
+    expect(body.details?.providers_tried).toEqual(['groq', 'deepgram']);
+  });
+
+  // CONN-0103 — hard daily-cost CB
+  it('STT SttBudgetExhaustedError → 503 stt_budget_exhausted with daily_cost_usd + budget_usd', async () => {
+    sttRouterMock.transcribe.mockRejectedValueOnce(new SttBudgetExhaustedError(10.5, 10));
+    const req = makeMultipartReq({ apiKeyId: 'apikey-1' });
+    const { reply, sent } = makeReply();
+    await controller.stt(undefined, req, reply);
+    expect(sent.status).toBe(503);
+    const body = sent.body as {
+      error_code: string;
+      details?: { daily_cost_usd?: number; budget_usd?: number };
+    };
+    expect(body.error_code).toBe('stt_budget_exhausted');
+    expect(body.details?.daily_cost_usd).toBe(10.5);
+    expect(body.details?.budget_usd).toBe(10);
   });
 
   it('STT SttProviderError(rate_limited) → 429 stt_provider_failed', async () => {
@@ -231,6 +252,53 @@ describe('SpeechController', () => {
     const { reply, sent } = makeReply();
     await controller.stt(undefined, req, reply);
     expect(sent.status).toBe(401);
+  });
+
+  // TRANS-0061 B.6 — multipart streaming exceeds STT_MAX_AUDIO_BYTES.
+  // `@fastify/multipart` throws `FST_REQ_FILE_TOO_LARGE` from `data.toBuffer()`
+  // with default `throwFileSizeLimit: true`; previously this fell through to
+  // 500 stt_provider_failed (probe #3 in TRANS-0061-fixtures.md).
+  it('STT: @fastify/multipart FST_REQ_FILE_TOO_LARGE → 413 stt_audio_too_large', async () => {
+    const fastifyErr = Object.assign(new Error('request file too large'), {
+      code: 'FST_REQ_FILE_TOO_LARGE',
+      statusCode: 413,
+    });
+    const req = {
+      apiKey: { id: 'apikey-1' },
+      file: async () => ({
+        toBuffer: async () => {
+          throw fastifyErr;
+        },
+        filename: 'big.wav',
+        mimetype: 'audio/wav',
+        fields: {},
+      }),
+    } as unknown as MultipartReqStub;
+    const { reply, sent } = makeReply();
+    await controller.stt(undefined, req, reply);
+    expect(sent.status).toBe(413);
+    expect((sent.body as { error_code: string }).error_code).toBe('stt_audio_too_large');
+  });
+
+  // TRANS-0061 B.5 — non-multipart Content-Type. `@fastify/multipart` exposes
+  // `req.file()` that throws `RequestNotMultipart` (code FST_REQ_NOT_MULTIPART)
+  // when the inbound request isn't multipart. Previously this also fell to 500
+  // (probe #5). Convert to controlled 400 stt_validation_error.
+  it('STT: req.file() throws RequestNotMultipart → 400 stt_validation_error', async () => {
+    const req = {
+      apiKey: { id: 'apikey-1' },
+      file: async () => {
+        throw Object.assign(new Error('the request is not multipart'), {
+          code: 'FST_REQ_NOT_MULTIPART',
+          statusCode: 406,
+        });
+      },
+    } as unknown as MultipartReqStub;
+    const { reply, sent } = makeReply();
+    await controller.stt(undefined, req, reply);
+    expect(sent.status).toBe(400);
+    expect((sent.body as { error_code: string }).error_code).toBe('stt_validation_error');
+    expect((sent.body as { message: string }).message).toMatch(/multipart/i);
   });
 
   it('generates UUID when X-Request-ID header missing', async () => {

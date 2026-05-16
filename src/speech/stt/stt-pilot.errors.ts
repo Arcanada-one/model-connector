@@ -9,7 +9,11 @@ export type SttProviderErrorType =
   | 'network_error'
   | 'timeout'
   | 'parse_error'
-  | 'http_error';
+  | 'http_error'
+  // CONN-0103: response shape mismatch — Zod schema rejection. Retryable
+  // (cascade triggers next provider). NOT extends SttBudgetExhaustedError —
+  // budget is a hard stop, drift is a soft one.
+  | 'drift';
 
 export class SttProviderError extends Error {
   readonly name = 'SttProviderError';
@@ -51,5 +55,23 @@ export class SttUnsupportedMimeError extends Error {
     readonly allowed: readonly string[],
   ) {
     super(`Unsupported audio MIME "${mimeType}"; allowed: ${allowed.join(', ')}`);
+  }
+}
+
+/**
+ * CONN-0103 — daily-cost hard cap fired.
+ *
+ * Standalone (NOT extends SttProviderError) intentionally: cascade-catch in
+ * SttRouterService matches `instanceof SttProviderError` for retry; budget
+ * exhaustion is terminal and must propagate up without triggering fallback
+ * to the next provider. Maps to HTTP 503 in SpeechController.
+ */
+export class SttBudgetExhaustedError extends Error {
+  readonly name = 'SttBudgetExhaustedError';
+  constructor(
+    readonly dailyCostUsd: number,
+    readonly budgetUsd: number,
+  ) {
+    super(`STT daily budget exhausted: $${dailyCostUsd.toFixed(4)} ≥ $${budgetUsd.toFixed(2)}`);
   }
 }

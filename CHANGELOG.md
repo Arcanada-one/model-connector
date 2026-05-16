@@ -39,10 +39,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SpeechErrorCode` adds `stt_audio_too_large`, `stt_unsupported_mime`, `stt_validation_error`, `stt_provider_failed`, `stt_all_providers_exhausted`, `stt_no_provider_configured`.
 - `POST /v1/speech/tts` and `POST /v1/speech/vad` keep their existing proxy semantics unchanged.
 
+- **Speech-to-text — multi-provider cascade (Deepgram, AssemblyAI, OpenAI)**:
+  - Three new connectors: `DeepgramSttConnector` (`nova-3`, raw-body POST, `Authorization: Token`), `AssemblyAiSttConnector` (`universal-2`, two-step upload → submit → poll), `OpenAiSttConnector` (`gpt-4o-mini-transcribe`, multipart `response_format=json` — `verbose_json` is rejected for this model family).
+  - Cascade fallback: when `STT_MULTI_PROVIDER=true`, retryable `SttProviderError` triggers the next provider in `STT_PROVIDERS_ORDER`. `fallback_count` in the response envelope records the number of hops before success.
+  - Hard daily-cost circuit breaker: when aggregated `costUsd` for the UTC day reaches `STT_DAILY_BUDGET_USD`, the router returns `HTTP 503 stt_budget_exhausted` **before** any outbound HTTP fires. Soft-warn at 80% threshold remains as a `pino.warn` log.
+  - Zod-based drift detection: each provider has a registered response schema; mismatch is surfaced as retryable `SttProviderError(type: 'drift')` and persisted with `driftStatus='schema_fail'` for audit.
+- **`SttBudgetExhaustedError`** — standalone (NOT extends `SttProviderError`) so cascade-catch in the router does not retry it. Maps to `HTTP 503` with `details.daily_cost_usd` and `details.budget_usd`.
+- **Audit columns** — `SttTranscription.fallbackCount` (Int, default 0) and `SttTranscription.driftStatus` (`schema_pass` / `schema_fail` / null) added via Prisma migration `20260516170000_conn_0103_stt_drift_and_fallback`.
+- New env vars (all default disabled / fail-closed):
+  - `STT_PROVIDER_DEEPGRAM_ENABLED`, `STT_DEEPGRAM_API_KEY`, `STT_DEEPGRAM_MODEL`, `STT_DEEPGRAM_PRICE_USD_PER_MIN`, `STT_DEEPGRAM_TIMEOUT_MS`, `STT_DEEPGRAM_MAX_CONCURRENCY`.
+  - `STT_PROVIDER_ASSEMBLYAI_ENABLED`, `STT_ASSEMBLYAI_API_KEY`, `STT_ASSEMBLYAI_MODEL`, `STT_ASSEMBLYAI_PRICE_USD_PER_MIN`, `STT_ASSEMBLYAI_TIMEOUT_MS`, `STT_ASSEMBLYAI_POLL_INTERVAL_MS`, `STT_ASSEMBLYAI_MAX_CONCURRENCY`.
+  - `STT_PROVIDER_OPENAI_ENABLED`, `STT_OPENAI_API_KEY`, `STT_OPENAI_MODEL`, `STT_OPENAI_PRICE_USD_PER_MIN`, `STT_OPENAI_TIMEOUT_MS`, `STT_OPENAI_MAX_CONCURRENCY`.
+
+### Changed
+
+- `POST /v1/speech/stt` no longer returns the previous 501 stub envelope. The `stt_not_yet_routed` error code is retired.
+- `SpeechErrorCode` adds `stt_audio_too_large`, `stt_unsupported_mime`, `stt_validation_error`, `stt_provider_failed`, `stt_all_providers_exhausted`, `stt_no_provider_configured`, `stt_budget_exhausted`.
+- `SpeechErrorEnvelope` gains an optional `details` payload (used by `stt_budget_exhausted` for `daily_cost_usd` + `budget_usd`, and by `stt_all_providers_exhausted` for `providers_tried`).
+- `POST /v1/speech/tts` and `POST /v1/speech/vad` keep their existing proxy semantics unchanged.
+- `BaseSttConnector.buildRequestBody()` is the new abstract for connectors with raw-body payloads (Deepgram, AssemblyAI upload). `buildMultipartBody()` is preserved for `FormData` providers (Groq, OpenAI).
+
 ### Notes
 
-- Cost-budget hard cap (HTTP 503 when daily spend ≥ baseline), drift detection, and the multi-provider cascade (Deepgram, AssemblyAI, OpenAI Whisper) ship in a subsequent release along with corresponding env vars and Vault paths.
 - Self-hosted Whisper async endpoint (`/v1/speech/stt/async` on a separate BullMQ pipeline) is scoped to a later release and not part of this one.
+- All three new providers default to disabled (`STT_PROVIDER_*_ENABLED=false`). The operator flips them after provisioning real API keys in Vault path `arcanada/prod/env/model-connector/STT_*`. Until then the surface continues to honour the single-Groq path from the previous release.
 
 ## [0.3.0] - 2026-05-13
 

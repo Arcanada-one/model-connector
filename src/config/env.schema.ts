@@ -96,6 +96,30 @@ export const envSchema = z.object({
   STT_MAX_AUDIO_BYTES: z.coerce.number().min(1024).max(26_214_400).default(26_214_400),
   STT_DAILY_BUDGET_USD: z.coerce.number().min(0).max(1000).default(10),
   STT_COST_WARN_THRESHOLD_PCT: z.coerce.number().min(0).max(1).default(0.8),
+
+  // CONN-0103: STT Phase 1b — Deepgram + AssemblyAI + OpenAI providers + hard CB.
+  // All ENABLED flags default false (fail-closed); operator flips post-Vault-provisioning.
+  STT_PROVIDER_DEEPGRAM_ENABLED: envBool.default(false),
+  STT_DEEPGRAM_API_KEY: z.string().optional(),
+  STT_DEEPGRAM_MODEL: z.string().default('nova-3'),
+  STT_DEEPGRAM_PRICE_USD_PER_MIN: z.coerce.number().min(0).max(10).default(0.0043),
+  STT_DEEPGRAM_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(60_000),
+  STT_DEEPGRAM_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+
+  STT_PROVIDER_ASSEMBLYAI_ENABLED: envBool.default(false),
+  STT_ASSEMBLYAI_API_KEY: z.string().optional(),
+  STT_ASSEMBLYAI_MODEL: z.string().default('universal-2'),
+  STT_ASSEMBLYAI_PRICE_USD_PER_MIN: z.coerce.number().min(0).max(10).default(0.0045),
+  STT_ASSEMBLYAI_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+  STT_ASSEMBLYAI_POLL_INTERVAL_MS: z.coerce.number().min(250).max(60_000).default(2_000),
+  STT_ASSEMBLYAI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(5),
+
+  STT_PROVIDER_OPENAI_ENABLED: envBool.default(false),
+  STT_OPENAI_API_KEY: z.string().optional(),
+  STT_OPENAI_MODEL: z.string().default('gpt-4o-mini-transcribe'),
+  STT_OPENAI_PRICE_USD_PER_MIN: z.coerce.number().min(0).max(10).default(0.006),
+  STT_OPENAI_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(60_000),
+  STT_OPENAI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
