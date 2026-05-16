@@ -32,14 +32,15 @@ model Request {
 }
 
 model ApiKey {
-  id               String            @id @default(uuid())
-  name             String
-  keyHash          String            @unique
-  rateLimit        Int               @default(60)
-  active           Boolean           @default(true)
-  requests         Request[]
-  imageGenerations ImageGeneration[]
-  createdAt        DateTime          @default(now())
+  id                String             @id @default(uuid())
+  name              String
+  keyHash           String             @unique
+  rateLimit         Int                @default(60)
+  active            Boolean            @default(true)
+  requests          Request[]
+  imageGenerations  ImageGeneration[]
+  sttTranscriptions SttTranscription[]
+  createdAt         DateTime           @default(now())
 }
 
 model ConnectorAccount {
@@ -105,4 +106,30 @@ model ImageJob {
   @@index([imageGenerationId])
   @@index([bullJobId])
   @@index([status, createdAt])
+}
+
+// CONN-0102: STT multi-provider router audit row
+// PK = UUID v7 (app-side via uuidv7 lib) for time-sortable scans.
+model SttTranscription {
+  id                   String   @id // UUID v7, set by application layer
+  apiKeyId             String
+  apiKey               ApiKey   @relation(fields: [apiKeyId], references: [id])
+  provider             String // 'groq' (Phase 1a); Phase 1b adds 'deepgram' | 'assemblyai' | 'openai'
+  model                String
+  language             String?
+  audioBytes           Int
+  audioDurationSeconds Float?
+  mimeType             String
+  transcriptionPreview String // first 80 chars of returned transcription (PII surface — keep short)
+  costUsd              Decimal  @default(0) @db.Decimal(10, 6)
+  latencyMs            Int
+  status               String // 'success' | 'error'
+  errorType            String?
+  errorMessage         String?
+  requestId            String?
+  createdAt            DateTime @default(now())
+
+  @@index([provider, createdAt])
+  @@index([apiKeyId, createdAt])
+  @@index([status])
 }
