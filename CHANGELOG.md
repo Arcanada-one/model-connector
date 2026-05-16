@@ -41,8 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Notes
 
-- Cost-budget hard cap (HTTP 503 when daily spend ≥ baseline), drift detection, and the multi-provider cascade (Deepgram, AssemblyAI, OpenAI Whisper) ship in Phase 1b along with corresponding env vars and Vault paths.
-- Self-hosted Whisper async endpoint (`/v1/speech/stt/async` on a separate BullMQ pipeline) is scoped to Phase 2 and not part of this release.
+- Cost-budget hard cap (HTTP 503 when daily spend ≥ baseline), drift detection, and the multi-provider cascade (Deepgram, AssemblyAI, OpenAI Whisper) ship in a subsequent release along with corresponding env vars and Vault paths.
+- Self-hosted Whisper async endpoint (`/v1/speech/stt/async` on a separate BullMQ pipeline) is scoped to a later release and not part of this one.
 
 ## [0.3.0] - 2026-05-13
 
