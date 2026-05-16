@@ -86,3 +86,26 @@ describe('MetricsService — STT extension (CONN-0102)', () => {
     expect(metrics.getAll()).toEqual({});
   });
 });
+
+// CONN-0103 remediation — named drift counter (stt_response_schema_fail_total{provider}).
+describe('MetricsService — STT drift counter (CONN-0103)', () => {
+  let metrics: MetricsService;
+
+  beforeEach(() => {
+    metrics = new MetricsService();
+  });
+
+  it('incrementSttSchemaFail increments per-provider counter', () => {
+    metrics.incrementSttSchemaFail('deepgram');
+    metrics.incrementSttSchemaFail('deepgram');
+    metrics.incrementSttSchemaFail('assemblyai');
+    expect(metrics.getSttSchemaFailCounts()).toEqual({
+      deepgram: 2,
+      assemblyai: 1,
+    });
+  });
+
+  it('getSttSchemaFailCounts returns empty record when no drift recorded', () => {
+    expect(metrics.getSttSchemaFailCounts()).toEqual({});
+  });
+});

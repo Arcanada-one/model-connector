@@ -23,6 +23,7 @@ describe('OpenAiSttConnector', () => {
   beforeEach(() => {
     validateEnv({
       DATABASE_URL: 'postgresql://test',
+      STT_GROQ_API_KEY: 'gsk_test_groq_key',
       STT_OPENAI_API_KEY: 'sk-test-key',
       STT_OPENAI_MODEL: 'gpt-4o-mini-transcribe',
       STT_OPENAI_PRICE_USD_PER_MIN: '0.006',

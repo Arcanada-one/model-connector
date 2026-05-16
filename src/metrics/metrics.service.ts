@@ -76,6 +76,8 @@ function emptyMetrics(): ConnectorMetrics {
 export class MetricsService {
   private metrics = new Map<string, ConnectorMetrics>();
   private sttMetrics = new Map<string, SttMetrics>();
+  // CONN-0103 — `stt_response_schema_fail_total{provider}` named drift counter.
+  private sttSchemaFailCounts: Record<string, number> = {};
 
   record(opts: {
     connector: string;
@@ -176,5 +178,13 @@ export class MetricsService {
       };
     }
     return result;
+  }
+
+  incrementSttSchemaFail(provider: string): void {
+    this.sttSchemaFailCounts[provider] = (this.sttSchemaFailCounts[provider] ?? 0) + 1;
+  }
+
+  getSttSchemaFailCounts(): Record<string, number> {
+    return { ...this.sttSchemaFailCounts };
   }
 }

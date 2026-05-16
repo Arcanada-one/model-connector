@@ -16,6 +16,8 @@ describe('TranscribatorProxy', () => {
     process.env.TRANSCRIBATOR_API_URL = 'http://upstream.test';
     process.env.SPEECH_INTERNAL_TOKEN = 'a-secret-token-at-least-16-chars';
     process.env.SPEECH_PROXY_TIMEOUT_MS = '5000';
+    // CONN-0103 V-AC-8 — Groq enabled by default; refine requires key on boot.
+    process.env.STT_GROQ_API_KEY = 'gsk_test_proxy_key';
     vi.resetModules();
     proxy = new TranscribatorProxy();
     fetchSpy = vi.fn();

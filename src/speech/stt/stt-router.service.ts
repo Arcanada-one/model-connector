@@ -193,6 +193,7 @@ export class SttRouterService {
       this.logger.warn(
         `STT drift detected for ${provider}: ${parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`,
       );
+      this.metrics.incrementSttSchemaFail(provider);
       return 'schema_fail';
     }
     return 'schema_pass';

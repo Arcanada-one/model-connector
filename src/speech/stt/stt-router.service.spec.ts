@@ -41,7 +41,7 @@ function buildRouter(opts: {
       aggregate: vi.fn().mockResolvedValue({ _sum: { costUsd: 0 } }),
     },
   };
-  const metrics = { recordStt: vi.fn() };
+  const metrics = { recordStt: vi.fn(), incrementSttSchemaFail: vi.fn() };
   const router = new SttRouterService(
     fakeGroq as never,
     fakeDeepgram as never,
@@ -83,6 +83,8 @@ const baseEnv = {
   STT_DAILY_BUDGET_USD: '10',
   STT_COST_WARN_THRESHOLD_PCT: '0.8',
   STT_MAX_AUDIO_BYTES: '26214400',
+  // CONN-0103 V-AC-8 — Groq enabled by default; refine requires key.
+  STT_GROQ_API_KEY: 'test-groq-key',
 };
 
 describe('SttRouterService', () => {
@@ -213,6 +215,16 @@ describe('SttRouterService', () => {
     expect(metrics.recordStt).not.toHaveBeenCalled();
   });
 
+  // CONN-0103 remediation — V-AC-2 envelope parity: SttBudgetExhaustedError carries providersTried: []
+  it('SttBudgetExhaustedError exposes providersTried (empty at hard-CB gate)', async () => {
+    const { router, prisma } = buildRouter({});
+    prisma.sttTranscription.aggregate.mockResolvedValue({ _sum: { costUsd: 10.5 } });
+    await expect(router.transcribe(makeReq(), 'apikey-1')).rejects.toMatchObject({
+      name: 'SttBudgetExhaustedError',
+      providersTried: [],
+    });
+  });
+
   // CONN-0103 — cascade fallback (V-AC-3)
   it('cascades to next provider when first fails with retryable SttProviderError (multi=true)', async () => {
     validateEnv({
@@ -220,6 +232,7 @@ describe('SttRouterService', () => {
       STT_MULTI_PROVIDER: 'true',
       STT_PROVIDERS_ORDER: 'groq,deepgram',
       STT_PROVIDER_DEEPGRAM_ENABLED: 'true',
+      STT_DEEPGRAM_API_KEY: 'dg_test_key',
     });
     const ctx = buildRouter({});
     ctx.fakeGroq.transcribe.mockRejectedValueOnce(
@@ -247,6 +260,7 @@ describe('SttRouterService', () => {
       STT_MULTI_PROVIDER: 'true',
       STT_PROVIDERS_ORDER: 'groq,deepgram',
       STT_PROVIDER_DEEPGRAM_ENABLED: 'true',
+      STT_DEEPGRAM_API_KEY: 'dg_test_key',
     });
     const ctx = buildRouter({});
     ctx.fakeGroq.transcribe.mockRejectedValue(
@@ -268,6 +282,7 @@ describe('SttRouterService', () => {
       STT_MULTI_PROVIDER: 'true',
       STT_PROVIDERS_ORDER: 'deepgram,groq',
       STT_PROVIDER_DEEPGRAM_ENABLED: 'true',
+      STT_DEEPGRAM_API_KEY: 'dg_test_key',
     });
     const ctx = buildRouter({});
     // Deepgram returns malformed result (missing providerRequestId -> empty string → schema fail).
@@ -298,6 +313,8 @@ describe('SttRouterService', () => {
       .filter((d) => d.driftStatus === 'schema_fail');
     expect(driftRows.length).toBeGreaterThanOrEqual(1);
     expect(driftRows[0].errorType).toBe('drift');
+    // CONN-0103 remediation — named drift counter `stt_response_schema_fail_total{provider}`.
+    expect(ctx.metrics.incrementSttSchemaFail).toHaveBeenCalledWith('deepgram');
   });
 
   it('persists driftStatus=schema_pass on a clean Deepgram success', async () => {
@@ -306,6 +323,7 @@ describe('SttRouterService', () => {
       STT_PROVIDERS_ORDER: 'deepgram',
       STT_PROVIDER_GROQ_ENABLED: 'false',
       STT_PROVIDER_DEEPGRAM_ENABLED: 'true',
+      STT_DEEPGRAM_API_KEY: 'dg_test_key',
     });
     const ctx = buildRouter({});
     ctx.fakeDeepgram.transcribe.mockResolvedValueOnce({

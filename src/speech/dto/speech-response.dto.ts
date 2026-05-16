@@ -3,7 +3,6 @@ export type SpeechErrorCode =
   | 'upstream_timeout'
   | 'speech_backend_disabled'
   | 'vad_not_implemented'
-  // CONN-0102 — STT routing surface (replaces stt_not_yet_routed stub).
   | 'stt_audio_too_large'
   | 'stt_unsupported_mime'
   | 'stt_validation_error'

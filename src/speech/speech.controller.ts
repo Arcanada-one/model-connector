@@ -215,6 +215,7 @@ export class SpeechController {
         details: {
           daily_cost_usd: Number(err.dailyCostUsd.toFixed(6)),
           budget_usd: err.budgetUsd,
+          providers_tried: err.providersTried,
         },
       };
     }

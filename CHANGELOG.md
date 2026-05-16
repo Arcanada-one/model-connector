@@ -58,6 +58,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SpeechErrorEnvelope` gains an optional `details` payload (used by `stt_budget_exhausted` for `daily_cost_usd` + `budget_usd`, and by `stt_all_providers_exhausted` for `providers_tried`).
 - `POST /v1/speech/tts` and `POST /v1/speech/vad` keep their existing proxy semantics unchanged.
 - `BaseSttConnector.buildRequestBody()` is the new abstract for connectors with raw-body payloads (Deepgram, AssemblyAI upload). `buildMultipartBody()` is preserved for `FormData` providers (Groq, OpenAI).
+- **STT remediation (CONN-0103 round 2)**:
+  - `MetricsService` exposes `incrementSttSchemaFail(provider)` + `getSttSchemaFailCounts()` — named drift counter `stt_response_schema_fail_total{provider}` surface. Router increments on every Zod schema-fail outcome.
+  - `SttBudgetExhaustedError` carries `providersTried: string[]` (always `[]` at the hard-CB gate). The 503 `stt_budget_exhausted` envelope `details` now exposes `providers_tried: []` — symmetric with `stt_all_providers_exhausted` so clients read the field unconditionally.
+  - `envSchema` enforces a `superRefine` check: when `STT_PROVIDER_{NAME}_ENABLED=true`, the matching `STT_{NAME}_API_KEY` (or legacy `GROQ_API_KEY` fallback for Groq) MUST be set. Fail-closed at boot via `validateEnv()` instead of runtime fail-open on first request.
 
 ### Notes
 

@@ -139,9 +139,11 @@ describe('GroqSttConnector', () => {
   });
 
   it('falls back to GROQ_API_KEY when STT_GROQ_API_KEY is not set', async () => {
-    // Reset env to a state without STT_GROQ_API_KEY.
+    // Reset env to a state without STT_GROQ_API_KEY but WITH legacy GROQ_API_KEY
+    // (the CONN-0103 refine accepts the legacy key as a Groq enablement source).
     validateEnv({
       DATABASE_URL: 'postgresql://test',
+      GROQ_API_KEY: 'gsk_legacy_chat_key',
       // STT_GROQ_API_KEY intentionally omitted
     });
     process.env.GROQ_API_KEY = 'gsk_legacy_chat_key';
