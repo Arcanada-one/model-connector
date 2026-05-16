@@ -10,7 +10,7 @@ import {
 } from './transcribator.proxy';
 import { TtsRequestDto } from './dto/tts-request.dto';
 import { VadRequestDto } from './dto/vad-request.dto';
-import { STT_STUB_RESPONSE, SpeechErrorEnvelope } from './dto/speech-response.dto';
+import { SpeechErrorEnvelope } from './dto/speech-response.dto';
 
 export type ProxyOutcome =
   | { kind: 'proxied'; result: ProxyResult }
@@ -28,10 +28,6 @@ export class SpeechService {
 
   async vad(body: VadRequestDto, requestId?: string): Promise<ProxyOutcome> {
     return this.proxyOrError('vad', body as unknown as Record<string, unknown>, requestId);
-  }
-
-  stt(): SpeechErrorEnvelope {
-    return STT_STUB_RESPONSE;
   }
 
   private async proxyOrError(

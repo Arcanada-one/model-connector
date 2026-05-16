@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+// CONN-0102: z.coerce.boolean() coerces ANY non-empty string to `true`
+// (including the literal "false"). For env flags where operators set
+// `FOO=false` and expect false, we need explicit parsing.
+const envBool = z.union([z.boolean(), z.string()]).transform((v) => {
+  if (typeof v === 'boolean') return v;
+  const lower = v.trim().toLowerCase();
+  if (lower === 'false' || lower === '0' || lower === 'no' || lower === '') return false;
+  return true;
+});
+
 export const envSchema = z.object({
   PORT: z.coerce.number().default(3900),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -73,6 +83,19 @@ export const envSchema = z.object({
   // Image budget and rate limiting
   IMAGE_BUDGET_DAILY_USD: z.coerce.number().min(0).max(1000).default(10),
   IMAGE_RATE_LIMIT_PER_HOUR: z.coerce.number().min(1).max(500).default(50),
+
+  // CONN-0102: STT multi-provider router (Phase 1a — Groq sync only)
+  STT_MULTI_PROVIDER: envBool.default(false),
+  STT_PROVIDERS_ORDER: z.string().default('groq'),
+  STT_PROVIDER_GROQ_ENABLED: envBool.default(true),
+  STT_GROQ_API_KEY: z.string().optional(),
+  STT_GROQ_MODEL: z.string().default('whisper-large-v3'),
+  STT_GROQ_PRICE_USD_PER_MIN: z.coerce.number().min(0).max(10).default(0.00185),
+  STT_GROQ_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(60_000),
+  STT_GROQ_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+  STT_MAX_AUDIO_BYTES: z.coerce.number().min(1024).max(26_214_400).default(26_214_400),
+  STT_DAILY_BUDGET_USD: z.coerce.number().min(0).max(1000).default(10),
+  STT_COST_WARN_THRESHOLD_PCT: z.coerce.number().min(0).max(1).default(0.8),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

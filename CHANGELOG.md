@@ -9,22 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Speech proxy endpoints** (TRANS-0035, branch `trans-0035-speech-proxy`):
-  - `POST /v1/speech/tts` — proxy to Transcribator API SpeechModule (`api.transcribator.com/v1/speech/tts`). Streams `audio/wav` from upstream Silero TTS. Inherits global `AuthGuard` (Bearer API key).
-  - `POST /v1/speech/vad` — pass-through to upstream `/v1/speech/vad` (currently returns 501 until TRANS-0036 lands Silero VAD v6).
-  - `POST /v1/speech/stt` — synchronous 501 stub (`error_code: stt_not_yet_routed`, tracking TRANS-0037). Full routing decision deferred to Pilot 1 (`Transcribator Bot STT rewire`).
-  - `TranscribatorProxy` — native `fetch` client with `AbortSignal.timeout(SPEECH_PROXY_TIMEOUT_MS)`, single retry on 502/503/504 + 250 ms backoff, header allowlist (`content-type`, `content-length`, `retry-after`, `x-speech-backend`, `x-speech-model-version`, `x-request-id`), Authorization stripped from client-supplied headers.
-  - 30 new vitest specs (DTOs ×15 / Proxy ×11 / Service ×4) — total `pnpm test` 50 files / 517 tests green.
-- New env vars (`src/config/env.schema.ts`):
-  - `TRANSCRIBATOR_API_URL` (default `http://localhost:3700`).
-  - `SPEECH_INTERNAL_TOKEN` (optional, min 16 chars).
-  - `SPEECH_PROXY_TIMEOUT_MS` (default 30000).
+- **Speech-to-text routing — Phase 1a (Groq Whisper sync)**:
+  - `POST /v1/speech/stt` is now a live transcription endpoint backed by Groq Whisper (`whisper-large-v3` default). Multipart upload (`file`), optional `language`/`model`/`prompt`/`temperature` form fields, 25 MB audio cap, BCP-47 language hint, returns
+    `{transcription, model, provider, language, latency_ms, cost_usd, audio_duration_seconds, fallback_count, request_id}`.
+  - New abstract `BaseSttConnector` and concrete `GroqSttConnector` with per-provider concurrency cap and circuit breaker. 4xx responses (auth/payload/MIME) propagate to caller but do **not** trip the breaker — only `5xx`, `408`, `429`, network and timeout errors count, matching the resilience-pattern default for HTTP integrations.
+  - `SttRouterService` iterates `STT_PROVIDERS_ORDER` (Phase 1a: `groq` only), persists one `SttTranscription` audit row per request (success and failure paths), emits a soft pino warning when daily Groq spend crosses 80% of `STT_DAILY_BUDGET_USD`. No hard 503 budget cut in Phase 1a — that lands in Phase 1b alongside the multi-provider cascade.
+  - `MetricsService.recordStt()` + `getAllStt()` — per `provider:model` counters for requests / success / errors / cost / latency / audio duration.
+- **Multipart parser** registered at bootstrap via `@fastify/multipart@^9`. `fileSize` limit honours `STT_MAX_AUDIO_BYTES` so oversize uploads are rejected before fully buffering.
+- **New env vars** (`src/config/env.schema.ts`):
+  - `STT_MULTI_PROVIDER` (default `false`) — Phase 1a single-provider gate; Phase 1b flips to cascade.
+  - `STT_PROVIDERS_ORDER` (default `groq`) — comma-separated priority list.
+  - `STT_PROVIDER_GROQ_ENABLED` (default `true`).
+  - `STT_GROQ_API_KEY` (optional; falls back to existing `GROQ_API_KEY` when unset).
+  - `STT_GROQ_MODEL` (default `whisper-large-v3`).
+  - `STT_GROQ_PRICE_USD_PER_MIN` (default `0.00185`).
+  - `STT_GROQ_TIMEOUT_MS` (default `60000`).
+  - `STT_GROQ_MAX_CONCURRENCY` (default `10`).
+  - `STT_MAX_AUDIO_BYTES` (default `26214400` ≈ 25 MiB).
+  - `STT_DAILY_BUDGET_USD` (default `10`).
+  - `STT_COST_WARN_THRESHOLD_PCT` (default `0.8`).
+- **Prisma migration** `20260516000000_conn_0102_stt_transcription` — new `SttTranscription` table (FK → `ApiKey`, indexes on `(provider, createdAt)`, `(apiKeyId, createdAt)`, `status`). PK is app-side UUID v7 to keep inserts time-sortable.
+- **Env-flag boolean parser** — internal helper that treats `false` / `0` / `no` / empty as `false` for `STT_MULTI_PROVIDER` and `STT_PROVIDER_GROQ_ENABLED`. (Zod's `z.coerce.boolean()` coerces the literal string `"false"` to `true`; explicit parsing avoids the foot-gun on these flags.)
+- New integration spec (`stt-pilot.integration.spec.ts`) exercises the full router → connector → Groq path via MSW.
+- 32 new vitest specs across `src/speech/stt/`, `src/speech/dto/stt-*`, and `src/metrics/` cover DTO validation, error classes, base/Groq connectors, router persistence + cost warn, controller envelope mapping, and metrics buckets.
+
+### Changed
+
+- `POST /v1/speech/stt` no longer returns the previous 501 stub envelope. The `stt_not_yet_routed` error code is retired.
+- `SpeechErrorCode` adds `stt_audio_too_large`, `stt_unsupported_mime`, `stt_validation_error`, `stt_provider_failed`, `stt_all_providers_exhausted`, `stt_no_provider_configured`.
+- `POST /v1/speech/tts` and `POST /v1/speech/vad` keep their existing proxy semantics unchanged.
 
 ### Notes
 
-- License-aware routing (Silero free vs external paid) and kill switch `SPEECH_BACKEND_ENABLED` live in Transcribator API — Connector is agnostic to backend selection.
-- Auth currently uses existing `AuthGuard` (API-key Bearer). Migration to Auth Arcana JWKS deferred to AUTH-0031 ecosystem-wide swap.
-- Metrics counter (`mc_speech_proxy_total{endpoint,status_class}`) deferred — `MetricsService` is connector:model-keyed; speech proxy needs separate Prometheus surface, follow-up backlog item.
+- Cost-budget hard cap (HTTP 503 when daily spend ≥ baseline), drift detection, and the multi-provider cascade (Deepgram, AssemblyAI, OpenAI Whisper) ship in Phase 1b along with corresponding env vars and Vault paths.
+- Self-hosted Whisper async endpoint (`/v1/speech/stt/async` on a separate BullMQ pipeline) is scoped to Phase 2 and not part of this release.
 
 ## [0.3.0] - 2026-05-13
 

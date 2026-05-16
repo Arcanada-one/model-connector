@@ -64,11 +64,7 @@ describe('SpeechService', () => {
     }
   });
 
-  it('returns STT stub synchronously without proxy call', () => {
-    const envelope = service.stt();
-    expect(envelope.statusCode).toBe(501);
-    expect(envelope.error_code).toBe('stt_not_yet_routed');
-    expect(envelope.tracking).toBe('TRANS-0037');
-    expect(proxyMock.proxy).not.toHaveBeenCalled();
-  });
+  // STT moved out of SpeechService to SttRouterService per CONN-0102 —
+  // no `.stt()` method here anymore. Coverage lives in stt-router.service.spec.ts
+  // and the SpeechController STT-route spec below.
 });
