@@ -3,6 +3,7 @@ import { SttRouterService } from './stt-router.service';
 import {
   SttAllProvidersExhausted,
   SttAudioTooLargeError,
+  SttBudgetExhaustedError,
   SttProviderError,
   SttUnsupportedMimeError,
 } from './stt-pilot.errors';
@@ -13,9 +14,11 @@ import type {
   SttConnectorResult,
 } from './interfaces/stt-connector.interface';
 
-class FakeGroqStt implements ISttConnector {
-  readonly name = 'groq-stt';
-  readonly provider = 'groq';
+class FakeConnector implements ISttConnector {
+  constructor(
+    readonly name: string,
+    readonly provider: string,
+  ) {}
   transcribe = vi.fn<(req: SttConnectorRequest) => Promise<SttConnectorResult>>();
   getStatus = vi.fn();
 }
@@ -25,7 +28,10 @@ function buildRouter(opts: {
   txErr?: SttProviderError;
   registry?: Map<string, ISttConnector>;
 }) {
-  const fakeGroq = new FakeGroqStt();
+  const fakeGroq = new FakeConnector('groq-stt', 'groq');
+  const fakeDeepgram = new FakeConnector('deepgram-stt', 'deepgram');
+  const fakeAssemblyAi = new FakeConnector('assemblyai-stt', 'assemblyai');
+  const fakeOpenAi = new FakeConnector('openai-stt', 'openai');
   if (opts.txOk) fakeGroq.transcribe.mockResolvedValue(opts.txOk);
   if (opts.txErr) fakeGroq.transcribe.mockRejectedValue(opts.txErr);
 
@@ -36,10 +42,27 @@ function buildRouter(opts: {
     },
   };
   const metrics = { recordStt: vi.fn() };
-  const router = new SttRouterService(fakeGroq as never, prisma as never, metrics as never);
-  if (opts.registry) router.setRegistry(opts.registry);
-  else router.setRegistry(new Map([['groq', fakeGroq]]));
-  return { router, fakeGroq, prisma, metrics };
+  const router = new SttRouterService(
+    fakeGroq as never,
+    fakeDeepgram as never,
+    fakeAssemblyAi as never,
+    fakeOpenAi as never,
+    prisma as never,
+    metrics as never,
+  );
+  if (opts.registry) {
+    router.setRegistry(opts.registry);
+  } else {
+    router.setRegistry(
+      new Map<string, ISttConnector>([
+        ['groq', fakeGroq],
+        ['deepgram', fakeDeepgram],
+        ['assemblyai', fakeAssemblyAi],
+        ['openai', fakeOpenAi],
+      ]),
+    );
+  }
+  return { router, fakeGroq, fakeDeepgram, fakeAssemblyAi, fakeOpenAi, prisma, metrics };
 }
 
 function makeReq(overrides: Partial<SttConnectorRequest> = {}): SttConnectorRequest {
@@ -53,16 +76,18 @@ function makeReq(overrides: Partial<SttConnectorRequest> = {}): SttConnectorRequ
   };
 }
 
+const baseEnv = {
+  DATABASE_URL: 'postgresql://test',
+  STT_MULTI_PROVIDER: 'false',
+  STT_PROVIDERS_ORDER: 'groq',
+  STT_DAILY_BUDGET_USD: '10',
+  STT_COST_WARN_THRESHOLD_PCT: '0.8',
+  STT_MAX_AUDIO_BYTES: '26214400',
+};
+
 describe('SttRouterService', () => {
   beforeEach(() => {
-    validateEnv({
-      DATABASE_URL: 'postgresql://test',
-      STT_MULTI_PROVIDER: 'false',
-      STT_PROVIDERS_ORDER: 'groq',
-      STT_DAILY_BUDGET_USD: '10',
-      STT_COST_WARN_THRESHOLD_PCT: '0.8',
-      STT_MAX_AUDIO_BYTES: '26214400',
-    });
+    validateEnv(baseEnv);
   });
 
   afterEach(() => {
@@ -95,6 +120,7 @@ describe('SttRouterService', () => {
     expect(persisted.status).toBe('success');
     expect(persisted.transcriptionPreview).toBe('hello world');
     expect(persisted.apiKeyId).toBe('apikey-1');
+    expect(persisted.fallbackCount).toBe(0);
 
     expect(metrics.recordStt).toHaveBeenCalledWith(
       expect.objectContaining({ provider: 'groq', status: 'success' }),
@@ -117,7 +143,7 @@ describe('SttRouterService', () => {
     expect(fakeGroq.transcribe).not.toHaveBeenCalled();
   });
 
-  it('persists error row + throws SttAllProvidersExhausted when provider fails (Phase 1a no cascade)', async () => {
+  it('persists error row + throws SttAllProvidersExhausted when provider fails (multi=false)', async () => {
     const err = new SttProviderError('groq', 'server_error', 'boom');
     const { router, prisma } = buildRouter({ txErr: err });
     await expect(router.transcribe(makeReq(), 'apikey-1')).rejects.toBeInstanceOf(
@@ -130,10 +156,7 @@ describe('SttRouterService', () => {
   });
 
   it('throws SttAllProvidersExhausted when STT_PROVIDER_GROQ_ENABLED=false', async () => {
-    validateEnv({
-      DATABASE_URL: 'postgresql://test',
-      STT_PROVIDER_GROQ_ENABLED: 'false',
-    });
+    validateEnv({ ...baseEnv, STT_PROVIDER_GROQ_ENABLED: 'false' });
     const { router } = buildRouter({});
     await expect(router.transcribe(makeReq(), 'apikey-1')).rejects.toBeInstanceOf(
       SttAllProvidersExhausted,
@@ -141,11 +164,6 @@ describe('SttRouterService', () => {
   });
 
   it('emits soft warning when daily cost crosses 80% threshold (no 503)', async () => {
-    validateEnv({
-      DATABASE_URL: 'postgresql://test',
-      STT_DAILY_BUDGET_USD: '10',
-      STT_COST_WARN_THRESHOLD_PCT: '0.8',
-    });
     const result: SttConnectorResult = {
       transcription: 'x',
       audioDurationSeconds: 1,
@@ -154,11 +172,11 @@ describe('SttRouterService', () => {
       latencyMs: 100,
     };
     const { router, prisma } = buildRouter({ txOk: result });
-    // Aggregate returns $8.50 — above 80% of $10 = $8.
+    // Aggregate returns $8.50 — above 80% of $10 = $8 but below hard cap.
     prisma.sttTranscription.aggregate.mockResolvedValue({ _sum: { costUsd: 8.5 } });
     const warnSpy = vi.spyOn(router['logger'], 'warn').mockImplementation(() => undefined);
     const envelope = await router.transcribe(makeReq(), 'apikey-1');
-    expect(envelope.transcription).toBe('x'); // request still succeeded — no 503
+    expect(envelope.transcription).toBe('x');
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('STT daily cost reached'));
   });
 
@@ -170,5 +188,138 @@ describe('SttRouterService', () => {
     const call = prisma.sttTranscription.aggregate.mock.calls[0][0];
     expect(call.where.status).toBe('success');
     expect(call.where.createdAt.gte).toBeInstanceOf(Date);
+  });
+
+  // CONN-0103 — hard daily-cost CB (V-AC-2)
+  it('throws SttBudgetExhaustedError before any provider call when daily cost ≥ budget', async () => {
+    const { router, prisma, fakeGroq, metrics } = buildRouter({
+      txOk: {
+        transcription: 'never reached',
+        model: 'whisper-large-v3',
+        costUsd: 0,
+        latencyMs: 0,
+      },
+    });
+    prisma.sttTranscription.aggregate.mockResolvedValue({ _sum: { costUsd: 10.5 } });
+    await expect(router.transcribe(makeReq(), 'apikey-1')).rejects.toMatchObject({
+      name: 'SttBudgetExhaustedError',
+      dailyCostUsd: 10.5,
+      budgetUsd: 10,
+    });
+    await expect(router.transcribe(makeReq(), 'apikey-1')).rejects.toBeInstanceOf(
+      SttBudgetExhaustedError,
+    );
+    expect(fakeGroq.transcribe).not.toHaveBeenCalled();
+    expect(metrics.recordStt).not.toHaveBeenCalled();
+  });
+
+  // CONN-0103 — cascade fallback (V-AC-3)
+  it('cascades to next provider when first fails with retryable SttProviderError (multi=true)', async () => {
+    validateEnv({
+      ...baseEnv,
+      STT_MULTI_PROVIDER: 'true',
+      STT_PROVIDERS_ORDER: 'groq,deepgram',
+      STT_PROVIDER_DEEPGRAM_ENABLED: 'true',
+    });
+    const ctx = buildRouter({});
+    ctx.fakeGroq.transcribe.mockRejectedValueOnce(
+      new SttProviderError('groq', 'server_error', 'boom'),
+    );
+    ctx.fakeDeepgram.transcribe.mockResolvedValueOnce({
+      transcription: 'from deepgram',
+      audioDurationSeconds: 1,
+      detectedLanguage: 'en',
+      model: 'nova-3',
+      costUsd: 0.00007,
+      latencyMs: 220,
+      providerRequestId: 'dg-req-1',
+    });
+    const envelope = await ctx.router.transcribe(makeReq(), 'apikey-1');
+    expect(envelope.provider).toBe('deepgram');
+    expect(envelope.fallback_count).toBe(1);
+    expect(ctx.fakeGroq.transcribe).toHaveBeenCalledTimes(1);
+    expect(ctx.fakeDeepgram.transcribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('throws SttAllProvidersExhausted with providersTried when every cascade step fails (multi=true)', async () => {
+    validateEnv({
+      ...baseEnv,
+      STT_MULTI_PROVIDER: 'true',
+      STT_PROVIDERS_ORDER: 'groq,deepgram',
+      STT_PROVIDER_DEEPGRAM_ENABLED: 'true',
+    });
+    const ctx = buildRouter({});
+    ctx.fakeGroq.transcribe.mockRejectedValue(
+      new SttProviderError('groq', 'server_error', 'boom-1'),
+    );
+    ctx.fakeDeepgram.transcribe.mockRejectedValue(
+      new SttProviderError('deepgram', 'server_error', 'boom-2'),
+    );
+    await ctx.router.transcribe(makeReq(), 'apikey-1').catch((err) => {
+      expect(err).toBeInstanceOf(SttAllProvidersExhausted);
+      expect((err as SttAllProvidersExhausted).providersTried).toEqual(['groq', 'deepgram']);
+    });
+  });
+
+  // CONN-0103 — drift detection (V-AC-4)
+  it('treats Zod schema_fail as retryable and cascades + persists driftStatus=schema_fail', async () => {
+    validateEnv({
+      ...baseEnv,
+      STT_MULTI_PROVIDER: 'true',
+      STT_PROVIDERS_ORDER: 'deepgram,groq',
+      STT_PROVIDER_DEEPGRAM_ENABLED: 'true',
+    });
+    const ctx = buildRouter({});
+    // Deepgram returns malformed result (missing providerRequestId -> empty string → schema fail).
+    // Our projection requires metadata.request_id to be min(1); empty string trips Zod.
+    ctx.fakeDeepgram.transcribe.mockResolvedValueOnce({
+      transcription: 'drifted',
+      audioDurationSeconds: 1,
+      model: 'nova-3',
+      costUsd: 0.00007,
+      latencyMs: 220,
+      // providerRequestId left undefined to trigger schema_fail
+    });
+    ctx.fakeGroq.transcribe.mockResolvedValueOnce({
+      transcription: 'fallback-groq',
+      audioDurationSeconds: 1,
+      detectedLanguage: 'en',
+      model: 'whisper-large-v3',
+      costUsd: 0.00003,
+      latencyMs: 1300,
+      providerRequestId: 'req_xyz',
+    });
+    const envelope = await ctx.router.transcribe(makeReq(), 'apikey-1');
+    expect(envelope.provider).toBe('groq');
+    expect(envelope.fallback_count).toBe(1);
+    // Drift row persisted as error w/ driftStatus=schema_fail
+    const driftRows = ctx.prisma.sttTranscription.create.mock.calls
+      .map((c) => c[0].data)
+      .filter((d) => d.driftStatus === 'schema_fail');
+    expect(driftRows.length).toBeGreaterThanOrEqual(1);
+    expect(driftRows[0].errorType).toBe('drift');
+  });
+
+  it('persists driftStatus=schema_pass on a clean Deepgram success', async () => {
+    validateEnv({
+      ...baseEnv,
+      STT_PROVIDERS_ORDER: 'deepgram',
+      STT_PROVIDER_GROQ_ENABLED: 'false',
+      STT_PROVIDER_DEEPGRAM_ENABLED: 'true',
+    });
+    const ctx = buildRouter({});
+    ctx.fakeDeepgram.transcribe.mockResolvedValueOnce({
+      transcription: 'ok',
+      audioDurationSeconds: 1,
+      detectedLanguage: 'en',
+      model: 'nova-3',
+      costUsd: 0.00007,
+      latencyMs: 220,
+      providerRequestId: 'dg-pass',
+    });
+    const envelope = await ctx.router.transcribe(makeReq(), 'apikey-1');
+    expect(envelope.provider).toBe('deepgram');
+    const persisted = ctx.prisma.sttTranscription.create.mock.calls[0][0].data;
+    expect(persisted.driftStatus).toBe('schema_pass');
   });
 });

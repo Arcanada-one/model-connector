@@ -37,7 +37,6 @@ export abstract class BaseSttConnector implements ISttConnector {
   protected abstract getBaseUrl(): string;
   protected abstract getRequestPath(request: SttConnectorRequest): string;
   protected abstract getAuthHeader(): Record<string, string>;
-  protected abstract buildMultipartBody(request: SttConnectorRequest): FormData;
   protected abstract parseSttResponse(
     json: unknown,
     request: SttConnectorRequest,
@@ -49,6 +48,27 @@ export abstract class BaseSttConnector implements ISttConnector {
     providerRequestId?: string;
   };
   protected abstract getCostUsd(audioDurationSeconds: number | undefined): number;
+
+  /**
+   * Builds the outbound HTTP request body. Default impl returns a multipart
+   * `FormData` produced by `buildMultipartBody()`; raw-body providers
+   * (Deepgram, AssemblyAI upload step) override this and return a
+   * `{ body: Buffer, contentType: '...' }` tuple.
+   */
+  protected buildRequestBody(request: SttConnectorRequest): {
+    body: BodyInit;
+    contentType?: string;
+  } {
+    return { body: this.buildMultipartBody(request) };
+  }
+
+  /** Provided for FormData-style providers (Groq, OpenAI). Override either
+   * this OR `buildRequestBody` — not both. */
+  protected buildMultipartBody(_request: SttConnectorRequest): FormData {
+    throw new Error(
+      `${this.name}: must override either buildMultipartBody() or buildRequestBody()`,
+    );
+  }
 
   protected getDefaultTimeoutMs(): number {
     return 60_000;
@@ -126,10 +146,12 @@ export abstract class BaseSttConnector implements ISttConnector {
 
     try {
       const url = `${this.getBaseUrl()}${this.getRequestPath(request)}`;
-      const body = this.buildMultipartBody(request);
+      const { body, contentType } = this.buildRequestBody(request);
       const headers: Record<string, string> = {
         ...this.getAuthHeader(),
-        // Do NOT set Content-Type — FormData→fetch encodes the boundary itself.
+        // FormData→fetch encodes the boundary itself, so we omit Content-Type
+        // unless the subclass explicitly supplies one (raw-body providers).
+        ...(contentType ? { 'Content-Type': contentType } : {}),
       };
 
       const res = await fetch(url, {

@@ -21,6 +21,7 @@ import { sttRequestSchema } from './dto/stt-request.dto';
 import {
   SttAllProvidersExhausted,
   SttAudioTooLargeError,
+  SttBudgetExhaustedError,
   SttProviderError,
   SttUnsupportedMimeError,
 } from './stt/stt-pilot.errors';
@@ -129,7 +130,26 @@ export class SpeechController {
           }
       >;
     };
-    const data = await reqWithMultipart.file();
+    // TRANS-0061 B.5 — @fastify/multipart throws `FST_REQ_NOT_MULTIPART`
+    // (HTTP 406 by default) when Content-Type is not `multipart/form-data`.
+    // Convert into a controlled 400 stt_validation_error envelope rather than
+    // leaking through the generic 500 stt_provider_failed branch.
+    let data: Awaited<ReturnType<typeof reqWithMultipart.file>>;
+    try {
+      data = await reqWithMultipart.file();
+    } catch (err) {
+      if (this.isFastifyErrorCode(err, 'FST_REQ_NOT_MULTIPART')) {
+        throw new HttpException(
+          {
+            statusCode: 400,
+            error_code: 'stt_validation_error',
+            message: 'Content-Type must be multipart/form-data',
+          },
+          400,
+        );
+      }
+      throw err;
+    }
     if (!data) {
       throw new HttpException(
         {
@@ -150,7 +170,22 @@ export class SpeechController {
     return { file: buffer, filename: data.filename, mimeType: data.mimetype, fields };
   }
 
+  private isFastifyErrorCode(err: unknown, code: string): boolean {
+    return typeof err === 'object' && err !== null && (err as { code?: string }).code === code;
+  }
+
   private mapSttError(err: unknown): SpeechErrorEnvelope {
+    // TRANS-0061 B.6 — `@fastify/multipart` throws `FST_REQ_FILE_TOO_LARGE`
+    // out of `data.toBuffer()` when the streamed file exceeds the limit
+    // configured in `main.ts` (`STT_MAX_AUDIO_BYTES`). Project that into the
+    // canonical 413 `stt_audio_too_large` envelope instead of the generic 500.
+    if (this.isFastifyErrorCode(err, 'FST_REQ_FILE_TOO_LARGE')) {
+      return {
+        statusCode: 413,
+        error_code: 'stt_audio_too_large',
+        message: 'Audio payload exceeds the configured maximum',
+      };
+    }
     if (err instanceof SttAudioTooLargeError) {
       return {
         statusCode: 413,
@@ -172,11 +207,23 @@ export class SpeechController {
         message: err.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
       };
     }
+    if (err instanceof SttBudgetExhaustedError) {
+      return {
+        statusCode: 503,
+        error_code: 'stt_budget_exhausted',
+        message: err.message,
+        details: {
+          daily_cost_usd: Number(err.dailyCostUsd.toFixed(6)),
+          budget_usd: err.budgetUsd,
+        },
+      };
+    }
     if (err instanceof SttAllProvidersExhausted) {
       return {
         statusCode: 503,
         error_code: 'stt_all_providers_exhausted',
         message: err.message,
+        details: { providers_tried: err.providersTried },
       };
     }
     if (err instanceof SttProviderError) {
