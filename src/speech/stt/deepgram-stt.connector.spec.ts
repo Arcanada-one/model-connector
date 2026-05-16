@@ -23,6 +23,7 @@ describe('DeepgramSttConnector', () => {
   beforeEach(() => {
     validateEnv({
       DATABASE_URL: 'postgresql://test',
+      STT_GROQ_API_KEY: 'gsk_test_groq_key',
       STT_DEEPGRAM_API_KEY: 'dg_test_key',
       STT_DEEPGRAM_MODEL: 'nova-3',
       STT_DEEPGRAM_PRICE_USD_PER_MIN: '0.0043',

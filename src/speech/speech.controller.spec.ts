@@ -234,6 +234,8 @@ describe('SpeechController', () => {
     expect(body.error_code).toBe('stt_budget_exhausted');
     expect(body.details?.daily_cost_usd).toBe(10.5);
     expect(body.details?.budget_usd).toBe(10);
+    // CONN-0103 remediation — envelope parity with stt_all_providers_exhausted (providers_tried: []).
+    expect((body.details as Record<string, unknown>).providers_tried).toEqual([]);
   });
 
   it('STT SttProviderError(rate_limited) → 429 stt_provider_failed', async () => {

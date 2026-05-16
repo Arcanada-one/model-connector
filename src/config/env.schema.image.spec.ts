@@ -4,6 +4,7 @@ describe('env.schema — image generation vars smoke', () => {
   it('parses minimal config with all image vars defaulting/optional', () => {
     const result = envSchema.safeParse({
       DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      STT_GROQ_API_KEY: 'gsk_test_groq_key',
     });
     expect(result.success).toBe(true);
     if (!result.success) return;
@@ -25,6 +26,7 @@ describe('env.schema — image generation vars smoke', () => {
   it('parses with all image vars provided', () => {
     const result = envSchema.safeParse({
       DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      STT_GROQ_API_KEY: 'gsk_test_groq_key',
       VERTEX_PROJECT_ID: 'arcanada-platform',
       VERTEX_LOCATION: 'us-central1',
       VERTEX_SERVICE_ACCOUNT_JSON: '{"type":"service_account"}',
