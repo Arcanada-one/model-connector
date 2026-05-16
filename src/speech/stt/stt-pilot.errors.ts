@@ -71,6 +71,11 @@ export class SttBudgetExhaustedError extends Error {
   constructor(
     readonly dailyCostUsd: number,
     readonly budgetUsd: number,
+    // Always `[]` at the hard-CB gate (router throws before any provider call).
+    // Field exists so the 503 envelope is shape-symmetric with
+    // `stt_all_providers_exhausted` (clients can read `details.providers_tried`
+    // unconditionally on both 503 codes).
+    readonly providersTried: string[] = [],
   ) {
     super(`STT daily budget exhausted: $${dailyCostUsd.toFixed(4)} ≥ $${budgetUsd.toFixed(2)}`);
   }
