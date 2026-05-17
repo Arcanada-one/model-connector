@@ -15,6 +15,7 @@ import { ttsRequestSchema, TtsRequestDto } from './dto/tts-request.dto';
 import { vadRequestSchema, VadRequestDto } from './dto/vad-request.dto';
 import { Body } from '@nestjs/common';
 import { ZodError } from 'zod';
+import { SpeechMetricsService, SpeechEndpoint } from './speech-metrics.service';
 import { SpeechService } from './speech.service';
 import { SttRouterService } from './stt/stt-router.service';
 import { sttRequestSchema } from './dto/stt-request.dto';
@@ -38,6 +39,7 @@ export class SpeechController {
   constructor(
     private readonly service: SpeechService,
     private readonly sttRouter: SttRouterService,
+    private readonly speechMetrics: SpeechMetricsService,
   ) {}
 
   @Post('tts')
@@ -48,9 +50,14 @@ export class SpeechController {
     @Req() _req: FastifyRequest,
     @Res() reply: FastifyReply,
   ): Promise<void> {
+    const startedAt = Date.now();
     const requestId = incomingRequestId ?? randomUUID();
-    const outcome = await this.service.tts(body, requestId);
-    this.send(reply, outcome, requestId);
+    try {
+      const outcome = await this.service.tts(body, requestId);
+      this.send(reply, outcome, requestId);
+    } finally {
+      this.recordMetric('tts', reply, startedAt);
+    }
   }
 
   @Post('vad')
@@ -61,9 +68,14 @@ export class SpeechController {
     @Req() _req: FastifyRequest,
     @Res() reply: FastifyReply,
   ): Promise<void> {
+    const startedAt = Date.now();
     const requestId = incomingRequestId ?? randomUUID();
-    const outcome = await this.service.vad(body, requestId);
-    this.send(reply, outcome, requestId);
+    try {
+      const outcome = await this.service.vad(body, requestId);
+      this.send(reply, outcome, requestId);
+    } finally {
+      this.recordMetric('vad', reply, startedAt);
+    }
   }
 
   @Post('stt')
@@ -72,6 +84,7 @@ export class SpeechController {
     @Req() req: AuthenticatedRequest,
     @Res() reply: FastifyReply,
   ): Promise<void> {
+    const startedAt = Date.now();
     const requestId = incomingRequestId ?? randomUUID();
     reply.header('X-Request-ID', requestId);
     try {
@@ -108,7 +121,25 @@ export class SpeechController {
       reply.status(envelope.statusCode);
       reply.header('Content-Type', 'application/json');
       reply.send(envelope);
+    } finally {
+      this.recordMetric('stt', reply, startedAt);
     }
+  }
+
+  // CONN-0098 — capture status code + latency for the Prometheus surface.
+  // Fastify exposes the current status via `reply.statusCode`; if a handler
+  // throws before setting one we fall back to 500 (matches what the global
+  // error filter would emit).
+  private recordMetric(endpoint: SpeechEndpoint, reply: FastifyReply, startedAt: number): void {
+    const statusCode =
+      typeof (reply as { statusCode?: number }).statusCode === 'number'
+        ? (reply as { statusCode: number }).statusCode || 500
+        : 500;
+    this.speechMetrics.observe({
+      endpoint,
+      statusCode,
+      latencyMs: Date.now() - startedAt,
+    });
   }
 
   private async parseMultipart(req: AuthenticatedRequest): Promise<{
