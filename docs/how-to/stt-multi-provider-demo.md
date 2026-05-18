@@ -39,10 +39,10 @@ When the primary provider returns `5xx`, the response still arrives as
 `fallback_count ≥ 1`. The full provider list attempted is exposed in the
 `providers_tried` envelope field.
 
-## Phase 2 — faster-whisper async (self-hosted on arcana-ai)
+## Async path — faster-whisper (self-hosted on arcana-ai)
 
-Phase 2 ships POST `/v1/speech/stt/async` plus GET `/v1/speech/stt/jobs/:id`.
-Use this path for long audio (> 60 s) or when you want zero per-second cost.
+The async path ships POST `/v1/speech/stt/async` plus GET `/v1/speech/stt/jobs/:id`.
+Use it for long audio (> 60 s) or when you want zero per-second cost.
 
 Pre-conditions:
 
@@ -139,7 +139,7 @@ body — no information leak across API keys.
 |---------|---------|
 | `STT_DAILY_BUDGET_USD` aggregate cost ≥ cap | POST returns `503 stt_budget_exhausted` before queuing |
 | Per-day request counter present | `redis-cli GET conn:stt:quota:req:YYYYMMDD` (counter), `TTL` ≤ 86400 (UTC midnight) |
-| Counter survives restart | Redis-persistent (CONN-0104 fixes M2) |
+| Counter survives restart | Redis-persistent (per design — previous in-memory counters reset on restart) |
 
 ### Network topology recap
 
