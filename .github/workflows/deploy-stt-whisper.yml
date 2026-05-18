@@ -1,0 +1,104 @@
+name: Deploy STT Whisper (arcana-ai)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/stt-whisper/**'
+      - '.github/workflows/deploy-stt-whisper.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  network-exposure-lint:
+    # Mandate: CI/CD Convention #5 — network-exposure-lint must gate any
+    # deploy of a stack with new listeners. Tier 2 stack is loopback + tailnet,
+    # but the lint enforces the absence of public `0.0.0.0` binds.
+    uses: Arcanada-one/datarim/.github/workflows/network-exposure-lint.yml@main
+    with:
+      paths: 'deploy/stt-whisper/docker-compose.yml'
+
+  deploy:
+    needs: network-exposure-lint
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, Linux, arcana-ai]
+    concurrency:
+      group: deploy-stt-whisper
+      cancel-in-progress: false
+    env:
+      COMPOSE_FILE: deploy/stt-whisper/docker-compose.yml
+      WHISPER_HEALTH_URL: http://localhost:8400/health
+    steps:
+      - uses: actions/checkout@v4
+
+      # INFRA-0121 mandate: pre-deploy preflight against target host (arcana-ai).
+      # SHA-bridge per CLAUDE.md § 8 — INFRA-0122 PR #8 head until merge tag v1.x.y lands.
+      - name: Preflight check
+        uses: Arcanada-one/datarim/.github/actions/preflight-check@fff25210a90204db04962dc2de63fe255a084ec3 # v1 SHA-bridge (INFRA-0122 PR #8 head)
+        with:
+          target-host: arcana-ai
+          service-name: stt-whisper
+          # arcana-ai 7.6 GiB RAM 0 swap, 4vCPU. STT model needs ~3.25 GiB at peak.
+          min-free-disk-gb: '5'
+          disk-warn-percent: '80'
+          disk-fail-percent: '90'
+          extra-checks: |
+            tailscale
+            docker-pressure
+            ram-swap
+            loadavg
+            time-skew
+          ops-bot-emit: 'true'
+          ops-bot-key: ${{ secrets.OPS_BOT_API_KEY }}
+
+      - name: Pull pinned image
+        run: docker compose -f "$COMPOSE_FILE" pull whisper
+
+      - name: Bring up stack
+        run: docker compose -f "$COMPOSE_FILE" up -d
+
+      - name: Wait for healthy
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "$WHISPER_HEALTH_URL" > /dev/null 2>&1; then
+              echo "Whisper healthy on attempt $i"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Health check failed after 150s"
+          docker compose -f "$COMPOSE_FILE" logs --tail=100 whisper
+          exit 1
+
+      - name: Post-deploy health body assertion
+        run: |
+          BODY=$(curl -fsS "$WHISPER_HEALTH_URL")
+          echo "Health body: $BODY"
+          if ! echo "$BODY" | grep -qi 'ok\|healthy'; then
+            echo "Unexpected health body (expected ok|healthy)"
+            exit 1
+          fi
+
+      - name: Status snapshot
+        run: docker compose -f "$COMPOSE_FILE" ps
+
+      - name: Notify Ops Bot on failure
+        if: failure()
+        env:
+          OPS_BOT_API_KEY: ${{ secrets.OPS_BOT_API_KEY }}
+        run: |
+          if [ -z "${OPS_BOT_API_KEY:-}" ]; then
+            echo "OPS_BOT_API_KEY missing — skipping Ops Bot notification (fail-soft per Authenticated-emit pattern)"
+            exit 0
+          fi
+          curl -fsS -X POST https://ops.arcanada.one/events \
+            -H "Authorization: Bearer $OPS_BOT_API_KEY" \
+            -H 'Content-Type: application/json' \
+            -d "$(jq -nc \
+              --arg service stt-whisper \
+              --arg host arcana-ai \
+              --arg run "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              '{category:"fatal", agent:"deploy-stt-whisper", service:$service, host:$host, body:"deploy-stt-whisper failed", meta:{run_url:$run}, dedup_key:"deploy-stt-whisper-arcana-ai-failed"}')" \
+            || echo "Ops Bot notify failed (continuing — deploy already failed)"
