@@ -5,6 +5,84 @@ import {
   OUTPUT_FORMAT_SCHEMA_SIZE_LIMIT,
 } from './execute.dto';
 
+// ARCA-0011 — multi-modal prompt union ----------------------------------------
+describe('executeRequestSchema (ARCA-0011 ContentBlock union)', () => {
+  const base = { connector: 'openrouter' } as const;
+  const pngDataUrl = 'data:image/png;base64,iVBORw0KGgo=';
+
+  it('accepts string prompt (backward-compat)', () => {
+    const r = executeRequestSchema.safeParse({ ...base, prompt: 'hello' });
+    expect(r.success).toBe(true);
+  });
+
+  it('accepts ContentBlock[] prompt with text-only block', () => {
+    const r = executeRequestSchema.safeParse({
+      ...base,
+      prompt: [{ type: 'text', text: 'describe' }],
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('accepts ContentBlock[] with text + image_url blocks', () => {
+    const r = executeRequestSchema.safeParse({
+      ...base,
+      prompt: [
+        { type: 'text', text: 'describe this' },
+        { type: 'image_url', image_url: { url: pngDataUrl } },
+      ],
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('accepts image_url with optional detail field', () => {
+    const r = executeRequestSchema.safeParse({
+      ...base,
+      prompt: [{ type: 'image_url', image_url: { url: pngDataUrl, detail: 'high' } }],
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('rejects empty ContentBlock array', () => {
+    const r = executeRequestSchema.safeParse({ ...base, prompt: [] });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects ContentBlock array exceeding 20 items', () => {
+    const blocks = Array.from({ length: 21 }, () => ({ type: 'text', text: 'x' }));
+    const r = executeRequestSchema.safeParse({ ...base, prompt: blocks });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects image_url that is not a data: URL', () => {
+    const r = executeRequestSchema.safeParse({
+      ...base,
+      prompt: [{ type: 'image_url', image_url: { url: 'https://example.com/cat.png' } }],
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects image_url with unsupported media type', () => {
+    const r = executeRequestSchema.safeParse({
+      ...base,
+      prompt: [{ type: 'image_url', image_url: { url: 'data:image/bmp;base64,XXX' } }],
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects unknown block type', () => {
+    const r = executeRequestSchema.safeParse({
+      ...base,
+      prompt: [{ type: 'audio', text: 'oops' }],
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects empty string prompt', () => {
+    const r = executeRequestSchema.safeParse({ ...base, prompt: '' });
+    expect(r.success).toBe(false);
+  });
+});
+
 // CONN-0089 — output_format + schema validation -------------------------------
 describe('executeRequestSchema (CONN-0089 output-guard fields)', () => {
   const base = { connector: 'openrouter', prompt: 'hello' } as const;

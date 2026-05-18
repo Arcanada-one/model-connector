@@ -1,5 +1,16 @@
+// ARCA-0011 — multi-modal prompt block. Aligned with Anthropic / OpenRouter
+// canonical content-block shape. CLI connectors accept the union at DTO level
+// but reject `ContentBlock[]` at runtime with `unsupported_modality` until
+// per-CLI binary support lands (CONN-0209).
+export type ContentBlock =
+  | { type: 'text'; text: string }
+  | {
+      type: 'image_url';
+      image_url: { url: string; detail?: 'auto' | 'low' | 'high' };
+    };
+
 export interface ConnectorRequest {
-  prompt: string;
+  prompt: string | ContentBlock[];
   model?: string;
   systemPrompt?: string;
   tools?: string[];
@@ -68,6 +79,7 @@ const ERROR_ACTION_MAP: Record<string, { retryable: boolean; recommendation: Err
   http_error: { retryable: true, recommendation: 'retry' },
   model_not_found: { retryable: false, recommendation: 'abort' },
   api_error: { retryable: true, recommendation: 'retry' },
+  unsupported_modality: { retryable: false, recommendation: 'abort' },
 };
 
 export function classifyErrorAction(errorType: string): {

@@ -24,6 +24,7 @@ const HTTP_ERROR_STATUS: Record<string, HttpStatus> = {
   auth_error: HttpStatus.SERVICE_UNAVAILABLE,
   binary_not_found: HttpStatus.SERVICE_UNAVAILABLE,
   rate_limited: HttpStatus.TOO_MANY_REQUESTS,
+  unsupported_modality: HttpStatus.BAD_REQUEST,
 };
 
 @Controller()

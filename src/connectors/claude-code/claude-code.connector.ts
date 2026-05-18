@@ -118,6 +118,11 @@ export class ClaudeCodeConnector extends BaseCliConnector {
       args.push('--add-dir', extra.addDir);
     }
 
+    // ARCA-0011: ContentBlock[] rejected by base-class guard before reaching
+    // this code path.
+    if (typeof request.prompt !== 'string') {
+      throw new Error('claude-code connector requires string prompt');
+    }
     args.push(request.prompt);
     return args;
   }
