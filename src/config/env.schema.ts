@@ -29,6 +29,11 @@ export const envSchema = z
     CONNECTOR_QUEUE_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(60_000),
     CONNECTOR_MAX_RETRIES: z.coerce.number().min(0).max(5).default(1),
 
+    // ARCA-0011 multi-modal prompt support (ContentBlock[] forwarding).
+    // Informational kill-switch reserved for incident response; per-connector
+    // runtime guard already short-circuits non-openrouter connectors.
+    MC_MULTI_MODAL_ENABLED: envBool.default(true),
+
     // CONN-0089 output-guard middleware
     OUTPUT_GUARD_ENABLED: z.coerce.boolean().default(true),
     OUTPUT_GUARD_MAX_RETRIES: z.coerce.number().min(0).max(5).default(3),

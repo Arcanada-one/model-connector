@@ -270,6 +270,45 @@ describe('OpenRouterConnector', () => {
     });
   });
 
+  // --- ARCA-0011 multi-modal (ContentBlock[] prompt forwarding) ---
+
+  describe('ARCA-0011 multimodal prompt forwarding', () => {
+    const pngDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB';
+
+    it('forwards ContentBlock[] prompt as messages[user].content array', async () => {
+      mockOk(chatResponse);
+      await connector.execute({
+        prompt: [
+          { type: 'text', text: 'Describe this image.' },
+          { type: 'image_url', image_url: { url: pngDataUrl } },
+        ],
+        model: 'anthropic/claude-sonnet-4',
+      });
+      const call = fetchSpy.mock.calls[0];
+      const body = JSON.parse((call[1] as { body: string }).body) as {
+        messages: Array<{ role: string; content: unknown }>;
+      };
+      const userMsg = body.messages.find((m) => m.role === 'user');
+      expect(Array.isArray(userMsg?.content)).toBe(true);
+      const content = userMsg!.content as Array<{ type: string }>;
+      expect(content).toHaveLength(2);
+      expect(content[0].type).toBe('text');
+      expect(content[1].type).toBe('image_url');
+    });
+
+    it('still forwards string prompt as plain string content (backward-compat)', async () => {
+      mockOk(chatResponse);
+      await connector.execute({ prompt: 'hello' });
+      const call = fetchSpy.mock.calls[0];
+      const body = JSON.parse((call[1] as { body: string }).body) as {
+        messages: Array<{ role: string; content: unknown }>;
+      };
+      const userMsg = body.messages.find((m) => m.role === 'user');
+      expect(typeof userMsg?.content).toBe('string');
+      expect(userMsg?.content).toBe('hello');
+    });
+  });
+
   // --- Status ---
 
   describe('getStatus', () => {

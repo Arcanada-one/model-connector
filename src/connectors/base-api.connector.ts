@@ -90,8 +90,33 @@ export abstract class BaseApiConnector implements IConnector {
     return { 'Content-Type': 'application/json' };
   }
 
+  // ARCA-0011 — connectors opt into multimodal `ContentBlock[]` prompts.
+  // Default `false`; openrouter overrides to `true` in Phase 1.
+  protected get supportsContentBlocks(): boolean {
+    return false;
+  }
+
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
     const id = randomUUID();
+
+    if (Array.isArray(request.prompt) && !this.supportsContentBlocks) {
+      const action = classifyErrorAction('unsupported_modality');
+      return {
+        id,
+        connector: this.name,
+        model: request.model || 'unknown',
+        result: '',
+        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+        latencyMs: 0,
+        queueWaitMs: 0,
+        status: 'error',
+        error: {
+          type: 'unsupported_modality',
+          message: `Connector '${this.name}' does not accept ContentBlock[] prompts`,
+          ...action,
+        },
+      };
+    }
 
     // Circuit breaker check (per-model)
     const modelCb = this.cbManager.getCircuitBreaker(request.model ?? '');

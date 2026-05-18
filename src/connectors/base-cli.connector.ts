@@ -146,8 +146,34 @@ export abstract class BaseCliConnector implements IConnector {
   protected abstract parseOutput(stdout: string, stderr: string): ParsedCliOutput;
   abstract getCapabilities(): ConnectorCapabilities;
 
+  // ARCA-0011 — connectors opt into multimodal `ContentBlock[]` prompts.
+  // CLI connectors keep the default `false` and reject at runtime; only
+  // openrouter overrides to `true` in Phase 1.
+  protected get supportsContentBlocks(): boolean {
+    return false;
+  }
+
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
     const id = randomUUID();
+
+    if (Array.isArray(request.prompt) && !this.supportsContentBlocks) {
+      const action = classifyErrorAction('unsupported_modality');
+      return {
+        id,
+        connector: this.name,
+        model: request.model || 'unknown',
+        result: '',
+        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+        latencyMs: 0,
+        queueWaitMs: 0,
+        status: 'error',
+        error: {
+          type: 'unsupported_modality',
+          message: `Connector '${this.name}' does not accept ContentBlock[] prompts`,
+          ...action,
+        },
+      };
+    }
 
     // Circuit breaker check (per-model)
     const modelCb = this.cbManager.getCircuitBreaker(request.model ?? '');
@@ -368,6 +394,12 @@ export abstract class BaseCliConnector implements IConnector {
     const jsonInstruction =
       'You must respond with valid JSON only. No markdown, no code fences, no explanation — output raw JSON.';
 
+    // CLI connectors reject ContentBlock[] earlier with `unsupported_modality`
+    // (per-CLI runtime guard); this helper is only invoked on string prompts.
+    if (typeof request.prompt !== 'string') {
+      throw new Error('buildPromptWithJsonMode requires string prompt');
+    }
+
     if (request.responseFormat?.type === 'json_object') {
       return `${jsonInstruction}\n\n${request.prompt}`;
     }
@@ -391,5 +423,33 @@ export abstract class BaseCliConnector implements IConnector {
 
   static hashPrompt(prompt: string): string {
     return createHash('sha256').update(prompt).digest('hex');
+  }
+
+  // ARCA-0011 — accept string | ContentBlock[] for hashing/logging. For block
+  // arrays, hash the JSON serialization and report total text length across
+  // all text blocks + image-block markers. Raw image bytes never enter logs.
+  static promptDigest(prompt: ConnectorRequest['prompt']): {
+    promptHash: string;
+    promptLength: number;
+  } {
+    if (typeof prompt === 'string') {
+      return {
+        promptHash: BaseCliConnector.hashPrompt(prompt),
+        promptLength: prompt.length,
+      };
+    }
+    const serialized = JSON.stringify(prompt);
+    let length = 0;
+    for (const block of prompt) {
+      if (block.type === 'text') {
+        length += block.text.length;
+      } else {
+        length += `[image:${block.image_url.detail ?? 'auto'}]`.length;
+      }
+    }
+    return {
+      promptHash: createHash('sha256').update(serialized).digest('hex'),
+      promptLength: length,
+    };
   }
 }

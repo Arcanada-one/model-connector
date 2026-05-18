@@ -4,11 +4,31 @@ import { z } from 'zod';
 
 export const OUTPUT_FORMAT_SCHEMA_SIZE_LIMIT = 32_768;
 
+// ARCA-0011 — ContentBlock union for multi-modal prompts.
+// Mirrors Anthropic / OpenRouter content-block shape; only data: URLs accepted
+// for image_url to avoid logging or forwarding remote URLs from untrusted
+// callers (Telegram CDN URLs are short-lived + unsigned).
+export const ContentBlockSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('text'),
+    text: z.string().min(1).max(100_000),
+  }),
+  z.object({
+    type: z.literal('image_url'),
+    image_url: z.object({
+      url: z.string().regex(/^data:image\/(jpeg|png|gif|webp);base64,[A-Za-z0-9+/=]+$/),
+      detail: z.enum(['auto', 'low', 'high']).optional(),
+    }),
+  }),
+]);
+
+export type ContentBlock = z.infer<typeof ContentBlockSchema>;
+
 // Base shape WITHOUT refinement — refinement is attached after `.omit()` so the
 // per-connector variant can be derived (Zod v4 forbids omit on refined schemas).
 const executeRequestBaseShape = {
   connector: z.string().min(1).max(50),
-  prompt: z.string().min(1).max(100_000),
+  prompt: z.union([z.string().min(1).max(100_000), z.array(ContentBlockSchema).min(1).max(20)]),
   model: z.string().max(100).optional(),
   systemPrompt: z.string().max(100_000).optional(),
   tools: z.array(z.string()).optional(),
