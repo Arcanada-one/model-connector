@@ -149,6 +149,8 @@ jobs:
             # codex-bin/dev-shm volumes are applied to model-connector container
             # alongside the codex-sidecar service.
             COMPOSE="docker compose -f docker-compose.yml -f docker-compose.codex.yml"
+            # CONN-0208: cleanup orphan containers before recreate (race condition); named volumes preserved.
+            $COMPOSE down --remove-orphans || true
             $COMPOSE up -d --build
             sleep 10
             curl -fsS http://localhost:3900/health || ($COMPOSE logs --tail=50 && exit 1)
