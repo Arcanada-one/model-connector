@@ -29,7 +29,9 @@ jobs:
       cancel-in-progress: false
     env:
       COMPOSE_FILE: deploy/stt-whisper/docker-compose.yml
-      WHISPER_HEALTH_URL: http://localhost:8400/health
+      # Whisper binds to arcana-ai Tailscale interface (100.81.64.51:8400) per
+      # Tier 2 baseline; runner on the same host reaches it via Tailscale IP.
+      WHISPER_HEALTH_URL: http://100.81.64.51:8400/health
     steps:
       - uses: actions/checkout@v4
 
