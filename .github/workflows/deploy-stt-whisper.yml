@@ -18,7 +18,7 @@ jobs:
     # but the lint enforces the absence of public `0.0.0.0` binds.
     uses: Arcanada-one/datarim/.github/workflows/network-exposure-lint.yml@main
     with:
-      paths: 'deploy/stt-whisper/docker-compose.yml'
+      compose_paths: 'deploy/stt-whisper/docker-compose.yml'
 
   deploy:
     needs: network-exposure-lint
