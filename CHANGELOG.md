@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prometheus surface for speech proxy (CONN-0098)** — new `GET /metrics` endpoint
+  (Bearer-protected via the existing `AuthGuard`) exposes two series in the standard
+  `text/plain; version=0.0.4` format:
+  - `mc_speech_proxy_total{endpoint, status_class}` — counter incremented on every
+    response from `/v1/speech/{tts,vad,stt}`, with `endpoint ∈ {tts, vad, stt}` and
+    `status_class ∈ {1xx, 2xx, 3xx, 4xx, 5xx}`.
+  - `mc_speech_proxy_latency_ms{endpoint}` — histogram with explicit buckets
+    `[100, 250, 500, 1000, 2500, 5000, 10000, 30000]` ms, one observation per
+    request. Buckets reflect STT/TTS p50/p95/p99 from the TRANS-0035 baseline and
+    may be refined once PROD scrape data is in.
+
+  Internals live in a dedicated `SpeechMetricsService` + `SpeechMetricsModule`
+  with a private `prom-client` `Registry`, kept strictly orthogonal to the
+  existing connector-keyed `MetricsService` JSON aggregation served at
+  `/health/metrics` (no schema or call-site changes there).
+
 - **Speech-to-text routing — Phase 1a (Groq Whisper sync)**:
   - `POST /v1/speech/stt` is now a live transcription endpoint backed by Groq Whisper (`whisper-large-v3` default). Multipart upload (`file`), optional `language`/`model`/`prompt`/`temperature` form fields, 25 MB audio cap, BCP-47 language hint, returns
     `{transcription, model, provider, language, latency_ms, cost_usd, audio_duration_seconds, fallback_count, request_id}`.
