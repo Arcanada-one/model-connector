@@ -49,6 +49,11 @@ export class GrokConnector extends BaseApiConnector {
     if (request.systemPrompt) {
       messages.push({ role: 'system', content: request.systemPrompt });
     }
+    // ARCA-0011: ContentBlock[] is rejected by the base-class guard
+    // (`supportsContentBlocks=false`) before reaching this branch.
+    if (typeof request.prompt !== 'string') {
+      throw new Error('grok connector requires string prompt');
+    }
     messages.push({ role: 'user', content: request.prompt });
 
     const body: Record<string, unknown> = {

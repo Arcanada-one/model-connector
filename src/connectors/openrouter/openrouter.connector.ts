@@ -1,5 +1,9 @@
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
-import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
+import {
+  ConnectorCapabilities,
+  ConnectorRequest,
+  ContentBlock,
+} from '../interfaces/connector.interface';
 
 interface OpenRouterResponse {
   id: string;
@@ -22,6 +26,13 @@ const DEFAULT_MODEL = 'anthropic/claude-sonnet-4';
 export class OpenRouterConnector extends BaseApiConnector {
   readonly name = 'openrouter';
 
+  // ARCA-0011 — OpenRouter passes `messages[N].content` through as
+  // `string | ContentBlock[]`; OpenAI-compat vision endpoints accept the
+  // same shape natively.
+  protected get supportsContentBlocks(): boolean {
+    return true;
+  }
+
   protected getBaseUrl(): string {
     return 'https://openrouter.ai/api';
   }
@@ -43,7 +54,7 @@ export class OpenRouterConnector extends BaseApiConnector {
   }
 
   protected buildRequestBody(request: ConnectorRequest): unknown {
-    const messages: Array<{ role: string; content: string }> = [];
+    const messages: Array<{ role: string; content: string | ContentBlock[] }> = [];
 
     if (request.systemPrompt) {
       messages.push({ role: 'system', content: request.systemPrompt });

@@ -48,13 +48,14 @@ export class ConnectorJobProcessor extends WorkerHost {
     request: ConnectorRequest,
     apiKeyId: string,
   ) {
+    const digest = BaseCliConnector.promptDigest(request.prompt);
     try {
       await this.prisma.request.create({
         data: {
           connector: response.connector,
           model: response.model,
-          promptHash: BaseCliConnector.hashPrompt(request.prompt),
-          promptLength: request.prompt.length,
+          promptHash: digest.promptHash,
+          promptLength: digest.promptLength,
           inputTokens: response.usage.inputTokens,
           outputTokens: response.usage.outputTokens,
           totalTokens: response.usage.totalTokens,
