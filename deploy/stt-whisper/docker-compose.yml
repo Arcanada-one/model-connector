@@ -6,16 +6,18 @@
 # Model: Systran/faster-distil-whisper-large-v3 (INT8 CT2, RTF ~1.05× on 4vCPU).
 #
 # x-exposure-tier: 2
-# x-exposure-justification: Tailscale-only reachability. Host firewall blocks
-#   eth0/wan0 to TCP 8400; docker bind is loopback (127.0.0.1:8400). Workers
-#   reach the port via tailnet hostname `arcana-ai` (100.81.64.51).
+# x-exposure-justification: Tailscale-only reachability. Docker binds the
+#   port on arcana-ai's Tailscale interface IP (100.81.64.51:8400) — eth0
+#   (89.167.24.119) has no listening socket, so the host's INPUT-policy=DROP
+#   default plus the docker-proxy bind together keep the surface tailnet-only.
+#   Workers reach the port via tailnet hostname `arcana-ai` → 100.81.64.51.
 services:
   whisper:
     image: fedirz/faster-whisper-server@sha256:760e5e43d427dc6cfbbc4731934b908b7de9c7e6d5309c6a1f0c8c923a5b6030
     container_name: stt-whisper
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8400:8000"
+      - "100.81.64.51:8400:8000"
     environment:
       WHISPER__MODEL: Systran/faster-distil-whisper-large-v3
       WHISPER__USE_LOCAL_FILES_ONLY: "false"
