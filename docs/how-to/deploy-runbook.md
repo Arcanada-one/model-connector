@@ -30,10 +30,10 @@ Trade-off: the explicit `down` introduces a momentary `~3-5s` availability dip w
 
 ## Manual recovery when the cleanup step fails
 
-If the `down --remove-orphans` step somehow leaves an orphan container holding the name (e.g. stuck on shutdown grace), recover from `arcana-prod`:
+If the `down --remove-orphans` step somehow leaves an orphan container holding the name (e.g. stuck on shutdown grace), recover from `arcana-prod` (see § SSH host form below for the address rationale):
 
 ```bash
-ssh root@arcana-prod
+ssh root@100.121.155.54
 cd /srv/apps/model-connector
 docker rm -f model-connector-model-connector-1 || true
 docker rm -f model-connector-codex-sidecar-1 || true
@@ -54,15 +54,23 @@ gh run list --workflow "CI & Deploy" --branch main --limit 1 --json conclusion,j
 curl -fsS https://connector.arcanada.one/health   # → 200 {status:ok, ...}
 
 # Named volume preservation gate
-ssh root@arcana-prod 'docker volume ls --format "{{.Name}}" \
+ssh root@100.121.155.54 'docker volume ls --format "{{.Name}}" \
   | grep -E "claude-auth|cursor-auth|cursor-config|gemini-auth|codex-bin"' | wc -l
 # Expected: 5
 
 # CONN-0073 codex overlay regression
-ssh root@arcana-prod docker exec model-connector-model-connector-1 \
+ssh root@100.121.155.54 docker exec model-connector-model-connector-1 \
   sh -c 'echo $CODEX_BINARY_PATH'
 # Expected: /codex-sidecar/bin/codex
 ```
+
+## SSH host form
+
+Every command in this runbook addresses the production host by its Tailscale IP literal (`100.121.155.54`), not by the MagicDNS nickname `arcana-prod`. `arcana-prod` also carries a public Hetzner `A` record (`65.108.236.39`); on operator machines without an `/etc/hosts` override the MagicDNS name resolves to the public IP and SSH then runs against the public interface — which is firewalled to Tailscale traffic only and returns `Connection refused` from a fresh dev machine. The Tailscale IP literal works on every machine joined to the Arcanada tailnet without per-machine DNS preference tuning.
+
+If you prefer the nickname, add the Tailscale IP to `/etc/hosts` (`100.121.155.54 arcana-prod`) or set Tailscale's `--accept-dns=true` so MagicDNS is consulted before the public resolver. The hardcoded IP is the most portable form for an operator runbook.
+
+Reference: workspace memory `feedback_tailscale_magicdns_not_default`.
 
 ## Future work
 
