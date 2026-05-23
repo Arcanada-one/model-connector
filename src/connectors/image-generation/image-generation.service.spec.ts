@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { HttpStatus } from '@nestjs/common';
 import type { Queue } from 'bullmq';
 import type { PrismaService } from '../../prisma/prisma.service';
 
@@ -83,6 +84,43 @@ describe('ImageGenerationService', () => {
           'test-api-key',
         ),
       ).rejects.toThrow(ProviderNotProvisionedError);
+    });
+
+    it('returns 503 when all providers disabled', async () => {
+      // CONN-0213 D-2 regress: with every IMAGE_PROVIDER_*_ENABLED flag off
+      // (see getConfig mock above), resolveConnector returns null for any
+      // resolved provider — processRequest MUST throw the typed
+      // ProviderNotProvisionedError carrying HTTP 503 (not generic Error 500),
+      // so the controller maps it deterministically. Guards
+      // image-generation.service.ts:204.
+      const call = (
+        service as unknown as {
+          processRequest: (req: unknown, apiKeyId: string, provider: string) => Promise<unknown>;
+        }
+      ).processRequest(
+        {
+          tier: 'mid',
+          prompt: 'all-providers-disabled regress',
+          quality: 'medium',
+          count: 1,
+          outputFormat: 'url',
+          outputAsync: 'never',
+        },
+        'test-api-key',
+        'vertex',
+      );
+
+      await expect(call).rejects.toThrow(ProviderNotProvisionedError);
+      await expect(call).rejects.toMatchObject({
+        getStatus: expect.any(Function),
+      });
+      try {
+        await call;
+      } catch (err) {
+        expect((err as ProviderNotProvisionedError).getStatus()).toBe(
+          HttpStatus.SERVICE_UNAVAILABLE,
+        );
+      }
     });
 
     it('falls back to next provider when primary is unprovisioned', async () => {
