@@ -41,8 +41,9 @@ describe.skipIf(!shouldRun)('ImageRouterService — fallback integration [INTEGR
   it('routeExcluding throws ImageRoutingError when all providers excluded', () => {
     const router = new ImageRouterService(cbManager);
 
+    // CONN-0213: fal-ai is now a mid-tier fallback candidate — must be excluded too.
     expect(() =>
-      router.routeExcluding('mid', {}, ['vertex', 'replicate', 'openai-images']),
+      router.routeExcluding('mid', {}, ['vertex', 'replicate', 'openai-images', 'fal-ai']),
     ).toThrow(ImageRoutingError);
   });
 
@@ -96,13 +97,19 @@ describe.skipIf(!shouldRun)('ImageRouterService — fallback integration [INTEGR
     console.log('[INT] routing_decision shape verified:', JSON.stringify(decision));
   });
 
-  it('fallback_used is true when primary provider excluded; throws when tier has only one provider', () => {
+  it('fallback_used is true when primary provider excluded; throws when all tier providers excluded', () => {
     const router = new ImageRouterService(cbManager);
 
-    // Mid tier has only vertex candidates — excluding vertex should throw
-    expect(() => router.routeExcluding('mid', {}, ['vertex'])).toThrow(ImageRoutingError);
+    // CONN-0213: mid tier now has [vertex, vertex, fal-ai] candidates —
+    // excluding vertex alone leaves fal-ai as a valid fallback. Throw only
+    // when all tier providers are excluded.
+    const partialDecision = router.routeExcluding('mid', {}, ['vertex']);
+    expect(partialDecision.chosenProvider).toBe('fal-ai');
+    expect(partialDecision.fallbackUsed).toBe(true);
+
+    expect(() => router.routeExcluding('mid', {}, ['vertex', 'fal-ai'])).toThrow(ImageRoutingError);
     console.log(
-      '[INT] Mid tier with vertex-only candidates: correctly throws when vertex excluded',
+      '[INT] Mid tier: vertex-excluded → fal-ai fallback OK; vertex+fal-ai excluded → throws',
     );
   });
 
