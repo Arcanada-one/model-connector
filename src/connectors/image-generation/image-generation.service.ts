@@ -7,6 +7,7 @@ import { ImageRouterService, ASYNC_PROVIDERS, ImageRoutingError } from './image-
 import { VertexImageConnector } from './vertex/vertex-image.connector';
 import { ReplicateFluxConnector } from './replicate/replicate-flux.connector';
 import { OpenAIImagesConnector } from './openai-images/openai-images.connector';
+import { FalAiConnector } from './fal-ai/fal-ai.connector';
 import { CircuitBreakerManager } from '../../core/resilience/circuit-breaker-manager';
 import { getConfig } from '../../config/env.schema';
 import { ProviderNotProvisionedError } from './errors/provider-not-provisioned.error';
@@ -22,6 +23,7 @@ export class ImageGenerationService implements IImageGenerationService {
   private readonly vertexConnector: VertexImageConnector | null = null;
   private readonly replicateConnector: ReplicateFluxConnector | null = null;
   private readonly openaiConnector: OpenAIImagesConnector | null = null;
+  private readonly falAiConnector: FalAiConnector | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -50,6 +52,11 @@ export class ImageGenerationService implements IImageGenerationService {
 
     if (config.IMAGE_PROVIDER_OPENAI_ENABLED && config.OPENAI_API_KEY) {
       this.openaiConnector = new OpenAIImagesConnector(config.OPENAI_API_KEY, this.cbManager);
+    }
+
+    // CONN-0213: Fal.ai image-generation provider (Phase 1 — image only).
+    if (config.IMAGE_PROVIDER_FAL_AI_ENABLED && config.FAL_AI_API_KEY) {
+      this.falAiConnector = new FalAiConnector(config.FAL_AI_API_KEY, this.cbManager);
     }
   }
 
@@ -190,7 +197,14 @@ export class ImageGenerationService implements IImageGenerationService {
 
     const connector = this.resolveConnector(resolvedProvider as ProviderId);
     if (!connector) {
-      throw new Error(`Provider ${resolvedProvider} is not enabled or configured`);
+      // CONN-0213 D-2: generalize fail-soft. Throw ProviderNotProvisionedError so
+      // handleRequest's existing catch-and-fallback loop excludes the provider
+      // uniformly — applies to any optional provider whose env flag is off or
+      // whose Vault credentials are missing, not just fal-ai.
+      throw new ProviderNotProvisionedError(
+        resolvedProvider as ProviderId,
+        `IMAGE_PROVIDER_${String(resolvedProvider).toUpperCase().replace(/-/g, '_')}_ENABLED=false or key missing`,
+      );
     }
 
     return connector.generate({ ...req, model: modelId ?? req.model });
@@ -204,6 +218,8 @@ export class ImageGenerationService implements IImageGenerationService {
         return this.replicateConnector;
       case 'openai-images':
         return this.openaiConnector;
+      case 'fal-ai':
+        return this.falAiConnector;
       default:
         return null;
     }

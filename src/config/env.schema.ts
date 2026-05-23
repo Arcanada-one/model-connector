@@ -73,6 +73,11 @@ export const envSchema = z
     // OpenAI Images (gpt-image-1)
     OPENAI_API_KEY: z.string().optional(),
 
+    // CONN-0213: Fal.ai (image generation; video/audio backlog CONN-0215/CONN-0216)
+    // Vault: arcanada/prod/env/model-connector-fal-ai · field `api_key`
+    // Source URL: https://fal.ai/dashboard/keys
+    FAL_AI_API_KEY: z.string().optional(),
+
     // Cloudflare R2 Storage
     R2_ACCOUNT_ID: z.string().optional(),
     R2_ACCESS_KEY_ID: z.string().optional(),
@@ -85,6 +90,7 @@ export const envSchema = z
     IMAGE_PROVIDER_REPLICATE_ENABLED: z.coerce.boolean().default(false),
     IMAGE_PROVIDER_OPENAI_ENABLED: z.coerce.boolean().default(false),
     IMAGE_PROVIDER_CODEX_ENABLED: z.coerce.boolean().default(false),
+    IMAGE_PROVIDER_FAL_AI_ENABLED: z.coerce.boolean().default(false),
 
     // Image budget and rate limiting
     IMAGE_BUDGET_DAILY_USD: z.coerce.number().min(0).max(1000).default(10),
