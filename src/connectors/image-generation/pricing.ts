@@ -13,6 +13,9 @@ export const PRICING_TABLE: Partial<Record<ModelId | string, number>> = {
   'openai:gpt-image-1-low': 0.011,
   'openai:gpt-image-1-medium': 0.06,
   'openai:gpt-image-1-high': 0.25,
+  // CONN-0213: Fal.ai (source https://fal.ai/pricing; drift recipe CONN-0061)
+  'fal-ai:flux/dev': 0.025,
+  'fal-ai:flux-pro/v1.1': 0.04,
 };
 
 /**

@@ -6,9 +6,11 @@ describe('IMAGE_CAPABILITIES', () => {
     expect(() => imageCapabilitiesSchema.parse(IMAGE_CAPABILITIES)).not.toThrow();
   });
 
-  it('has all 8 expected model entries', () => {
+  it('has all 10 expected model entries', () => {
+    // CONN-0052: 8 vertex/replicate/openai entries
+    // CONN-0213: +2 fal-ai entries (fal-ai:flux/dev, fal-ai:flux-pro/v1.1)
     const keys = Object.keys(IMAGE_CAPABILITIES);
-    expect(keys).toHaveLength(8);
+    expect(keys).toHaveLength(10);
   });
 
   it('each entry has required fields', () => {
