@@ -6,7 +6,7 @@ import type { ImageProviderCapabilities, ModelId } from './types';
 const capabilityEntrySchema = z.object({
   modelId: z.string(),
   apiModelName: z.string().optional(),
-  provider: z.enum(['vertex', 'replicate', 'openai-images']),
+  provider: z.enum(['vertex', 'replicate', 'openai-images', 'fal-ai']),
   displayName: z.string().min(1),
   sizes: z
     .array(z.object({ width: z.number().int().positive(), height: z.number().int().positive() }))
@@ -219,6 +219,55 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     asyncThresholdMs: 60000,
     enabledByDefault: true,
     lastValidated: '2026-05-07',
+  },
+
+  // CONN-0213: Fal.ai (Phase 1 image only — video/audio in backlog CONN-0215/CONN-0216)
+  'fal-ai:flux/dev': {
+    modelId: 'fal-ai:flux/dev',
+    apiModelName: 'flux/dev', // appended to https://fal.run/fal-ai/
+    provider: 'fal-ai',
+    displayName: 'FLUX.1 [dev] (Fal.ai schnell, 4-step)',
+    // Fal.ai accepts a named image_size enum; widths/heights here are the
+    // canonical mappings the connector emits via mapSize().
+    sizes: [
+      { width: 1024, height: 1024 }, // square_hd
+      { width: 768, height: 1024 }, // portrait_4_3
+      { width: 1024, height: 768 }, // landscape_4_3
+    ],
+    aspectRatios: ['1:1', '16:9', '9:16', '4:3', '3:4'],
+    maxPromptChars: 4000,
+    supportsImg2Img: false,
+    supportsSeed: true,
+    watermark: 'never',
+    safetyPolicy: 'standard',
+    costPerImageUsd: 0.025,
+    latencyP95Ms: 1500, // Fixture 1: 0.6s inference; budget for queuing
+    asyncThresholdMs: 30000,
+    enabledByDefault: true,
+    lastValidated: '2026-05-23',
+  },
+
+  'fal-ai:flux-pro/v1.1': {
+    modelId: 'fal-ai:flux-pro/v1.1',
+    apiModelName: 'flux-pro/v1.1',
+    provider: 'fal-ai',
+    displayName: 'FLUX.1 Pro v1.1 (Fal.ai premium)',
+    sizes: [
+      { width: 1024, height: 1024 },
+      { width: 1024, height: 768 },
+      { width: 768, height: 1024 },
+    ],
+    aspectRatios: ['1:1', '16:9', '9:16', '4:3', '3:4'],
+    maxPromptChars: 4000,
+    supportsImg2Img: false,
+    supportsSeed: true,
+    watermark: 'never',
+    safetyPolicy: 'standard',
+    costPerImageUsd: 0.04,
+    latencyP95Ms: 8000,
+    asyncThresholdMs: 30000,
+    enabledByDefault: true,
+    lastValidated: '2026-05-23',
   },
 };
 

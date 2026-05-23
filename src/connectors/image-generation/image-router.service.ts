@@ -24,11 +24,15 @@ const TIER_MAP: Record<Tier, Array<{ provider: ProviderId; model: string }>> = {
   mid: [
     { provider: 'vertex', model: 'vertex:imagen-4-fast' },
     { provider: 'vertex', model: 'vertex:imagen-4' },
+    // CONN-0213: fal-ai as last fallback (cheap-tier model but fast)
+    { provider: 'fal-ai', model: 'fal-ai:flux/dev' },
   ],
   premium: [
     { provider: 'vertex', model: 'vertex:imagen-4-ultra' },
     { provider: 'replicate', model: 'replicate:flux-pro' },
     { provider: 'openai-images', model: 'openai:gpt-image-1-high' },
+    // CONN-0213: fal-ai as last fallback (cheaper than openai-images, watermark:never)
+    { provider: 'fal-ai', model: 'fal-ai:flux-pro/v1.1' },
   ],
 };
 
