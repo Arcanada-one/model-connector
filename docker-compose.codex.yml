@@ -48,12 +48,14 @@ services:
     # model-connector container that actually spawns the codex binary. Bind a
     # host /dev/shm path (Linux tmpfs by default) so both containers see the
     # same OAuth blob. Sidecar gets rw, model-connector gets ro.
-    # CONN-0080: entrypoint converges ${CODEX_HOME} to root:MC_GID 0750 on
-    # every start (auth.json stays MC_UID:MC_GID 0600). No operator host setup
-    # required for first-time bootstrap or restart-recovery — compose
-    # auto-creates the dir on first `compose up` and entrypoint tightens it.
-    # T-NEW preserved by file mode 0600 owned by MC user; group-rx on dir
-    # grants only traversal + readdir of a well-known filename.
+    # CONN-0080 + CONN-0217: entrypoint converges ${CODEX_HOME} to
+    # root:MC_GID 0770 on every start (auth.json stays MC_UID:MC_GID 0600).
+    # No operator host setup required for first-time bootstrap or
+    # restart-recovery — compose auto-creates the dir on first `compose up`
+    # and entrypoint tightens it. T-NEW preserved by file mode 0600 owned by
+    # MC user; group-rwx on dir grants traversal + readdir of a well-known
+    # filename plus write access required by codex CLI ≥ 0.130 in-process
+    # app-server (CONN-0217).
     volumes:
       - /dev/shm/codex-auth:/dev/shm/codex-auth
       # Volume init: image pre-populates /codex-sidecar/bin/codex (see Dockerfile);

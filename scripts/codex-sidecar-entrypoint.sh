@@ -68,8 +68,14 @@ fi
 # CAP_DAC_OVERRIDE — `mktemp: Permission denied` → restart loop. CAP_CHOWN
 # bypasses the owner check, so we can reclaim regardless of current owner.
 # chown FIRST (works on any owner), chmod SECOND (we now own → no CAP_FOWNER
-# needed). End-state: root:MC_GID 0750 — sidecar (root) writes via mktemp
-# while MC (group MC_GID) traverses via group r-x. Idempotent on re-runs.
+# needed). End-state: root:MC_GID 0770 — sidecar (root) writes via mktemp
+# while MC (group MC_GID) traverses AND writes via group rwx. CONN-0217:
+# codex CLI ≥ 0.130 spawns an in-process app-server that creates state files
+# inside ${CODEX_HOME} from the MC user (uid 1001); without group `w` it
+# fails with "failed to initialize in-process app-server client: Permission
+# denied (os error 13)". Auth confidentiality is preserved by file perms
+# (auth.json stays 0600 owned by MC user — only that uid can read it).
+# Idempotent on re-runs.
 MC_USER_UID="${MC_USER_UID:-1001}"
 MC_USER_GID="${MC_USER_GID:-1001}"
 if ! chown "0:${MC_USER_GID}" "${CODEX_HOME}"; then
@@ -77,7 +83,7 @@ if ! chown "0:${MC_USER_GID}" "${CODEX_HOME}"; then
     log "Ensure 'cap_add: [CHOWN]' is set on codex-sidecar service in docker-compose.codex.yml."
     exit 73
 fi
-chmod 0750 "${CODEX_HOME}"
+chmod 0770 "${CODEX_HOME}"
 
 : "${VAULT_ADDR:?VAULT_ADDR is required}"
 : "${VAULT_ROLE_ID:?VAULT_ROLE_ID is required}"
@@ -109,18 +115,20 @@ unset VAULT_TOKEN
 
 log "OAuth blob materialised at ${AUTH_TARGET} (mode 600, tmpfs)"
 
-# CONN-0068 + CONN-0080: AUTH_TARGET inherits root ownership via mktemp+mv.
-# Hand off the FILE to MC user so MC's spawned `codex` (running as `connector`,
-# UID 1001 on node:22-slim) can read it across the bind mount. Directory
-# ownership is left at root:MC_GID 0750 (set early, see top-of-script comment)
-# — MC traverses via the group bit, sidecar (root) keeps owner-write across
-# restarts. T-NEW preserved: auth.json stays mode 0600 owned by MC user; only
-# that UID can read content. Requires CAP_CHOWN (`cap_add: [CHOWN]`).
+# CONN-0068 + CONN-0080 + CONN-0217: AUTH_TARGET inherits root ownership via
+# mktemp+mv. Hand off the FILE to MC user so MC's spawned `codex` (running
+# as `connector`, UID 1001 on node:22-slim) can read it across the bind
+# mount. Directory ownership is left at root:MC_GID 0770 (set early, see
+# top-of-script comment) — MC traverses AND writes via the group bits
+# (required by codex CLI ≥ 0.130 in-process app-server), sidecar (root)
+# keeps owner-write across restarts. T-NEW preserved: auth.json stays mode
+# 0600 owned by MC user; only that UID can read content. Requires CAP_CHOWN
+# (`cap_add: [CHOWN]`).
 if ! chown "${MC_USER_UID}:${MC_USER_GID}" "${AUTH_TARGET}"; then
     log "FATAL: chown ${AUTH_TARGET} to ${MC_USER_UID}:${MC_USER_GID} failed — likely missing CAP_CHOWN."
     exit 73
 fi
-log "Set ${CODEX_HOME}=root:${MC_USER_GID} 0750, ${AUTH_TARGET}=${MC_USER_UID}:${MC_USER_GID} 0600 (CONN-0080)."
+log "Set ${CODEX_HOME}=root:${MC_USER_GID} 0770, ${AUTH_TARGET}=${MC_USER_UID}:${MC_USER_GID} 0600 (CONN-0217)."
 
 # Quick smoke — codex --version exercises auth.json parse path without spending tokens.
 if ! codex --version >/dev/null 2>&1; then
