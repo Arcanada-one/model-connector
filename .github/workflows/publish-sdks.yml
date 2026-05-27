@@ -55,7 +55,7 @@ jobs:
 
   build-python:
     name: Python — build + test + twine check
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     permissions:
       id-token: write
       contents: read
