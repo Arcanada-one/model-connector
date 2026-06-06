@@ -39,7 +39,7 @@ When the primary provider returns `5xx`, the response still arrives as
 `fallback_count ≥ 1`. The full provider list attempted is exposed in the
 `providers_tried` envelope field.
 
-## Async path — faster-whisper (self-hosted on arcana-ai)
+## Async path — faster-whisper (self-hosted on arcana-prod)
 
 The async path ships POST `/v1/speech/stt/async` plus GET `/v1/speech/stt/jobs/:id`.
 Use it for long audio (> 60 s) or when you want zero per-second cost.
@@ -47,10 +47,10 @@ Use it for long audio (> 60 s) or when you want zero per-second cost.
 Pre-conditions:
 
 - `STT_PROVIDER_LOCAL_WHISPER_ENABLED=true` on the connector.
-- `LOCAL_WHISPER_BASE_URL=http://arcana-ai:8400` reachable from the connector
-  worker (Tailscale).
-- Whisper stack live on arcana-ai (`deploy/stt-whisper/docker-compose.yml`,
-  health probe `curl -fsS http://arcana-ai:8400/health` returns `ok`).
+- `LOCAL_WHISPER_BASE_URL=http://arcana-prod:8400` reachable from the connector
+  (Tailscale).
+- Whisper stack live on arcana-prod (`deploy/stt-whisper/docker-compose.yml`,
+  health probe `curl -fsS http://arcana-prod:8400/health` returns `ok`).
 
 ### 1. Submit a job
 
@@ -143,7 +143,7 @@ body — no information leak across API keys.
 
 ### Network topology recap
 
-- Worker → Whisper: `http://arcana-ai:8400/v1/audio/transcriptions` (Tailscale only)
+- Worker → Whisper: `http://arcana-prod:8400/v1/audio/transcriptions` (Tailscale only)
 - Worker → Redis: `arcana-db:6379` (existing)
 - Client → Connector: `https://connector.arcanada.one` (public, bcrypt API key)
 

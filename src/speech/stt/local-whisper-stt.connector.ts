@@ -5,7 +5,7 @@ import type { SttConnectorRequest } from './interfaces/stt-connector.interface';
 
 /**
  * CONN-0104 — LocalWhisperSttConnector. Self-hosted faster-whisper-server
- * on arcana-ai (CPU-only, Tailscale-only port 8400) speaking the OpenAI
+ * on arcana-prod (CPU-only, Tailscale-only port 8400) speaking the OpenAI
  * /v1/audio/transcriptions compat surface.
  *
  * Per Phase 0 capture (CONN-0101-fixtures.md 2026-05-16):
@@ -29,7 +29,7 @@ interface FasterWhisperVerboseJson {
   // segments + words exist but are not surfaced through SttConnectorResult.
 }
 
-const DEFAULT_LOCAL_WHISPER_BASE_URL = 'http://arcana-ai:8400';
+const DEFAULT_LOCAL_WHISPER_BASE_URL = 'http://arcana-prod:8400';
 const DEFAULT_LOCAL_WHISPER_MODEL = 'Systran/faster-distil-whisper-large-v3';
 
 @Injectable()
