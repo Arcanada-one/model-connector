@@ -1,23 +1,25 @@
 # Self-hosted faster-whisper-server stack for Model Connector STT Phase 2.
-# Runs on arcana-ai (Tailscale 100.81.64.51). Reached by Model Connector workers
-# via LOCAL_WHISPER_BASE_URL=http://arcana-ai:8400 inside the tailnet.
+# Runs on arcana-prod (Tailscale 100.121.155.54) — STT is an application service,
+# placed on the application/services host per the canonical server-role model.
+# Reached by Model Connector via LOCAL_WHISPER_BASE_URL=http://arcana-prod:8400
+# inside the tailnet (model-connector runs on the same host → loopback-fast).
 #
 # Image pinned by digest after Phase 0 fixture capture (2026-05-16).
 # Model: Systran/faster-distil-whisper-large-v3 (INT8 CT2, RTF ~1.05× on 4vCPU).
 #
 # x-exposure-tier: 2
 # x-exposure-justification: Tailscale-only reachability. Docker binds the
-#   port on arcana-ai's Tailscale interface IP (100.81.64.51:8400) — eth0
-#   (89.167.24.119) has no listening socket, so the host's INPUT-policy=DROP
+#   port on arcana-prod's Tailscale interface IP (100.121.155.54:8400) — the
+#   public eth0 has no listening socket on 8400, so the host's INPUT-policy=DROP
 #   default plus the docker-proxy bind together keep the surface tailnet-only.
-#   Workers reach the port via tailnet hostname `arcana-ai` → 100.81.64.51.
+#   Consumers reach the port via tailnet hostname `arcana-prod` → 100.121.155.54.
 services:
   whisper:
     image: fedirz/faster-whisper-server@sha256:760e5e43d427dc6cfbbc4731934b908b7de9c7e6d5309c6a1f0c8c923a5b6030
     container_name: stt-whisper
     restart: unless-stopped
     ports:
-      - "100.81.64.51:8400:8000"
+      - "100.121.155.54:8400:8000"
     environment:
       WHISPER__MODEL: Systran/faster-distil-whisper-large-v3
       WHISPER__USE_LOCAL_FILES_ONLY: "false"
@@ -27,8 +29,9 @@ services:
     mem_limit: 4g
     memswap_limit: 4g
     cpus: "4.0"
+    # Image ships python3 only (no curl/wget/nc) — probe via stdlib urllib.
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health',timeout=5).status==200 else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3

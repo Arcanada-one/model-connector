@@ -1,4 +1,4 @@
-name: Deploy STT Whisper (arcana-ai)
+name: Deploy STT Whisper (arcana-prod)
 
 on:
   push:
@@ -23,26 +23,26 @@ jobs:
   deploy:
     needs: network-exposure-lint
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, Linux, arcana-ai]
+    runs-on: [self-hosted, Linux, arcana-prod]
     concurrency:
       group: deploy-stt-whisper
       cancel-in-progress: false
     env:
       COMPOSE_FILE: deploy/stt-whisper/docker-compose.yml
-      # Whisper binds to arcana-ai Tailscale interface (100.81.64.51:8400) per
+      # Whisper binds to arcana-prod Tailscale interface (100.121.155.54:8400) per
       # Tier 2 baseline; runner on the same host reaches it via Tailscale IP.
-      WHISPER_HEALTH_URL: http://100.81.64.51:8400/health
+      WHISPER_HEALTH_URL: http://100.121.155.54:8400/health
     steps:
       - uses: actions/checkout@v4
 
-      # INFRA-0121 mandate: pre-deploy preflight against target host (arcana-ai).
+      # INFRA-0121 mandate: pre-deploy preflight against target host (arcana-prod).
       # SHA-bridge per CLAUDE.md § 8 — INFRA-0122 PR #8 head until merge tag v1.x.y lands.
       - name: Preflight check
         uses: Arcanada-one/datarim/.github/actions/preflight-check@fff25210a90204db04962dc2de63fe255a084ec3 # v1 SHA-bridge (INFRA-0122 PR #8 head)
         with:
-          target-host: arcana-ai
+          target-host: arcana-prod
           service-name: stt-whisper
-          # arcana-ai 7.6 GiB RAM 0 swap, 4vCPU. STT model needs ~3.25 GiB at peak.
+          # STT model needs ~3.25 GiB at peak; arcana-prod 64 GiB RAM, headroom ample.
           min-free-disk-gb: '5'
           disk-warn-percent: '80'
           disk-fail-percent: '90'
@@ -100,7 +100,7 @@ jobs:
             -H 'Content-Type: application/json' \
             -d "$(jq -nc \
               --arg service stt-whisper \
-              --arg host arcana-ai \
+              --arg host arcana-prod \
               --arg run "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-              '{category:"fatal", agent:"deploy-stt-whisper", service:$service, host:$host, body:"deploy-stt-whisper failed", meta:{run_url:$run}, dedup_key:"deploy-stt-whisper-arcana-ai-failed"}')" \
+              '{category:"fatal", agent:"deploy-stt-whisper", service:$service, host:$host, body:"deploy-stt-whisper failed", meta:{run_url:$run}, dedup_key:"deploy-stt-whisper-arcana-prod-failed"}')" \
             || echo "Ops Bot notify failed (continuing — deploy already failed)"
