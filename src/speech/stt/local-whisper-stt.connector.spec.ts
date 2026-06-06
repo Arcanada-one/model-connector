@@ -11,10 +11,10 @@ import type { SttConnectorRequest } from './interfaces/stt-connector.interface';
 // whisper section, 2026-05-16). OpenAI-compat verbose_json:
 //   { task, language, duration, text, words, segments[...] }.
 // No auth (Tailscale-only). Endpoint POST /v1/audio/transcriptions on port
-// 8400 of arcana-ai. msw intercepts http://arcana-ai:8400 — the value
+// 8400 of arcana-prod. msw intercepts http://arcana-prod:8400 — the value
 // matches the test env's LOCAL_WHISPER_BASE_URL default.
 
-const WHISPER_URL = 'http://arcana-ai:8400/v1/audio/transcriptions';
+const WHISPER_URL = 'http://arcana-prod:8400/v1/audio/transcriptions';
 
 // Captured Phase 0 response shape (warm transcription, 13.7s EN audio).
 // Trimmed inner arrays to keep the spec readable while preserving every
@@ -71,7 +71,7 @@ describe('LocalWhisperSttConnector', () => {
     validateEnv({
       DATABASE_URL: 'postgresql://test',
       STT_PROVIDER_GROQ_ENABLED: 'false',
-      LOCAL_WHISPER_BASE_URL: 'http://arcana-ai:8400',
+      LOCAL_WHISPER_BASE_URL: 'http://arcana-prod:8400',
       STT_LOCAL_WHISPER_MODEL: 'Systran/faster-distil-whisper-large-v3',
       STT_LOCAL_WHISPER_TIMEOUT_MS: '300000',
       STT_LOCAL_WHISPER_MAX_CONCURRENCY: '1',
@@ -79,7 +79,7 @@ describe('LocalWhisperSttConnector', () => {
     connector = new LocalWhisperSttConnector();
   });
 
-  it('targets http://arcana-ai:8400/v1/audio/transcriptions without auth header', async () => {
+  it('targets http://arcana-prod:8400/v1/audio/transcriptions without auth header', async () => {
     let capturedAuth: string | null = 'sentinel';
     let capturedUrl = '';
     server.use(
