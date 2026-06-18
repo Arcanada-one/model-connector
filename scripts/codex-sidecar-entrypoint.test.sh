@@ -191,6 +191,114 @@ else
     assert_exit "M-4 marker absent → fail-safe skip" 1 "${rc}"
 fi
 
+# ---------------------------------------------------------------------------
+# I-1: entrypoint backgrounds the writeback loop after smoke
+#
+# Scenario: full entrypoint run with mocked binaries and shim libs:
+#   - mock vault (AppRole login + kv get succeed)
+#   - mock codex (--version succeeds)
+#   - mock chown (no-op — test runs as non-root)
+#   - mock timeout (passthrough)
+#   - shim lib/is_tmpfs_mount.sh (always returns 0)
+#   - shim lib/vault-kv-version.sh (returns version 1)
+#   - mock codex-oauth-writeback.sh that writes a sentinel file on launch
+#
+# The entrypoint is copied into a fake-scripts dir whose lib/ holds the shims,
+# so SCRIPT_DIR resolution points at the shims. The mock writeback script is
+# also placed in that dir so the entrypoint finds and backgrounds it.
+#
+# Assertion: sentinel file is created, proving the loop was launched.
+# ---------------------------------------------------------------------------
+I1="${TMPDIR_BASE}/i1"
+I1_SHM="${I1}/shm-auth"
+I1_BIN="${I1}/bin"
+I1_SCRIPTS="${I1}/fake-scripts"
+SENTINEL_FILE="${I1}/writeback-launched.sentinel"
+mkdir -p "${I1_SHM}" "${I1_BIN}" "${I1_SCRIPTS}/lib"
+
+# Mock vault: login returns a token; kv metadata get returns ver 1; kv get returns blob.
+cat > "${I1_BIN}/vault" << 'VEOF'
+#!/usr/bin/env bash
+case "$*" in
+    *approle/login*)      printf 'test-vault-token\n'; exit 0 ;;
+    *"kv metadata get"*)  printf '{"data":{"current_version":1,"max_versions":5}}\n'; exit 0 ;;
+    *"kv get"*)           printf '{"access_token":"test-tok","refresh_token":"rTest"}\n'; exit 0 ;;
+esac
+exit 0
+VEOF
+chmod +x "${I1_BIN}/vault"
+
+# Mock codex: --version succeeds.
+cat > "${I1_BIN}/codex" << 'CEOF'
+#!/usr/bin/env bash
+[ "${1:-}" = "--version" ] && { printf '0.130.0\n'; exit 0; }
+exit 0
+CEOF
+chmod +x "${I1_BIN}/codex"
+
+# Mock timeout: drop the numeric first arg, exec the rest (passthrough).
+cat > "${I1_BIN}/timeout" << 'TEOF'
+#!/usr/bin/env bash
+shift; exec "$@"
+TEOF
+chmod +x "${I1_BIN}/timeout"
+
+# Mock chown: no-op (test runs as non-root; entrypoint calls chown to root:gid).
+cat > "${I1_BIN}/chown" << 'CHEOF'
+#!/usr/bin/env bash
+exit 0
+CHEOF
+chmod +x "${I1_BIN}/chown"
+
+# Shim lib/is_tmpfs_mount.sh — always passes tmpfs check (no /proc available in test).
+cat > "${I1_SCRIPTS}/lib/is_tmpfs_mount.sh" << 'SEOF'
+is_tmpfs_mount() { return 0; }
+SEOF
+
+# Shim lib/vault-kv-version.sh — returns version 1.
+cat > "${I1_SCRIPTS}/lib/vault-kv-version.sh" << 'KVEOF'
+vault_kv_current_version() { printf '1\n'; return 0; }
+KVEOF
+
+# Mock codex-oauth-writeback.sh — writes sentinel and exits.
+# Expanded now (not inside heredoc) so SENTINEL_FILE path is baked in.
+cat > "${I1_SCRIPTS}/codex-oauth-writeback.sh" << WEOF
+#!/usr/bin/env bash
+printf 'launched' > "${SENTINEL_FILE}"
+exit 0
+WEOF
+chmod +x "${I1_SCRIPTS}/codex-oauth-writeback.sh"
+
+# Copy the real entrypoint into fake-scripts so SCRIPT_DIR points there
+# and picks up our shim libs + mock writeback.
+cp "${SCRIPT_DIR}/codex-sidecar-entrypoint.sh" "${I1_SCRIPTS}/codex-sidecar-entrypoint.sh"
+
+# Run entrypoint with all required env, mock PATH, and 'true' as CMD.
+set +e
+CODEX_HOME="${I1_SHM}" \
+VAULT_ADDR="http://mock-vault:8200" \
+VAULT_ROLE_ID="test-role-id" \
+VAULT_SECRET_ID="test-secret-id" \
+CODEX_WRITEBACK_ROLE_ID="wb-role-id" \
+CODEX_WRITEBACK_SECRET_ID="wb-secret-id" \
+VAULT_KV_PATH="arcanada/prod/env/codex-cli" \
+CODEX_AUTH_STRATEGY="vault-blob" \
+MC_USER_UID="$(id -u)" \
+MC_USER_GID="$(id -g)" \
+PATH="${I1_BIN}:${PATH}" \
+bash "${I1_SCRIPTS}/codex-sidecar-entrypoint.sh" true >/dev/null 2>&1
+set -e
+
+# Give backgrounded child time to write sentinel before we check.
+sleep 1
+
+if [ -f "${SENTINEL_FILE}" ]; then
+    printf 'ok   I-1 entrypoint backgrounds writeback loop (sentinel found)\n'
+else
+    printf 'FAIL I-1 entrypoint did NOT launch writeback loop (sentinel absent)\n'
+    fail=1
+fi
+
 if [ "${fail}" -eq 0 ]; then
     printf '\nall tests passed\n'
 fi

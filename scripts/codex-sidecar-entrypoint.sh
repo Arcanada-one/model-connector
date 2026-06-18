@@ -206,4 +206,40 @@ if ! codex --version >/dev/null 2>&1; then
 fi
 
 log "Sidecar ready — codex $(codex --version 2>&1)"
+
+# ---------------------------------------------------------------------------
+# Background-launch the OAuth writeback watcher.
+#
+# Launched here — after the smoke check confirms auth.json is valid — so the
+# watcher starts only when the sidecar is fully initialised. It runs alongside
+# the container's main process (sleep infinity / whatever CMD is passed) and
+# exits when the container stops.
+#
+# Authentication: the writeback script performs its OWN AppRole login using
+# CODEX_WRITEBACK_ROLE_ID / CODEX_WRITEBACK_SECRET_ID (dedicated write-role,
+# operator-provisioned at H1). Those env vars are forwarded to the child
+# process. If they are unset (H1 not yet executed), the script exits 0 with
+# a warning — fail-open on writeback so the sidecar still starts.
+#
+# Note: VAULT_ROLE_ID / VAULT_SECRET_ID have already been unset above (read-role
+# creds consumed by this entrypoint). The writeback child uses its own distinct
+# creds. VAULT_TOKEN is also unset; the writeback script obtains its own token.
+# ---------------------------------------------------------------------------
+if [ -n "${CODEX_WRITEBACK_ROLE_ID:-}" ] && [ -n "${CODEX_WRITEBACK_SECRET_ID:-}" ]; then
+    log "Launching OAuth writeback watcher in background (CODEX_WRITEBACK_ROLE_ID set)."
+else
+    log "Warning: CODEX_WRITEBACK_ROLE_ID / CODEX_WRITEBACK_SECRET_ID not set — writeback watcher will exit immediately (H1 operator step pending). Sidecar continues."
+fi
+
+WRITEBACK_SCRIPT="${SCRIPT_DIR}/codex-oauth-writeback.sh"
+if [ -x "${WRITEBACK_SCRIPT}" ]; then
+    # Export the writeback-role creds to the child; unset read-role vars are
+    # already gone. VAULT_ADDR and VAULT_KV_PATH and CODEX_HOME remain set.
+    "${WRITEBACK_SCRIPT}" &
+    WRITEBACK_PID=$!
+    log "Writeback watcher PID=${WRITEBACK_PID}"
+else
+    log "Warning: ${WRITEBACK_SCRIPT} not found or not executable — skipping writeback launch."
+fi
+
 exec "$@"
