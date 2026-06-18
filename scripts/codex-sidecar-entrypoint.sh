@@ -29,7 +29,58 @@ log() { printf '[entrypoint] %s\n' "$*" >&2; }
 VAULT_KV_PATH="${VAULT_KV_PATH:-arcanada/prod/env/codex-cli}"
 CODEX_AUTH_STRATEGY="${CODEX_AUTH_STRATEGY:-vault-blob}"
 ALLOW_MISSING_OAUTH="${ALLOW_MISSING_OAUTH:-0}"
-AUTH_TARGET="${CODEX_HOME}/auth.json"
+AUTH_TARGET="${CODEX_HOME:-/dev/shm/codex-auth}/auth.json"
+
+# ---------------------------------------------------------------------------
+# Sourceable helper: codex_should_materialize
+#
+# Returns 0 (materialize) or 1 (skip / fail-safe) based on freshness:
+#   codex_should_materialize <auth_target> <marker_path> <vault_current_version>
+#
+# Rules:
+#   - auth_target absent          → 0 (materialize: first-boot seed)
+#   - marker absent, auth present → 1 (fail-safe: skip, don't clobber fresh token)
+#   - marker version == vault ver → 1 (skip: already at current Vault version)
+#   - vault ver > marker version  → 0 (materialize: operator re-seeded)
+# ---------------------------------------------------------------------------
+codex_should_materialize() {
+    local auth_target="$1"
+    local marker_path="$2"
+    local vault_ver="$3"
+
+    # auth.json absent → always materialize
+    if [ ! -f "${auth_target}" ]; then
+        return 0
+    fi
+
+    # auth.json present but marker absent → fail-safe: skip to protect possibly-fresh token
+    if [ ! -f "${marker_path}" ]; then
+        log "Warning: auth.json present but .vault-version marker absent (upgrade path?). Skipping overwrite (fail-safe)."
+        return 1
+    fi
+
+    local local_ver
+    local_ver="$(cat "${marker_path}" 2>/dev/null)" || local_ver=""
+
+    # No vault version available → fail-safe: skip
+    if [ -z "${vault_ver}" ]; then
+        log "Warning: Vault version unavailable, skipping overwrite (fail-safe)."
+        return 1
+    fi
+
+    # Vault newer than local marker → materialize
+    if [ "${vault_ver}" -gt "${local_ver:-0}" ] 2>/dev/null; then
+        return 0
+    fi
+
+    # Same or older → skip (local rotated token is at least as fresh)
+    return 1
+}
+
+# When sourced by tests, skip all side-effectful startup.
+if [ "${CONN_0222_TEST_ONLY:-0}" = "1" ]; then
+    return 0 2>/dev/null || exit 0
+fi
 
 # Verification mode bypasses every gate; used by V-12 (image-layer secret probe)
 # and by `docker run` smoke checks that never need to touch Vault.
@@ -47,6 +98,8 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=lib/is_tmpfs_mount.sh
 . "${SCRIPT_DIR}/lib/is_tmpfs_mount.sh"
+# shellcheck source=lib/vault-kv-version.sh
+. "${SCRIPT_DIR}/lib/vault-kv-version.sh"
 
 if ! is_tmpfs_mount "${CODEX_HOME}"; then
     log "FATAL: ${CODEX_HOME} is not tmpfs-backed — refusing to write OAuth blob."
@@ -96,24 +149,38 @@ VAULT_TOKEN="$(timeout 30 vault write -field=token auth/approle/login \
 export VAULT_TOKEN
 unset VAULT_ROLE_ID VAULT_SECRET_ID
 
-log "Fetching ${VAULT_KV_PATH}.oauth_credentials"
-OAUTH_BLOB="$(timeout 30 vault kv get -field=oauth_credentials "${VAULT_KV_PATH}")"
+# Fetch Vault KV-v2 current version for freshness comparison (CONN-0222).
+VAULT_VERSION_MARKER="${CODEX_HOME}/.vault-version"
+VAULT_CURRENT_VER="$(vault_kv_current_version "${VAULT_KV_PATH}")" || VAULT_CURRENT_VER=""
 
-if [ -z "${OAUTH_BLOB}" ]; then
-    log "FATAL: Vault returned empty oauth_credentials. Check operator provisioning."
-    exit 71
+if codex_should_materialize "${AUTH_TARGET}" "${VAULT_VERSION_MARKER}" "${VAULT_CURRENT_VER}"; then
+    log "Fetching ${VAULT_KV_PATH}.oauth_credentials (Vault ver=${VAULT_CURRENT_VER:-unknown})"
+    OAUTH_BLOB="$(timeout 30 vault kv get -field=oauth_credentials "${VAULT_KV_PATH}")"
+
+    if [ -z "${OAUTH_BLOB}" ]; then
+        log "FATAL: Vault returned empty oauth_credentials. Check operator provisioning."
+        exit 71
+    fi
+
+    # Write atomically with strict permissions; never echo the blob.
+    umask 0177
+    TMPFILE="$(mktemp "${CODEX_HOME}/.auth.XXXXXX")"
+    printf '%s' "${OAUTH_BLOB}" > "${TMPFILE}"
+    chmod 0600 "${TMPFILE}"
+    mv -f "${TMPFILE}" "${AUTH_TARGET}"
+    unset OAUTH_BLOB
+    unset VAULT_TOKEN
+
+    # Update the .vault-version marker so next restart knows which version is local.
+    if [ -n "${VAULT_CURRENT_VER}" ]; then
+        printf '%s' "${VAULT_CURRENT_VER}" > "${VAULT_VERSION_MARKER}"
+    fi
+
+    log "OAuth blob materialised at ${AUTH_TARGET} (mode 600, tmpfs, vault-ver=${VAULT_CURRENT_VER:-unknown})"
+else
+    log "Skipping Vault re-seed: local auth.json is current (vault-ver=${VAULT_CURRENT_VER:-unknown}, marker=$(cat "${VAULT_VERSION_MARKER}" 2>/dev/null || echo none))."
+    unset VAULT_TOKEN
 fi
-
-# Write atomically with strict permissions; never echo the blob.
-umask 0177
-TMPFILE="$(mktemp "${CODEX_HOME}/.auth.XXXXXX")"
-printf '%s' "${OAUTH_BLOB}" > "${TMPFILE}"
-chmod 0600 "${TMPFILE}"
-mv -f "${TMPFILE}" "${AUTH_TARGET}"
-unset OAUTH_BLOB
-unset VAULT_TOKEN
-
-log "OAuth blob materialised at ${AUTH_TARGET} (mode 600, tmpfs)"
 
 # CONN-0068 + CONN-0080 + CONN-0217: AUTH_TARGET inherits root ownership via
 # mktemp+mv. Hand off the FILE to MC user so MC's spawned `codex` (running
@@ -124,11 +191,13 @@ log "OAuth blob materialised at ${AUTH_TARGET} (mode 600, tmpfs)"
 # keeps owner-write across restarts. T-NEW preserved: auth.json stays mode
 # 0600 owned by MC user; only that UID can read content. Requires CAP_CHOWN
 # (`cap_add: [CHOWN]`).
-if ! chown "${MC_USER_UID}:${MC_USER_GID}" "${AUTH_TARGET}"; then
-    log "FATAL: chown ${AUTH_TARGET} to ${MC_USER_UID}:${MC_USER_GID} failed — likely missing CAP_CHOWN."
-    exit 73
+if [ -f "${AUTH_TARGET}" ]; then
+    if ! chown "${MC_USER_UID}:${MC_USER_GID}" "${AUTH_TARGET}"; then
+        log "FATAL: chown ${AUTH_TARGET} to ${MC_USER_UID}:${MC_USER_GID} failed — likely missing CAP_CHOWN."
+        exit 73
+    fi
+    log "Set ${CODEX_HOME}=root:${MC_USER_GID} 0770, ${AUTH_TARGET}=${MC_USER_UID}:${MC_USER_GID} 0600 (CONN-0217)."
 fi
-log "Set ${CODEX_HOME}=root:${MC_USER_GID} 0770, ${AUTH_TARGET}=${MC_USER_UID}:${MC_USER_GID} 0600 (CONN-0217)."
 
 # Quick smoke — codex --version exercises auth.json parse path without spending tokens.
 if ! codex --version >/dev/null 2>&1; then
