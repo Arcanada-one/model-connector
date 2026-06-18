@@ -16,8 +16,14 @@
 #   --once                 run a single writeback and exit (for tests / debugging)
 #   --poll-interval <n>    mtime-poll interval seconds (default: 5)
 #
-# Required env (unless --auth-file/--vault-path override):
-#   VAULT_ADDR, VAULT_TOKEN (already exported by entrypoint before backgrounding)
+# Required env:
+#   VAULT_ADDR              — Vault server address
+#   CODEX_WRITEBACK_ROLE_ID — AppRole role-id for the DEDICATED write-only role
+#   CODEX_WRITEBACK_SECRET_ID — AppRole secret-id for the write-only role
+#   (These are separate from the read-role creds VAULT_ROLE_ID/VAULT_SECRET_ID
+#    consumed by the entrypoint. This script performs its own AppRole login
+#    on startup with the dedicated writeback AppRole — it does NOT inherit
+#    VAULT_TOKEN from the entrypoint.)
 #   VAULT_KV_PATH
 #   CODEX_HOME
 #
@@ -64,6 +70,35 @@ LOCK_DIR="${LOCK_DIR:-${CODEX_HOME_DEFAULT}/.writeback.lock}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=lib/vault-kv-version.sh
 . "${SCRIPT_DIR}/lib/vault-kv-version.sh"
+
+# ---------------------------------------------------------------------------
+# AppRole login with the DEDICATED writeback role.
+#
+# This script authenticates independently using its own AppRole credentials
+# (CODEX_WRITEBACK_ROLE_ID / CODEX_WRITEBACK_SECRET_ID). It does NOT inherit
+# VAULT_TOKEN from the entrypoint — the entrypoint unsets its read-role token
+# before exec-ing the main container command, and the writeback role needs
+# write-capable policy (distinct from the read-only role the entrypoint uses).
+#
+# The actual AppRole is operator-provisioned (H1). If the creds are absent,
+# the script exits 0 with a warning (fail-open on writeback — the local token
+# is retained; the missing writeback is logged for alerting).
+# ---------------------------------------------------------------------------
+: "${VAULT_ADDR:?VAULT_ADDR is required}"
+
+if [ -z "${CODEX_WRITEBACK_ROLE_ID:-}" ] || [ -z "${CODEX_WRITEBACK_SECRET_ID:-}" ]; then
+    log "Warning: CODEX_WRITEBACK_ROLE_ID / CODEX_WRITEBACK_SECRET_ID not set — writeback AppRole not provisioned yet (H1 operator step pending). Exiting without writeback."
+    exit 0
+fi
+
+log "AppRole login for writeback role at ${VAULT_ADDR} (role-id redacted)"
+VAULT_TOKEN="$(timeout 30 vault write -field=token auth/approle/login \
+    role_id="${CODEX_WRITEBACK_ROLE_ID}" secret_id="${CODEX_WRITEBACK_SECRET_ID}")" || {
+    log "ERROR: writeback AppRole login failed — exiting without writeback."
+    exit 1
+}
+export VAULT_TOKEN
+unset CODEX_WRITEBACK_ROLE_ID CODEX_WRITEBACK_SECRET_ID
 
 # ---------------------------------------------------------------------------
 # do_writeback: single writeback attempt with CAS + single-flight lock.

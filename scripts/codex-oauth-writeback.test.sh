@@ -55,6 +55,10 @@ build_mock_vault() {
 #!/usr/bin/env bash
 LOG="${VAULT_MOCK_LOG:-/dev/null}"
 printf '%s\n' "$*" >> "${LOG}"
+# AppRole login — return a mock token.
+if [ "$1" = "write" ] && printf '%s' "$*" | grep -q "approle/login"; then
+    printf 'mock-writeback-vault-token\n'; exit 0
+fi
 if [ "$1" = "kv" ] && [ "$2" = "metadata" ] && [ "$3" = "get" ]; then
     ver="${VAULT_MOCK_CURRENT_VER:-1}"
     printf '{"data":{"current_version":%s,"max_versions":5}}\n' "${ver}"
@@ -81,13 +85,30 @@ EOF
     chmod +x "${mock_dir}/vault"
 }
 
-# Run the writeback script with a mock vault. Exports VAULT_MOCK_LOG into env.
+# Build a mock timeout binary (passthrough — macOS may lack GNU timeout in test PATH).
+build_mock_timeout() {
+    local mock_dir="$1"
+    mkdir -p "${mock_dir}"
+    cat > "${mock_dir}/timeout" << 'EOF'
+#!/usr/bin/env bash
+shift; exec "$@"
+EOF
+    chmod +x "${mock_dir}/timeout"
+}
+
+# Run the writeback script with a mock vault and required env vars.
+# Provides VAULT_ADDR and writeback-role creds so the AppRole login succeeds.
+# Exports VAULT_MOCK_LOG into env.
 run_writeback() {
     local dir="$1"; shift
     export VAULT_MOCK_LOG="${dir}/vault.log"
     build_mock_vault "${dir}/mock-vault"
+    build_mock_timeout "${dir}/mock-vault"
     local old_path="${PATH}"
     export PATH="${dir}/mock-vault:${old_path}"
+    VAULT_ADDR="http://mock-vault:8200" \
+    CODEX_WRITEBACK_ROLE_ID="test-wb-role-id" \
+    CODEX_WRITEBACK_SECRET_ID="test-wb-secret-id" \
     bash "${WRITEBACK_SCRIPT}" "$@" 2>&1
     local rc=$?
     export PATH="${old_path}"
@@ -198,13 +219,20 @@ printf '{"access_token":"concurrent"}' > "${S1}/auth.json"
 printf '1' > "${S1}/.vault-version"
 export VAULT_MOCK_CURRENT_VER=1 VAULT_MOCK_CAS_MATCH_VER=1 VAULT_MOCK_UNREACHABLE=0
 build_mock_vault "${S1}/mock-vault"
+build_mock_timeout "${S1}/mock-vault"
 export VAULT_MOCK_LOG="${S1}/vault.log"
 old_path_s1="${PATH}"
 export PATH="${S1}/mock-vault:${old_path_s1}"
+VAULT_ADDR="http://mock-vault:8200" \
+CODEX_WRITEBACK_ROLE_ID="test-wb-role-id" \
+CODEX_WRITEBACK_SECRET_ID="test-wb-secret-id" \
 bash "${WRITEBACK_SCRIPT}" \
     --auth-file "${S1}/auth.json" --vault-path "arcanada/prod/env/codex-cli" \
     --marker "${S1}/.vault-version" --lock "${S1}/.writeback.lock" --once >/dev/null 2>&1 &
 PID1=$!
+VAULT_ADDR="http://mock-vault:8200" \
+CODEX_WRITEBACK_ROLE_ID="test-wb-role-id" \
+CODEX_WRITEBACK_SECRET_ID="test-wb-secret-id" \
 bash "${WRITEBACK_SCRIPT}" \
     --auth-file "${S1}/auth.json" --vault-path "arcanada/prod/env/codex-cli" \
     --marker "${S1}/.vault-version" --lock "${S1}/.writeback.lock" --once >/dev/null 2>&1 &
@@ -235,21 +263,25 @@ run_writeback "${S2}" \
     --marker "${S2}/.vault-version" --lock "${S2}/.writeback.lock" --once >/dev/null
 rc_s2=$?; set -e
 assert_exit "S-2 pre-held lock → exit 0 (skip)" 0 "${rc_s2}"
-put_s2="$(grep -c "kv put" "${S2}/vault.log" 2>/dev/null || echo 0)"
+put_s2="$(grep -c "kv put" "${S2}/vault.log" 2>/dev/null || true)"
+put_s2="${put_s2:-0}"
 assert_eq "S-2 no vault put when lock held" "0" "${put_s2}"
 
 # ---------------------------------------------------------------------------
 # S-3: static HCL policy check — sidecar policy has create+update capabilities
+# The runbook lives in the arcanada workspace (documentation/infrastructure/
+# vault-secondary-bootstrap/codex-oauth-recovery.md), not inside this repo.
+# Opt in by setting CONN_0222_RUNBOOK_PATH to the absolute runbook path.
 # ---------------------------------------------------------------------------
-RUNBOOK_PATH="${SCRIPT_DIR}/../documentation/infrastructure/vault-secondary-bootstrap/codex-oauth-recovery.md"
-if [ -f "${RUNBOOK_PATH}" ]; then
+RUNBOOK_PATH="${CONN_0222_RUNBOOK_PATH:-}"
+if [ -n "${RUNBOOK_PATH}" ] && [ -f "${RUNBOOK_PATH}" ]; then
     if grep -qE '"create".*"update"|"update".*"create"' "${RUNBOOK_PATH}" 2>/dev/null; then
         printf 'ok   S-3 HCL draft grants create+update to sidecar role\n'
     else
         printf 'FAIL S-3 runbook missing create+update in HCL draft\n'; fail=1
     fi
 else
-    printf 'SKIP S-3 runbook not yet written (phase 6)\n'
+    printf 'SKIP S-3 set CONN_0222_RUNBOOK_PATH=<abs-path-to-codex-oauth-recovery.md> to enable\n'
 fi
 
 if [ "${fail}" -eq 0 ]; then printf '\nall tests passed\n'; fi
