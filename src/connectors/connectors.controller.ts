@@ -23,6 +23,9 @@ const HTTP_ERROR_STATUS: Record<string, HttpStatus> = {
   circuit_open: HttpStatus.SERVICE_UNAVAILABLE,
   auth_error: HttpStatus.SERVICE_UNAVAILABLE,
   binary_not_found: HttpStatus.SERVICE_UNAVAILABLE,
+  // service_unavailable: durability condition (e.g. refresh_token_reused) that
+  // routes to 503 without going through the auth_error / instant-open CB path.
+  service_unavailable: HttpStatus.SERVICE_UNAVAILABLE,
   rate_limited: HttpStatus.TOO_MANY_REQUESTS,
   unsupported_modality: HttpStatus.BAD_REQUEST,
 };
