@@ -81,7 +81,12 @@ jobs:
             -e REDIS_PORT=16379 \
             -e NODE_ENV=test \
             -e PORT=3900 \
+            -e STT_PROVIDER_GROQ_ENABLED=false \
             model-connector-e2e
+          # STT_PROVIDER_GROQ_ENABLED defaults true (env.schema), which makes the
+          # boot-time env validation require STT_GROQ_API_KEY. The e2e harness does
+          # not exercise STT and injects no provider key, so disable the Groq STT
+          # provider here. Prod is unaffected (its .env supplies GROQ_API_KEY).
 
       - name: Wait for healthy
         run: |
