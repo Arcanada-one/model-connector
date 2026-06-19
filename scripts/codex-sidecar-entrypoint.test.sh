@@ -182,13 +182,41 @@ else
     set +e; codex_should_materialize "${FAKE_HOME}/auth.json" "${FAKE_HOME}/.vault-version" "7"; rc=$?; set -e
     assert_exit "M-3 Vault newer → materialize" 0 "${rc}"
 
-    # M-4: auth.json present, marker absent (upgrade-from-old-entrypoint) → skip (exit 1).
+    # M-4: auth.json present, marker absent, Vault readable → materialize (exit 0).
+    # Root cause of the prod self-block: the old logic skipped here to "protect
+    # possibly-fresh token", but marker absent means we have NO baseline — Vault
+    # is authoritative when it is reachable. Fix: materialize when vault_ver is known.
     FAKE_HOME="${TMPDIR_BASE}/m4-home"
     mkdir -p "${FAKE_HOME}"
+    printf '{"access_token":"stale-from-may"}' > "${FAKE_HOME}/auth.json"
+    # .vault-version does NOT exist; Vault version 4 is readable (the prod scenario)
+    set +e; codex_should_materialize "${FAKE_HOME}/auth.json" "${FAKE_HOME}/.vault-version" "4"; rc=$?; set -e
+    assert_exit "M-4 marker absent + Vault readable → materialize (Vault authoritative)" 0 "${rc}"
+
+    # M-4b: auth.json present, marker absent, Vault UNREACHABLE → fail-safe skip (exit 1).
+    # This is the genuine fail-safe: when Vault cannot be read, we cannot
+    # compare — keep the local token rather than risk clobbering with stale blob.
+    FAKE_HOME="${TMPDIR_BASE}/m4b-home"
+    mkdir -p "${FAKE_HOME}"
     printf '{"access_token":"maybe-fresh"}' > "${FAKE_HOME}/auth.json"
-    # .vault-version does NOT exist
-    set +e; codex_should_materialize "${FAKE_HOME}/auth.json" "${FAKE_HOME}/.vault-version" "3"; rc=$?; set -e
-    assert_exit "M-4 marker absent → fail-safe skip" 1 "${rc}"
+    # .vault-version does NOT exist; vault_ver is empty (Vault unreachable)
+    set +e; codex_should_materialize "${FAKE_HOME}/auth.json" "${FAKE_HOME}/.vault-version" ""; rc=$?; set -e
+    assert_exit "M-4b marker absent + Vault unreachable → fail-safe skip" 1 "${rc}"
+
+    # M-5: PROD SCENARIO — stale auth.json on host-bind + no marker + Vault v4 readable → materialize.
+    # This is the exact prod failure from CONN-0222 compliance check:
+    # /dev/shm/codex-auth is a HOST BIND surviving docker compose --force-recreate.
+    # Old auth.json from May was present; .vault-version marker was never written;
+    # Vault had a fresh seed at version 4. Old M-4 fail-safe caused SKIP → stale token
+    # persisted. New logic: Vault is authoritative → must materialize.
+    FAKE_HOME="${TMPDIR_BASE}/m5-prod-scenario"
+    mkdir -p "${FAKE_HOME}"
+    printf '{"access_token":"may-stale-token","refresh_token":"rUsed"}' > "${FAKE_HOME}/auth.json"
+    # Simulate host-bind surviving recreate: old auth.json exists, no marker written yet
+    # (marker never written because old entrypoint version had the bug)
+    # Vault is reachable and has fresh seed at version 4
+    set +e; codex_should_materialize "${FAKE_HOME}/auth.json" "${FAKE_HOME}/.vault-version" "4"; rc=$?; set -e
+    assert_exit "M-5 PROD: stale auth.json + no marker + Vault v4 → materialize (not skip)" 0 "${rc}"
 fi
 
 # ---------------------------------------------------------------------------
@@ -296,6 +324,94 @@ if [ -f "${SENTINEL_FILE}" ]; then
     printf 'ok   I-1 entrypoint backgrounds writeback loop (sentinel found)\n'
 else
     printf 'FAIL I-1 entrypoint did NOT launch writeback loop (sentinel absent)\n'
+    fail=1
+fi
+
+# ---------------------------------------------------------------------------
+# I-2: marker .vault-version is written after successful materialize.
+#
+# Scenario: no auth.json on disk (first-boot), Vault returns version 1.
+# The entrypoint must write ${CODEX_HOME}/.vault-version containing "1"
+# after materializing the blob.
+#
+# Reuses the same mock infrastructure as I-1 but places the entrypoint
+# in a fresh shm dir without a pre-existing auth.json so first-boot path
+# runs, and checks the marker file exists and contains the version.
+# ---------------------------------------------------------------------------
+I2="${TMPDIR_BASE}/i2"
+I2_SHM="${I2}/shm-auth"
+I2_BIN="${I2}/bin"
+I2_SCRIPTS="${I2}/fake-scripts"
+mkdir -p "${I2_SHM}" "${I2_BIN}" "${I2_SCRIPTS}/lib"
+
+cat > "${I2_BIN}/vault" << 'VEOF2'
+#!/usr/bin/env bash
+case "$*" in
+    *approle/login*)      printf 'test-vault-token\n'; exit 0 ;;
+    *"kv metadata get"*)  printf '{"data":{"current_version":1,"max_versions":5}}\n'; exit 0 ;;
+    *"kv get"*)           printf '{"access_token":"fresh-tok","refresh_token":"rFresh"}\n'; exit 0 ;;
+esac
+exit 0
+VEOF2
+chmod +x "${I2_BIN}/vault"
+
+cat > "${I2_BIN}/codex" << 'CEOF2'
+#!/usr/bin/env bash
+[ "${1:-}" = "--version" ] && { printf '0.130.0\n'; exit 0; }
+exit 0
+CEOF2
+chmod +x "${I2_BIN}/codex"
+
+cat > "${I2_BIN}/timeout" << 'TEOF2'
+#!/usr/bin/env bash
+shift; exec "$@"
+TEOF2
+chmod +x "${I2_BIN}/timeout"
+
+cat > "${I2_BIN}/chown" << 'CHEOF2'
+#!/usr/bin/env bash
+exit 0
+CHEOF2
+chmod +x "${I2_BIN}/chown"
+
+cat > "${I2_SCRIPTS}/lib/is_tmpfs_mount.sh" << 'SEOF2'
+is_tmpfs_mount() { return 0; }
+SEOF2
+
+cat > "${I2_SCRIPTS}/lib/vault-kv-version.sh" << 'KVEOF2'
+vault_kv_current_version() { printf '1\n'; return 0; }
+KVEOF2
+
+# No writeback launch needed for this test; provide a no-op stub.
+cat > "${I2_SCRIPTS}/codex-oauth-writeback.sh" << 'WEOF2'
+#!/usr/bin/env bash
+exit 0
+WEOF2
+chmod +x "${I2_SCRIPTS}/codex-oauth-writeback.sh"
+
+cp "${SCRIPT_DIR}/codex-sidecar-entrypoint.sh" "${I2_SCRIPTS}/codex-sidecar-entrypoint.sh"
+
+# No pre-existing auth.json → first-boot path (always materialize).
+set +e
+CODEX_HOME="${I2_SHM}" \
+VAULT_ADDR="http://mock-vault:8200" \
+VAULT_ROLE_ID="test-role-id" \
+VAULT_SECRET_ID="test-secret-id" \
+CODEX_WRITEBACK_ROLE_ID="" \
+CODEX_WRITEBACK_SECRET_ID="" \
+VAULT_KV_PATH="arcanada/prod/env/codex-cli" \
+CODEX_AUTH_STRATEGY="vault-blob" \
+MC_USER_UID="$(id -u)" \
+MC_USER_GID="$(id -g)" \
+PATH="${I2_BIN}:${PATH}" \
+bash "${I2_SCRIPTS}/codex-sidecar-entrypoint.sh" true >/dev/null 2>&1
+set -e
+
+MARKER_CONTENT="$(cat "${I2_SHM}/.vault-version" 2>/dev/null || echo '')"
+if [ "${MARKER_CONTENT}" = "1" ]; then
+    printf 'ok   I-2 .vault-version marker written after materialize (value=1)\n'
+else
+    printf 'FAIL I-2 .vault-version marker not written or wrong (got: "%s")\n' "${MARKER_CONTENT}"
     fail=1
 fi
 

@@ -4,6 +4,7 @@ import { FastifyReply } from 'fastify';
 import { IS_PUBLIC_KEY } from '../auth/public.decorator';
 import { SpeechMetricsService } from '../speech/speech-metrics.service';
 import { MetricsController } from './metrics.controller';
+import { MetricsService } from './metrics.service';
 
 function makeReply(): { reply: FastifyReply; sent: Record<string, unknown> } {
   const sent: Record<string, unknown> = { headers: {}, body: null, status: null };
@@ -26,11 +27,13 @@ function makeReply(): { reply: FastifyReply; sent: Record<string, unknown> } {
 
 describe('MetricsController', () => {
   let speechMetrics: SpeechMetricsService;
+  let metricsService: MetricsService;
   let controller: MetricsController;
 
   beforeEach(() => {
     speechMetrics = new SpeechMetricsService();
-    controller = new MetricsController(speechMetrics);
+    metricsService = new MetricsService();
+    controller = new MetricsController(speechMetrics, metricsService);
   });
 
   it('serves Prometheus text format with both speech-proxy series after an observation', async () => {
@@ -46,6 +49,7 @@ describe('MetricsController', () => {
     const body = sent.body as string;
     expect(body).toContain('mc_speech_proxy_total');
     expect(body).toContain('mc_speech_proxy_latency_ms');
+    expect(body).toContain('codex_oauth_vault_writeback_failures_total');
     expect(body).toMatch(
       /mc_speech_proxy_total\{[^}]*endpoint="tts"[^}]*status_class="2xx"[^}]*\} 1/,
     );
@@ -61,6 +65,7 @@ describe('MetricsController', () => {
     const body = sent.body as string;
     expect(body).toContain('# HELP mc_speech_proxy_total');
     expect(body).toContain('# HELP mc_speech_proxy_latency_ms');
+    expect(body).toContain('# HELP codex_oauth_vault_writeback_failures_total');
   });
 
   it('handler is NOT marked @Public() — AuthGuard must enforce Bearer', () => {
