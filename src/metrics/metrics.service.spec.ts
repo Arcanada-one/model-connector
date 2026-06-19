@@ -184,3 +184,72 @@ describe('MetricsService — Codex OAuth detection counters (CONN-0222)', () => 
     expect(text).toContain('codex_circuit_open_ms_total');
   });
 });
+
+// ---------------------------------------------------------------------------
+// D-5..D-7: drainCodexSentinel — sentinel file transport (CONN-0222 round 3)
+// ---------------------------------------------------------------------------
+import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
+
+describe('MetricsService — drainCodexSentinel', () => {
+  let metrics: MetricsService;
+  let tmpDir: string;
+  let sentinelPath: string;
+
+  beforeEach(() => {
+    metrics = new MetricsService();
+    tmpDir = mkdtempSync(join(tmpdir(), 'conn-0222-sentinel-'));
+    sentinelPath = join(tmpDir, '.metrics-sentinel');
+  });
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  // D-5: writeback_fail events increment writeback failure counter
+  it('D-5: writeback_fail lines increment codexWritebackFailuresTotal', () => {
+    writeFileSync(sentinelPath, '{"event":"writeback_fail"}\n{"event":"writeback_fail"}\n');
+    metrics.drainCodexSentinel(sentinelPath);
+    expect(metrics.getCodexWritebackFailureCount()).toBe(2);
+    // File must be truncated after drain
+    expect(readFileSync(sentinelPath, 'utf8')).toBe('');
+  });
+
+  // D-6: refresh_attempt events increment refresh attempt counter
+  it('D-6: refresh_attempt lines increment codexRefreshAttemptsTotal', () => {
+    writeFileSync(sentinelPath, '{"event":"refresh_attempt"}\n');
+    metrics.drainCodexSentinel(sentinelPath);
+    expect(metrics.getCodexRefreshAttemptCount()).toBe(1);
+    expect(readFileSync(sentinelPath, 'utf8')).toBe('');
+  });
+
+  // D-7: mixed events, unknown events ignored, file absent is no-op
+  it('D-7: mixed events processed; unknown events silently ignored', () => {
+    writeFileSync(
+      sentinelPath,
+      '{"event":"refresh_attempt"}\n{"event":"unknown_future_event"}\n{"event":"writeback_fail"}\n',
+    );
+    metrics.drainCodexSentinel(sentinelPath);
+    expect(metrics.getCodexRefreshAttemptCount()).toBe(1);
+    expect(metrics.getCodexWritebackFailureCount()).toBe(1);
+    expect(metrics.getCodexRefreshTokenReusedCount()).toBe(0);
+  });
+
+  it('D-7b: absent sentinel file is a no-op (no error thrown)', () => {
+    // sentinelPath does not exist
+    expect(() => metrics.drainCodexSentinel(sentinelPath)).not.toThrow();
+    expect(metrics.getCodexWritebackFailureCount()).toBe(0);
+    expect(metrics.getCodexRefreshAttemptCount()).toBe(0);
+  });
+
+  it('D-7c: malformed JSON lines are silently skipped', () => {
+    writeFileSync(
+      sentinelPath,
+      '{"event":"refresh_attempt"}\nnot-json\n{"event":"writeback_fail"}\n',
+    );
+    metrics.drainCodexSentinel(sentinelPath);
+    expect(metrics.getCodexRefreshAttemptCount()).toBe(1);
+    expect(metrics.getCodexWritebackFailureCount()).toBe(1);
+  });
+});
