@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 
 import type { OutputGuardPass } from '../connectors/output-guard/types';
 
@@ -244,6 +245,46 @@ export class MetricsService {
       refreshTokenReusedTotal: this.codexRefreshTokenReusedTotal,
       circuitOpenMsTotal: this.codexCircuitOpenMsTotal,
     };
+  }
+
+  // -------------------------------------------------------------------------
+  // Sentinel file transport (CONN-0222 detection-metrics).
+  // The sidecar writeback script and entrypoint write JSON-lines to
+  // ${CODEX_HOME}/.metrics-sentinel when sidecar-observable events occur
+  // (writeback_fail, refresh_attempt). This method drains that file
+  // atomically (read then truncate) and increments the in-memory counters.
+  // Called before generating Prometheus output so the metrics stay current.
+  //
+  // File format: one JSON object per line, e.g.:
+  //   {"event":"writeback_fail"}
+  //   {"event":"refresh_attempt"}
+  // Unknown events are silently ignored (forward-compatible).
+  // -------------------------------------------------------------------------
+  drainCodexSentinel(sentinelPath?: string): void {
+    const path =
+      sentinelPath ?? `${process.env['CODEX_HOME'] ?? '/dev/shm/codex-auth'}/.metrics-sentinel`;
+    if (!existsSync(path)) return;
+    let raw: string;
+    try {
+      raw = readFileSync(path, 'utf8');
+      // Truncate atomically after read — any events written between read and
+      // truncate are lost (acceptable: sentinel is best-effort, not durable).
+      writeFileSync(path, '', 'utf8');
+    } catch {
+      // Sentinel unreadable / permission denied — fail silently (non-critical path).
+      return;
+    }
+    for (const line of raw.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const obj = JSON.parse(trimmed) as { event?: string };
+        if (obj.event === 'writeback_fail') this.codexWritebackFailuresTotal++;
+        else if (obj.event === 'refresh_attempt') this.codexRefreshAttemptsTotal++;
+      } catch {
+        // Malformed line — skip.
+      }
+    }
   }
 
   getPrometheusCodexOauth(): string {
