@@ -177,6 +177,21 @@ export class CodexConnector extends BaseCliConnector {
 
   protected classifyError(message: string, exitCode: number): string {
     const lower = message.toLowerCase();
+    // refresh_token_reused = durability condition (sidecar writeback missed),
+    // NOT an auth-age expiry. Classify as service_unavailable so it does NOT
+    // instant-open the circuit breaker and does NOT produce a misleading
+    // "OAuth token expired" signal. Genuine expiry / sign-in-required stays auth_error.
+    if (lower.includes('refresh_token_reused')) {
+      // Emit a structured-log alert so this can be detected before a 503 storm.
+      process.stderr.write(
+        JSON.stringify({
+          event: 'codex_refresh_token_reused',
+          message,
+          ts: new Date().toISOString(),
+        }) + '\n',
+      );
+      return 'service_unavailable';
+    }
     if (
       lower.includes('refresh token') ||
       lower.includes('token is expired') ||

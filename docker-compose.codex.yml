@@ -44,6 +44,13 @@ services:
       # Override here if MC Dockerfile pins a different UID.
       MC_USER_UID: ${MC_USER_UID:-1001}
       MC_USER_GID: ${MC_USER_GID:-1001}
+      # CONN-0222: dedicated write-only AppRole for the OAuth writeback watcher.
+      # Values are operator-provisioned (H1) — inject via .env or host env at deploy time.
+      # Distinct from VAULT_ROLE_ID/VAULT_SECRET_ID (read-role, consumed by entrypoint only).
+      # Until H1 is executed, the writeback watcher exits with a warning and the
+      # sidecar continues normally (fail-open on writeback).
+      CODEX_WRITEBACK_ROLE_ID: ${CODEX_WRITEBACK_ROLE_ID:-}
+      CODEX_WRITEBACK_SECRET_ID: ${CODEX_WRITEBACK_SECRET_ID:-}
     # CONN-0068 F-8/F-10: per-container tmpfs cannot be shared with the
     # model-connector container that actually spawns the codex binary. Bind a
     # host /dev/shm path (Linux tmpfs by default) so both containers see the
