@@ -26,6 +26,13 @@ set -euo pipefail
 
 log() { printf '[entrypoint] %s\n' "$*" >&2; }
 
+# Append a sentinel event to ${CODEX_HOME}/.metrics-sentinel for MC /metrics drain.
+# Best-effort — failures are silently ignored (counter transport is non-critical).
+emit_sentinel() {
+    local sentinel_path="${CODEX_HOME:-/dev/shm/codex-auth}/.metrics-sentinel"
+    printf '%s\n' "{\"event\":\"$1\"}" >> "${sentinel_path}" 2>/dev/null || true
+}
+
 VAULT_KV_PATH="${VAULT_KV_PATH:-arcanada/prod/env/codex-cli}"
 CODEX_AUTH_STRATEGY="${CODEX_AUTH_STRATEGY:-vault-blob}"
 ALLOW_MISSING_OAUTH="${ALLOW_MISSING_OAUTH:-0}"
@@ -38,42 +45,52 @@ AUTH_TARGET="${CODEX_HOME:-/dev/shm/codex-auth}/auth.json"
 #   codex_should_materialize <auth_target> <marker_path> <vault_current_version>
 #
 # Rules:
-#   - auth_target absent          → 0 (materialize: first-boot seed)
-#   - marker absent, auth present → 1 (fail-safe: skip, don't clobber fresh token)
-#   - marker version == vault ver → 1 (skip: already at current Vault version)
-#   - vault ver > marker version  → 0 (materialize: operator re-seeded)
+#   - auth_target absent                          → 0 (materialize: first-boot seed)
+#   - marker absent, auth present, vault readable → 0 (materialize: Vault is authoritative;
+#                                                      marker absence ≠ local freshness)
+#   - marker absent, auth present, vault unknown  → 1 (fail-safe: Vault unreachable, keep local)
+#   - vault ver == marker version                 → 1 (skip: already at current Vault version)
+#   - vault ver > marker version                  → 0 (materialize: operator re-seeded)
+#   - no vault version available                  → 1 (fail-safe: Vault unreachable, keep local)
+#
+# Key behavioural change from the original M-4 rule: when the marker is absent
+# and Vault IS reachable with a readable version, we treat Vault as authoritative
+# and materialize. The old "skip to protect possibly-fresh token" logic was wrong:
+# a missing marker means we have NO evidence the local token was ever written from
+# a known Vault version, so we cannot claim it is "at least as fresh". Vault wins.
+# Genuine fail-safe only applies when Vault is unreachable / unreadable.
 # ---------------------------------------------------------------------------
 codex_should_materialize() {
     local auth_target="$1"
     local marker_path="$2"
     local vault_ver="$3"
 
-    # auth.json absent → always materialize
+    # auth.json absent → always materialize (first-boot / tmpfs wiped)
     if [ ! -f "${auth_target}" ]; then
         return 0
     fi
 
-    # auth.json present but marker absent → fail-safe: skip to protect possibly-fresh token
-    if [ ! -f "${marker_path}" ]; then
-        log "Warning: auth.json present but .vault-version marker absent (upgrade path?). Skipping overwrite (fail-safe)."
+    # No vault version available → fail-safe: cannot compare, keep local token
+    if [ -z "${vault_ver}" ]; then
+        log "Warning: Vault version unavailable, skipping overwrite (fail-safe). Local token retained."
         return 1
+    fi
+
+    # auth.json present but marker absent → Vault is authoritative (no local baseline)
+    if [ ! -f "${marker_path}" ]; then
+        log "Info: auth.json present but .vault-version marker absent. Vault reachable (ver=${vault_ver}) — materializing (Vault is authoritative)."
+        return 0
     fi
 
     local local_ver
     local_ver="$(cat "${marker_path}" 2>/dev/null)" || local_ver=""
 
-    # No vault version available → fail-safe: skip
-    if [ -z "${vault_ver}" ]; then
-        log "Warning: Vault version unavailable, skipping overwrite (fail-safe)."
-        return 1
-    fi
-
-    # Vault newer than local marker → materialize
+    # Vault newer than local marker → materialize (operator re-seeded)
     if [ "${vault_ver}" -gt "${local_ver:-0}" ] 2>/dev/null; then
         return 0
     fi
 
-    # Same or older → skip (local rotated token is at least as fresh)
+    # Same or older → skip (local rotated token is at least as fresh as Vault)
     return 1
 }
 
@@ -177,6 +194,8 @@ if codex_should_materialize "${AUTH_TARGET}" "${VAULT_VERSION_MARKER}" "${VAULT_
     fi
 
     log "OAuth blob materialised at ${AUTH_TARGET} (mode 600, tmpfs, vault-ver=${VAULT_CURRENT_VER:-unknown})"
+    # Signal to MC /metrics that a refresh_attempt occurred (token was re-seeded from Vault).
+    emit_sentinel "refresh_attempt" 
 else
     log "Skipping Vault re-seed: local auth.json is current (vault-ver=${VAULT_CURRENT_VER:-unknown}, marker=$(cat "${VAULT_VERSION_MARKER}" 2>/dev/null || echo none))."
     unset VAULT_TOKEN

@@ -40,6 +40,13 @@ set -euo pipefail
 
 log() { printf '[writeback] %s\n' "$*" >&2; }
 
+# Append a sentinel event to ${CODEX_HOME}/.metrics-sentinel for MC /metrics drain.
+# Best-effort — failures are silently ignored (counter transport is non-critical).
+emit_sentinel() {
+    local sentinel_path="${CODEX_HOME_DEFAULT:-/dev/shm/codex-auth}/.metrics-sentinel"
+    printf '%s\n' "{\"event\":\"$1\"}" >> "${sentinel_path}" 2>/dev/null || true
+}
+
 # ---------------------------------------------------------------------------
 # Argument parsing
 # ---------------------------------------------------------------------------
@@ -174,6 +181,7 @@ do_writeback() {
 
     # Other failure (Vault unreachable, policy error, etc.) — fail-closed.
     log "ERROR: Vault writeback failed (rc=${put_rc}): ${put_out}"
+    emit_sentinel "writeback_fail"
     return 1
 }
 
