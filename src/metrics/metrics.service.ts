@@ -187,4 +187,81 @@ export class MetricsService {
   getSttSchemaFailCounts(): Record<string, number> {
     return { ...this.sttSchemaFailCounts };
   }
+
+  // -------------------------------------------------------------------------
+  // Codex OAuth detection counters (CONN-0222 Phase 5)
+  // Sidecar-side signals (writeback_failures, refresh_attempts) are
+  // incremented by calling code in the sidecar entrypoint or via a sentinel
+  // file read path; MC-side signals (refresh_token_reused) are incremented
+  // directly in the error classification path.
+  // -------------------------------------------------------------------------
+  private codexWritebackFailuresTotal = 0;
+  private codexRefreshAttemptsTotal = 0;
+  private codexRefreshTokenReusedTotal = 0;
+  private codexCircuitOpenMsTotal = 0;
+
+  incrementCodexWritebackFailure(): void {
+    this.codexWritebackFailuresTotal++;
+  }
+
+  incrementCodexRefreshAttempt(): void {
+    this.codexRefreshAttemptsTotal++;
+  }
+
+  incrementCodexRefreshTokenReused(): void {
+    this.codexRefreshTokenReusedTotal++;
+  }
+
+  recordCodexCircuitOpenMs(ms: number): void {
+    this.codexCircuitOpenMsTotal += ms;
+  }
+
+  getCodexWritebackFailureCount(): number {
+    return this.codexWritebackFailuresTotal;
+  }
+
+  getCodexRefreshAttemptCount(): number {
+    return this.codexRefreshAttemptsTotal;
+  }
+
+  getCodexRefreshTokenReusedCount(): number {
+    return this.codexRefreshTokenReusedTotal;
+  }
+
+  getCodexCircuitOpenMs(): number {
+    return this.codexCircuitOpenMsTotal;
+  }
+
+  getCodexOauthCounters(): {
+    vaultWritebackFailuresTotal: number;
+    refreshAttemptsTotal: number;
+    refreshTokenReusedTotal: number;
+    circuitOpenMsTotal: number;
+  } {
+    return {
+      vaultWritebackFailuresTotal: this.codexWritebackFailuresTotal,
+      refreshAttemptsTotal: this.codexRefreshAttemptsTotal,
+      refreshTokenReusedTotal: this.codexRefreshTokenReusedTotal,
+      circuitOpenMsTotal: this.codexCircuitOpenMsTotal,
+    };
+  }
+
+  getPrometheusCodexOauth(): string {
+    return (
+      [
+        '# HELP codex_oauth_vault_writeback_failures_total Number of non-CAS Vault writeback failures',
+        '# TYPE codex_oauth_vault_writeback_failures_total counter',
+        'codex_oauth_vault_writeback_failures_total ' + String(this.codexWritebackFailuresTotal),
+        '# HELP codex_oauth_refresh_attempts_total Number of OAuth refresh attempts observed',
+        '# TYPE codex_oauth_refresh_attempts_total counter',
+        'codex_oauth_refresh_attempts_total ' + String(this.codexRefreshAttemptsTotal),
+        '# HELP codex_oauth_refresh_token_reused_total Number of refresh_token_reused errors classified',
+        '# TYPE codex_oauth_refresh_token_reused_total counter',
+        'codex_oauth_refresh_token_reused_total ' + String(this.codexRefreshTokenReusedTotal),
+        '# HELP codex_circuit_open_ms_total Total ms the Codex circuit breaker was open',
+        '# TYPE codex_circuit_open_ms_total counter',
+        'codex_circuit_open_ms_total ' + String(this.codexCircuitOpenMsTotal),
+      ].join('\n') + '\n'
+    );
+  }
 }

@@ -109,3 +109,78 @@ describe('MetricsService — STT drift counter (CONN-0103)', () => {
     expect(metrics.getSttSchemaFailCounts()).toEqual({});
   });
 });
+
+// ---------------------------------------------------------------------------
+// D-1..D-4: Codex OAuth detection metrics (CONN-0222 Phase 5)
+// ---------------------------------------------------------------------------
+describe('MetricsService — Codex OAuth detection counters (CONN-0222)', () => {
+  let metrics: MetricsService;
+
+  beforeEach(() => {
+    metrics = new MetricsService();
+  });
+
+  // D-1a: writeback failure counter increments
+  it('D-1a: incrementCodexWritebackFailure increments per call', () => {
+    metrics.incrementCodexWritebackFailure();
+    metrics.incrementCodexWritebackFailure();
+    expect(metrics.getCodexWritebackFailureCount()).toBe(2);
+  });
+
+  // D-1b: refresh_token_reused detection counter increments
+  it('D-1b: incrementCodexRefreshTokenReused increments per call', () => {
+    metrics.incrementCodexRefreshTokenReused();
+    expect(metrics.getCodexRefreshTokenReusedCount()).toBe(1);
+  });
+
+  // D-1c: refresh attempt counter increments
+  it('D-1c: incrementCodexRefreshAttempt increments per call', () => {
+    metrics.incrementCodexRefreshAttempt();
+    metrics.incrementCodexRefreshAttempt();
+    metrics.incrementCodexRefreshAttempt();
+    expect(metrics.getCodexRefreshAttemptCount()).toBe(3);
+  });
+
+  // D-1d: counters start at zero
+  it('D-1d: all Codex OAuth counters start at zero', () => {
+    expect(metrics.getCodexWritebackFailureCount()).toBe(0);
+    expect(metrics.getCodexRefreshTokenReusedCount()).toBe(0);
+    expect(metrics.getCodexRefreshAttemptCount()).toBe(0);
+  });
+
+  // D-2: getCodexOauthCounters returns all four signals
+  it('D-2: getCodexOauthCounters returns all four counters', () => {
+    metrics.incrementCodexWritebackFailure();
+    metrics.incrementCodexRefreshAttempt();
+    metrics.incrementCodexRefreshAttempt();
+    metrics.incrementCodexRefreshTokenReused();
+    const counters = metrics.getCodexOauthCounters();
+    expect(counters.vaultWritebackFailuresTotal).toBe(1);
+    expect(counters.refreshAttemptsTotal).toBe(2);
+    expect(counters.refreshTokenReusedTotal).toBe(1);
+  });
+
+  // D-3: CB-state seconds tracking
+  it('D-3: recordCodexCircuitOpenMs accumulates milliseconds', () => {
+    metrics.recordCodexCircuitOpenMs(5000);
+    metrics.recordCodexCircuitOpenMs(3000);
+    expect(metrics.getCodexCircuitOpenMs()).toBe(8000);
+  });
+
+  it('D-3b: CB open ms starts at zero', () => {
+    expect(metrics.getCodexCircuitOpenMs()).toBe(0);
+  });
+
+  // D-4: getPrometheusCodexOauth returns Prometheus text with all series
+  it('D-4: getPrometheusCodexOauth includes all four metric series names', () => {
+    metrics.incrementCodexWritebackFailure();
+    metrics.incrementCodexRefreshAttempt();
+    metrics.incrementCodexRefreshTokenReused();
+    metrics.recordCodexCircuitOpenMs(1000);
+    const text = metrics.getPrometheusCodexOauth();
+    expect(text).toContain('codex_oauth_vault_writeback_failures_total');
+    expect(text).toContain('codex_oauth_refresh_attempts_total');
+    expect(text).toContain('codex_oauth_refresh_token_reused_total');
+    expect(text).toContain('codex_circuit_open_ms_total');
+  });
+});
