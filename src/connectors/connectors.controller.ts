@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { ConnectorsService } from './connectors.service';
 import { ConnectorResponse } from './interfaces/connector.interface';
@@ -11,6 +21,7 @@ import {
   imageGenerateRequestSchema,
   ImageGenerateRequestDto,
 } from './dto/execute.dto';
+import { CatalogFiltersSchema } from './dto/catalog.dto';
 import { ImageGenerationService } from './image-generation/image-generation.service';
 import { IMAGE_CAPABILITIES } from './image-generation/capabilities';
 import { CascadeRouterService } from './cascade/cascade-router.service';
@@ -43,6 +54,30 @@ export class ConnectorsController {
   @Get('connectors')
   async listConnectors() {
     return this.connectorsService.listAll();
+  }
+
+  /**
+   * GET /connectors/catalog — Universal model catalog across all connectors.
+   *
+   * Query params:
+   *   free=true       Return only free-tier models.
+   *   cheap=true      Return free + low-cost models (price_multiplier <= 1).
+   *   capability=X    Return models whose connector supports X.
+   *                   X ∈ supportsJsonSchema | supportsTools | supportsStreaming
+   *
+   * Route must appear before /connectors/:name/status so Fastify does not
+   * match the literal segment "catalog" as a :name parameter.
+   */
+  @Get('connectors/catalog')
+  async getCatalog(@Query() rawQuery: Record<string, string>) {
+    const parsed = CatalogFiltersSchema.safeParse(rawQuery);
+    if (!parsed.success) {
+      throw new HttpException(
+        { error: 'validation_error', details: parsed.error.flatten() },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return this.connectorsService.getCatalog(parsed.data);
   }
 
   @Get('connectors/:name/status')
