@@ -1,7 +1,7 @@
 // CONN-0223 — Cascade router: ordered free→paid connector fallback.
 // NO fetch/axios/http in this file — all HTTP is delegated to ConnectorsService.
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { ConnectorsService } from '../connectors.service';
 import { MetricsService } from '../../metrics/metrics.service';
 import {
@@ -26,6 +26,7 @@ export class CascadeRouterService {
   private budgetResetDate: string = todayUtc();
 
   constructor(
+    @Inject(forwardRef(() => ConnectorsService))
     private readonly connectorsService: ConnectorsService,
     private readonly metricsService: MetricsService,
   ) {}
