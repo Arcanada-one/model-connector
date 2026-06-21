@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Model Connector watcher dead-man every 30 seconds
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=30s
+AccuracySec=1s
+Unit=model-connector-watcher-deadman.service
+
+[Install]
+WantedBy=timers.target

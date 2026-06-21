@@ -64,6 +64,7 @@ export const envSchema = z
     SPEECH_PROXY_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).default(30_000),
 
     ADMIN_TOKEN: z.string().min(32).optional(),
+    WATCHER_REPAIR_TOKEN: z.string().min(32).optional(),
 
     // CONN-0052: Image Generation providers
     // Vertex AI (Google Cloud)
