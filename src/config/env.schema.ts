@@ -43,6 +43,10 @@ export const envSchema = z
     CURSOR_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(1),
     GEMINI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
     CODEX_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
+    // CONN-0223: declared here so the paid-tier boot guard (superRefine below) can
+    // inspect it. The OpenRouter connector also reads it directly from process.env
+    // (pre-schema path) — this declaration brings it into the validated schema.
+    OPENROUTER_API_KEY: z.string().optional(),
     OPENROUTER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     GROQ_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     GROK_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
@@ -144,6 +148,21 @@ export const envSchema = z
     STT_LOCAL_WHISPER_MODEL: z.string().default('Systran/faster-distil-whisper-large-v3'),
     STT_LOCAL_WHISPER_TIMEOUT_MS: z.coerce.number().min(1_000).max(600_000).default(300_000),
     STT_LOCAL_WHISPER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(1),
+    // CONN-0223: OpenModel free-tier cascade
+    OPENMODEL_ENABLED: envBool.default(false),
+    OPENMODEL_API_KEY: z.string().optional(),
+    OPENMODEL_BASE_URL: z.string().url().default('https://api.openmodel.ai/v1'),
+    OPENMODEL_FREE_MODELS: z.string().default('deepseek-v4-flash'),
+    OPENMODEL_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(30_000),
+    OPENMODEL_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(2),
+    CASCADE_LOW_REASONING_ORDER: z
+      .string()
+      .default(
+        'openmodel:deepseek-v4-flash:free,openrouter:meta-llama/llama-4-maverick:free,openrouter:deepseek-v4-flash:paid',
+      ),
+    CASCADE_PAID_ENABLED: envBool.default(false),
+    CASCADE_PAID_DAILY_BUDGET_USD: z.coerce.number().min(0).max(100).default(0.17),
+    CASCADE_PAID_MODEL: z.string().default('deepseek-v4-flash'),
   })
   .superRefine((data, ctx) => {
     // CONN-0103 V-AC-8 — fail-closed boot when a provider is enabled but its API key
@@ -180,6 +199,24 @@ export const envSchema = z
           path: [keyLabel.split(' ')[0]],
         });
       }
+    }
+    // CONN-0223 — OpenModel boot-guard
+    if (data.OPENMODEL_ENABLED && !data.OPENMODEL_API_KEY) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'OPENMODEL_API_KEY required when OPENMODEL_ENABLED=true',
+        path: ['OPENMODEL_API_KEY'],
+      });
+    }
+    // CONN-0223 — Cascade paid-tier boot-guard (V-AC-10 "paid tier likewise").
+    // The default paid-tier connector is openrouter; enabling the paid tier without
+    // a key would silently fail on the first paid call.
+    if (data.CASCADE_PAID_ENABLED && !data.OPENROUTER_API_KEY) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'OPENROUTER_API_KEY required when CASCADE_PAID_ENABLED=true',
+        path: ['OPENROUTER_API_KEY'],
+      });
     }
   });
 

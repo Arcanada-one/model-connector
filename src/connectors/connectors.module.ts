@@ -12,6 +12,8 @@ import { GroqModule } from './groq/groq.module';
 import { GrokModule } from './grok/grok.module';
 import { ImageGenerationModule } from './image-generation/image-generation.module';
 import { OutputGuardModule } from './output-guard/output-guard.module';
+import { OpenModelModule } from './openmodel/openmodel.module';
+import { CascadeModule } from './cascade/cascade.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { OutputGuardModule } from './output-guard/output-guard.module';
     GrokModule,
     ImageGenerationModule,
     OutputGuardModule,
+    OpenModelModule,
+    CascadeModule,
   ],
   controllers: [ConnectorsController],
   providers: [ConnectorsService],

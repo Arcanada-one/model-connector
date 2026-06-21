@@ -157,4 +157,49 @@ describe('envSchema', () => {
       expect(config.STT_PROVIDER_OPENAI_ENABLED).toBe(false);
     });
   });
+
+  // CONN-0223 V-AC-10 — boot-guard: OpenModel + cascade paid-tier (plan Phase 2)
+  describe('CONN-0223 boot-guard (V-AC-10)', () => {
+    const base = {
+      DATABASE_URL: 'postgresql://u:p@localhost/db',
+      STT_GROQ_API_KEY: 'test-groq-key',
+    };
+
+    // OpenModel guard
+    it('rejects OPENMODEL_ENABLED=true without OPENMODEL_API_KEY', () => {
+      expect(() => validateEnv({ ...base, OPENMODEL_ENABLED: 'true' })).toThrow(
+        'Invalid environment variables',
+      );
+    });
+
+    it('accepts OPENMODEL_ENABLED=true with OPENMODEL_API_KEY set', () => {
+      expect(() =>
+        validateEnv({ ...base, OPENMODEL_ENABLED: 'true', OPENMODEL_API_KEY: 'om-test-key' }),
+      ).not.toThrow();
+    });
+
+    it('accepts OPENMODEL_ENABLED=false with no OPENMODEL_API_KEY (default off, fail-closed)', () => {
+      const config = validateEnv(base);
+      expect(config.OPENMODEL_ENABLED).toBe(false);
+      expect(config.OPENMODEL_API_KEY).toBeUndefined();
+    });
+
+    // Paid-tier guard (V-AC-10 "paid tier likewise")
+    it('rejects CASCADE_PAID_ENABLED=true without OPENROUTER_API_KEY', () => {
+      expect(() => validateEnv({ ...base, CASCADE_PAID_ENABLED: 'true' })).toThrow(
+        'Invalid environment variables',
+      );
+    });
+
+    it('accepts CASCADE_PAID_ENABLED=true with OPENROUTER_API_KEY set', () => {
+      expect(() =>
+        validateEnv({ ...base, CASCADE_PAID_ENABLED: 'true', OPENROUTER_API_KEY: 'sk-or-test' }),
+      ).not.toThrow();
+    });
+
+    it('accepts CASCADE_PAID_ENABLED=false with no OPENROUTER_API_KEY (default off)', () => {
+      const config = validateEnv(base);
+      expect(config.CASCADE_PAID_ENABLED).toBe(false);
+    });
+  });
 });

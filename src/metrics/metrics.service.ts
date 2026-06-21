@@ -38,6 +38,20 @@ export interface SttMetrics {
   totalLatencyMs: number;
 }
 
+// CONN-0223 — Cascade routing observability.
+export interface CascadeMetrics {
+  totalRequests: number;
+  successCount: number;
+  exhaustedCount: number;
+  budgetExceededCount: number;
+  abortCount: number;
+  totalFallbacks: number;
+  freeTierHits: number;
+  paidTierHits: number;
+  totalCostUsd: number;
+  totalLatencyMs: number;
+}
+
 function emptySttMetrics(): SttMetrics {
   return {
     totalRequests: 0,
@@ -177,6 +191,55 @@ export class MetricsService {
         ...m,
         avgLatencyMs: m.totalRequests > 0 ? Math.round(m.totalLatencyMs / m.totalRequests) : 0,
       };
+    }
+    return result;
+  }
+
+  private cascadeMetrics = new Map<string, CascadeMetrics>();
+
+  // CONN-0223 — Cascade routing observability.
+  recordCascade(opts: {
+    connector: string;
+    model: string;
+    tier: 'free' | 'paid';
+    status: 'success' | 'exhausted' | 'budget_exceeded' | 'abort';
+    fallbackCount: number;
+    latencyMs: number;
+    costUsd: number;
+    freeTierHit: boolean;
+  }): void {
+    const key = `cascade:${opts.connector}:${opts.model}`;
+    if (!this.cascadeMetrics.has(key)) {
+      this.cascadeMetrics.set(key, {
+        totalRequests: 0,
+        successCount: 0,
+        exhaustedCount: 0,
+        budgetExceededCount: 0,
+        abortCount: 0,
+        totalFallbacks: 0,
+        freeTierHits: 0,
+        paidTierHits: 0,
+        totalCostUsd: 0,
+        totalLatencyMs: 0,
+      });
+    }
+    const m = this.cascadeMetrics.get(key)!;
+    m.totalRequests++;
+    m.totalFallbacks += opts.fallbackCount;
+    m.totalCostUsd += opts.costUsd;
+    m.totalLatencyMs += opts.latencyMs;
+    if (opts.freeTierHit) m.freeTierHits++;
+    if (opts.tier === 'paid') m.paidTierHits++;
+    if (opts.status === 'success') m.successCount++;
+    else if (opts.status === 'exhausted') m.exhaustedCount++;
+    else if (opts.status === 'budget_exceeded') m.budgetExceededCount++;
+    else if (opts.status === 'abort') m.abortCount++;
+  }
+
+  getAllCascade(): Record<string, CascadeMetrics> {
+    const result: Record<string, CascadeMetrics> = {};
+    for (const [name, m] of this.cascadeMetrics) {
+      result[name] = { ...m };
     }
     return result;
   }

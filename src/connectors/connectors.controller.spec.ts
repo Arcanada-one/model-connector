@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { HttpException } from '@nestjs/common';
 import { ConnectorsController } from './connectors.controller';
 import { ConnectorsService } from './connectors.service';
 import type { ImageGenerationService } from './image-generation/image-generation.service';
+import type { CascadeRouterService } from './cascade/cascade-router.service';
+import { CascadeExhaustedError, CascadeBudgetExceededError } from './cascade/cascade.errors';
 
 // ─── Mock env.schema to avoid DATABASE_URL requirement ───────────────────────
 vi.mock('@nestjs/bullmq', () => ({
@@ -22,12 +25,18 @@ describe('ConnectorsController', () => {
     processRequest: vi.fn(),
   } as unknown as ImageGenerationService;
 
+  // CONN-0223 F3 — cascade router mock (plan Phase 4)
+  const mockCascadeService = {
+    execute: vi.fn(),
+  } as unknown as CascadeRouterService;
+
   let controller: ConnectorsController;
 
   beforeEach(() => {
     controller = new ConnectorsController(
       mockService as unknown as ConnectorsService,
       mockImageService,
+      mockCascadeService,
     );
     vi.clearAllMocks();
   });
@@ -56,6 +65,96 @@ describe('ConnectorsController', () => {
     const result = await controller.executeUniversal({ connector: 'test', prompt: 'hi' }, req);
     expect(result.status).toBe('success');
     expect(mockService.execute).toHaveBeenCalledWith('test', { prompt: 'hi' }, 'key-1');
+  });
+
+  // ─── CONN-0223 F3 — Cascade routing via profile (plan Phase 4) ───────────────
+
+  describe('profile routing (cascade dispatch)', () => {
+    const successResponse = {
+      id: 'casc-1',
+      connector: 'openmodel',
+      model: 'deepseek-v4-flash',
+      result: 'ok',
+      usage: { inputTokens: 5, outputTokens: 5, totalTokens: 10, costUsd: 0 },
+      latencyMs: 200,
+      status: 'success' as const,
+    };
+
+    it('dispatches profile:"low-reasoning" to CascadeRouterService', async () => {
+      vi.mocked(mockCascadeService.execute).mockResolvedValue(successResponse);
+      const req = { apiKey: { id: 'key-2' } };
+      const result = await controller.executeUniversal(
+        { profile: 'low-reasoning', prompt: 'classify this' } as Parameters<
+          typeof controller.executeUniversal
+        >[0],
+        req,
+      );
+      expect(result.status).toBe('success');
+      expect(mockCascadeService.execute).toHaveBeenCalledWith(
+        'low-reasoning',
+        { prompt: 'classify this' },
+        'key-2',
+      );
+      // ConnectorsService must NOT be called on the cascade path
+      expect(mockService.execute).not.toHaveBeenCalled();
+    });
+
+    it('maps CascadeExhaustedError to HTTP 503 with cascade_exhausted body', async () => {
+      vi.mocked(mockCascadeService.execute).mockRejectedValue(
+        new CascadeExhaustedError([
+          { connector: 'openmodel', model: 'deepseek-v4-flash', errorType: 'rate_limited' },
+        ]),
+      );
+      const req = { apiKey: { id: 'key-2' } };
+      await expect(
+        controller.executeUniversal(
+          { profile: 'low-reasoning', prompt: 'hi' } as Parameters<
+            typeof controller.executeUniversal
+          >[0],
+          req,
+        ),
+      ).rejects.toMatchObject({
+        status: 503,
+        response: expect.objectContaining({ error: 'cascade_exhausted' }),
+      });
+    });
+
+    it('maps CascadeBudgetExceededError to HTTP 503 with budget_exceeded body', async () => {
+      vi.mocked(mockCascadeService.execute).mockRejectedValue(
+        new CascadeBudgetExceededError(0.17, 0.17),
+      );
+      const req = { apiKey: { id: 'key-2' } };
+      await expect(
+        controller.executeUniversal(
+          { profile: 'low-reasoning', prompt: 'hi' } as Parameters<
+            typeof controller.executeUniversal
+          >[0],
+          req,
+        ),
+      ).rejects.toMatchObject({
+        status: 503,
+        response: expect.objectContaining({ error: 'budget_exceeded' }),
+      });
+    });
+
+    it('re-throws unexpected errors from the cascade without wrapping in HttpException', async () => {
+      vi.mocked(mockCascadeService.execute).mockRejectedValue(new Error('unexpected'));
+      const req = { apiKey: { id: 'key-2' } };
+      let caught: unknown;
+      try {
+        await controller.executeUniversal(
+          { profile: 'low-reasoning', prompt: 'hi' } as Parameters<
+            typeof controller.executeUniversal
+          >[0],
+          req,
+        );
+      } catch (err) {
+        caught = err;
+      }
+      expect(caught).toBeInstanceOf(Error);
+      expect((caught as Error).message).toBe('unexpected');
+      expect(caught instanceof HttpException).toBe(false);
+    });
   });
 
   // ─── Image capabilities endpoint ─────────────────────────────────────────────

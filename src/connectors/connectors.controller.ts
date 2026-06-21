@@ -13,6 +13,8 @@ import {
 } from './dto/execute.dto';
 import { ImageGenerationService } from './image-generation/image-generation.service';
 import { IMAGE_CAPABILITIES } from './image-generation/capabilities';
+import { CascadeRouterService } from './cascade/cascade-router.service';
+import { CascadeExhaustedError, CascadeBudgetExceededError } from './cascade/cascade.errors';
 
 interface AuthenticatedRequest extends FastifyRequest {
   apiKey?: { id: string };
@@ -35,6 +37,7 @@ export class ConnectorsController {
   constructor(
     private readonly connectorsService: ConnectorsService,
     private readonly imageGenerationService: ImageGenerationService,
+    private readonly cascadeRouterService: CascadeRouterService,
   ) {}
 
   @Get('connectors')
@@ -64,8 +67,36 @@ export class ConnectorsController {
     @Req() req: AuthenticatedRequest,
   ) {
     const apiKeyId = req.apiKey?.id ?? 'unknown';
+
+    if (body.profile != null) {
+      const { profile, ...request } = body;
+      try {
+        const response = await this.cascadeRouterService.execute(profile, request, apiKeyId);
+        return this.mapResponseStatus(response);
+      } catch (err) {
+        if (err instanceof CascadeExhaustedError) {
+          throw new HttpException(
+            { error: 'cascade_exhausted', tried: err.tried, message: err.message },
+            HttpStatus.SERVICE_UNAVAILABLE,
+          );
+        }
+        if (err instanceof CascadeBudgetExceededError) {
+          throw new HttpException(
+            {
+              error: 'budget_exceeded',
+              dailyCostUsd: err.dailyCostUsd,
+              limitUsd: err.limitUsd,
+              message: err.message,
+            },
+            HttpStatus.SERVICE_UNAVAILABLE,
+          );
+        }
+        throw err;
+      }
+    }
+
     const { connector, ...request } = body;
-    const response = await this.connectorsService.execute(connector, request, apiKeyId);
+    const response = await this.connectorsService.execute(connector!, request, apiKeyId);
     return this.mapResponseStatus(response);
   }
 
