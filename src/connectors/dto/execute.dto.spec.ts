@@ -178,3 +178,41 @@ describe('imageGenerateRequestSchema', () => {
     });
   });
 });
+
+// CONN-0223 — profile field + XOR validation
+describe('executeRequestSchema (CONN-0223 profile XOR connector)', () => {
+  it('accepts connector without profile', () => {
+    const r = executeRequestSchema.safeParse({ connector: 'openrouter', prompt: 'hello' });
+    expect(r.success).toBe(true);
+  });
+
+  it('accepts profile without connector', () => {
+    const r = executeRequestSchema.safeParse({ profile: 'low-reasoning', prompt: 'hello' });
+    expect(r.success).toBe(true);
+  });
+
+  it('rejects when neither connector nor profile is provided', () => {
+    const r = executeRequestSchema.safeParse({ prompt: 'hello' });
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      expect(r.error.issues.some((i) => i.message.includes('Exactly one'))).toBe(true);
+    }
+  });
+
+  it('rejects when both connector and profile are provided', () => {
+    const r = executeRequestSchema.safeParse({
+      connector: 'openrouter',
+      profile: 'low-reasoning',
+      prompt: 'hello',
+    });
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      expect(r.error.issues.some((i) => i.message.includes('mutually exclusive'))).toBe(true);
+    }
+  });
+
+  it('rejects unknown profile value', () => {
+    const r = executeRequestSchema.safeParse({ profile: 'high-reasoning', prompt: 'hello' });
+    expect(r.success).toBe(false);
+  });
+});

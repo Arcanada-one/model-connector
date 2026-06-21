@@ -116,6 +116,8 @@ export interface ConnectorCapabilities {
   supportsJsonSchema: boolean;
   supportsTools: boolean;
   maxTimeout: number;
+  // CONN-0223 — optional field for connectors that expose a free tier.
+  freeModels?: string[];
 }
 
 export interface CircuitBreakerResetEntry {
