@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { parseConfig } from '../src/config.js';
 
 const valid = {
@@ -76,5 +76,58 @@ describe('closed watcher configuration', () => {
     expect(() =>
       parseConfig({ ...valid, health: { bind_host: '0.0.0.0', port: 3911 } }, { OPSBOT_TOKEN: 'x' }),
     ).toThrow(/loopback/);
+  });
+});
+
+// ── CONN-0230: shadow prod config template (V-AC-1) ────────────────────────
+// Verifies the deployed config template at deploy/config.shadow.yaml parses
+// correctly and that all mutation toggles throw when enabled in shadow mode.
+import { readFile } from 'node:fs/promises';
+import { parse as parseYaml } from 'yaml';
+
+describe('CONN-0230 shadow prod config template (V-AC-1)', () => {
+  let raw: unknown;
+
+  beforeEach(async () => {
+    const content = await readFile(new URL('../deploy/config.shadow.yaml', import.meta.url), 'utf8');
+    raw = parseYaml(content);
+  });
+
+  it('parses shadow-safe prod config template', () => {
+    const cfg = parseConfig(raw as Parameters<typeof parseConfig>[0], { OPSBOT_TOKEN: 'test-token' });
+    expect(cfg.mode).toBe('shadow');
+    expect(cfg.recovery.circuit_reset_enabled).toBe(false);
+    expect(cfg.recovery.failover_enabled).toBe(false);
+    expect(cfg.catalog.write_enabled).toBe(false);
+    expect(cfg.observation.bounded_canary_enabled).toBe(false);
+    expect(cfg.health.bind_host).toBe('127.0.0.1');
+    expect(cfg.model_connector.base_url).toBe('https://connector.arcanada.ai');
+  });
+
+  it('rejects circuit_reset_enabled=true in prod template config', () => {
+    expect(() =>
+      parseConfig(
+        { ...(raw as object), recovery: { ...((raw as Record<string, unknown>)['recovery'] as object), circuit_reset_enabled: true } },
+        { OPSBOT_TOKEN: 'x', WATCHER_REPAIR_TOKEN: 'x'.repeat(32) },
+      ),
+    ).toThrow(/shadow/);
+  });
+
+  it('rejects failover_enabled=true in prod template config', () => {
+    expect(() =>
+      parseConfig(
+        { ...(raw as object), recovery: { ...((raw as Record<string, unknown>)['recovery'] as object), failover_enabled: true } },
+        { OPSBOT_TOKEN: 'x' },
+      ),
+    ).toThrow(/shadow/);
+  });
+
+  it('rejects catalog.write_enabled=true in prod template config', () => {
+    expect(() =>
+      parseConfig(
+        { ...(raw as object), catalog: { ...((raw as Record<string, unknown>)['catalog'] as object), write_enabled: true } },
+        { OPSBOT_TOKEN: 'x' },
+      ),
+    ).toThrow(/shadow/);
   });
 });
