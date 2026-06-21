@@ -5,8 +5,11 @@ This guide explains how to route requests through the low-cost cascade using the
 
 ## When to Use
 
+The target agent class for this profile is: **watching, simple orchestration, email checking**.
+
 Use `profile: "low-reasoning"` when:
 
+- The task belongs to the target class above (watching agents, simple orchestrators, email checkers).
 - The task does not require advanced reasoning (classification, extraction, simple Q&A).
 - You want automatic fallback across free-tier models with optional paid fallback.
 - You want cost efficiency without manually selecting a connector.

@@ -43,6 +43,10 @@ export const envSchema = z
     CURSOR_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(1),
     GEMINI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
     CODEX_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
+    // CONN-0223: declared here so the paid-tier boot guard (superRefine below) can
+    // inspect it. The OpenRouter connector also reads it directly from process.env
+    // (pre-schema path) — this declaration brings it into the validated schema.
+    OPENROUTER_API_KEY: z.string().optional(),
     OPENROUTER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     GROQ_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     GROK_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
@@ -202,6 +206,16 @@ export const envSchema = z
         code: 'custom',
         message: 'OPENMODEL_API_KEY required when OPENMODEL_ENABLED=true',
         path: ['OPENMODEL_API_KEY'],
+      });
+    }
+    // CONN-0223 — Cascade paid-tier boot-guard (V-AC-10 "paid tier likewise").
+    // The default paid-tier connector is openrouter; enabling the paid tier without
+    // a key would silently fail on the first paid call.
+    if (data.CASCADE_PAID_ENABLED && !data.OPENROUTER_API_KEY) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'OPENROUTER_API_KEY required when CASCADE_PAID_ENABLED=true',
+        path: ['OPENROUTER_API_KEY'],
       });
     }
   });
