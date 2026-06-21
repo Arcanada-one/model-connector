@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     root: './',
-    include: ['src/**/*.spec.ts'],
+    include: ['src/**/*.spec.ts', 'test/watcher/**/*.spec.ts'],
     // Exclude integration tests from default run — use pnpm test:integration instead
     exclude: ['src/**/*.integration.spec.ts', 'node_modules/**'],
     coverage: {

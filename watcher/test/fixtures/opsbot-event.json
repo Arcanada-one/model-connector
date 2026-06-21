@@ -1,0 +1,7 @@
+{
+  "category": "warning",
+  "agent": "model-connector-watcher",
+  "title": "Provider failure detected",
+  "body": "{\"provider\":\"openrouter\",\"model\":\"example/model\",\"failure_class\":\"rate_or_quota\",\"audit_ref\":\"fixture-audit-ref\"}",
+  "dedup_key": "model-connector-watcher-openrouter-example-model-rate-or-quota"
+}
