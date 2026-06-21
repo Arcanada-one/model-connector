@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **public-surface-lint no longer false-positives on the `BGE-M3` model name
+  (CONN-0228)** — the CI gate (`public-surface / public-surface-lint`) was failing
+  on `main` because the framework milestone pattern matched the trailing token of
+  the public embedding-model name `BGE-M3`, flagging 11 legitimate references
+  across `README.md` and `docs/`. This blocked merge of every PR. The repo now
+  ships a consumer-scoped `dev-tools/public-surface-forbidden.regex` (wired via the
+  workflow's `regex_file` input) whose milestone pattern is tightened so it ignores
+  hyphenated identifiers such as `BGE-M3` while still flagging standalone milestone
+  leaks. Enforced by `dev-tools/public-surface-forbidden.regex.spec.bats`.
+
 ### Added
 
 - **Prometheus surface for speech proxy (CONN-0098)** — new `GET /metrics` endpoint
