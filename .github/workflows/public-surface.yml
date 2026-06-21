@@ -14,3 +14,7 @@ jobs:
     uses: Arcanada-one/datarim/.github/workflows/public-surface-lint.yml@main
     with:
       paths: 'README.md CHANGELOG.md docs packages'
+      # CONN-0228: consumer-scoped regex override — the framework milestone
+      # pattern false-positives on the public model name `BGE-M3`. See
+      # dev-tools/public-surface-forbidden.regex for the rationale.
+      regex_file: 'dev-tools/public-surface-forbidden.regex'
