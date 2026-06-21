@@ -1,0 +1,40 @@
+# public-surface-forbidden.regex (model-connector consumer override)
+#
+# Consumer-scoped copy of the Datarim Public Surface Hygiene contract. The
+# reusable workflow (Arcanada-one/datarim/.github/workflows/public-surface-lint.yml)
+# loads this file via its `regex_file` input instead of the framework default.
+#
+# Why an override exists (CONN-0228):
+#   The framework milestone pattern `\b(M|Phase) ?[1-9][0-9]*\b` false-positives
+#   on the public, correct model name `BGE-M3` (the `M3` token of BAAI General
+#   Embedding M3). `BGE-M3` is a legitimate external identifier, not a leaked
+#   internal milestone code, so scrubbing it from the docs would degrade them.
+#   The milestone pattern here is tightened to not match `M<digit>` when it is
+#   preceded by a hyphen or alphanumeric (i.e. part of a hyphenated identifier
+#   such as `BGE-M3`), while still catching real milestone leaks (`Phase 2`,
+#   `M1`, `level M3`). See dev-tools/public-surface-forbidden.regex.spec.bats.
+#
+# Keep every other pattern byte-identical to the framework default so the only
+# behavioural difference is the tightened milestone boundary. When the framework
+# pattern is itself fixed upstream, this override can be removed and the workflow
+# reverted to the default regex.
+#
+# Format: one extended-regex pattern per non-empty, non-comment line.
+
+# Internal SDLC artefact references (PRD / creative / plans / insights /
+# reflection). Identical to framework default.
+\bPRD-[A-Z]{2,10}-[0-9]{4}\b
+\bcreative-[A-Z]{2,10}-[0-9]{4}\b
+\bplans-[A-Z]{2,10}-[0-9]{4}\b
+\binsights-[A-Z]{2,10}-[0-9]{4}\b
+\breflection-[A-Z]{2,10}-[0-9]{4}\b
+
+# Internal-only repo paths inside the canonical Datarim layout. Identical to
+# framework default.
+\bdatarim/(tasks|creative|plans|insights|reflection)/
+
+# Milestone-code references that leak phase / iteration internals. TIGHTENED
+# vs framework default: the leading `(^|[^-A-Za-z0-9])` boundary prevents a
+# match inside hyphenated identifiers like `BGE-M3` while still flagging
+# standalone milestone codes (`M1`, `Phase 2`, `level M3`).
+(^|[^-A-Za-z0-9])(M|Phase) ?[1-9][0-9]*\b
