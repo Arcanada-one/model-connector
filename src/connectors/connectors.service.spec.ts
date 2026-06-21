@@ -5,6 +5,7 @@ import { NotFoundException } from '@nestjs/common';
 import { IConnector } from './interfaces/connector.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
+import type { CatalogFilters } from './dto/catalog.dto';
 
 describe('ConnectorsService', () => {
   let service: ConnectorsService;
@@ -209,6 +210,194 @@ describe('ConnectorsService', () => {
       expect(result.status).toBe('success');
       expect(result.structured).toEqual({ sanitized: true });
       expect(result.result).toBe('{"sanitized": true}');
+    });
+  });
+
+  // CONN-0226 ------------------------------------------------------------------
+  describe('getCatalog (CONN-0226)', () => {
+    const noFilters: CatalogFilters = { free: false, cheap: false, capability: undefined };
+
+    const openmodelConnector: IConnector = {
+      name: 'openmodel',
+      type: 'api',
+      execute: vi.fn(),
+      getStatus: vi.fn().mockResolvedValue({
+        name: 'openmodel',
+        healthy: true,
+        activeJobs: 0,
+        queuedJobs: 0,
+        rateLimitStatus: 'ok',
+      }),
+      getCapabilities: vi.fn().mockReturnValue({
+        name: 'openmodel',
+        type: 'api',
+        models: ['deepseek-v4-flash', 'deepseek-r2', 'qwen3-235b'],
+        supportsStreaming: false,
+        supportsJsonSchema: true,
+        supportsTools: false,
+        maxTimeout: 120_000,
+        freeModels: ['deepseek-v4-flash'],
+      }),
+      resetCircuitBreaker: vi.fn().mockReturnValue([]),
+    };
+
+    const cliConnector: IConnector = {
+      name: 'claude-code',
+      type: 'cli',
+      execute: vi.fn(),
+      getStatus: vi.fn().mockResolvedValue({
+        name: 'claude-code',
+        healthy: true,
+        activeJobs: 0,
+        queuedJobs: 0,
+        rateLimitStatus: 'ok',
+      }),
+      getCapabilities: vi.fn().mockReturnValue({
+        name: 'claude-code',
+        type: 'cli',
+        models: ['claude-sonnet-4-5', 'claude-opus-4'],
+        supportsStreaming: false,
+        supportsJsonSchema: true,
+        supportsTools: true,
+        maxTimeout: 300_000,
+      }),
+      resetCircuitBreaker: vi.fn().mockReturnValue([]),
+    };
+
+    it('returns all models from all connectors with no filters', async () => {
+      service.register(openmodelConnector);
+      service.register(cliConnector);
+      const result = await service.getCatalog(noFilters);
+      // openmodel: 3 models; claude-code: 2 models
+      expect(result.count).toBe(5);
+      expect(result.models).toHaveLength(5);
+    });
+
+    it('sets free=true for openmodel deepseek-v4-flash (price_multiplier=0)', async () => {
+      service.register(openmodelConnector);
+      const result = await service.getCatalog(noFilters);
+      const flash = result.models.find((m) => m.model === 'deepseek-v4-flash');
+      expect(flash?.free).toBe(true);
+      expect(flash?.cheap).toBe(true);
+      expect(flash?.priceMultiplier).toBe(0);
+    });
+
+    it('sets free=false for openmodel deepseek-r2 (price_multiplier=1)', async () => {
+      service.register(openmodelConnector);
+      const result = await service.getCatalog(noFilters);
+      const r2 = result.models.find((m) => m.model === 'deepseek-r2');
+      expect(r2?.free).toBe(false);
+      expect(r2?.cheap).toBe(true); // price_multiplier=1 = cheap
+      expect(r2?.priceMultiplier).toBe(1);
+    });
+
+    it('sets priceMultiplier=null for connectors without catalogue data', async () => {
+      service.register(cliConnector);
+      const result = await service.getCatalog(noFilters);
+      for (const m of result.models) {
+        expect(m.priceMultiplier).toBeNull();
+      }
+    });
+
+    it('sets rateLimits=null for all models (no connector exposes RPM/TPM)', async () => {
+      service.register(openmodelConnector);
+      const result = await service.getCatalog(noFilters);
+      for (const m of result.models) {
+        expect(m.rateLimits).toBeNull();
+      }
+    });
+
+    it('free filter: returns only free models', async () => {
+      service.register(openmodelConnector);
+      service.register(cliConnector);
+      const result = await service.getCatalog({ ...noFilters, free: true });
+      expect(result.models.every((m) => m.free)).toBe(true);
+      expect(result.models.length).toBeGreaterThan(0);
+    });
+
+    it('cheap filter: returns free and low-cost models', async () => {
+      service.register(openmodelConnector);
+      const result = await service.getCatalog({ ...noFilters, cheap: true });
+      expect(result.models.every((m) => m.cheap)).toBe(true);
+      // deepseek-v4-flash (free) + deepseek-r2 (multiplier=1) qualify; qwen3-235b (multiplier=1) qualifies too
+      expect(result.models.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('capability filter supportsTools: excludes openmodel (supportsTools=false)', async () => {
+      service.register(openmodelConnector);
+      service.register(cliConnector);
+      const result = await service.getCatalog({ ...noFilters, capability: 'supportsTools' });
+      expect(result.models.every((m) => m.connector === 'claude-code')).toBe(true);
+    });
+
+    it('capability filter supportsJsonSchema: includes openmodel and claude-code', async () => {
+      service.register(openmodelConnector);
+      service.register(cliConnector);
+      const result = await service.getCatalog({ ...noFilters, capability: 'supportsJsonSchema' });
+      const connectors = new Set(result.models.map((m) => m.connector));
+      expect(connectors).toContain('openmodel');
+      expect(connectors).toContain('claude-code');
+    });
+
+    it('routing field matches connector name and model id', async () => {
+      service.register(openmodelConnector);
+      const result = await service.getCatalog(noFilters);
+      for (const m of result.models) {
+        expect(m.routing.connector).toBe(m.connector);
+        expect(m.routing.model).toBe(m.model);
+      }
+    });
+
+    it('available reflects connector health status', async () => {
+      const unhealthyConnector: IConnector = {
+        ...cliConnector,
+        name: 'unhealthy',
+        getStatus: vi.fn().mockResolvedValue({
+          name: 'unhealthy',
+          healthy: false,
+          activeJobs: 0,
+          queuedJobs: 0,
+          rateLimitStatus: 'ok',
+        }),
+      };
+      service.register(unhealthyConnector);
+      const result = await service.getCatalog(noFilters);
+      expect(result.models.every((m) => m.available === false)).toBe(true);
+    });
+
+    it('getStatus failure is handled gracefully (available=false)', async () => {
+      const failingStatusConnector: IConnector = {
+        ...cliConnector,
+        name: 'failing-status',
+        getStatus: vi.fn().mockRejectedValue(new Error('binary not found')),
+      };
+      service.register(failingStatusConnector);
+      const result = await service.getCatalog(noFilters);
+      const failModels = result.models.filter((m) => m.connector === 'failing-status');
+      expect(failModels.every((m) => m.available === false)).toBe(true);
+    });
+
+    it('returns generatedAt as valid ISO-8601 string', async () => {
+      service.register(openmodelConnector);
+      const result = await service.getCatalog(noFilters);
+      expect(() => new Date(result.generatedAt)).not.toThrow();
+      expect(new Date(result.generatedAt).toISOString()).toBe(result.generatedAt);
+    });
+
+    it('count matches models array length', async () => {
+      service.register(openmodelConnector);
+      const result = await service.getCatalog(noFilters);
+      expect(result.count).toBe(result.models.length);
+    });
+
+    it('capabilities field mirrors connector caps', async () => {
+      service.register(openmodelConnector);
+      const result = await service.getCatalog(noFilters);
+      for (const m of result.models) {
+        expect(m.capabilities.supportsJsonSchema).toBe(true);
+        expect(m.capabilities.supportsStreaming).toBe(false);
+        expect(m.capabilities.supportsTools).toBe(false);
+      }
     });
   });
 

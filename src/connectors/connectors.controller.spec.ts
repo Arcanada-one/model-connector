@@ -5,6 +5,7 @@ import { ConnectorsService } from './connectors.service';
 import type { ImageGenerationService } from './image-generation/image-generation.service';
 import type { CascadeRouterService } from './cascade/cascade-router.service';
 import { CascadeExhaustedError, CascadeBudgetExceededError } from './cascade/cascade.errors';
+import type { CatalogResponse } from './dto/catalog.dto';
 
 // ─── Mock env.schema to avoid DATABASE_URL requirement ───────────────────────
 vi.mock('@nestjs/bullmq', () => ({
@@ -13,10 +14,29 @@ vi.mock('@nestjs/bullmq', () => ({
 }));
 
 describe('ConnectorsController', () => {
+  const mockCatalogResponse: CatalogResponse = {
+    models: [
+      {
+        connector: 'openmodel',
+        model: 'deepseek-v4-flash',
+        free: true,
+        cheap: true,
+        priceMultiplier: 0,
+        rateLimits: null,
+        capabilities: { supportsStreaming: false, supportsJsonSchema: true, supportsTools: false },
+        routing: { connector: 'openmodel', model: 'deepseek-v4-flash' },
+        available: true,
+      },
+    ],
+    generatedAt: new Date().toISOString(),
+    count: 1,
+  };
+
   const mockService = {
     listAll: vi.fn().mockResolvedValue([{ name: 'test', type: 'cli', capabilities: {} }]),
     getStatus: vi.fn().mockResolvedValue({ name: 'test', healthy: true }),
     execute: vi.fn().mockResolvedValue({ id: '1', status: 'success', result: 'ok' }),
+    getCatalog: vi.fn().mockResolvedValue(mockCatalogResponse),
   };
 
   const mockImageService = {
@@ -207,6 +227,73 @@ describe('ConnectorsController', () => {
       expect(providers).toContain('vertex');
       expect(providers).toContain('replicate');
       expect(providers).toContain('openai-images');
+    });
+  });
+
+  // ─── CONN-0226 — GET /connectors/catalog ─────────────────────────────────────
+
+  describe('GET /connectors/catalog', () => {
+    beforeEach(() => {
+      vi.mocked(mockService.getCatalog).mockResolvedValue(mockCatalogResponse);
+    });
+
+    it('returns catalog with count and generatedAt when no filters applied', async () => {
+      const result = await controller.getCatalog({});
+      expect(result.count).toBe(1);
+      expect(result.generatedAt).toBeDefined();
+      expect(result.models).toHaveLength(1);
+      expect(mockService.getCatalog).toHaveBeenCalledOnce();
+    });
+
+    it('passes free=true filter through to service', async () => {
+      await controller.getCatalog({ free: 'true' });
+      expect(mockService.getCatalog).toHaveBeenCalledWith(expect.objectContaining({ free: true }));
+    });
+
+    it('passes cheap=true filter through to service', async () => {
+      await controller.getCatalog({ cheap: 'true' });
+      expect(mockService.getCatalog).toHaveBeenCalledWith(expect.objectContaining({ cheap: true }));
+    });
+
+    it('passes capability filter through to service', async () => {
+      await controller.getCatalog({ capability: 'supportsJsonSchema' });
+      expect(mockService.getCatalog).toHaveBeenCalledWith(
+        expect.objectContaining({ capability: 'supportsJsonSchema' }),
+      );
+    });
+
+    it('returns 400 for unknown capability value', async () => {
+      await expect(controller.getCatalog({ capability: 'supportsUnicorns' })).rejects.toMatchObject(
+        { status: 400 },
+      );
+    });
+
+    it('returns models with connector, model, free, cheap, rateLimits, routing fields', async () => {
+      const result = await controller.getCatalog({});
+      const model = result.models[0];
+      expect(model.connector).toBe('openmodel');
+      expect(model.model).toBe('deepseek-v4-flash');
+      expect(model.free).toBe(true);
+      expect(model.cheap).toBe(true);
+      expect(model.rateLimits).toBeNull();
+      expect(model.routing.connector).toBe('openmodel');
+      expect(model.routing.model).toBe('deepseek-v4-flash');
+    });
+
+    it('returns 400 for invalid filter combination (unknown capability type)', async () => {
+      let caught: unknown;
+      try {
+        await controller.getCatalog({ capability: 'invalidValue' as 'supportsTools' });
+      } catch (err) {
+        caught = err;
+      }
+      expect(caught).toBeInstanceOf(HttpException);
+      expect((caught as HttpException).getStatus()).toBe(400);
+    });
+
+    it('free=1 is treated as truthy filter', async () => {
+      await controller.getCatalog({ free: '1' });
+      expect(mockService.getCatalog).toHaveBeenCalledWith(expect.objectContaining({ free: true }));
     });
   });
 });

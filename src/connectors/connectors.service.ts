@@ -17,6 +17,8 @@ import { getConfig } from '../config/env.schema';
 import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import type { OutputGuardReport } from './output-guard/types';
+import { OPENMODEL_CATALOGUE } from './openmodel/openmodel.catalogue';
+import type { CatalogFilters, CatalogModelEntry, CatalogResponse } from './dto/catalog.dto';
 
 // CONN-0089: callers may pass guard-only fields alongside the base request.
 export type ServiceExecuteRequest = ConnectorRequest & {
@@ -75,6 +77,94 @@ export class ConnectorsService {
       type: c.type,
       capabilities: c.getCapabilities(),
     }));
+  }
+
+  /**
+   * CONN-0226 — Build a catalog of all models across registered connectors.
+   *
+   * Price / free detection strategy per connector:
+   *  - openmodel: uses OPENMODEL_CATALOGUE price_multiplier (0 = free).
+   *  - all connectors: if freeModels[] is present on capabilities, those
+   *    model ids are marked free regardless of catalogue.
+   *  - connectors that expose no price data → priceMultiplier: null.
+   *
+   * Rate limits (RPM/TPM): no connector currently exposes these; always null.
+   * Never invent values — callers must treat null as "unknown".
+   */
+  async getCatalog(filters: CatalogFilters): Promise<CatalogResponse> {
+    const entries: CatalogModelEntry[] = [];
+
+    for (const connector of this.connectors.values()) {
+      const caps = connector.getCapabilities();
+      let status: ConnectorStatus;
+      try {
+        status = await connector.getStatus();
+      } catch {
+        status = {
+          name: connector.name,
+          healthy: false,
+          activeJobs: 0,
+          queuedJobs: 0,
+          rateLimitStatus: 'ok',
+        };
+      }
+
+      const available = status.healthy;
+      const freeModelSet = new Set<string>(caps.freeModels ?? []);
+
+      for (const model of caps.models) {
+        const priceMultiplier = this.resolvePrice(connector.name, model);
+        const free = freeModelSet.has(model) || (priceMultiplier !== null && priceMultiplier === 0);
+        const cheap = free || (priceMultiplier !== null && priceMultiplier <= 1);
+
+        // Apply filters
+        if (filters.free && !free) continue;
+        if (filters.cheap && !cheap) continue;
+        if (filters.capability) {
+          const capKey = filters.capability as keyof typeof caps;
+          if (!caps[capKey]) continue;
+        }
+
+        entries.push({
+          connector: connector.name,
+          model,
+          free,
+          cheap,
+          priceMultiplier,
+          // Rate limits: no connector exposes live RPM/TPM data yet.
+          rateLimits: null,
+          capabilities: {
+            supportsStreaming: caps.supportsStreaming,
+            supportsJsonSchema: caps.supportsJsonSchema,
+            supportsTools: caps.supportsTools,
+          },
+          routing: {
+            connector: connector.name,
+            model,
+          },
+          available,
+        });
+      }
+    }
+
+    return {
+      models: entries,
+      generatedAt: new Date().toISOString(),
+      count: entries.length,
+    };
+  }
+
+  /**
+   * Resolve a price multiplier for a given connector + model combination.
+   * Returns null when no price data is available for this connector.
+   * Currently only openmodel exposes structured price data via OPENMODEL_CATALOGUE.
+   */
+  private resolvePrice(connectorName: string, model: string): number | null {
+    if (connectorName === 'openmodel') {
+      const entry = OPENMODEL_CATALOGUE.find((e) => e.id === model);
+      return entry !== undefined ? entry.price_multiplier : null;
+    }
+    return null;
   }
 
   async getStatus(name: string): Promise<ConnectorStatus> {
