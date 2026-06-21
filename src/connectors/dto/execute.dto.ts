@@ -27,7 +27,7 @@ export type ContentBlock = z.infer<typeof ContentBlockSchema>;
 // Base shape WITHOUT refinement — refinement is attached after `.omit()` so the
 // per-connector variant can be derived (Zod v4 forbids omit on refined schemas).
 const executeRequestBaseShape = {
-  connector: z.string().min(1).max(50),
+  connector: z.string().min(1).max(50).optional(),
   prompt: z.union([z.string().min(1).max(100_000), z.array(ContentBlockSchema).min(1).max(20)]),
   model: z.string().max(100).optional(),
   systemPrompt: z.string().max(100_000).optional(),
@@ -39,6 +39,8 @@ const executeRequestBaseShape = {
   responseFormat: z.object({ type: z.enum(['json_object', 'text']) }).optional(),
   timeout: z.number().int().min(5_000).max(600_000).optional(),
   extra: z.record(z.string(), z.unknown()).optional(),
+  // CONN-0223 — cascade profile: mutually exclusive with connector.
+  profile: z.enum(['low-reasoning']).optional(),
   // CONN-0089 output-guard: opt-in structured-output validate-and-repair
   output_format: z.enum(['json', 'yaml', 'toml', 'python', 'auto']).optional(),
   schema: z.record(z.string(), z.unknown()).optional(),
@@ -62,7 +64,27 @@ const schemaSizeRefine = (
   }
 };
 
-export const executeRequestSchema = z.object(executeRequestBaseShape).superRefine(schemaSizeRefine);
+export const executeRequestSchema = z
+  .object(executeRequestBaseShape)
+  .superRefine(schemaSizeRefine)
+  .superRefine((val, ctx) => {
+    const hasConnector = val.connector != null && val.connector !== '';
+    const hasProfile = val.profile != null;
+    if (!hasConnector && !hasProfile) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['connector'],
+        message: 'Exactly one of connector or profile is required',
+      });
+    }
+    if (hasConnector && hasProfile) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['profile'],
+        message: 'connector and profile are mutually exclusive',
+      });
+    }
+  });
 
 export type ExecuteRequestDto = z.infer<typeof executeRequestSchema>;
 
