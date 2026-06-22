@@ -197,6 +197,11 @@ export class GeminiConnector extends BaseCliConnector {
       name: 'gemini',
       type: 'cli',
       models: ['gemini-2.5-flash', 'gemini-3-flash-preview', 'gemini-2.5-flash-lite'],
+      // CONN-0233 — reviewed 2026-06-22: Gemini CLI uses Google AI Studio OAuth.
+      // The CLI is free-tier (rate-limited via AI Studio free quota).
+      // All models in this connector are accessible via the free CLI tier.
+      // Source: https://ai.google.dev/gemini-api/docs/models (AI Studio free tier).
+      freeModels: ['gemini-2.5-flash', 'gemini-3-flash-preview', 'gemini-2.5-flash-lite'],
       supportsStreaming: false,
       supportsJsonSchema: false,
       supportsTools: true,

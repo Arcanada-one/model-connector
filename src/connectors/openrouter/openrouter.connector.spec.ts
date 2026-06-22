@@ -268,6 +268,75 @@ describe('OpenRouterConnector', () => {
       expect(caps.supportsTools).toBe(true);
       expect(caps.maxTimeout).toBe(300_000);
     });
+
+    // CONN-0233 — free-detection: OpenRouter dynamic fetch
+    it('should expose freeModels[] (empty before refreshFreeModels is called)', () => {
+      const caps = connector.getCapabilities();
+      // Before refresh: freeModels is defined as an empty array
+      expect(Array.isArray(caps.freeModels)).toBe(true);
+    });
+
+    it('refreshFreeModels: parses pricing=0 models as free', async () => {
+      // Fixture: 3 models — two free (pricing or :free suffix), one paid
+      const modelsApiFixture = {
+        data: [
+          {
+            id: 'google/gemma-4-31b-it:free',
+            pricing: { prompt: '0', completion: '0' },
+          },
+          {
+            id: 'nvidia/nemotron-3-nano:free',
+            pricing: { prompt: '0', completion: '0' },
+          },
+          {
+            id: 'openai/gpt-4o',
+            pricing: { prompt: '0.0025', completion: '0.01' },
+          },
+        ],
+      };
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(modelsApiFixture),
+      });
+
+      await connector.refreshFreeModels();
+      const caps = connector.getCapabilities();
+
+      expect(caps.freeModels).toContain('google/gemma-4-31b-it:free');
+      expect(caps.freeModels).toContain('nvidia/nemotron-3-nano:free');
+      expect(caps.freeModels).not.toContain('openai/gpt-4o');
+      // Free models must also appear in caps.models
+      expect(caps.models).toContain('google/gemma-4-31b-it:free');
+      expect(caps.models).toContain('nvidia/nemotron-3-nano:free');
+    });
+
+    it('refreshFreeModels: treats :free-suffix models as free even if pricing missing', async () => {
+      const modelsApiFixture = {
+        data: [
+          { id: 'some/model:free' }, // no pricing field
+          { id: 'another/model', pricing: null }, // null pricing
+        ],
+      };
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(modelsApiFixture),
+      });
+
+      await connector.refreshFreeModels();
+      const caps = connector.getCapabilities();
+      expect(caps.freeModels).toContain('some/model:free');
+      expect(caps.freeModels).not.toContain('another/model');
+    });
+
+    it('refreshFreeModels: tolerates API failure gracefully (freeModels stays [])', async () => {
+      fetchSpy.mockRejectedValueOnce(new Error('Network error'));
+
+      await expect(connector.refreshFreeModels()).resolves.not.toThrow();
+      const caps = connector.getCapabilities();
+      expect(Array.isArray(caps.freeModels)).toBe(true);
+    });
   });
 
   // --- ARCA-0011 multi-modal (ContentBlock[] prompt forwarding) ---

@@ -205,5 +205,16 @@ describe('GeminiConnector', () => {
       expect(caps.supportsTools).toBe(true);
       expect(caps.maxTimeout).toBe(600_000);
     });
+
+    // CONN-0233 — free-detection: Gemini CLI is free via Google OAuth (AI Studio).
+    // All models in the connector are accessible via the free CLI tier.
+    it('should expose freeModels[] covering all Gemini CLI models', () => {
+      const caps = connector.getCapabilities();
+      expect(Array.isArray(caps.freeModels)).toBe(true);
+      expect((caps.freeModels ?? []).length).toBeGreaterThanOrEqual(1);
+      for (const m of caps.freeModels ?? []) {
+        expect(caps.models).toContain(m);
+      }
+    });
   });
 });
