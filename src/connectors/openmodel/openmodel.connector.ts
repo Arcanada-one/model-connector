@@ -28,11 +28,27 @@ const DEFAULT_MODEL = 'deepseek-v4-flash';
 // Required by Anthropic protocol: max_tokens must always be present in the request.
 const DEFAULT_MAX_TOKENS = 4096;
 
+// CONN-0236 — offline/CI fallback. The live OpenModel /v1/models endpoint returns
+// ~32 models (operator-verified on Mac, 2026-06-23); refreshModels() fetches the
+// full list on boot where OPENMODEL_API_KEY is present. These three are the
+// historically-shipped, cited ids (CONN-0223) kept as the static floor.
+const OPENMODEL_STATIC_MODELS = ['deepseek-v4-flash', 'deepseek-r2', 'qwen3-235b'];
+
 export class OpenModelConnector extends BaseApiConnector {
   readonly name = 'openmodel';
 
   protected getBaseUrl(): string {
     return process.env.OPENMODEL_BASE_URL || 'https://api.openmodel.ai/v1';
+  }
+
+  // CONN-0236 — OpenModel exposes an OpenAI/Anthropic-compatible model listing at
+  // `{baseUrl}/models` (baseUrl already ends in /v1 → https://api.openmodel.ai/v1/models).
+  protected getModelsUrl(): string {
+    return `${this.getBaseUrl()}/models`;
+  }
+
+  protected getStaticModels(): string[] {
+    return OPENMODEL_STATIC_MODELS;
   }
 
   protected getTimeout(): number {
@@ -107,7 +123,8 @@ export class OpenModelConnector extends BaseApiConnector {
     return {
       name: 'openmodel',
       type: 'api',
-      models: ['deepseek-v4-flash', 'deepseek-r2', 'qwen3-235b'],
+      // CONN-0236 — static 3 until refreshModels() fetches the live ~32.
+      models: this.dynamicModels,
       supportsStreaming: false,
       supportsJsonSchema: true,
       supportsTools: false,

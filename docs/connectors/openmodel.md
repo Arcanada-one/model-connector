@@ -25,6 +25,12 @@ is the free tier. The free model list is configurable via `OPENMODEL_FREE_MODELS
 
 ## Models
 
+> **Dynamic (CONN-0236).** The list below is the static **offline/CI fallback**.
+> At boot the connector fetches `GET https://api.openmodel.ai/v1/models` (where
+> `OPENMODEL_API_KEY` is set) and merges the provider's full list — ~32 models,
+> operator-verified 2026-06-23 — over these three. See
+> `docs/how-to/catalog-endpoint.md` § "Model-list source".
+
 | Model | Free |
 |---|---|
 | `deepseek-v4-flash` | Yes |

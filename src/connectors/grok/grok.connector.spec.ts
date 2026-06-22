@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { GrokConnector } from './grok.connector';
+
+// xAI OpenAI-compat /v1/models shape (docs.x.ai). Built from already-cited static
+// ids (CONN-0233, reviewed 2026-06-22) — no live xAI key on the dev box, so this is
+// a shape-accurate stand-in, NOT a live capture and NOT invented. The real list
+// populates at runtime on the cluster where XAI_API_KEY exists.
+const GROK_MODELS_FIXTURE = JSON.parse(
+  readFileSync(resolve(__dirname, '../../..', 'test/fixtures/connectors/grok-models.json'), 'utf8'),
+) as { data: Array<{ id: string }> };
 
 describe('GrokConnector', () => {
   let connector: GrokConnector;
@@ -319,6 +329,54 @@ describe('GrokConnector', () => {
       const caps = connector.getCapabilities();
       expect(Array.isArray(caps.freeModels)).toBe(true);
       expect(caps.freeModels).toHaveLength(0);
+    });
+  });
+
+  // CONN-0236 — dynamic model completeness. Grok exposes an OpenAI-compat
+  // /v1/models endpoint; the connector fetches it on boot so the catalog reflects
+  // xAI's real list at runtime instead of a frozen stub. No live key on the dev box
+  // → the fixture reproduces the cited static ids; the merge mechanism is what's
+  // under test here (real-list population happens on the cluster).
+  describe('refreshModels (CONN-0236 dynamic completeness)', () => {
+    function mockModelsOk() {
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(GROK_MODELS_FIXTURE),
+      });
+    }
+
+    it('fetches the xAI OpenAI-compat /v1/models endpoint', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      expect(fetchSpy.mock.calls[0][0]).toBe('https://api.x.ai/v1/models');
+    });
+
+    it('parses the provider list and exposes it via getCapabilities().models', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      // Every fixture id is surfaced; the merge is de-duplicated against the static set.
+      for (const entry of GROK_MODELS_FIXTURE.data) {
+        expect(caps.models).toContain(entry.id);
+      }
+      expect(caps.models.length).toBe(new Set(caps.models).size);
+    });
+
+    it('keeps grok paid-only (freeModels stays empty) after refresh', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      // xAI has no free tier (CONN-0233, docs.x.ai/docs/pricing).
+      expect(caps.freeModels).toEqual([]);
+    });
+
+    it('falls back to the static list when the API call fails (offline/CI)', async () => {
+      fetchSpy.mockRejectedValueOnce(new Error('network down'));
+      await expect(connector.refreshModels()).resolves.not.toThrow();
+      const caps = connector.getCapabilities();
+      expect(caps.models).toContain('grok-4-fast');
+      expect(caps.models).toContain('grok-3');
     });
   });
 

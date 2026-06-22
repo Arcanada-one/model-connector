@@ -1,0 +1,23 @@
+{
+  "object": "list",
+  "data": [
+    { "id": "deepseek-v4-flash", "object": "model" },
+    { "id": "deepseek-v4-pro", "object": "model" },
+    { "id": "deepseek-r2", "object": "model" },
+    { "id": "qwen3-235b", "object": "model" },
+    { "id": "glm-4.7", "object": "model" },
+    { "id": "glm-5", "object": "model" },
+    { "id": "glm-5.1", "object": "model" },
+    { "id": "glm-5.2", "object": "model" },
+    { "id": "gpt-5.3-codex", "object": "model" },
+    { "id": "gpt-5.4", "object": "model" },
+    { "id": "gpt-5.4-mini", "object": "model" },
+    { "id": "gpt-5.4-pro", "object": "model" },
+    { "id": "gpt-5.5", "object": "model" },
+    { "id": "kimi-k2.5", "object": "model" },
+    { "id": "kimi-k2.6", "object": "model" },
+    { "id": "kimi-k2.7-code", "object": "model" },
+    { "id": "MiniMax-M2.5", "object": "model" },
+    { "id": "MiniMax-M2.7", "object": "model" }
+  ]
+}
