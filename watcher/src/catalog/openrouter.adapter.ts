@@ -7,11 +7,11 @@ const modelSchema = z.object({
   pricing: z.object({
     prompt: numericString,
     completion: numericString,
-  }).strict(),
+  }).passthrough(),
   context_length: z.number().int().positive().optional(),
   architecture: z.object({ modality: z.string().min(1).optional() }).passthrough().optional(),
 }).passthrough();
-const responseSchema = z.object({ data: z.array(modelSchema) }).strict();
+const responseSchema = z.object({ data: z.array(modelSchema) }).passthrough();
 
 export function normalizeOpenRouterCatalog(input: unknown): CatalogModel[] {
   return responseSchema.parse(input).data.map((model) => {
