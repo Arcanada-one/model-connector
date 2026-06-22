@@ -117,6 +117,20 @@ export class GroqConnector extends BaseApiConnector {
         'groq/compound',
         'groq/compound-mini',
       ],
+      // CONN-0233 — reviewed 2026-06-22: Groq's API is free-tier (rate-limited).
+      // All models listed above are accessible via the free API tier.
+      // Source: https://console.groq.com/docs/openai (free API with rate limits).
+      freeModels: [
+        'llama-3.3-70b-versatile',
+        'llama-3.1-8b-instant',
+        'meta-llama/llama-4-scout-17b-16e-instruct',
+        'openai/gpt-oss-120b',
+        'openai/gpt-oss-20b',
+        'openai/gpt-oss-safeguard-20b',
+        'qwen/qwen3-32b',
+        'groq/compound',
+        'groq/compound-mini',
+      ],
       supportsStreaming: false,
       supportsJsonSchema: true,
       supportsTools: true,

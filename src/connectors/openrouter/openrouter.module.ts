@@ -16,5 +16,9 @@ export class OpenRouterModule implements OnModuleInit {
 
   onModuleInit() {
     this.connectors.register(this.openrouter);
+    // CONN-0233 — kick off free-model refresh on startup (fire-and-forget).
+    // Failure is tolerated inside refreshFreeModels; catalog still works
+    // with empty freeModels if the API is unreachable at boot.
+    void this.openrouter.refreshFreeModels();
   }
 }

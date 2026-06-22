@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
 import {
   ConnectorCapabilities,
@@ -21,16 +22,95 @@ interface OpenRouterResponse {
   };
 }
 
+// CONN-0233 — OpenRouter /api/v1/models response shape (partial; only fields we use).
+interface OpenRouterModelEntry {
+  id: string;
+  pricing?: { prompt?: string; completion?: string } | null;
+}
+
+interface OpenRouterModelsApiResponse {
+  data: OpenRouterModelEntry[];
+}
+
 const DEFAULT_MODEL = 'anthropic/claude-sonnet-4';
+
+// Static paid models list (unchanged from pre-CONN-0233).
+const STATIC_MODELS = [
+  'anthropic/claude-sonnet-4',
+  'anthropic/claude-haiku-4',
+  'openai/gpt-4o',
+  'openai/gpt-4o-mini',
+  'google/gemini-2.5-flash',
+  'meta-llama/llama-4-maverick',
+];
 
 export class OpenRouterConnector extends BaseApiConnector {
   readonly name = 'openrouter';
+
+  private readonly logger = new Logger(OpenRouterConnector.name);
+
+  // CONN-0233 — cached free-model state populated by refreshFreeModels().
+  // Starts empty; populated once on module init or on first catalog build.
+  // A model is free when: pricing.prompt==="0" && pricing.completion==="0",
+  // OR its id ends with ":free" (OpenRouter's self-documenting convention).
+  private _dynamicFreeModels: string[] = [];
+  private _dynamicModels: string[] = [...STATIC_MODELS];
 
   // ARCA-0011 — OpenRouter passes `messages[N].content` through as
   // `string | ContentBlock[]`; OpenAI-compat vision endpoints accept the
   // same shape natively.
   protected get supportsContentBlocks(): boolean {
     return true;
+  }
+
+  /**
+   * CONN-0233 — Fetch OpenRouter /api/v1/models, compute the free set,
+   * and update cached state. Called from OnModuleInit; tolerates failure
+   * (leaves freeModels empty, logs a warning — never throws).
+   */
+  async refreshFreeModels(): Promise<void> {
+    try {
+      const url = `${this.getBaseUrl()}/v1/models`;
+      const response = await fetch(url, {
+        headers: this.getHeaders(),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!response.ok) {
+        this.logger.warn(
+          `OpenRouter /v1/models returned ${response.status} — skipping free refresh`,
+        );
+        return;
+      }
+      const json = (await response.json()) as OpenRouterModelsApiResponse;
+      if (!Array.isArray(json?.data)) {
+        this.logger.warn('OpenRouter /v1/models response has no data[] — skipping free refresh');
+        return;
+      }
+
+      const freeIds: string[] = [];
+      for (const entry of json.data) {
+        if (typeof entry?.id !== 'string') continue;
+        const isFreeById = entry.id.endsWith(':free');
+        const isFreeByPricing =
+          entry.pricing != null && entry.pricing.prompt === '0' && entry.pricing.completion === '0';
+        if (isFreeById || isFreeByPricing) {
+          freeIds.push(entry.id);
+        }
+      }
+
+      this._dynamicFreeModels = freeIds;
+      // Merge free models into the models list so the catalog service iterates them.
+      // Static models remain; free models that aren't in the static list are appended.
+      const staticSet = new Set(STATIC_MODELS);
+      const extra = freeIds.filter((id) => !staticSet.has(id));
+      this._dynamicModels = [...STATIC_MODELS, ...extra];
+
+      this.logger.log(`OpenRouter free refresh: ${freeIds.length} free models discovered`);
+    } catch (err) {
+      this.logger.warn(
+        `OpenRouter free refresh failed: ${(err as Error).message} — proceeding with empty freeModels`,
+      );
+    }
   }
 
   protected getBaseUrl(): string {
@@ -111,14 +191,11 @@ export class OpenRouterConnector extends BaseApiConnector {
     return {
       name: 'openrouter',
       type: 'api',
-      models: [
-        'anthropic/claude-sonnet-4',
-        'anthropic/claude-haiku-4',
-        'openai/gpt-4o',
-        'openai/gpt-4o-mini',
-        'google/gemini-2.5-flash',
-        'meta-llama/llama-4-maverick',
-      ],
+      // CONN-0233: _dynamicModels starts as STATIC_MODELS; after refreshFreeModels()
+      // it is extended with discovered :free / pricing=0 models.
+      models: this._dynamicModels,
+      // CONN-0233: _dynamicFreeModels is empty until refreshFreeModels() runs.
+      freeModels: this._dynamicFreeModels,
       supportsStreaming: false,
       supportsJsonSchema: true,
       supportsTools: true,
