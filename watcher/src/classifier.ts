@@ -10,7 +10,14 @@ export function classifyFailure(evidence: EvidenceSnapshot): FailureClass | null
   if (evidence.explicitErrorType && AUTH_ERRORS.has(evidence.explicitErrorType)) return 'authentication';
   if (evidence.explicitErrorType && BILLING_ERRORS.has(evidence.explicitErrorType)) return 'billing';
   if (evidence.circuitState === 'open' || evidence.counters.circuitOpenCount > 0) return 'circuit_open';
-  if (evidence.explicitErrorType || evidence.counters.errorCount > 0) return 'unknown';
+  // Named explicit error types (from health / canary sources) are deterministic — classify immediately.
+  if (evidence.explicitErrorType) return 'unknown';
+  // For metrics-sourced evidence, use the windowed error rate computed by runCycle.
+  // windowedErrorState === undefined means no RateWindow was provided (e.g. health/canary sources
+  // that set explicitErrorType but never touch counters). Fall through to null.
+  // windowedErrorState === null means below minimum_samples or first-observation priming — not enough
+  // data to classify. Do NOT flag.
+  if (evidence.windowedErrorState === 'degraded') return 'unknown';
   return null;
 }
 
