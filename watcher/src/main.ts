@@ -38,6 +38,7 @@ interface ObservationClient {
 interface WatcherState {
   heartbeatAt: string;
   lastCycleOk: boolean;
+  _shadowStart?: string;
 }
 
 interface RuntimeState {
@@ -48,6 +49,8 @@ interface RuntimeState {
   metricBaselines: Map<string, import('./types.js').MetricCounters>;
   /** Per-pair RateWindow instances for windowed error-rate classification. */
   rateWindows: Map<string, RateWindow>;
+  /** ISO timestamp marking the start of the current clean evidence window (set once at first deploy, preserved across restarts). */
+  shadowStart?: string;
 }
 
 export interface RunWatcherOptions {
@@ -95,6 +98,12 @@ export function parseArgs(args: string[]): CliOptions {
 
 export async function runWatcher(options: RunWatcherOptions): Promise<void> {
   const dependencies = createDependencies(options);
+
+  // Stamp _shadowStart once: preserve existing value (so restarts don't truncate the window);
+  // stamp now only when state is absent or has no _shadowStart (first deploy after this fix).
+  const existingState = await dependencies.store.read();
+  dependencies.runtime.shadowStart = existingState?._shadowStart ?? new Date(dependencies.now()).toISOString();
+
   const cycle = async () => runCycle(dependencies);
   if (options.once) {
     await cycle();
@@ -221,7 +230,7 @@ async function runCycle(deps: CycleDependencies): Promise<void> {
   }
   await refreshCatalogIfDue(deps);
   deps.runtime.lastCycleOk = results.every((result) => result.status === 'fulfilled');
-  await deps.store.write({ heartbeatAt: observedAt, lastCycleOk: deps.runtime.lastCycleOk });
+  await deps.store.write({ heartbeatAt: observedAt, lastCycleOk: deps.runtime.lastCycleOk, _shadowStart: deps.runtime.shadowStart });
   logger.info({ lastCycleOk: deps.runtime.lastCycleOk }, 'watcher observation cycle completed');
   notifySystemd('WATCHDOG=1');
 }
