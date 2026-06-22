@@ -1,8 +1,9 @@
 const SECRET_KEY = /token|secret|password|authorization|api[_-]?key/i;
+const LONG_STRING_KEYS = new Set(['body']);
 
 export function redact(value: unknown, key = ''): unknown {
   if (SECRET_KEY.test(key)) return '[REDACTED]';
-  if (typeof value === 'string') return value.slice(0, 200);
+  if (typeof value === 'string') return value.slice(0, LONG_STRING_KEYS.has(key) ? 4000 : 200);
   if (Array.isArray(value)) return value.map((item) => redact(item));
   if (value && typeof value === 'object') {
     return Object.fromEntries(Object.entries(value).map(([childKey, child]) => [childKey, redact(child, childKey)]));

@@ -90,16 +90,24 @@ describe('watcher main loop e2e', () => {
       'POST /events',
     ]));
     expect(requests.some((request) => request.includes('/circuit-breaker/reset'))).toBe(false);
-    expect(alerts).toEqual([
-      expect.objectContaining({
-        provider: 'openrouter',
-        model: 'model-a',
-        failure_class: 'circuit_open',
-        attempted_action: 'reset_circuit',
-        blocked_action: 'reset_circuit',
-        recommended_operator_step: 'enable circuit reset only after activation gates pass',
-      }),
-    ]);
+    expect(alerts).toHaveLength(1);
+    const alert = alerts[0];
+    expect(alert).toMatchObject({
+      category: 'info',
+      agent: 'model-connector-watcher',
+    });
+    expect(typeof alert['title']).toBe('string');
+    expect((alert['title'] as string).length).toBeLessThanOrEqual(256);
+    expect(typeof alert['body']).toBe('string');
+    const alertBody = JSON.parse(alert['body'] as string) as Record<string, unknown>;
+    expect(alertBody).toMatchObject({
+      provider: 'openrouter',
+      model: 'model-a',
+      failure_class: 'circuit_open',
+      attempted_action: 'reset_circuit',
+      blocked_action: 'reset_circuit',
+      recommended_operator_step: 'enable circuit reset only after activation gates pass',
+    });
     expect(JSON.parse(await readFile(config.storage.state_path, 'utf8'))).toMatchObject({
       lastCycleOk: true,
     });
@@ -224,13 +232,18 @@ describe('watcher main loop e2e', () => {
     });
 
     expect(requests.some((request) => request.includes('/circuit-breaker/reset'))).toBe(false);
-    expect(alerts).toEqual([
-      expect.objectContaining({
-        attempted_action: 'reset_circuit',
-        blocked_action: 'reset_circuit',
-        outcome: 'cooldown',
-      }),
-    ]);
+    expect(alerts).toHaveLength(1);
+    const alert2 = alerts[0];
+    expect(alert2).toMatchObject({
+      category: 'info',
+      agent: 'model-connector-watcher',
+    });
+    const alert2Body = JSON.parse(alert2['body'] as string) as Record<string, unknown>;
+    expect(alert2Body).toMatchObject({
+      attempted_action: 'reset_circuit',
+      blocked_action: 'reset_circuit',
+      outcome: 'cooldown',
+    });
   });
 });
 
