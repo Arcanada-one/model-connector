@@ -95,6 +95,20 @@ async function computeWindow(statePath, records, requiredWindowDays) {
   };
 }
 
+
+// ── Filter records to the analysis window ─────────────────────────────────
+// Pure function: drop any record whose timestamp falls outside [startTs, endTs].
+// endTs=null means open-ended (up to the latest record).
+export function filterToWindow(records, startTs, endTs) {
+  return records.filter(r => {
+    const t = new Date(r.timestamp).getTime();
+    if (isNaN(t)) return false;
+    if (startTs !== null && t < startTs) return false;
+    if (endTs !== null && t > endTs) return false;
+    return true;
+  });
+}
+
 // ── Sample count (from audit records as lower bound) ──────────────────────
 function computeSamples(records) {
   const counts = new Map();
@@ -247,16 +261,20 @@ async function main() {
   const opts = parseArgs(process.argv.slice(2));
   const records = await readAuditLog(opts.auditPath);
   const window = await computeWindow(opts.statePath, records, opts.windowDays);
-  const samples = computeSamples(records);
-  const fpRates = computeFpRate(records);
-  const flaps = computeFlaps(records);
+  const startTs = window.startIso ? new Date(window.startIso).getTime() : null;
+  const endTs = window.endIso ? new Date(window.endIso).getTime() : null;
+  const windowedRecords = filterToWindow(records, startTs, endTs);
+
+  const samples = computeSamples(windowedRecords);
+  const fpRates = computeFpRate(windowedRecords);
+  const flaps = computeFlaps(windowedRecords);
 
   const report = buildReport({ samples, fpRates, flaps, window, requiredWindowDays: opts.windowDays });
 
   console.log('\n=== CONN-0230 Evidence Analyzer ===');
   console.log(`Audit file   : ${opts.auditPath}`);
   console.log(`State file   : ${opts.statePath ?? '(none)'}`);
-  console.log(`Records      : ${records.length}`);
+  console.log(`Records      : ${records.length} total, ${windowedRecords.length} in-window [${window.startIso ?? 'unknown'} → ${window.endIso ?? 'unknown'}]`);
   console.log(`Pairs        : ${samples.size > 0 ? [...samples.keys()].join(', ') : '(none — all healthy)'}`);
   console.log(`Window       : ${window.days.toFixed(2)} days (est. ${window.estimatedSamples} cycles/pair)`);
   console.log(`\nVERDICT: ${report.verdict}\n`);
