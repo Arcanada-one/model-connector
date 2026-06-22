@@ -246,7 +246,7 @@ async function emitAlert(
     attempted_action: attemptedAction,
     blocked_action: blockedAction,
   });
-  await deps.opsbot.emit({
+  const bodyDetail = {
     provider: evidence.provider,
     model: evidence.model,
     failure_class: failureClass,
@@ -258,6 +258,17 @@ async function emitAlert(
       ? 'enable circuit reset only after activation gates pass'
       : 'inspect audit record and dependency health',
     audit_ref: auditRef,
+  };
+  const bodyFull = JSON.stringify(bodyDetail);
+  const bodySummary = bodyFull.length <= 4000
+    ? bodyFull
+    : JSON.stringify({ ...bodyDetail, evidence: { provider: evidence.provider, model: evidence.model, observedAt: evidence.observedAt } });
+  await deps.opsbot.emit({
+    category: 'info',
+    agent: 'model-connector-watcher',
+    title: `MC ${evidence.provider}/${evidence.model}: ${failureClass}`.slice(0, 256),
+    body: bodySummary.slice(0, 4000),
+    dedup_key: `mc-watcher:${evidence.provider}:${evidence.model}:${failureClass}`.slice(0, 128),
   }, deps.now());
 }
 
