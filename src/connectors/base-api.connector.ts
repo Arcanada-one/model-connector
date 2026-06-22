@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { Logger } from '@nestjs/common';
 import {
   CircuitBreakerResetEntry,
   ConnectorCapabilities,
@@ -31,6 +32,15 @@ export abstract class BaseApiConnector implements IConnector {
   protected activeJobs = 0;
   private _semaphore?: Semaphore;
   private _cbManager?: CircuitBreakerManager;
+
+  // CONN-0236 — dynamic model completeness. Connectors whose provider exposes a
+  // `/models` listing override getStaticModels()/getModelsUrl() and return
+  // `this.dynamicModels` from getCapabilities(). refreshModels() populates the
+  // cache on boot; the static list is the offline/CI fallback (no live call in CI).
+  // Named distinctly from OpenRouterConnector's own `_dynamicModels` field — TS
+  // forbids a subclass redeclaring a base private of the same name.
+  private _refreshedModels?: string[];
+  private readonly _modelsLogger = new Logger('ConnectorModelRefresh');
 
   protected get semaphore(): Semaphore {
     if (!this._semaphore) {
@@ -94,6 +104,104 @@ export abstract class BaseApiConnector implements IConnector {
   // Default `false`; openrouter overrides to `true` in Phase 1.
   protected get supportsContentBlocks(): boolean {
     return false;
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // CONN-0236 — Dynamic model completeness
+  //
+  // Generalizes the proven OpenRouterConnector.refreshFreeModels() pattern
+  // (CONN-0233): fetch the provider's `/models` listing, parse the ids, and cache
+  // them so getCapabilities().models reflects the provider's REAL catalogue instead
+  // of a hand-maintained stub. The static list (getStaticModels) is the source of
+  // truth offline and in CI — refreshModels() never runs during tests (which mock
+  // fetch) and tolerates every failure mode, leaving the static list intact.
+  //
+  // NOTE: OpenRouterConnector keeps its own specialized refreshFreeModels()
+  // (CONN-0233) instead of this generic refresh — it additionally derives the
+  // free-model set from pricing / ":free" id suffixes. This base method is the
+  // plain id-list path for providers without that pricing semantics
+  // (openmodel / groq / grok). Do not fold openrouter in here without porting its
+  // pricing-aware free detection.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  /**
+   * The hand-curated / cited model list. Used verbatim until refreshModels()
+   * succeeds, and as the permanent fallback when the provider is unreachable.
+   * Override per connector. Default `[]` keeps non-participating connectors inert.
+   */
+  protected getStaticModels(): string[] {
+    return [];
+  }
+
+  /**
+   * Provider model-listing endpoint. Defaults to `{baseUrl}/models`; override when
+   * the provider nests it elsewhere (groq → `/openai/v1/models`, grok → `/v1/models`).
+   */
+  protected getModelsUrl(): string {
+    return `${this.getBaseUrl()}/models`;
+  }
+
+  /**
+   * Parse the provider's `/models` JSON into a flat list of model ids. Default
+   * handles the OpenAI/Anthropic-compatible `{ data: [{ id }] }` shape. Override to
+   * filter (e.g. groq drops non-chat audio families) or to parse a bespoke shape.
+   */
+  protected extractModelIds(json: unknown): string[] {
+    const data = (json as { data?: unknown })?.data;
+    if (!Array.isArray(data)) return [];
+    return data
+      .map((entry) => (entry as { id?: unknown })?.id)
+      .filter((id): id is string => typeof id === 'string' && id.length > 0);
+  }
+
+  /**
+   * The list getCapabilities().models should return: the refreshed provider list
+   * once available, otherwise the static fallback.
+   */
+  protected get dynamicModels(): string[] {
+    return this._refreshedModels ?? this.getStaticModels();
+  }
+
+  /**
+   * Fetch the provider's `/models` listing and cache the merged model list
+   * (static ∪ provider, static-first, de-duplicated). Fire-and-forget on boot;
+   * tolerates every failure (non-2xx, empty, network/parse error) by leaving the
+   * static list in place. Never throws — safe to `void` from OnModuleInit.
+   */
+  async refreshModels(): Promise<void> {
+    const staticModels = this.getStaticModels();
+    try {
+      const url = this.getModelsUrl();
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!response.ok) {
+        this._modelsLogger.warn(
+          `${this.name} ${url} returned ${response.status} — keeping ${staticModels.length} static models`,
+        );
+        return;
+      }
+      const json = await response.json();
+      const ids = this.extractModelIds(json);
+      if (ids.length === 0) {
+        this._modelsLogger.warn(
+          `${this.name} /models response had no usable ids — keeping ${staticModels.length} static models`,
+        );
+        return;
+      }
+      const staticSet = new Set(staticModels);
+      const extra = ids.filter((id) => !staticSet.has(id));
+      this._refreshedModels = [...staticModels, ...extra];
+      this._modelsLogger.log(
+        `${this.name} model refresh: ${ids.length} provider models → ${this._refreshedModels.length} total (was ${staticModels.length})`,
+      );
+    } catch (err) {
+      this._modelsLogger.warn(
+        `${this.name} model refresh failed: ${(err as Error).message} — keeping ${staticModels.length} static models`,
+      );
+    }
   }
 
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {

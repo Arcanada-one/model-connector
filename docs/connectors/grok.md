@@ -23,6 +23,12 @@ API connector for [xAI's Grok](https://docs.x.ai/) family. Added 2026-04-29.
 
 ## Models
 
+> **Dynamic (CONN-0236).** The list below is the static **offline/CI fallback**.
+> At boot the connector fetches `GET https://api.x.ai/v1/models` (where
+> `XAI_API_KEY` is set) and merges xAI's live list over it, so a stale static id
+> self-heals against the account. See `docs/how-to/catalog-endpoint.md` §
+> "Model-list source".
+
 | Model | Use case |
 |-------|----------|
 | `grok-4-fast` | Default — balanced speed/quality |

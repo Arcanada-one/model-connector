@@ -23,6 +23,13 @@ API connector for [Groq Cloud](https://console.groq.com/) — ultra-fast LPU-bac
 
 ## Models
 
+> **Dynamic (CONN-0236).** The list below is the static **offline/CI fallback**.
+> At boot the connector fetches `GET https://api.groq.com/openai/v1/models` and
+> merges the live chat models over it. Groq's listing also returns STT (whisper),
+> TTS (orpheus) and moderation (prompt-guard) families — these are filtered out so
+> only chat models surface here. See `docs/how-to/catalog-endpoint.md` §
+> "Model-list source".
+
 | Model | Notes |
 |-------|-------|
 | `llama-3.3-70b-versatile` | Default — balanced 70B |

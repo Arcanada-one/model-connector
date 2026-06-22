@@ -154,13 +154,39 @@ If the OpenRouter `/api/v1/models` API is unreachable at boot, `freeModels` rema
 empty for that session and the connector still serves all static paid models normally.
 No catalog request is ever blocked by a failed refresh.
 
+### Model-list source: dynamic vs curated (CONN-0236)
+
+Each chat connector's `models[]` is populated either by a **dynamic** fetch of the
+provider's own `/models` listing at boot, or by a **curated** static list. Dynamic
+connectors call `refreshModels()` once from `OnModuleInit` (fire-and-forget, like
+OpenRouter's free refresh): they fetch `{baseUrl}/models`, parse the ids, and merge
+them over the static list. The static list is always the offline/CI fallback — CI
+makes **no live provider call** (every test mocks `fetch` against a captured
+fixture), and any boot-time failure (unreachable, non-2xx, missing API key) leaves
+the static list in place. So a connector is never *less* complete than its static
+list and becomes *more* complete wherever the provider key is present.
+
+| Connector | Model-list source | Endpoint | Static fallback | Notes |
+|-----------|-------------------|----------|-----------------|-------|
+| **openmodel** | **Dynamic** | `https://api.openmodel.ai/v1/models` | 3 (`deepseek-v4-flash`, `deepseek-r2`, `qwen3-235b`) | Live list is ~32 (operator-verified 2026-06-23); appears at runtime where `OPENMODEL_API_KEY` is set. |
+| **groq** | **Dynamic** | `https://api.groq.com/openai/v1/models` | 9 chat models | The endpoint also returns STT (whisper), TTS (orpheus) and moderation (prompt-guard) families; `extractModelIds()` filters those out by modality/name so only chat models surface here. |
+| **grok** | **Dynamic** | `https://api.x.ai/v1/models` | 9 | Real list appears where `XAI_API_KEY` is set; static ids self-heal against the live account (CONN-0232 R7 flagged them for re-validation). |
+| **openrouter** | **Dynamic** | `https://openrouter.ai/api/v1/models` | 6 paid | Uses its own `refreshFreeModels()` (pricing/`:free`-aware) — predates and supersedes the generic path. |
+| **gemini** | **Curated, dated** | — (CLI connector, Google API shape) | 3 | Not OpenAI-compatible; kept curated (`// reviewed`) rather than forcing an OpenAI-shape fetch. |
+| **claude-code, codex, cursor** | **Curated, dated** | — (CLI connectors) | per connector | Account/subscription-scoped; no public `/models` listing to fetch. |
+
+**Anti-fabrication:** every dynamically-fetched id comes from a live provider
+response, and every static-fallback id is cited and dated (CONN-0233 / CONN-0232 R7).
+No model id is invented. The capture fixtures and their provenance live in
+`test/fixtures/connectors/README.md`.
+
 ### Modality coverage & completeness (CONN-0232)
 
 The catalog spans **all** model families MC serves, not just chat:
 
 | Modality | Source | Connectors / models |
 |----------|--------|---------------------|
-| `chat` | registered chat connectors | claude-code, codex, cursor, gemini, grok, groq, openmodel, openrouter (dynamic) |
+| `chat` | registered chat connectors | claude-code, codex, cursor, gemini (curated); grok, groq, openmodel, openrouter (dynamic — see "Model-list source" above) |
 | `embedding` | registered connector | embedding (`bge-m3`) |
 | `image_generation` | curated, dated `IMAGE_CAPABILITIES` | vertex (4), replicate (1), openai-images (3), fal-ai (2) |
 | `speech_to_text` | each STT connector's own default model | assemblyai-stt, deepgram-stt, groq-stt, local-whisper, openai-stt |

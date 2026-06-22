@@ -20,11 +20,36 @@ interface GrokChatResponse {
 
 const DEFAULT_MODEL = 'grok-4-fast';
 
+// CONN-0236 — offline/CI fallback (cited CONN-0233, reviewed 2026-06-22, docs.x.ai).
+// CONN-0232 R7 flags these ids for re-validation against the live account; the boot
+// refreshModels() against /v1/models supersedes them at runtime where XAI_API_KEY
+// is present, so a stale static entry self-heals on the cluster.
+const GROK_STATIC_MODELS = [
+  'grok-4-fast',
+  'grok-4-fast-reasoning',
+  'grok-4-fast-non-reasoning',
+  'grok-4-1-fast-reasoning',
+  'grok-4-1-fast-non-reasoning',
+  'grok-4-0709',
+  'grok-3',
+  'grok-3-mini',
+  'grok-code-fast-1',
+];
+
 export class GrokConnector extends BaseApiConnector {
   readonly name = 'grok';
 
   protected getBaseUrl(): string {
     return 'https://api.x.ai';
+  }
+
+  // CONN-0236 — xAI exposes an OpenAI-compat model listing at /v1/models.
+  protected getModelsUrl(): string {
+    return `${this.getBaseUrl()}/v1/models`;
+  }
+
+  protected getStaticModels(): string[] {
+    return GROK_STATIC_MODELS;
   }
 
   protected getTimeout(): number {
@@ -106,17 +131,8 @@ export class GrokConnector extends BaseApiConnector {
     return {
       name: 'grok',
       type: 'api',
-      models: [
-        'grok-4-fast',
-        'grok-4-fast-reasoning',
-        'grok-4-fast-non-reasoning',
-        'grok-4-1-fast-reasoning',
-        'grok-4-1-fast-non-reasoning',
-        'grok-4-0709',
-        'grok-3',
-        'grok-3-mini',
-        'grok-code-fast-1',
-      ],
+      // CONN-0236 — static 9 until refreshModels() fetches the live list.
+      models: this.dynamicModels,
       // CONN-0233 — reviewed 2026-06-22: xAI/Grok has no free tier.
       // All models are pay-per-token. Source: https://docs.x.ai/docs/pricing
       freeModels: [],

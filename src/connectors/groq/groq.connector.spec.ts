@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { GroqConnector } from './groq.connector';
+
+// Live capture — GET https://api.groq.com/openai/v1/models, arcana-dev 2026-06-23.
+// 17 entries incl. non-chat families (whisper STT, orpheus TTS, llama-prompt-guard).
+const GROQ_MODELS_FIXTURE = JSON.parse(
+  readFileSync(resolve(__dirname, '../../..', 'test/fixtures/connectors/groq-models.json'), 'utf8'),
+) as { data: Array<{ id: string }> };
 
 describe('GroqConnector', () => {
   let connector: GroqConnector;
@@ -299,6 +307,72 @@ describe('GroqConnector', () => {
       for (const m of caps.freeModels ?? []) {
         expect(caps.models).toContain(m);
       }
+    });
+  });
+
+  // CONN-0236 — dynamic model completeness. Groq's /openai/v1/models lists 17 models
+  // (live 2026-06-23) spanning chat + STT (whisper) + TTS (orpheus) + moderation
+  // (prompt-guard). This chat connector must fetch the chat models dynamically and
+  // EXCLUDE the audio families (handled by the dedicated speech/image modules).
+  describe('refreshModels (CONN-0236 dynamic completeness)', () => {
+    function mockModelsOk() {
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(GROQ_MODELS_FIXTURE),
+      });
+    }
+
+    it('fetches the Groq OpenAI-compat /models endpoint', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      expect(fetchSpy.mock.calls[0][0]).toBe('https://api.groq.com/openai/v1/models');
+    });
+
+    it('adds provider chat models discovered live (e.g. allam-2-7b, qwen3.6-27b)', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(caps.models).toContain('allam-2-7b');
+      expect(caps.models).toContain('qwen/qwen3.6-27b');
+      // Static ids stay present.
+      expect(caps.models).toContain('llama-3.3-70b-versatile');
+    });
+
+    it('EXCLUDES audio (STT/TTS) families — not invented chat entries', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      // whisper = audio-input STT, orpheus = audio-output TTS → owned by speech module.
+      expect(caps.models).not.toContain('whisper-large-v3');
+      expect(caps.models).not.toContain('whisper-large-v3-turbo');
+      expect(caps.models).not.toContain('canopylabs/orpheus-v1-english');
+      expect(caps.models).not.toContain('canopylabs/orpheus-arabic-saudi');
+    });
+
+    it('EXCLUDES moderation classifiers (llama-prompt-guard-*) from the chat catalog', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      // text→text but a safety classifier, not conversational — owned by a separate family.
+      expect(caps.models).not.toContain('meta-llama/llama-prompt-guard-2-22m');
+      expect(caps.models).not.toContain('meta-llama/llama-prompt-guard-2-86m');
+    });
+
+    it('all dynamic groq models remain free-tier (freeModels === models)', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      // Groq's API is free-tier (CONN-0233); every chat model it lists is free.
+      expect(caps.freeModels).toEqual(caps.models);
+    });
+
+    it('falls back to the static list when the API call fails (offline/CI)', async () => {
+      fetchSpy.mockRejectedValueOnce(new Error('network down'));
+      await expect(connector.refreshModels()).resolves.not.toThrow();
+      const caps = connector.getCapabilities();
+      expect(caps.models).toContain('llama-3.3-70b-versatile');
+      expect(caps.models).not.toContain('allam-2-7b');
     });
   });
 
