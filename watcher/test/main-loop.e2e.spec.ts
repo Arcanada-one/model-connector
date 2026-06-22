@@ -92,8 +92,9 @@ describe('watcher main loop e2e', () => {
     expect(requests.some((request) => request.includes('/circuit-breaker/reset'))).toBe(false);
     expect(alerts).toHaveLength(1);
     const alert = alerts[0];
+    // blocked path: shadow mode blocks reset_circuit -> blockedAction set -> category 'warning'
     expect(alert).toMatchObject({
-      category: 'info',
+      category: 'warning',
       agent: 'model-connector-watcher',
     });
     expect(typeof alert['title']).toBe('string');
@@ -234,8 +235,9 @@ describe('watcher main loop e2e', () => {
     expect(requests.some((request) => request.includes('/circuit-breaker/reset'))).toBe(false);
     expect(alerts).toHaveLength(1);
     const alert2 = alerts[0];
+    // blocked path: cooldown exhausted -> blockedAction='reset_circuit' -> category 'warning'
     expect(alert2).toMatchObject({
-      category: 'info',
+      category: 'warning',
       agent: 'model-connector-watcher',
     });
     const alert2Body = JSON.parse(alert2['body'] as string) as Record<string, unknown>;
