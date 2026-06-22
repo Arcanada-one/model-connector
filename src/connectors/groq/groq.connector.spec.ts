@@ -290,6 +290,16 @@ describe('GroqConnector', () => {
       expect(caps.supportsTools).toBe(true);
       expect(caps.maxTimeout).toBe(300_000);
     });
+
+    // CONN-0233 — free-detection: Groq API is free-tier (rate-limited).
+    it('should expose freeModels[] with >=2 models all present in models[]', () => {
+      const caps = connector.getCapabilities();
+      expect(Array.isArray(caps.freeModels)).toBe(true);
+      expect((caps.freeModels ?? []).length).toBeGreaterThanOrEqual(2);
+      for (const m of caps.freeModels ?? []) {
+        expect(caps.models).toContain(m);
+      }
+    });
   });
 
   // --- Status ---
