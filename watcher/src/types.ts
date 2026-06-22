@@ -22,6 +22,12 @@ export interface EvidenceSnapshot {
   source: 'health' | 'metrics' | 'bounded_canary';
   reachable: boolean;
   circuitState: 'closed' | 'open' | 'half_open';
+  /**
+   * Set by runCycle when windowed error-rate data is available.
+   * null  = not enough data (below minimum_samples or first observation)
+   * 'healthy' / 'degraded' = RateWindow decision for this cycle's delta.
+   */
+  windowedErrorState?: 'healthy' | 'degraded' | null;
   counters: MetricCounters;
   explicitErrorType?: string;
 }

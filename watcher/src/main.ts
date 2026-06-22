@@ -12,7 +12,8 @@ import { loadConfig, type WatcherConfig } from './config.js';
 import { DisabledCatalogWriterAdapter } from './contracts/catalog-writer.adapter.js';
 import { startHealthServer } from './health-server.js';
 import { ModelConnectorClient } from './model-connector.client.js';
-import { normalizeMetrics } from './observation.js';
+import { computeMetricDelta, normalizeMetrics } from './observation.js';
+import { RateWindow } from './rate-window.js';
 import { createOpsBotSender, OpsBotClient } from './opsbot.client.js';
 import { executeRecovery, RecoveryPolicy } from './recovery-policy.js';
 import { StateStore } from './state-store.js';
@@ -43,6 +44,10 @@ interface RuntimeState {
   lastCycleOk: boolean;
   lastCatalogFetchAt?: number;
   catalogs: Map<string, CatalogModel[]>;
+  /** Per-pair cumulative counters from the PREVIOUS cycle (for delta computation). */
+  metricBaselines: Map<string, import('./types.js').MetricCounters>;
+  /** Per-pair RateWindow instances for windowed error-rate classification. */
+  rateWindows: Map<string, RateWindow>;
 }
 
 export interface RunWatcherOptions {
@@ -106,7 +111,7 @@ export async function runWatcher(options: RunWatcherOptions): Promise<void> {
 function createDependencies(options: RunWatcherOptions): CycleDependencies {
   const { config } = options;
   const env = options.env ?? process.env;
-  const runtime: RuntimeState = { lastCycleOk: false, catalogs: new Map() };
+  const runtime: RuntimeState = { lastCycleOk: false, catalogs: new Map(), metricBaselines: new Map(), rateWindows: new Map() };
   const catalogSync = new CatalogSync(
     new DisabledCatalogWriterAdapter(),
     (provider, models) => {
@@ -157,7 +162,61 @@ async function runCycle(deps: CycleDependencies): Promise<void> {
   const metricsResult = results[2];
   if (metricsResult.status === 'fulfilled') {
     for (const evidence of normalizeMetrics(metricsResult.value as Record<string, MetricCounters>, observedAt)) {
-      await handleEvidence(evidence, deps);
+      const pairKey = `${evidence.provider}:${evidence.model}`;
+      const previousBaseline = deps.runtime.metricBaselines.get(pairKey);
+
+      if (previousBaseline === undefined) {
+        // First observation of this pair: store baseline for delta on the next cycle.
+        // windowedErrorState=null signals "not enough data" — classifier will not fire
+        // on error-rate, but deterministic signals (circuit_open, provider_outage,
+        // explicitErrorType) still classify normally via the enriched evidence below.
+        deps.runtime.metricBaselines.set(pairKey, evidence.counters);
+        const primingEvidence = { ...evidence, counters: evidence.counters, windowedErrorState: null as null } as typeof evidence;
+        await handleEvidence(primingEvidence, deps);
+        continue;
+      }
+
+      const delta = computeMetricDelta(previousBaseline, evidence.counters);
+      if (delta === null) {
+        // Counter reset (MC restart): re-prime, pass windowedErrorState=null this cycle.
+        deps.runtime.metricBaselines.set(pairKey, evidence.counters);
+        logger.info({ provider: evidence.provider, model: evidence.model }, 'metric counter reset detected — re-priming baseline');
+        const resetEvidence = { ...evidence, counters: evidence.counters, windowedErrorState: null as null } as typeof evidence;
+        await handleEvidence(resetEvidence, deps);
+        continue;
+      }
+
+      // Update stored baseline to current cumulative counters.
+      deps.runtime.metricBaselines.set(pairKey, evidence.counters);
+
+      // Feed delta into the per-pair RateWindow.
+      if (!deps.runtime.rateWindows.has(pairKey)) {
+        const errorRateCfg = deps.config.error_rate;
+        deps.runtime.rateWindows.set(pairKey, new RateWindow({
+          minimumSamples: errorRateCfg.minimum_samples,
+          degradeRatio: errorRateCfg.degrade_ratio,
+          degradeWindows: errorRateCfg.degrade_consecutive_windows,
+          recoverRatio: errorRateCfg.recover_ratio,
+          recoverWindows: errorRateCfg.recover_consecutive_windows,
+        }));
+      }
+      const window = deps.runtime.rateWindows.get(pairKey)!;
+      const windowResult = window.observe(delta.errorCount, delta.totalRequests);
+
+      // Attach windowed result to evidence before classification.
+      // circuitState is preserved from the raw snapshot (set by normalizeMetrics from
+      // cumulative circuitOpenCount). counters carry the DELTA for errorCount gating.
+      // null ratio means below minimum_samples — classifier treats as no-fault on
+      // error-rate path only; deterministic signals are unaffected.
+      const enrichedEvidence = {
+        ...evidence,
+        counters: delta,
+        windowedErrorState: windowResult.ratio === null
+          ? null
+          : windowResult.state,
+      } as typeof evidence;
+
+      await handleEvidence(enrichedEvidence, deps);
     }
   }
   await refreshCatalogIfDue(deps);
