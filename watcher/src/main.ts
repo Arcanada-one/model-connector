@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import { realpathSync } from 'node:fs';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import pino from 'pino';
 import { AuditLog } from './audit-log.js';
 import { OpenRouterCatalogAdapter } from './catalog/openrouter.adapter.js';
@@ -308,6 +309,19 @@ function scheduleNextCycle(cycle: () => Promise<void>, intervalMs: number): void
   }, intervalMs);
 }
 
+
+export function isDirectlyExecuted(argv1: string | undefined, metaUrl: string): boolean {
+  if (!argv1) return false;
+  try {
+    const invokedPath = realpathSync(argv1);
+    const selfPath = realpathSync(fileURLToPath(metaUrl));
+    return invokedPath === selfPath;
+  } catch {
+    // fallback: compare raw URLs (e.g. in environments where realpath fails)
+    return metaUrl === pathToFileURL(argv1).href;
+  }
+}
+
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
@@ -329,7 +343,7 @@ function notifySystemd(message: 'READY=1' | 'WATCHDOG=1'): void {
   child.on('error', (error) => logger.warn({ err: error }, 'systemd notification failed'));
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isDirectlyExecuted(process.argv[1], import.meta.url)) {
   main().catch((error: unknown) => {
     logger.error({ err: error }, 'watcher failed');
     process.exitCode = 1;
