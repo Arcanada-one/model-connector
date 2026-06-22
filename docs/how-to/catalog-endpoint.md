@@ -95,6 +95,35 @@ internal catalogue (`OPENMODEL_CATALOGUE`). All CLI connectors (claude-code,
 codex, cursor) return `null` because their cost depends on the operator's
 subscription, not a per-call price.
 
+### Free model detection (CONN-0233)
+
+`free: true` is set by the service when either condition holds:
+
+1. **`freeModels[]` membership** — the connector's `getCapabilities()` includes the
+   model id in its `freeModels` array.
+2. **`priceMultiplier === 0`** — the openmodel catalogue assigns the model zero cost.
+
+Connectors populate `freeModels[]` using two strategies:
+
+| Connector | Strategy | Evidence basis | Reviewed |
+|-----------|----------|----------------|---------|
+| **groq** | Curated static list | Groq API is free-tier (rate-limited via console.groq.com free plan). All models in the connector are accessible. | 2026-06-22 |
+| **gemini** | Curated static list | Gemini CLI uses Google AI Studio OAuth (free quota). All models in the connector are accessible via the free CLI tier. | 2026-06-22 |
+| **grok** | Explicit empty list | xAI has no free tier — all models are pay-per-token (docs.x.ai/docs/pricing). | 2026-06-22 |
+| **openrouter** | Dynamic API fetch | Fetches `GET https://openrouter.ai/api/v1/models` on startup; marks models free when `pricing.prompt === "0" && pricing.completion === "0"` **or** the model id ends with `:free`. Cache is updated once at module init via `refreshFreeModels()`. | 2026-06-22 |
+| **openmodel** | Price catalogue (`priceMultiplier === 0`) | `OPENMODEL_CATALOGUE` assigns `price_multiplier: 0` to free-tier models. No `freeModels[]` needed — the service equation covers it. | pre-CONN-0233 |
+
+**Anti-fabrication guarantee:** every free flag has provider evidence. A model is
+only marked free when it is verifiably free-tier at the detection date cited above.
+When a provider's status is uncertain for a given model, it is left unset (honest
+partial coverage beats a fabricated flag). The Vitest suite asserts that every entry
+in `freeModels[]` also appears in `models[]`, preventing silent phantom entries.
+
+**OpenRouter dynamic refresh:** the initial fetch is fire-and-forget from `OnModuleInit`.
+If the OpenRouter `/api/v1/models` API is unreachable at boot, `freeModels` remains
+empty for that session and the connector still serves all static paid models normally.
+No catalog request is ever blocked by a failed refresh.
+
 ### Rate limits
 
 No connector currently exposes live RPM/TPM data to the Model Connector API.

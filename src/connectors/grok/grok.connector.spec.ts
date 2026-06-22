@@ -312,6 +312,14 @@ describe('GrokConnector', () => {
       expect(caps.supportsTools).toBe(true);
       expect(caps.maxTimeout).toBe(300_000);
     });
+
+    // CONN-0233 — free-detection: xAI/Grok has no free tier (all pay-per-token).
+    // freeModels must be present but empty.
+    it('should expose freeModels as an empty array (xAI has no free tier)', () => {
+      const caps = connector.getCapabilities();
+      expect(Array.isArray(caps.freeModels)).toBe(true);
+      expect(caps.freeModels).toHaveLength(0);
+    });
   });
 
   describe('getStatus', () => {

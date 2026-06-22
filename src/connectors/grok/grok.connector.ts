@@ -117,6 +117,9 @@ export class GrokConnector extends BaseApiConnector {
         'grok-3-mini',
         'grok-code-fast-1',
       ],
+      // CONN-0233 — reviewed 2026-06-22: xAI/Grok has no free tier.
+      // All models are pay-per-token. Source: https://docs.x.ai/docs/pricing
+      freeModels: [],
       supportsStreaming: false,
       supportsJsonSchema: true,
       supportsTools: true,
