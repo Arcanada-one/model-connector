@@ -64,13 +64,25 @@ export class ConnectorsController {
    *   cheap=true      Return free + low-cost models (price_multiplier <= 1).
    *   capability=X    Return models whose connector supports X.
    *                   X ∈ supportsJsonSchema | supportsTools | supportsStreaming
+   *   modality=M      Return only models of modality M (CONN-0232). `type=M` is
+   *                   accepted as an alias and mapped to `modality`.
+   *                   M ∈ chat | embedding | image_generation | speech_to_text |
+   *                       text_to_speech | rerank
+   *   connector=NAME  Return only models of that connector (CONN-0232).
+   *   tag=T           Exact-match a single derived tag, e.g. cost:free (CONN-0232).
+   *   group=G         Namespace-prefix match, e.g. group=cost → any cost:* (CONN-0232).
    *
    * Route must appear before /connectors/:name/status so Fastify does not
    * match the literal segment "catalog" as a :name parameter.
    */
   @Get('connectors/catalog')
   async getCatalog(@Query() rawQuery: Record<string, string>) {
-    const parsed = CatalogFiltersSchema.safeParse(rawQuery);
+    // CONN-0232: `?type=` is an operator-facing alias for `?modality=`. Map it
+    // before parsing; an explicit `?modality=` always wins.
+    const { type, ...rest } = rawQuery;
+    const normalizedQuery =
+      type !== undefined && rest.modality === undefined ? { ...rest, modality: type } : rawQuery;
+    const parsed = CatalogFiltersSchema.safeParse(normalizedQuery);
     if (!parsed.success) {
       throw new HttpException(
         { error: 'validation_error', details: parsed.error.flatten() },

@@ -29,9 +29,15 @@ All parameters are optional. When omitted, the full catalog is returned.
 | `free`       | `true` \| `1` | Return only models on the free tier. |
 | `cheap`      | `true` \| `1` | Return free models **and** models with a low price multiplier (`<= 1`). |
 | `capability` | enum   | Return only models whose connector supports the named capability. Accepted values: `supportsJsonSchema`, `supportsTools`, `supportsStreaming`. |
+| `modality`   | enum   | Return only models of the given modality (CONN-0232). Accepted values: `chat`, `embedding`, `image_generation`, `speech_to_text`, `text_to_speech`, `rerank`. |
+| `type`       | enum   | Alias for `modality` (same accepted values). When both are given, `modality` wins. |
+| `connector`  | string | Return only models served by that connector (exact match on the `connector` field), e.g. `groq`, `vertex`, `deepgram-stt`. |
+| `tag`        | string | Exact-match a single derived tag, e.g. `cost:free`, `cap:tools`, `modality:chat`. |
+| `group`      | string | Namespace-prefix match: `group=cost` returns any model carrying a `cost:*` tag. Delimiter-safe — `group=cost` never matches a `cost-something:` tag. |
 
 Filters compose by AND: `?free=true&capability=supportsJsonSchema` returns only
-free models that also support JSON schema output.
+free models that also support JSON schema output;
+`?modality=image_generation&connector=vertex` returns only Vertex image models.
 
 ---
 
@@ -43,6 +49,8 @@ free models that also support JSON schema output.
     {
       "connector": "openmodel",
       "model": "deepseek-v4-flash",
+      "modality": "chat",
+      "tags": ["modality:chat", "cost:free", "cost:cheap", "cap:json-schema"],
       "free": true,
       "cheap": true,
       "priceMultiplier": 0,
@@ -64,12 +72,33 @@ free models that also support JSON schema output.
 }
 ```
 
+A non-chat entry (image generation) additionally carries a `routing.endpoint`
+so it is not misrepresented as the chat `/execute` route:
+
+```json
+{
+  "connector": "vertex",
+  "model": "vertex:imagen-4-fast",
+  "modality": "image_generation",
+  "tags": ["modality:image_generation"],
+  "free": false,
+  "cheap": false,
+  "priceMultiplier": null,
+  "rateLimits": null,
+  "capabilities": { "supportsStreaming": false, "supportsJsonSchema": false, "supportsTools": false },
+  "routing": { "connector": "vertex", "model": "vertex:imagen-4-fast", "endpoint": "/images/generate" },
+  "available": true
+}
+```
+
 ### Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `connector` | `string` | Connector name (matches the `connector` field in `/execute` requests). |
 | `model` | `string` | Model identifier passed as `model` in execute requests. |
+| `modality` | enum | Model family (CONN-0232): `chat`, `embedding`, `image_generation`, `speech_to_text`, `text_to_speech`, or `rerank`. Distinct from the connector's transport `type` (`cli`/`api`). |
+| `tags` | `string[]` | Derived, namespaced tags (CONN-0232). Reproducible from the other fields — never fabricated. Namespaces: `modality:`, `cost:` (`cost:free`, `cost:cheap`), `cap:` (`cap:streaming`, `cap:tools`, `cap:json-schema`). No measured/curated tags yet. |
 | `free` | `boolean` | `true` when the model is on the connector's free tier. |
 | `cheap` | `boolean` | `true` when `free === true` **or** when the price multiplier is `<= 1`. |
 | `priceMultiplier` | `number \| null` | Relative cost unit. `0` = free, `1` = standard, `null` = unknown (connector does not expose price data). |
@@ -79,7 +108,8 @@ free models that also support JSON schema output.
 | `capabilities.supportsTools` | `boolean` | Whether the connector supports tool/function calling. |
 | `routing.connector` | `string` | The connector name to use in the `/execute` or `/connectors/:name/execute` path. |
 | `routing.model` | `string` | The model id to pass in the execute request body. |
-| `available` | `boolean` | `true` when the connector's `getStatus()` reports `healthy: true` at catalog-generation time. |
+| `routing.endpoint` | `string \| undefined` | Real invocation path for non-chat families (CONN-0232): `/images/generate` (image), `/v1/speech/stt` (STT), `/v1/speech/tts` (TTS). Omitted for chat/embedding, which use the standard `/execute` path. |
+| `available` | `boolean` | Per-MODEL availability (CONN-0232 R10): `true` when the connector is **reachable** AND this model's circuit breaker is not open. A connector whose `/health` route returns `404` while its API is alive is **not** marked offline. |
 | `generatedAt` | `string` | ISO-8601 timestamp of when the catalog snapshot was generated. |
 | `count` | `number` | Number of model entries returned (after filters). |
 
@@ -124,6 +154,37 @@ If the OpenRouter `/api/v1/models` API is unreachable at boot, `freeModels` rema
 empty for that session and the connector still serves all static paid models normally.
 No catalog request is ever blocked by a failed refresh.
 
+### Modality coverage & completeness (CONN-0232)
+
+The catalog spans **all** model families MC serves, not just chat:
+
+| Modality | Source | Connectors / models |
+|----------|--------|---------------------|
+| `chat` | registered chat connectors | claude-code, codex, cursor, gemini, grok, groq, openmodel, openrouter (dynamic) |
+| `embedding` | registered connector | embedding (`bge-m3`) |
+| `image_generation` | curated, dated `IMAGE_CAPABILITIES` | vertex (4), replicate (1), openai-images (3), fal-ai (2) |
+| `speech_to_text` | each STT connector's own default model | assemblyai-stt, deepgram-stt, groq-stt, local-whisper, openai-stt |
+| `text_to_speech` | proxy routing entry | `tts` → Transcribator (`/v1/speech/tts`); a single family marker, not a fabricated native model list |
+| `rerank` | reserved | no connector yet → **zero entries** (the enum value exists so a future connector needs no breaking change) |
+
+Image-generation, STT and TTS connectors do not implement the chat `IConnector`
+contract, so they are surfaced via a dedicated static modality catalog rather
+than the chat connector registry. **Anti-fabrication:** every static model id is
+sourced — image models from the dated `IMAGE_CAPABILITIES` map, STT models from
+each connector's own hard-coded default — and the catalog makes **no live
+provider call**. No id is invented.
+
+### Connector reachability vs per-model availability (CONN-0232 R10)
+
+`available` is computed **per model**. A connector is considered *reachable* when
+a probe of its health route returns any non-5xx status — a `404` ("no such
+route", e.g. a provider that does not serve `/health`) or `401`/`403`
+("API alive, auth required") all count as reachable; only `5xx`, timeouts and
+network/DNS failures count as down. A model is then `available` only when its
+connector is reachable **and** the model's own circuit breaker is not open, so a
+single failing model no longer marks its siblings — or a whole connector with a
+missing `/health` route — offline.
+
 ### Rate limits
 
 No connector currently exposes live RPM/TPM data to the Model Connector API.
@@ -138,7 +199,7 @@ individually `null` if only one dimension is known).
 
 | HTTP status | `error` field | Cause |
 |-------------|--------------|-------|
-| `400` | `validation_error` | An unknown `capability` value was passed (e.g. `supportsUnicorns`). |
+| `400` | `validation_error` | An unknown `capability` value (e.g. `supportsUnicorns`) or an unknown `modality`/`type` value (e.g. `telepathy`) was passed. |
 | `401` | (standard auth error) | Missing or invalid Bearer token. |
 
 ---

@@ -263,17 +263,44 @@ export abstract class BaseApiConnector implements IConnector {
     }
   }
 
+  /**
+   * CONN-0232 R10 — path probed for connector reachability. Defaults to
+   * `/health`, but a missing `/health` route NO LONGER means offline (see
+   * `isReachableStatus`). Override per connector to point at a route the provider
+   * actually serves (e.g. `/models`) when `/health` is absent.
+   */
+  protected getHealthProbePath(): string {
+    return '/health';
+  }
+
+  /**
+   * CONN-0232 R10 — classify a probe HTTP status as "connector reachable".
+   * The server ANSWERED, so it is up: 2xx/3xx and 4xx (incl. 401/403 auth-needed
+   * and 404 no-such-route) are all reachable. Only 5xx (server erroring) counts
+   * as down — except 501 Not Implemented, which still means the server answered.
+   *
+   * This is the direct fix for openmodel: GET https://api.openmodel.ai/v1/health
+   * returns 404 (no route) while /v1/models returns 401 — the API is alive, so a
+   * 404 on /health must not blanket-offline every openmodel model.
+   */
+  protected isReachableStatus(status: number): boolean {
+    return status < 500 || status === 501;
+  }
+
   async getStatus(): Promise<ConnectorStatus> {
     const { aggregate, perModel } = this.cbManager.getStates();
     try {
-      const res = await fetch(`${this.getBaseUrl()}/health`, {
+      const res = await fetch(`${this.getBaseUrl()}${this.getHealthProbePath()}`, {
         method: 'GET',
         signal: AbortSignal.timeout(5_000),
       });
 
+      const reachable = this.isReachableStatus(res.status);
       return {
         name: this.name,
-        healthy: res.ok && aggregate.state !== 'open',
+        // `healthy` = connector reachable AND its aggregate breaker not open.
+        // Per-MODEL availability is computed downstream from `circuitBreakers`.
+        healthy: reachable && aggregate.state !== 'open',
         activeJobs: this.activeJobs,
         queuedJobs: this.semaphore.pending,
         rateLimitStatus: 'ok',
@@ -281,6 +308,7 @@ export abstract class BaseApiConnector implements IConnector {
         circuitBreakers: perModel,
       };
     } catch {
+      // Network error / timeout / DNS failure → genuinely unreachable.
       return {
         name: this.name,
         healthy: false,

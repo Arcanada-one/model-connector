@@ -43,12 +43,21 @@ describe('ConnectorsService', () => {
     }),
   };
 
+  // CONN-0232: existing chat-focused tests use an EMPTY static modality catalog
+  // so their counts/availability assertions stay about registered connectors.
+  // Completeness tests below construct a service with the real ModalityCatalogService.
+  const emptyModalityCatalog = {
+    getEntries: () => [],
+    getFilteredEntries: () => [],
+  } as unknown as import('./modality-catalog.service').ModalityCatalogService;
+
   beforeEach(() => {
     service = new ConnectorsService(
       mockQueue as unknown as Queue,
       mockPrisma as unknown as PrismaService,
       mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
       new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+      emptyModalityCatalog,
     );
     vi.clearAllMocks();
   });
@@ -398,6 +407,146 @@ describe('ConnectorsService', () => {
         expect(m.capabilities.supportsStreaming).toBe(false);
         expect(m.capabilities.supportsTools).toBe(false);
       }
+    });
+
+    // ── CONN-0232: modality + derived tags on chat connectors ──
+    it('stamps modality=chat by default and modality:* + cost/cap tags', async () => {
+      service.register(openmodelConnector);
+      const result = await service.getCatalog(noFilters);
+      const flash = result.models.find((m) => m.model === 'deepseek-v4-flash');
+      expect(flash?.modality).toBe('chat');
+      expect(flash?.tags).toContain('modality:chat');
+      expect(flash?.tags).toContain('cost:free'); // free model
+      expect(flash?.tags).toContain('cap:json-schema');
+      expect(flash?.tags).not.toContain('cap:tools'); // openmodel supportsTools=false
+    });
+
+    it('uses the connector-declared modality when present (embedding)', async () => {
+      const embeddingConnector: IConnector = {
+        ...cliConnector,
+        name: 'embedding',
+        getCapabilities: vi.fn().mockReturnValue({
+          name: 'embedding',
+          type: 'api',
+          modality: 'embedding',
+          models: ['bge-m3'],
+          supportsStreaming: false,
+          supportsJsonSchema: false,
+          supportsTools: false,
+          maxTimeout: 60_000,
+        }),
+      };
+      service.register(embeddingConnector);
+      const result = await service.getCatalog(noFilters);
+      const bge = result.models.find((m) => m.model === 'bge-m3');
+      expect(bge?.modality).toBe('embedding');
+      expect(bge?.tags).toContain('modality:embedding');
+    });
+
+    it('?modality= filter narrows to a single family', async () => {
+      service.register(openmodelConnector);
+      const result = await service.getCatalog({ ...noFilters, modality: 'embedding' });
+      expect(result.models).toHaveLength(0); // openmodel is chat
+      const chat = await service.getCatalog({ ...noFilters, modality: 'chat' });
+      expect(chat.models.length).toBeGreaterThan(0);
+    });
+
+    it('?connector= filter narrows to one connector', async () => {
+      service.register(openmodelConnector);
+      service.register(cliConnector);
+      const result = await service.getCatalog({ ...noFilters, connector: 'claude-code' });
+      expect(result.models.every((m) => m.connector === 'claude-code')).toBe(true);
+      expect(result.models.length).toBe(2);
+    });
+
+    it('?tag= and ?group= filters work', async () => {
+      service.register(openmodelConnector);
+      const byTag = await service.getCatalog({ ...noFilters, tag: 'cost:free' });
+      expect(byTag.models.every((m) => m.tags.includes('cost:free'))).toBe(true);
+      const byGroup = await service.getCatalog({ ...noFilters, group: 'cost' });
+      expect(byGroup.models.every((m) => m.tags.some((t) => t.startsWith('cost:')))).toBe(true);
+    });
+
+    // ── CONN-0232 R10: per-model availability ──
+    it('R10: a reachable connector keeps models available even if a /health route would 404', async () => {
+      // healthy:true models stay available; this asserts the per-model path does
+      // not blanket-offline when the connector is reachable.
+      service.register(openmodelConnector);
+      const result = await service.getCatalog(noFilters);
+      expect(result.models.every((m) => m.available === true)).toBe(true);
+    });
+
+    it('R10: only the model whose circuit breaker is OPEN is unavailable, not its siblings', async () => {
+      const partiallyDegraded: IConnector = {
+        ...openmodelConnector,
+        name: 'openmodel',
+        getStatus: vi.fn().mockResolvedValue({
+          name: 'openmodel',
+          healthy: true,
+          activeJobs: 0,
+          queuedJobs: 0,
+          rateLimitStatus: 'ok',
+          circuitBreakers: {
+            'deepseek-r2': {
+              state: 'open',
+              consecutiveFailures: 5,
+              lastErrorType: 'server_error',
+            },
+          },
+        }),
+      };
+      service.register(partiallyDegraded);
+      const result = await service.getCatalog(noFilters);
+      const r2 = result.models.find((m) => m.model === 'deepseek-r2');
+      const flash = result.models.find((m) => m.model === 'deepseek-v4-flash');
+      expect(r2?.available).toBe(false); // its breaker is open
+      expect(flash?.available).toBe(true); // sibling unaffected
+    });
+  });
+
+  // ── CONN-0232: catalog completeness via the real ModalityCatalogService ──
+  describe('getCatalog completeness (CONN-0232 WS3)', () => {
+    const noFilters: CatalogFilters = { free: false, cheap: false, capability: undefined };
+    let fullService: ConnectorsService;
+
+    beforeEach(async () => {
+      const { ModalityCatalogService } = await import('./modality-catalog.service');
+      fullService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        new ModalityCatalogService(),
+      );
+    });
+
+    it('surfaces image-generation, speech-to-text and text-to-speech families', async () => {
+      const result = await fullService.getCatalog(noFilters);
+      const modalities = new Set(result.models.map((m) => m.modality));
+      expect(modalities).toContain('image_generation');
+      expect(modalities).toContain('speech_to_text');
+      expect(modalities).toContain('text_to_speech');
+    });
+
+    it('non-chat entries carry an honest routing.endpoint (not the chat /execute route)', async () => {
+      const result = await fullService.getCatalog(noFilters);
+      const img = result.models.find((m) => m.modality === 'image_generation');
+      const stt = result.models.find((m) => m.modality === 'speech_to_text');
+      const tts = result.models.find((m) => m.modality === 'text_to_speech');
+      expect(img?.routing.endpoint).toBe('/images/generate');
+      expect(stt?.routing.endpoint).toBe('/v1/speech/stt');
+      expect(tts?.routing.endpoint).toBe('/v1/speech/tts');
+    });
+
+    it('?modality=image_generation returns only image-gen models', async () => {
+      const result = await fullService.getCatalog({ ...noFilters, modality: 'image_generation' });
+      expect(result.models.length).toBeGreaterThan(0);
+      expect(result.models.every((m) => m.modality === 'image_generation')).toBe(true);
+    });
+
+    it('emits zero rerank entries (reserved modality, no connector yet — anti-fabrication)', async () => {
+      const result = await fullService.getCatalog({ ...noFilters, modality: 'rerank' });
+      expect(result.models).toHaveLength(0);
     });
   });
 

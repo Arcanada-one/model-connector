@@ -290,6 +290,31 @@ describe('BaseApiConnector', () => {
 
       expect(status.healthy).toBe(false);
     });
+
+    // ── CONN-0232 R10: a missing /health route (404) must NOT mark a live API offline ──
+    it('R10: stays healthy when /health 404s but the server answered (openmodel case)', async () => {
+      fetchSpy.mockResolvedValueOnce({ ok: false, status: 404 });
+      const status = await connector.getStatus();
+      expect(status.healthy).toBe(true);
+    });
+
+    it('R10: stays healthy on 401 (API alive, auth required)', async () => {
+      fetchSpy.mockResolvedValueOnce({ ok: false, status: 401 });
+      const status = await connector.getStatus();
+      expect(status.healthy).toBe(true);
+    });
+
+    it('R10: stays healthy on 403 (reachable, not down)', async () => {
+      fetchSpy.mockResolvedValueOnce({ ok: false, status: 403 });
+      const status = await connector.getStatus();
+      expect(status.healthy).toBe(true);
+    });
+
+    it('R10: 5xx (>=500, not 501) is still treated as down', async () => {
+      fetchSpy.mockResolvedValueOnce({ ok: false, status: 500 });
+      const status = await connector.getStatus();
+      expect(status.healthy).toBe(false);
+    });
   });
 
   describe('classifyHttpError', () => {

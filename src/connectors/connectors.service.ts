@@ -18,7 +18,15 @@ import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import type { OutputGuardReport } from './output-guard/types';
 import { OPENMODEL_CATALOGUE } from './openmodel/openmodel.catalogue';
-import type { CatalogFilters, CatalogModelEntry, CatalogResponse } from './dto/catalog.dto';
+import {
+  buildDerivedTags,
+  entryMatchesFilters,
+  type CatalogFilters,
+  type CatalogModelEntry,
+  type CatalogResponse,
+  type ModelModality,
+} from './dto/catalog.dto';
+import { ModalityCatalogService } from './modality-catalog.service';
 
 // CONN-0089: callers may pass guard-only fields alongside the base request.
 export type ServiceExecuteRequest = ConnectorRequest & {
@@ -50,6 +58,9 @@ export class ConnectorsService {
     private readonly prisma: PrismaService,
     private readonly metricsService: MetricsService,
     private readonly outputGuardMiddleware: OutputGuardMiddleware,
+    // CONN-0232 — static non-chat catalog (image-gen / STT / TTS). Defaulted so
+    // existing manual constructions still work; the module provides the real one.
+    private readonly modalityCatalog: ModalityCatalogService = new ModalityCatalogService(),
   ) {}
 
   register(connector: IConnector) {
@@ -109,43 +120,53 @@ export class ConnectorsService {
         };
       }
 
-      const available = status.healthy;
+      // CONN-0232: `healthy` means the connector is REACHABLE (R10 — a 404 on a
+      // missing /health route no longer marks a live API offline). Per-model
+      // availability additionally requires the model's own circuit breaker to be
+      // closed, so one connector probe no longer blanket-offlines unrelated models.
+      const reachable = status.healthy;
+      const perModelBreakers = status.circuitBreakers ?? {};
+      // CONN-0232: model modality — connector default (chat) unless the connector
+      // declares one (e.g. embedding). Never overloads transport `type`.
+      const modality: ModelModality = caps.modality ?? 'chat';
       const freeModelSet = new Set<string>(caps.freeModels ?? []);
 
       for (const model of caps.models) {
         const priceMultiplier = this.resolvePrice(connector.name, model);
         const free = freeModelSet.has(model) || (priceMultiplier !== null && priceMultiplier === 0);
         const cheap = free || (priceMultiplier !== null && priceMultiplier <= 1);
+        const capabilities = {
+          supportsStreaming: caps.supportsStreaming,
+          supportsJsonSchema: caps.supportsJsonSchema,
+          supportsTools: caps.supportsTools,
+        };
+        const modelBreakerOpen = perModelBreakers[model]?.state === 'open';
 
-        // Apply filters
-        if (filters.free && !free) continue;
-        if (filters.cheap && !cheap) continue;
-        if (filters.capability) {
-          const capKey = filters.capability as keyof typeof caps;
-          if (!caps[capKey]) continue;
-        }
-
-        entries.push({
+        const entry: CatalogModelEntry = {
           connector: connector.name,
           model,
+          modality,
+          tags: buildDerivedTags({ modality, free, cheap, capabilities }),
           free,
           cheap,
           priceMultiplier,
           // Rate limits: no connector exposes live RPM/TPM data yet.
           rateLimits: null,
-          capabilities: {
-            supportsStreaming: caps.supportsStreaming,
-            supportsJsonSchema: caps.supportsJsonSchema,
-            supportsTools: caps.supportsTools,
-          },
+          capabilities,
           routing: {
             connector: connector.name,
             model,
           },
-          available,
-        });
+          available: reachable && !modelBreakerOpen,
+        };
+
+        if (entryMatchesFilters(entry, filters)) entries.push(entry);
       }
     }
+
+    // CONN-0232: merge non-chat families (image-gen / STT / TTS) that are not
+    // IConnector and therefore invisible to the loop above. Same filters apply.
+    entries.push(...this.modalityCatalog.getFilteredEntries(filters));
 
     return {
       models: entries,
