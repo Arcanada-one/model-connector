@@ -264,7 +264,7 @@ async function emitAlert(
     ? bodyFull
     : JSON.stringify({ ...bodyDetail, evidence: { provider: evidence.provider, model: evidence.model, observedAt: evidence.observedAt } });
   await deps.opsbot.emit({
-    category: 'info',
+    category: blockedAction ? 'warning' : 'info',
     agent: 'model-connector-watcher',
     title: `MC ${evidence.provider}/${evidence.model}: ${failureClass}`.slice(0, 256),
     body: bodySummary.slice(0, 4000),
