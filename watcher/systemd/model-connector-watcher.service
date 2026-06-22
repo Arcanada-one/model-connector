@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=notify
+NotifyAccess=all
 User=model-connector-watcher
 Group=model-connector-watcher
 EnvironmentFile=/etc/model-connector-watcher/watcher.env
