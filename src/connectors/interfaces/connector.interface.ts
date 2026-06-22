@@ -110,6 +110,7 @@ export interface ConnectorStatus {
 
 export interface ConnectorCapabilities {
   name: string;
+  // Transport — HOW we reach the provider. NOT the model modality (CONN-0232).
   type: 'cli' | 'api';
   models: string[];
   supportsStreaming: boolean;
@@ -118,6 +119,11 @@ export interface ConnectorCapabilities {
   maxTimeout: number;
   // CONN-0223 — optional field for connectors that expose a free tier.
   freeModels?: string[];
+  // CONN-0232 — model modality (a.k.a `type` in the catalog DTO). Distinct from
+  // transport `type` above. Defaults to 'chat' in the catalog when omitted; the
+  // embedding connector sets 'embedding'. A string here (not the DTO enum) keeps
+  // this interface free of a dto import; the catalog validates against the enum.
+  modality?: import('../dto/catalog.dto').ModelModality;
 }
 
 export interface CircuitBreakerResetEntry {

@@ -4,6 +4,10 @@ import {
   CatalogResponseSchema,
   CatalogFiltersSchema,
   CAPABILITY_FILTER_VALUES,
+  MODEL_MODALITY_VALUES,
+  buildDerivedTags,
+  entryMatchesFilters,
+  type CatalogModelEntry,
 } from './catalog.dto';
 
 // ─── CONN-0226 — catalog DTO schema unit tests ────────────────────────────────
@@ -11,6 +15,8 @@ import {
 const validEntry = {
   connector: 'openmodel',
   model: 'deepseek-v4-flash',
+  modality: 'chat' as const,
+  tags: ['modality:chat', 'cost:free', 'cost:cheap', 'cap:json-schema'],
   free: true,
   cheap: true,
   priceMultiplier: 0,
@@ -181,5 +187,134 @@ describe('CatalogFiltersSchema', () => {
     expect(result.data?.free).toBe(false);
     expect(result.data?.cheap).toBe(false);
     expect(result.data?.capability).toBeUndefined();
+  });
+});
+
+// ─── CONN-0232 — modality + tags + new filters ────────────────────────────────
+
+describe('CatalogModelEntrySchema — modality + tags (CONN-0232)', () => {
+  it('rejects an entry missing modality', () => {
+    const { modality: _omit, ...rest } = validEntry;
+    expect(CatalogModelEntrySchema.safeParse(rest).success).toBe(false);
+  });
+
+  it('rejects an entry missing tags', () => {
+    const { tags: _omit, ...rest } = validEntry;
+    expect(CatalogModelEntrySchema.safeParse(rest).success).toBe(false);
+  });
+
+  it('accepts every modality enum value', () => {
+    for (const m of MODEL_MODALITY_VALUES) {
+      const entry = { ...validEntry, modality: m };
+      expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+    }
+  });
+
+  it('rejects an unknown modality', () => {
+    const entry = { ...validEntry, modality: 'telepathy' };
+    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(false);
+  });
+
+  it('accepts an optional routing.endpoint (honest non-chat path)', () => {
+    const entry = {
+      ...validEntry,
+      modality: 'image_generation' as const,
+      routing: { connector: 'vertex', model: 'vertex:imagen-4', endpoint: '/images/generate' },
+    };
+    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+  });
+});
+
+describe('buildDerivedTags (CONN-0232)', () => {
+  it('always includes the modality tag', () => {
+    const tags = buildDerivedTags({
+      modality: 'embedding',
+      free: false,
+      cheap: false,
+      capabilities: { supportsStreaming: false, supportsJsonSchema: false, supportsTools: false },
+    });
+    expect(tags).toContain('modality:embedding');
+  });
+
+  it('derives cost + capability tags reproducibly', () => {
+    const tags = buildDerivedTags({
+      modality: 'chat',
+      free: true,
+      cheap: true,
+      capabilities: { supportsStreaming: true, supportsJsonSchema: true, supportsTools: true },
+    });
+    expect(tags).toEqual([
+      'modality:chat',
+      'cost:free',
+      'cost:cheap',
+      'cap:streaming',
+      'cap:tools',
+      'cap:json-schema',
+    ]);
+  });
+
+  it('omits cost/cap tags when the flags are false', () => {
+    const tags = buildDerivedTags({
+      modality: 'chat',
+      free: false,
+      cheap: false,
+      capabilities: { supportsStreaming: false, supportsJsonSchema: false, supportsTools: false },
+    });
+    expect(tags).toEqual(['modality:chat']);
+  });
+});
+
+describe('CatalogFiltersSchema — type/modality/connector/tag/group (CONN-0232)', () => {
+  it('parses a valid modality filter', () => {
+    const result = CatalogFiltersSchema.safeParse({ modality: 'image_generation' });
+    expect(result.success).toBe(true);
+    expect(result.data?.modality).toBe('image_generation');
+  });
+
+  it('rejects an unknown modality filter', () => {
+    expect(CatalogFiltersSchema.safeParse({ modality: 'nope' }).success).toBe(false);
+  });
+
+  it('parses connector / tag / group filters', () => {
+    const result = CatalogFiltersSchema.safeParse({
+      connector: 'groq',
+      tag: 'cost:free',
+      group: 'cost',
+    });
+    expect(result.success).toBe(true);
+    expect(result.data?.connector).toBe('groq');
+    expect(result.data?.tag).toBe('cost:free');
+    expect(result.data?.group).toBe('cost');
+  });
+});
+
+describe('entryMatchesFilters (CONN-0232)', () => {
+  const base: CatalogModelEntry = CatalogModelEntrySchema.parse(validEntry);
+  const noFilters = { free: false, cheap: false } as ReturnType<typeof CatalogFiltersSchema.parse>;
+
+  it('passes with no active filters', () => {
+    expect(entryMatchesFilters(base, noFilters)).toBe(true);
+  });
+
+  it('modality filter excludes non-matching entries', () => {
+    expect(entryMatchesFilters(base, { ...noFilters, modality: 'embedding' })).toBe(false);
+    expect(entryMatchesFilters(base, { ...noFilters, modality: 'chat' })).toBe(true);
+  });
+
+  it('connector filter is exact', () => {
+    expect(entryMatchesFilters(base, { ...noFilters, connector: 'groq' })).toBe(false);
+    expect(entryMatchesFilters(base, { ...noFilters, connector: 'openmodel' })).toBe(true);
+  });
+
+  it('tag filter is exact membership', () => {
+    expect(entryMatchesFilters(base, { ...noFilters, tag: 'cost:free' })).toBe(true);
+    expect(entryMatchesFilters(base, { ...noFilters, tag: 'cost:expensive' })).toBe(false);
+  });
+
+  it('group filter is delimiter-safe prefix (cost does NOT match cost-something)', () => {
+    const trap: CatalogModelEntry = { ...base, tags: ['cost-something:weird'] };
+    expect(entryMatchesFilters(trap, { ...noFilters, group: 'cost' })).toBe(false);
+    expect(entryMatchesFilters(base, { ...noFilters, group: 'cost' })).toBe(true);
+    expect(entryMatchesFilters(base, { ...noFilters, group: 'cap' })).toBe(true);
   });
 });

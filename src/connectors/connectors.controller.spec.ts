@@ -19,6 +19,8 @@ describe('ConnectorsController', () => {
       {
         connector: 'openmodel',
         model: 'deepseek-v4-flash',
+        modality: 'chat',
+        tags: ['modality:chat', 'cost:free', 'cost:cheap', 'cap:json-schema'],
         free: true,
         cheap: true,
         priceMultiplier: 0,
@@ -260,6 +262,44 @@ describe('ConnectorsController', () => {
       expect(mockService.getCatalog).toHaveBeenCalledWith(
         expect.objectContaining({ capability: 'supportsJsonSchema' }),
       );
+    });
+
+    // ── CONN-0232: new filters + ?type= alias ──
+    it('passes modality / connector / tag / group filters through to service', async () => {
+      await controller.getCatalog({
+        modality: 'image_generation',
+        connector: 'vertex',
+        tag: 'modality:image_generation',
+        group: 'cost',
+      });
+      expect(mockService.getCatalog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          modality: 'image_generation',
+          connector: 'vertex',
+          tag: 'modality:image_generation',
+          group: 'cost',
+        }),
+      );
+    });
+
+    it('maps ?type= alias to modality', async () => {
+      await controller.getCatalog({ type: 'speech_to_text' });
+      expect(mockService.getCatalog).toHaveBeenCalledWith(
+        expect.objectContaining({ modality: 'speech_to_text' }),
+      );
+    });
+
+    it('explicit ?modality= wins over ?type= alias', async () => {
+      await controller.getCatalog({ type: 'chat', modality: 'embedding' });
+      expect(mockService.getCatalog).toHaveBeenCalledWith(
+        expect.objectContaining({ modality: 'embedding' }),
+      );
+    });
+
+    it('returns 400 for unknown modality value', async () => {
+      await expect(controller.getCatalog({ modality: 'telepathy' })).rejects.toMatchObject({
+        status: 400,
+      });
     });
 
     it('returns 400 for unknown capability value', async () => {
