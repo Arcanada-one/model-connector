@@ -155,10 +155,15 @@ export const envSchema = z
     OPENMODEL_FREE_MODELS: z.string().default('deepseek-v4-flash'),
     OPENMODEL_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(30_000),
     OPENMODEL_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(2),
+    // CONN-0237 Part 1 — three INDEPENDENT free-pool providers (openmodel / groq /
+    // openrouter) before the paid rung, so a single provider's rate-limit (e.g. the
+    // shared OpenRouter 429 pool) no longer fails the whole free fallback. groq rung
+    // requires GROQ_API_KEY (present on prod). Verified live 2026-06-23:
+    // groq:llama-3.3-70b-versatile → 201 success in ~1s.
     CASCADE_LOW_REASONING_ORDER: z
       .string()
       .default(
-        'openmodel:deepseek-v4-flash:free,openrouter:meta-llama/llama-4-maverick:free,openrouter:deepseek-v4-flash:paid',
+        'openmodel:deepseek-v4-flash:free,groq:llama-3.3-70b-versatile:free,openrouter:meta-llama/llama-4-maverick:free,openrouter:deepseek-v4-flash:paid',
       ),
     CASCADE_PAID_ENABLED: envBool.default(false),
     CASCADE_PAID_DAILY_BUDGET_USD: z.coerce.number().min(0).max(100).default(0.17),
