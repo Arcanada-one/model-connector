@@ -235,31 +235,44 @@ export class ConnectorsService {
     endpoint?: string;
     executableHere: boolean;
   } {
+    const executableHere = ConnectorsService.isModalityExecutableHere(modality);
+    // STT/TTS/image/video surfaced through a chat connector are INFORMATIONAL —
+    // the (connector, model) tuple is not a real route here (the executable row is
+    // the dedicated modality connector, e.g. `groq-stt`). We set NO chat caps, mark
+    // not-callable-here, and DELIBERATELY OMIT `routing.endpoint`: pointing it at a
+    // sibling module's path would misrepresent the route (consilium impl-review MED
+    // — `/v1/speech/stt` with `connector:groq` is not how you call it; grok-imagine
+    // ids are not wired into MC's image module at all). `available:false` + the
+    // modality is the honest signal; route via the dedicated connector for that
+    // modality, not this one.
+    //
+    // moderation (groq prompt-guard) IS callable here — it runs through the chat
+    // /execute → /chat/completions path — but it is a classifier, so it carries NO
+    // chat capabilities (no tools/json-schema/streaming) to keep `cap:*` honest.
+    if (modality === 'moderation' || !executableHere) {
+      return { capabilities: { ...NO_CAPS }, executableHere };
+    }
+    return { capabilities: connectorCaps, executableHere };
+  }
+
+  /**
+   * CONN-0239 — single source of truth for "can this modality run through the chat
+   * `/execute` path of an IConnector?". Chat / embedding / rerank / moderation are
+   * served via the connector's chat path; the dedicated-pipeline modalities
+   * (STT / TTS / image / video) are NOT — calling them via /execute would forward a
+   * non-chat id to /chat/completions. Used by {@link presentModel} (catalog
+   * `available`) AND the execute() pre-flight gate so the two never drift.
+   */
+  static isModalityExecutableHere(modality: ModelModality): boolean {
     switch (modality) {
-      // STT/TTS/image/video surfaced through a chat connector are INFORMATIONAL —
-      // the (connector, model) tuple is not a real route here (the executable row is
-      // the dedicated modality connector, e.g. `groq-stt`). We set NO chat caps, mark
-      // not-callable-here, and DELIBERATELY OMIT `routing.endpoint`: pointing it at a
-      // sibling module's path would misrepresent the route (consilium impl-review MED
-      // — `/v1/speech/stt` with `connector:groq` is not how you call it; grok-imagine
-      // ids are not wired into MC's image module at all). `available:false` + the
-      // modality is the honest signal; route via the dedicated connector for that
-      // modality, not this one.
       case 'speech_to_text':
       case 'text_to_speech':
       case 'image_generation':
       case 'video':
-        return { capabilities: { ...NO_CAPS }, executableHere: false };
-      // moderation (groq prompt-guard) IS callable here — it runs through the chat
-      // /execute → /chat/completions path — but it is a classifier, so it carries NO
-      // chat capabilities (no tools/json-schema/streaming) to keep `cap:*` honest.
-      case 'moderation':
-        return { capabilities: { ...NO_CAPS }, executableHere: true };
-      case 'chat':
-      case 'embedding':
-      case 'rerank':
+        return false;
       default:
-        return { capabilities: connectorCaps, executableHere: true };
+        // chat, embedding, rerank, moderation
+        return true;
     }
   }
 
@@ -297,6 +310,38 @@ export class ConnectorsService {
     apiKeyId: string,
   ): Promise<ConnectorResponse> {
     const connector = this.get(connectorName);
+
+    // CONN-0239 — modality pre-flight gate. The catalog surfaces non-chat families
+    // (STT/TTS/image/video) for completeness with `available:false`; this connector's
+    // chat `/execute` path cannot serve them. Reject such a request HERE with
+    // `unsupported_modality` instead of forwarding a non-chat id to /chat/completions
+    // (which would burn a provider round-trip for a provider-side error). Resolved
+    // from the same per-model modality the catalog uses — single source via
+    // `isModalityExecutableHere`. When the model is unknown to modelMeta we do NOT
+    // block (default chat assumption) — only a KNOWN non-executable modality is gated.
+    if (request.model) {
+      const caps = connector.getCapabilities();
+      const meta = caps.modelMeta?.find((m) => m.id === request.model);
+      const modality = meta?.modality;
+      if (modality && !ConnectorsService.isModalityExecutableHere(modality)) {
+        const action = classifyErrorAction('unsupported_modality');
+        return {
+          id: '',
+          connector: connectorName,
+          model: request.model,
+          result: '',
+          usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+          latencyMs: 0,
+          status: 'error',
+          error: {
+            type: 'unsupported_modality',
+            message: `Model '${request.model}' is a '${modality}' model and cannot be executed through the chat endpoint of connector '${connectorName}'. Route it via the dedicated ${modality} connector instead.`,
+            ...action,
+          },
+        };
+      }
+    }
+
     let maxRetries: number;
     try {
       maxRetries = getConfig().CONNECTOR_MAX_RETRIES;

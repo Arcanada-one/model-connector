@@ -76,6 +76,64 @@ describe('ConnectorsService', () => {
     expect(service.listNames()).toEqual(['test']);
   });
 
+  describe('execute() modality gate (CONN-0239)', () => {
+    const metaConnector: IConnector = {
+      ...mockConnector,
+      name: 'metacon',
+      execute: vi.fn().mockResolvedValue({
+        id: 'r',
+        connector: 'metacon',
+        model: 'm',
+        result: 'ok',
+        usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, costUsd: 0 },
+        latencyMs: 1,
+        status: 'success',
+      }),
+      getCapabilities: vi.fn().mockReturnValue({
+        name: 'metacon',
+        type: 'api',
+        models: ['chat-m', 'whisper-m', 'guard-m', 'img-m'],
+        supportsStreaming: false,
+        supportsJsonSchema: false,
+        supportsTools: false,
+        maxTimeout: 300000,
+        modelMeta: [
+          { id: 'chat-m', modality: 'chat' },
+          { id: 'whisper-m', modality: 'speech_to_text' },
+          { id: 'guard-m', modality: 'moderation' },
+          { id: 'img-m', modality: 'image_generation' },
+        ],
+      }),
+    };
+
+    it.each(['whisper-m', 'img-m'])(
+      'rejects a non-chat model (%s) with unsupported_modality WITHOUT calling the provider',
+      async (model) => {
+        service.register(metaConnector);
+        const res = await service.execute('metacon', { prompt: 'x', model }, 'k');
+        expect(res.status).toBe('error');
+        expect(res.error?.type).toBe('unsupported_modality');
+        expect(metaConnector.execute).not.toHaveBeenCalled();
+      },
+    );
+
+    it('allows chat and moderation models through to the provider', async () => {
+      service.register(metaConnector);
+      const chat = await service.execute('metacon', { prompt: 'x', model: 'chat-m' }, 'k');
+      const mod = await service.execute('metacon', { prompt: 'x', model: 'guard-m' }, 'k');
+      expect(chat.status).toBe('success');
+      expect(mod.status).toBe('success');
+      expect(metaConnector.execute).toHaveBeenCalledTimes(2);
+    });
+
+    it('does NOT block a model unknown to modelMeta (default chat assumption)', async () => {
+      service.register(metaConnector);
+      const res = await service.execute('metacon', { prompt: 'x', model: 'unknown-id' }, 'k');
+      expect(res.status).toBe('success');
+      expect(metaConnector.execute).toHaveBeenCalled();
+    });
+  });
+
   it('should execute via connector directly', async () => {
     service.register(mockConnector);
     const result = await service.execute('test', { prompt: 'hello' }, 'key-1');
