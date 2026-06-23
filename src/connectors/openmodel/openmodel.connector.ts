@@ -133,13 +133,15 @@ export class OpenModelConnector extends BaseApiConnector {
       };
     }
 
-    // CONN-0237 — Anthropic /v1/messages echoes only the continuation of an assistant
-    // prefill. When JSON-mode was active, the leading '{' was sent as prefill content
-    // and is NOT included in the returned text block — re-prepend it here (V-AC-3).
+    // CONN-0237 — Anthropic /v1/messages MAY echo only the continuation of an assistant
+    // prefill (leading '{' absent), but some upstreams (observed: deepseek-v4-flash via the
+    // openmodel endpoint) ignore the prefill and return the FULL object including '{'.
+    // Re-prepend '{' only when the returned text does not already start with it — otherwise
+    // we produce '{{...}' and JSON.parse fails (CONN-0237 prod regression, 2026-06-23).
     // Non-JSON path is byte-identical (V-AC-2).
     const isJsonMode = request.responseFormat?.type === 'json_object';
     const rawText = textBlock.text ?? '';
-    const text = isJsonMode ? '{' + rawText : rawText;
+    const text = isJsonMode && !rawText.trimStart().startsWith('{') ? '{' + rawText : rawText;
 
     return {
       text,
