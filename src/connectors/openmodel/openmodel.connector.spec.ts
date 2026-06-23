@@ -436,6 +436,56 @@ describe('OpenModelConnector', () => {
       expect(parsed.count).toBe(42);
     });
 
+    it('does NOT double-prepend { when the upstream already returned a full object (CONN-0237 prod regression)', () => {
+      // deepseek-v4-flash via the openmodel endpoint ignores the prefill and returns
+      // the FULL object including the leading '{'. Re-prepending would yield '{{...}'
+      // and JSON.parse would fail. Guard: only prepend when '{' is absent.
+      const fullObjectFixture = {
+        id: 'msg_json_03',
+        type: 'message',
+        role: 'assistant',
+        model: 'deepseek-v4-flash',
+        content: [{ type: 'text', text: '{"ok": true}' }],
+        stop_reason: 'end_turn',
+        usage: { input_tokens: 5, output_tokens: 6 },
+      };
+
+      const result = (
+        connector as unknown as { parseResponse: (j: unknown, r: unknown) => unknown }
+      ).parseResponse(fullObjectFixture, {
+        prompt: 'y',
+        responseFormat: { type: 'json_object' },
+      }) as { text: string; isError: boolean };
+
+      expect(result.isError).toBe(false);
+      expect(result.text).toBe('{"ok": true}');
+      expect(result.text.startsWith('{{')).toBe(false);
+      expect(() => JSON.parse(result.text)).not.toThrow();
+      expect((JSON.parse(result.text) as { ok: boolean }).ok).toBe(true);
+    });
+
+    it('does NOT double-prepend { when full object has leading whitespace', () => {
+      const paddedFixture = {
+        id: 'msg_json_04',
+        type: 'message',
+        role: 'assistant',
+        model: 'deepseek-v4-flash',
+        content: [{ type: 'text', text: '  {"a": 1}' }],
+        stop_reason: 'end_turn',
+        usage: { input_tokens: 3, output_tokens: 4 },
+      };
+
+      const result = (
+        connector as unknown as { parseResponse: (j: unknown, r: unknown) => unknown }
+      ).parseResponse(paddedFixture, {
+        prompt: 'y',
+        responseFormat: { type: 'json_object' },
+      }) as { text: string; isError: boolean };
+
+      expect(result.text.trimStart().startsWith('{{')).toBe(false);
+      expect(() => JSON.parse(result.text)).not.toThrow();
+    });
+
     it('does NOT re-prepend { when json-mode is inactive (type: text)', () => {
       const result = (
         connector as unknown as { parseResponse: (j: unknown, r: unknown) => unknown }
