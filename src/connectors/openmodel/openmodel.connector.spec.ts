@@ -333,6 +333,15 @@ describe('OpenModelConnector', () => {
       expect(calledUrl).toBe('https://api.openmodel.ai/v1/models');
     });
 
+    it('uses Authorization: Bearer for /models, not x-api-key (CONN-0236 — /v1/models 401s on x-api-key)', async () => {
+      process.env.OPENMODEL_API_KEY = 'test-key';
+      mockModelsOk(MODELS_FIXTURE);
+      await connector.refreshModels();
+      const opts = (fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1];
+      expect(opts.headers['Authorization']).toBe('Bearer test-key');
+      expect(opts.headers['x-api-key']).toBeUndefined();
+    });
+
     it('before refresh, getCapabilities().models is the static 3-model fallback', () => {
       const caps = connector.getCapabilities();
       expect(caps.models).toEqual(['deepseek-v4-flash', 'deepseek-r2', 'qwen3-235b']);
