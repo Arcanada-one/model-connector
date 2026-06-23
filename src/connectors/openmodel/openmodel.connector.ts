@@ -28,6 +28,11 @@ const DEFAULT_MODEL = 'deepseek-v4-flash';
 // Required by Anthropic protocol: max_tokens must always be present in the request.
 const DEFAULT_MAX_TOKENS = 4096;
 
+// CONN-0237 — Anthropic-native JSON-mode: system instruction injected when
+// responseFormat.type === 'json_object'. No OpenAI response_format field added.
+const JSON_ONLY_INSTRUCTION =
+  'Respond with only valid JSON. No prose, no preamble, no markdown code fences.';
+
 // CONN-0236 — offline/CI fallback. The live OpenModel /v1/models endpoint returns
 // ~32 models (operator-verified on Mac, 2026-06-23); refreshModels() fetches the
 // full list on boot where OPENMODEL_API_KEY is present. These three are the
@@ -100,6 +105,15 @@ export class OpenModelConnector extends BaseApiConnector {
       body.temperature = request.extra.temperature;
     }
 
+    // CONN-0237 — Anthropic-native JSON-mode: gated strictly on json_object.
+    // Non-JSON callers (no responseFormat or type:'text') are byte-identical (V-AC-2).
+    if (request.responseFormat?.type === 'json_object') {
+      // Merge: preserve any existing systemPrompt, append the strict instruction.
+      body.system = [request.systemPrompt, JSON_ONLY_INSTRUCTION].filter(Boolean).join('\n\n');
+      // Assistant-prefill: Anthropic echoes only the continuation; parseResponse re-prepends '{'.
+      messages.push({ role: 'assistant', content: '{' });
+    }
+
     return body;
   }
 
@@ -119,8 +133,16 @@ export class OpenModelConnector extends BaseApiConnector {
       };
     }
 
+    // CONN-0237 — Anthropic /v1/messages echoes only the continuation of an assistant
+    // prefill. When JSON-mode was active, the leading '{' was sent as prefill content
+    // and is NOT included in the returned text block — re-prepend it here (V-AC-3).
+    // Non-JSON path is byte-identical (V-AC-2).
+    const isJsonMode = request.responseFormat?.type === 'json_object';
+    const rawText = textBlock.text ?? '';
+    const text = isJsonMode ? '{' + rawText : rawText;
+
     return {
-      text: textBlock.text || '',
+      text,
       model: json.model || request.model || DEFAULT_MODEL,
       inputTokens: json.usage?.input_tokens ?? 0,
       outputTokens: json.usage?.output_tokens ?? 0,
