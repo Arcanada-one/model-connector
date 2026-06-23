@@ -1,0 +1,734 @@
+[
+  {
+    "id": "ab37aecd-bac0-4c75-80ae-e87976dbb965",
+    "created": "2024-05-12T00:00:00Z",
+    "updated": "2024-05-12T00:00:00Z",
+    "display_name": "gpt-4o",
+    "model_id": "gpt-4o",
+    "model_developer": "openai",
+    "model_family": "gpt-4",
+    "is_active": true,
+    "provider": "openai",
+    "owner": "system",
+    "input_cost": 0.0025,
+    "input_currency": "usd",
+    "output_cost": 0.01,
+    "output_currency": "usd",
+    "description": "GPT-4o (\u201co\u201d for \u201comni\u201d) is our most advanced model. It is multimodal (accepting text or image inputs and outputting text), and it has the same high intelligence as GPT-4 Turbo but is much more efficient\u2014it generates text 2x faster and is 50% cheaper. Additionally, GPT-4o has the best vision and performance across non-English languages.",
+    "pricing_url": "https://platform.openai.com/docs/pricing",
+    "docs_url": "https://platform.openai.com/docs/api-reference/chat/create",
+    "model_type": "chat",
+    "has_functions": true,
+    "has_cpu_pricing": false,
+    "enabled_for_playground": true,
+    "enabled_for_endpoints": true,
+    "configuration": {
+      "provider": ""
+    },
+    "metadata": {
+      "context_window": 128000,
+      "supports_responses_api": true,
+      "is_private": false,
+      "region": "us",
+      "supports_vision": true,
+      "supports_tool_calling": true,
+      "supports_strict_tool": true,
+      "supports_json_mode_response_format": true,
+      "supports_json_schema_response_format": true,
+      "supports_streaming": true,
+      "supports_batch_api": true,
+      "supports_sampling_params": true,
+      "supports_web_search": true,
+      "supports_text_input": true,
+      "supports_image_input": true,
+      "supports_audio_input": true,
+      "supports_pdf_input": true,
+      "supports_text_output": true,
+      "supports_audio_output": true,
+      "max_output_tokens": 16384,
+      "pricing": {},
+      "million_tokens_input_cost": 2.5,
+      "million_tokens_output_cost": 10,
+      "million_tokens_cache_read_cost": 1.25,
+      "speed_rating": 4,
+      "intelligence_rating": 4,
+      "cost_efficiency_rating": 5,
+      "knowledge_cutoff": "2023-10-01",
+      "autorouter": {
+        "id": "OpenAI/GPT-4o/standard",
+        "version": "1"
+      }
+    },
+    "parameters": [
+      {
+        "id": "b4e46da3-b9c5-4535-b5c7-2b3e60c210fa",
+        "name": "Top P",
+        "parameter": "topP",
+        "description": "",
+        "hints": "",
+        "config": {
+          "max": 1,
+          "min": 0,
+          "step": 0.1,
+          "default": 0
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "d04cc7fb-55ab-4b34-b933-d3f479ee64a9",
+        "name": "Temperature",
+        "parameter": "temperature",
+        "description": "",
+        "hints": "",
+        "config": {
+          "min": 0,
+          "step": 0.1,
+          "default": 0.2,
+          "max": 2
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "556b3e2c-f3b3-449a-9316-99cd6322a817",
+        "name": "Frequency penalty",
+        "parameter": "frequencyPenalty",
+        "description": "",
+        "hints": "",
+        "config": {
+          "max": 2,
+          "min": 0,
+          "step": 0.1,
+          "default": 0
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "b46b47cc-3bc3-4278-8bf6-bb770eacf82e",
+        "name": "Presence penalty",
+        "parameter": "presencePenalty",
+        "description": "",
+        "hints": "",
+        "config": {
+          "max": 2,
+          "min": 0,
+          "step": 0.1,
+          "default": 0
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "1f56a2c4-a88e-42a5-bfa3-9c7a614b5acc",
+        "name": "Max tokens",
+        "parameter": "maxTokens",
+        "description": "",
+        "hints": "",
+        "config": {
+          "max": 16384,
+          "min": 0,
+          "step": 1,
+          "default": 256
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "aefc94c4-59b0-436b-a7d6-88ff8c0b9c3b",
+        "name": "Top K",
+        "parameter": "topK",
+        "description": "Only sample from the top K options for each subsequent token.",
+        "hints": "",
+        "config": {
+          "min": 0,
+          "step": 1,
+          "default": 5,
+          "max": 40
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      }
+    ],
+    "enabled": true,
+    "refId": "openai/gpt-4o"
+  },
+  {
+    "id": "cbdcdd9f-6d0c-4d84-870a-e63601f45ff3",
+    "created": "2024-09-10T00:00:00.083Z",
+    "updated": "2024-09-10T00:00:00.083Z",
+    "display_name": "DeepSeek R1",
+    "model_id": "deepseek-ai/DeepSeek-R1",
+    "model_developer": "deepseek",
+    "model_family": "r1",
+    "is_active": true,
+    "provider": "togetherai",
+    "owner": "system",
+    "input_cost": 0.007,
+    "input_currency": "usd",
+    "output_cost": 0.007,
+    "output_currency": "usd",
+    "description": "Performance on par with OpenAI-o1",
+    "pricing_url": "",
+    "docs_url": "https://api-docs.deepseek.com/news/news250120",
+    "model_type": "chat",
+    "has_functions": false,
+    "has_cpu_pricing": false,
+    "enabled_for_playground": true,
+    "enabled_for_endpoints": true,
+    "configuration": {
+      "provider": ""
+    },
+    "metadata": {
+      "is_private": false,
+      "region": "us",
+      "supports_streaming": true,
+      "supports_sampling_params": true,
+      "supports_text_input": true,
+      "supports_text_output": true,
+      "million_tokens_input_cost": 7,
+      "million_tokens_output_cost": 7,
+      "speed_rating": 1,
+      "intelligence_rating": 5,
+      "cost_efficiency_rating": 5
+    },
+    "parameters": [
+      {
+        "id": "90ae2e14-4559-4f41-8fa4-75d08997032e",
+        "name": "Temperature",
+        "parameter": "temperature",
+        "description": "",
+        "hints": "",
+        "config": {
+          "max": 2,
+          "min": 0,
+          "step": 0.7,
+          "default": 0
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "3e79c64c-c285-4b4c-8b56-4325b9d28566",
+        "name": "Frequency penalty",
+        "parameter": "frequencyPenalty",
+        "description": "",
+        "hints": "",
+        "config": {
+          "step": 0.1,
+          "default": 0,
+          "max": 2,
+          "min": -2
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "a3ee57b8-aa90-41f9-bc4a-aeff9873b0d0",
+        "name": "Max tokens",
+        "parameter": "maxTokens",
+        "description": "",
+        "hints": "",
+        "config": {
+          "max": 131072,
+          "min": 0,
+          "step": 1,
+          "default": 2000
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      }
+    ],
+    "enabled": false,
+    "refId": "togetherai/deepseek-ai/DeepSeek-R1"
+  },
+  {
+    "id": "1665808d-b414-4e5a-bfd0-f4c6339945b7",
+    "created": "2026-06-04T00:00:00Z",
+    "updated": "2026-06-04T00:00:00Z",
+    "display_name": "GLM-5.1",
+    "model_id": "GLM-5.1",
+    "model_developer": "z-ai",
+    "model_family": "glm",
+    "is_active": true,
+    "provider": "wafer",
+    "owner": "system",
+    "input_cost": 0.001,
+    "input_currency": "usd",
+    "output_cost": 0.0032,
+    "output_currency": "usd",
+    "description": "General Language Model 5.1 by Z.AI, served by Wafer with high-quality bilingual English/Chinese generation, coding, and reasoning capabilities.",
+    "pricing_url": "https://www.wafer.ai/",
+    "docs_url": "https://docs.wafer.ai/serverless",
+    "model_type": "chat",
+    "has_functions": true,
+    "has_cpu_pricing": false,
+    "enabled_for_playground": true,
+    "enabled_for_endpoints": true,
+    "configuration": {
+      "provider": "openailike",
+      "base_url": "https://pass-eu.wafer.ai/v1"
+    },
+    "metadata": {
+      "context_window": 202752,
+      "is_private": false,
+      "region": "europe",
+      "supports_tool_calling": true,
+      "supports_streaming": true,
+      "supports_sampling_params": true,
+      "supports_reasoning": true,
+      "supports_reasoning_effort_low": true,
+      "supports_reasoning_effort_medium": true,
+      "supports_reasoning_effort_high": true,
+      "supports_extended_thinking": true,
+      "supports_prompt_caching": true,
+      "supports_text_input": true,
+      "supports_text_output": true,
+      "max_output_tokens": 202752,
+      "supports_max_completion_tokens": true,
+      "million_tokens_input_cost": 1,
+      "million_tokens_output_cost": 3.2,
+      "million_tokens_cache_read_cost": 0.1,
+      "speed_rating": 4,
+      "intelligence_rating": 5,
+      "cost_efficiency_rating": 5,
+      "supports_zdr": true
+    },
+    "parameters": [
+      {
+        "id": "3223be2c-aef3-4500-8440-c0110cfaa118",
+        "name": "Max tokens",
+        "parameter": "maxTokens",
+        "description": "Maximum number of tokens to generate",
+        "hints": "",
+        "config": {
+          "default": 4096,
+          "max": 202752,
+          "min": 1,
+          "step": 1
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "af876987-a3c1-425f-86a8-0685f9332b41",
+        "name": "Thinking - Budget Tokens",
+        "parameter": "budgetTokens",
+        "description": "Gives the model enhanced reasoning capabilities for complex tasks. A value of 0 means the feature is disabled.",
+        "hints": "",
+        "config": {
+          "max": 202751,
+          "min": 0,
+          "step": 1,
+          "default": 0
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "98a998af-38ab-493d-8a8f-172349db4c23",
+        "name": "Reasoning effort",
+        "parameter": "reasoningEffort",
+        "description": "Constrains effort on reasoning. Lower values can reduce latency and reasoning-token usage.",
+        "hints": "",
+        "config": {
+          "default": "medium",
+          "options": [
+            {
+              "display_name": "Low",
+              "value": "low"
+            },
+            {
+              "display_name": "Medium",
+              "value": "medium"
+            },
+            {
+              "display_name": "High",
+              "value": "high"
+            }
+          ]
+        },
+        "parameter_type": "select",
+        "is_active": true
+      },
+      {
+        "id": "c0002f78-db69-4df2-821a-8d29370b7c85",
+        "name": "Temperature",
+        "parameter": "temperature",
+        "description": "Controls randomness of outputs",
+        "hints": "",
+        "config": {
+          "max": 2,
+          "min": 0,
+          "step": 0.1,
+          "default": 1
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "ecb96ecd-970b-40d2-896b-2559692cbdce",
+        "name": "Top P",
+        "parameter": "topP",
+        "description": "Nucleus sampling",
+        "hints": "",
+        "config": {
+          "max": 1,
+          "min": 0,
+          "step": 0.01,
+          "default": 1
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "4dc879f8-0504-494e-8c38-f543f847e4ef",
+        "name": "Top K",
+        "parameter": "topK",
+        "description": "Only sample from the top K options for each subsequent token.",
+        "hints": "",
+        "config": {
+          "max": 40,
+          "min": 0,
+          "step": 1,
+          "default": 5
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "d6a24574-ac5e-46d7-8f84-141d9fc0e987",
+        "name": "Frequency penalty",
+        "parameter": "frequencyPenalty",
+        "description": "Positive values penalize new tokens based on their existing frequency in the generated text.",
+        "hints": "",
+        "config": {
+          "default": 0,
+          "max": 2,
+          "min": -2,
+          "step": 0.1
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "fc6940bd-39d7-49d5-82ba-a344b87fa9f5",
+        "name": "Presence penalty",
+        "parameter": "presencePenalty",
+        "description": "Positive values penalize new tokens based on whether they already appear in the generated text.",
+        "hints": "",
+        "config": {
+          "default": 0,
+          "max": 2,
+          "min": -2,
+          "step": 0.1
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      }
+    ],
+    "enabled": false,
+    "refId": "wafer/GLM-5.1"
+  },
+  {
+    "id": "b2c3d4e5-0004-4a5b-8c9d-f1a2b3c4d5e6",
+    "created": "2026-02-17T00:00:00Z",
+    "updated": "2026-02-17T00:00:00Z",
+    "display_name": "Grok 3",
+    "model_id": "grok-3",
+    "model_developer": "xai",
+    "model_family": "grok",
+    "is_active": true,
+    "provider": "xai",
+    "owner": "system",
+    "input_cost": 0.003,
+    "input_currency": "usd",
+    "output_cost": 0.015,
+    "output_currency": "usd",
+    "description": "Grok 3 is a powerful general-purpose model with strong tool calling and structured output capabilities.",
+    "pricing_url": "https://docs.x.ai/developers/models",
+    "docs_url": "https://docs.x.ai/developers/models",
+    "model_type": "chat",
+    "has_functions": true,
+    "has_cpu_pricing": false,
+    "enabled_for_playground": true,
+    "enabled_for_endpoints": true,
+    "configuration": {
+      "provider": ""
+    },
+    "metadata": {
+      "context_window": 131072,
+      "supports_responses_api": true,
+      "is_private": false,
+      "region": "us",
+      "supports_tool_calling": true,
+      "supports_json_schema_response_format": true,
+      "supports_streaming": true,
+      "supports_sampling_params": true,
+      "supports_text_input": true,
+      "supports_text_output": true,
+      "max_output_tokens": 8192,
+      "million_tokens_input_cost": 3,
+      "million_tokens_output_cost": 15,
+      "million_tokens_cache_read_cost": 0.75,
+      "speed_rating": 2,
+      "intelligence_rating": 4,
+      "cost_efficiency_rating": 5,
+      "supports_structured_outputs": true,
+      "autorouter": {
+        "id": "xAI/Grok/3",
+        "version": "1"
+      }
+    },
+    "parameters": [
+      {
+        "id": "b2c3d4e5-0004-4001-8c9d-f1a2b3c4d5e6",
+        "name": "Max tokens",
+        "parameter": "maxTokens",
+        "description": "The maximum number of tokens to generate before stopping.",
+        "hints": "",
+        "config": {
+          "max": 131072,
+          "min": 1,
+          "step": 1,
+          "default": 4096
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "b2c3d4e5-0004-4002-8c9d-f1a2b3c4d5e6",
+        "name": "Temperature",
+        "parameter": "temperature",
+        "description": "Amount of randomness injected into the response. Ranges from 0 to 2.",
+        "hints": "",
+        "config": {
+          "max": 2,
+          "min": 0,
+          "step": 0.1,
+          "default": 1
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "b2c3d4e5-0004-4003-8c9d-f1a2b3c4d5e6",
+        "name": "Top P",
+        "parameter": "topP",
+        "description": "Nucleus sampling parameter.",
+        "hints": "",
+        "config": {
+          "min": 0,
+          "step": 0.1,
+          "default": 1,
+          "max": 1
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      }
+    ],
+    "enabled": false,
+    "refId": "xai/grok-3"
+  },
+  {
+    "id": "240b4841-7e63-4693-8f58-1a182829798d",
+    "created": "2026-04-01T00:00:00Z",
+    "updated": "2026-04-01T00:00:00Z",
+    "display_name": "Holo3 122B A10B",
+    "model_id": "holo3-122b-a10b",
+    "model_developer": "hcompany",
+    "model_family": "holo3",
+    "is_active": true,
+    "provider": "hcompany",
+    "owner": "system",
+    "input_cost": 0.0004,
+    "input_currency": "usd",
+    "output_cost": 0.003,
+    "output_currency": "usd",
+    "description": "Holo3-122B-A10B is a Mixture-of-Experts model with 122B total parameters and 10B active parameters, designed for maximum performance on complex reasoning and multimodal tasks.",
+    "pricing_url": "https://hub.hcompany.ai/quickstart",
+    "docs_url": "https://hub.hcompany.ai/quickstart",
+    "model_type": "chat",
+    "has_functions": false,
+    "has_cpu_pricing": false,
+    "enabled_for_playground": true,
+    "enabled_for_endpoints": true,
+    "configuration": {
+      "provider": ""
+    },
+    "metadata": {
+      "context_window": 65536,
+      "is_private": false,
+      "region": "us",
+      "supports_vision": true,
+      "supports_json_mode_response_format": true,
+      "supports_json_schema_response_format": true,
+      "supports_streaming": true,
+      "supports_sampling_params": true,
+      "supports_text_input": true,
+      "supports_image_input": true,
+      "supports_text_output": true,
+      "max_input_tokens": 57344,
+      "max_output_tokens": 8192,
+      "million_tokens_input_cost": 0.4,
+      "million_tokens_output_cost": 3,
+      "speed_rating": 3,
+      "intelligence_rating": 5,
+      "cost_efficiency_rating": 5
+    },
+    "parameters": [
+      {
+        "id": "6a08306e-2a17-41ab-b643-1cfabd851fcb",
+        "name": "Temperature",
+        "parameter": "temperature",
+        "description": "Controls randomness of outputs",
+        "hints": "",
+        "config": {
+          "max": 2,
+          "min": 0,
+          "step": 0.1,
+          "default": 1
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "6b44f939-4eed-41b4-90c0-30fb93a92fcf",
+        "name": "Top P",
+        "parameter": "topP",
+        "description": "Nucleus sampling",
+        "hints": "",
+        "config": {
+          "max": 1,
+          "min": 0,
+          "step": 0.01,
+          "default": 1
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "dd57ea7e-c151-4165-bfe2-c7ff152e3cae",
+        "name": "Max tokens",
+        "parameter": "maxTokens",
+        "description": "Maximum number of tokens to generate",
+        "hints": "",
+        "config": {
+          "min": 1,
+          "step": 1,
+          "default": 4096,
+          "max": 8192
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      }
+    ],
+    "enabled": false,
+    "refId": "hcompany/holo3-122b-a10b"
+  },
+  {
+    "id": "fd89f90c-b42f-4519-a396-a0ac24eee1bf",
+    "created": "2026-05-14T00:00:00Z",
+    "updated": "2026-05-14T00:00:00Z",
+    "display_name": "Kimi K2.6",
+    "model_id": "moonshotai/Kimi-K2.6",
+    "model_developer": "moonshotai",
+    "model_family": "kimi-k2",
+    "is_active": true,
+    "provider": "togetherai",
+    "owner": "system",
+    "input_cost": 0.0012,
+    "input_currency": "usd",
+    "output_cost": 0.0045,
+    "output_currency": "usd",
+    "description": "Kimi K2.6 is Moonshot AI's latest and most intelligent model with stronger long-horizon coding, significantly improved instruction compliance and self-correction, and enhanced autonomous agent execution. Native multimodal architecture supporting text, image, and video input, with thinking and non-thinking modes and 256k context.",
+    "pricing_url": "https://www.together.ai/pricing",
+    "docs_url": "https://docs.together.ai/docs/serverless-models",
+    "model_type": "chat",
+    "has_functions": true,
+    "has_cpu_pricing": false,
+    "enabled_for_playground": true,
+    "enabled_for_endpoints": true,
+    "configuration": {
+      "provider": ""
+    },
+    "metadata": {
+      "context_window": 262144,
+      "is_private": false,
+      "region": "us",
+      "supports_vision": true,
+      "supports_tool_calling": true,
+      "supports_json_schema_response_format": true,
+      "supports_streaming": true,
+      "supports_sampling_params": true,
+      "supports_reasoning": true,
+      "supports_text_input": true,
+      "supports_image_input": true,
+      "supports_video_input": true,
+      "supports_pdf_input": true,
+      "supports_text_output": true,
+      "max_output_tokens": 131000,
+      "million_tokens_input_cost": 1.2,
+      "million_tokens_output_cost": 4.5,
+      "million_tokens_cache_read_cost": 0.2,
+      "speed_rating": 1,
+      "intelligence_rating": 5,
+      "cost_efficiency_rating": 5,
+      "supports_structured_outputs": true,
+      "autorouter": {
+        "id": "Moonshot AI/Kimi/K2.6",
+        "version": "1"
+      }
+    },
+    "parameters": [
+      {
+        "id": "f8c964e4-3a51-4fb6-a301-03d295bcdf06",
+        "name": "Temperature",
+        "parameter": "temperature",
+        "description": "",
+        "hints": "",
+        "config": {
+          "max": 2,
+          "min": 0,
+          "step": 0.1,
+          "default": 0.7
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "cf5df655-f6fd-47b1-8957-e9bdbd5a7f30",
+        "name": "Frequency penalty",
+        "parameter": "frequencyPenalty",
+        "description": "",
+        "hints": "",
+        "config": {
+          "max": 2,
+          "min": -2,
+          "step": 0.1,
+          "default": 0
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      },
+      {
+        "id": "13095b63-f62d-4898-ad44-b612e07e94fd",
+        "name": "Max tokens",
+        "parameter": "maxTokens",
+        "description": "",
+        "hints": "",
+        "config": {
+          "max": 131000,
+          "min": 1,
+          "step": 1,
+          "default": 32768
+        },
+        "parameter_type": "slider",
+        "is_active": true
+      }
+    ],
+    "enabled": false,
+    "refId": "togetherai/moonshotai/Kimi-K2.6"
+  }
+]

@@ -50,6 +50,11 @@ export const envSchema = z
     OPENROUTER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     GROQ_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     GROK_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+    // CONN-0239: orq.ai OpenAI-compatible gateway connector.
+    // Vault: secret/connector/orq_api_key. Key read directly from process.env in connector.
+    ORQ_API_KEY: z.string().optional(),
+    ORQ_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    ORQ_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     EMBEDDING_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(8),
 
     CIRCUIT_BREAKER_THRESHOLD: z.coerce.number().min(1).max(50).default(5),

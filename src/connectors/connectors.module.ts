@@ -15,6 +15,7 @@ import { ImageGenerationModule } from './image-generation/image-generation.modul
 import { OutputGuardModule } from './output-guard/output-guard.module';
 import { OpenModelModule } from './openmodel/openmodel.module';
 import { CascadeModule } from './cascade/cascade.module';
+import { OrqModule } from './orq/orq.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { CascadeModule } from './cascade/cascade.module';
     OutputGuardModule,
     OpenModelModule,
     CascadeModule,
+    OrqModule,
   ],
   controllers: [ConnectorsController],
   providers: [ConnectorsService, ModalityCatalogService],
