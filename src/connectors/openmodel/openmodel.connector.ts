@@ -65,6 +65,17 @@ export class OpenModelConnector extends BaseApiConnector {
     };
   }
 
+  // CONN-0236 — the chat endpoint is Anthropic-style (x-api-key), but the
+  // OpenAI-compatible `/v1/models` listing requires `Authorization: Bearer`
+  // (x-api-key → 401). Verified live 2026-06-23: Bearer → 200, x-api-key → 401.
+  protected getModelsHeaders(): Record<string, string> {
+    const apiKey = process.env.OPENMODEL_API_KEY || '';
+    return {
+      'content-type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    };
+  }
+
   protected buildRequestUrl(_request: ConnectorRequest): string {
     return `${this.getBaseUrl()}/messages`;
   }

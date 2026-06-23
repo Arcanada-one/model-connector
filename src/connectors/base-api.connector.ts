@@ -163,6 +163,17 @@ export abstract class BaseApiConnector implements IConnector {
   }
 
   /**
+   * Headers for the `/models` listing request. Defaults to the connector's normal
+   * {@link getHeaders}. Override when the model-listing endpoint needs a different
+   * auth scheme than the chat endpoint — e.g. OpenModel's chat uses `x-api-key`
+   * (Anthropic-style) while its OpenAI-compatible `/v1/models` requires
+   * `Authorization: Bearer` (CONN-0236).
+   */
+  protected getModelsHeaders(): Record<string, string> {
+    return this.getHeaders();
+  }
+
+  /**
    * Fetch the provider's `/models` listing and cache the merged model list
    * (static ∪ provider, static-first, de-duplicated). Fire-and-forget on boot;
    * tolerates every failure (non-2xx, empty, network/parse error) by leaving the
@@ -174,7 +185,7 @@ export abstract class BaseApiConnector implements IConnector {
       const url = this.getModelsUrl();
       const response = await fetch(url, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: this.getModelsHeaders(),
         signal: AbortSignal.timeout(10_000),
       });
       if (!response.ok) {
