@@ -502,6 +502,158 @@ describe('ConnectorsService', () => {
       expect(r2?.available).toBe(false); // its breaker is open
       expect(flash?.available).toBe(true); // sibling unaffected
     });
+
+    // ── CONN-0238: per-model modality + pricing/context + honest non-chat presentation ──
+    const multiModalConnector: IConnector = {
+      name: 'groq',
+      type: 'api',
+      execute: vi.fn(),
+      getStatus: vi.fn().mockResolvedValue({
+        name: 'groq',
+        healthy: true,
+        activeJobs: 0,
+        queuedJobs: 0,
+        rateLimitStatus: 'ok',
+      }),
+      getCapabilities: vi.fn().mockReturnValue({
+        name: 'groq',
+        type: 'api',
+        supportsStreaming: false,
+        supportsJsonSchema: true,
+        supportsTools: true,
+        maxTimeout: 300_000,
+        models: ['llama-3.3-70b-versatile', 'whisper-large-v3', 'orpheus-x', 'prompt-guard-x'],
+        freeModels: ['llama-3.3-70b-versatile', 'prompt-guard-x'],
+        modelMeta: [
+          {
+            id: 'llama-3.3-70b-versatile',
+            modality: 'chat',
+            free: true,
+            pricing: { inputPerMTok: 0.59, outputPerMTok: 0.79, unit: 'per_1m_tokens' },
+            contextWindow: 131072,
+            maxOutputTokens: 32768,
+          },
+          { id: 'whisper-large-v3', modality: 'speech_to_text', free: false, pricing: null },
+          { id: 'orpheus-x', modality: 'text_to_speech', free: false, pricing: null },
+          { id: 'prompt-guard-x', modality: 'moderation', free: true, pricing: null },
+        ],
+      }),
+      resetCircuitBreaker: vi.fn().mockReturnValue([]),
+    };
+
+    const grokImagineConnector: IConnector = {
+      ...multiModalConnector,
+      name: 'grok',
+      getStatus: vi.fn().mockResolvedValue({
+        name: 'grok',
+        healthy: true,
+        activeJobs: 0,
+        queuedJobs: 0,
+        rateLimitStatus: 'ok',
+      }),
+      getCapabilities: vi.fn().mockReturnValue({
+        name: 'grok',
+        type: 'api',
+        supportsStreaming: false,
+        supportsJsonSchema: true,
+        supportsTools: true,
+        maxTimeout: 300_000,
+        models: ['grok-4.3', 'grok-imagine-image', 'grok-imagine-video'],
+        freeModels: [],
+        modelMeta: [
+          { id: 'grok-4.3', modality: 'chat', free: false },
+          { id: 'grok-imagine-image', modality: 'image_generation', free: false },
+          { id: 'grok-imagine-video', modality: 'video', free: false },
+        ],
+      }),
+    };
+
+    const find = (r: Awaited<ReturnType<typeof service.getCatalog>>, id: string) =>
+      r.models.find((m) => m.model === id)!;
+
+    it('stamps per-model modality from modelMeta (one connector, many modalities)', async () => {
+      service.register(multiModalConnector);
+      const r = await service.getCatalog(noFilters);
+      expect(find(r, 'llama-3.3-70b-versatile').modality).toBe('chat');
+      expect(find(r, 'whisper-large-v3').modality).toBe('speech_to_text');
+      expect(find(r, 'orpheus-x').modality).toBe('text_to_speech');
+      expect(find(r, 'prompt-guard-x').modality).toBe('moderation');
+    });
+
+    it('surfaces real pricing + context + maxOutputTokens from modelMeta', async () => {
+      service.register(multiModalConnector);
+      const r = await service.getCatalog(noFilters);
+      const m = find(r, 'llama-3.3-70b-versatile');
+      expect(m.pricing).toEqual({ inputPerMTok: 0.59, outputPerMTok: 0.79, unit: 'per_1m_tokens' });
+      expect(m.contextWindow).toBe(131072);
+      expect(m.maxOutputTokens).toBe(32768);
+    });
+
+    it('keeps pricing/context null where modelMeta has none', async () => {
+      service.register(multiModalConnector);
+      const r = await service.getCatalog(noFilters);
+      const w = find(r, 'whisper-large-v3');
+      expect(w.pricing).toBeNull();
+      expect(w.contextWindow).toBeNull();
+    });
+
+    it('non-chat families on a chat connector are NOT claimed callable (available=false, NO chat caps, no misleading endpoint)', async () => {
+      service.register(multiModalConnector);
+      const r = await service.getCatalog(noFilters);
+      const w = find(r, 'whisper-large-v3');
+      expect(w.available).toBe(false);
+      expect(w.capabilities).toEqual({
+        supportsStreaming: false,
+        supportsJsonSchema: false,
+        supportsTools: false,
+      });
+      // No endpoint — the (groq, whisper) tuple is not a real route here; the
+      // executable STT row is the dedicated `groq-stt` connector. available:false
+      // + modality is the honest signal.
+      expect(w.routing.endpoint).toBeUndefined();
+      expect(find(r, 'orpheus-x').routing.endpoint).toBeUndefined();
+    });
+
+    it('chat stays available + carries chat caps; moderation is callable but caps-masked', async () => {
+      service.register(multiModalConnector);
+      const r = await service.getCatalog(noFilters);
+      const chat = find(r, 'llama-3.3-70b-versatile');
+      const mod = find(r, 'prompt-guard-x');
+      expect(chat.available).toBe(true);
+      expect(chat.capabilities.supportsTools).toBe(true);
+      expect(mod.available).toBe(true); // groq prompt-guard is served via chat/completions
+      expect(mod.capabilities.supportsTools).toBe(false); // classifier — no tools/json/streaming
+      expect(mod.routing.endpoint).toBeUndefined(); // chat /execute path
+    });
+
+    it('per-model free flag from modelMeta (whisper not free, chat/moderation free)', async () => {
+      service.register(multiModalConnector);
+      const r = await service.getCatalog(noFilters);
+      expect(find(r, 'llama-3.3-70b-versatile').free).toBe(true);
+      expect(find(r, 'prompt-guard-x').free).toBe(true);
+      expect(find(r, 'whisper-large-v3').free).toBe(false);
+    });
+
+    it('grok-imagine image/video are surfaced but available=false (MC cannot execute them)', async () => {
+      service.register(grokImagineConnector);
+      const r = await service.getCatalog(noFilters);
+      const img = find(r, 'grok-imagine-image');
+      const vid = find(r, 'grok-imagine-video');
+      expect(img.modality).toBe('image_generation');
+      expect(img.available).toBe(false);
+      expect(img.routing.endpoint).toBeUndefined(); // grok-imagine not wired in MC image module
+      expect(vid.modality).toBe('video');
+      expect(vid.available).toBe(false);
+      expect(vid.routing.endpoint).toBeUndefined(); // no MC video execute route
+      // the chat sibling stays callable
+      expect(find(r, 'grok-4.3').available).toBe(true);
+    });
+
+    it('?modality=video filter narrows to grok-imagine-video', async () => {
+      service.register(grokImagineConnector);
+      const r = await service.getCatalog({ ...noFilters, modality: 'video' });
+      expect(r.models.map((m) => m.model)).toEqual(['grok-imagine-video']);
+    });
   });
 
   // ── CONN-0232: catalog completeness via the real ModalityCatalogService ──

@@ -310,11 +310,13 @@ describe('GroqConnector', () => {
     });
   });
 
-  // CONN-0236 — dynamic model completeness. Groq's /openai/v1/models lists 17 models
-  // (live 2026-06-23) spanning chat + STT (whisper) + TTS (orpheus) + moderation
-  // (prompt-guard). This chat connector must fetch the chat models dynamically and
-  // EXCLUDE the audio families (handled by the dedicated speech/image modules).
-  describe('refreshModels (CONN-0236 dynamic completeness)', () => {
+  // CONN-0238 — Groq's /openai/v1/models lists 17 models (live 2026-06-23) spanning
+  // chat + STT (whisper) + TTS (orpheus) + moderation (prompt-guard). Operator
+  // decision (reverses CONN-0236): SHOW them all with the correct per-model modality
+  // instead of dropping the non-chat families. REPLACE-not-UNION on a successful
+  // fetch (the live list is the sole source of truth). Pricing/context come from the
+  // live entries.
+  describe('refreshModels (CONN-0238 all-modalities + pricing)', () => {
     function mockModelsOk() {
       fetchSpy.mockResolvedValueOnce({
         ok: true,
@@ -322,6 +324,8 @@ describe('GroqConnector', () => {
         json: () => Promise.resolve(GROQ_MODELS_FIXTURE),
       });
     }
+    const metaFor = (caps: ReturnType<GroqConnector['getCapabilities']>, id: string) =>
+      (caps.modelMeta ?? []).find((m) => m.id === id);
 
     it('fetches the Groq OpenAI-compat /models endpoint', async () => {
       mockModelsOk();
@@ -329,50 +333,96 @@ describe('GroqConnector', () => {
       expect(fetchSpy.mock.calls[0][0]).toBe('https://api.groq.com/openai/v1/models');
     });
 
-    it('adds provider chat models discovered live (e.g. allam-2-7b, qwen3.6-27b)', async () => {
+    it('surfaces ALL 17 live models (REPLACE — count matches the fixture)', async () => {
       mockModelsOk();
       await connector.refreshModels();
       const caps = connector.getCapabilities();
+      expect(caps.models.length).toBe(GROQ_MODELS_FIXTURE.data.length);
       expect(caps.models).toContain('allam-2-7b');
       expect(caps.models).toContain('qwen/qwen3.6-27b');
-      // Static ids stay present.
       expect(caps.models).toContain('llama-3.3-70b-versatile');
     });
 
-    it('EXCLUDES audio (STT/TTS) families — not invented chat entries', async () => {
+    it('SHOWS the STT (whisper) family with speech_to_text modality', async () => {
       mockModelsOk();
       await connector.refreshModels();
       const caps = connector.getCapabilities();
-      // whisper = audio-input STT, orpheus = audio-output TTS → owned by speech module.
-      expect(caps.models).not.toContain('whisper-large-v3');
-      expect(caps.models).not.toContain('whisper-large-v3-turbo');
-      expect(caps.models).not.toContain('canopylabs/orpheus-v1-english');
-      expect(caps.models).not.toContain('canopylabs/orpheus-arabic-saudi');
+      expect(caps.models).toContain('whisper-large-v3');
+      expect(metaFor(caps, 'whisper-large-v3')?.modality).toBe('speech_to_text');
+      expect(metaFor(caps, 'whisper-large-v3-turbo')?.modality).toBe('speech_to_text');
     });
 
-    it('EXCLUDES moderation classifiers (llama-prompt-guard-*) from the chat catalog', async () => {
+    it('SHOWS the TTS (orpheus) family with text_to_speech modality', async () => {
       mockModelsOk();
       await connector.refreshModels();
       const caps = connector.getCapabilities();
-      // text→text but a safety classifier, not conversational — owned by a separate family.
-      expect(caps.models).not.toContain('meta-llama/llama-prompt-guard-2-22m');
-      expect(caps.models).not.toContain('meta-llama/llama-prompt-guard-2-86m');
+      expect(metaFor(caps, 'canopylabs/orpheus-v1-english')?.modality).toBe('text_to_speech');
+      expect(metaFor(caps, 'canopylabs/orpheus-arabic-saudi')?.modality).toBe('text_to_speech');
     });
 
-    it('all dynamic groq models remain free-tier (freeModels === models)', async () => {
+    it('SHOWS the moderation (prompt-guard) family with moderation modality', async () => {
       mockModelsOk();
       await connector.refreshModels();
       const caps = connector.getCapabilities();
-      // Groq's API is free-tier (CONN-0233); every chat model it lists is free.
-      expect(caps.freeModels).toEqual(caps.models);
+      expect(metaFor(caps, 'meta-llama/llama-prompt-guard-2-22m')?.modality).toBe('moderation');
+      expect(metaFor(caps, 'meta-llama/llama-prompt-guard-2-86m')?.modality).toBe('moderation');
     });
 
-    it('falls back to the static list when the API call fails (offline/CI)', async () => {
+    it('classifies plain text models as chat', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(metaFor(caps, 'llama-3.3-70b-versatile')?.modality).toBe('chat');
+      // multimodal vision chat (text+image input, text output) is still chat
+      expect(metaFor(caps, 'qwen/qwen3.6-27b')?.modality).toBe('chat');
+    });
+
+    it('surfaces real per-1M-token pricing + context for chat models (no fabrication)', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      const m = metaFor(caps, 'llama-3.3-70b-versatile');
+      // fixture: prompt 0.00000059, completion 0.00000079 per token → ×1e6 per 1M.
+      expect(m?.pricing?.inputPerMTok).toBe(0.59);
+      expect(m?.pricing?.outputPerMTok).toBe(0.79);
+      expect(m?.pricing?.unit).toBe('per_1m_tokens');
+      expect(m?.contextWindow).toBe(131072);
+      expect(m?.maxOutputTokens).toBe(32768);
+    });
+
+    it('keeps pricing null where the live entry has none (e.g. groq/compound)', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(metaFor(caps, 'groq/compound')?.pricing).toBeNull();
+    });
+
+    it('keeps pricing null for STT/TTS (ambiguous non-token unit — anti-fabrication)', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(metaFor(caps, 'whisper-large-v3')?.pricing).toBeNull();
+      expect(metaFor(caps, 'canopylabs/orpheus-v1-english')?.pricing).toBeNull();
+    });
+
+    it('marks chat + moderation free, STT/TTS not free (freeModels excludes speech)', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(caps.freeModels).toContain('llama-3.3-70b-versatile');
+      expect(caps.freeModels).toContain('meta-llama/llama-prompt-guard-2-22m');
+      expect(caps.freeModels).not.toContain('whisper-large-v3');
+      expect(caps.freeModels).not.toContain('canopylabs/orpheus-v1-english');
+    });
+
+    it('falls back to the static chat list when the API call fails (offline/CI)', async () => {
       fetchSpy.mockRejectedValueOnce(new Error('network down'));
       await expect(connector.refreshModels()).resolves.not.toThrow();
       const caps = connector.getCapabilities();
       expect(caps.models).toContain('llama-3.3-70b-versatile');
       expect(caps.models).not.toContain('allam-2-7b');
+      // static floor is chat-only — no STT/TTS offline
+      expect(caps.models).not.toContain('whisper-large-v3');
     });
   });
 

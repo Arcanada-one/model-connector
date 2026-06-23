@@ -7,6 +7,7 @@ import {
   MODEL_MODALITY_VALUES,
   buildDerivedTags,
   entryMatchesFilters,
+  normalizePerMTokPrice,
   type CatalogModelEntry,
 } from './catalog.dto';
 
@@ -222,6 +223,85 @@ describe('CatalogModelEntrySchema — modality + tags (CONN-0232)', () => {
       routing: { connector: 'vertex', model: 'vertex:imagen-4', endpoint: '/images/generate' },
     };
     expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+  });
+});
+
+// ─── CONN-0238 — new modalities (video / moderation) + pricing/context fields ──
+
+describe('CONN-0238 — modality enum additions', () => {
+  it('includes video (grok-imagine-video) and moderation (groq prompt-guard)', () => {
+    expect(MODEL_MODALITY_VALUES).toContain('video');
+    expect(MODEL_MODALITY_VALUES).toContain('moderation');
+  });
+
+  it('accepts a video modality entry', () => {
+    const entry = { ...validEntry, modality: 'video' as const };
+    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+  });
+
+  it('accepts a moderation modality entry', () => {
+    const entry = { ...validEntry, modality: 'moderation' as const };
+    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+  });
+});
+
+describe('CONN-0238 — pricing / contextWindow / maxOutputTokens fields', () => {
+  it('defaults the new fields to null when absent (back-compat)', () => {
+    const parsed = CatalogModelEntrySchema.parse(validEntry);
+    expect(parsed.pricing).toBeNull();
+    expect(parsed.contextWindow).toBeNull();
+    expect(parsed.maxOutputTokens).toBeNull();
+  });
+
+  it('accepts a per-1M-token pricing object with context + max-output', () => {
+    const entry = {
+      ...validEntry,
+      pricing: { inputPerMTok: 0.59, outputPerMTok: 0.79, unit: 'per_1m_tokens' },
+      contextWindow: 131072,
+      maxOutputTokens: 32768,
+    };
+    const result = CatalogModelEntrySchema.safeParse(entry);
+    expect(result.success).toBe(true);
+    expect(result.data?.pricing?.inputPerMTok).toBe(0.59);
+    expect(result.data?.contextWindow).toBe(131072);
+  });
+
+  it('accepts null pricing fields (price unknown / non-token unit)', () => {
+    const entry = {
+      ...validEntry,
+      pricing: { inputPerMTok: null, outputPerMTok: null, unit: 'per_1m_tokens' },
+    };
+    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+  });
+
+  it('rejects a non-positive contextWindow', () => {
+    const entry = { ...validEntry, contextWindow: 0 };
+    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(false);
+  });
+});
+
+describe('normalizePerMTokPrice (CONN-0238)', () => {
+  it('normalises a per-token string to per-1M tokens (6dp, no float noise)', () => {
+    expect(normalizePerMTokPrice('0.00000059')).toBe(0.59);
+    expect(normalizePerMTokPrice('0.000000075')).toBe(0.075);
+  });
+
+  it('maps a literal "0" to 0 (genuinely free), not null', () => {
+    expect(normalizePerMTokPrice('0')).toBe(0);
+  });
+
+  it('accepts a numeric per-token value too', () => {
+    expect(normalizePerMTokPrice(0.00000059)).toBe(0.59);
+  });
+
+  it('returns null for absent / empty / non-numeric / non-finite input', () => {
+    expect(normalizePerMTokPrice(undefined)).toBeNull();
+    expect(normalizePerMTokPrice(null)).toBeNull();
+    expect(normalizePerMTokPrice('')).toBeNull();
+    expect(normalizePerMTokPrice('   ')).toBeNull();
+    expect(normalizePerMTokPrice('not-a-number')).toBeNull();
+    expect(normalizePerMTokPrice(Number.NaN)).toBeNull();
+    expect(normalizePerMTokPrice(Number.POSITIVE_INFINITY)).toBeNull();
   });
 });
 

@@ -7,6 +7,7 @@ import {
   ConnectorResponse,
   ConnectorStatus,
   IConnector,
+  ProviderModelMeta,
   classifyErrorAction,
 } from './interfaces/connector.interface';
 import { Semaphore, QueueTimeoutError } from './base-cli.connector';
@@ -39,7 +40,8 @@ export abstract class BaseApiConnector implements IConnector {
   // cache on boot; the static list is the offline/CI fallback (no live call in CI).
   // Named distinctly from OpenRouterConnector's own `_dynamicModels` field — TS
   // forbids a subclass redeclaring a base private of the same name.
-  private _refreshedModels?: string[];
+  // CONN-0238 — store per-model metadata (not just ids); REPLACE semantics.
+  private _refreshedModels?: ProviderModelMeta[];
   private readonly _modelsLogger = new Logger('ConnectorModelRefresh');
 
   protected get semaphore(): Semaphore {
@@ -142,24 +144,44 @@ export abstract class BaseApiConnector implements IConnector {
   }
 
   /**
-   * Parse the provider's `/models` JSON into a flat list of model ids. Default
-   * handles the OpenAI/Anthropic-compatible `{ data: [{ id }] }` shape. Override to
-   * filter (e.g. groq drops non-chat audio families) or to parse a bespoke shape.
+   * Static model metadata (offline/CI fallback). Defaults to the plain id list
+   * stamped with no modality (the catalog applies the connector default). Override
+   * when the static floor spans modalities (e.g. grok-imagine image/video).
    */
-  protected extractModelIds(json: unknown): string[] {
+  protected getStaticModelMetas(): ProviderModelMeta[] {
+    return this.getStaticModels().map((id) => ({ id }));
+  }
+
+  /**
+   * CONN-0238 — parse the provider's `/models` JSON into per-model metadata.
+   * Default handles the OpenAI/Anthropic-compatible `{ data: [{ id }] }` shape and
+   * stamps no modality/pricing. Override to classify modality, filter, or surface
+   * pricing/context from the provider list (groq, grok). Replaces the old
+   * `extractModelIds` (id-only) seam.
+   */
+  protected extractModels(json: unknown): ProviderModelMeta[] {
     const data = (json as { data?: unknown })?.data;
     if (!Array.isArray(data)) return [];
     return data
       .map((entry) => (entry as { id?: unknown })?.id)
-      .filter((id): id is string => typeof id === 'string' && id.length > 0);
+      .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      .map((id) => ({ id }));
   }
 
   /**
-   * The list getCapabilities().models should return: the refreshed provider list
-   * once available, otherwise the static fallback.
+   * Per-model metadata getCapabilities() should expose: the refreshed provider
+   * metas once available, otherwise the static fallback metas.
+   */
+  protected get dynamicModelMetas(): ProviderModelMeta[] {
+    return this._refreshedModels ?? this.getStaticModelMetas();
+  }
+
+  /**
+   * The flat id list getCapabilities().models should return — derived from
+   * {@link dynamicModelMetas} so ids and per-model metadata never drift.
    */
   protected get dynamicModels(): string[] {
-    return this._refreshedModels ?? this.getStaticModels();
+    return this.dynamicModelMetas.map((m) => m.id);
   }
 
   /**
@@ -174,13 +196,16 @@ export abstract class BaseApiConnector implements IConnector {
   }
 
   /**
-   * Fetch the provider's `/models` listing and cache the merged model list
-   * (static ∪ provider, static-first, de-duplicated). Fire-and-forget on boot;
-   * tolerates every failure (non-2xx, empty, network/parse error) by leaving the
-   * static list in place. Never throws — safe to `void` from OnModuleInit.
+   * Fetch the provider's `/models` listing and REPLACE the cached model list with
+   * the live provider list (CONN-0238). The static list is the OFFLINE-ONLY
+   * fallback — it is NOT merged into a successful live result, so stale/phantom
+   * static ids cannot survive a refresh (the CONN-0236 UNION leaked them: grok
+   * 18 = 9 real + 9 phantom). Fire-and-forget on boot; tolerates every failure
+   * (non-2xx, empty, network/parse error) by leaving the static list in place.
+   * Never throws — safe to `void` from OnModuleInit.
    */
   async refreshModels(): Promise<void> {
-    const staticModels = this.getStaticModels();
+    const staticCount = this.getStaticModels().length;
     try {
       const url = this.getModelsUrl();
       const response = await fetch(url, {
@@ -190,27 +215,26 @@ export abstract class BaseApiConnector implements IConnector {
       });
       if (!response.ok) {
         this._modelsLogger.warn(
-          `${this.name} ${url} returned ${response.status} — keeping ${staticModels.length} static models`,
+          `${this.name} ${url} returned ${response.status} — keeping ${staticCount} static models`,
         );
         return;
       }
       const json = await response.json();
-      const ids = this.extractModelIds(json);
-      if (ids.length === 0) {
+      const metas = this.extractModels(json);
+      if (metas.length === 0) {
         this._modelsLogger.warn(
-          `${this.name} /models response had no usable ids — keeping ${staticModels.length} static models`,
+          `${this.name} /models response had no usable ids — keeping ${staticCount} static models`,
         );
         return;
       }
-      const staticSet = new Set(staticModels);
-      const extra = ids.filter((id) => !staticSet.has(id));
-      this._refreshedModels = [...staticModels, ...extra];
+      // REPLACE, not UNION — the live provider list is the sole source of truth.
+      this._refreshedModels = metas;
       this._modelsLogger.log(
-        `${this.name} model refresh: ${ids.length} provider models → ${this._refreshedModels.length} total (was ${staticModels.length})`,
+        `${this.name} model refresh: ${metas.length} provider models (replaced ${staticCount} static)`,
       );
     } catch (err) {
       this._modelsLogger.warn(
-        `${this.name} model refresh failed: ${(err as Error).message} — keeping ${staticModels.length} static models`,
+        `${this.name} model refresh failed: ${(err as Error).message} — keeping ${staticCount} static models`,
       );
     }
   }

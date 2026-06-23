@@ -532,9 +532,11 @@ describe('OpenModelConnector', () => {
     });
   });
 
-  // CONN-0236 — dynamic model completeness: openmodel /v1/models returns ~32 real
-  // models; the connector must fetch them on refresh and stop reporting only 3.
-  describe('refreshModels (CONN-0236 dynamic completeness)', () => {
+  // CONN-0238 — openmodel /v1/models returns 34 real models (operator live capture
+  // 2026-06-23). REPLACE-not-UNION: a successful refresh shows ONLY the live list,
+  // so the dead static ids (deepseek-r2, qwen3-235b — gone from the live API) cannot
+  // survive. The static floor itself is trimmed to the one cited live id.
+  describe('refreshModels (CONN-0238 REPLACE + dead-id drop)', () => {
     function mockModelsOk(body: unknown) {
       (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
@@ -559,43 +561,50 @@ describe('OpenModelConnector', () => {
       expect(opts.headers['x-api-key']).toBeUndefined();
     });
 
-    it('before refresh, getCapabilities().models is the static 3-model fallback', () => {
+    it('before refresh, getCapabilities().models is the trimmed static floor (no dead ids)', () => {
       const caps = connector.getCapabilities();
-      expect(caps.models).toEqual(['deepseek-v4-flash', 'deepseek-r2', 'qwen3-235b']);
+      expect(caps.models).toEqual(['deepseek-v4-flash']);
+      expect(caps.models).not.toContain('deepseek-r2');
+      expect(caps.models).not.toContain('qwen3-235b');
     });
 
-    it('after refresh, getCapabilities().models reflects the full provider list (>3)', async () => {
+    it('after refresh, getCapabilities().models REPLACES with the full live 34', async () => {
       mockModelsOk(MODELS_FIXTURE);
       await connector.refreshModels();
       const caps = connector.getCapabilities();
-      // The operator-verified live list is 32; the fixture subset is 18 — either way >3.
-      expect(caps.models.length).toBeGreaterThan(3);
-      // Static ids are preserved...
+      expect(caps.models.length).toBe(MODELS_FIXTURE.data.length);
       expect(caps.models).toContain('deepseek-v4-flash');
-      // ...and provider-fetched ids appear (operator-verified 2026-06-23).
-      expect(caps.models).toContain('glm-5.2');
+      expect(caps.models).toContain('claude-opus-4-8');
       expect(caps.models).toContain('gpt-5.4-pro');
       expect(caps.models).toContain('kimi-k2.7-code');
+      expect(caps.models).toContain('qwen3.7-max');
     });
 
-    it('does not duplicate ids already present in the static list', async () => {
+    it('REPLACE drops the dead static ids (no deepseek-r2 / qwen3-235b after refresh)', async () => {
       mockModelsOk(MODELS_FIXTURE);
       await connector.refreshModels();
       const caps = connector.getCapabilities();
-      const occurrences = caps.models.filter((m) => m === 'deepseek-v4-flash').length;
-      expect(occurrences).toBe(1);
+      expect(caps.models).not.toContain('deepseek-r2');
+      expect(caps.models).not.toContain('qwen3-235b');
     });
 
-    it('falls back to the static list when the API call fails (offline/CI)', async () => {
+    it('does not duplicate ids', async () => {
+      mockModelsOk(MODELS_FIXTURE);
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(caps.models.length).toBe(new Set(caps.models).size);
+    });
+
+    it('falls back to the trimmed static floor when the API call fails (offline/CI)', async () => {
       (fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
         new Error('network down'),
       );
       await expect(connector.refreshModels()).resolves.not.toThrow();
       const caps = connector.getCapabilities();
-      expect(caps.models).toEqual(['deepseek-v4-flash', 'deepseek-r2', 'qwen3-235b']);
+      expect(caps.models).toEqual(['deepseek-v4-flash']);
     });
 
-    it('falls back to the static list on a non-2xx response', async () => {
+    it('falls back to the trimmed static floor on a non-2xx response', async () => {
       (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,
         status: 401,
@@ -603,7 +612,7 @@ describe('OpenModelConnector', () => {
       });
       await connector.refreshModels();
       const caps = connector.getCapabilities();
-      expect(caps.models).toEqual(['deepseek-v4-flash', 'deepseek-r2', 'qwen3-235b']);
+      expect(caps.models).toEqual(['deepseek-v4-flash']);
     });
   });
 

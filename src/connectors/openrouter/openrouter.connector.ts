@@ -4,7 +4,9 @@ import {
   ConnectorCapabilities,
   ConnectorRequest,
   ContentBlock,
+  ProviderModelMeta,
 } from '../interfaces/connector.interface';
+import { normalizePerMTokPrice } from '../dto/catalog.dto';
 
 interface OpenRouterResponse {
   id: string;
@@ -22,10 +24,12 @@ interface OpenRouterResponse {
   };
 }
 
-// CONN-0233 — OpenRouter /api/v1/models response shape (partial; only fields we use).
+// CONN-0233/0238 — OpenRouter /api/v1/models response shape (partial; fields we use).
 interface OpenRouterModelEntry {
   id: string;
   pricing?: { prompt?: string; completion?: string } | null;
+  context_length?: number | null;
+  top_provider?: { context_length?: number | null; max_completion_tokens?: number | null } | null;
 }
 
 interface OpenRouterModelsApiResponse {
@@ -49,12 +53,23 @@ export class OpenRouterConnector extends BaseApiConnector {
 
   private readonly logger = new Logger(OpenRouterConnector.name);
 
-  // CONN-0233 — cached free-model state populated by refreshFreeModels().
-  // Starts empty; populated once on module init or on first catalog build.
+  // CONN-0233/0238 — cached model state populated by refreshFreeModels().
+  // CONN-0238: the cache now holds ALL models (REPLACE), not just static+free.
   // A model is free when: pricing.prompt==="0" && pricing.completion==="0",
   // OR its id ends with ":free" (OpenRouter's self-documenting convention).
-  private _dynamicFreeModels: string[] = [];
-  private _dynamicModels: string[] = [...STATIC_MODELS];
+  // Offline floor = STATIC_MODELS (chat, paid, no machine pricing) until the live
+  // fetch REPLACES it with all ~340 entries + per-model free/pricing/context.
+  private _dynamicModelMeta: ProviderModelMeta[] = STATIC_MODELS.map((id) => ({
+    id,
+    modality: 'chat',
+    free: false,
+  }));
+  private get _dynamicFreeModels(): string[] {
+    return this._dynamicModelMeta.filter((m) => m.free).map((m) => m.id);
+  }
+  private get _dynamicModels(): string[] {
+    return this._dynamicModelMeta.map((m) => m.id);
+  }
 
   // ARCA-0011 — OpenRouter passes `messages[N].content` through as
   // `string | ContentBlock[]`; OpenAI-compat vision endpoints accept the
@@ -87,28 +102,48 @@ export class OpenRouterConnector extends BaseApiConnector {
         return;
       }
 
-      const freeIds: string[] = [];
+      // CONN-0238 — REPLACE the cache with EVERY model the API returns (all ~340),
+      // not just the free subset. free=true flags the ~26 free; pricing/context come
+      // from each live entry. The catalog surfaces all of them; the page defaults to
+      // free-first via a filter, but completeness lives in the catalog.
+      const metas: ProviderModelMeta[] = [];
       for (const entry of json.data) {
         if (typeof entry?.id !== 'string') continue;
         const isFreeById = entry.id.endsWith(':free');
         const isFreeByPricing =
           entry.pricing != null && entry.pricing.prompt === '0' && entry.pricing.completion === '0';
-        if (isFreeById || isFreeByPricing) {
-          freeIds.push(entry.id);
-        }
+        const inputPerMTok = normalizePerMTokPrice(entry.pricing?.prompt);
+        const outputPerMTok = normalizePerMTokPrice(entry.pricing?.completion);
+        const pricing =
+          inputPerMTok !== null || outputPerMTok !== null
+            ? { inputPerMTok, outputPerMTok, unit: 'per_1m_tokens' }
+            : null;
+        const contextWindow = entry.top_provider?.context_length ?? entry.context_length ?? null;
+        metas.push({
+          id: entry.id,
+          modality: 'chat',
+          free: isFreeById || isFreeByPricing,
+          pricing,
+          contextWindow: typeof contextWindow === 'number' ? contextWindow : null,
+          maxOutputTokens:
+            typeof entry.top_provider?.max_completion_tokens === 'number'
+              ? entry.top_provider.max_completion_tokens
+              : null,
+        });
       }
 
-      this._dynamicFreeModels = freeIds;
-      // Merge free models into the models list so the catalog service iterates them.
-      // Static models remain; free models that aren't in the static list are appended.
-      const staticSet = new Set(STATIC_MODELS);
-      const extra = freeIds.filter((id) => !staticSet.has(id));
-      this._dynamicModels = [...STATIC_MODELS, ...extra];
+      if (metas.length === 0) {
+        this.logger.warn('OpenRouter /v1/models returned no usable ids — keeping static floor');
+        return;
+      }
+      this._dynamicModelMeta = metas;
 
-      this.logger.log(`OpenRouter free refresh: ${freeIds.length} free models discovered`);
+      this.logger.log(
+        `OpenRouter refresh: ${metas.length} models (${this._dynamicFreeModels.length} free) — REPLACED static floor`,
+      );
     } catch (err) {
       this.logger.warn(
-        `OpenRouter free refresh failed: ${(err as Error).message} — proceeding with empty freeModels`,
+        `OpenRouter refresh failed: ${(err as Error).message} — keeping the static paid floor`,
       );
     }
   }
@@ -191,10 +226,11 @@ export class OpenRouterConnector extends BaseApiConnector {
     return {
       name: 'openrouter',
       type: 'api',
-      // CONN-0233: _dynamicModels starts as STATIC_MODELS; after refreshFreeModels()
-      // it is extended with discovered :free / pricing=0 models.
+      // CONN-0238: starts as the STATIC_MODELS floor; after refreshFreeModels() it is
+      // REPLACED with all ~340 live models. modelMeta carries per-model free/pricing/
+      // context (single source — `models` is derived from it).
       models: this._dynamicModels,
-      // CONN-0233: _dynamicFreeModels is empty until refreshFreeModels() runs.
+      modelMeta: this._dynamicModelMeta,
       freeModels: this._dynamicFreeModels,
       supportsStreaming: false,
       supportsJsonSchema: true,

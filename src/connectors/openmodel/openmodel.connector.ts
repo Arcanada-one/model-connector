@@ -33,11 +33,13 @@ const DEFAULT_MAX_TOKENS = 4096;
 const JSON_ONLY_INSTRUCTION =
   'Respond with only valid JSON. No prose, no preamble, no markdown code fences.';
 
-// CONN-0236 — offline/CI fallback. The live OpenModel /v1/models endpoint returns
-// ~32 models (operator-verified on Mac, 2026-06-23); refreshModels() fetches the
-// full list on boot where OPENMODEL_API_KEY is present. These three are the
-// historically-shipped, cited ids (CONN-0223) kept as the static floor.
-const OPENMODEL_STATIC_MODELS = ['deepseek-v4-flash', 'deepseek-r2', 'qwen3-235b'];
+// CONN-0238 — offline/CI fallback. The live OpenModel /v1/models endpoint returns
+// 34 models (operator-verified 2026-06-23); refreshModels() REPLACES this floor with
+// the live list on boot where OPENMODEL_API_KEY is present. The floor is trimmed to
+// the single still-live cited id — the old `deepseek-r2` / `qwen3-235b` are GONE from
+// the live API (CONN-0236 UNION wrongly kept them); dropping them here removes them
+// offline too.
+const OPENMODEL_STATIC_MODELS = ['deepseek-v4-flash'];
 
 export class OpenModelConnector extends BaseApiConnector {
   readonly name = 'openmodel';
@@ -155,11 +157,14 @@ export class OpenModelConnector extends BaseApiConnector {
   }
 
   getCapabilities(): ConnectorCapabilities & { freeModels: string[] } {
+    // CONN-0238 — static floor (deepseek-v4-flash) until refreshModels() REPLACES it
+    // with the live 34. modelMeta is exposed for catalog parity with the other
+    // dynamic connectors (all-chat here, so it carries no per-model modality).
     return {
       name: 'openmodel',
       type: 'api',
-      // CONN-0236 — static 3 until refreshModels() fetches the live ~32.
       models: this.dynamicModels,
+      modelMeta: this.dynamicModelMetas,
       supportsStreaming: false,
       supportsJsonSchema: true,
       supportsTools: false,

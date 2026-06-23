@@ -7,6 +7,7 @@ import {
   ConnectorResponse,
   ConnectorStatus,
   IConnector,
+  ProviderModelMeta,
   classifyErrorAction,
 } from './interfaces/connector.interface';
 import { ConnectorJobData } from '../queue/connector-job.processor';
@@ -25,8 +26,16 @@ import {
   type CatalogModelEntry,
   type CatalogResponse,
   type ModelModality,
+  type ModelPricing,
 } from './dto/catalog.dto';
 import { ModalityCatalogService } from './modality-catalog.service';
+
+// CONN-0238 — capability mask for non-chat families surfaced via a chat connector.
+const NO_CAPS = {
+  supportsStreaming: false,
+  supportsJsonSchema: false,
+  supportsTools: false,
+} as const;
 
 // CONN-0089: callers may pass guard-only fields alongside the base request.
 export type ServiceExecuteRequest = ConnectorRequest & {
@@ -126,21 +135,41 @@ export class ConnectorsService {
       // closed, so one connector probe no longer blanket-offlines unrelated models.
       const reachable = status.healthy;
       const perModelBreakers = status.circuitBreakers ?? {};
-      // CONN-0232: model modality — connector default (chat) unless the connector
+      // CONN-0232: connector-wide default modality (chat) unless the connector
       // declares one (e.g. embedding). Never overloads transport `type`.
-      const modality: ModelModality = caps.modality ?? 'chat';
+      const connectorModality: ModelModality = caps.modality ?? 'chat';
       const freeModelSet = new Set<string>(caps.freeModels ?? []);
+      // CONN-0238: per-model metadata (modality/pricing/context/free). Derived from
+      // the same source as `models`, so iterate metas when NON-EMPTY (single source —
+      // no drift); otherwise wrap the flat id list. The `.length` guard (not just
+      // `??`) means a connector that returns `modelMeta: []` does not silently yield
+      // a zero-model catalog when `models` still has ids (consilium impl-review MED).
+      const metaList: ProviderModelMeta[] = caps.modelMeta?.length
+        ? caps.modelMeta
+        : caps.models.map((id) => ({ id }));
 
-      for (const model of caps.models) {
+      for (const meta of metaList) {
+        const model = meta.id;
+        const modality: ModelModality = meta.modality ?? connectorModality;
         const priceMultiplier = this.resolvePrice(connector.name, model);
-        const free = freeModelSet.has(model) || (priceMultiplier !== null && priceMultiplier === 0);
+        const free =
+          meta.free ??
+          (freeModelSet.has(model) || (priceMultiplier !== null && priceMultiplier === 0));
         const cheap = free || (priceMultiplier !== null && priceMultiplier <= 1);
-        const capabilities = {
+        const modelBreakerOpen = perModelBreakers[model]?.state === 'open';
+
+        // CONN-0238 — present each model HONESTLY per modality (consilium HIGH):
+        // a chat connector cannot execute its non-chat families via /execute, so
+        // they carry no chat capabilities, point at their real sibling-module
+        // endpoint, and are not claimed callable. chat + moderation (groq
+        // prompt-guard is served via chat/completions) keep the connector caps.
+        const present = this.presentModel(modality, {
           supportsStreaming: caps.supportsStreaming,
           supportsJsonSchema: caps.supportsJsonSchema,
           supportsTools: caps.supportsTools,
-        };
-        const modelBreakerOpen = perModelBreakers[model]?.state === 'open';
+        });
+        const capabilities = present.capabilities;
+        const pricing: ModelPricing | null = meta.pricing ?? null;
 
         const entry: CatalogModelEntry = {
           connector: connector.name,
@@ -150,14 +179,18 @@ export class ConnectorsService {
           free,
           cheap,
           priceMultiplier,
-          // Rate limits: no connector exposes live RPM/TPM data yet.
+          pricing,
+          contextWindow: meta.contextWindow ?? null,
+          maxOutputTokens: meta.maxOutputTokens ?? null,
+          // Rate limits: no connector exposes live machine RPM/TPM data yet.
           rateLimits: null,
           capabilities,
           routing: {
             connector: connector.name,
             model,
+            ...(present.endpoint ? { endpoint: present.endpoint } : {}),
           },
-          available: reachable && !modelBreakerOpen,
+          available: present.executableHere && reachable && !modelBreakerOpen,
         };
 
         if (entryMatchesFilters(entry, filters)) entries.push(entry);
@@ -173,6 +206,61 @@ export class ConnectorsService {
       generatedAt: new Date().toISOString(),
       count: entries.length,
     };
+  }
+
+  /**
+   * CONN-0238 — per-modality presentation policy for a model surfaced through a
+   * chat IConnector. Chat + moderation are executable via the connector's chat path
+   * (groq prompt-guard runs through chat/completions), so they keep the connector's
+   * capabilities and the default /execute route. The non-chat families (STT/TTS/
+   * image/video) are surfaced for catalog COMPLETENESS (operator: "show them all")
+   * but the chat connector CANNOT execute them — they carry no chat capabilities,
+   * point at their honest sibling-module endpoint where one exists, and are marked
+   * not-executable-here (`available:false`). This keeps the catalog truthful
+   * (anti-fabrication) without dropping the families the operator wants shown.
+   */
+  private presentModel(
+    modality: ModelModality,
+    connectorCaps: {
+      supportsStreaming: boolean;
+      supportsJsonSchema: boolean;
+      supportsTools: boolean;
+    },
+  ): {
+    capabilities: {
+      supportsStreaming: boolean;
+      supportsJsonSchema: boolean;
+      supportsTools: boolean;
+    };
+    endpoint?: string;
+    executableHere: boolean;
+  } {
+    switch (modality) {
+      // STT/TTS/image/video surfaced through a chat connector are INFORMATIONAL —
+      // the (connector, model) tuple is not a real route here (the executable row is
+      // the dedicated modality connector, e.g. `groq-stt`). We set NO chat caps, mark
+      // not-callable-here, and DELIBERATELY OMIT `routing.endpoint`: pointing it at a
+      // sibling module's path would misrepresent the route (consilium impl-review MED
+      // — `/v1/speech/stt` with `connector:groq` is not how you call it; grok-imagine
+      // ids are not wired into MC's image module at all). `available:false` + the
+      // modality is the honest signal; route via the dedicated connector for that
+      // modality, not this one.
+      case 'speech_to_text':
+      case 'text_to_speech':
+      case 'image_generation':
+      case 'video':
+        return { capabilities: { ...NO_CAPS }, executableHere: false };
+      // moderation (groq prompt-guard) IS callable here — it runs through the chat
+      // /execute → /chat/completions path — but it is a classifier, so it carries NO
+      // chat capabilities (no tools/json-schema/streaming) to keep `cap:*` honest.
+      case 'moderation':
+        return { capabilities: { ...NO_CAPS }, executableHere: true };
+      case 'chat':
+      case 'embedding':
+      case 'rerank':
+      default:
+        return { capabilities: connectorCaps, executableHere: true };
+    }
   }
 
   /**

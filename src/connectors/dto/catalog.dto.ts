@@ -18,11 +18,49 @@ export const MODEL_MODALITY_VALUES = [
   'image_generation',
   'speech_to_text',
   'text_to_speech',
+  // CONN-0238 — `video` covers grok-imagine-video; `moderation` covers groq
+  // llama-prompt-guard safety classifiers. Both are additive (Class B): the Zod
+  // enum is open to new members without a Class-A migration.
+  'video',
+  'moderation',
   'rerank',
 ] as const;
 
 export const ModelModalitySchema = z.enum(MODEL_MODALITY_VALUES);
 export type ModelModality = (typeof MODEL_MODALITY_VALUES)[number];
+
+/**
+ * CONN-0238 — normalised model pricing surfaced from the provider's live
+ * `/models` API. Token-priced models are normalised to USD per 1,000,000 tokens
+ * (`unit: 'per_1m_tokens'`); each field is null when the provider does not
+ * publish it. NEVER invented — populated only from a machine source (anti-
+ * fabrication). Non-token price models (STT $/hour, TTS $/char) keep `unit`
+ * labelled and the per-MTok fields null rather than mislabel an ambiguous rate.
+ */
+export const ModelPricingSchema = z.object({
+  inputPerMTok: z.number().nullable(),
+  outputPerMTok: z.number().nullable(),
+  unit: z.string(),
+});
+
+export type ModelPricing = z.infer<typeof ModelPricingSchema>;
+
+/**
+ * CONN-0238 — normalise a provider's per-token price (a decimal string such as
+ * groq/openrouter `pricing.prompt = "0.00000059"`) to USD per 1,000,000 tokens,
+ * rounded to 6 decimals to kill IEEE-754 noise (0.00000059 × 1e6 = 0.5899999…).
+ * Returns null for an absent/empty/non-numeric input (anti-fabrication — never
+ * invents a price). A literal "0" maps to 0 (genuinely free), not null.
+ */
+export function normalizePerMTokPrice(raw: unknown): number | null {
+  if (typeof raw === 'number') {
+    return Number.isFinite(raw) ? Number((raw * 1_000_000).toFixed(6)) : null;
+  }
+  if (typeof raw !== 'string' || raw.trim() === '') return null;
+  const perToken = Number(raw);
+  if (!Number.isFinite(perToken)) return null;
+  return Number((perToken * 1_000_000).toFixed(6));
+}
 
 /**
  * Per-model entry returned in the catalog response.
@@ -69,6 +107,17 @@ export const CatalogModelEntrySchema = z.object({
       tokensPerMinute: z.number().int().positive().nullable(),
     })
     .nullable(),
+  /**
+   * CONN-0238 — real pricing from the provider's live `/models` API (groq /
+   * openrouter expose per-token pricing; openmodel/grok do not). Null when no
+   * machine price source exists. `.default(null)` keeps pre-CONN-0238 entry
+   * literals valid while guaranteeing the field is always present on output.
+   */
+  pricing: ModelPricingSchema.nullable().default(null),
+  /** CONN-0238 — provider-published context window (tokens). Null if unknown. */
+  contextWindow: z.number().int().positive().nullable().default(null),
+  /** CONN-0238 — provider-published max output/completion tokens. Null if unknown. */
+  maxOutputTokens: z.number().int().positive().nullable().default(null),
   /**
    * Capabilities inherited from the connector.
    * A model shares its connector's capabilities unless overridden.

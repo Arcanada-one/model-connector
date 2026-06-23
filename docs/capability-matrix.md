@@ -14,7 +14,7 @@ Single-glance comparison of all Model Connector backends. Use this to pick the r
 | `codex` | CLI | `o4-mini` | ❌¹ | ⚠️ prompt | ✅ | 4 | OpenAI OAuth or `OPENAI_API_KEY` | ~6–12s | ChatGPT-tier |
 | `openrouter` | API | (no default — caller must set) | ✅ | ✅ | ✅ | 10 | `OPENROUTER_API_KEY` | ~0.5–1s | per-model |
 | `groq` | API | `llama-3.3-70b-versatile` | ✅ | ✅ | ✅ | 10 | `GROQ_API_KEY` | ~0.15–0.7s | free tier (28.8K min/day) |
-| `grok` | API | `grok-4-fast` | ✅ | ✅ | ✅ | 10 | `XAI_API_KEY` | ~0.5–2s | per-token (xAI pricing) |
+| `grok` | API | `grok-4.3` | ✅ | ✅ | ✅ | 10 | `XAI_API_KEY` | ~0.5–2s | per-token (xAI pricing) |
 | `embedding` | API | `bge-m3` | n/a | n/a | ❌ | 8 | Tailscale internal | ~0.2s | free (self-hosted) |
 
 ¹ Codex CLI supports `--output-schema` via raw flag, but Model Connector doesn't surface it through `responseFormat` yet; treat as `❌` for now.
@@ -39,7 +39,7 @@ CLI connectors that prompt-inject JSON instructions (`cursor`, `gemini`, `codex`
 
 ### "I need reasoning model"
 
-→ **`grok`** with `grok-4-fast-reasoning` or `grok-4-1-fast-reasoning`.
+→ **`grok`** with `grok-4.20-0309-reasoning`.
 → **`codex`** with `o3` (heavier; OAuth tier-dependent).
 
 ### "I need embeddings (search, similarity)"
