@@ -199,6 +199,96 @@ describe('OpenModelConnector', () => {
       }) as { response_format?: unknown };
       expect(body.response_format).toBeUndefined();
     });
+
+    // CONN-0237 — V-AC-1: JSON-mode body shape
+    it('adds system JSON instruction AND assistant-prefill message when responseFormat.type is json_object', () => {
+      const body = (
+        connector as unknown as { buildRequestBody: (r: unknown) => unknown }
+      ).buildRequestBody({
+        prompt: 'Give me JSON',
+        systemPrompt: 'You are helpful',
+        responseFormat: { type: 'json_object' },
+      }) as {
+        system?: string;
+        messages: Array<{ role: string; content: string }>;
+        response_format?: unknown;
+      };
+
+      // system must contain the strict JSON instruction
+      expect(body.system).toBeDefined();
+      expect(body.system!.toLowerCase()).toContain('respond with only valid json');
+      expect(body.system!.toLowerCase()).toContain('no markdown');
+
+      // system must also preserve the original systemPrompt (merge, not replace)
+      expect(body.system).toContain('You are helpful');
+
+      // last message must be the assistant prefill
+      const lastMsg = body.messages[body.messages.length - 1];
+      expect(lastMsg).toEqual({ role: 'assistant', content: '{' });
+
+      // user message must still be present
+      expect(body.messages).toContainEqual({ role: 'user', content: 'Give me JSON' });
+
+      // must NOT add OpenAI response_format field
+      expect(body.response_format).toBeUndefined();
+    });
+
+    it('adds system JSON instruction without leading newline when no systemPrompt', () => {
+      const body = (
+        connector as unknown as { buildRequestBody: (r: unknown) => unknown }
+      ).buildRequestBody({
+        prompt: 'Give me JSON',
+        responseFormat: { type: 'json_object' },
+      }) as { system?: string; messages: Array<{ role: string; content: string }> };
+
+      // system must equal only the instruction (no leading newline, no "undefined" string)
+      expect(body.system).toBeDefined();
+      expect(body.system).not.toMatch(/^undefined/);
+      expect(body.system).not.toMatch(/^\n/);
+      expect(body.system!.toLowerCase()).toContain('respond with only valid json');
+
+      // prefill present
+      const lastMsg = body.messages[body.messages.length - 1];
+      expect(lastMsg).toEqual({ role: 'assistant', content: '{' });
+    });
+
+    // CONN-0237 — V-AC-2: Non-JSON byte-identity regression
+    it('leaves request body byte-identical for non-json callers (no responseFormat)', () => {
+      const body = (
+        connector as unknown as { buildRequestBody: (r: unknown) => unknown }
+      ).buildRequestBody({
+        prompt: 'Hello',
+        systemPrompt: 'sys',
+        extra: { temperature: 0.3, max_tokens: 512 },
+      }) as {
+        system?: string;
+        messages: Array<{ role: string; content: string }>;
+        temperature?: number;
+      };
+
+      // system unchanged — no JSON instruction appended
+      expect(body.system).toBe('sys');
+      // no assistant-role prefill entry
+      expect(body.messages.some((m) => m.role === 'assistant')).toBe(false);
+      // temperature still passed through
+      expect(body.temperature).toBe(0.3);
+    });
+
+    it('leaves request body byte-identical for non-json callers (responseFormat: type text)', () => {
+      const body = (
+        connector as unknown as { buildRequestBody: (r: unknown) => unknown }
+      ).buildRequestBody({
+        prompt: 'Hello',
+        systemPrompt: 'sys',
+        responseFormat: { type: 'text' },
+      }) as {
+        system?: string;
+        messages: Array<{ role: string; content: string }>;
+      };
+
+      expect(body.system).toBe('sys');
+      expect(body.messages.some((m) => m.role === 'assistant')).toBe(false);
+    });
   });
 
   // --- Protocol: Response parsing ---
@@ -288,6 +378,83 @@ describe('OpenModelConnector', () => {
         connector as unknown as { parseResponse: (j: unknown, r: unknown) => unknown }
       ).parseResponse(LIVE_RESPONSE_FIXTURE, { prompt: 'hi' }) as { costUsd: number };
       expect(result.costUsd).toBe(0);
+    });
+
+    // CONN-0237 — V-AC-3: parseResponse re-prepend
+    // The Anthropic /v1/messages API echoes ONLY the continuation of an assistant
+    // prefill — the leading `{` is NOT returned. So parseResponse must re-prepend it.
+    it('re-prepends leading { and returns parseable JSON when json-mode was active (nested object)', () => {
+      const continuationFixture = {
+        id: 'msg_json_01',
+        type: 'message',
+        role: 'assistant',
+        model: 'deepseek-v4-flash',
+        content: [{ type: 'text', text: '"foo": 1, "nested": { "a": 2 } }' }],
+        stop_reason: 'end_turn',
+        usage: { input_tokens: 10, output_tokens: 20 },
+      };
+
+      const result = (
+        connector as unknown as { parseResponse: (j: unknown, r: unknown) => unknown }
+      ).parseResponse(continuationFixture, {
+        prompt: 'x',
+        responseFormat: { type: 'json_object' },
+      }) as { text: string; isError: boolean };
+
+      expect(result.isError).toBe(false);
+      // After re-prepend the text must start with { and be parseable
+      expect(result.text).toBe('{"foo": 1, "nested": { "a": 2 } }');
+      expect(() => JSON.parse(result.text)).not.toThrow();
+      const parsed = JSON.parse(result.text) as Record<string, unknown>;
+      expect(parsed.foo).toBe(1);
+      expect((parsed.nested as Record<string, unknown>).a).toBe(2);
+    });
+
+    it('re-prepends leading { and returns parseable JSON when json-mode was active (flat object)', () => {
+      const flatContinuationFixture = {
+        id: 'msg_json_02',
+        type: 'message',
+        role: 'assistant',
+        model: 'deepseek-v4-flash',
+        content: [{ type: 'text', text: '"key": "value", "count": 42 }' }],
+        stop_reason: 'end_turn',
+        usage: { input_tokens: 5, output_tokens: 10 },
+      };
+
+      const result = (
+        connector as unknown as { parseResponse: (j: unknown, r: unknown) => unknown }
+      ).parseResponse(flatContinuationFixture, {
+        prompt: 'y',
+        responseFormat: { type: 'json_object' },
+      }) as { text: string; isError: boolean };
+
+      expect(result.isError).toBe(false);
+      expect(result.text).toBe('{"key": "value", "count": 42 }');
+      expect(() => JSON.parse(result.text)).not.toThrow();
+      const parsed = JSON.parse(result.text) as Record<string, unknown>;
+      expect(parsed.key).toBe('value');
+      expect(parsed.count).toBe(42);
+    });
+
+    it('does NOT re-prepend { when json-mode is inactive (type: text)', () => {
+      const result = (
+        connector as unknown as { parseResponse: (j: unknown, r: unknown) => unknown }
+      ).parseResponse(TEXT_ONLY_FIXTURE, {
+        prompt: 'hi',
+        responseFormat: { type: 'text' },
+      }) as { text: string; isError: boolean };
+
+      expect(result.isError).toBe(false);
+      expect(result.text).toBe('Hello!');
+    });
+
+    it('does NOT re-prepend { when json-mode is inactive (no responseFormat)', () => {
+      const result = (
+        connector as unknown as { parseResponse: (j: unknown, r: unknown) => unknown }
+      ).parseResponse(TEXT_ONLY_FIXTURE, { prompt: 'hi' }) as { text: string; isError: boolean };
+
+      expect(result.isError).toBe(false);
+      expect(result.text).toBe('Hello!');
     });
   });
 
