@@ -1,5 +1,10 @@
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
-import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
+import {
+  ConnectorCapabilities,
+  ConnectorRequest,
+  ProviderModelMeta,
+} from '../interfaces/connector.interface';
+import { ModelModality, normalizePerMTokPrice } from '../dto/catalog.dto';
 
 interface GroqChatResponse {
   id: string;
@@ -37,11 +42,14 @@ const GROQ_STATIC_MODELS = [
   'groq/compound-mini',
 ];
 
-// Groq /models entry shape (only the fields we read for chat-modality filtering).
+// Groq /models entry shape (only the fields we read for modality + pricing).
 interface GroqModelEntry {
   id?: unknown;
   input_modalities?: unknown;
   output_modalities?: unknown;
+  context_window?: unknown;
+  max_completion_tokens?: unknown;
+  pricing?: { prompt?: unknown; completion?: unknown } | null;
 }
 
 export class GroqConnector extends BaseApiConnector {
@@ -56,40 +64,72 @@ export class GroqConnector extends BaseApiConnector {
     return `${this.getBaseUrl()}/openai/v1/models`;
   }
 
+  // CONN-0238 — static floor is chat-only and free-tier (offline/CI fallback).
   protected getStaticModels(): string[] {
     return GROQ_STATIC_MODELS;
   }
 
+  protected getStaticModelMetas(): ProviderModelMeta[] {
+    return GROQ_STATIC_MODELS.map((id) => ({ id, modality: 'chat' as ModelModality, free: true }));
+  }
+
   /**
-   * CONN-0236 — parse Groq's /models list, keeping only chat (text) models. Groq
-   * returns STT (whisper: input `audio`, output `transcription`), TTS (orpheus:
-   * output `speech`) and moderation families in the same list; this chat connector
-   * must not surface the non-text ones (the speech module owns them). A model is
-   * "chat" here when its OUTPUT is text-only and its INPUT is text and/or image
-   * (multimodal vision chat is still chat). Entries without modality fields are kept
-   * — other OpenAI-compat providers omit them and are chat-only. Moderation
-   * classifiers (llama-prompt-guard-*) are text→text but not conversational, so they
-   * are excluded by name — Groq documents them as a separate safety family.
+   * CONN-0238 — parse Groq's /models list, surfacing EVERY model with its real
+   * per-model modality (operator decision — reverses CONN-0236's drop of the
+   * non-chat families). Groq returns STT (whisper: output `transcription`), TTS
+   * (orpheus: output `speech`), moderation (llama-prompt-guard, text→text safety
+   * classifier) and chat in one list. Modality is derived from
+   * `input_modalities`/`output_modalities` + the prompt-guard name. Pricing is
+   * normalised to per-1M-tokens ONLY for text-output models (unambiguous per-token
+   * unit); STT/TTS keep pricing null (the provider's $/hour & $/char are not
+   * MTok-comparable — never mislabel). Context/max-output come straight from the
+   * live entry. chat + moderation are free-tier; STT/TTS are not (priced families).
    */
-  protected extractModelIds(json: unknown): string[] {
+  protected extractModels(json: unknown): ProviderModelMeta[] {
     const data = (json as { data?: unknown })?.data;
     if (!Array.isArray(data)) return [];
-    const ALLOWED_INPUT = new Set(['text', 'image']);
-    const ALLOWED_OUTPUT = new Set(['text']);
-    const within = (mods: unknown, allowed: Set<string>): boolean =>
-      mods === undefined || (Array.isArray(mods) && mods.every((m) => allowed.has(m as string)));
-    const isNonChatByName = (id: string): boolean => id.includes('prompt-guard');
-    return data
-      .filter((entry) => {
-        const e = entry as GroqModelEntry;
-        return (
-          within(e.input_modalities, ALLOWED_INPUT) && within(e.output_modalities, ALLOWED_OUTPUT)
-        );
-      })
-      .map((entry) => (entry as GroqModelEntry).id)
-      .filter(
-        (id): id is string => typeof id === 'string' && id.length > 0 && !isNonChatByName(id),
-      );
+    const out: ProviderModelMeta[] = [];
+    for (const entry of data) {
+      const e = entry as GroqModelEntry;
+      if (typeof e.id !== 'string' || e.id.length === 0) continue;
+      const modality = this.classifyGroqModality(e);
+      const textOutput = modality === 'chat' || modality === 'moderation';
+      const pricing =
+        textOutput && e.pricing
+          ? {
+              inputPerMTok: normalizePerMTokPrice(e.pricing.prompt),
+              outputPerMTok: normalizePerMTokPrice(e.pricing.completion),
+              unit: 'per_1m_tokens',
+            }
+          : null;
+      // Suppress an all-null pricing object (no usable numbers) → null.
+      const pricingOrNull =
+        pricing && (pricing.inputPerMTok !== null || pricing.outputPerMTok !== null)
+          ? pricing
+          : null;
+      out.push({
+        id: e.id,
+        modality,
+        free: textOutput, // groq's chat + moderation are free-tier; STT/TTS priced
+        pricing: pricingOrNull,
+        contextWindow: typeof e.context_window === 'number' ? e.context_window : null,
+        maxOutputTokens:
+          typeof e.max_completion_tokens === 'number' ? e.max_completion_tokens : null,
+      });
+    }
+    return out;
+  }
+
+  private classifyGroqModality(e: GroqModelEntry): ModelModality {
+    const id = e.id as string;
+    if (id.includes('prompt-guard')) return 'moderation';
+    // Classify by OUTPUT first: whisper outputs `transcription` (STT), orpheus
+    // outputs `speech` (TTS). A future audio-INPUT chat model would output `text`
+    // and must stay `chat` — so we do NOT key STT off audio input alone.
+    const output = Array.isArray(e.output_modalities) ? (e.output_modalities as string[]) : [];
+    if (output.includes('transcription')) return 'speech_to_text';
+    if (output.includes('speech')) return 'text_to_speech';
+    return 'chat';
   }
 
   protected getTimeout(): number {
@@ -168,17 +208,18 @@ export class GroqConnector extends BaseApiConnector {
   }
 
   getCapabilities(): ConnectorCapabilities {
-    // CONN-0236 — static 9 until refreshModels() fetches the live chat list.
-    const models = this.dynamicModels;
+    // CONN-0238 — static 9 (chat) until refreshModels() fetches the live 17.
+    const modelMeta = this.dynamicModelMetas;
     return {
       name: 'groq',
       type: 'api',
-      models,
-      // CONN-0233 — reviewed 2026-06-22: Groq's API is free-tier (rate-limited).
-      // Every chat model Groq lists is accessible via the free API tier, so the
-      // free set tracks the dynamic model list 1:1.
+      models: modelMeta.map((m) => m.id),
+      modelMeta,
+      // CONN-0233/0238 — Groq's API is free-tier (rate-limited) for chat +
+      // moderation; STT/TTS are priced families (per-meta `free`). The free set is
+      // derived from the per-model metadata so it never includes whisper/orpheus.
       // Source: https://console.groq.com/docs/openai (free API with rate limits).
-      freeModels: models,
+      freeModels: modelMeta.filter((m) => m.free).map((m) => m.id),
       supportsStreaming: false,
       supportsJsonSchema: true,
       supportsTools: true,

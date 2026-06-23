@@ -88,6 +88,10 @@ function makeEntry(opts: {
     cheap,
     // Per-image / per-second pricing is not a multiplier — never invent one.
     priceMultiplier: null,
+    // CONN-0238 — these static families publish no machine per-token price/context.
+    pricing: null,
+    contextWindow: null,
+    maxOutputTokens: null,
     rateLimits: null,
     capabilities: { ...NO_CAPS },
     routing: { connector: opts.connector, model: opts.model, endpoint: opts.endpoint },

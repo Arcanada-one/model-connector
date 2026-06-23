@@ -3,10 +3,10 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { GrokConnector } from './grok.connector';
 
-// xAI OpenAI-compat /v1/models shape (docs.x.ai). Built from already-cited static
-// ids (CONN-0233, reviewed 2026-06-22) — no live xAI key on the dev box, so this is
-// a shape-accurate stand-in, NOT a live capture and NOT invented. The real list
-// populates at runtime on the cluster where XAI_API_KEY exists.
+// xAI OpenAI-compat /v1/models shape (docs.x.ai). CONN-0238 — operator live capture
+// 2026-06-23: the real 9 ids (grok-4.3, grok-4.20-*, grok-build-0.1, grok-imagine-*)
+// replace the CONN-0236 phantom list (grok-4-fast/grok-3/…) that the UNION refresh
+// leaked into prod. grok-imagine-* are image/video models — modality matters.
 const GROK_MODELS_FIXTURE = JSON.parse(
   readFileSync(resolve(__dirname, '../../..', 'test/fixtures/connectors/grok-models.json'), 'utf8'),
 ) as { data: Array<{ id: string }> };
@@ -105,18 +105,18 @@ describe('GrokConnector', () => {
       ]);
     });
 
-    it('should default model to grok-4-fast', async () => {
+    it('should default model to grok-4.3', async () => {
       mockOk(chatResponse);
       await connector.execute({ prompt: 'hello' });
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
-      expect(body.model).toBe('grok-4-fast');
+      expect(body.model).toBe('grok-4.3');
     });
 
     it('should use request.model when specified', async () => {
       mockOk(chatResponse);
-      await connector.execute({ prompt: 'hello', model: 'grok-4-fast-non-reasoning' });
+      await connector.execute({ prompt: 'hello', model: 'grok-4.20-0309-non-reasoning' });
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
-      expect(body.model).toBe('grok-4-fast-non-reasoning');
+      expect(body.model).toBe('grok-4.20-0309-non-reasoning');
     });
 
     it('should pass max_tokens, temperature, top_p from extra', async () => {
@@ -313,10 +313,10 @@ describe('GrokConnector', () => {
       const caps = connector.getCapabilities();
       expect(caps.name).toBe('grok');
       expect(caps.type).toBe('api');
-      expect(caps.models).toContain('grok-4-fast');
-      expect(caps.models).toContain('grok-4-fast-reasoning');
-      expect(caps.models).toContain('grok-4-fast-non-reasoning');
-      expect(caps.models).toContain('grok-3-mini');
+      // CONN-0238 — static floor is the real chat models (no phantom grok-4-fast/grok-3).
+      expect(caps.models).toContain('grok-4.3');
+      expect(caps.models).not.toContain('grok-4-fast');
+      expect(caps.models).not.toContain('grok-3');
       expect(caps.supportsStreaming).toBe(false);
       expect(caps.supportsJsonSchema).toBe(true);
       expect(caps.supportsTools).toBe(true);
@@ -332,12 +332,12 @@ describe('GrokConnector', () => {
     });
   });
 
-  // CONN-0236 — dynamic model completeness. Grok exposes an OpenAI-compat
-  // /v1/models endpoint; the connector fetches it on boot so the catalog reflects
-  // xAI's real list at runtime instead of a frozen stub. No live key on the dev box
-  // → the fixture reproduces the cited static ids; the merge mechanism is what's
-  // under test here (real-list population happens on the cluster).
-  describe('refreshModels (CONN-0236 dynamic completeness)', () => {
+  // CONN-0238 — Grok's /v1/models lists 9 real models (operator live capture
+  // 2026-06-23): chat (grok-4.3, grok-4.20-*, grok-build-0.1) + image_generation
+  // (grok-imagine-image*) + video (grok-imagine-video*). REPLACE-not-UNION kills the
+  // CONN-0236 phantom list. Modality is classified per id (xAI /v1/models returns
+  // ids only — no pricing/context, so those stay null).
+  describe('refreshModels (CONN-0238 real list + per-model modality)', () => {
     function mockModelsOk() {
       fetchSpy.mockResolvedValueOnce({
         ok: true,
@@ -345,6 +345,8 @@ describe('GrokConnector', () => {
         json: () => Promise.resolve(GROK_MODELS_FIXTURE),
       });
     }
+    const metaFor = (caps: ReturnType<GrokConnector['getCapabilities']>, id: string) =>
+      (caps.modelMeta ?? []).find((m) => m.id === id);
 
     it('fetches the xAI OpenAI-compat /v1/models endpoint', async () => {
       mockModelsOk();
@@ -352,31 +354,57 @@ describe('GrokConnector', () => {
       expect(fetchSpy.mock.calls[0][0]).toBe('https://api.x.ai/v1/models');
     });
 
-    it('parses the provider list and exposes it via getCapabilities().models', async () => {
+    it('REPLACES with the live 9 (count matches fixture; no phantom survivors)', async () => {
       mockModelsOk();
       await connector.refreshModels();
       const caps = connector.getCapabilities();
-      // Every fixture id is surfaced; the merge is de-duplicated against the static set.
+      expect(caps.models.length).toBe(GROK_MODELS_FIXTURE.data.length);
       for (const entry of GROK_MODELS_FIXTURE.data) {
         expect(caps.models).toContain(entry.id);
       }
-      expect(caps.models.length).toBe(new Set(caps.models).size);
+      expect(caps.models).not.toContain('grok-4-fast');
+      expect(caps.models).not.toContain('grok-3');
+    });
+
+    it('classifies grok-imagine-image* as image_generation', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(metaFor(caps, 'grok-imagine-image')?.modality).toBe('image_generation');
+      expect(metaFor(caps, 'grok-imagine-image-quality')?.modality).toBe('image_generation');
+    });
+
+    it('classifies grok-imagine-video* as video', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(metaFor(caps, 'grok-imagine-video')?.modality).toBe('video');
+      expect(metaFor(caps, 'grok-imagine-video-1.5')?.modality).toBe('video');
+    });
+
+    it('classifies the reasoning/build text models as chat', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(metaFor(caps, 'grok-4.3')?.modality).toBe('chat');
+      expect(metaFor(caps, 'grok-4.20-0309-reasoning')?.modality).toBe('chat');
+      expect(metaFor(caps, 'grok-build-0.1')?.modality).toBe('chat');
     });
 
     it('keeps grok paid-only (freeModels stays empty) after refresh', async () => {
       mockModelsOk();
       await connector.refreshModels();
       const caps = connector.getCapabilities();
-      // xAI has no free tier (CONN-0233, docs.x.ai/docs/pricing).
       expect(caps.freeModels).toEqual([]);
     });
 
-    it('falls back to the static list when the API call fails (offline/CI)', async () => {
+    it('falls back to the static real-9 list when the API call fails (offline/CI)', async () => {
       fetchSpy.mockRejectedValueOnce(new Error('network down'));
       await expect(connector.refreshModels()).resolves.not.toThrow();
       const caps = connector.getCapabilities();
-      expect(caps.models).toContain('grok-4-fast');
-      expect(caps.models).toContain('grok-3');
+      expect(caps.models).toContain('grok-4.3');
+      expect(caps.models).toContain('grok-imagine-image');
+      expect(caps.models).not.toContain('grok-3');
     });
   });
 

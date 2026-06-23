@@ -42,6 +42,107 @@ class TestApiConnector extends BaseApiConnector {
   }
 }
 
+// CONN-0238 — a connector that participates in dynamic model refresh, with a
+// static floor that DIFFERS from the live list so REPLACE-vs-UNION is observable.
+class RefreshTestConnector extends BaseApiConnector {
+  readonly name = 'refresh-test';
+  protected getBaseUrl(): string {
+    return 'http://localhost:9999';
+  }
+  protected getStaticModels(): string[] {
+    return ['static-a', 'static-b'];
+  }
+  protected buildRequestUrl(): string {
+    return `${this.getBaseUrl()}/v1/test`;
+  }
+  protected buildRequestBody(request: ConnectorRequest): unknown {
+    return { input: request.prompt };
+  }
+  protected parseResponse(): ParsedApiOutput {
+    return { text: '', model: 'x', inputTokens: 0, outputTokens: 0, costUsd: 0, isError: false };
+  }
+  getCapabilities(): ConnectorCapabilities {
+    return {
+      name: this.name,
+      type: 'api',
+      models: this.dynamicModels,
+      modelMeta: this.dynamicModelMetas,
+      supportsStreaming: false,
+      supportsJsonSchema: false,
+      supportsTools: false,
+      maxTimeout: 30_000,
+    };
+  }
+}
+
+describe('BaseApiConnector — CONN-0238 REPLACE-not-UNION + extractModels', () => {
+  let connector: RefreshTestConnector;
+  let fetchSpy: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    connector = new RefreshTestConnector();
+    fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  function mockModelsOk(ids: string[]) {
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: ids.map((id) => ({ id })) }),
+    });
+  }
+
+  it('REPLACES the static list with the live list on success (no UNION leftovers)', async () => {
+    mockModelsOk(['static-b', 'live-c']);
+    await connector.refreshModels();
+    const models = connector.getCapabilities().models;
+    // 'static-a' is NOT in the live response → REPLACE drops it (UNION would keep it).
+    expect(models).toEqual(['static-b', 'live-c']);
+    expect(models).not.toContain('static-a');
+  });
+
+  it('falls back to the static list (offline/CI) when the live fetch fails', async () => {
+    fetchSpy.mockRejectedValueOnce(new Error('network down'));
+    await expect(connector.refreshModels()).resolves.not.toThrow();
+    expect(connector.getCapabilities().models).toEqual(['static-a', 'static-b']);
+  });
+
+  it('keeps the static list on a non-2xx response (no phantom replacement)', async () => {
+    fetchSpy.mockResolvedValueOnce({ ok: false, status: 503 });
+    await connector.refreshModels();
+    expect(connector.getCapabilities().models).toEqual(['static-a', 'static-b']);
+  });
+
+  it('dynamicModelMetas defaults each id to a {id}-only meta (no modality)', async () => {
+    mockModelsOk(['live-c', 'live-d']);
+    await connector.refreshModels();
+    const metas = connector.getCapabilities().modelMeta ?? [];
+    expect(metas).toEqual([{ id: 'live-c' }, { id: 'live-d' }]);
+  });
+
+  it('keeps the static list when the response has an empty data[] (no replacement)', async () => {
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: [] }),
+    });
+    await connector.refreshModels();
+    expect(connector.getCapabilities().models).toEqual(['static-a', 'static-b']);
+  });
+
+  it('keeps the static list on garbage JSON (no data[]) — never throws', async () => {
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ nope: 1 }),
+    });
+    await expect(connector.refreshModels()).resolves.not.toThrow();
+    expect(connector.getCapabilities().models).toEqual(['static-a', 'static-b']);
+  });
+});
+
 describe('BaseApiConnector', () => {
   let connector: TestApiConnector;
   let fetchSpy: ReturnType<typeof vi.fn>;
