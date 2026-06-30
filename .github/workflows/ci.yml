@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint-and-test:
-    runs-on: [self-hosted, Linux, arcana-ai]
+    runs-on: [self-hosted, Linux, ci-general]
     steps:
       - uses: actions/checkout@v4
 
