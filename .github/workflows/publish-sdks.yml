@@ -17,7 +17,7 @@ concurrency:
 jobs:
   build-ts:
     name: TypeScript — build + test + dry-run
-    runs-on: [self-hosted, Linux, arcana-ai]
+    runs-on: [self-hosted, Linux, ci-general]
     permissions:
       id-token: write
       contents: read
