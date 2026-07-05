@@ -165,14 +165,28 @@ export const envSchema = z
     // shared OpenRouter 429 pool) no longer fails the whole free fallback. groq rung
     // requires GROQ_API_KEY (present on prod). Verified live 2026-06-23:
     // groq:llama-3.3-70b-versatile → 201 success in ~1s.
-    // CONN-0244 — openmodel:deepseek-v4-flash was REMOVED from the free rungs. OpenModel
-    // is a PAID gateway (no free tier); tagging it `:free` drove real paid traffic through
-    // the operator's account under the free cascade and burned the balance into the negative.
-    // The free rungs are now genuinely-free only (groq free tier, openrouter `:free` models).
+    // CONN-0244 — DEEPENED free fallback. openmodel:deepseek-v4-flash was REMOVED (paid gateway;
+    // tagging it `:free` burned the operator's balance). The old 3-rung chain effectively rode on
+    // ONE live rung (groq) — a single groq rate-limit meant cascade_exhausted. Every rung below
+    // was LIVE-PROBED on prod (status=success, costUsd=0). Providers are INTERLEAVED (groq fast-
+    // first; openrouter reserves at positions 3 & 6) so a whole-provider outage still has a
+    // cross-provider fallback before exhaustion. gemini was probed and EXCLUDED — its CLI returns
+    // execution_error on prod (dead, not added).
+    // FORMAT (cascade.profiles parseCascadeOrder): tier = text after the LAST colon, so a model id
+    // may NOT contain a colon — openrouter `:free`-suffixed ids are unrepresentable here; only
+    // colon-free free ids are used (maverick, openrouter/free). paid rungs are filtered out when
+    // CASCADE_PAID_ENABLED=false and must stay last (validateFreeBeforePaid).
     CASCADE_LOW_REASONING_ORDER: z
       .string()
       .default(
-        'groq:llama-3.3-70b-versatile:free,openrouter:meta-llama/llama-4-maverick:free,openrouter:deepseek-v4-flash:paid',
+        'groq:llama-3.3-70b-versatile:free,' +
+          'groq:llama-3.1-8b-instant:free,' +
+          'openrouter:meta-llama/llama-4-maverick:free,' +
+          'groq:meta-llama/llama-4-scout-17b-16e-instruct:free,' +
+          'groq:openai/gpt-oss-120b:free,' +
+          'openrouter:openrouter/free:free,' +
+          'groq:qwen/qwen3-32b:free,' +
+          'openrouter:deepseek-v4-flash:paid',
       ),
     CASCADE_PAID_ENABLED: envBool.default(false),
     CASCADE_PAID_DAILY_BUDGET_USD: z.coerce.number().min(0).max(100).default(0.17),

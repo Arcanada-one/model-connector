@@ -126,6 +126,30 @@ describe('CascadeRouterService (T1-T7)', () => {
     );
   });
 
+  it('CONN-0244: deep free chain advances through several rate-limited rungs to a later success', async () => {
+    // 5 free rungs across 2 providers; first three rate-limit, the fourth succeeds.
+    mockConfig.CASCADE_LOW_REASONING_ORDER =
+      'groq:llama-3.3-70b-versatile:free,groq:llama-3.1-8b-instant:free,openrouter:meta-llama/llama-4-maverick:free,groq:openai/gpt-oss-120b:free,openrouter:openrouter/free:free';
+    const mockService = makeMockConnectorsService([
+      makeErrorResponse('rate_limited', 'groq', 'llama-3.3-70b-versatile'),
+      makeErrorResponse('rate_limited', 'groq', 'llama-3.1-8b-instant'),
+      makeErrorResponse('rate_limited', 'openrouter', 'meta-llama/llama-4-maverick'),
+      makeSuccessResponse('groq', 'openai/gpt-oss-120b'),
+    ]);
+    const mockMetrics = makeMockMetrics();
+    const router = new CascadeRouterService(
+      mockService as unknown as ConstructorParameters<typeof CascadeRouterService>[0],
+      mockMetrics as unknown as ConstructorParameters<typeof CascadeRouterService>[1],
+    );
+
+    const result = await router.execute('low-reasoning', { prompt: 'hi' }, 'key-1');
+    expect(result.status).toBe('success');
+    expect(mockService.execute).toHaveBeenCalledTimes(4); // advanced through 3 failures
+    expect(mockMetrics.recordCascade).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'success', fallbackCount: 3, freeTierHit: true }),
+    );
+  });
+
   it('T2: free rate_limited → free2 success → fallbackCount=1, freeTierHit=true', async () => {
     mockConfig.CASCADE_PAID_ENABLED = false;
     mockConfig.CASCADE_LOW_REASONING_ORDER =
