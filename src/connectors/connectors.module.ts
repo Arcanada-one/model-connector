@@ -16,6 +16,12 @@ import { OutputGuardModule } from './output-guard/output-guard.module';
 import { OpenModelModule } from './openmodel/openmodel.module';
 import { CascadeModule } from './cascade/cascade.module';
 import { OrqModule } from './orq/orq.module';
+// CONN-0245 — DB-as-source-of-truth model catalog.
+import { CatalogRepository } from './catalog.repository';
+import { CatalogRefreshService } from './catalog-refresh.service';
+import { CATALOG_REDIS_PROVIDER } from './catalog-redis.provider';
+// CONN-0245-EXT — provider READ/USE access.
+import { ProviderAccessService } from './provider-access.service';
 
 @Module({
   imports: [
@@ -35,7 +41,14 @@ import { OrqModule } from './orq/orq.module';
     OrqModule,
   ],
   controllers: [ConnectorsController],
-  providers: [ConnectorsService, ModalityCatalogService],
-  exports: [ConnectorsService],
+  providers: [
+    ConnectorsService,
+    ModalityCatalogService,
+    CatalogRepository,
+    CatalogRefreshService,
+    CATALOG_REDIS_PROVIDER,
+    ProviderAccessService,
+  ],
+  exports: [ConnectorsService, CatalogRepository, ProviderAccessService],
 })
 export class ConnectorsModule {}

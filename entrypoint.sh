@@ -17,4 +17,9 @@ echo -n "" | gnome-keyring-daemon --login --components=secrets
 echo -n "" | gnome-keyring-daemon --start --components=secrets
 export GNOME_KEYRING_CONTROL
 
+# CONN-0245: DB is source of truth for the catalog — apply pending migrations on boot.
+# prisma CLI is present (node_modules copied from build stage installed with --prod=false).
+echo "[entrypoint] running prisma migrate deploy..."
+node_modules/.bin/prisma migrate deploy || { echo "[entrypoint] migrate deploy FAILED"; exit 1; }
+
 exec "$@"

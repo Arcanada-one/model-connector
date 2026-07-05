@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { createHash } from 'node:crypto';
 import {
   CircuitBreakerResetEntry,
   ConnectorRequest,
@@ -23,6 +24,7 @@ import { parseProviderAccess, resolveProviderAccess, type ProviderAccess } from 
 import {
   buildDerivedTags,
   entryMatchesFilters,
+  isModalityExecutableHere,
   type CatalogFilters,
   type CatalogModelEntry,
   type CatalogResponse,
@@ -30,6 +32,11 @@ import {
   type ModelPricing,
 } from './dto/catalog.dto';
 import { ModalityCatalogService } from './modality-catalog.service';
+// CONN-0245 — DB-as-source-of-truth catalog read path.
+import { CatalogRepository, type CatalogRepositoryLike } from './catalog.repository';
+import { rowToEntry } from './catalog-mapper';
+import { CATALOG_REDIS_CLIENT, type ICatalogRedis } from './catalog-redis.token';
+import { ProviderAccessService, type ProviderAccessLike } from './provider-access.service';
 
 // CONN-0238 — capability mask for non-chat families surfaced via a chat connector.
 const NO_CAPS = {
@@ -71,7 +78,66 @@ export class ConnectorsService {
     // CONN-0232 — static non-chat catalog (image-gen / STT / TTS). Defaulted so
     // existing manual constructions still work; the module provides the real one.
     private readonly modalityCatalog: ModalityCatalogService = new ModalityCatalogService(),
+    // CONN-0245 — DB-as-source-of-truth catalog read path. `catalogRepo` is
+    // typed as the narrow `CatalogRepositoryLike` interface (so specs can
+    // inject a `{ findAll: vi.fn() }` mock), but the interface type is erased
+    // at runtime — Nest's automatic DI can't derive a token from it, so
+    // `@Inject(CatalogRepository)` supplies the concrete class as the
+    // resolution token explicitly. Defaulted to a narrow no-op mock so
+    // existing manual `new ConnectorsService(...)` constructions (specs that
+    // don't exercise getCatalog/buildCatalogSnapshot) keep working unchanged.
+    @Inject(CatalogRepository)
+    private readonly catalogRepo: CatalogRepositoryLike = { findAll: async () => [] },
+    // Optional Redis accelerator cache in front of the DB read path. `null`
+    // (default) disables caching — getCatalog() falls through straight to
+    // the repo, which is exactly the pre-cache behavior existing specs expect.
+    @Inject(CATALOG_REDIS_CLIENT) private readonly catalogRedis: ICatalogRedis | null = null,
+    // CONN-0245-EXT — DB-backed runtime state for CONN-0244's per-provider
+    // READ/USE access (`getAccess`/`canRead`/`canUse` below delegate to
+    // `this.providerAccess.getAccess(name)`). Defaulted to a stub that
+    // replicates CONN-0244's ORIGINAL raw fallback (env `PROVIDER_ACCESS`
+    // present-key check, then `getConfig()`, then the hardcoded
+    // `'openmodel:read'` default) so every existing manual
+    // `new ConnectorsService(...)` construction — including CONN-0244's own
+    // spec suite, which sets `process.env.PROVIDER_ACCESS` directly without
+    // constructing a ProviderAccessService — keeps working byte-identically.
+    @Inject(ProviderAccessService)
+    private readonly providerAccess: ProviderAccessLike = {
+      seedDefaults: async () => {},
+      refresh: async () => {},
+      getAccess: (name: string): ProviderAccess => {
+        let csv: string;
+        if ('PROVIDER_ACCESS' in process.env) {
+          csv = process.env.PROVIDER_ACCESS ?? '';
+        } else {
+          try {
+            csv = getConfig().PROVIDER_ACCESS;
+          } catch {
+            csv = 'openmodel:read';
+          }
+        }
+        return resolveProviderAccess(parseProviderAccess(csv), name);
+      },
+    },
   ) {}
+
+  // CONN-0244 — per-provider access (READ = catalog-visible, USE = routable).
+  // CONN-0245-EXT — delegates to ProviderAccessService: DB state if the
+  // provider has been seeded, else the exact CONN-0244 config computation
+  // (see the constructor default above for the pre-seed/unwired fallback).
+  private getAccess(name: string): ProviderAccess {
+    return this.providerAccess.getAccess(name);
+  }
+
+  /** Provider's models are visible in the catalog. */
+  canRead(name: string): boolean {
+    return this.getAccess(name).read;
+  }
+
+  /** MC will route traffic through this provider (cascade / execute). */
+  canUse(name: string): boolean {
+    return this.getAccess(name).use;
+  }
 
   register(connector: IConnector) {
     this.connectors.set(connector.name, connector);
@@ -90,35 +156,6 @@ export class ConnectorsService {
     return Array.from(this.connectors.keys());
   }
 
-  // CONN-0244 — per-provider access (READ = catalog-visible, USE = routable). Read from
-  // PROVIDER_ACCESS (env.schema default marks openmodel READ-only); falls back to raw env
-  // when the full config is unavailable (test envs), then to fully-enabled per provider.
-  private getAccess(name: string): ProviderAccess {
-    // An explicitly-set PROVIDER_ACCESS env wins (present-key check, so '' is a valid
-    // "all-enabled" override); otherwise the validated config default ('openmodel:read').
-    let csv: string;
-    if ('PROVIDER_ACCESS' in process.env) {
-      csv = process.env.PROVIDER_ACCESS ?? '';
-    } else {
-      try {
-        csv = getConfig().PROVIDER_ACCESS;
-      } catch {
-        csv = 'openmodel:read';
-      }
-    }
-    return resolveProviderAccess(parseProviderAccess(csv), name);
-  }
-
-  /** Provider's models are visible in the catalog. */
-  canRead(name: string): boolean {
-    return this.getAccess(name).read;
-  }
-
-  /** MC will route traffic through this provider (cascade / execute). */
-  canUse(name: string): boolean {
-    return this.getAccess(name).use;
-  }
-
   async listAll(): Promise<
     Array<{ name: string; type: string; capabilities: ReturnType<IConnector['getCapabilities']> }>
   > {
@@ -130,7 +167,12 @@ export class ConnectorsService {
   }
 
   /**
-   * CONN-0226 — Build a catalog of all models across registered connectors.
+   * CONN-0245 — Build a FULL, unfiltered catalog snapshot across all
+   * registered connectors. This is the exact CONN-0226 assembly logic
+   * (unchanged), just no longer invoked on the request path: the ONLY
+   * caller is CatalogRefreshService's cron, which persists the result via
+   * `entryToRow` + `CatalogRepository.upsertSnapshot()`. `getCatalog()`
+   * below never calls this — it reads the DB (+ optional cache) instead.
    *
    * Price / free detection strategy per connector:
    *  - openmodel: uses OPENMODEL_CATALOGUE price_multiplier (0 = free).
@@ -141,7 +183,7 @@ export class ConnectorsService {
    * Rate limits (RPM/TPM): no connector currently exposes these; always null.
    * Never invent values — callers must treat null as "unknown".
    */
-  async getCatalog(filters: CatalogFilters): Promise<CatalogResponse> {
+  async buildCatalogSnapshot(): Promise<CatalogModelEntry[]> {
     const entries: CatalogModelEntry[] = [];
 
     for (const connector of this.connectors.values()) {
@@ -230,19 +272,97 @@ export class ConnectorsService {
           available: routable && present.executableHere && reachable && !modelBreakerOpen,
         };
 
-        if (entryMatchesFilters(entry, filters)) entries.push(entry);
+        entries.push(entry);
       }
     }
 
     // CONN-0232: merge non-chat families (image-gen / STT / TTS) that are not
-    // IConnector and therefore invisible to the loop above. Same filters apply.
-    entries.push(...this.modalityCatalog.getFilteredEntries(filters));
+    // IConnector and therefore invisible to the loop above. Unfiltered — this
+    // is a full snapshot, not a request-scoped view.
+    entries.push(...this.modalityCatalog.getEntries());
 
-    return {
+    return entries;
+  }
+
+  /**
+   * CONN-0245 — Universal model catalog, READ-ONLY from the DB (+ optional
+   * short-TTL Redis cache in front of it). Never calls a provider on this
+   * path — the `model_catalog` table is the single source of truth, kept
+   * warm by `CatalogRefreshService`'s cron (full refresh + status interval).
+   */
+  async getCatalog(filters: CatalogFilters): Promise<CatalogResponse> {
+    const cacheEnabled = this.isCatalogCacheEnabled();
+    const cacheKey = this.catalogCacheKey(filters);
+
+    if (cacheEnabled && this.catalogRedis) {
+      try {
+        const cached = await this.catalogRedis.get(cacheKey);
+        if (cached) {
+          return JSON.parse(cached) as CatalogResponse;
+        }
+      } catch (err) {
+        this.logger.warn(`Catalog cache read failed, falling back to DB: ${err}`);
+      }
+    }
+
+    const rows = await this.catalogRepo.findAll();
+    const entries = rows
+      .map((row) => rowToEntry(row))
+      .filter((entry) => entryMatchesFilters(entry, filters));
+    const generatedAt = rows.length
+      ? new Date(Math.max(...rows.map((r) => r.lastChecked.getTime()))).toISOString()
+      : new Date().toISOString();
+
+    const response: CatalogResponse = {
       models: entries,
-      generatedAt: new Date().toISOString(),
+      generatedAt,
       count: entries.length,
     };
+
+    if (cacheEnabled && this.catalogRedis) {
+      try {
+        await this.catalogRedis.set(
+          cacheKey,
+          JSON.stringify(response),
+          'PX',
+          this.catalogCacheTtlMs(),
+        );
+      } catch (err) {
+        this.logger.warn(`Catalog cache write failed (non-fatal): ${err}`);
+      }
+    }
+
+    return response;
+  }
+
+  private isCatalogCacheEnabled(): boolean {
+    // Defensive getConfig (matches the cascade-router convention): when the
+    // full env can't be validated (e.g. unit tests without DATABASE_URL) fall
+    // back to the env.schema default (true) rather than silently disabling the
+    // cache path. Prod always has a validated config, so it reads the real flag.
+    try {
+      return getConfig().CATALOG_CACHE_ENABLED;
+    } catch {
+      return true;
+    }
+  }
+
+  private catalogCacheTtlMs(): number {
+    try {
+      return getConfig().CATALOG_CACHE_TTL_MS;
+    } catch {
+      return 30_000;
+    }
+  }
+
+  /** Stable cache key — sorted-key JSON hashed so semantically-identical filter objects collide. */
+  private catalogCacheKey(filters: CatalogFilters): string {
+    const sortedEntries = Object.entries(filters as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .sort(([a], [b]) => a.localeCompare(b));
+    const stable = JSON.stringify(sortedEntries);
+    const hash = createHash('sha1').update(stable).digest('hex');
+    return `conn:catalog:${hash}`;
   }
 
   /**
@@ -301,16 +421,7 @@ export class ConnectorsService {
    * `available`) AND the execute() pre-flight gate so the two never drift.
    */
   static isModalityExecutableHere(modality: ModelModality): boolean {
-    switch (modality) {
-      case 'speech_to_text':
-      case 'text_to_speech':
-      case 'image_generation':
-      case 'video':
-        return false;
-      default:
-        // chat, embedding, rerank, moderation
-        return true;
-    }
+    return isModalityExecutableHere(modality);
   }
 
   /**
@@ -328,6 +439,34 @@ export class ConnectorsService {
 
   async getStatus(name: string): Promise<ConnectorStatus> {
     return this.get(name).getStatus();
+  }
+
+  /**
+   * CONN-0245 — best-effort trigger of each registered connector's own
+   * live-model-list refresh (e.g. `BaseApiConnector.refreshModels()`) ahead
+   * of a full catalog snapshot. Duck-typed via a runtime check because
+   * `refreshModels` is NOT part of the `IConnector` interface — CLI
+   * connectors (claude-code, cursor, codex) don't have a live `/models`
+   * endpoint to refresh from and simply don't expose it.
+   * `refreshModels()` itself is documented to never throw (falls back to
+   * the cached/static list on any failure), but `Promise.allSettled` here is
+   * an extra belt-and-braces guard so one connector can never block or fail
+   * the others.
+   */
+  async refreshAllProviderModels(): Promise<void> {
+    const refreshable = Array.from(this.connectors.values()).filter(
+      (c): c is IConnector & { refreshModels: () => Promise<void> } =>
+        typeof (c as { refreshModels?: unknown }).refreshModels === 'function',
+    );
+    await Promise.allSettled(
+      refreshable.map((c) =>
+        c
+          .refreshModels()
+          .catch((err) =>
+            this.logger.warn(`refreshModels failed for ${c.name} (keeping cached models): ${err}`),
+          ),
+      ),
+    );
   }
 
   resetCircuitBreaker(connectorName?: string, model?: string): CircuitBreakerResetEntry[] {

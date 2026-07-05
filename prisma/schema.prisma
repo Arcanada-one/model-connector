@@ -139,3 +139,71 @@ model SttTranscription {
   @@index([apiKeyId, createdAt])
   @@index([status])
 }
+
+// CONN-0245: DB as single source of truth for the model catalog.
+// Populated exclusively by CatalogRefreshService (cron full-refresh +
+// interval status-refresh) — the getCatalog() request path only ever reads
+// this table (+ optional Redis cache), never calls a provider directly.
+// Rows are never deleted: when a model disappears from a provider's live
+// list, `absent` flips to true and the last-known data is retained for
+// history/audit instead of losing the row.
+model ModelCatalog {
+  id                 String   @id @default(cuid())
+  connector          String
+  model              String
+  modality           String
+  status             String // "online" | "offline"
+  lastChecked        DateTime
+  supportsStreaming  Boolean  @default(false)
+  supportsJsonSchema Boolean  @default(false)
+  supportsTools      Boolean  @default(false)
+  inputPerMTok       Float?
+  outputPerMTok      Float?
+  priceUnit          String   @default("USD/1M tokens")
+  tier               String // "free" | "paid" | "unknown"
+  free               Boolean  @default(false)
+  // QA FIX B (Finding 1) — the legacy MC-side price multiplier (0 = free;
+  // 1 = standard; null = unknown; OPENMODEL_CATALOGUE-sourced). Persisted
+  // verbatim (not consulted for tier/free — see catalog-mapper.ts deriveTier)
+  // so the external site's `cheap`/`priceMultiplier` fields survive the DB
+  // round-trip unchanged instead of being fabricated on read.
+  priceMultiplier    Float?
+  contextWindow      Int?
+  maxOutputTokens    Int?
+  endpoint           String?
+  executableHere     Boolean  @default(false)
+  // CONN-0244 — per-provider USE access (`ProviderAccess.use`), persisted
+  // verbatim so the read path can reconstruct the `access:read-only` tag.
+  // NOT a compound of useEnabled && executableHere — availability for
+  // routing is derived separately (see `available`, computed from `status`
+  // at persist time in catalog-mapper.ts's entryToRow/rowToEntry).
+  routable           Boolean  @default(false)
+  firstSeen          DateTime @default(now())
+  lastSeen           DateTime
+  absent             Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([connector, model])
+  @@index([modality])
+  @@index([status])
+  @@map("model_catalog")
+}
+
+// CONN-0245-EXT — per-provider READ/USE access state. DB is authoritative;
+// config (CATALOG_PROVIDER_USE_DEFAULT_OFF) only seeds defaults for a
+// provider the FIRST time it's seen (create-only — see
+// ProviderAccessService.seedDefaults). readEnabled gates catalog visibility;
+// useEnabled gates whether MC routes traffic to it (execute()/cascade).
+// Driving case: OpenModel is paid and the operator hasn't topped up ->
+// readEnabled=true (still shown, real prices, not falsely free) /
+// useEnabled=false (never routed).
+model ProviderAccess {
+  provider    String   @id
+  readEnabled Boolean  @default(true)
+  useEnabled  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("provider_access")
+}
