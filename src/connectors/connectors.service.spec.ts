@@ -432,6 +432,42 @@ describe('ConnectorsService', () => {
       expect(result.models.every((m) => m.available === false)).toBe(true);
     });
 
+    it('CONN-0244: one open per-model breaker offlines ONLY that model, not the whole connector', async () => {
+      // Regression: an open per-model breaker used to flip the connector `healthy=false`
+      // (via aggregate) and blanket-offline every model. Now `healthy` = reachable, and
+      // only the model whose breaker is open is `available:false`.
+      const partiallyDegraded: IConnector = {
+        ...openmodelConnector,
+        name: 'openrouter',
+        getStatus: vi.fn().mockResolvedValue({
+          name: 'openrouter',
+          healthy: true, // reachable
+          activeJobs: 0,
+          queuedJobs: 0,
+          rateLimitStatus: 'ok',
+          circuitBreakers: {
+            'deepseek-r2': { state: 'open', consecutiveFailures: 5, lastErrorType: 'rate_limited' },
+          },
+        }),
+        getCapabilities: vi.fn().mockReturnValue({
+          name: 'openrouter',
+          type: 'api',
+          models: ['deepseek-v4-flash', 'deepseek-r2', 'qwen3-235b'],
+          supportsStreaming: false,
+          supportsJsonSchema: true,
+          supportsTools: false,
+          maxTimeout: 120_000,
+          freeModels: ['deepseek-v4-flash'],
+        }),
+      };
+      service.register(partiallyDegraded);
+      const result = await service.getCatalog(noFilters);
+      const byId = (id: string) => result.models.find((m) => m.model === id);
+      expect(byId('deepseek-r2')?.available).toBe(false); // open breaker → offline
+      expect(byId('deepseek-v4-flash')?.available).toBe(true); // healthy → online
+      expect(byId('qwen3-235b')?.available).toBe(true); // healthy → online
+    });
+
     it('getStatus failure is handled gracefully (available=false)', async () => {
       const failingStatusConnector: IConnector = {
         ...cliConnector,
