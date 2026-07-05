@@ -515,11 +515,9 @@ describe('OpenModelConnector', () => {
       expect(caps.type).toBe('api');
     });
 
-    it('includes freeModels with deepseek-v4-flash by default', () => {
+    it('CONN-0244: freeModels is EMPTY by default (OpenModel is a paid gateway)', () => {
       const caps = connector.getCapabilities();
-      expect((caps as unknown as { freeModels: string[] }).freeModels).toContain(
-        'deepseek-v4-flash',
-      );
+      expect((caps as unknown as { freeModels: string[] }).freeModels).toEqual([]);
     });
 
     it('uses OPENMODEL_FREE_MODELS CSV override', () => {

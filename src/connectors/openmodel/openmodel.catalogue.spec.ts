@@ -31,17 +31,21 @@ describe('buildFreeModels', () => {
   });
 });
 
-describe('OPENMODEL_CATALOGUE price_multiplier', () => {
-  it('deepseek-v4-flash has price_multiplier === 0 (free)', () => {
+describe('OPENMODEL_CATALOGUE price_multiplier (CONN-0244 — paid gateway)', () => {
+  it('deepseek-v4-flash has price_multiplier === 1 (paid, not free)', () => {
     const model = OPENMODEL_CATALOGUE.find((m) => m.id === 'deepseek-v4-flash');
     expect(model).toBeDefined();
-    expect(model!.price_multiplier).toBe(0);
+    expect(model!.price_multiplier).toBe(1);
   });
 
-  it('all free models have price_multiplier === 0', () => {
+  it('OpenModel is a paid gateway — NO catalogue entry is free (price_multiplier === 0)', () => {
     const freeModels = OPENMODEL_CATALOGUE.filter((m) => m.price_multiplier === 0);
-    expect(freeModels.length).toBeGreaterThan(0);
-    expect(freeModels.every((m) => m.price_multiplier === 0)).toBe(true);
+    expect(freeModels).toHaveLength(0);
+    expect(OPENMODEL_CATALOGUE.every((m) => m.price_multiplier > 0)).toBe(true);
+  });
+
+  it('OPENMODEL_FREE_MODELS_DEFAULT is empty (no free models by default)', () => {
+    expect(OPENMODEL_FREE_MODELS_DEFAULT).toEqual([]);
   });
 
   it('catalogue contains at least one paid model', () => {

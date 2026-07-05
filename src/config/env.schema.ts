@@ -165,10 +165,14 @@ export const envSchema = z
     // shared OpenRouter 429 pool) no longer fails the whole free fallback. groq rung
     // requires GROQ_API_KEY (present on prod). Verified live 2026-06-23:
     // groq:llama-3.3-70b-versatile → 201 success in ~1s.
+    // CONN-0244 — openmodel:deepseek-v4-flash was REMOVED from the free rungs. OpenModel
+    // is a PAID gateway (no free tier); tagging it `:free` drove real paid traffic through
+    // the operator's account under the free cascade and burned the balance into the negative.
+    // The free rungs are now genuinely-free only (groq free tier, openrouter `:free` models).
     CASCADE_LOW_REASONING_ORDER: z
       .string()
       .default(
-        'openmodel:deepseek-v4-flash:free,groq:llama-3.3-70b-versatile:free,openrouter:meta-llama/llama-4-maverick:free,openrouter:deepseek-v4-flash:paid',
+        'groq:llama-3.3-70b-versatile:free,openrouter:meta-llama/llama-4-maverick:free,openrouter:deepseek-v4-flash:paid',
       ),
     CASCADE_PAID_ENABLED: envBool.default(false),
     CASCADE_PAID_DAILY_BUDGET_USD: z.coerce.number().min(0).max(100).default(0.17),
