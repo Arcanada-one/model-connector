@@ -303,7 +303,34 @@ describe('ConnectorsService', () => {
         supportsJsonSchema: true,
         supportsTools: false,
         maxTimeout: 120_000,
-        freeModels: ['deepseek-v4-flash'],
+        // CONN-0244 — OpenModel is a paid gateway: no free models.
+        freeModels: [],
+      }),
+      resetCircuitBreaker: vi.fn().mockReturnValue([]),
+    };
+
+    // CONN-0244 — a genuinely-free provider fixture (openmodel is no longer free), used by the
+    // free-filter mechanism test below.
+    const freeProviderConnector: IConnector = {
+      name: 'groq',
+      type: 'api',
+      execute: vi.fn(),
+      getStatus: vi.fn().mockResolvedValue({
+        name: 'groq',
+        healthy: true,
+        activeJobs: 0,
+        queuedJobs: 0,
+        rateLimitStatus: 'ok',
+      }),
+      getCapabilities: vi.fn().mockReturnValue({
+        name: 'groq',
+        type: 'api',
+        models: ['llama-3.3-70b-versatile'],
+        supportsStreaming: false,
+        supportsJsonSchema: true,
+        supportsTools: true,
+        maxTimeout: 120_000,
+        freeModels: ['llama-3.3-70b-versatile'],
       }),
       resetCircuitBreaker: vi.fn().mockReturnValue([]),
     };
@@ -340,13 +367,13 @@ describe('ConnectorsService', () => {
       expect(result.models).toHaveLength(5);
     });
 
-    it('sets free=true for openmodel deepseek-v4-flash (price_multiplier=0)', async () => {
+    it('CONN-0244: openmodel deepseek-v4-flash is NOT free (paid gateway, price_multiplier=1)', async () => {
       service.register(openmodelConnector);
       const result = await service.getCatalog(noFilters);
       const flash = result.models.find((m) => m.model === 'deepseek-v4-flash');
-      expect(flash?.free).toBe(true);
-      expect(flash?.cheap).toBe(true);
-      expect(flash?.priceMultiplier).toBe(0);
+      expect(flash?.free).toBe(false);
+      expect(flash?.cheap).toBe(true); // price_multiplier=1 = cheap-but-paid
+      expect(flash?.priceMultiplier).toBe(1);
     });
 
     it('sets free=false for openmodel deepseek-r2 (price_multiplier=1)', async () => {
@@ -377,9 +404,12 @@ describe('ConnectorsService', () => {
     it('free filter: returns only free models', async () => {
       service.register(openmodelConnector);
       service.register(cliConnector);
+      service.register(freeProviderConnector); // openmodel is paid now — use a genuinely-free provider
       const result = await service.getCatalog({ ...noFilters, free: true });
       expect(result.models.every((m) => m.free)).toBe(true);
       expect(result.models.length).toBeGreaterThan(0);
+      // and none of the free results are openmodel
+      expect(result.models.some((m) => m.connector === 'openmodel')).toBe(false);
     });
 
     it('cheap filter: returns free and low-cost models', async () => {
@@ -510,7 +540,8 @@ describe('ConnectorsService', () => {
       const flash = result.models.find((m) => m.model === 'deepseek-v4-flash');
       expect(flash?.modality).toBe('chat');
       expect(flash?.tags).toContain('modality:chat');
-      expect(flash?.tags).toContain('cost:free'); // free model
+      expect(flash?.tags).toContain('cost:cheap'); // CONN-0244: paid gateway → cheap, not free
+      expect(flash?.tags).not.toContain('cost:free');
       expect(flash?.tags).toContain('cap:json-schema');
       expect(flash?.tags).not.toContain('cap:tools'); // openmodel supportsTools=false
     });

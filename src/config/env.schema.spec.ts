@@ -28,6 +28,16 @@ describe('envSchema', () => {
     expect(() => validateEnv(incomplete)).toThrow('Invalid environment variables');
   });
 
+  // CONN-0244 — the default free cascade must NOT route through the paid OpenModel gateway.
+  it('default CASCADE_LOW_REASONING_ORDER has no openmodel :free rung and starts with a real free rung', () => {
+    const order = validateEnv(validEnv).CASCADE_LOW_REASONING_ORDER;
+    expect(order).not.toMatch(/openmodel:[^,]*:free/);
+    const freeRungs = order.split(',').filter((e) => e.endsWith(':free'));
+    expect(freeRungs.length).toBeGreaterThan(0);
+    expect(freeRungs.every((e) => !e.startsWith('openmodel:'))).toBe(true);
+    expect(order.split(',')[0]).toBe('groq:llama-3.3-70b-versatile:free');
+  });
+
   it('should apply defaults for optional fields', () => {
     const config = validateEnv({
       DATABASE_URL: 'postgresql://u:p@localhost/db',

@@ -47,7 +47,9 @@ export class CascadeRouterService {
       // Fallback for test environments where env may not be fully loaded
       config = {
         CASCADE_LOW_REASONING_ORDER:
-          process.env.CASCADE_LOW_REASONING_ORDER || 'openmodel:deepseek-v4-flash:free',
+          // CONN-0244 — test-env fallback: a genuinely-free rung (groq free tier), NOT the
+          // paid openmodel gateway which must never be a `:free` cascade step.
+          process.env.CASCADE_LOW_REASONING_ORDER || 'groq:llama-3.3-70b-versatile:free',
         CASCADE_PAID_ENABLED: false,
         CASCADE_PAID_DAILY_BUDGET_USD: 0.17,
       } as ReturnType<typeof getConfig>;
