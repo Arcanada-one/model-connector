@@ -28,14 +28,25 @@ describe('envSchema', () => {
     expect(() => validateEnv(incomplete)).toThrow('Invalid environment variables');
   });
 
-  // CONN-0244 — the default free cascade must NOT route through the paid OpenModel gateway.
-  it('default CASCADE_LOW_REASONING_ORDER has no openmodel :free rung and starts with a real free rung', () => {
+  // CONN-0244 — the default free cascade must be DEEP (≥5 live free rungs across ≥2 providers)
+  // and must NOT route through the paid OpenModel gateway.
+  it('default CASCADE_LOW_REASONING_ORDER is a deep multi-provider free chain, no openmodel', () => {
     const order = validateEnv(validEnv).CASCADE_LOW_REASONING_ORDER;
-    expect(order).not.toMatch(/openmodel:[^,]*:free/);
-    const freeRungs = order.split(',').filter((e) => e.endsWith(':free'));
-    expect(freeRungs.length).toBeGreaterThan(0);
-    expect(freeRungs.every((e) => !e.startsWith('openmodel:'))).toBe(true);
-    expect(order.split(',')[0]).toBe('groq:llama-3.3-70b-versatile:free');
+    expect(order).not.toMatch(/openmodel:/); // openmodel gone entirely (paid)
+    const rungs = order.split(',');
+    const freeRungs = rungs.filter((e) => e.endsWith(':free'));
+    // depth: at least 5 genuinely-free rungs
+    expect(freeRungs.length).toBeGreaterThanOrEqual(5);
+    // provider diversity: free rungs span at least 2 distinct providers
+    const providers = new Set(freeRungs.map((e) => e.split(':')[0]));
+    expect(providers.size).toBeGreaterThanOrEqual(2);
+    expect(providers.has('groq')).toBe(true);
+    expect(providers.has('openrouter')).toBe(true);
+    // fast, proven groq rung first; single paid rung stays last
+    expect(rungs[0]).toBe('groq:llama-3.3-70b-versatile:free');
+    expect(rungs[rungs.length - 1].endsWith(':paid')).toBe(true);
+    // no model id contains a colon (would break tier parsing): each rung has exactly 2 colons
+    expect(rungs.every((e) => e.split(':').length === 3)).toBe(true);
   });
 
   // CONN-0244 — OpenModel is a paid gateway kept visible but not routable by default.
