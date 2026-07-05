@@ -61,6 +61,8 @@ function makeRouter(
   let idx = 0;
   const mockConnectorsService = {
     execute: vi.fn(() => Promise.resolve(responses[idx++] ?? err('server_error'))),
+    // CONN-0244 — cascade filters candidates by canUse; fully-routable in these tests.
+    canUse: vi.fn(() => true),
   };
   const mockMetrics = { recordCascade: vi.fn() };
 

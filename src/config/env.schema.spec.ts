@@ -38,6 +38,11 @@ describe('envSchema', () => {
     expect(order.split(',')[0]).toBe('groq:llama-3.3-70b-versatile:free');
   });
 
+  // CONN-0244 — OpenModel is a paid gateway kept visible but not routable by default.
+  it('default PROVIDER_ACCESS marks openmodel read-only', () => {
+    expect(validateEnv(validEnv).PROVIDER_ACCESS).toBe('openmodel:read');
+  });
+
   it('should apply defaults for optional fields', () => {
     const config = validateEnv({
       DATABASE_URL: 'postgresql://u:p@localhost/db',

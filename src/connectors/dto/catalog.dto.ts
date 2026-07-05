@@ -210,6 +210,9 @@ export function buildDerivedTags(input: {
   free: boolean;
   cheap: boolean;
   capabilities: { supportsStreaming: boolean; supportsJsonSchema: boolean; supportsTools: boolean };
+  // CONN-0244 — false ⇒ the provider is READ-only (visible, not routable). Defaults to true
+  // so existing callers (static image/STT/TTS entries) are unaffected.
+  routable?: boolean;
 }): string[] {
   const tags: string[] = [`modality:${input.modality}`];
   if (input.free) tags.push('cost:free');
@@ -217,6 +220,7 @@ export function buildDerivedTags(input: {
   if (input.capabilities.supportsStreaming) tags.push('cap:streaming');
   if (input.capabilities.supportsTools) tags.push('cap:tools');
   if (input.capabilities.supportsJsonSchema) tags.push('cap:json-schema');
+  if (input.routable === false) tags.push('access:read-only');
   return tags;
 }
 

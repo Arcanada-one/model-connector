@@ -56,10 +56,13 @@ export class CascadeRouterService {
     }
 
     if (profile === 'low-reasoning') {
-      return buildLowReasoningCandidates({
+      const candidates = buildLowReasoningCandidates({
         lowReasoningOrder: config.CASCADE_LOW_REASONING_ORDER,
         paidEnabled: config.CASCADE_PAID_ENABLED,
       });
+      // CONN-0244 — drop candidates whose provider is not routable (PROVIDER_ACCESS use=false),
+      // so a read-only provider never appears in the cascade even if it is listed in the order.
+      return candidates.filter((c) => this.connectorsService.canUse(c.connector));
     }
     throw new Error(`Unknown cascade profile: "${profile}"`);
   }
