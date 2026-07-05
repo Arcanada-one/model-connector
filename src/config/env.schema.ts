@@ -177,6 +177,13 @@ export const envSchema = z
     CASCADE_PAID_ENABLED: envBool.default(false),
     CASCADE_PAID_DAILY_BUDGET_USD: z.coerce.number().min(0).max(100).default(0.17),
     CASCADE_PAID_MODEL: z.string().default('deepseek-v4-flash'),
+    // CONN-0244 — per-provider access. CSV `name:level` (level = use | read | none):
+    //   use  = fully enabled (default for any provider not listed),
+    //   read = visible in catalog but NOT routable (no cascade / no /execute),
+    //   none = hidden entirely.
+    // Default marks OpenModel READ-only: it is a paid gateway the operator cannot fund, so it
+    // stays visible in the catalog (paid, marked read-only) but MC never routes traffic to it.
+    PROVIDER_ACCESS: z.string().default('openmodel:read'),
   })
   .superRefine((data, ctx) => {
     // CONN-0103 V-AC-8 — fail-closed boot when a provider is enabled but its API key

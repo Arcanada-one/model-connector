@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Queue } from 'bullmq';
 import { ConnectorsService } from './connectors.service';
 import { NotFoundException } from '@nestjs/common';
@@ -52,6 +52,8 @@ describe('ConnectorsService', () => {
   } as unknown as import('./modality-catalog.service').ModalityCatalogService;
 
   beforeEach(() => {
+    // CONN-0244 — baseline: all providers fully enabled unless a test opts into PROVIDER_ACCESS.
+    process.env.PROVIDER_ACCESS = '';
     service = new ConnectorsService(
       mockQueue as unknown as Queue,
       mockPrisma as unknown as PrismaService,
@@ -374,6 +376,59 @@ describe('ConnectorsService', () => {
       expect(flash?.free).toBe(false);
       expect(flash?.cheap).toBe(true); // price_multiplier=1 = cheap-but-paid
       expect(flash?.priceMultiplier).toBe(1);
+    });
+
+    describe('CONN-0244 — per-provider READ/USE access (PROVIDER_ACCESS)', () => {
+      const prev = process.env.PROVIDER_ACCESS;
+      afterEach(() => {
+        if (prev === undefined) delete process.env.PROVIDER_ACCESS;
+        else process.env.PROVIDER_ACCESS = prev;
+      });
+
+      it('read-only provider: models stay VISIBLE but available=false + access:read-only tag', async () => {
+        process.env.PROVIDER_ACCESS = 'openmodel:read';
+        service.register(openmodelConnector);
+        service.register(cliConnector);
+        const result = await service.getCatalog(noFilters);
+        const om = result.models.filter((m) => m.connector === 'openmodel');
+        expect(om.length).toBe(3); // still visible in the catalog
+        expect(om.every((m) => m.available === false)).toBe(true); // not routable
+        expect(om.every((m) => m.tags.includes('access:read-only'))).toBe(true);
+        // a fully-enabled provider is unaffected
+        const cli = result.models.filter((m) => m.connector === 'claude-code');
+        expect(cli.every((m) => m.available === true)).toBe(true);
+        expect(cli.some((m) => m.tags.includes('access:read-only'))).toBe(false);
+      });
+
+      it('hidden provider (none): models are absent from the catalog', async () => {
+        process.env.PROVIDER_ACCESS = 'openmodel:none';
+        service.register(openmodelConnector);
+        service.register(cliConnector);
+        const result = await service.getCatalog(noFilters);
+        expect(result.models.some((m) => m.connector === 'openmodel')).toBe(false);
+        expect(result.models.some((m) => m.connector === 'claude-code')).toBe(true);
+      });
+
+      it('canRead/canUse reflect the configured access level', () => {
+        process.env.PROVIDER_ACCESS = 'openmodel:read';
+        expect(service.canRead('openmodel')).toBe(true);
+        expect(service.canUse('openmodel')).toBe(false);
+        expect(service.canRead('gemini')).toBe(true); // unlisted → fully enabled
+        expect(service.canUse('gemini')).toBe(true);
+      });
+
+      it('execute() on a read-only provider is rejected (provider_not_routable) with no outbound call', async () => {
+        process.env.PROVIDER_ACCESS = 'openmodel:read';
+        service.register(openmodelConnector);
+        const res = await service.execute(
+          'openmodel',
+          { prompt: 'x', model: 'deepseek-v4-flash' },
+          'key-1',
+        );
+        expect(res.status).toBe('error');
+        expect(res.error?.type).toBe('provider_not_routable');
+        expect(openmodelConnector.execute).not.toHaveBeenCalled();
+      });
     });
 
     it('sets free=false for openmodel deepseek-r2 (price_multiplier=1)', async () => {

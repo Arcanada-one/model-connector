@@ -19,6 +19,7 @@ import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import type { OutputGuardReport } from './output-guard/types';
 import { OPENMODEL_CATALOGUE } from './openmodel/openmodel.catalogue';
+import { parseProviderAccess, resolveProviderAccess, type ProviderAccess } from './provider-access';
 import {
   buildDerivedTags,
   entryMatchesFilters,
@@ -89,6 +90,35 @@ export class ConnectorsService {
     return Array.from(this.connectors.keys());
   }
 
+  // CONN-0244 — per-provider access (READ = catalog-visible, USE = routable). Read from
+  // PROVIDER_ACCESS (env.schema default marks openmodel READ-only); falls back to raw env
+  // when the full config is unavailable (test envs), then to fully-enabled per provider.
+  private getAccess(name: string): ProviderAccess {
+    // An explicitly-set PROVIDER_ACCESS env wins (present-key check, so '' is a valid
+    // "all-enabled" override); otherwise the validated config default ('openmodel:read').
+    let csv: string;
+    if ('PROVIDER_ACCESS' in process.env) {
+      csv = process.env.PROVIDER_ACCESS ?? '';
+    } else {
+      try {
+        csv = getConfig().PROVIDER_ACCESS;
+      } catch {
+        csv = 'openmodel:read';
+      }
+    }
+    return resolveProviderAccess(parseProviderAccess(csv), name);
+  }
+
+  /** Provider's models are visible in the catalog. */
+  canRead(name: string): boolean {
+    return this.getAccess(name).read;
+  }
+
+  /** MC will route traffic through this provider (cascade / execute). */
+  canUse(name: string): boolean {
+    return this.getAccess(name).use;
+  }
+
   async listAll(): Promise<
     Array<{ name: string; type: string; capabilities: ReturnType<IConnector['getCapabilities']> }>
   > {
@@ -115,6 +145,11 @@ export class ConnectorsService {
     const entries: CatalogModelEntry[] = [];
 
     for (const connector of this.connectors.values()) {
+      // CONN-0244 — READ gate: a provider with read=false is hidden from the catalog entirely.
+      // USE gate: read-only providers stay visible but are marked not-routable below.
+      const access = this.getAccess(connector.name);
+      if (!access.read) continue;
+      const routable = access.use;
       const caps = connector.getCapabilities();
       let status: ConnectorStatus;
       try {
@@ -176,7 +211,7 @@ export class ConnectorsService {
           connector: connector.name,
           model,
           modality,
-          tags: buildDerivedTags({ modality, free, cheap, capabilities }),
+          tags: buildDerivedTags({ modality, free, cheap, capabilities, routable }),
           free,
           cheap,
           priceMultiplier,
@@ -191,7 +226,8 @@ export class ConnectorsService {
             model,
             ...(present.endpoint ? { endpoint: present.endpoint } : {}),
           },
-          available: present.executableHere && reachable && !modelBreakerOpen,
+          // CONN-0244 — a read-only provider (routable=false) is never `available` for routing.
+          available: routable && present.executableHere && reachable && !modelBreakerOpen,
         };
 
         if (entryMatchesFilters(entry, filters)) entries.push(entry);
@@ -311,6 +347,28 @@ export class ConnectorsService {
     apiKeyId: string,
   ): Promise<ConnectorResponse> {
     const connector = this.get(connectorName);
+
+    // CONN-0244 — USE gate (single choke-point for ALL routing: direct /execute, universal
+    // /execute, and every cascade candidate route through here). A read-only provider is never
+    // routed to — reject before any outbound call so a provider the operator marked not-routable
+    // (e.g. paid OpenModel) cannot burn money. Permanent (non-retryable) so the cascade advances.
+    if (!this.canUse(connectorName)) {
+      const action = classifyErrorAction('provider_not_routable');
+      return {
+        id: '',
+        connector: connectorName,
+        model: request.model || 'unknown',
+        result: '',
+        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+        latencyMs: 0,
+        status: 'error',
+        error: {
+          type: 'provider_not_routable',
+          message: `Connector '${connectorName}' is READ-only (PROVIDER_ACCESS): its models are visible in the catalog but MC does not route traffic to it.`,
+          ...action,
+        },
+      };
+    }
 
     // CONN-0239 — modality pre-flight gate. The catalog surfaces non-chat families
     // (STT/TTS/image/video) for completeness with `available:false`; this connector's

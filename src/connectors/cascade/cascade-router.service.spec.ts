@@ -49,6 +49,8 @@ function makeErrorResponse(
 
 function makeMockConnectorsService(
   responses: Array<ReturnType<typeof makeSuccessResponse> | ReturnType<typeof makeErrorResponse>>,
+  // CONN-0244 — cascade filters candidates by canUse; default fully-routable.
+  canUse: (connector: string) => boolean = () => true,
 ) {
   let callIndex = 0;
   return {
@@ -56,6 +58,7 @@ function makeMockConnectorsService(
       const item = responses[callIndex++];
       return Promise.resolve(item ?? makeErrorResponse('server_error'));
     }),
+    canUse: vi.fn((connector: string) => canUse(connector)),
   };
 }
 
@@ -92,6 +95,34 @@ describe('CascadeRouterService (T1-T7)', () => {
     expect(mockService.execute).toHaveBeenCalledTimes(1);
     expect(mockMetrics.recordCascade).toHaveBeenCalledWith(
       expect.objectContaining({ status: 'success', fallbackCount: 0, freeTierHit: true }),
+    );
+  });
+
+  it('CONN-0244: a read-only (canUse=false) provider is filtered out of the cascade entirely', async () => {
+    // order = openmodel(free), openrouter(free), openrouter(paid); openmodel is read-only.
+    const mockService = makeMockConnectorsService(
+      [makeSuccessResponse('openrouter', 'meta-llama/llama-4-maverick')],
+      (connector) => connector !== 'openmodel', // openmodel not routable
+    );
+    const mockMetrics = makeMockMetrics();
+    const router = new CascadeRouterService(
+      mockService as unknown as ConstructorParameters<typeof CascadeRouterService>[0],
+      mockMetrics as unknown as ConstructorParameters<typeof CascadeRouterService>[1],
+    );
+
+    const result = await router.execute('low-reasoning', { prompt: 'hello' }, 'key-1');
+    expect(result.status).toBe('success');
+    // openmodel was never called — the first executed candidate is openrouter.
+    expect(mockService.execute).toHaveBeenCalledTimes(1);
+    expect(mockService.execute).toHaveBeenCalledWith(
+      'openrouter',
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(mockService.execute).not.toHaveBeenCalledWith(
+      'openmodel',
+      expect.anything(),
+      expect.anything(),
     );
   });
 
