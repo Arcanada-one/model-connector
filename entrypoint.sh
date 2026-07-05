@@ -20,6 +20,18 @@ export GNOME_KEYRING_CONTROL
 # CONN-0245: DB is source of truth for the catalog — apply pending migrations on boot.
 # prisma CLI is present (node_modules copied from build stage installed with --prod=false).
 echo "[entrypoint] running prisma migrate deploy..."
-node_modules/.bin/prisma migrate deploy || { echo "[entrypoint] migrate deploy FAILED"; exit 1; }
+if ! node_modules/.bin/prisma migrate deploy 2>/tmp/mc-migrate.err; then
+  cat /tmp/mc-migrate.err
+  # P3005: the DB is non-empty but has no prisma migration history — it was
+  # provisioned by `prisma db push` (e.g. the CI docker-e2e ephemeral Postgres),
+  # so the schema is ALREADY at the current state and there is nothing to apply.
+  # Continue booting in that case; fail closed on any other migrate error so a
+  # genuine migration problem never silently ships.
+  if grep -qiE "P3005|schema is not empty" /tmp/mc-migrate.err; then
+    echo "[entrypoint] DB has no migration history but schema is present (db push-managed) — skipping migrate deploy, continuing boot"
+  else
+    echo "[entrypoint] migrate deploy FAILED"; exit 1
+  fi
+fi
 
 exec "$@"
