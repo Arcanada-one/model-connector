@@ -416,6 +416,29 @@ describe('BaseApiConnector', () => {
       const status = await connector.getStatus();
       expect(status.healthy).toBe(false);
     });
+
+    // ── CONN-0244: an OPEN per-model breaker must NOT blanket-offline the whole connector ──
+    // Regression: one rate-limited/failed model tripped aggregate.state='open', which flipped
+    // getStatus().healthy to false; the catalog then marked EVERY model of the provider offline
+    // (openrouter: a single rate-limited `:free` model blanket-offlined all ~350). Connector-level
+    // `healthy` must mean REACHABLE only — per-model availability is gated downstream via the
+    // per-model breaker in `circuitBreakers`.
+    it('CONN-0244: stays healthy when reachable even with an OPEN per-model breaker', async () => {
+      // Trip model-a's breaker with an auth_error (instant open).
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        text: () => Promise.resolve('unauthorized'),
+      });
+      await connector.execute({ prompt: 'x', model: 'model-a' });
+
+      // Health probe answers 200 → connector is reachable.
+      fetchSpy.mockResolvedValueOnce({ ok: true, status: 200 });
+      const status = await connector.getStatus();
+
+      expect(status.healthy).toBe(true);
+      expect(status.circuitBreakers!['model-a'].state).toBe('open');
+    });
   });
 
   describe('classifyHttpError', () => {

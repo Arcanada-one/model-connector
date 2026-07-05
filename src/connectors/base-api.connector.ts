@@ -441,9 +441,14 @@ export abstract class BaseApiConnector implements IConnector {
       const reachable = this.isReachableStatus(res.status);
       return {
         name: this.name,
-        // `healthy` = connector reachable AND its aggregate breaker not open.
-        // Per-MODEL availability is computed downstream from `circuitBreakers`.
-        healthy: reachable && aggregate.state !== 'open',
+        // CONN-0244 — `healthy` = connector REACHABLE only. It must NOT fold in the
+        // aggregate circuit breaker: `getStates().aggregate` is 'open' whenever ANY
+        // single per-model breaker is open, so gating `healthy` on it blanket-offlined
+        // the WHOLE provider in the catalog when one model failed (openrouter: a single
+        // rate-limited `:free` model offlined all ~350). Per-MODEL availability is
+        // computed downstream from `circuitBreakers` (see connectors.service `available`);
+        // the aggregate is still surfaced below for observability.
+        healthy: reachable,
         activeJobs: this.activeJobs,
         queuedJobs: this.semaphore.pending,
         rateLimitStatus: 'ok',

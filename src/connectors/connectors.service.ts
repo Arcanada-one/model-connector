@@ -129,10 +129,11 @@ export class ConnectorsService {
         };
       }
 
-      // CONN-0232: `healthy` means the connector is REACHABLE (R10 — a 404 on a
-      // missing /health route no longer marks a live API offline). Per-model
-      // availability additionally requires the model's own circuit breaker to be
-      // closed, so one connector probe no longer blanket-offlines unrelated models.
+      // CONN-0232/0244: `healthy` means the connector is REACHABLE (R10 — a 404 on a
+      // missing /health route no longer marks a live API offline; CONN-0244 — an open
+      // per-model breaker no longer flips `healthy`). Per-model availability additionally
+      // requires the model's own circuit breaker to be closed (see `modelBreakerOpen`
+      // below), so neither a probe quirk nor one failing model blanket-offlines the rest.
       const reachable = status.healthy;
       const perModelBreakers = status.circuitBreakers ?? {};
       // CONN-0232: connector-wide default modality (chat) unless the connector
