@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from './config/config.module';
 import { AuthModule } from './auth/auth.module';
@@ -14,6 +15,8 @@ import { getConfig } from './config/env.schema';
   imports: [
     ConfigModule,
     PrismaModule,
+    // CONN-0245 — enables @Cron/@Interval for CatalogRefreshService.
+    ScheduleModule.forRoot(),
     BullModule.forRoot({
       connection: {
         host: getConfig().REDIS_HOST,

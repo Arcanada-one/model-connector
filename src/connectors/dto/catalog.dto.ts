@@ -231,6 +231,28 @@ export function buildDerivedTags(input: {
  * `group` uses a delimiter-safe prefix so `group=cost` does NOT match a
  * hypothetical `cost-something:` tag (consilium R3 pitfall).
  */
+/**
+ * CONN-0239/CONN-0245 — single source of truth for "can this modality run
+ * through the chat `/execute` path of an IConnector?". Chat / embedding /
+ * rerank / moderation are served via the connector's chat path; the
+ * dedicated-pipeline modalities (STT / TTS / image / video) are NOT.
+ * Pure + dependency-free so both `ConnectorsService` (execute() gate,
+ * presentModel()) and `catalog-mapper.ts` (entryToRow's `executableHere`
+ * persisted column) can use it without a circular import between the two.
+ */
+export function isModalityExecutableHere(modality: ModelModality): boolean {
+  switch (modality) {
+    case 'speech_to_text':
+    case 'text_to_speech':
+    case 'image_generation':
+    case 'video':
+      return false;
+    default:
+      // chat, embedding, rerank, moderation
+      return true;
+  }
+}
+
 export function entryMatchesFilters(entry: CatalogModelEntry, filters: CatalogFilters): boolean {
   if (filters.free && !entry.free) return false;
   if (filters.cheap && !entry.cheap) return false;

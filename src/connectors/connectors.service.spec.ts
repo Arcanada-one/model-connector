@@ -5,13 +5,56 @@ import { NotFoundException } from '@nestjs/common';
 import { IConnector } from './interfaces/connector.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
-import type { CatalogFilters } from './dto/catalog.dto';
+import { entryToRow } from './catalog-mapper';
+import {
+  entryMatchesFilters,
+  type CatalogFilters,
+  type CatalogModelEntry,
+} from './dto/catalog.dto';
+import type { CatalogRepositoryLike, ModelCatalogRow } from './catalog.repository';
+import type { ICatalogRedis } from './catalog-redis.token';
+
+// CONN-0245 — DB-as-source-of-truth catalog: builds a narrow CatalogRepository
+// mock whose `findAll()` returns rows equivalent to a given entry list (via
+// the real `entryToRow` mapper), so getCatalog() read-path tests exercise the
+// actual write→read round trip instead of an arbitrary hand-rolled row shape.
+// CONN-0245 — buildCatalogSnapshot() is now unfiltered (the cron persists
+// EVERYTHING; entryMatchesFilters only runs against DB rows on the
+// getCatalog() read path). Assembly-shape tests below reproduce the exact
+// pre-CONN-0245 `getCatalog(filters)` behavior by composing the unchanged
+// assembly (`buildCatalogSnapshot`) with the same, still-shared
+// `entryMatchesFilters` — i.e. this IS the old getCatalog(filters) body,
+// just decomposed into its two now-separate halves.
+async function assembleFiltered(
+  svc: ConnectorsService,
+  filters: CatalogFilters,
+): Promise<CatalogModelEntry[]> {
+  const all = await svc.buildCatalogSnapshot();
+  return all.filter((e) => entryMatchesFilters(e, filters));
+}
+
+function repoFromEntries(entries: CatalogModelEntry[]): CatalogRepositoryLike {
+  const rows: ModelCatalogRow[] = entries.map((entry, i) => ({
+    ...entryToRow(entry),
+    id: `row-${i}`,
+    firstSeen: new Date('2026-07-01T00:00:00.000Z'),
+    lastSeen: new Date('2026-07-05T16:00:00.000Z'),
+    absent: false,
+    createdAt: new Date('2026-07-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-07-05T16:00:00.000Z'),
+  }));
+  return { findAll: vi.fn().mockResolvedValue(rows) };
+}
 
 describe('ConnectorsService', () => {
   let service: ConnectorsService;
   const mockQueue = { add: vi.fn() };
   const mockPrisma = { request: { create: vi.fn().mockResolvedValue({}) } };
   const mockMetrics = { record: vi.fn(), getAll: vi.fn().mockReturnValue({}) };
+  // No-op repo/cache for tests that don't exercise getCatalog's DB read path
+  // (execute/retry/output-guard/etc. — unrelated to the catalog).
+  const noopCatalogRepo: CatalogRepositoryLike = { findAll: vi.fn().mockResolvedValue([]) };
+  const noopCatalogRedis: ICatalogRedis | null = null;
 
   const mockConnector: IConnector = {
     name: 'test',
@@ -60,6 +103,8 @@ describe('ConnectorsService', () => {
       mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
       new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
       emptyModalityCatalog,
+      noopCatalogRepo,
+      noopCatalogRedis,
     );
     vi.clearAllMocks();
   });
@@ -133,6 +178,43 @@ describe('ConnectorsService', () => {
       const res = await service.execute('metacon', { prompt: 'x', model: 'unknown-id' }, 'k');
       expect(res.status).toBe('success');
       expect(metaConnector.execute).toHaveBeenCalled();
+    });
+  });
+
+  describe('execute() USE gate (CONN-0245-EXT — DB-backed ProviderAccessService)', () => {
+    it('a DB-seeded USE=off provider is refused with provider_not_routable WITHOUT calling the connector', async () => {
+      const gatedService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        noopCatalogRepo,
+        noopCatalogRedis,
+        {
+          seedDefaults: vi.fn(),
+          refresh: vi.fn(),
+          getAccess: vi.fn().mockReturnValue({ read: true, use: false }),
+        },
+      );
+      gatedService.register(mockConnector);
+
+      const res = await gatedService.execute('test', { prompt: 'hello' }, 'key-1');
+
+      expect(res.status).toBe('error');
+      expect(res.error?.type).toBe('provider_not_routable');
+      expect(mockConnector.execute).not.toHaveBeenCalled();
+    });
+
+    it('USE=on (default fail-open stub, falls through to PROVIDER_ACCESS config) — zero behavior change', async () => {
+      // `service` (the shared beforeEach instance) uses the constructor
+      // default providerAccess stub, which itself falls through to the exact
+      // CONN-0244 config computation (process.env.PROVIDER_ACCESS = '' from
+      // the outer beforeEach ⇒ fully enabled).
+      service.register(mockConnector);
+      const result = await service.execute('test', { prompt: 'hello' }, 'key-1');
+      expect(result.status).toBe('success');
+      expect(mockConnector.execute).toHaveBeenCalledOnce();
     });
   });
 
@@ -283,7 +365,14 @@ describe('ConnectorsService', () => {
   });
 
   // CONN-0226 ------------------------------------------------------------------
-  describe('getCatalog (CONN-0226)', () => {
+  describe('buildCatalogSnapshot (CONN-0226/0232/0238 — full assembly, moved off the request path)', () => {
+    // CONN-0245: this describe block used to exercise `getCatalog(filters)`
+    // directly (assembly + filter + envelope in one call). getCatalog() now
+    // reads the DB; buildCatalogSnapshot() is where the (unchanged) assembly
+    // logic these tests actually verify still lives. `assembleFiltered()`
+    // reproduces the exact old `getCatalog(filters)` result shape (assembly
+    // then `entryMatchesFilters`) so every assertion below keeps its original
+    // meaning byte-for-byte — nothing here is weakened.
     const noFilters: CatalogFilters = { free: false, cheap: false, capability: undefined };
 
     const openmodelConnector: IConnector = {
@@ -363,16 +452,15 @@ describe('ConnectorsService', () => {
     it('returns all models from all connectors with no filters', async () => {
       service.register(openmodelConnector);
       service.register(cliConnector);
-      const result = await service.getCatalog(noFilters);
+      const result = await assembleFiltered(service, noFilters);
       // openmodel: 3 models; claude-code: 2 models
-      expect(result.count).toBe(5);
-      expect(result.models).toHaveLength(5);
+      expect(result).toHaveLength(5);
     });
 
     it('CONN-0244: openmodel deepseek-v4-flash is NOT free (paid gateway, price_multiplier=1)', async () => {
       service.register(openmodelConnector);
-      const result = await service.getCatalog(noFilters);
-      const flash = result.models.find((m) => m.model === 'deepseek-v4-flash');
+      const result = await assembleFiltered(service, noFilters);
+      const flash = result.find((m) => m.model === 'deepseek-v4-flash');
       expect(flash?.free).toBe(false);
       expect(flash?.cheap).toBe(true); // price_multiplier=1 = cheap-but-paid
       expect(flash?.priceMultiplier).toBe(1);
@@ -389,13 +477,17 @@ describe('ConnectorsService', () => {
         process.env.PROVIDER_ACCESS = 'openmodel:read';
         service.register(openmodelConnector);
         service.register(cliConnector);
-        const result = await service.getCatalog(noFilters);
-        const om = result.models.filter((m) => m.connector === 'openmodel');
+        // CONN-0245: assembly (READ/USE gate + tags) lives in
+        // buildCatalogSnapshot() now — getCatalog() reads the DB. This is the
+        // exact CONN-0244 assertion, retargeted at the function that still
+        // does the assembly.
+        const result = await assembleFiltered(service, noFilters);
+        const om = result.filter((m) => m.connector === 'openmodel');
         expect(om.length).toBe(3); // still visible in the catalog
         expect(om.every((m) => m.available === false)).toBe(true); // not routable
         expect(om.every((m) => m.tags.includes('access:read-only'))).toBe(true);
         // a fully-enabled provider is unaffected
-        const cli = result.models.filter((m) => m.connector === 'claude-code');
+        const cli = result.filter((m) => m.connector === 'claude-code');
         expect(cli.every((m) => m.available === true)).toBe(true);
         expect(cli.some((m) => m.tags.includes('access:read-only'))).toBe(false);
       });
@@ -404,9 +496,9 @@ describe('ConnectorsService', () => {
         process.env.PROVIDER_ACCESS = 'openmodel:none';
         service.register(openmodelConnector);
         service.register(cliConnector);
-        const result = await service.getCatalog(noFilters);
-        expect(result.models.some((m) => m.connector === 'openmodel')).toBe(false);
-        expect(result.models.some((m) => m.connector === 'claude-code')).toBe(true);
+        const result = await assembleFiltered(service, noFilters);
+        expect(result.some((m) => m.connector === 'openmodel')).toBe(false);
+        expect(result.some((m) => m.connector === 'claude-code')).toBe(true);
       });
 
       it('canRead/canUse reflect the configured access level', () => {
@@ -433,8 +525,8 @@ describe('ConnectorsService', () => {
 
     it('sets free=false for openmodel deepseek-r2 (price_multiplier=1)', async () => {
       service.register(openmodelConnector);
-      const result = await service.getCatalog(noFilters);
-      const r2 = result.models.find((m) => m.model === 'deepseek-r2');
+      const result = await assembleFiltered(service, noFilters);
+      const r2 = result.find((m) => m.model === 'deepseek-r2');
       expect(r2?.free).toBe(false);
       expect(r2?.cheap).toBe(true); // price_multiplier=1 = cheap
       expect(r2?.priceMultiplier).toBe(1);
@@ -442,16 +534,16 @@ describe('ConnectorsService', () => {
 
     it('sets priceMultiplier=null for connectors without catalogue data', async () => {
       service.register(cliConnector);
-      const result = await service.getCatalog(noFilters);
-      for (const m of result.models) {
+      const result = await assembleFiltered(service, noFilters);
+      for (const m of result) {
         expect(m.priceMultiplier).toBeNull();
       }
     });
 
     it('sets rateLimits=null for all models (no connector exposes RPM/TPM)', async () => {
       service.register(openmodelConnector);
-      const result = await service.getCatalog(noFilters);
-      for (const m of result.models) {
+      const result = await assembleFiltered(service, noFilters);
+      for (const m of result) {
         expect(m.rateLimits).toBeNull();
       }
     });
@@ -460,41 +552,44 @@ describe('ConnectorsService', () => {
       service.register(openmodelConnector);
       service.register(cliConnector);
       service.register(freeProviderConnector); // openmodel is paid now — use a genuinely-free provider
-      const result = await service.getCatalog({ ...noFilters, free: true });
-      expect(result.models.every((m) => m.free)).toBe(true);
-      expect(result.models.length).toBeGreaterThan(0);
+      const result = await assembleFiltered(service, { ...noFilters, free: true });
+      expect(result.every((m) => m.free)).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
       // and none of the free results are openmodel
-      expect(result.models.some((m) => m.connector === 'openmodel')).toBe(false);
+      expect(result.some((m) => m.connector === 'openmodel')).toBe(false);
     });
 
     it('cheap filter: returns free and low-cost models', async () => {
       service.register(openmodelConnector);
-      const result = await service.getCatalog({ ...noFilters, cheap: true });
-      expect(result.models.every((m) => m.cheap)).toBe(true);
+      const result = await assembleFiltered(service, { ...noFilters, cheap: true });
+      expect(result.every((m) => m.cheap)).toBe(true);
       // deepseek-v4-flash (free) + deepseek-r2 (multiplier=1) qualify; qwen3-235b (multiplier=1) qualifies too
-      expect(result.models.length).toBeGreaterThanOrEqual(2);
+      expect(result.length).toBeGreaterThanOrEqual(2);
     });
 
     it('capability filter supportsTools: excludes openmodel (supportsTools=false)', async () => {
       service.register(openmodelConnector);
       service.register(cliConnector);
-      const result = await service.getCatalog({ ...noFilters, capability: 'supportsTools' });
-      expect(result.models.every((m) => m.connector === 'claude-code')).toBe(true);
+      const result = await assembleFiltered(service, { ...noFilters, capability: 'supportsTools' });
+      expect(result.every((m) => m.connector === 'claude-code')).toBe(true);
     });
 
     it('capability filter supportsJsonSchema: includes openmodel and claude-code', async () => {
       service.register(openmodelConnector);
       service.register(cliConnector);
-      const result = await service.getCatalog({ ...noFilters, capability: 'supportsJsonSchema' });
-      const connectors = new Set(result.models.map((m) => m.connector));
+      const result = await assembleFiltered(service, {
+        ...noFilters,
+        capability: 'supportsJsonSchema',
+      });
+      const connectors = new Set(result.map((m) => m.connector));
       expect(connectors).toContain('openmodel');
       expect(connectors).toContain('claude-code');
     });
 
     it('routing field matches connector name and model id', async () => {
       service.register(openmodelConnector);
-      const result = await service.getCatalog(noFilters);
-      for (const m of result.models) {
+      const result = await assembleFiltered(service, noFilters);
+      for (const m of result) {
         expect(m.routing.connector).toBe(m.connector);
         expect(m.routing.model).toBe(m.model);
       }
@@ -513,8 +608,8 @@ describe('ConnectorsService', () => {
         }),
       };
       service.register(unhealthyConnector);
-      const result = await service.getCatalog(noFilters);
-      expect(result.models.every((m) => m.available === false)).toBe(true);
+      const result = await assembleFiltered(service, noFilters);
+      expect(result.every((m) => m.available === false)).toBe(true);
     });
 
     it('CONN-0244: one open per-model breaker offlines ONLY that model, not the whole connector', async () => {
@@ -546,8 +641,8 @@ describe('ConnectorsService', () => {
         }),
       };
       service.register(partiallyDegraded);
-      const result = await service.getCatalog(noFilters);
-      const byId = (id: string) => result.models.find((m) => m.model === id);
+      const result = await assembleFiltered(service, noFilters);
+      const byId = (id: string) => result.find((m) => m.model === id);
       expect(byId('deepseek-r2')?.available).toBe(false); // open breaker → offline
       expect(byId('deepseek-v4-flash')?.available).toBe(true); // healthy → online
       expect(byId('qwen3-235b')?.available).toBe(true); // healthy → online
@@ -560,28 +655,15 @@ describe('ConnectorsService', () => {
         getStatus: vi.fn().mockRejectedValue(new Error('binary not found')),
       };
       service.register(failingStatusConnector);
-      const result = await service.getCatalog(noFilters);
-      const failModels = result.models.filter((m) => m.connector === 'failing-status');
+      const result = await assembleFiltered(service, noFilters);
+      const failModels = result.filter((m) => m.connector === 'failing-status');
       expect(failModels.every((m) => m.available === false)).toBe(true);
-    });
-
-    it('returns generatedAt as valid ISO-8601 string', async () => {
-      service.register(openmodelConnector);
-      const result = await service.getCatalog(noFilters);
-      expect(() => new Date(result.generatedAt)).not.toThrow();
-      expect(new Date(result.generatedAt).toISOString()).toBe(result.generatedAt);
-    });
-
-    it('count matches models array length', async () => {
-      service.register(openmodelConnector);
-      const result = await service.getCatalog(noFilters);
-      expect(result.count).toBe(result.models.length);
     });
 
     it('capabilities field mirrors connector caps', async () => {
       service.register(openmodelConnector);
-      const result = await service.getCatalog(noFilters);
-      for (const m of result.models) {
+      const result = await assembleFiltered(service, noFilters);
+      for (const m of result) {
         expect(m.capabilities.supportsJsonSchema).toBe(true);
         expect(m.capabilities.supportsStreaming).toBe(false);
         expect(m.capabilities.supportsTools).toBe(false);
@@ -591,8 +673,8 @@ describe('ConnectorsService', () => {
     // ── CONN-0232: modality + derived tags on chat connectors ──
     it('stamps modality=chat by default and modality:* + cost/cap tags', async () => {
       service.register(openmodelConnector);
-      const result = await service.getCatalog(noFilters);
-      const flash = result.models.find((m) => m.model === 'deepseek-v4-flash');
+      const result = await assembleFiltered(service, noFilters);
+      const flash = result.find((m) => m.model === 'deepseek-v4-flash');
       expect(flash?.modality).toBe('chat');
       expect(flash?.tags).toContain('modality:chat');
       expect(flash?.tags).toContain('cost:cheap'); // CONN-0244: paid gateway → cheap, not free
@@ -617,34 +699,34 @@ describe('ConnectorsService', () => {
         }),
       };
       service.register(embeddingConnector);
-      const result = await service.getCatalog(noFilters);
-      const bge = result.models.find((m) => m.model === 'bge-m3');
+      const result = await assembleFiltered(service, noFilters);
+      const bge = result.find((m) => m.model === 'bge-m3');
       expect(bge?.modality).toBe('embedding');
       expect(bge?.tags).toContain('modality:embedding');
     });
 
     it('?modality= filter narrows to a single family', async () => {
       service.register(openmodelConnector);
-      const result = await service.getCatalog({ ...noFilters, modality: 'embedding' });
-      expect(result.models).toHaveLength(0); // openmodel is chat
-      const chat = await service.getCatalog({ ...noFilters, modality: 'chat' });
-      expect(chat.models.length).toBeGreaterThan(0);
+      const result = await assembleFiltered(service, { ...noFilters, modality: 'embedding' });
+      expect(result).toHaveLength(0); // openmodel is chat
+      const chat = await assembleFiltered(service, { ...noFilters, modality: 'chat' });
+      expect(chat.length).toBeGreaterThan(0);
     });
 
     it('?connector= filter narrows to one connector', async () => {
       service.register(openmodelConnector);
       service.register(cliConnector);
-      const result = await service.getCatalog({ ...noFilters, connector: 'claude-code' });
-      expect(result.models.every((m) => m.connector === 'claude-code')).toBe(true);
-      expect(result.models.length).toBe(2);
+      const result = await assembleFiltered(service, { ...noFilters, connector: 'claude-code' });
+      expect(result.every((m) => m.connector === 'claude-code')).toBe(true);
+      expect(result.length).toBe(2);
     });
 
     it('?tag= and ?group= filters work', async () => {
       service.register(openmodelConnector);
-      const byTag = await service.getCatalog({ ...noFilters, tag: 'cost:free' });
-      expect(byTag.models.every((m) => m.tags.includes('cost:free'))).toBe(true);
-      const byGroup = await service.getCatalog({ ...noFilters, group: 'cost' });
-      expect(byGroup.models.every((m) => m.tags.some((t) => t.startsWith('cost:')))).toBe(true);
+      const byTag = await assembleFiltered(service, { ...noFilters, tag: 'cost:free' });
+      expect(byTag.every((m) => m.tags.includes('cost:free'))).toBe(true);
+      const byGroup = await assembleFiltered(service, { ...noFilters, group: 'cost' });
+      expect(byGroup.every((m) => m.tags.some((t) => t.startsWith('cost:')))).toBe(true);
     });
 
     // ── CONN-0232 R10: per-model availability ──
@@ -652,8 +734,8 @@ describe('ConnectorsService', () => {
       // healthy:true models stay available; this asserts the per-model path does
       // not blanket-offline when the connector is reachable.
       service.register(openmodelConnector);
-      const result = await service.getCatalog(noFilters);
-      expect(result.models.every((m) => m.available === true)).toBe(true);
+      const result = await assembleFiltered(service, noFilters);
+      expect(result.every((m) => m.available === true)).toBe(true);
     });
 
     it('R10: only the model whose circuit breaker is OPEN is unavailable, not its siblings', async () => {
@@ -676,9 +758,9 @@ describe('ConnectorsService', () => {
         }),
       };
       service.register(partiallyDegraded);
-      const result = await service.getCatalog(noFilters);
-      const r2 = result.models.find((m) => m.model === 'deepseek-r2');
-      const flash = result.models.find((m) => m.model === 'deepseek-v4-flash');
+      const result = await assembleFiltered(service, noFilters);
+      const r2 = result.find((m) => m.model === 'deepseek-r2');
+      const flash = result.find((m) => m.model === 'deepseek-v4-flash');
       expect(r2?.available).toBe(false); // its breaker is open
       expect(flash?.available).toBe(true); // sibling unaffected
     });
@@ -748,12 +830,11 @@ describe('ConnectorsService', () => {
       }),
     };
 
-    const find = (r: Awaited<ReturnType<typeof service.getCatalog>>, id: string) =>
-      r.models.find((m) => m.model === id)!;
+    const find = (r: CatalogModelEntry[], id: string) => r.find((m) => m.model === id)!;
 
     it('stamps per-model modality from modelMeta (one connector, many modalities)', async () => {
       service.register(multiModalConnector);
-      const r = await service.getCatalog(noFilters);
+      const r = await assembleFiltered(service, noFilters);
       expect(find(r, 'llama-3.3-70b-versatile').modality).toBe('chat');
       expect(find(r, 'whisper-large-v3').modality).toBe('speech_to_text');
       expect(find(r, 'orpheus-x').modality).toBe('text_to_speech');
@@ -762,7 +843,7 @@ describe('ConnectorsService', () => {
 
     it('surfaces real pricing + context + maxOutputTokens from modelMeta', async () => {
       service.register(multiModalConnector);
-      const r = await service.getCatalog(noFilters);
+      const r = await assembleFiltered(service, noFilters);
       const m = find(r, 'llama-3.3-70b-versatile');
       expect(m.pricing).toEqual({ inputPerMTok: 0.59, outputPerMTok: 0.79, unit: 'per_1m_tokens' });
       expect(m.contextWindow).toBe(131072);
@@ -771,7 +852,7 @@ describe('ConnectorsService', () => {
 
     it('keeps pricing/context null where modelMeta has none', async () => {
       service.register(multiModalConnector);
-      const r = await service.getCatalog(noFilters);
+      const r = await assembleFiltered(service, noFilters);
       const w = find(r, 'whisper-large-v3');
       expect(w.pricing).toBeNull();
       expect(w.contextWindow).toBeNull();
@@ -779,7 +860,7 @@ describe('ConnectorsService', () => {
 
     it('non-chat families on a chat connector are NOT claimed callable (available=false, NO chat caps, no misleading endpoint)', async () => {
       service.register(multiModalConnector);
-      const r = await service.getCatalog(noFilters);
+      const r = await assembleFiltered(service, noFilters);
       const w = find(r, 'whisper-large-v3');
       expect(w.available).toBe(false);
       expect(w.capabilities).toEqual({
@@ -796,7 +877,7 @@ describe('ConnectorsService', () => {
 
     it('chat stays available + carries chat caps; moderation is callable but caps-masked', async () => {
       service.register(multiModalConnector);
-      const r = await service.getCatalog(noFilters);
+      const r = await assembleFiltered(service, noFilters);
       const chat = find(r, 'llama-3.3-70b-versatile');
       const mod = find(r, 'prompt-guard-x');
       expect(chat.available).toBe(true);
@@ -808,7 +889,7 @@ describe('ConnectorsService', () => {
 
     it('per-model free flag from modelMeta (whisper not free, chat/moderation free)', async () => {
       service.register(multiModalConnector);
-      const r = await service.getCatalog(noFilters);
+      const r = await assembleFiltered(service, noFilters);
       expect(find(r, 'llama-3.3-70b-versatile').free).toBe(true);
       expect(find(r, 'prompt-guard-x').free).toBe(true);
       expect(find(r, 'whisper-large-v3').free).toBe(false);
@@ -816,7 +897,7 @@ describe('ConnectorsService', () => {
 
     it('grok-imagine image/video are surfaced but available=false (MC cannot execute them)', async () => {
       service.register(grokImagineConnector);
-      const r = await service.getCatalog(noFilters);
+      const r = await assembleFiltered(service, noFilters);
       const img = find(r, 'grok-imagine-image');
       const vid = find(r, 'grok-imagine-video');
       expect(img.modality).toBe('image_generation');
@@ -831,13 +912,12 @@ describe('ConnectorsService', () => {
 
     it('?modality=video filter narrows to grok-imagine-video', async () => {
       service.register(grokImagineConnector);
-      const r = await service.getCatalog({ ...noFilters, modality: 'video' });
-      expect(r.models.map((m) => m.model)).toEqual(['grok-imagine-video']);
+      const r = await assembleFiltered(service, { ...noFilters, modality: 'video' });
+      expect(r.map((m) => m.model)).toEqual(['grok-imagine-video']);
     });
   });
-
   // ── CONN-0232: catalog completeness via the real ModalityCatalogService ──
-  describe('getCatalog completeness (CONN-0232 WS3)', () => {
+  describe('buildCatalogSnapshot completeness (CONN-0232 WS3)', () => {
     const noFilters: CatalogFilters = { free: false, cheap: false, capability: undefined };
     let fullService: ConnectorsService;
 
@@ -853,32 +933,236 @@ describe('ConnectorsService', () => {
     });
 
     it('surfaces image-generation, speech-to-text and text-to-speech families', async () => {
-      const result = await fullService.getCatalog(noFilters);
-      const modalities = new Set(result.models.map((m) => m.modality));
+      const result = await assembleFiltered(fullService, noFilters);
+      const modalities = new Set(result.map((m) => m.modality));
       expect(modalities).toContain('image_generation');
       expect(modalities).toContain('speech_to_text');
       expect(modalities).toContain('text_to_speech');
     });
 
     it('non-chat entries carry an honest routing.endpoint (not the chat /execute route)', async () => {
-      const result = await fullService.getCatalog(noFilters);
-      const img = result.models.find((m) => m.modality === 'image_generation');
-      const stt = result.models.find((m) => m.modality === 'speech_to_text');
-      const tts = result.models.find((m) => m.modality === 'text_to_speech');
+      const result = await assembleFiltered(fullService, noFilters);
+      const img = result.find((m) => m.modality === 'image_generation');
+      const stt = result.find((m) => m.modality === 'speech_to_text');
+      const tts = result.find((m) => m.modality === 'text_to_speech');
       expect(img?.routing.endpoint).toBe('/images/generate');
       expect(stt?.routing.endpoint).toBe('/v1/speech/stt');
       expect(tts?.routing.endpoint).toBe('/v1/speech/tts');
     });
 
     it('?modality=image_generation returns only image-gen models', async () => {
-      const result = await fullService.getCatalog({ ...noFilters, modality: 'image_generation' });
-      expect(result.models.length).toBeGreaterThan(0);
-      expect(result.models.every((m) => m.modality === 'image_generation')).toBe(true);
+      const result = await assembleFiltered(fullService, {
+        ...noFilters,
+        modality: 'image_generation',
+      });
+      expect(result.length).toBeGreaterThan(0);
+      expect(result.every((m) => m.modality === 'image_generation')).toBe(true);
     });
 
     it('emits zero rerank entries (reserved modality, no connector yet — anti-fabrication)', async () => {
-      const result = await fullService.getCatalog({ ...noFilters, modality: 'rerank' });
-      expect(result.models).toHaveLength(0);
+      const result = await assembleFiltered(fullService, { ...noFilters, modality: 'rerank' });
+      expect(result).toHaveLength(0);
+    });
+  });
+
+  // ── CONN-0245: getCatalog() DB read path — reads ONLY the repo (+ cache), ──
+  // ── never a provider. This is the actual request-path contract now.      ──
+  describe('getCatalog DB read path (CONN-0245)', () => {
+    const noFilters: CatalogFilters = { free: false, cheap: false, capability: undefined };
+
+    function makeChatEntry(overrides: Partial<CatalogModelEntry> = {}): CatalogModelEntry {
+      return {
+        connector: 'groq',
+        model: 'llama-3.3-70b-versatile',
+        modality: 'chat',
+        tags: ['modality:chat', 'cost:free'],
+        free: true,
+        cheap: true,
+        priceMultiplier: null,
+        rateLimits: null,
+        pricing: { inputPerMTok: 0, outputPerMTok: 0, unit: 'per_1m_tokens' },
+        contextWindow: 131072,
+        maxOutputTokens: 32768,
+        capabilities: { supportsStreaming: false, supportsJsonSchema: true, supportsTools: true },
+        routing: { connector: 'groq', model: 'llama-3.3-70b-versatile' },
+        routable: true,
+        available: true,
+        ...overrides,
+      };
+    }
+
+    it('reads from the repo and maps rows to CatalogModelEntry[] — does NOT call any connector', async () => {
+      const connector = {
+        name: 'groq',
+        type: 'api',
+        execute: vi.fn(),
+        getStatus: vi.fn(),
+        getCapabilities: vi.fn(),
+        resetCircuitBreaker: vi.fn(),
+      } as unknown as IConnector;
+      const dbService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        repoFromEntries([makeChatEntry()]),
+        null,
+      );
+      dbService.register(connector);
+
+      const result = await dbService.getCatalog(noFilters);
+
+      expect(result.models).toHaveLength(1);
+      expect(result.models[0]).toMatchObject({
+        connector: 'groq',
+        model: 'llama-3.3-70b-versatile',
+        modality: 'chat',
+        free: true,
+        available: true,
+      });
+      expect(result.count).toBe(1);
+      expect(connector.getStatus).not.toHaveBeenCalled();
+      expect(connector.execute).not.toHaveBeenCalled();
+      expect(connector.getCapabilities).not.toHaveBeenCalled();
+    });
+
+    it('applies filters against the mapped rows (same entryMatchesFilters semantics)', async () => {
+      const repo = repoFromEntries([
+        makeChatEntry(),
+        makeChatEntry({
+          model: 'whisper-large-v3',
+          modality: 'speech_to_text',
+          free: false,
+          cheap: false,
+          pricing: null,
+          tags: ['modality:speech_to_text'],
+          capabilities: {
+            supportsStreaming: false,
+            supportsJsonSchema: false,
+            supportsTools: false,
+          },
+          routing: { connector: 'groq', model: 'whisper-large-v3', endpoint: '/v1/speech/stt' },
+        }),
+      ]);
+      const dbService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        repo,
+        null,
+      );
+
+      const chatOnly = await dbService.getCatalog({ ...noFilters, modality: 'chat' });
+      expect(chatOnly.models.map((m) => m.model)).toEqual(['llama-3.3-70b-versatile']);
+
+      const sttOnly = await dbService.getCatalog({ ...noFilters, modality: 'speech_to_text' });
+      expect(sttOnly.models.map((m) => m.model)).toEqual(['whisper-large-v3']);
+      expect(sttOnly.models[0].routing.endpoint).toBe('/v1/speech/stt');
+    });
+
+    it("excludes absent rows (findAll is the repo's job — service just trusts it)", async () => {
+      const repo = repoFromEntries([makeChatEntry()]); // repoFromEntries always sets absent:false
+      const dbService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        repo,
+        null,
+      );
+      const result = await dbService.getCatalog(noFilters);
+      expect(result.models).toHaveLength(1);
+      expect(repo.findAll).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns generatedAt as a valid ISO-8601 string derived from row.lastChecked', async () => {
+      const dbService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        repoFromEntries([makeChatEntry()]),
+        null,
+      );
+      const result = await dbService.getCatalog(noFilters);
+      expect(() => new Date(result.generatedAt)).not.toThrow();
+      expect(new Date(result.generatedAt).toISOString()).toBe(result.generatedAt);
+    });
+
+    it('count matches models array length', async () => {
+      const dbService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        repoFromEntries([makeChatEntry(), makeChatEntry({ model: 'm2' })]),
+        null,
+      );
+      const result = await dbService.getCatalog(noFilters);
+      expect(result.count).toBe(result.models.length);
+    });
+
+    it('cache hit: returns the cached envelope WITHOUT calling the repo', async () => {
+      const cachedResponse = {
+        models: [makeChatEntry()],
+        generatedAt: '2026-07-05T16:00:00.000Z',
+        count: 1,
+      };
+      const repo = repoFromEntries([]); // would return empty if actually queried
+      const redis: ICatalogRedis = {
+        get: vi.fn().mockResolvedValue(JSON.stringify(cachedResponse)),
+        set: vi.fn(),
+        del: vi.fn(),
+        keys: vi.fn().mockResolvedValue([]),
+      };
+      const dbService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        repo,
+        redis,
+      );
+
+      const result = await dbService.getCatalog(noFilters);
+
+      expect(result).toEqual(cachedResponse);
+      expect(repo.findAll).not.toHaveBeenCalled();
+    });
+
+    it('cache miss: reads the repo and stores the result in the cache', async () => {
+      const repo = repoFromEntries([makeChatEntry()]);
+      const redis: ICatalogRedis = {
+        get: vi.fn().mockResolvedValue(null),
+        set: vi.fn().mockResolvedValue('OK'),
+        del: vi.fn(),
+        keys: vi.fn().mockResolvedValue([]),
+      };
+      const dbService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        repo,
+        redis,
+      );
+
+      const result = await dbService.getCatalog(noFilters);
+
+      expect(repo.findAll).toHaveBeenCalledTimes(1);
+      expect(redis.set).toHaveBeenCalledTimes(1);
+      const [key, value, mode] = (redis.set as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(key).toMatch(/^conn:catalog:/);
+      expect(JSON.parse(value)).toMatchObject({ count: result.count });
+      expect(mode).toBe('PX');
     });
   });
 
