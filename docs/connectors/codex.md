@@ -35,7 +35,7 @@ CLI connector for the [`codex`](https://platform.openai.com/docs/codex) binary â
 
 The connector spawns Codex with:
 ```
---full-auto --ephemeral --skip-git-repo-check
+--sandbox workspace-write --ephemeral --skip-git-repo-check
 ```
 
 ## Environment

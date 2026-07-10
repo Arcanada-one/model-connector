@@ -40,7 +40,19 @@ export class CodexConnector extends BaseCliConnector {
 
   protected buildArgs(request: ConnectorRequest): string[] {
     const prompt = this.buildPromptWithJsonMode(request);
-    const args = ['exec', '--json', '--full-auto', '--ephemeral', '--skip-git-repo-check'];
+    // CONN-0077: codex 0.130+ deprecated `--full-auto` in favor of the
+    // equivalent explicit flag it aliased to — `--sandbox workspace-write`
+    // (verified live against codex-cli 0.142.5: identical behavior, no
+    // deprecation warning). `--full-auto` still works today but codex 0.14x+
+    // is expected to drop the alias entirely.
+    const args = [
+      'exec',
+      '--json',
+      '--sandbox',
+      'workspace-write',
+      '--ephemeral',
+      '--skip-git-repo-check',
+    ];
     // CONN-0074: ChatGPT account auth (PRD-CONN-0045 subscription-only) binds
     // the model to the account; passing `--model` for any other identifier
     // (o4-mini / o3 / gpt-5 / gpt-5-codex / codex-mini-latest) returns 400
