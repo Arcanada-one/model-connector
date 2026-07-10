@@ -1,6 +1,10 @@
 # Codex CLI sidecar — CONN-0045 Phase 1 (CONN-0063)
 #
-# Pinned release: rust-v0.130.0 (published 2026-05-08)
+# Pinned release: rust-v0.142.5 (published 2026-07-01; CONN-0224 bump from
+# rust-v0.130.0 — the old pin's built-in default model gpt-5.3-codex is
+# rejected by the account post gpt-5.5 cutover; 0.142.5 defaults to gpt-5.5,
+# matching the locally-verified working `codex-cli 0.142.5` install used
+# elsewhere in this ecosystem)
 # Asset: codex-x86_64-unknown-linux-musl.tar.gz
 # Sigstore bundle: codex-x86_64-unknown-linux-musl.sigstore (Fulcio keyless via GitHub Actions OIDC)
 #
@@ -8,8 +12,8 @@
 # OAuth blob (~/.codex/auth.json) is fetched at runtime from Vault into a tmpfs mount —
 # never baked into image layers.
 
-ARG CODEX_RELEASE_TAG=rust-v0.130.0
-ARG CODEX_VERSION=0.130.0
+ARG CODEX_RELEASE_TAG=rust-v0.142.5
+ARG CODEX_VERSION=0.142.5
 ARG COSIGN_VERSION=2.4.1
 
 # ---------- builder: download + verify Codex binary + cosign ----------

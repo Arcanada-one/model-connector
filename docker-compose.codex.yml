@@ -13,13 +13,13 @@
 
 services:
   codex-sidecar:
-    image: arcanada/codex-cli:rust-v0.130.0
+    image: arcanada/codex-cli:rust-v0.142.5
     build:
       context: .
       dockerfile: Dockerfile.codex-sidecar
       args:
-        CODEX_RELEASE_TAG: rust-v0.130.0
-        CODEX_VERSION: "0.130.0"
+        CODEX_RELEASE_TAG: rust-v0.142.5
+        CODEX_VERSION: "0.142.5"
     container_name: model-connector-codex-sidecar
     restart: unless-stopped
     init: true
