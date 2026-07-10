@@ -11,8 +11,12 @@ class TestCodexConnector extends CodexConnector {
     return this.buildArgs(request);
   }
 
-  public testParseOutput(stdout: string, stderr: string) {
-    return this.parseOutput(stdout, stderr);
+  public testParseOutput(
+    stdout: string,
+    stderr: string,
+    request: ConnectorRequest = { prompt: '' },
+  ) {
+    return this.parseOutput(stdout, stderr, request);
   }
 
   public testClassifyError(msg: string, code: number) {
@@ -168,10 +172,23 @@ describe('CodexConnector', () => {
       const parsed = connector.testParseOutput(successJsonl, '');
       expect(parsed.text).toBe('4');
       expect(parsed.isError).toBe(false);
-      expect(parsed.model).toBe('o4-mini');
+      // CONN-0076: no request.model → we don't know which model the
+      // ChatGPT-account default actually ran; report the placeholder, not a
+      // guessed model id.
+      expect(parsed.model).toBe('codex-account-default');
       expect(parsed.inputTokens).toBe(120);
       expect(parsed.outputTokens).toBe(5);
       expect(parsed.costUsd).toBe(0);
+    });
+
+    it('CONN-0076: should report the requested model when caller passed one', () => {
+      const parsed = connector.testParseOutput(successJsonl, '', { prompt: 'hi', model: 'o3' });
+      expect(parsed.model).toBe('o3');
+    });
+
+    it('CONN-0076: should report codex-account-default (not a hardcoded model id) when caller omitted model', () => {
+      const parsed = connector.testParseOutput(successJsonl, '');
+      expect(parsed.model).toBe('codex-account-default');
     });
 
     it('should extract thread_id in structured field', () => {
