@@ -143,7 +143,11 @@ export abstract class BaseCliConnector implements IConnector {
 
   protected abstract getBinaryPath(): string;
   protected abstract buildArgs(request: ConnectorRequest): string[];
-  protected abstract parseOutput(stdout: string, stderr: string): ParsedCliOutput;
+  protected abstract parseOutput(
+    stdout: string,
+    stderr: string,
+    request: ConnectorRequest,
+  ): ParsedCliOutput;
   abstract getCapabilities(): ConnectorCapabilities;
 
   // ARCA-0011 — connectors opt into multimodal `ContentBlock[]` prompts.
@@ -246,7 +250,7 @@ export abstract class BaseCliConnector implements IConnector {
       );
 
       const latencyMs = Date.now() - start;
-      const parsed = this.parseOutput(stdout, stderr);
+      const parsed = this.parseOutput(stdout, stderr, request);
 
       const base: ConnectorResponse = {
         id,
