@@ -149,6 +149,13 @@ jobs:
             set -e
             cd /srv/apps/model-connector
             git pull --ff-only origin main
+            # INFRA-0280 moved Redis from Arcana-KB to Arcana-DBS. Migrate only
+            # the known stale endpoint and preserve every secret in the env file.
+            if grep -qx 'REDIS_HOST=100.70.137.104' .env; then
+              sed -i 's/^REDIS_HOST=100\.70\.137\.104$/REDIS_HOST=100.97.136.74/' .env
+            fi
+            grep -qx 'REDIS_HOST=100.97.136.74' .env \
+              || (echo 'FAIL: REDIS_HOST does not point to Arcana-DBS'; exit 1)
             # CONN-0073: layer codex overlay so codex env (CODEX_BINARY_PATH,
             # CODEX_HOME, CODEX_VAULT_ROLE_ID, CODEX_VAULT_SECRET_ID) and
             # codex-bin/dev-shm volumes are applied to model-connector container
