@@ -22,7 +22,13 @@ interface CodexEvent {
   item?: { id?: string; type?: string; message?: string; text?: string };
 }
 
-const DEFAULT_MODEL = 'o4-mini';
+// CONN-0076: codex never reports which model it actually used (JSONL events
+// carry no model field). Under ChatGPT-account auth (CONN-0074), the account
+// binds the model implicitly (currently gpt-5.5) and we never learn it; under
+// explicit `--model` (future API-key clients) codex used exactly what we
+// asked. Report `request.model` when known, else this placeholder — never a
+// hardcoded model id that may not match what actually ran.
+const ACCOUNT_DEFAULT_MODEL = 'codex-account-default';
 const SCHEMA_TMP_DIR = join(tmpdir(), 'codex-schemas');
 
 export class CodexConnector extends BaseCliConnector {
@@ -61,13 +67,18 @@ export class CodexConnector extends BaseCliConnector {
     return path;
   }
 
-  protected parseOutput(stdout: string, stderr: string): ParsedCliOutput {
+  protected parseOutput(
+    stdout: string,
+    stderr: string,
+    request: ConnectorRequest = { prompt: '' },
+  ): ParsedCliOutput {
+    const model = request.model ?? ACCOUNT_DEFAULT_MODEL;
     const trimmed = stdout.trim();
 
     if (!trimmed) {
       return {
         text: '',
-        model: DEFAULT_MODEL,
+        model,
         inputTokens: 0,
         outputTokens: 0,
         costUsd: 0,
@@ -81,7 +92,7 @@ export class CodexConnector extends BaseCliConnector {
     if (events.length === 0) {
       return {
         text: '',
-        model: DEFAULT_MODEL,
+        model,
         inputTokens: 0,
         outputTokens: 0,
         costUsd: 0,
@@ -112,7 +123,7 @@ export class CodexConnector extends BaseCliConnector {
       return {
         text: '',
         structured: threadId ? { threadId } : undefined,
-        model: DEFAULT_MODEL,
+        model,
         inputTokens: 0,
         outputTokens: 0,
         costUsd: 0,
@@ -128,7 +139,7 @@ export class CodexConnector extends BaseCliConnector {
       return {
         text: '',
         structured: threadId ? { threadId } : undefined,
-        model: DEFAULT_MODEL,
+        model,
         inputTokens: 0,
         outputTokens: 0,
         costUsd: 0,
@@ -153,7 +164,7 @@ export class CodexConnector extends BaseCliConnector {
     return {
       text,
       structured: Object.keys(structured).length > 0 ? structured : undefined,
-      model: DEFAULT_MODEL,
+      model,
       inputTokens,
       outputTokens,
       costUsd: 0,
