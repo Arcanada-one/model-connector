@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily codex-cli OAuth blob staleness probe (CONN-0218)
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1800
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=Probe codex-cli OAuth blob age in Vault, alert Ops Bot on staleness (CONN-0218)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Read-only AppRole (same read role codex-sidecar-entrypoint.sh uses) —
+# provisioned separately, never committed. See deploy/codex-oauth-staleness-probe/README.md.
+EnvironmentFile=/etc/arcanada/codex-oauth-staleness-probe.env
+ExecStart=/opt/model-connector/scripts/codex-oauth-staleness-probe.sh
+User=connector
+Group=connector
