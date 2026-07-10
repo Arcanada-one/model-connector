@@ -67,12 +67,18 @@ describe('CodexConnector', () => {
       expect(args).toEqual([
         'exec',
         '--json',
-        '--full-auto',
+        '--sandbox',
+        'workspace-write',
         '--ephemeral',
         '--skip-git-repo-check',
         'hello world',
       ]);
       expect(args).not.toContain('--model');
+    });
+
+    it('CONN-0077: should not use the deprecated --full-auto flag', () => {
+      const args = connector.testBuildArgs({ prompt: 'hello world' });
+      expect(args).not.toContain('--full-auto');
     });
 
     it('should use specified model', () => {
