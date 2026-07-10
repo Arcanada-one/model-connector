@@ -31,3 +31,34 @@ vault_kv_current_version() {
     }'
     return 0
 }
+
+# vault_kv_metadata_field <raw-json> <field>
+#
+# Extracts a scalar field from the `.data.metadata` object of a
+# `vault kv get -format=json` response — e.g. `created_time` (RFC3339
+# string) or `version` (integer). Used by
+# codex-oauth-staleness-probe.sh (CONN-0218) to age the current version
+# without a second Vault round-trip (`vault kv get` already returns the
+# current version's metadata inline, unlike `vault kv metadata get`
+# which requires a separate nested-versions lookup).
+#
+# Best-effort line-based awk match (same style as vault_kv_current_version)
+# — good enough for the flat scalar fields this needs; does not attempt
+# general JSON parsing. Prints nothing and returns 1 on no match.
+vault_kv_metadata_field() {
+    local raw="$1" field="$2"
+    local value
+    value="$(printf '%s\n' "${raw}" | awk -v field="${field}" '
+    {
+        pat = "\"" field "\":[[:space:]]*\"?[^,}\"]*\"?"
+        if (match($0, pat)) {
+            seg = substr($0, RSTART, RLENGTH)
+            sub("\"" field "\":[[:space:]]*", "", seg)
+            gsub(/^"|"$/, "", seg)
+            print seg
+            exit
+        }
+    }')"
+    [ -n "${value}" ] || return 1
+    printf '%s\n' "${value}"
+}
