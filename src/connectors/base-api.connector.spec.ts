@@ -220,6 +220,48 @@ describe('BaseApiConnector', () => {
       expect(response.error?.type).toBe('auth_error');
     });
 
+    it('should return auth_error on HTTP 400 with invalid-api-key body (CONN-0050)', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({ error: { message: 'Incorrect API key provided: sk-***' } }),
+          ),
+      });
+
+      const response = await connector.execute({ prompt: 'secret' });
+
+      expect(response.status).toBe('error');
+      expect(response.error?.type).toBe('auth_error');
+    });
+
+    it('should return auth_error on HTTP 400 with plain-text unauthorized body (CONN-0050)', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: () => Promise.resolve('Unauthorized: invalid credentials'),
+      });
+
+      const response = await connector.execute({ prompt: 'secret' });
+
+      expect(response.status).toBe('error');
+      expect(response.error?.type).toBe('auth_error');
+    });
+
+    it('should keep HTTP 400 as validation_error when body has no auth keywords (CONN-0050)', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: () => Promise.resolve(JSON.stringify({ error: { message: 'prompt too long' } })),
+      });
+
+      const response = await connector.execute({ prompt: 'secret' });
+
+      expect(response.status).toBe('error');
+      expect(response.error?.type).toBe('validation_error');
+    });
+
     it('should return error on HTTP 500', async () => {
       fetchSpy.mockResolvedValueOnce({
         ok: false,

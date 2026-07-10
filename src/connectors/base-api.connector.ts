@@ -483,6 +483,7 @@ export abstract class BaseApiConnector implements IConnector {
   protected classifyHttpError(status: number, body: string): string {
     if (status === 429) return 'rate_limited';
     if (status === 401 || status === 403) return 'auth_error';
+    if (this.isAuthErrorBody(body)) return 'auth_error';
     if (status === 400 || status === 422) return 'validation_error';
     if (status === 404) {
       try {
@@ -498,5 +499,25 @@ export abstract class BaseApiConnector implements IConnector {
     }
     if (status >= 500) return 'server_error';
     return 'http_error';
+  }
+
+  // CONN-0050 — some providers signal an invalid/expired API key on a status
+  // code that isn't 401/403 (e.g. 400 "Incorrect API key provided"). Mirrors
+  // the body-string fallback base-cli.connector.ts already applies to CLI
+  // stderr/stdout via classifyError().
+  private isAuthErrorBody(body: string): boolean {
+    const AUTH_KEYWORDS = /invalid api key|incorrect api key|unauthorized|authentication.*fail/i;
+    try {
+      const parsed = JSON.parse(body) as {
+        error?: { code?: string; type?: string; message?: string };
+      };
+      const code = (parsed.error?.code ?? '').toLowerCase();
+      const type = (parsed.error?.type ?? '').toLowerCase();
+      const message = parsed.error?.message ?? '';
+      if (code.includes('invalid_api_key') || type.includes('authentication')) return true;
+      return AUTH_KEYWORDS.test(message);
+    } catch {
+      return AUTH_KEYWORDS.test(body);
+    }
   }
 }
