@@ -95,7 +95,7 @@ jobs:
             echo "OPS_BOT_API_KEY missing — skipping Ops Bot notification (fail-soft per Authenticated-emit pattern)"
             exit 0
           fi
-          curl -fsS -X POST https://ops.arcanada.one/events \
+          curl -fsS -X POST https://ops.arcanada.ai/events \
             -H "Authorization: Bearer $OPS_BOT_API_KEY" \
             -H 'Content-Type: application/json' \
             -d "$(jq -nc \
