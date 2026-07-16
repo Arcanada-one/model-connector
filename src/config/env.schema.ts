@@ -70,6 +70,10 @@ export const envSchema = z
 
     ADMIN_TOKEN: z.string().min(32).optional(),
 
+    // CTRL-0026 Phase 2: purpose-scoped read token for GET /stats/requests/daily
+    // (StatsReadGuard). Never accepts ADMIN_TOKEN or an inference ApiKey.
+    STATS_READ_TOKEN: z.string().min(32).optional(),
+
     // CONN-0052: Image Generation providers
     // Vertex AI (Google Cloud)
     VERTEX_PROJECT_ID: z.string().optional(),

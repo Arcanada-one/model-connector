@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { AdminModule } from './admin/admin.module';
 import { SpeechModule } from './speech/speech.module';
+import { StatsModule } from './stats/stats.module';
 import { getConfig } from './config/env.schema';
 
 @Module({
@@ -31,6 +32,7 @@ import { getConfig } from './config/env.schema';
     MetricsModule,
     AdminModule,
     SpeechModule,
+    StatsModule,
   ],
 })
 export class AppModule {}
