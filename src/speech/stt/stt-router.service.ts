@@ -6,6 +6,7 @@ import { GroqSttConnector } from './groq-stt.connector';
 import { DeepgramSttConnector } from './deepgram-stt.connector';
 import { AssemblyAiSttConnector } from './assemblyai-stt.connector';
 import { OpenAiSttConnector } from './openai-stt.connector';
+import { LocalWhisperSttConnector } from './local-whisper-stt.connector';
 import { STT_RESPONSE_SCHEMAS } from './schemas';
 import {
   SttAllProvidersExhausted,
@@ -43,12 +44,14 @@ function buildRegistry(
   deepgram: DeepgramSttConnector,
   assemblyai: AssemblyAiSttConnector,
   openai: OpenAiSttConnector,
+  localWhisper: LocalWhisperSttConnector,
 ): Map<string, ISttConnector> {
   return new Map<string, ISttConnector>([
     ['groq', groq],
     ['deepgram', deepgram],
     ['assemblyai', assemblyai],
     ['openai', openai],
+    ['local-whisper', localWhisper],
   ]);
 }
 
@@ -63,10 +66,11 @@ export class SttRouterService {
     deepgramStt: DeepgramSttConnector,
     assemblyAiStt: AssemblyAiSttConnector,
     openAiStt: OpenAiSttConnector,
+    localWhisperStt: LocalWhisperSttConnector,
     private readonly prisma: PrismaService,
     private readonly metrics: MetricsService,
   ) {
-    this.registry = buildRegistry(groqStt, deepgramStt, assemblyAiStt, openAiStt);
+    this.registry = buildRegistry(groqStt, deepgramStt, assemblyAiStt, openAiStt, localWhisperStt);
   }
 
   /** @internal Test seam — replaces the registry; spec injects a fake ISttConnector. */
@@ -264,6 +268,8 @@ export class SttRouterService {
           return config?.STT_PROVIDER_ASSEMBLYAI_ENABLED ?? false;
         case 'openai':
           return config?.STT_PROVIDER_OPENAI_ENABLED ?? false;
+        case 'local-whisper':
+          return config?.STT_PROVIDER_LOCAL_WHISPER_ENABLED ?? false;
         default:
           return false;
       }

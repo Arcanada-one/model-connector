@@ -32,6 +32,7 @@ function buildRouter(opts: {
   const fakeDeepgram = new FakeConnector('deepgram-stt', 'deepgram');
   const fakeAssemblyAi = new FakeConnector('assemblyai-stt', 'assemblyai');
   const fakeOpenAi = new FakeConnector('openai-stt', 'openai');
+  const fakeLocalWhisper = new FakeConnector('local-whisper', 'local-whisper');
   if (opts.txOk) fakeGroq.transcribe.mockResolvedValue(opts.txOk);
   if (opts.txErr) fakeGroq.transcribe.mockRejectedValue(opts.txErr);
 
@@ -47,6 +48,7 @@ function buildRouter(opts: {
     fakeDeepgram as never,
     fakeAssemblyAi as never,
     fakeOpenAi as never,
+    fakeLocalWhisper as never,
     prisma as never,
     metrics as never,
   );
@@ -59,10 +61,20 @@ function buildRouter(opts: {
         ['deepgram', fakeDeepgram],
         ['assemblyai', fakeAssemblyAi],
         ['openai', fakeOpenAi],
+        ['local-whisper', fakeLocalWhisper],
       ]),
     );
   }
-  return { router, fakeGroq, fakeDeepgram, fakeAssemblyAi, fakeOpenAi, prisma, metrics };
+  return {
+    router,
+    fakeGroq,
+    fakeDeepgram,
+    fakeAssemblyAi,
+    fakeOpenAi,
+    fakeLocalWhisper,
+    prisma,
+    metrics,
+  };
 }
 
 function makeReq(overrides: Partial<SttConnectorRequest> = {}): SttConnectorRequest {
@@ -163,6 +175,31 @@ describe('SttRouterService', () => {
     await expect(router.transcribe(makeReq(), 'apikey-1')).rejects.toBeInstanceOf(
       SttAllProvidersExhausted,
     );
+  });
+
+  it('routes to enabled local Whisper when external providers are unavailable', async () => {
+    validateEnv({
+      ...baseEnv,
+      STT_PROVIDERS_ORDER: 'local-whisper',
+      STT_PROVIDER_GROQ_ENABLED: 'false',
+      STT_PROVIDER_LOCAL_WHISPER_ENABLED: 'true',
+    });
+    const ctx = buildRouter({});
+    ctx.fakeLocalWhisper.transcribe.mockResolvedValueOnce({
+      transcription: 'recovered locally',
+      audioDurationSeconds: 1,
+      detectedLanguage: 'ru',
+      model: 'Systran/faster-distil-whisper-large-v3',
+      costUsd: 0,
+      latencyMs: 100,
+      providerRequestId: 'local-1',
+    });
+
+    const envelope = await ctx.router.transcribe(makeReq(), 'apikey-1');
+
+    expect(envelope.provider).toBe('local-whisper');
+    expect(envelope.transcription).toBe('recovered locally');
+    expect(ctx.fakeLocalWhisper.transcribe).toHaveBeenCalledTimes(1);
   });
 
   it('emits soft warning when daily cost crosses 80% threshold (no 503)', async () => {
