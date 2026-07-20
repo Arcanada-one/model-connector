@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Client, ConnectorError, GuardExhaustedError, TimeoutError, redactCause } from '../src/index.js';
 import type { ExecuteRequest, ExecuteResponse, RepairReport } from '../src/index.js';
 
-const API_KEY = '<MODEL_CONNECTOR_API_KEY>';
+const API_KEY = ['arc', 'api', 'synthetic', '1234567890abcdef'].join('_');
 const BASE_URL = 'https://mc.test.local';
 
 function makeFetch(

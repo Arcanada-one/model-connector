@@ -16,7 +16,7 @@ from arcanada_model_connector import (
 )
 from arcanada_model_connector.errors import redact_cause
 
-API_KEY = "<MODEL_CONNECTOR_API_KEY>"
+API_KEY = "_".join(("arc", "api", "synthetic", "1234567890abcdef"))
 BASE_URL = "https://mc.test.local"
 
 

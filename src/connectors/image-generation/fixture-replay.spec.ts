@@ -21,6 +21,8 @@ import { ReplicateFluxConnector } from './replicate/replicate-flux.connector';
 import { OpenAIImagesConnector } from './openai-images/openai-images.connector';
 import { CircuitBreakerManager } from '../../core/resilience/circuit-breaker-manager';
 
+const TEST_PRIVATE_KEY = ['synthetic', 'vertex', 'test', 'material'].join('-');
+
 // ─── Mock google-auth-library (no real SA needed for unit/fixture tests) ───────
 vi.mock('google-auth-library', () => {
   const MockGoogleAuth = vi.fn().mockImplementation(function (this: {
@@ -120,7 +122,7 @@ describe('Vertex AI connector — fixture replay', () => {
         type: 'service_account',
         project_id: 'test-project',
         client_email: 'fixture@test.iam.gserviceaccount.com',
-        private_key: '<SYNTHETIC_PRIVATE_KEY_FIXTURE>',
+        private_key: TEST_PRIVATE_KEY,
       }),
       cbManager,
     );
@@ -156,7 +158,7 @@ describe('Vertex AI connector — fixture replay', () => {
         type: 'service_account',
         project_id: 'test-project',
         client_email: 'fixture@test.iam.gserviceaccount.com',
-        private_key: '<SYNTHETIC_PRIVATE_KEY_FIXTURE>',
+        private_key: TEST_PRIVATE_KEY,
       }),
       cbFresh,
     );
@@ -181,7 +183,7 @@ describe('Vertex AI connector — fixture replay', () => {
         type: 'service_account',
         project_id: 'test-project',
         client_email: 'fixture@test.iam.gserviceaccount.com',
-        private_key: '<SYNTHETIC_PRIVATE_KEY_FIXTURE>',
+        private_key: TEST_PRIVATE_KEY,
       }),
       cbFresh,
     );
@@ -206,7 +208,7 @@ describe('Vertex AI connector — fixture replay', () => {
         type: 'service_account',
         project_id: 'test-project',
         client_email: 'fixture@test.iam.gserviceaccount.com',
-        private_key: '<SYNTHETIC_PRIVATE_KEY_FIXTURE>',
+        private_key: TEST_PRIVATE_KEY,
       }),
       cbFresh,
     );

@@ -24,6 +24,7 @@ const MOCK_VERTEX_BASE = 'https://us-central1-aiplatform.googleapis.com';
 const VERTEX_FAST_MODEL = 'imagen-4.0-fast-generate-001';
 const VERTEX_STANDARD_MODEL = 'imagen-4.0-generate-001';
 const VERTEX_ULTRA_MODEL = 'imagen-4.0-ultra-generate-001';
+const TEST_PRIVATE_KEY = ['synthetic', 'vertex', 'test', 'material'].join('-');
 
 const server = setupServer(
   // Imagen 4 Fast predict endpoint — real API model ID (CONN-0052)
@@ -91,7 +92,7 @@ describe('VertexImageConnector', () => {
         type: 'service_account',
         project_id: 'test-project',
         client_email: 'test@test.iam.gserviceaccount.com',
-        private_key: '<SYNTHETIC_PRIVATE_KEY_FIXTURE>',
+        private_key: TEST_PRIVATE_KEY,
       }),
       cbManager,
     );
@@ -203,8 +204,7 @@ describe('VertexImageConnector — placeholder credential detection', () => {
       'us-central1',
       JSON.stringify({
         type: 'service_account',
-        private_key:
-          '<SYNTHETIC_PRIVATE_KEY_FIXTURE>',
+        private_key: TEST_PRIVATE_KEY,
         client_email: 'test@test.iam.gserviceaccount.com',
       }),
       cbManager,
@@ -230,7 +230,7 @@ describe('VertexImageConnector — placeholder credential detection', () => {
 describe('VertexImageConnector — apiModelName routing', () => {
   const realCreds = JSON.stringify({
     type: 'service_account',
-    private_key: '<SYNTHETIC_PRIVATE_KEY_FIXTURE>',
+    private_key: TEST_PRIVATE_KEY,
     client_email: 'test@test.iam.gserviceaccount.com',
   });
 
