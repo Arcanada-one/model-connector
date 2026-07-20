@@ -1,6 +1,6 @@
 # How-to: TypeScript SDK (`@arcanada/model-connector-sdk`)
 
-This guide walks a TypeScript / Node.js consumer through every supported workflow against `connector.arcanada.one`.
+This guide walks a TypeScript / Node.js consumer through every supported workflow against `connector.arcanada.ai`.
 
 ## Install
 
@@ -19,7 +19,7 @@ import { Client } from '@arcanada/model-connector-sdk';
 
 const client = new Client({
   apiKey: process.env.ARC_API_KEY!,
-  // baseUrl: 'https://connector.arcanada.one', // default
+  // baseUrl: 'https://connector.arcanada.ai', // default
   // timeoutMs: 120_000,                          // default
 });
 ```

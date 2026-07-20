@@ -9,32 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Catalog accuracy: REPLACE-not-UNION + per-model modality/pricing (CONN-0238)** —
-  the deployed catalog diverged from each provider's real `/models` API. Root cause:
-  `refreshModels()` cached `static ∪ provider` (UNION), so on a successful live fetch
-  stale/phantom static ids survived (grok prod showed 18 = 9 real + 9 phantom;
-  openmodel 36 = 34 real + 2 dead `deepseek-r2`/`qwen3-235b`). Fixes:
-  - **REPLACE not UNION** — a successful refresh makes the live provider list the
-    sole source of truth; the static list is the offline/CI fallback only. Static
-    floors trimmed to verified-minimum (openmodel → `deepseek-v4-flash`; grok → the
-    real 9; groq → 9 chat). Phantoms structurally impossible.
-  - **Per-model modality** — `extractModels()` returns `{id, modality, free, pricing,
-    contextWindow, maxOutputTokens}`. groq now SHOWS all 17 (chat + whisper STT +
-    orpheus TTS + prompt-guard moderation) with the correct modality instead of
-    dropping the non-chat families; grok classifies grok-imagine image/video.
-  - **openrouter surfaces all ~340** (26 free) instead of free-only; each model
-    carries a `free` flag + pricing + context. Page defaults to free-first via
-    `?free=true`.
-  - **Real pricing + context** — new `pricing` (`{inputPerMTok, outputPerMTok,
-    unit}`, normalised per-1M-tokens), `contextWindow`, `maxOutputTokens` catalog
-    fields, populated verbatim from groq/openrouter `/models`. `rateLimits` stays
-    `null` (no machine RPM/TPM source; plan-tier numbers never scraped).
-  - New modality enum values `video` + `moderation` (Class B additive). Non-chat
-    families surfaced via a chat connector are `available:false` with their honest
-    sibling-module endpoint (anti-fabrication — not claimed callable via `/execute`).
-  - All ids/prices come from live `/models` captures (groq/openrouter live, grok/
-    openmodel operator live captures 2026-06-23) — nothing invented.
-
 - **public-surface-lint no longer false-positives on the `BGE-M3` model name
   (CONN-0228)** — the CI gate (`public-surface / public-surface-lint`) was failing
   on `main` because the framework milestone pattern matched the trailing token of

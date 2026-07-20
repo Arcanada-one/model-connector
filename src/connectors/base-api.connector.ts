@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { Logger } from '@nestjs/common';
 import {
   CircuitBreakerResetEntry,
   ConnectorCapabilities,
@@ -7,7 +6,6 @@ import {
   ConnectorResponse,
   ConnectorStatus,
   IConnector,
-  ProviderModelMeta,
   classifyErrorAction,
 } from './interfaces/connector.interface';
 import { Semaphore, QueueTimeoutError } from './base-cli.connector';
@@ -33,16 +31,6 @@ export abstract class BaseApiConnector implements IConnector {
   protected activeJobs = 0;
   private _semaphore?: Semaphore;
   private _cbManager?: CircuitBreakerManager;
-
-  // CONN-0236 — dynamic model completeness. Connectors whose provider exposes a
-  // `/models` listing override getStaticModels()/getModelsUrl() and return
-  // `this.dynamicModels` from getCapabilities(). refreshModels() populates the
-  // cache on boot; the static list is the offline/CI fallback (no live call in CI).
-  // Named distinctly from OpenRouterConnector's own `_dynamicModels` field — TS
-  // forbids a subclass redeclaring a base private of the same name.
-  // CONN-0238 — store per-model metadata (not just ids); REPLACE semantics.
-  private _refreshedModels?: ProviderModelMeta[];
-  private readonly _modelsLogger = new Logger('ConnectorModelRefresh');
 
   protected get semaphore(): Semaphore {
     if (!this._semaphore) {
@@ -106,137 +94,6 @@ export abstract class BaseApiConnector implements IConnector {
   // Default `false`; openrouter overrides to `true` in Phase 1.
   protected get supportsContentBlocks(): boolean {
     return false;
-  }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // CONN-0236 — Dynamic model completeness
-  //
-  // Generalizes the proven OpenRouterConnector.refreshFreeModels() pattern
-  // (CONN-0233): fetch the provider's `/models` listing, parse the ids, and cache
-  // them so getCapabilities().models reflects the provider's REAL catalogue instead
-  // of a hand-maintained stub. The static list (getStaticModels) is the source of
-  // truth offline and in CI — refreshModels() never runs during tests (which mock
-  // fetch) and tolerates every failure mode, leaving the static list intact.
-  //
-  // NOTE: OpenRouterConnector keeps its own specialized refreshFreeModels()
-  // (CONN-0233) instead of this generic refresh — it additionally derives the
-  // free-model set from pricing / ":free" id suffixes. This base method is the
-  // plain id-list path for providers without that pricing semantics
-  // (openmodel / groq / grok). Do not fold openrouter in here without porting its
-  // pricing-aware free detection.
-  // ───────────────────────────────────────────────────────────────────────────
-
-  /**
-   * The hand-curated / cited model list. Used verbatim until refreshModels()
-   * succeeds, and as the permanent fallback when the provider is unreachable.
-   * Override per connector. Default `[]` keeps non-participating connectors inert.
-   */
-  protected getStaticModels(): string[] {
-    return [];
-  }
-
-  /**
-   * Provider model-listing endpoint. Defaults to `{baseUrl}/models`; override when
-   * the provider nests it elsewhere (groq → `/openai/v1/models`, grok → `/v1/models`).
-   */
-  protected getModelsUrl(): string {
-    return `${this.getBaseUrl()}/models`;
-  }
-
-  /**
-   * Static model metadata (offline/CI fallback). Defaults to the plain id list
-   * stamped with no modality (the catalog applies the connector default). Override
-   * when the static floor spans modalities (e.g. grok-imagine image/video).
-   */
-  protected getStaticModelMetas(): ProviderModelMeta[] {
-    return this.getStaticModels().map((id) => ({ id }));
-  }
-
-  /**
-   * CONN-0238 — parse the provider's `/models` JSON into per-model metadata.
-   * Default handles the OpenAI/Anthropic-compatible `{ data: [{ id }] }` shape and
-   * stamps no modality/pricing. Override to classify modality, filter, or surface
-   * pricing/context from the provider list (groq, grok). Replaces the old
-   * `extractModelIds` (id-only) seam.
-   */
-  protected extractModels(json: unknown): ProviderModelMeta[] {
-    const data = (json as { data?: unknown })?.data;
-    if (!Array.isArray(data)) return [];
-    return data
-      .map((entry) => (entry as { id?: unknown })?.id)
-      .filter((id): id is string => typeof id === 'string' && id.length > 0)
-      .map((id) => ({ id }));
-  }
-
-  /**
-   * Per-model metadata getCapabilities() should expose: the refreshed provider
-   * metas once available, otherwise the static fallback metas.
-   */
-  protected get dynamicModelMetas(): ProviderModelMeta[] {
-    return this._refreshedModels ?? this.getStaticModelMetas();
-  }
-
-  /**
-   * The flat id list getCapabilities().models should return — derived from
-   * {@link dynamicModelMetas} so ids and per-model metadata never drift.
-   */
-  protected get dynamicModels(): string[] {
-    return this.dynamicModelMetas.map((m) => m.id);
-  }
-
-  /**
-   * Headers for the `/models` listing request. Defaults to the connector's normal
-   * {@link getHeaders}. Override when the model-listing endpoint needs a different
-   * auth scheme than the chat endpoint — e.g. OpenModel's chat uses `x-api-key`
-   * (Anthropic-style) while its OpenAI-compatible `/v1/models` requires
-   * `Authorization: Bearer` (CONN-0236).
-   */
-  protected getModelsHeaders(): Record<string, string> {
-    return this.getHeaders();
-  }
-
-  /**
-   * Fetch the provider's `/models` listing and REPLACE the cached model list with
-   * the live provider list (CONN-0238). The static list is the OFFLINE-ONLY
-   * fallback — it is NOT merged into a successful live result, so stale/phantom
-   * static ids cannot survive a refresh (the CONN-0236 UNION leaked them: grok
-   * 18 = 9 real + 9 phantom). Fire-and-forget on boot; tolerates every failure
-   * (non-2xx, empty, network/parse error) by leaving the static list in place.
-   * Never throws — safe to `void` from OnModuleInit.
-   */
-  async refreshModels(): Promise<void> {
-    const staticCount = this.getStaticModels().length;
-    try {
-      const url = this.getModelsUrl();
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getModelsHeaders(),
-        signal: AbortSignal.timeout(10_000),
-      });
-      if (!response.ok) {
-        this._modelsLogger.warn(
-          `${this.name} ${url} returned ${response.status} — keeping ${staticCount} static models`,
-        );
-        return;
-      }
-      const json = await response.json();
-      const metas = this.extractModels(json);
-      if (metas.length === 0) {
-        this._modelsLogger.warn(
-          `${this.name} /models response had no usable ids — keeping ${staticCount} static models`,
-        );
-        return;
-      }
-      // REPLACE, not UNION — the live provider list is the sole source of truth.
-      this._refreshedModels = metas;
-      this._modelsLogger.log(
-        `${this.name} model refresh: ${metas.length} provider models (replaced ${staticCount} static)`,
-      );
-    } catch (err) {
-      this._modelsLogger.warn(
-        `${this.name} model refresh failed: ${(err as Error).message} — keeping ${staticCount} static models`,
-      );
-    }
   }
 
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
@@ -406,44 +263,17 @@ export abstract class BaseApiConnector implements IConnector {
     }
   }
 
-  /**
-   * CONN-0232 R10 — path probed for connector reachability. Defaults to
-   * `/health`, but a missing `/health` route NO LONGER means offline (see
-   * `isReachableStatus`). Override per connector to point at a route the provider
-   * actually serves (e.g. `/models`) when `/health` is absent.
-   */
-  protected getHealthProbePath(): string {
-    return '/health';
-  }
-
-  /**
-   * CONN-0232 R10 — classify a probe HTTP status as "connector reachable".
-   * The server ANSWERED, so it is up: 2xx/3xx and 4xx (incl. 401/403 auth-needed
-   * and 404 no-such-route) are all reachable. Only 5xx (server erroring) counts
-   * as down — except 501 Not Implemented, which still means the server answered.
-   *
-   * This is the direct fix for openmodel: GET https://api.openmodel.ai/v1/health
-   * returns 404 (no route) while /v1/models returns 401 — the API is alive, so a
-   * 404 on /health must not blanket-offline every openmodel model.
-   */
-  protected isReachableStatus(status: number): boolean {
-    return status < 500 || status === 501;
-  }
-
   async getStatus(): Promise<ConnectorStatus> {
     const { aggregate, perModel } = this.cbManager.getStates();
     try {
-      const res = await fetch(`${this.getBaseUrl()}${this.getHealthProbePath()}`, {
+      const res = await fetch(`${this.getBaseUrl()}/health`, {
         method: 'GET',
         signal: AbortSignal.timeout(5_000),
       });
 
-      const reachable = this.isReachableStatus(res.status);
       return {
         name: this.name,
-        // `healthy` = connector reachable AND its aggregate breaker not open.
-        // Per-MODEL availability is computed downstream from `circuitBreakers`.
-        healthy: reachable && aggregate.state !== 'open',
+        healthy: res.ok && aggregate.state !== 'open',
         activeJobs: this.activeJobs,
         queuedJobs: this.semaphore.pending,
         rateLimitStatus: 'ok',
@@ -451,7 +281,6 @@ export abstract class BaseApiConnector implements IConnector {
         circuitBreakers: perModel,
       };
     } catch {
-      // Network error / timeout / DNS failure → genuinely unreachable.
       return {
         name: this.name,
         healthy: false,

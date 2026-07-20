@@ -116,7 +116,7 @@ GET /connectors/:name/status       → Connector health & active jobs
 **Universal endpoint** (specify connector in body):
 
 ```bash
-curl -X POST https://connector.arcanada.one/execute \
+curl -X POST https://connector.arcanada.ai/execute \
   -H "Authorization: Bearer <MODEL_CONNECTOR_API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -129,7 +129,7 @@ curl -X POST https://connector.arcanada.one/execute \
 **Per-connector endpoint:**
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
+curl -X POST https://connector.arcanada.ai/connectors/claude-code/execute \
   -H "Authorization: Bearer <MODEL_CONNECTOR_API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -185,7 +185,7 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
 Request JSON output from any connector:
 
 ```bash
-curl -X POST https://connector.arcanada.one/execute \
+curl -X POST https://connector.arcanada.ai/execute \
   -H "Authorization: Bearer <MODEL_CONNECTOR_API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -217,7 +217,7 @@ Since **v0.2.0** the `/execute` endpoint runs an **output-guard middleware** tha
 **Example — strict JSON Schema:**
 
 ```bash
-curl -X POST https://connector.arcanada.one/execute \
+curl -X POST https://connector.arcanada.ai/execute \
   -H "Authorization: Bearer <MODEL_CONNECTOR_API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -402,7 +402,7 @@ MC_API_KEY=<MODEL_CONNECTOR_API_KEY>  # raw ключ (не хеш!)
 ### Проверить ключ
 
 ```bash
-curl -s https://connector.arcanada.one/connectors \
+curl -s https://connector.arcanada.ai/connectors \
   -H "Authorization: Bearer <MODEL_CONNECTOR_API_KEY>"
 # 200 + JSON → ключ работает
 # 401 → ключ невалиден
@@ -529,7 +529,7 @@ pnpm db:push      # Push schema to database
 
 | Параметр | Из интернета | Из Tailscale (серверы экосистемы) |
 |----------|-------------|----------------------------------|
-| **URL** | `https://connector.arcanada.one` | `http://100.121.155.54:3900` |
+| **URL** | `https://connector.arcanada.ai` | `http://100.121.155.54:3900` |
 | **Протокол** | HTTPS (Cloudflare → nginx → :3900) | HTTP напрямую (без прокси) |
 | **Auth** | `Authorization: Bearer <API_KEY>` | `Authorization: Bearer <API_KEY>` |
 | **Таймаут Cloudflare** | ~100s (HTTP 524 при превышении) | нет ограничения |
@@ -556,7 +556,7 @@ POST /execute                       → универсальный (поле "co
 
 ```bash
 # Из интернета / с локальной машины:
-curl -X POST https://connector.arcanada.one/connectors/openrouter/execute \
+curl -X POST https://connector.arcanada.ai/connectors/openrouter/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -578,7 +578,7 @@ curl -X POST http://100.121.155.54:3900/connectors/openrouter/execute \
 ```typescript
 // .env: MC_API_KEY=your-key
 // С сервера экосистемы используйте http://100.121.155.54:3900
-const MC_URL = process.env.MC_URL || 'https://connector.arcanada.one';
+const MC_URL = process.env.MC_URL || 'https://connector.arcanada.ai';
 const MC_KEY = process.env.MC_API_KEY;
 
 async function askLLM(prompt: string, model?: string): Promise<string> {
@@ -608,7 +608,7 @@ async function askLLM(prompt: string, model?: string): Promise<string> {
 import os, httpx
 
 # С сервера экосистемы используйте http://100.121.155.54:3900
-MC_URL = os.environ.get("MC_URL", "https://connector.arcanada.one")
+MC_URL = os.environ.get("MC_URL", "https://connector.arcanada.ai")
 MC_KEY = os.environ["MC_API_KEY"]
 
 async def ask_llm(prompt: str, model: str = "meta-llama/llama-4-maverick") -> str:
@@ -629,25 +629,25 @@ async def ask_llm(prompt: str, model: str = "meta-llama/llama-4-maverick") -> st
 
 ```bash
 # Claude Code (CLI, ~4s, нужен для file access / code execution)
-curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
+curl -X POST https://connector.arcanada.ai/connectors/claude-code/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"prompt": "What is 2+2?", "maxTurns": 1}'
 
 # Embedding (BGE-M3, ~0.2s, self-hosted на arcana-db)
-curl -X POST https://connector.arcanada.one/connectors/embedding/execute \
+curl -X POST https://connector.arcanada.ai/connectors/embedding/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"prompt": "your text here"}'
 
 # Embedding — sparse / hybrid / colbert режимы
-curl -X POST https://connector.arcanada.one/connectors/embedding/execute \
+curl -X POST https://connector.arcanada.ai/connectors/embedding/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"prompt": "text", "extra": {"embeddingType": "hybrid"}}'
 
 # Универсальный endpoint (connector в body)
-curl -X POST https://connector.arcanada.one/execute \
+curl -X POST https://connector.arcanada.ai/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"connector": "openrouter", "prompt": "Hello", "model": "openai/gpt-4o-mini"}'
@@ -721,7 +721,7 @@ openssl rand -hex 32
 **Создать ключ:**
 
 ```bash
-curl -X POST https://connector.arcanada.one/admin/keys \
+curl -X POST https://connector.arcanada.ai/admin/keys \
   -H "X-Admin-Token: $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"name": "my-service", "rateLimit": 120}'
@@ -734,7 +734,7 @@ curl -X POST https://connector.arcanada.one/admin/keys \
 **Список ключей:**
 
 ```bash
-curl https://connector.arcanada.one/admin/keys \
+curl https://connector.arcanada.ai/admin/keys \
   -H "X-Admin-Token: $ADMIN_TOKEN"
 
 # Ответ: [{"id": "...", "name": "my-service", "rateLimit": 120, "active": true, "createdAt": "..."}]
@@ -743,7 +743,7 @@ curl https://connector.arcanada.one/admin/keys \
 **Деактивировать ключ:**
 
 ```bash
-curl -X DELETE https://connector.arcanada.one/admin/keys/<id> \
+curl -X DELETE https://connector.arcanada.ai/admin/keys/<id> \
   -H "X-Admin-Token: $ADMIN_TOKEN"
 
 # Ответ: 204 No Content
@@ -774,6 +774,6 @@ MIT
 
 ## Links
 
-- **Live:** https://connector.arcanada.one
+- **Live:** https://connector.arcanada.ai
 - **GitHub:** https://github.com/Arcanada-one/model-connector
-- **Ecosystem:** https://arcanada.one
+- **Ecosystem:** https://arcanada.ai

@@ -16,8 +16,5 @@ export class GroqModule implements OnModuleInit {
 
   onModuleInit() {
     this.connectors.register(this.groq);
-    // CONN-0236 — fetch the live chat-model list on startup (fire-and-forget).
-    // Audio (whisper/orpheus) families are filtered out; failure keeps the static 9.
-    void this.groq.refreshModels();
   }
 }

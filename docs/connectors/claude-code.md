@@ -50,7 +50,7 @@ CLAUDE_CODE_MAX_CONCURRENCY=4      # Concurrent CLI processes
 ### Simple Q&A
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
+curl -X POST https://connector.arcanada.ai/connectors/claude-code/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -d '{"prompt": "What is 2+2?", "maxTurns": 1}'
 ```
@@ -58,7 +58,7 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
 ### Code task with file access
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
+curl -X POST https://connector.arcanada.ai/connectors/claude-code/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -d '{
     "prompt": "Read README.md and summarize the install steps.",
@@ -71,7 +71,7 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
 ### Structured output (json_schema)
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
+curl -X POST https://connector.arcanada.ai/connectors/claude-code/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -d '{
     "prompt": "Extract: Pavel, age 42, works on Arcanada",

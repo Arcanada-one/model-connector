@@ -16,8 +16,5 @@ export class OpenModelModule implements OnModuleInit {
 
   onModuleInit() {
     this.connectors.register(this.openmodel);
-    // CONN-0236 — fetch the live ~32-model list on startup (fire-and-forget,
-    // like OpenRouter's refreshFreeModels). Failure leaves the static 3 in place.
-    void this.openmodel.refreshModels();
   }
 }

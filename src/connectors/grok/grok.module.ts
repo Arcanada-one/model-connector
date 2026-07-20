@@ -16,8 +16,5 @@ export class GrokModule implements OnModuleInit {
 
   onModuleInit() {
     this.connectors.register(this.grok);
-    // CONN-0236 — fetch the live xAI model list on startup (fire-and-forget).
-    // Failure (or no XAI_API_KEY) keeps the static 9.
-    void this.grok.refreshModels();
   }
 }

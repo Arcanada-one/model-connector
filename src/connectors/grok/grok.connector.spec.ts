@@ -1,15 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { GrokConnector } from './grok.connector';
-
-// xAI OpenAI-compat /v1/models shape (docs.x.ai). CONN-0238 — operator live capture
-// 2026-06-23: the real 9 ids (grok-4.3, grok-4.20-*, grok-build-0.1, grok-imagine-*)
-// replace the CONN-0236 phantom list (grok-4-fast/grok-3/…) that the UNION refresh
-// leaked into prod. grok-imagine-* are image/video models — modality matters.
-const GROK_MODELS_FIXTURE = JSON.parse(
-  readFileSync(resolve(__dirname, '../../..', 'test/fixtures/connectors/grok-models.json'), 'utf8'),
-) as { data: Array<{ id: string }> };
 
 describe('GrokConnector', () => {
   let connector: GrokConnector;
@@ -105,18 +95,18 @@ describe('GrokConnector', () => {
       ]);
     });
 
-    it('should default model to grok-4.3', async () => {
+    it('should default model to grok-4-fast', async () => {
       mockOk(chatResponse);
       await connector.execute({ prompt: 'hello' });
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
-      expect(body.model).toBe('grok-4.3');
+      expect(body.model).toBe('grok-4-fast');
     });
 
     it('should use request.model when specified', async () => {
       mockOk(chatResponse);
-      await connector.execute({ prompt: 'hello', model: 'grok-4.20-0309-non-reasoning' });
+      await connector.execute({ prompt: 'hello', model: 'grok-4-fast-non-reasoning' });
       const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
-      expect(body.model).toBe('grok-4.20-0309-non-reasoning');
+      expect(body.model).toBe('grok-4-fast-non-reasoning');
     });
 
     it('should pass max_tokens, temperature, top_p from extra', async () => {
@@ -313,10 +303,10 @@ describe('GrokConnector', () => {
       const caps = connector.getCapabilities();
       expect(caps.name).toBe('grok');
       expect(caps.type).toBe('api');
-      // CONN-0238 — static floor is the real chat models (no phantom grok-4-fast/grok-3).
-      expect(caps.models).toContain('grok-4.3');
-      expect(caps.models).not.toContain('grok-4-fast');
-      expect(caps.models).not.toContain('grok-3');
+      expect(caps.models).toContain('grok-4-fast');
+      expect(caps.models).toContain('grok-4-fast-reasoning');
+      expect(caps.models).toContain('grok-4-fast-non-reasoning');
+      expect(caps.models).toContain('grok-3-mini');
       expect(caps.supportsStreaming).toBe(false);
       expect(caps.supportsJsonSchema).toBe(true);
       expect(caps.supportsTools).toBe(true);
@@ -329,82 +319,6 @@ describe('GrokConnector', () => {
       const caps = connector.getCapabilities();
       expect(Array.isArray(caps.freeModels)).toBe(true);
       expect(caps.freeModels).toHaveLength(0);
-    });
-  });
-
-  // CONN-0238 — Grok's /v1/models lists 9 real models (operator live capture
-  // 2026-06-23): chat (grok-4.3, grok-4.20-*, grok-build-0.1) + image_generation
-  // (grok-imagine-image*) + video (grok-imagine-video*). REPLACE-not-UNION kills the
-  // CONN-0236 phantom list. Modality is classified per id (xAI /v1/models returns
-  // ids only — no pricing/context, so those stay null).
-  describe('refreshModels (CONN-0238 real list + per-model modality)', () => {
-    function mockModelsOk() {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(GROK_MODELS_FIXTURE),
-      });
-    }
-    const metaFor = (caps: ReturnType<GrokConnector['getCapabilities']>, id: string) =>
-      (caps.modelMeta ?? []).find((m) => m.id === id);
-
-    it('fetches the xAI OpenAI-compat /v1/models endpoint', async () => {
-      mockModelsOk();
-      await connector.refreshModels();
-      expect(fetchSpy.mock.calls[0][0]).toBe('https://api.x.ai/v1/models');
-    });
-
-    it('REPLACES with the live 9 (count matches fixture; no phantom survivors)', async () => {
-      mockModelsOk();
-      await connector.refreshModels();
-      const caps = connector.getCapabilities();
-      expect(caps.models.length).toBe(GROK_MODELS_FIXTURE.data.length);
-      for (const entry of GROK_MODELS_FIXTURE.data) {
-        expect(caps.models).toContain(entry.id);
-      }
-      expect(caps.models).not.toContain('grok-4-fast');
-      expect(caps.models).not.toContain('grok-3');
-    });
-
-    it('classifies grok-imagine-image* as image_generation', async () => {
-      mockModelsOk();
-      await connector.refreshModels();
-      const caps = connector.getCapabilities();
-      expect(metaFor(caps, 'grok-imagine-image')?.modality).toBe('image_generation');
-      expect(metaFor(caps, 'grok-imagine-image-quality')?.modality).toBe('image_generation');
-    });
-
-    it('classifies grok-imagine-video* as video', async () => {
-      mockModelsOk();
-      await connector.refreshModels();
-      const caps = connector.getCapabilities();
-      expect(metaFor(caps, 'grok-imagine-video')?.modality).toBe('video');
-      expect(metaFor(caps, 'grok-imagine-video-1.5')?.modality).toBe('video');
-    });
-
-    it('classifies the reasoning/build text models as chat', async () => {
-      mockModelsOk();
-      await connector.refreshModels();
-      const caps = connector.getCapabilities();
-      expect(metaFor(caps, 'grok-4.3')?.modality).toBe('chat');
-      expect(metaFor(caps, 'grok-4.20-0309-reasoning')?.modality).toBe('chat');
-      expect(metaFor(caps, 'grok-build-0.1')?.modality).toBe('chat');
-    });
-
-    it('keeps grok paid-only (freeModels stays empty) after refresh', async () => {
-      mockModelsOk();
-      await connector.refreshModels();
-      const caps = connector.getCapabilities();
-      expect(caps.freeModels).toEqual([]);
-    });
-
-    it('falls back to the static real-9 list when the API call fails (offline/CI)', async () => {
-      fetchSpy.mockRejectedValueOnce(new Error('network down'));
-      await expect(connector.refreshModels()).resolves.not.toThrow();
-      const caps = connector.getCapabilities();
-      expect(caps.models).toContain('grok-4.3');
-      expect(caps.models).toContain('grok-imagine-image');
-      expect(caps.models).not.toContain('grok-3');
     });
   });
 

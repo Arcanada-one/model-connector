@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConnectorsService } from './connectors.service';
-import { ModalityCatalogService } from './modality-catalog.service';
 import { ConnectorsController } from './connectors.controller';
 import { QueueModule } from '../queue/queue.module';
 import { CursorModule } from './cursor/cursor.module';
@@ -35,7 +34,7 @@ import { OrqModule } from './orq/orq.module';
     OrqModule,
   ],
   controllers: [ConnectorsController],
-  providers: [ConnectorsService, ModalityCatalogService],
+  providers: [ConnectorsService],
   exports: [ConnectorsService],
 })
 export class ConnectorsModule {}

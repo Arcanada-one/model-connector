@@ -28,34 +28,11 @@ const DEFAULT_MODEL = 'deepseek-v4-flash';
 // Required by Anthropic protocol: max_tokens must always be present in the request.
 const DEFAULT_MAX_TOKENS = 4096;
 
-// CONN-0237 — Anthropic-native JSON-mode: system instruction injected when
-// responseFormat.type === 'json_object'. No OpenAI response_format field added.
-const JSON_ONLY_INSTRUCTION =
-  'Respond with only valid JSON. No prose, no preamble, no markdown code fences.';
-
-// CONN-0238 — offline/CI fallback. The live OpenModel /v1/models endpoint returns
-// 34 models (operator-verified 2026-06-23); refreshModels() REPLACES this floor with
-// the live list on boot where OPENMODEL_API_KEY is present. The floor is trimmed to
-// the single still-live cited id — the old `deepseek-r2` / `qwen3-235b` are GONE from
-// the live API (CONN-0236 UNION wrongly kept them); dropping them here removes them
-// offline too.
-const OPENMODEL_STATIC_MODELS = ['deepseek-v4-flash'];
-
 export class OpenModelConnector extends BaseApiConnector {
   readonly name = 'openmodel';
 
   protected getBaseUrl(): string {
     return process.env.OPENMODEL_BASE_URL || 'https://api.openmodel.ai/v1';
-  }
-
-  // CONN-0236 — OpenModel exposes an OpenAI/Anthropic-compatible model listing at
-  // `{baseUrl}/models` (baseUrl already ends in /v1 → https://api.openmodel.ai/v1/models).
-  protected getModelsUrl(): string {
-    return `${this.getBaseUrl()}/models`;
-  }
-
-  protected getStaticModels(): string[] {
-    return OPENMODEL_STATIC_MODELS;
   }
 
   protected getTimeout(): number {
@@ -69,17 +46,6 @@ export class OpenModelConnector extends BaseApiConnector {
       'content-type': 'application/json',
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
-    };
-  }
-
-  // CONN-0236 — the chat endpoint is Anthropic-style (x-api-key), but the
-  // OpenAI-compatible `/v1/models` listing requires `Authorization: Bearer`
-  // (x-api-key → 401). Verified live 2026-06-23: Bearer → 200, x-api-key → 401.
-  protected getModelsHeaders(): Record<string, string> {
-    const apiKey = process.env.OPENMODEL_API_KEY || '';
-    return {
-      'content-type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
     };
   }
 
@@ -107,15 +73,6 @@ export class OpenModelConnector extends BaseApiConnector {
       body.temperature = request.extra.temperature;
     }
 
-    // CONN-0237 — Anthropic-native JSON-mode: gated strictly on json_object.
-    // Non-JSON callers (no responseFormat or type:'text') are byte-identical (V-AC-2).
-    if (request.responseFormat?.type === 'json_object') {
-      // Merge: preserve any existing systemPrompt, append the strict instruction.
-      body.system = [request.systemPrompt, JSON_ONLY_INSTRUCTION].filter(Boolean).join('\n\n');
-      // Assistant-prefill: Anthropic echoes only the continuation; parseResponse re-prepends '{'.
-      messages.push({ role: 'assistant', content: '{' });
-    }
-
     return body;
   }
 
@@ -135,18 +92,8 @@ export class OpenModelConnector extends BaseApiConnector {
       };
     }
 
-    // CONN-0237 — Anthropic /v1/messages MAY echo only the continuation of an assistant
-    // prefill (leading '{' absent), but some upstreams (observed: deepseek-v4-flash via the
-    // openmodel endpoint) ignore the prefill and return the FULL object including '{'.
-    // Re-prepend '{' only when the returned text does not already start with it — otherwise
-    // we produce '{{...}' and JSON.parse fails (CONN-0237 prod regression, 2026-06-23).
-    // Non-JSON path is byte-identical (V-AC-2).
-    const isJsonMode = request.responseFormat?.type === 'json_object';
-    const rawText = textBlock.text ?? '';
-    const text = isJsonMode && !rawText.trimStart().startsWith('{') ? '{' + rawText : rawText;
-
     return {
-      text,
+      text: textBlock.text || '',
       model: json.model || request.model || DEFAULT_MODEL,
       inputTokens: json.usage?.input_tokens ?? 0,
       outputTokens: json.usage?.output_tokens ?? 0,
@@ -157,14 +104,10 @@ export class OpenModelConnector extends BaseApiConnector {
   }
 
   getCapabilities(): ConnectorCapabilities & { freeModels: string[] } {
-    // CONN-0238 — static floor (deepseek-v4-flash) until refreshModels() REPLACES it
-    // with the live 34. modelMeta is exposed for catalog parity with the other
-    // dynamic connectors (all-chat here, so it carries no per-model modality).
     return {
       name: 'openmodel',
       type: 'api',
-      models: this.dynamicModels,
-      modelMeta: this.dynamicModelMetas,
+      models: ['deepseek-v4-flash', 'deepseek-r2', 'qwen3-235b'],
       supportsStreaming: false,
       supportsJsonSchema: true,
       supportsTools: false,

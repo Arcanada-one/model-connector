@@ -4,7 +4,7 @@ End-to-end walkthrough across the three STT phases. Pre-condition: caller has a
 Model Connector API key (`MC_API_KEY=arc_api_…`) and a small audio fixture.
 
 ```bash
-export MC=https://connector.arcanada.one
+export MC=https://connector.arcanada.ai
 export MC_API_KEY=arc_api_…
 export FIXTURE=./meeting.mp3   # any supported MIME, ≤25 MiB
 ```
@@ -71,7 +71,7 @@ Expected response (HTTP `202 Accepted`):
 {
   "job_id": "0194f2a0-1234-7000-8000-000000000001",
   "status": "queued",
-  "status_url": "https://connector.arcanada.one/v1/speech/stt/jobs/0194f2a0-1234-7000-8000-000000000001"
+  "status_url": "https://connector.arcanada.ai/v1/speech/stt/jobs/0194f2a0-1234-7000-8000-000000000001"
 }
 ```
 
@@ -145,7 +145,7 @@ body — no information leak across API keys.
 
 - Worker → Whisper: `http://arcana-prod:8400/v1/audio/transcriptions` (Tailscale only)
 - Worker → Redis: `arcana-db:6379` (existing)
-- Client → Connector: `https://connector.arcanada.one` (public, bcrypt API key)
+- Client → Connector: `https://connector.arcanada.ai` (public, bcrypt API key)
 
 ## Smoke script
 

@@ -127,7 +127,7 @@ Returns the full capability matrix (no auth required).
 
 ```bash
 # Sync generation — mid tier, auto routing
-curl -X POST https://connector.arcanada.one/images/generate \
+curl -X POST https://connector.arcanada.ai/images/generate \
   -H "Authorization: Bearer $MC_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -140,7 +140,7 @@ curl -X POST https://connector.arcanada.one/images/generate \
   }'
 
 # Premium async — pin to Imagen 4 Ultra
-curl -X POST https://connector.arcanada.one/images/generate \
+curl -X POST https://connector.arcanada.ai/images/generate \
   -H "Authorization: Bearer $MC_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -155,11 +155,11 @@ curl -X POST https://connector.arcanada.one/images/generate \
   }'
 
 # Poll async job
-curl https://connector.arcanada.one/jobs/01926abc-... \
+curl https://connector.arcanada.ai/jobs/01926abc-... \
   -H "Authorization: Bearer $MC_KEY"
 
 # Get capability matrix (no auth)
-curl https://connector.arcanada.one/connectors/image/capabilities
+curl https://connector.arcanada.ai/connectors/image/capabilities
 ```
 
 ---
