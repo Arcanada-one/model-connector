@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Credential documentation regression
+        run: bash dev-tools/credential-docs-regression.sh
+
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4

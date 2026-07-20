@@ -358,36 +358,37 @@ API keys are stored bcrypt-hashed in the `ApiKey` PostgreSQL table on arcana-db.
 
 ### Как получить ключ
 
-**Шаг 1. Сгенерировать случайный ключ:**
+**Шаг 1. Сгенерировать случайный ключ и не выводить его в терминал:**
 
 ```bash
-# Формат: mc-<service-name>-<random>
-openssl rand -hex 16 | sed 's/^/mc-myservice-/'
-# Пример результата: <MODEL_CONNECTOR_API_KEY>
+# Формат: mc-<service-name>-<random>; в документации показываем только
+# <MODEL_CONNECTOR_API_KEY>, никогда реалистичный литерал.
+MC_API_KEY="mc-myservice-$(openssl rand -hex 16)"
 ```
 
 **Шаг 2. Получить bcrypt-хеш** (на PROD сервере):
 
 ```bash
-ssh root@65.108.236.39
-docker exec model-connector-model-connector-1 node -e \
-  "const b=require('bcryptjs');b.hash('<MODEL_CONNECTOR_API_KEY>',10).then(h=>console.log(h))"
-# → $2b$10$4IDeokFW7NPv6958W56LS.QcOHxzqVFwBkoF6YfzYGDQDgZrdViDu
+# MC_API_KEY содержит значение <MODEL_CONNECTOR_API_KEY> из защищённого канала.
+MC_API_KEY="$MC_API_KEY" docker exec -i -e MC_API_KEY model-connector-model-connector-1 node -e \
+  "const b=require('bcryptjs');b.hash(process.env.MC_API_KEY,10).then(h=>console.log(h))"
 ```
 
-**Шаг 3. Вставить в базу:**
+**Шаг 3. Вставить хеш в базу:**
+
+`MODEL_CONNECTOR_DATABASE_URL` поступает из одобренного Vault/runtime-потока;
+не вставляйте URI с паролем в документацию или аргументы процесса.
 
 ```bash
-# Подключение к БД (с любого сервера в Tailscale)
-psql "postgresql://<DB_USER>:<DB_PASSWORD>@<DB_HOST>:5432/<DB_NAME>"
+psql "$MODEL_CONNECTOR_DATABASE_URL"
 ```
 
 ```sql
-INSERT INTO "ApiKey" (id, name, "hashedKey", "createdAt")
+INSERT INTO "ApiKey" (id, name, "keyHash", "createdAt")
 VALUES (
   gen_random_uuid(),
-  'myservice',                    -- человекочитаемое имя
-  '$2b$10$4IDeo...<полный хеш>', -- результат шага 2
+  'myservice',
+  '<BCRYPT_HASH>',
   NOW()
 );
 ```
@@ -395,26 +396,21 @@ VALUES (
 **Шаг 4. Использовать** в `.env` вашего проекта:
 
 ```env
-MC_URL=http://100.121.155.54:3900    # для серверов в Tailscale
-MC_API_KEY=<MODEL_CONNECTOR_API_KEY>  # raw ключ (не хеш!)
+MC_URL=http://100.121.155.54:3900
+MC_API_KEY=<MODEL_CONNECTOR_API_KEY>
 ```
 
 ### Проверить ключ
 
+Передайте заголовок через stdin-конфигурацию curl, чтобы значение не попадало
+в список аргументов процесса:
+
 ```bash
-curl -s https://connector.arcanada.one/connectors \
-  -H "Authorization: Bearer <MODEL_CONNECTOR_API_KEY>"
+printf 'header = "Authorization: Bearer %s"\n' "$MC_API_KEY" | \
+  curl -s --config - https://connector.arcanada.one/connectors
 # 200 + JSON → ключ работает
 # 401 → ключ невалиден
 ```
-
-### Существующие ключи
-
-| Имя | Назначение | Создан |
-|-----|-----------|--------|
-| `demo-test` | тестирование / smoke tests | 2026-04-20 |
-
-> **Безопасность:** raw-ключ знает только владелец сервиса. В базе хранится только bcrypt-хеш. При компрометации — удалите строку из `ApiKey` и создайте новый ключ.
 
 ## Architecture
 
