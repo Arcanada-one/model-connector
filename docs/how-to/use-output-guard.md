@@ -60,7 +60,7 @@ middleware's retry budget.
 ## Example: curl
 
 ```bash
-curl -sS -X POST "https://connector.arcanada.one/execute" \
+curl -sS -X POST "https://connector.arcanada.ai/execute" \
   -H "Authorization: Bearer ${MC_KEY}" \
   -H "Content-Type: application/json" \
   -d '{

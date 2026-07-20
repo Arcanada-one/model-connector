@@ -1,6 +1,6 @@
 # How-to: Python SDK (`arcanada-model-connector`)
 
-This guide walks a Python consumer through every supported workflow against `connector.arcanada.one`.
+This guide walks a Python consumer through every supported workflow against `connector.arcanada.ai`.
 
 ## Install
 
@@ -17,7 +17,7 @@ from arcanada_model_connector import Client
 
 client = Client(
     api_key="arc_api_...",
-    # base_url="https://connector.arcanada.one",  # default
+    # base_url="https://connector.arcanada.ai",  # default
     # timeout=120.0,                                # default
 )
 ```

@@ -10,7 +10,7 @@ API connector for [xAI's Grok](https://docs.x.ai/) family. Added 2026-04-29.
 | **Type** | `api` (HTTP) |
 | **Base URL** | `https://api.x.ai/v1/chat/completions` |
 | **Auth** | `Bearer $XAI_API_KEY` |
-| **Default model** | `grok-4.3` |
+| **Default model** | `grok-4-fast` |
 | **Default concurrency** | 10 (`GROK_MAX_CONCURRENCY`) |
 | **Default timeout** | 120 000 ms (`GROK_TIMEOUT_MS`) |
 
@@ -23,25 +23,17 @@ API connector for [xAI's Grok](https://docs.x.ai/) family. Added 2026-04-29.
 
 ## Models
 
-> **Dynamic, REPLACE (CONN-0238).** The list below is the static **offline/CI
-> fallback** (the real 9, operator live capture 2026-06-23). At boot the connector
-> fetches `GET https://api.x.ai/v1/models` (where `XAI_API_KEY` is set) and
-> **REPLACES** the static list with xAI's live list — no UNION, so the old phantom
-> ids (`grok-4-fast`, `grok-3`, …) that the CONN-0236 merge leaked are gone. The
-> connector spans modalities: chat + image (grok-imagine-image) + video
-> (grok-imagine-video). See `docs/how-to/catalog-endpoint.md` § "Model-list source".
-
-| Model | Modality | Use case |
-|-------|----------|----------|
-| `grok-4.3` | chat | Default — flagship |
-| `grok-4.20-0309-reasoning` | chat | Reasoning-heavy tasks (math, planning) |
-| `grok-4.20-0309-non-reasoning` | chat | Pure text generation, lower latency |
-| `grok-4.20-multi-agent-0309` | chat | Multi-agent orchestration build |
-| `grok-build-0.1` | chat | Build/agentic variant |
-| `grok-imagine-image` | image_generation | Image generation (informational — not executable via this chat connector) |
-| `grok-imagine-image-quality` | image_generation | High-quality image generation |
-| `grok-imagine-video` | video | Video generation (no MC execute route yet) |
-| `grok-imagine-video-1.5` | video | Video generation (1.5 line) |
+| Model | Use case |
+|-------|----------|
+| `grok-4-fast` | Default — balanced speed/quality |
+| `grok-4-fast-reasoning` | Reasoning-heavy tasks (math, planning) |
+| `grok-4-fast-non-reasoning` | Pure text generation, lower latency |
+| `grok-4-1-fast-reasoning` | Newer reasoning (4.1 line) |
+| `grok-4-1-fast-non-reasoning` | Newer text gen (4.1 line) |
+| `grok-4-0709` | Pinned 4.0 build (snapshot) |
+| `grok-3` | Previous-gen flagship |
+| `grok-3-mini` | Cheaper, smaller context |
+| `grok-code-fast-1` | Code-specialized variant |
 
 ## Environment
 
@@ -56,31 +48,31 @@ GROK_MAX_CONCURRENCY=10       # Optional — default 10
 ### Basic call
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/grok/execute \
+curl -X POST https://connector.arcanada.ai/connectors/grok/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "prompt": "Explain transformers in one sentence",
-    "model": "grok-4.3"
+    "model": "grok-4-fast"
   }'
 ```
 
 ### Reasoning model
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/grok/execute \
+curl -X POST https://connector.arcanada.ai/connectors/grok/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "prompt": "If 7 workers paint 3 walls in 5 hours, how long for 21 workers and 30 walls?",
-    "model": "grok-4.20-0309-reasoning"
+    "model": "grok-4-fast-reasoning"
   }'
 ```
 
 ### Structured output
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/grok/execute \
+curl -X POST https://connector.arcanada.ai/connectors/grok/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -100,8 +92,8 @@ Standard `BaseApiConnector` error mapping. Notable:
 
 ## When to Use
 
-- ✅ Reasoning workloads (`grok-4.20-0309-reasoning`).
-- ✅ Build/agentic tasks where `grok-build-0.1` fits.
+- ✅ Reasoning workloads (`grok-4-fast-reasoning`, `grok-4-1-fast-reasoning`).
+- ✅ Code-related tasks where `grok-code-fast-1` outperforms general models.
 - ✅ Structured output (json_schema strict).
 - ❌ Embeddings → use `embedding` connector.
 - ❌ File-system / code-execution agent flows → use `claude-code`.

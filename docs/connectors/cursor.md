@@ -55,7 +55,7 @@ CURSOR_MAX_CONCURRENCY=1     # MANDATORY — do not change
 ## Example
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/cursor/execute \
+curl -X POST https://connector.arcanada.ai/connectors/cursor/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -d '{
     "prompt": "Refactor the auth handler to use async/await",

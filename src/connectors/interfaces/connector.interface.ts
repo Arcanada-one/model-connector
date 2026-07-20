@@ -108,30 +108,8 @@ export interface ConnectorStatus {
   circuitBreakers?: Record<string, CircuitBreakerState>;
 }
 
-// CONN-0238 — per-model metadata carried alongside the flat `models` id list.
-// Lets one connector span multiple modalities (groq: chat + STT + TTS + moderation;
-// grok: chat + image + video) and surface real pricing/context from the live
-// `/models` API. Every field is optional: a connector that only knows ids emits
-// `{ id }`; the catalog falls back to the connector-wide modality and null
-// pricing/context. The catalog derives `models` from these metas, so the two never
-// drift (consilium HIGH — single source of truth).
-export interface ProviderModelMeta {
-  id: string;
-  /** Per-model modality; the catalog falls back to the connector default when omitted. */
-  modality?: import('../dto/catalog.dto').ModelModality;
-  /** Per-model free-tier flag (e.g. openrouter ':free'); overrides the connector free set. */
-  free?: boolean;
-  /** Normalised pricing from the provider's live /models API. Null = no machine price. */
-  pricing?: import('../dto/catalog.dto').ModelPricing | null;
-  /** Provider-published context window (tokens). */
-  contextWindow?: number | null;
-  /** Provider-published max output/completion tokens. */
-  maxOutputTokens?: number | null;
-}
-
 export interface ConnectorCapabilities {
   name: string;
-  // Transport — HOW we reach the provider. NOT the model modality (CONN-0232).
   type: 'cli' | 'api';
   models: string[];
   supportsStreaming: boolean;
@@ -140,16 +118,6 @@ export interface ConnectorCapabilities {
   maxTimeout: number;
   // CONN-0223 — optional field for connectors that expose a free tier.
   freeModels?: string[];
-  // CONN-0232 — model modality (a.k.a `type` in the catalog DTO). Distinct from
-  // transport `type` above. Defaults to 'chat' in the catalog when omitted; the
-  // embedding connector sets 'embedding'. A string here (not the DTO enum) keeps
-  // this interface free of a dto import; the catalog validates against the enum.
-  modality?: import('../dto/catalog.dto').ModelModality;
-  // CONN-0238 — per-model metadata (modality / free / pricing / context). When
-  // present the catalog uses it per-model; when absent it falls back to the flat
-  // `models` list + connector-wide `modality`. Derived from the same source as
-  // `models` (see ProviderModelMeta) so they cannot drift.
-  modelMeta?: ProviderModelMeta[];
 }
 
 export interface CircuitBreakerResetEntry {

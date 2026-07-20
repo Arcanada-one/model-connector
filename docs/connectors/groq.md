@@ -23,31 +23,17 @@ API connector for [Groq Cloud](https://console.groq.com/) — ultra-fast LPU-bac
 
 ## Models
 
-> **Dynamic, REPLACE, all-modalities (CONN-0238).** The 9 chat ids below are the
-> static **offline/CI fallback**. At boot the connector fetches
-> `GET https://api.groq.com/openai/v1/models` and **REPLACES** the floor with the
-> live **17** models. Groq's listing spans modalities: CONN-0238 SHOWS them all
-> with their real modality + pricing/context (CONN-0236 dropped the non-chat
-> families). Chat + moderation are executable via this connector; the STT/TTS rows
-> are informational (`available:false` — the executable STT route is the dedicated
-> `groq-stt` connector). See `docs/how-to/catalog-endpoint.md` § "Model-list source".
-
-| Model | Modality | Notes |
-|-------|----------|-------|
-| `llama-3.3-70b-versatile` | chat | Default — balanced 70B ($0.59/$0.79 per 1M) |
-| `llama-3.1-8b-instant` | chat | Fastest, smallest — high-throughput classification |
-| `meta-llama/llama-4-scout-17b-16e-instruct` | chat | Llama 4 Scout (MoE, vision) |
-| `openai/gpt-oss-120b` | chat | OpenAI open-weight 120B |
-| `openai/gpt-oss-20b` | chat | OpenAI open-weight 20B |
-| `openai/gpt-oss-safeguard-20b` | chat | Safety-tuned 20B variant |
-| `qwen/qwen3-32b` | chat | Qwen 3 |
-| `qwen/qwen3.6-27b` | chat | Qwen 3.6 (vision) |
-| `allam-2-7b` | chat | Arabic-focused 7B |
-| `groq/compound` | chat | Groq's tool-using compound model |
-| `groq/compound-mini` | chat | Smaller compound variant |
-| `whisper-large-v3`, `whisper-large-v3-turbo` | speech_to_text | STT (informational — call via `groq-stt`) |
-| `canopylabs/orpheus-v1-english`, `canopylabs/orpheus-arabic-saudi` | text_to_speech | TTS (informational) |
-| `meta-llama/llama-prompt-guard-2-22m`, `-86m` | moderation | Safety classifier (via chat/completions) |
+| Model | Notes |
+|-------|-------|
+| `llama-3.3-70b-versatile` | Default — balanced 70B |
+| `llama-3.1-8b-instant` | Fastest, smallest — for high-throughput classification |
+| `meta-llama/llama-4-scout-17b-16e-instruct` | Llama 4 Scout (MoE) |
+| `openai/gpt-oss-120b` | OpenAI open-weight 120B |
+| `openai/gpt-oss-20b` | OpenAI open-weight 20B |
+| `openai/gpt-oss-safeguard-20b` | Safety-tuned 20B variant |
+| `qwen/qwen3-32b` | Qwen 3 |
+| `groq/compound` | Groq's tool-using compound model |
+| `groq/compound-mini` | Smaller compound variant |
 
 ## Environment
 
@@ -62,7 +48,7 @@ GROQ_MAX_CONCURRENCY=10       # Optional
 ### Free-tier classification (sub-second)
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/groq/execute \
+curl -X POST https://connector.arcanada.ai/connectors/groq/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -75,7 +61,7 @@ curl -X POST https://connector.arcanada.one/connectors/groq/execute \
 ### Structured JSON
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/groq/execute \
+curl -X POST https://connector.arcanada.ai/connectors/groq/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -d '{
     "prompt": "Extract entities: Pavel deploys MC to PROD on Mondays.",

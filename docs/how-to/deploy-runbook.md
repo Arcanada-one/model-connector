@@ -51,7 +51,7 @@ Named volumes survive `docker rm -f` (volumes are only removed by `docker volume
 gh run list --workflow "CI & Deploy" --branch main --limit 1 --json conclusion,jobs
 
 # PROD health endpoint
-curl -fsS https://connector.arcanada.one/health   # → 200 {status:ok, ...}
+curl -fsS https://connector.arcanada.ai/health   # → 200 {status:ok, ...}
 
 # Named volume preservation gate
 ssh root@100.121.155.54 'docker volume ls --format "{{.Name}}" \

@@ -57,7 +57,6 @@ export class EmbeddingConnector extends BaseApiConnector {
     return {
       name: 'embedding',
       type: 'api',
-      modality: 'embedding',
       models: ['bge-m3'],
       supportsStreaming: false,
       supportsJsonSchema: false,

@@ -35,7 +35,7 @@ API connector for the self-hosted **BGE-M3** embedding service running on Arcana
 ### Dense embedding (default)
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/embedding/execute \
+curl -X POST https://connector.arcanada.ai/connectors/embedding/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -d '{"prompt": "Pavel founded Arcanada in 2026"}'
 ```
@@ -45,7 +45,7 @@ Response includes vector in `result` / `structured` (1024 floats).
 ### Hybrid (dense + sparse + ColBERT)
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/embedding/execute \
+curl -X POST https://connector.arcanada.ai/connectors/embedding/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -d '{
     "prompt": "your text",

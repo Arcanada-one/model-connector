@@ -43,7 +43,7 @@ GEMINI_MAX_CONCURRENCY=4
 ## Example
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/gemini/execute \
+curl -X POST https://connector.arcanada.ai/connectors/gemini/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -d '{"prompt": "Translate to French: Hello world", "model": "gemini-2.5-flash"}'
 ```

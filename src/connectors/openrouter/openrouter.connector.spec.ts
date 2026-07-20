@@ -1,24 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { OpenRouterConnector } from './openrouter.connector';
-
-// CONN-0238 — live capture GET https://openrouter.ai/api/v1/models (public), arcana-dev
-// 2026-06-23: all 340 entries (26 free), real ids + pricing + top_provider. Trimmed to
-// the fields the parser reads. The catalog must surface ALL 340, not free-only.
-const OPENROUTER_MODELS_FIXTURE = JSON.parse(
-  readFileSync(
-    resolve(__dirname, '../../..', 'test/fixtures/connectors/openrouter-models.json'),
-    'utf8',
-  ),
-) as {
-  data: Array<{
-    id: string;
-    context_length: number | null;
-    pricing: { prompt: string | null; completion: string | null };
-    top_provider: { context_length: number | null; max_completion_tokens: number | null };
-  }>;
-};
 
 describe('OpenRouterConnector', () => {
   let connector: OpenRouterConnector;
@@ -328,8 +309,6 @@ describe('OpenRouterConnector', () => {
       // Free models must also appear in caps.models
       expect(caps.models).toContain('google/gemma-4-31b-it:free');
       expect(caps.models).toContain('nvidia/nemotron-3-nano:free');
-      // CONN-0238 — paid models are surfaced too (all models, not free-only).
-      expect(caps.models).toContain('openai/gpt-4o');
     });
 
     it('refreshFreeModels: treats :free-suffix models as free even if pricing missing', async () => {
@@ -357,68 +336,6 @@ describe('OpenRouterConnector', () => {
       await expect(connector.refreshFreeModels()).resolves.not.toThrow();
       const caps = connector.getCapabilities();
       expect(Array.isArray(caps.freeModels)).toBe(true);
-    });
-  });
-
-  // CONN-0238 — surface ALL 340 (not free-only). free=true flags the 26 free; the
-  // page can default to free-first via a filter, but the CATALOG carries all 340.
-  // Per-model pricing/context come from the live /models entries.
-  describe('CONN-0238 — all-340 + per-model free/pricing/context', () => {
-    function mockModelsOk() {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(OPENROUTER_MODELS_FIXTURE),
-      });
-    }
-    const metaFor = (caps: ReturnType<OpenRouterConnector['getCapabilities']>, id: string) =>
-      (caps.modelMeta ?? []).find((m) => m.id === id);
-
-    it('REPLACES with all 340 models (count matches the live fixture)', async () => {
-      mockModelsOk();
-      await connector.refreshFreeModels();
-      const caps = connector.getCapabilities();
-      expect(caps.models.length).toBe(OPENROUTER_MODELS_FIXTURE.data.length);
-    });
-
-    it('flags exactly the 26 free models (the rest are paid, still listed)', async () => {
-      mockModelsOk();
-      await connector.refreshFreeModels();
-      const caps = connector.getCapabilities();
-      const expectedFree = OPENROUTER_MODELS_FIXTURE.data.filter(
-        (e) =>
-          e.id.endsWith(':free') || (e.pricing?.prompt === '0' && e.pricing?.completion === '0'),
-      ).length;
-      expect((caps.freeModels ?? []).length).toBe(expectedFree);
-      // and the paid majority is still present in models[]
-      expect(caps.models.length).toBeGreaterThan((caps.freeModels ?? []).length);
-    });
-
-    it('surfaces real per-1M-token pricing + context for a paid model', async () => {
-      mockModelsOk();
-      await connector.refreshFreeModels();
-      const caps = connector.getCapabilities();
-      // pick the first paid entry that publishes numeric prompt+completion pricing
-      const sample = OPENROUTER_MODELS_FIXTURE.data.find(
-        (e) =>
-          !e.id.endsWith(':free') &&
-          e.pricing?.prompt &&
-          e.pricing.prompt !== '0' &&
-          e.pricing?.completion,
-      )!;
-      const m = metaFor(caps, sample.id);
-      expect(m?.pricing?.unit).toBe('per_1m_tokens');
-      expect(m?.pricing?.inputPerMTok).toBeCloseTo(Number(sample.pricing.prompt) * 1e6, 6);
-      const expectedCtx = sample.top_provider?.context_length ?? sample.context_length ?? null;
-      expect(m?.contextWindow).toBe(expectedCtx);
-    });
-
-    it('marks a :free model free in its per-model meta', async () => {
-      mockModelsOk();
-      await connector.refreshFreeModels();
-      const caps = connector.getCapabilities();
-      const freeSample = OPENROUTER_MODELS_FIXTURE.data.find((e) => e.id.endsWith(':free'))!;
-      expect(metaFor(caps, freeSample.id)?.free).toBe(true);
     });
   });
 

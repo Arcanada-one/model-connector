@@ -8,7 +8,7 @@
 # Required env:
 #   MC_KEY            Model Connector API key (Bearer)
 # Optional env:
-#   MC_BASE_URL       Default https://connector.arcanada.one
+#   MC_BASE_URL       Default https://connector.arcanada.ai
 #   MC_FIXTURE_PATH   Default ./scripts/fixtures/smoke-stt.mp3
 #   MC_FIXTURE_LANG   Default en
 #   MC_FIXTURE_MARKER Substring required in transcription (optional)
@@ -26,7 +26,7 @@
 set -euo pipefail
 
 : "${MC_KEY:?MC_KEY env required (Model Connector Bearer token)}"
-MC_BASE_URL="${MC_BASE_URL:-https://connector.arcanada.one}"
+MC_BASE_URL="${MC_BASE_URL:-https://connector.arcanada.ai}"
 MC_FIXTURE_PATH="${MC_FIXTURE_PATH:-./scripts/fixtures/smoke-stt.mp3}"
 MC_FIXTURE_LANG="${MC_FIXTURE_LANG:-en}"
 MC_FIXTURE_MARKER="${MC_FIXTURE_MARKER:-}"

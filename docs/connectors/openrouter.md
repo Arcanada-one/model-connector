@@ -48,7 +48,7 @@ OPENROUTER_MAX_CONCURRENCY=10     # Optional
 ### Generic call
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/openrouter/execute \
+curl -X POST https://connector.arcanada.ai/connectors/openrouter/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -d '{
     "prompt": "Summarize this article in 3 bullets",
@@ -59,7 +59,7 @@ curl -X POST https://connector.arcanada.one/connectors/openrouter/execute \
 ### Structured output for Graphiti / Cognee
 
 ```bash
-curl -X POST https://connector.arcanada.one/connectors/openrouter/execute \
+curl -X POST https://connector.arcanada.ai/connectors/openrouter/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -d '{
     "prompt": "Extract entities and relations: ...",

@@ -14,7 +14,7 @@ from .errors import (
 )
 from .models import ExecuteErrorEnvelope, ExecuteRequest, ExecuteResponse
 
-DEFAULT_BASE_URL = "https://connector.arcanada.one"
+DEFAULT_BASE_URL = "https://connector.arcanada.ai"
 DEFAULT_TIMEOUT = 120.0
 
 

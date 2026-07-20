@@ -7,7 +7,7 @@ audio, self-hosted Whisper) is scoped to a later phase.
 ## Request
 
 ```bash
-curl -X POST https://connector.arcanada.one/v1/speech/stt \
+curl -X POST https://connector.arcanada.ai/v1/speech/stt \
   -H "Authorization: Bearer $MC_API_KEY" \
   -F "file=@./meeting.mp3" \
   -F "model=whisper-large-v3" \

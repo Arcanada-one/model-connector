@@ -12,7 +12,7 @@ import type {
   ExecuteResponse,
 } from './types.js';
 
-const DEFAULT_BASE_URL = 'https://connector.arcanada.one';
+const DEFAULT_BASE_URL = 'https://connector.arcanada.ai';
 const DEFAULT_TIMEOUT_MS = 120_000;
 const MIN_NODE_MAJOR = 20;
 
