@@ -36,7 +36,7 @@ jobs:
         run: pnpm test
 
   docker-e2e:
-    runs-on: [self-hosted, Linux, arcana-prod]
+    runs-on: [self-hosted, Linux, ci-general]
     needs: lint-and-test
     concurrency:
       group: docker-e2e-arcana-prod
