@@ -50,17 +50,20 @@ declare -rA REPOS=(
   [muneral]='https://github.com/Arcanada-one/muneral.git'
   [opsbot]='https://github.com/Arcanada-one/opsbot.git'
   [transcribator-api]='https://github.com/Arcanada-one/transcribator-api.git'
+  [legal-arcana]='https://github.com/Arcanada-one/legal-arcana.git'
 )
 declare -rA COMPOSE=(
   [model-connector]='deploy/stt-whisper/docker-compose.yml'
   [muneral]='docker-compose.prod.yml'
   [opsbot]='docker-compose.prod.yml'
   [transcribator-api]='docker-compose.prod.yml'
+  [legal-arcana]='docker-compose.yml'
 )
 # Private repositories whose fetch needs a credential on stdin.
 declare -rA AUTH=(
   [opsbot]='github-token'
   [transcribator-api]='github-token'
+  [legal-arcana]='github-token'
 )
 # Pin the compose project name. Unset means Compose derives it from the
 # checkout directory, which is what the whisper stack has always done —
@@ -69,6 +72,7 @@ declare -rA PROJECT=(
   [muneral]='muneral'
   [opsbot]='opsbot'
   [transcribator-api]='transcribator-api'
+  [legal-arcana]='legal-arcana'
 )
 # Root-owned environment file. A bare name resolves under ENV_ROOT; an absolute
 # path is used as given, so a service whose env is already root-owned somewhere
@@ -78,6 +82,16 @@ declare -rA ENVFILE=(
   [muneral]='muneral.env'
   [opsbot]='opsbot.env'
   [transcribator-api]='/opt/transcribator/.env'
+  [legal-arcana]='legal-arcana.env'
+)
+# A release script inside the checkout that already encapsulates the whole
+# deploy. Running it as root is the same trust boundary the broker already
+# relies on everywhere else — its content is reachable from origin/main, and
+# `docker compose build` executes that content as root regardless. What changes
+# is that the runner no longer supplies the tree it runs from, nor the
+# environment it runs with.
+declare -rA SCRIPT=(
+  [legal-arcana]='deploy/deploy.sh'
 )
 # Schema-migration recipe run before `up`.
 declare -rA MIGRATE=(
@@ -347,6 +361,18 @@ cmd_promote() {
 
 cmd_prune() { "$DOCKER" image prune --filter 'until=336h' -f; }
 
+cmd_run_deploy() {
+  local svc="$1" dir script
+  [[ -n "${SCRIPT[$svc]+set}" ]] || die "service has no deploy script: $svc"
+  require_checkout "$svc"
+  dir="$(checkout_dir "$svc")"
+  script="$dir/${SCRIPT[$svc]}"
+  [[ -f "$script" && ! -L "$script" ]] || die 'deploy script missing or not a regular file'
+  compose_env "$svc"
+  ( cd "$dir" && bash "$script" )
+  printf 'BROKER_RUN_DEPLOY_PASS service=%s\n' "$svc"
+}
+
 # Defends against a silent no-op build: a container that was not recreated is
 # running the previous code no matter how green the deploy looks.
 cmd_freshness() {
@@ -388,7 +414,7 @@ cmd_env_get() {
     awk -F= -v k="$key" '$1 == k { print substr($0, length(k) + 2); exit }'
 }
 
-usage='usage: <service> {sync <sha>|pull|build|up|ps|logs [n]|migrate|tag-rotate|tag-release|image-id|verify|rollback|promote|prune|freshness|smoke|env-get <KEY>}'
+usage='usage: <service> {sync <sha>|pull|build|up|ps|logs [n]|migrate|tag-rotate|tag-release|image-id|verify|rollback|promote|prune|freshness|smoke|env-get <KEY>|run-deploy}'
 
 main() {
   [[ $# -ge 2 ]] || die "$usage"
@@ -412,6 +438,7 @@ main() {
     freshness)    [[ $# -eq 0 ]] || die 'freshness takes no arguments'; cmd_freshness "$svc" ;;
     smoke)        [[ $# -eq 0 ]] || die 'smoke takes no arguments'; cmd_smoke "$svc" ;;
     env-get)      [[ $# -eq 1 ]] || die 'env-get takes exactly one key'; cmd_env_get "$svc" "$1" ;;
+    run-deploy)   [[ $# -eq 0 ]] || die 'run-deploy takes no arguments'; cmd_run_deploy "$svc" ;;
     *)            die "unknown action: $action" ;;
   esac
 }
