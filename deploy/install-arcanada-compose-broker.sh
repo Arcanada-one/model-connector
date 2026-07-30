@@ -14,4 +14,8 @@ install -m 0755 -o root -g root "$src" /usr/local/sbin/arcanada-compose-broker
 install -m 0440 -o root -g root "$sudoers_src" /etc/sudoers.d/arcanada-compose-broker
 visudo -cf /etc/sudoers.d/arcanada-compose-broker
 install -d -m 0755 -o root -g root /var/lib/arcanada-deploy
+# Root-owned environment files for services whose container env must not be
+# runner-writable. The directory is created here; the files themselves stay
+# operator-managed and are never carried in the repo.
+install -d -m 0700 -o root -g root /etc/arcanada/deploy-env
 echo "COMPOSE_BROKER_INSTALL_PASS sha256=$actual"

@@ -16,9 +16,15 @@ jobs:
     # Mandate: CI/CD Convention #5 — network-exposure-lint must gate any
     # deploy of a stack with new listeners. Tier 2 stack is loopback + tailnet,
     # but the lint enforces the absence of public `0.0.0.0` binds.
-    uses: Arcanada-one/datarim/.github/workflows/network-exposure-lint.yml@main
+    # `datarim_ref` is a required input of the reusable workflow and was not
+    # passed, so the call failed at workflow-startup: the whole run ended as
+    # `startup_failure` with no jobs, and the broker path this workflow exists
+    # to exercise has therefore never executed once. Pinning to an exact commit
+    # is also what the linter's own guard demands.
+    uses: Arcanada-one/datarim/.github/workflows/network-exposure-lint.yml@57afdfcd6a2d71aa8e0b577de6e43846e93b60dd
     with:
       compose_paths: 'deploy/stt-whisper/docker-compose.yml'
+      datarim_ref: '57afdfcd6a2d71aa8e0b577de6e43846e93b60dd'
 
   deploy:
     needs: network-exposure-lint
@@ -55,9 +61,14 @@ jobs:
           ops-bot-emit: 'true'
           ops-bot-key: ${{ secrets.OPS_BOT_API_KEY }}
 
-      - name: Pull pinned image
+      # These were a single plain YAML scalar, which folds into one line: the
+      # `pull` invocation became trailing arguments to `sync`, and the broker
+      # correctly rejected it as `sync takes exactly one sha`.
+      - name: Sync broker checkout to this commit
         run: sudo -n /usr/local/sbin/arcanada-compose-broker model-connector sync "$GITHUB_SHA"
-          sudo -n /usr/local/sbin/arcanada-compose-broker model-connector pull
+
+      - name: Pull pinned image
+        run: sudo -n /usr/local/sbin/arcanada-compose-broker model-connector pull
 
       - name: Bring up stack
         run: sudo -n /usr/local/sbin/arcanada-compose-broker model-connector up
