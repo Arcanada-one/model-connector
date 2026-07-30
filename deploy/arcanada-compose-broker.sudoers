@@ -1,0 +1,5 @@
+# SEC-0028 — the production runner may invoke the compose broker and nothing else.
+# The broker validates its own arguments: the service must be in a compiled-in
+# allowlist and the sha must already be reachable from origin/main. Widening this
+# line, or adding a second entry, re-opens the escalation this exists to close.
+ci-runner ALL=(root) NOPASSWD: /usr/local/sbin/arcanada-compose-broker

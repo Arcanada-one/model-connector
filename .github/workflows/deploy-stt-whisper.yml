@@ -56,10 +56,11 @@ jobs:
           ops-bot-key: ${{ secrets.OPS_BOT_API_KEY }}
 
       - name: Pull pinned image
-        run: docker compose -f "$COMPOSE_FILE" pull whisper
+        run: sudo -n /usr/local/sbin/arcanada-compose-broker model-connector sync "$GITHUB_SHA"
+          sudo -n /usr/local/sbin/arcanada-compose-broker model-connector pull
 
       - name: Bring up stack
-        run: docker compose -f "$COMPOSE_FILE" up -d
+        run: sudo -n /usr/local/sbin/arcanada-compose-broker model-connector up
 
       - name: Wait for healthy
         run: |
@@ -71,7 +72,7 @@ jobs:
             sleep 5
           done
           echo "Health check failed after 150s"
-          docker compose -f "$COMPOSE_FILE" logs --tail=100 whisper
+          sudo -n /usr/local/sbin/arcanada-compose-broker model-connector logs 100
           exit 1
 
       - name: Post-deploy health body assertion
@@ -84,7 +85,7 @@ jobs:
           fi
 
       - name: Status snapshot
-        run: docker compose -f "$COMPOSE_FILE" ps
+        run: sudo -n /usr/local/sbin/arcanada-compose-broker model-connector ps
 
       - name: Notify Ops Bot on failure
         if: failure()
