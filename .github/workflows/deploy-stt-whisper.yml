@@ -21,7 +21,7 @@ jobs:
     # `startup_failure` with no jobs, and the broker path this workflow exists
     # to exercise has therefore never executed once. Pinning to an exact commit
     # is also what the linter's own guard demands.
-    uses: Arcanada-one/datarim/.github/workflows/network-exposure-lint.yml@57afdfcd6a2d71aa8e0b577de6e43846e93b60dd
+    uses: Arcanada-one/datarim/.github/workflows/network-exposure-lint.yml@6531b66436b6a735be41a2288082d6de09df3bfa
     with:
       compose_paths: 'deploy/stt-whisper/docker-compose.yml'
       datarim_ref: '57afdfcd6a2d71aa8e0b577de6e43846e93b60dd'
