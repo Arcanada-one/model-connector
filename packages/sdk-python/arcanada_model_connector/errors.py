@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from .models import ExecuteErrorEnvelope
+from .models import ExecuteErrorEnvelope, FirstDispatchObservationV0
 
 _BEARER_RE = re.compile(r"Bearer\s+[A-Za-z0-9._\-+/=]+")
 
@@ -42,11 +42,16 @@ class ConnectorError(Exception):
         status: int,
         envelope: ExecuteErrorEnvelope | None = None,
         cause: Any = None,
+        first_dispatch_observation: FirstDispatchObservationV0 | None = None,
     ) -> None:
         super().__init__(_redact_str(message))
         self.status = status
         self.envelope = envelope
         self.retry_after = envelope.retry_after if envelope else None
+        # The receipt is a correlation value, not an authorization decision.
+        # Keep it separate from generic cause redaction so its signed semantic
+        # fields (including authorization="NOT_AUTHORIZED") remain lossless.
+        self.first_dispatch_observation = first_dispatch_observation
         self.cause = redact_cause(cause)
 
 

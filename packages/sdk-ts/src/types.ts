@@ -10,6 +10,18 @@ export interface ResponseFormat {
   type: 'json_object' | 'text';
 }
 
+export interface FirstDispatchMeasurementV0 {
+  version: 'first-dispatch-measurement/v0';
+  corpusId: string;
+  caseId: string;
+  roleId: string;
+  taskClassId: string;
+  commandId: string;
+  replayIndex: number;
+  variant: 'baseline' | 'compiled';
+  adapterBoundary: 'arcana-agent-system/driver/first-dispatch-v0';
+}
+
 export interface ExecuteRequest {
   connector: string;
   prompt: string;
@@ -26,6 +38,7 @@ export interface ExecuteRequest {
   // output-guard opt-in
   output_format?: OutputFormat;
   schema?: Record<string, unknown>;
+  firstDispatchMeasurement?: FirstDispatchMeasurementV0;
 }
 
 export type OutputGuardPass = 'native' | 'guarded' | 'failed';
@@ -82,6 +95,32 @@ export interface ExecuteUsage {
   costUsd: number;
 }
 
+export interface FirstDispatchObservationV0 {
+  version: 'first-dispatch-observation/v0';
+  observationId: string;
+  measurement: FirstDispatchMeasurementV0;
+  connector: string;
+  model: string;
+  connectorResponseId: string;
+  requestPayloadDigestSha256: string;
+  requestPayloadBytes: number;
+  observationBoundary: 'model-connector/service/pre-adapter-v0';
+  usage: {
+    inputTokens: number;
+    cachedInputTokens: null;
+    outputTokens: number;
+    totalTokens: number;
+    costUsd: number;
+    source: 'CONNECTOR_RESPONSE_UNVERIFIED';
+  };
+  latencyMs: number;
+  outcome: ExecuteStatus;
+  persistence: 'MODEL_CONNECTOR_POSTGRESQL';
+  evidenceStatus: 'PERSISTED_PRE_ADAPTER_OBSERVATION';
+  authorization: 'NOT_AUTHORIZED';
+  receiptDigestSha256: string;
+}
+
 export interface ExecuteResponse {
   id: string;
   connector: string;
@@ -96,6 +135,7 @@ export interface ExecuteResponse {
   status: ExecuteStatus;
   error?: ExecuteErrorEnvelope;
   repair_report?: RepairReport;
+  firstDispatchObservation?: FirstDispatchObservationV0;
 }
 
 export interface ClientOptions {

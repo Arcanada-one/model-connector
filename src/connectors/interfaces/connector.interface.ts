@@ -54,6 +54,7 @@ export interface ConnectorResponse {
   // CONN-0089 — populated only when the request supplied `output_format`.
   // Null/undefined preserves byte-identity for legacy callers (V-AC-3).
   repair_report?: import('../output-guard/types').OutputGuardReport;
+  firstDispatchObservation?: import('../first-dispatch-observation').FirstDispatchObservationV0;
 }
 
 const ERROR_ACTION_MAP: Record<string, { retryable: boolean; recommendation: ErrorAction }> = {

@@ -74,7 +74,14 @@ jobs:
         run: |
           docker run --rm --network=host \
             -e DATABASE_URL=postgresql://test:test@localhost:15432/connector_test \
-            model-connector-e2e npx prisma db push
+            model-connector-e2e npx prisma migrate deploy
+
+      - name: Verify first-dispatch PostgreSQL invariants
+        run: |
+          docker run --rm --network=host --entrypoint node \
+            -e DATABASE_URL=postgresql://test:test@localhost:15432/connector_test \
+            -v "$PWD/dev-tools/first-dispatch-observation-db-contract.mjs:/app/first-dispatch-observation-db-contract.mjs:ro" \
+            model-connector-e2e /app/first-dispatch-observation-db-contract.mjs
 
       - name: Start container
         run: |

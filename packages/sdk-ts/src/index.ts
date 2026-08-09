@@ -19,4 +19,6 @@ export type {
   ResponseFormat,
   ErrorAction,
   ErrorType,
+  FirstDispatchMeasurementV0,
+  FirstDispatchObservationV0,
 } from './types.js';

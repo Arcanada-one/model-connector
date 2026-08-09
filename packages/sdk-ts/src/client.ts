@@ -10,6 +10,7 @@ import type {
   ExecuteErrorEnvelope,
   ExecuteRequest,
   ExecuteResponse,
+  FirstDispatchObservationV0,
 } from './types.js';
 
 const DEFAULT_BASE_URL = 'https://connector.arcanada.one';
@@ -45,7 +46,7 @@ export class Client {
       assertNodeVersion();
       if (typeof globalThis.fetch !== 'function') {
         throw new NodeVersionError(
-          typeof process !== 'undefined' ? process.versions?.node ?? 'unknown' : 'unknown',
+          typeof process !== 'undefined' ? (process.versions?.node ?? 'unknown') : 'unknown',
           `>=${MIN_NODE_MAJOR}`,
         );
       }
@@ -107,15 +108,23 @@ export class Client {
 
     const envelope = extractError(body, res);
     const message = envelope?.message ?? `HTTP ${res.status}`;
+    const firstDispatchObservation = extractFirstDispatchObservation(body);
     if (envelope?.type === 'guard_exhausted') {
-      const e = new GuardExhaustedError(message, res.status, envelope);
+      const e = new GuardExhaustedError(message, res.status, envelope, firstDispatchObservation);
       (e as Error & { cause?: unknown }).cause = redactCause(body);
       throw e;
     }
-    const e = new ConnectorError(message, res.status, envelope);
+    const e = new ConnectorError(message, res.status, envelope, firstDispatchObservation);
     (e as Error & { cause?: unknown }).cause = redactCause(body);
     throw e;
   }
+}
+
+function extractFirstDispatchObservation(body: unknown): FirstDispatchObservationV0 | undefined {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return undefined;
+  const candidate = (body as Record<string, unknown>).firstDispatchObservation;
+  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return undefined;
+  return candidate as FirstDispatchObservationV0;
 }
 
 function extractError(body: unknown, res: Response): ExecuteErrorEnvelope | undefined {
