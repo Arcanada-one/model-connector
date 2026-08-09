@@ -1,7 +1,14 @@
-import { Inject, Injectable, NotFoundException, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
   CircuitBreakerResetEntry,
   ConnectorRequest,
@@ -37,6 +44,13 @@ import { CatalogRepository, type CatalogRepositoryLike } from './catalog.reposit
 import { rowToEntry } from './catalog-mapper';
 import { CATALOG_REDIS_CLIENT, type ICatalogRedis } from './catalog-redis.token';
 import { ProviderAccessService, type ProviderAccessLike } from './provider-access.service';
+import { firstDispatchMeasurementSchema, type FirstDispatchMeasurementV0 } from './dto/execute.dto';
+import {
+  finalizeFirstDispatchObservationV0,
+  reserveFirstDispatchObservationV0,
+  type FirstDispatchObservationV0,
+  type FirstDispatchReservationV0,
+} from './first-dispatch-observation';
 
 // CONN-0238 — capability mask for non-chat families surfaced via a chat connector.
 const NO_CAPS = {
@@ -49,6 +63,7 @@ const NO_CAPS = {
 export type ServiceExecuteRequest = ConnectorRequest & {
   output_format?: 'json' | 'yaml' | 'toml' | 'python' | 'auto';
   schema?: Record<string, unknown>;
+  firstDispatchMeasurement?: FirstDispatchMeasurementV0;
 };
 
 const RETRYABLE_ERRORS = new Set([
@@ -64,6 +79,8 @@ const RETRYABLE_ERRORS = new Set([
   'api_error',
   'structured_output_error',
 ]);
+
+type FirstDispatchFailureStage = 'connector_or_response_processing' | 'observation_finalize';
 
 @Injectable()
 export class ConnectorsService {
@@ -547,60 +564,101 @@ export class ConnectorsService {
       maxRetries = 1;
     }
     const totalAttempts = Math.max(1, maxRetries + 1);
-    const guardActive = Boolean(request.output_format);
+    const { firstDispatchMeasurement, ...providerRequest } = request;
+    const validatedMeasurement =
+      firstDispatchMeasurement === undefined
+        ? undefined
+        : firstDispatchMeasurementSchema.parse(firstDispatchMeasurement);
+    if (validatedMeasurement !== undefined && providerRequest.output_format !== undefined) {
+      throw new BadRequestException('firstDispatchMeasurement cannot use output-guard retries');
+    }
+    const guardActive = Boolean(providerRequest.output_format);
+    const attemptsForRequest = validatedMeasurement === undefined ? totalAttempts : 1;
+    const observationReservation = validatedMeasurement
+      ? await this.reserveFirstDispatchObservation(
+          connectorName,
+          providerRequest,
+          apiKeyId,
+          validatedMeasurement,
+        )
+      : null;
 
     let lastResponse: ConnectorResponse | undefined;
     let guardReport: OutputGuardReport | null = null;
+    let observationFailureStage: FirstDispatchFailureStage = 'connector_or_response_processing';
 
-    for (let attempt = 1; attempt <= totalAttempts; attempt++) {
-      let response: ConnectorResponse;
-      if (guardActive) {
-        const outcome = await this.outputGuardMiddleware.wrapExecute(connector, request);
-        response = outcome.response;
-        if (outcome.report) {
-          guardReport = outcome.report;
+    try {
+      for (let attempt = 1; attempt <= attemptsForRequest; attempt++) {
+        let response: ConnectorResponse;
+        if (guardActive) {
+          const outcome = await this.outputGuardMiddleware.wrapExecute(connector, providerRequest);
+          response = outcome.response;
+          if (outcome.report) {
+            guardReport = outcome.report;
+          }
+        } else {
+          response = await connector.execute(providerRequest);
         }
-      } else {
-        response = await connector.execute(request);
+
+        // JSON sanitization if responseFormat requested (legacy path).
+        if (
+          !guardActive &&
+          request.responseFormat?.type === 'json_object' &&
+          response.status === 'success'
+        ) {
+          response = this.applySanitization(response);
+        }
+
+        response.attempt = attempt;
+        response.maxAttempts = attemptsForRequest;
+        lastResponse = response;
+
+        // Success — done
+        if (response.status === 'success') {
+          break;
+        }
+
+        // Non-retryable error or last attempt — done.
+        // `guard_exhausted` is intentionally NOT in RETRYABLE_ERRORS — the
+        // middleware already consumed its retry budget.
+        const errorType = response.error?.type ?? '';
+        if (!RETRYABLE_ERRORS.has(errorType) || attempt >= attemptsForRequest) {
+          break;
+        }
+
+        // Retry with exponential backoff + jitter
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+        const jitter = Math.random() * delay * 0.3;
+        this.logger.warn(`Retry ${attempt}/${maxRetries} for ${connectorName}: ${errorType}`);
+        await new Promise((r) => setTimeout(r, delay + jitter));
       }
 
-      // JSON sanitization if responseFormat requested (legacy path).
-      if (
-        !guardActive &&
-        request.responseFormat?.type === 'json_object' &&
-        response.status === 'success'
-      ) {
-        response = this.applySanitization(response);
+      let response = lastResponse!;
+      if (guardReport) {
+        response.repair_report = guardReport;
       }
-
-      response.attempt = attempt;
-      response.maxAttempts = totalAttempts;
+      if (observationReservation) {
+        observationFailureStage = 'observation_finalize';
+        const firstDispatchObservation = await this.finalizeFirstDispatchObservation(
+          observationReservation,
+          response,
+        );
+        response = { ...response, firstDispatchObservation };
+      }
       lastResponse = response;
-
-      // Success — done
-      if (response.status === 'success') {
-        break;
+    } catch (error) {
+      if (observationReservation) {
+        await this.markFirstDispatchIndeterminate(
+          observationReservation,
+          observationFailureStage,
+        ).catch(() => {
+          this.logger.error('Failed to mark first-dispatch observation indeterminate');
+        });
       }
-
-      // Non-retryable error or last attempt — done.
-      // `guard_exhausted` is intentionally NOT in RETRYABLE_ERRORS — the
-      // middleware already consumed its retry budget.
-      const errorType = response.error?.type ?? '';
-      if (!RETRYABLE_ERRORS.has(errorType) || attempt >= totalAttempts) {
-        break;
-      }
-
-      // Retry with exponential backoff + jitter
-      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
-      const jitter = Math.random() * delay * 0.3;
-      this.logger.warn(`Retry ${attempt}/${maxRetries} for ${connectorName}: ${errorType}`);
-      await new Promise((r) => setTimeout(r, delay + jitter));
+      throw error;
     }
 
     const response = lastResponse!;
-    if (guardReport) {
-      response.repair_report = guardReport;
-    }
 
     // Metrics recording (per-model)
     this.metricsService.record({
@@ -625,7 +683,7 @@ export class ConnectorsService {
     });
 
     // Fire-and-forget DB logging
-    this.logRequest(response, request, apiKeyId, guardReport).catch((err) =>
+    this.logRequest(response, providerRequest, apiKeyId, guardReport).catch((err) =>
       this.logger.error(`Failed to log request: ${err}`),
     );
 
@@ -691,6 +749,84 @@ export class ConnectorsService {
         errorMessage: response.error?.message?.slice(0, 500),
         apiKeyId,
         repairReport: repairReport ? (repairReport as unknown as object) : undefined,
+      },
+    });
+  }
+
+  private async reserveFirstDispatchObservation(
+    connectorName: string,
+    providerRequest: ConnectorRequest,
+    apiKeyId: string,
+    measurement: FirstDispatchMeasurementV0,
+  ): Promise<FirstDispatchReservationV0> {
+    const reservation = reserveFirstDispatchObservationV0({
+      observationId: randomUUID(),
+      apiKeyId,
+      measurement,
+      connector: connectorName,
+      providerRequest,
+    });
+    await this.prisma.firstDispatchObservation.create({
+      data: {
+        id: reservation.observationId,
+        apiKeyId,
+        observationKeySha256: reservation.observationKeySha256,
+        measurement: reservation.measurement as unknown as object,
+        connector: reservation.connector,
+        requestedModel: reservation.requestedModel,
+        requestPayloadDigestSha256: reservation.requestPayloadDigestSha256,
+        requestPayloadBytes: reservation.requestPayloadBytes,
+        observationBoundary: reservation.observationBoundary,
+        persistence: 'MODEL_CONNECTOR_POSTGRESQL',
+        evidenceStatus: 'RESERVED_PRE_ADAPTER_OBSERVATION',
+        authorization: 'NOT_AUTHORIZED',
+        state: 'reserved',
+      },
+    });
+    return reservation;
+  }
+
+  private async finalizeFirstDispatchObservation(
+    reservation: FirstDispatchReservationV0,
+    response: ConnectorResponse,
+  ): Promise<FirstDispatchObservationV0> {
+    const observation = finalizeFirstDispatchObservationV0(reservation, response);
+    const updated = await this.prisma.firstDispatchObservation.updateMany({
+      where: { id: reservation.observationId, state: 'reserved' },
+      data: {
+        connectorResponseId: observation.connectorResponseId,
+        observedModel: observation.model,
+        inputTokens: observation.usage.inputTokens,
+        outputTokens: observation.usage.outputTokens,
+        totalTokens: observation.usage.totalTokens,
+        costUsd: observation.usage.costUsd,
+        latencyMs: observation.latencyMs,
+        outcome: observation.outcome,
+        usageSource: observation.usage.source,
+        persistence: observation.persistence,
+        evidenceStatus: observation.evidenceStatus,
+        authorization: observation.authorization,
+        receipt: observation as unknown as object,
+        receiptDigestSha256: observation.receiptDigestSha256,
+        state: 'observed',
+      },
+    });
+    if (updated.count !== 1) {
+      throw new ConflictException('first-dispatch observation is missing or already finalized');
+    }
+    return observation;
+  }
+
+  private async markFirstDispatchIndeterminate(
+    reservation: FirstDispatchReservationV0,
+    failureStage: FirstDispatchFailureStage,
+  ): Promise<void> {
+    await this.prisma.firstDispatchObservation.updateMany({
+      where: { id: reservation.observationId, state: 'reserved' },
+      data: {
+        state: 'indeterminate',
+        evidenceStatus: 'INDETERMINATE_PROVIDER_OR_PERSISTENCE_OUTCOME',
+        failureStage,
       },
     });
   }

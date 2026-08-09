@@ -49,7 +49,13 @@ function repoFromEntries(entries: CatalogModelEntry[]): CatalogRepositoryLike {
 describe('ConnectorsService', () => {
   let service: ConnectorsService;
   const mockQueue = { add: vi.fn() };
-  const mockPrisma = { request: { create: vi.fn().mockResolvedValue({}) } };
+  const mockPrisma = {
+    request: { create: vi.fn().mockResolvedValue({}) },
+    firstDispatchObservation: {
+      create: vi.fn().mockResolvedValue({}),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+    },
+  };
   const mockMetrics = { record: vi.fn(), getAll: vi.fn().mockReturnValue({}) };
   // No-op repo/cache for tests that don't exercise getCatalog's DB read path
   // (execute/retry/output-guard/etc. — unrelated to the catalog).
@@ -1163,6 +1169,231 @@ describe('ConnectorsService', () => {
       expect(key).toMatch(/^conn:catalog:/);
       expect(JSON.parse(value)).toMatchObject({ count: result.count });
       expect(mode).toBe('PX');
+    });
+  });
+
+  describe('first-dispatch observation', () => {
+    const firstDispatchMeasurement = {
+      version: 'first-dispatch-measurement/v0' as const,
+      corpusId: 'corpus-v0',
+      caseId: 'case-007',
+      roleId: 'developer',
+      taskClassId: 'code-change',
+      commandId: 'implement',
+      replayIndex: 1,
+      variant: 'baseline' as const,
+      adapterBoundary: 'arcana-agent-system/driver/first-dispatch-v0' as const,
+    };
+
+    it('persists and returns a prompt-bound observation without forwarding metadata', async () => {
+      service.register(mockConnector);
+
+      const result = await service.execute(
+        'test',
+        { prompt: 'héllo', firstDispatchMeasurement },
+        'key-1',
+      );
+
+      expect(mockConnector.execute).toHaveBeenCalledWith({ prompt: 'héllo' });
+      expect(result.firstDispatchObservation).toMatchObject({
+        version: 'first-dispatch-observation/v0',
+        measurement: firstDispatchMeasurement,
+        connector: 'test',
+        model: 'model',
+        connectorResponseId: 'resp-1',
+        requestPayloadBytes: expect.any(Number),
+        usage: {
+          inputTokens: 1,
+          cachedInputTokens: null,
+          outputTokens: 2,
+          totalTokens: 3,
+        },
+        latencyMs: 50,
+        outcome: 'success',
+        persistence: 'MODEL_CONNECTOR_POSTGRESQL',
+        evidenceStatus: 'PERSISTED_PRE_ADAPTER_OBSERVATION',
+        authorization: 'NOT_AUTHORIZED',
+      });
+      expect(result.firstDispatchObservation?.observationId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      );
+      expect(result.firstDispatchObservation?.requestPayloadDigestSha256).toMatch(/^[0-9a-f]{64}$/);
+      expect(result.firstDispatchObservation?.requestPayloadBytes).toBeGreaterThan(
+        Buffer.byteLength('héllo', 'utf8'),
+      );
+      expect(result.firstDispatchObservation?.receiptDigestSha256).toMatch(/^[0-9a-f]{64}$/);
+      expect(JSON.stringify(result.firstDispatchObservation)).not.toContain('héllo');
+
+      const reserved = mockPrisma.firstDispatchObservation.create.mock.calls.at(-1)?.[0]?.data;
+      const finalized = mockPrisma.firstDispatchObservation.updateMany.mock.calls.at(-1)?.[0];
+      expect(reserved.id).toBe(result.firstDispatchObservation?.observationId);
+      expect(reserved.measurement).toEqual(firstDispatchMeasurement);
+      expect(reserved).toMatchObject({
+        state: 'reserved',
+        persistence: 'MODEL_CONNECTOR_POSTGRESQL',
+        evidenceStatus: 'RESERVED_PRE_ADAPTER_OBSERVATION',
+        authorization: 'NOT_AUTHORIZED',
+      });
+      expect(finalized.where).toEqual({
+        id: result.firstDispatchObservation?.observationId,
+        state: 'reserved',
+      });
+      expect(finalized.data.receiptDigestSha256).toBe(
+        result.firstDispatchObservation?.receiptDigestSha256,
+      );
+      expect(finalized.data).toMatchObject({
+        usageSource: 'CONNECTOR_RESPONSE_UNVERIFIED',
+        persistence: 'MODEL_CONNECTOR_POSTGRESQL',
+        evidenceStatus: 'PERSISTED_PRE_ADAPTER_OBSERVATION',
+        authorization: 'NOT_AUTHORIZED',
+        receipt: result.firstDispatchObservation,
+      });
+      expect(finalized.data.state).toBe('observed');
+      expect(JSON.stringify(finalized.data.receipt)).not.toContain('héllo');
+    });
+
+    it('fails closed when an opted-in observation cannot be persisted', async () => {
+      service.register(mockConnector);
+      mockPrisma.firstDispatchObservation.create.mockRejectedValueOnce(
+        new Error('database unavailable'),
+      );
+
+      await expect(
+        service.execute('test', { prompt: 'hello', firstDispatchMeasurement }, 'key-1'),
+      ).rejects.toThrow('database unavailable');
+      expect(mockConnector.execute).not.toHaveBeenCalled();
+    });
+
+    it('uses exactly one connector attempt even when the result is retryable', async () => {
+      service.register(mockConnector);
+      vi.mocked(mockConnector.execute).mockResolvedValueOnce({
+        id: 'resp-error',
+        connector: 'test',
+        model: 'model',
+        result: '',
+        usage: { inputTokens: 1, outputTokens: 0, totalTokens: 1, costUsd: 0 },
+        latencyMs: 50,
+        status: 'error',
+        error: {
+          type: 'rate_limited',
+          message: 'try later',
+          retryable: true,
+          recommendation: 'wait',
+        },
+      });
+
+      const result = await service.execute(
+        'test',
+        { prompt: 'hello', firstDispatchMeasurement },
+        'key-1',
+      );
+
+      expect(mockConnector.execute).toHaveBeenCalledTimes(1);
+      expect(result.attempt).toBe(1);
+      expect(result.maxAttempts).toBe(1);
+      expect(result.firstDispatchObservation?.outcome).toBe('error');
+    });
+
+    it('does not overwrite an observation that is no longer reserved', async () => {
+      service.register(mockConnector);
+      mockPrisma.firstDispatchObservation.updateMany.mockResolvedValueOnce({ count: 0 });
+
+      await expect(
+        service.execute('test', { prompt: 'hello', firstDispatchMeasurement }, 'key-1'),
+      ).rejects.toThrow('first-dispatch observation is missing or already finalized');
+      expect(mockConnector.execute).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.firstDispatchObservation.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ state: 'reserved' }),
+        }),
+      );
+    });
+
+    it('marks a provider exception indeterminate without permitting a replay', async () => {
+      service.register(mockConnector);
+      vi.mocked(mockConnector.execute).mockRejectedValueOnce(
+        new Error('provider transport failed'),
+      );
+
+      await expect(
+        service.execute('test', { prompt: 'hello', firstDispatchMeasurement }, 'key-1'),
+      ).rejects.toThrow('provider transport failed');
+
+      expect(mockPrisma.firstDispatchObservation.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: expect.any(String),
+          state: 'reserved',
+        },
+        data: {
+          state: 'indeterminate',
+          evidenceStatus: 'INDETERMINATE_PROVIDER_OR_PERSISTENCE_OUTCOME',
+          failureStage: 'connector_or_response_processing',
+        },
+      });
+    });
+
+    it('marks a failed finalization indeterminate when the reservation is still writable', async () => {
+      service.register(mockConnector);
+      mockPrisma.firstDispatchObservation.updateMany.mockRejectedValueOnce(
+        new Error('finalization database failure'),
+      );
+
+      await expect(
+        service.execute('test', { prompt: 'hello', firstDispatchMeasurement }, 'key-1'),
+      ).rejects.toThrow('finalization database failure');
+
+      expect(mockPrisma.firstDispatchObservation.updateMany).toHaveBeenLastCalledWith({
+        where: {
+          id: expect.any(String),
+          state: 'reserved',
+        },
+        data: {
+          state: 'indeterminate',
+          evidenceStatus: 'INDETERMINATE_PROVIDER_OR_PERSISTENCE_OUTCOME',
+          failureStage: 'observation_finalize',
+        },
+      });
+    });
+
+    it('rejects output-guard retries even when the service is called directly', async () => {
+      service.register(mockConnector);
+
+      await expect(
+        service.execute(
+          'test',
+          { prompt: 'hello', firstDispatchMeasurement, output_format: 'json' },
+          'key-1',
+        ),
+      ).rejects.toThrow('firstDispatchMeasurement cannot use output-guard retries');
+      expect(mockPrisma.firstDispatchObservation.create).not.toHaveBeenCalled();
+      expect(mockConnector.execute).not.toHaveBeenCalled();
+    });
+
+    it('revalidates measurement metadata at the service choke point', async () => {
+      service.register(mockConnector);
+      const unsafeMeasurement = {
+        ...firstDispatchMeasurement,
+        caseId: 'case with spaces',
+      } as typeof firstDispatchMeasurement;
+
+      await expect(
+        service.execute(
+          'test',
+          { prompt: 'hello', firstDispatchMeasurement: unsafeMeasurement },
+          'key-1',
+        ),
+      ).rejects.toThrow();
+      expect(mockPrisma.firstDispatchObservation.create).not.toHaveBeenCalled();
+      expect(mockConnector.execute).not.toHaveBeenCalled();
+    });
+
+    it('keeps ordinary requests byte-compatible and observation-free', async () => {
+      service.register(mockConnector);
+
+      const result = await service.execute('test', { prompt: 'hello' }, 'key-1');
+
+      expect(mockConnector.execute).toHaveBeenCalledWith({ prompt: 'hello' });
+      expect(result.firstDispatchObservation).toBeUndefined();
     });
   });
 

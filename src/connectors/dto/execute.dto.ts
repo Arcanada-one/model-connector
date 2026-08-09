@@ -24,6 +24,28 @@ export const ContentBlockSchema = z.discriminatedUnion('type', [
 
 export type ContentBlock = z.infer<typeof ContentBlockSchema>;
 
+const measurementIdentifier = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[A-Za-z0-9._:/-]+$/);
+
+export const firstDispatchMeasurementSchema = z
+  .object({
+    version: z.literal('first-dispatch-measurement/v0'),
+    corpusId: measurementIdentifier,
+    caseId: measurementIdentifier,
+    roleId: measurementIdentifier,
+    taskClassId: measurementIdentifier,
+    commandId: measurementIdentifier,
+    replayIndex: z.number().int().min(1).max(65_535),
+    variant: z.enum(['baseline', 'compiled']),
+    adapterBoundary: z.literal('arcana-agent-system/driver/first-dispatch-v0'),
+  })
+  .strict();
+
+export type FirstDispatchMeasurementV0 = z.infer<typeof firstDispatchMeasurementSchema>;
+
 // Base shape WITHOUT refinement — refinement is attached after `.omit()` so the
 // per-connector variant can be derived (Zod v4 forbids omit on refined schemas).
 const executeRequestBaseShape = {
@@ -44,6 +66,7 @@ const executeRequestBaseShape = {
   // CONN-0089 output-guard: opt-in structured-output validate-and-repair
   output_format: z.enum(['json', 'yaml', 'toml', 'python', 'auto']).optional(),
   schema: z.record(z.string(), z.unknown()).optional(),
+  firstDispatchMeasurement: firstDispatchMeasurementSchema.optional(),
 } as const;
 
 const schemaSizeRefine = (
@@ -64,9 +87,32 @@ const schemaSizeRefine = (
   }
 };
 
+const measurementRefine = (
+  val: { firstDispatchMeasurement?: unknown; output_format?: unknown; profile?: unknown },
+  ctx: {
+    addIssue: (issue: { code: 'custom'; path: (string | number)[]; message: string }) => void;
+  },
+): void => {
+  if (val.firstDispatchMeasurement !== undefined && val.profile !== undefined) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['firstDispatchMeasurement'],
+      message: 'firstDispatchMeasurement requires a direct connector, not a cascade profile',
+    });
+  }
+  if (val.firstDispatchMeasurement !== undefined && val.output_format !== undefined) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['firstDispatchMeasurement'],
+      message: 'firstDispatchMeasurement cannot use output-guard retries',
+    });
+  }
+};
+
 export const executeRequestSchema = z
   .object(executeRequestBaseShape)
   .superRefine(schemaSizeRefine)
+  .superRefine(measurementRefine)
   .superRefine((val, ctx) => {
     const hasConnector = val.connector != null && val.connector !== '';
     const hasProfile = val.profile != null;
@@ -91,7 +137,8 @@ export type ExecuteRequestDto = z.infer<typeof executeRequestSchema>;
 const { connector: _connectorOmitted, ...perConnectorBaseShape } = executeRequestBaseShape;
 export const perConnectorExecuteSchema = z
   .object(perConnectorBaseShape)
-  .superRefine(schemaSizeRefine);
+  .superRefine(schemaSizeRefine)
+  .superRefine(measurementRefine);
 export type PerConnectorExecuteDto = z.infer<typeof perConnectorExecuteSchema>;
 
 // ─── Image generation DTO ─────────────────────────────────────────────────────
