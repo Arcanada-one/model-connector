@@ -7,6 +7,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # Security fixes for TRANSITIVE packages (e.g. nanoid via postcss) cannot be
+    # applied by editing package.json — they need the lockfile refreshed. Without
+    # allowing indirect updates the scheduled runs simply fail, as six arcanadas
+    # jobs did on 2026-08-09.
+    allow:
+      - dependency-type: "all"
     groups:
       # Grouped so routine upkeep arrives as few reviewable PRs, while
       # majors stay separate — a batched major bump hides breakage.
@@ -17,6 +23,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # Security fixes for TRANSITIVE packages (e.g. nanoid via postcss) cannot be
+    # applied by editing package.json — they need the lockfile refreshed. Without
+    # allowing indirect updates the scheduled runs simply fail, as six arcanadas
+    # jobs did on 2026-08-09.
+    allow:
+      - dependency-type: "all"
     groups:
       # Grouped so routine upkeep arrives as few reviewable PRs, while
       # majors stay separate — a batched major bump hides breakage.
@@ -27,6 +39,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Security fixes for TRANSITIVE packages (e.g. nanoid via postcss) cannot be
+    # applied by editing package.json — they need the lockfile refreshed. Without
+    # allowing indirect updates the scheduled runs simply fail, as six arcanadas
+    # jobs did on 2026-08-09.
+    allow:
+      - dependency-type: "all"
     groups:
       # Grouped so routine upkeep arrives as few reviewable PRs, while
       # majors stay separate — a batched major bump hides breakage.
