@@ -12,7 +12,12 @@ from .errors import (
     NetworkError,
     TimeoutError,
 )
-from .models import ExecuteErrorEnvelope, ExecuteRequest, ExecuteResponse
+from .models import (
+    ExecuteErrorEnvelope,
+    ExecuteRequest,
+    ExecuteResponse,
+    FirstDispatchObservationV0,
+)
 
 DEFAULT_BASE_URL = "https://connector.arcanada.one"
 DEFAULT_TIMEOUT = 120.0
@@ -35,20 +40,51 @@ def _serialize(request: ExecuteRequest | dict[str, Any]) -> dict[str, Any]:
 
 def _raise_from_response(status: int, body: Any, retry_after: float | None) -> None:
     envelope = _extract_envelope(body, retry_after)
+    observation = _extract_first_dispatch_observation(body)
     message = envelope.message if envelope else f"HTTP {status}"
     if envelope is not None and envelope.type == "guard_exhausted":
-        raise GuardExhaustedError(message, status, envelope, cause=body)
-    raise ConnectorError(message, status, envelope, cause=body)
+        raise GuardExhaustedError(
+            message,
+            status,
+            envelope,
+            cause=body,
+            first_dispatch_observation=observation,
+        )
+    raise ConnectorError(
+        message,
+        status,
+        envelope,
+        cause=body,
+        first_dispatch_observation=observation,
+    )
 
 
-def _extract_envelope(body: Any, retry_after: float | None) -> ExecuteErrorEnvelope | None:
+def _extract_first_dispatch_observation(body: Any) -> FirstDispatchObservationV0 | None:
+    if not isinstance(body, dict):
+        return None
+    candidate = body.get("firstDispatchObservation")
+    if not isinstance(candidate, dict):
+        return None
+    try:
+        return FirstDispatchObservationV0.model_validate(candidate)
+    except ValueError:
+        return None
+
+
+def _extract_envelope(
+    body: Any, retry_after: float | None
+) -> ExecuteErrorEnvelope | None:
     if not isinstance(body, dict):
         return None
     candidate = body.get("error") if isinstance(body.get("error"), dict) else body
     if not isinstance(candidate, dict) or not isinstance(candidate.get("type"), str):
         return None
     payload = dict(candidate)
-    if retry_after is not None and "retryAfter" not in payload and "retry_after" not in payload:
+    if (
+        retry_after is not None
+        and "retryAfter" not in payload
+        and "retry_after" not in payload
+    ):
         payload["retryAfter"] = retry_after
     return ExecuteErrorEnvelope.model_validate(payload)
 
@@ -132,7 +168,9 @@ class AsyncClient:
         )
         self._timeout = timeout
 
-    async def execute(self, request: ExecuteRequest | dict[str, Any]) -> ExecuteResponse:
+    async def execute(
+        self, request: ExecuteRequest | dict[str, Any]
+    ) -> ExecuteResponse:
         body = _serialize(request)
         try:
             response = await self._http.post("/execute", json=body)

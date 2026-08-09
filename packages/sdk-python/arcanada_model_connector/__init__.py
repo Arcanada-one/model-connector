@@ -16,6 +16,9 @@ from .models import (
     ExecuteRequest,
     ExecuteResponse,
     ExecuteUsage,
+    FirstDispatchMeasurementV0,
+    FirstDispatchObservationUsageV0,
+    FirstDispatchObservationV0,
     RepairReport,
 )
 
@@ -29,6 +32,9 @@ __all__ = [
     "ExecuteRequest",
     "ExecuteResponse",
     "ExecuteUsage",
+    "FirstDispatchMeasurementV0",
+    "FirstDispatchObservationUsageV0",
+    "FirstDispatchObservationV0",
     "GuardExhaustedError",
     "NetworkError",
     "RepairReport",

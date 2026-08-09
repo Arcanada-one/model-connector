@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   imageGenerateRequestSchema,
   executeRequestSchema,
+  perConnectorExecuteSchema,
   OUTPUT_FORMAT_SCHEMA_SIZE_LIMIT,
 } from './execute.dto';
 
@@ -143,6 +144,64 @@ describe('executeRequestSchema (CONN-0089 output-guard fields)', () => {
       expect(result.data.output_format).toBeUndefined();
       expect(result.data.schema).toBeUndefined();
     }
+  });
+});
+
+describe('executeRequestSchema first-dispatch measurement contract', () => {
+  const base = {
+    connector: 'openrouter',
+    prompt: 'hello',
+    firstDispatchMeasurement: {
+      version: 'first-dispatch-measurement/v0',
+      corpusId: 'corpus-v0',
+      caseId: 'case-007',
+      roleId: 'developer',
+      taskClassId: 'code-change',
+      commandId: 'implement',
+      replayIndex: 1,
+      variant: 'baseline',
+      adapterBoundary: 'arcana-agent-system/driver/first-dispatch-v0',
+    },
+  } as const;
+
+  it('accepts the closed identifier-only v0 contract', () => {
+    const result = executeRequestSchema.safeParse(base);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.firstDispatchMeasurement).toEqual(base.firstDispatchMeasurement);
+    }
+  });
+
+  it.each([
+    ['unknown version', { version: 'first-dispatch-measurement/v1' }],
+    ['unsafe identifier', { caseId: 'case with spaces' }],
+    ['zero replay', { replayIndex: 0 }],
+    ['unknown variant', { variant: 'shadow' }],
+    ['wrong adapter boundary', { adapterBoundary: 'caller/controlled' }],
+    ['unknown field', { prompt: 'must-not-live-here' }],
+  ])('rejects %s', (_label, mutation) => {
+    const result = executeRequestSchema.safeParse({
+      ...base,
+      firstDispatchMeasurement: { ...base.firstDispatchMeasurement, ...mutation },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects cascade and output-guard multi-dispatch paths', () => {
+    expect(
+      executeRequestSchema.safeParse({
+        ...base,
+        connector: undefined,
+        profile: 'low-reasoning',
+      }).success,
+    ).toBe(false);
+    expect(
+      perConnectorExecuteSchema.safeParse({
+        prompt: base.prompt,
+        firstDispatchMeasurement: base.firstDispatchMeasurement,
+        output_format: 'json',
+      }).success,
+    ).toBe(false);
   });
 });
 

@@ -10,6 +10,7 @@ from arcanada_model_connector import (
     Client,
     ConnectorError,
     ExecuteRequest,
+    FirstDispatchMeasurementV0,
     GuardExhaustedError,
     NetworkError,
     TimeoutError,
@@ -46,7 +47,9 @@ def _make_client(handler) -> Client:  # type: ignore[no-untyped-def]
 
 
 def _make_async_client(handler) -> AsyncClient:  # type: ignore[no-untyped-def]
-    return AsyncClient(api_key=API_KEY, base_url=BASE_URL, transport=httpx.MockTransport(handler))
+    return AsyncClient(
+        api_key=API_KEY, base_url=BASE_URL, transport=httpx.MockTransport(handler)
+    )
 
 
 def test_success_201() -> None:
@@ -58,6 +61,144 @@ def test_success_201() -> None:
         got = client.execute(ExecuteRequest(connector="openrouter", prompt="ping"))
         assert got.id == "run_1"
         assert got.status == "success"
+
+
+def test_first_dispatch_measurement_and_observation_round_trip() -> None:
+    measurement = FirstDispatchMeasurementV0(
+        version="first-dispatch-measurement/v0",
+        corpusId="corpus-1",
+        caseId="case-1",
+        roleId="developer",
+        taskClassId="code-change",
+        commandId="implement",
+        replayIndex=1,
+        variant="compiled",
+        adapterBoundary="arcana-agent-system/driver/first-dispatch-v0",
+    )
+    body = _success_body()
+    body["firstDispatchObservation"] = {
+        "version": "first-dispatch-observation/v0",
+        "observationId": "obs-1",
+        "measurement": measurement.model_dump(by_alias=True),
+        "connector": "openrouter",
+        "model": "mistralai/mistral-small-3.2-24b-instruct",
+        "connectorResponseId": "connector-run-1",
+        "requestPayloadDigestSha256": "a" * 64,
+        "requestPayloadBytes": 321,
+        "observationBoundary": "model-connector/service/pre-adapter-v0",
+        "usage": {
+            "inputTokens": 1,
+            "cachedInputTokens": None,
+            "outputTokens": 1,
+            "totalTokens": 2,
+            "costUsd": 0.0001,
+            "source": "CONNECTOR_RESPONSE_UNVERIFIED",
+        },
+        "latencyMs": 412,
+        "outcome": "success",
+        "persistence": "MODEL_CONNECTOR_POSTGRESQL",
+        "evidenceStatus": "PERSISTED_PRE_ADAPTER_OBSERVATION",
+        "authorization": "NOT_AUTHORIZED",
+        "receiptDigestSha256": "b" * 64,
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        posted = json.loads(request.content)
+        assert posted["firstDispatchMeasurement"] == measurement.model_dump(
+            by_alias=True
+        )
+        return httpx.Response(201, json=body)
+
+    request = ExecuteRequest(
+        connector="openrouter",
+        prompt="ping",
+        firstDispatchMeasurement=measurement,
+    )
+    with _make_client(handler) as client:
+        got = client.execute(request)
+
+    observation = got.first_dispatch_observation
+    assert observation is not None
+    assert observation.authorization == "NOT_AUTHORIZED"
+    assert observation.usage.source == "CONNECTOR_RESPONSE_UNVERIFIED"
+
+
+def test_mapped_http_logical_error_retains_unredacted_observation() -> None:
+    measurement = FirstDispatchMeasurementV0(
+        version="first-dispatch-measurement/v0",
+        corpusId="corpus-1",
+        caseId="case-error-1",
+        roleId="developer",
+        taskClassId="code-change",
+        commandId="implement",
+        replayIndex=1,
+        variant="compiled",
+        adapterBoundary="arcana-agent-system/driver/first-dispatch-v0",
+    )
+    observation_body = {
+        "version": "first-dispatch-observation/v0",
+        "observationId": "obs-error-1",
+        "measurement": measurement.model_dump(by_alias=True),
+        "connector": "openrouter",
+        "model": "bounded-model",
+        "connectorResponseId": "connector-run-error-1",
+        "requestPayloadDigestSha256": "a" * 64,
+        "requestPayloadBytes": 321,
+        "observationBoundary": "model-connector/service/pre-adapter-v0",
+        "usage": {
+            "inputTokens": 17,
+            "cachedInputTokens": None,
+            "outputTokens": 5,
+            "totalTokens": 22,
+            "costUsd": 0.001,
+            "source": "CONNECTOR_RESPONSE_UNVERIFIED",
+        },
+        "latencyMs": 42,
+        "outcome": "rate_limited",
+        "persistence": "MODEL_CONNECTOR_POSTGRESQL",
+        "evidenceStatus": "PERSISTED_PRE_ADAPTER_OBSERVATION",
+        "authorization": "NOT_AUTHORIZED",
+        "receiptDigestSha256": "b" * 64,
+    }
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        body = _success_body()
+        body.update(
+            {
+                "status": "error",
+                "error": {
+                    "type": "rate_limited",
+                    "message": "slow down",
+                    "retryable": True,
+                    "recommendation": "wait",
+                },
+                "firstDispatchObservation": observation_body,
+            }
+        )
+        return httpx.Response(429, json=body)
+
+    with _make_client(handler) as client, pytest.raises(ConnectorError) as exc_info:
+        client.execute({"connector": "openrouter", "prompt": "p"})
+
+    observation = exc_info.value.first_dispatch_observation
+    assert observation is not None
+    assert observation.authorization == "NOT_AUTHORIZED"
+    assert observation.model_dump(by_alias=True) == observation_body
+
+
+def test_first_dispatch_measurement_rejects_unsafe_identifiers() -> None:
+    with pytest.raises(ValueError):
+        FirstDispatchMeasurementV0(
+            version="first-dispatch-measurement/v0",
+            corpusId="corpus-1",
+            caseId="case with spaces",
+            roleId="developer",
+            taskClassId="code-change",
+            commandId="implement",
+            replayIndex=1,
+            variant="compiled",
+            adapterBoundary="arcana-agent-system/driver/first-dispatch-v0",
+        )
 
 
 def test_repair_report_native_pass() -> None:
@@ -73,7 +214,9 @@ def test_repair_report_native_pass() -> None:
         return httpx.Response(201, json=body)
 
     with _make_client(handler) as client:
-        got = client.execute({"connector": "openrouter", "prompt": "p", "output_format": "json"})
+        got = client.execute(
+            {"connector": "openrouter", "prompt": "p", "output_format": "json"}
+        )
         assert got.repair_report is not None
         assert got.repair_report.pass_ == "native"
         assert got.repair_report.retries == 0
@@ -92,7 +235,9 @@ def test_repair_report_guarded_pass() -> None:
         return httpx.Response(201, json=body)
 
     with _make_client(handler) as client:
-        got = client.execute({"connector": "openrouter", "prompt": "p", "output_format": "json"})
+        got = client.execute(
+            {"connector": "openrouter", "prompt": "p", "output_format": "json"}
+        )
         assert got.repair_report is not None
         assert got.repair_report.pass_ == "guarded"
         assert len(got.repair_report.strategies_applied) == 2
@@ -114,7 +259,9 @@ def test_guard_exhausted_raises() -> None:
 
     with _make_client(handler) as client:
         with pytest.raises(GuardExhaustedError):
-            client.execute({"connector": "openrouter", "prompt": "p", "output_format": "json"})
+            client.execute(
+                {"connector": "openrouter", "prompt": "p", "output_format": "json"}
+            )
 
 
 def test_401_auth_error() -> None:
@@ -249,4 +396,6 @@ async def test_async_guard_exhausted() -> None:
 
     async with _make_async_client(handler) as client:
         with pytest.raises(GuardExhaustedError):
-            await client.execute({"connector": "openrouter", "prompt": "p", "output_format": "json"})
+            await client.execute(
+                {"connector": "openrouter", "prompt": "p", "output_format": "json"}
+            )

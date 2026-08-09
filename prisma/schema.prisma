@@ -40,7 +40,42 @@ model ApiKey {
   requests          Request[]
   imageGenerations  ImageGeneration[]
   sttTranscriptions SttTranscription[]
+  firstDispatchObservations FirstDispatchObservation[]
   createdAt         DateTime           @default(now())
+}
+
+model FirstDispatchObservation {
+  id                         String   @id
+  apiKeyId                   String
+  apiKey                     ApiKey   @relation(fields: [apiKeyId], references: [id])
+  observationKeySha256       String   @unique
+  measurement                Json
+  connector                  String
+  requestedModel             String?
+  requestPayloadDigestSha256 String
+  requestPayloadBytes        Int
+  observationBoundary        String
+  connectorResponseId        String?
+  observedModel              String?
+  inputTokens                Int?
+  outputTokens               Int?
+  totalTokens                Int?
+  costUsd                    Decimal? @db.Decimal(20, 12)
+  latencyMs                  Int?
+  outcome                    String?
+  usageSource                String?
+  persistence                String
+  evidenceStatus             String
+  authorization              String
+  failureStage               String?
+  receipt                    Json?
+  receiptDigestSha256        String?  @unique
+  state                      String
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  @@index([apiKeyId, createdAt])
+  @@index([state, createdAt])
 }
 
 model ConnectorAccount {

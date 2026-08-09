@@ -1,22 +1,35 @@
-import type { ExecuteErrorEnvelope } from './types.js';
+import type { ExecuteErrorEnvelope, FirstDispatchObservationV0 } from './types.js';
 
 export class ConnectorError extends Error {
   public readonly status: number;
   public readonly envelope?: ExecuteErrorEnvelope;
   public readonly retryAfter?: number;
+  /** Unverified correlation receipt, retained outside generic cause redaction. */
+  public readonly firstDispatchObservation?: FirstDispatchObservationV0;
 
-  constructor(message: string, status: number, envelope?: ExecuteErrorEnvelope) {
+  constructor(
+    message: string,
+    status: number,
+    envelope?: ExecuteErrorEnvelope,
+    firstDispatchObservation?: FirstDispatchObservationV0,
+  ) {
     super(message);
     this.name = 'ConnectorError';
     this.status = status;
     this.envelope = envelope;
     this.retryAfter = envelope?.retryAfter;
+    this.firstDispatchObservation = firstDispatchObservation;
   }
 }
 
 export class GuardExhaustedError extends ConnectorError {
-  constructor(message: string, status: number, envelope?: ExecuteErrorEnvelope) {
-    super(message, status, envelope);
+  constructor(
+    message: string,
+    status: number,
+    envelope?: ExecuteErrorEnvelope,
+    firstDispatchObservation?: FirstDispatchObservationV0,
+  ) {
+    super(message, status, envelope, firstDispatchObservation);
     this.name = 'GuardExhaustedError';
   }
 }
