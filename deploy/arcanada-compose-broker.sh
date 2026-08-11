@@ -41,6 +41,7 @@ readonly ENV_ROOT=/etc/arcanada/deploy-env
 readonly GIT=/usr/bin/git
 readonly DOCKER=/usr/bin/docker
 readonly PNPM=/usr/bin/pnpm
+readonly NODE=/usr/bin/node
 
 # ---------------------------------------------------------------------------
 # Service table. Edit here, re-install, never parameterise.
@@ -132,6 +133,12 @@ declare -rA SMOKE=(
 declare -rA ENVKEYS=(
   [opsbot]='OPSBOT_HEARTBEAT_ENABLED'
 )
+# Fixed, aggregate-only production readback helpers. The caller can select only
+# a service and this verb; SQL, connection material, argv and output shape stay
+# inside the reviewed service checkout.
+declare -rA AGGREGATE_READBACK=(
+  [muneral]='apps/api/scripts/semantic-aggregate-readback.mjs'
+)
 
 die() { printf 'arcanada-compose-broker: %s\n' "$1" >&2; exit 1; }
 
@@ -186,14 +193,22 @@ require_checkout() {
   [[ -d "$(checkout_dir "$1")/.git" ]] || die 'checkout missing — sync first'
 }
 
-install_env() {
-  local svc="$1" dir src
+ROOT_ENV_PATH=''
+set_root_env_path() {
+  local svc="$1" src
   [[ -n "${ENVFILE[$svc]+set}" ]] || return 0
-  dir="$(checkout_dir "$svc")"
   src="$(env_path "$svc")"
   [[ -f "$src" && ! -L "$src" ]] || die "root-owned env file missing: $src"
   [[ "$(stat -c '%U' -- "$src")" == 'root' ]] || die "env file is not root-owned: $src"
-  install -m 0600 -o root -g root "$src" "$dir/.env"
+  ROOT_ENV_PATH="$src"
+}
+
+install_env() {
+  local svc="$1" dir
+  [[ -n "${ENVFILE[$svc]+set}" ]] || return 0
+  dir="$(checkout_dir "$svc")"
+  set_root_env_path "$svc"
+  install -m 0600 -o root -g root "$ROOT_ENV_PATH" "$dir/.env"
 }
 
 # A credential for a private fetch arrives on stdin, is validated, and is
@@ -414,7 +429,27 @@ cmd_env_get() {
     awk -F= -v k="$key" '$1 == k { print substr($0, length(k) + 2); exit }'
 }
 
-usage='usage: <service> {sync <sha>|pull|build|up|ps|logs [n]|migrate|tag-rotate|tag-release|image-id|verify|rollback|promote|prune|freshness|smoke|env-get <KEY>|run-deploy}'
+cmd_aggregate_readback() {
+  local svc="$1" dir script
+  [[ -n "${AGGREGATE_READBACK[$svc]+set}" ]] ||
+    die "service has no aggregate readback: $svc"
+  require_checkout "$svc"
+  dir="$(checkout_dir "$svc")"
+  script="$dir/${AGGREGATE_READBACK[$svc]}"
+  [[ -f "$script" && ! -L "$script" ]] ||
+    die 'aggregate readback helper missing or not a regular file'
+  set_root_env_path "$svc"
+  (
+    cd "$dir"
+    set -o allexport
+    # shellcheck disable=SC1090
+    . "$ROOT_ENV_PATH"
+    set +o allexport
+    "$NODE" "$script"
+  )
+}
+
+usage='usage: <service> {sync <sha>|pull|build|up|ps|logs [n]|migrate|tag-rotate|tag-release|image-id|verify|rollback|promote|prune|freshness|smoke|env-get <KEY>|aggregate-readback|run-deploy}'
 
 main() {
   [[ $# -ge 2 ]] || die "$usage"
@@ -438,6 +473,10 @@ main() {
     freshness)    [[ $# -eq 0 ]] || die 'freshness takes no arguments'; cmd_freshness "$svc" ;;
     smoke)        [[ $# -eq 0 ]] || die 'smoke takes no arguments'; cmd_smoke "$svc" ;;
     env-get)      [[ $# -eq 1 ]] || die 'env-get takes exactly one key'; cmd_env_get "$svc" "$1" ;;
+    aggregate-readback)
+                  [[ $# -eq 0 ]] || die 'aggregate-readback takes no arguments'
+                  cmd_aggregate_readback "$svc"
+                  ;;
     run-deploy)   [[ $# -eq 0 ]] || die 'run-deploy takes no arguments'; cmd_run_deploy "$svc" ;;
     *)            die "unknown action: $action" ;;
   esac

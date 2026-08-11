@@ -15,6 +15,12 @@ jobs:
       - name: Credential documentation regression
         run: bash dev-tools/credential-docs-regression.sh
 
+      - name: Fixed aggregate readback broker contract
+        run: |
+          bash -n deploy/arcanada-compose-broker.sh
+          bash -n deploy/arcanada-compose-broker.test.sh
+          bash deploy/arcanada-compose-broker.test.sh
+
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
