@@ -1,0 +1,14 @@
+{
+  "self": "https://eastus.api.cognitive.microsoft.com/speechtotext/transcriptions/11111111-1111-1111-1111-111111111111?api-version=2025-10-15",
+  "displayName": "Offline contract fixture",
+  "locale": "en-US",
+  "createdDateTime": "2026-07-23T12:00:00Z",
+  "lastActionDateTime": "2026-07-23T12:00:00Z",
+  "links": {
+    "files": "https://eastus.api.cognitive.microsoft.com/speechtotext/transcriptions/11111111-1111-1111-1111-111111111111/files?api-version=2025-10-15"
+  },
+  "properties": {
+    "timeToLiveHours": 48
+  },
+  "status": "NotStarted"
+}

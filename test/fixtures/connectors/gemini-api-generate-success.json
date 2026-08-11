@@ -1,0 +1,19 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [{ "text": "{\"answer\":" }, { "text": "42}" }],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 12,
+    "candidatesTokenCount": 5,
+    "totalTokenCount": 17
+  },
+  "modelVersion": "gemini-2.5-flash-001",
+  "responseId": "response-fixture-1"
+}

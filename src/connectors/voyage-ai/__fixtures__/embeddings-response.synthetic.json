@@ -1,0 +1,24 @@
+{
+  "_fixture": {
+    "provenance": "synthetic",
+    "captured": false,
+    "description": "Hand-authored minimal example derived from the public Voyage embeddings response schema; never returned by a provider call."
+  },
+  "object": "list",
+  "data": [
+    {
+      "object": "embedding",
+      "embedding": [0.125, -0.25, 0.5],
+      "index": 0
+    },
+    {
+      "object": "embedding",
+      "embedding": [-0.75, 0.625, 0.0],
+      "index": 1
+    }
+  ],
+  "model": "voyage-4-large",
+  "usage": {
+    "total_tokens": 8
+  }
+}

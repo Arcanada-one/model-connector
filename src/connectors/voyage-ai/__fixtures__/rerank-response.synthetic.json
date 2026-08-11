@@ -1,0 +1,24 @@
+{
+  "_fixture": {
+    "provenance": "synthetic",
+    "captured": false,
+    "description": "Hand-authored minimal example derived from the public Voyage rerank response schema; never returned by a provider call."
+  },
+  "object": "list",
+  "data": [
+    {
+      "index": 1,
+      "relevance_score": 0.9375,
+      "document": "The relevant synthetic document."
+    },
+    {
+      "index": 0,
+      "relevance_score": 0.125,
+      "document": "The less relevant synthetic document."
+    }
+  ],
+  "model": "rerank-2.5",
+  "usage": {
+    "total_tokens": 23
+  }
+}

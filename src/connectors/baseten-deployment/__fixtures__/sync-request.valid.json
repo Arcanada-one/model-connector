@@ -1,0 +1,13 @@
+{
+  "apiVersion": "inference-v1",
+  "operation": "deployment.predict.sync",
+  "hostingMode": "non_regional",
+  "modelId": "7wz2p0q",
+  "target": {
+    "kind": "production"
+  },
+  "authorizationScheme": "Bearer",
+  "payload": {
+    "prompt": "Synthetic deterministic predict input."
+  }
+}

@@ -1,0 +1,8 @@
+: synthetic_placeholder_not_provider_output
+
+data: {"id":"chatcmpl-stream-placeholder","object":"chat.completion.chunk","model":"placeholder-model","choices":[{"index":0,"delta":{"role":"assistant","content":"placeholder "},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-stream-placeholder","object":"chat.completion.chunk","model":"placeholder-model","choices":[{"index":0,"delta":{"content":"stream"},"finish_reason":"stop"}]}
+
+data: [DONE]
+

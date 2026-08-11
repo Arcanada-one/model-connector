@@ -1,0 +1,28 @@
+{
+  "fixture": {
+    "provenance": "handwritten deterministic synthetic fixture; never captured",
+    "task": "CONN-0287",
+    "source_shape": "NVIDIA embedding HTTP reference accessed 2026-07-19"
+  },
+  "response": {
+    "object": "list",
+    "data": [
+      {
+        "object": "embedding",
+        "index": 0,
+        "embedding": [0.125, -0.25, 0.5]
+      },
+      {
+        "object": "embedding",
+        "index": 1,
+        "embedding": [0.75, 0.0, -0.125]
+      }
+    ],
+    "model": "nvidia/nemotron-3-embed-1b",
+    "usage": {
+      "prompt_tokens": 7,
+      "total_tokens": 7
+    },
+    "ignored_synthetic_field": "must-not-cross-normalization"
+  }
+}

@@ -20,6 +20,11 @@ export interface ConnectorRequest {
   jsonSchema?: Record<string, unknown>;
   responseFormat?: { type: 'json_object' | 'text' };
   timeout?: number;
+  // CONN-0243 — per-request override of the service-level retry budget. When set,
+  // ConnectorsService.execute honors it over CONNECTOR_MAX_RETRIES. The failover
+  // gateway passes 0 so the inner loop makes exactly one attempt and all retry/
+  // advance logic lives in the outer free-first failover chain (no compounded backoff).
+  maxRetries?: number;
   extra?: Record<string, unknown>;
 }
 
@@ -31,6 +36,7 @@ export interface ConnectorError {
   retryAfter?: number;
   retryable: boolean;
   recommendation: ErrorAction;
+  details?: unknown;
 }
 
 export interface ConnectorResponse {
@@ -159,6 +165,22 @@ export interface CircuitBreakerResetEntry {
   previousState: 'closed' | 'open' | 'half_open';
 }
 
+// CONN-1646 — explicit, controlled evidence for one dynamic model-list
+// observation. Failure reasons are deliberately finite so raw provider
+// payloads, URLs, credentials, and database details cannot cross boundaries.
+export type CatalogRefreshResult =
+  | {
+      status: 'success';
+      source: 'provider-api';
+      observedAt: Date;
+    }
+  | {
+      status: 'failed';
+      source: 'provider-api';
+      checkedAt: Date;
+      reason: 'http' | 'network' | 'parse' | 'empty' | 'unexpected';
+    };
+
 export interface IConnector {
   readonly name: string;
   readonly type: 'cli' | 'api';
@@ -167,4 +189,5 @@ export interface IConnector {
   getStatus(): Promise<ConnectorStatus>;
   getCapabilities(): ConnectorCapabilities;
   resetCircuitBreaker(model?: string): CircuitBreakerResetEntry[];
+  refreshCatalogModels?(): Promise<CatalogRefreshResult>;
 }

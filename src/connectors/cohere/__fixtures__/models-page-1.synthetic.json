@@ -1,0 +1,29 @@
+{
+  "models": [
+    {
+      "name": "synthetic-chat-current",
+      "is_deprecated": false,
+      "endpoints": ["chat"],
+      "context_length": 12000
+    },
+    {
+      "name": "synthetic-embed-current",
+      "is_deprecated": false,
+      "endpoints": ["embed"],
+      "context_length": 8000
+    },
+    {
+      "name": "synthetic-shared-current",
+      "is_deprecated": false,
+      "endpoints": ["chat", "embed", "rerank"],
+      "context_length": 16000
+    },
+    {
+      "name": "synthetic-embed-deprecated",
+      "is_deprecated": true,
+      "endpoints": ["embed"],
+      "context_length": 4000
+    }
+  ],
+  "next_page_token": "synthetic-page-2"
+}

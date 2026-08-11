@@ -1,0 +1,28 @@
+[
+  {
+    "results": [
+      {
+        "alternatives": [
+          {
+            "transcript": "synthetic interim"
+          }
+        ],
+        "isFinal": false,
+        "stability": 0.8
+      }
+    ]
+  },
+  {
+    "results": [
+      {
+        "alternatives": [
+          {
+            "transcript": "synthetic final",
+            "confidence": 0.95
+          }
+        ],
+        "isFinal": true
+      }
+    ]
+  }
+]

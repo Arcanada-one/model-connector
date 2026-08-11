@@ -4,7 +4,11 @@
 // Models: GET /v2/models  → top-level JSON array (not {data:[]})
 import { Logger } from '@nestjs/common';
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
-import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
+import {
+  CatalogRefreshResult,
+  ConnectorCapabilities,
+  ConnectorRequest,
+} from '../interfaces/connector.interface';
 
 interface OrqChatResponse {
   id: string;
@@ -132,44 +136,55 @@ export class OrqConnector extends BaseApiConnector {
    * or 0 qualifying entries — leaves _dynamicModels as the static seed so
    * the catalog is never empty. Mirrors openrouter.refreshFreeModels() pattern.
    */
-  async refreshModels(): Promise<void> {
+  override async refreshModels(): Promise<CatalogRefreshResult> {
+    const checkedAt = new Date();
+    let response: Response;
     try {
       const url = `${this.getBaseUrl()}/models`;
-      const response = await fetch(url, {
+      response = await fetch(url, {
         headers: this.getHeaders(),
         signal: AbortSignal.timeout(10_000),
       });
 
       if (!response.ok) {
         this.logger.warn(`orq /models returned ${response.status} — keeping seed list`);
-        return;
+        return { status: 'failed', source: 'provider-api', checkedAt, reason: 'http' };
       }
-
-      const json = (await response.json()) as unknown;
-
-      if (!Array.isArray(json)) {
-        this.logger.warn('orq /models response is not an array — keeping seed list');
-        return;
-      }
-
-      const ids: string[] = [];
-      for (const entry of json as OrqModelEntry[]) {
-        if (typeof entry?.model_id !== 'string') continue;
-        if (entry.model_type === 'chat' && entry.is_active === true) {
-          ids.push(entry.model_id);
-        }
-      }
-
-      if (ids.length === 0) {
-        this.logger.warn('orq /models yielded 0 chat+active models — keeping seed list');
-        return;
-      }
-
-      this._dynamicModels = ids;
-      this.logger.log(`orq model refresh: ${ids.length} chat models discovered`);
-    } catch (err) {
-      this.logger.warn(`orq model refresh failed: ${(err as Error).message} — keeping seed list`);
+    } catch {
+      this.logger.warn('orq model refresh failed: reason=network — keeping seed list');
+      return { status: 'failed', source: 'provider-api', checkedAt, reason: 'network' };
     }
+
+    let json: unknown;
+    try {
+      json = await response.json();
+    } catch {
+      this.logger.warn('orq model refresh failed: reason=parse — keeping seed list');
+      return { status: 'failed', source: 'provider-api', checkedAt, reason: 'parse' };
+    }
+
+    if (!Array.isArray(json)) {
+      this.logger.warn('orq /models response is not an array — keeping seed list');
+      return { status: 'failed', source: 'provider-api', checkedAt, reason: 'parse' };
+    }
+
+    const ids: string[] = [];
+    for (const entry of json as OrqModelEntry[]) {
+      if (typeof entry?.model_id !== 'string') continue;
+      if (entry.model_type === 'chat' && entry.is_active === true) {
+        ids.push(entry.model_id);
+      }
+    }
+
+    if (ids.length === 0) {
+      this.logger.warn('orq /models yielded 0 chat+active models — keeping seed list');
+      return { status: 'failed', source: 'provider-api', checkedAt, reason: 'empty' };
+    }
+
+    this._dynamicModels = ids;
+    const observedAt = new Date();
+    this.logger.log(`orq model refresh: ${ids.length} chat models discovered`);
+    return { status: 'success', source: 'provider-api', observedAt };
   }
 
   getCapabilities(): ConnectorCapabilities {

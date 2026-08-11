@@ -1,0 +1,21 @@
+{
+  "id": "synthetic-completion-001",
+  "object": "chat.completion",
+  "created": 1700000000,
+  "model": "synthetic-model",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "synthetic response"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 4,
+    "completion_tokens": 2,
+    "total_tokens": 6
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "alternatives": [
+        {
+          "transcript": "synthetic protocol fixture",
+          "confidence": 0.97
+        }
+      ],
+      "resultEndTime": "1.200s",
+      "languageCode": "en-US"
+    }
+  ],
+  "totalBilledTime": "2s",
+  "requestId": "1000000000000000001"
+}

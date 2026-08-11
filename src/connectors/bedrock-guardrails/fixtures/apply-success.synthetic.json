@@ -1,0 +1,21 @@
+{
+  "action": "NONE",
+  "actionReason": "synthetic no intervention",
+  "assessments": [],
+  "guardrailCoverage": {
+    "textCharacters": {
+      "guarded": 14,
+      "total": 14
+    }
+  },
+  "outputs": [
+    {
+      "text": "synthetic safe output"
+    }
+  ],
+  "usage": {
+    "contentPolicyUnits": 1,
+    "topicPolicyUnits": 0,
+    "wordPolicyUnits": 0
+  }
+}

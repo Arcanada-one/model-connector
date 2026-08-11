@@ -1,7 +1,12 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron, Interval } from '@nestjs/schedule';
 import { ConnectorsService } from './connectors.service';
-import { CatalogRepository } from './catalog.repository';
+import {
+  CatalogRepository,
+  CatalogSnapshotConflictError,
+  type ApplyProviderSnapshotInput,
+  type ModelCatalogUpsert,
+} from './catalog.repository';
 import { entryToRow } from './catalog-mapper';
 import { getConfig } from '../config/env.schema';
 import { CATALOG_REDIS_CLIENT, type ICatalogRedis } from './catalog-redis.token';
@@ -75,10 +80,8 @@ export class CatalogRefreshService implements OnModuleInit {
     // provider and must not delay Nest's bootstrap sequence).
     try {
       await this.providerAccess.seedDefaults(this.connectorsService.listNames());
-    } catch (err) {
-      this.logger.warn(
-        `seedDefaults failed on boot (continuing with existing access state): ${err}`,
-      );
+    } catch {
+      this.logger.warn('seedDefaults failed on boot: reason=database');
     }
     void this.fullRefresh();
   }
@@ -91,50 +94,94 @@ export class CatalogRefreshService implements OnModuleInit {
     }
     this.running = true;
     try {
-      // Best-effort: refreshModels() (per BaseApiConnector) never throws and
-      // refreshAllProviderModels() additionally allSettled's across
-      // connectors, but we still guard the whole cycle below so a totally
-      // unexpected rejection can't skip the persist step.
-      await this.connectorsService.refreshAllProviderModels().catch((err) => {
-        this.logger.warn(`refreshAllProviderModels failed (continuing with cached models): ${err}`);
+      const cycleObservedAt = new Date();
+      const refreshResults = await this.connectorsService.refreshAllProviderModels().catch(() => {
+        this.logger.warn('refreshAllProviderModels failed: reason=unexpected');
+        return new Map();
       });
-
-      // CONN-0244's READ gate already ran inside buildCatalogSnapshot() — a
-      // `read=false` provider's models are simply absent from `entries`.
-      // markAbsentExcept below will then flag any of its prior rows absent
-      // (hidden from the live catalog) since they're no longer in `rows`.
       const entries = await this.connectorsService.buildCatalogSnapshot();
-      const rows = entries.map((entry) =>
-        entryToRow(entry, { useEnabled: this.connectorsService.canUse(entry.connector) }),
-      );
-
-      // QA FIX A (Finding 2, prod catalog-wipe) — an EMPTY assembly (every
-      // provider transiently unreachable, or every provider currently
-      // read=false) must NOT be treated as "nothing is live anymore". Calling
-      // markAbsentExcept([]) here would flag EVERY existing row absent,
-      // blanking the live catalog on a single bad cycle. Skip the persist
-      // step entirely and keep last-known-good rows — the next cycle (or
-      // statusRefresh) will recover once a provider is reachable/readable
-      // again.
-      if (rows.length === 0) {
-        this.logger.warn(
-          'fullRefresh: empty catalog snapshot — keeping last-known rows, skipping upsert/markAbsent this cycle',
+      const rowsByConnector = new Map<string, ModelCatalogUpsert[]>();
+      for (const entry of entries) {
+        // Defensive second READ check: buildCatalogSnapshot already filters
+        // registered connectors, but persistence never trusts assembly alone.
+        if (!this.connectorsService.canRead(entry.connector)) continue;
+        const rows = rowsByConnector.get(entry.connector) ?? [];
+        rows.push(
+          entryToRow(entry, {
+            useEnabled: this.connectorsService.canUse(entry.connector),
+          }),
         );
-        return;
+        rowsByConnector.set(entry.connector, rows);
       }
 
-      await this.catalogRepo.upsertSnapshot(rows);
-      await this.catalogRepo.markAbsentExcept(
-        rows.map((r) => ({ connector: r.connector, model: r.model })),
-      );
+      const registered = new Set(this.connectorsService.listNames());
+      const dynamicProviders = new Set(this.connectorsService.listDynamicCatalogProviderNames());
+      const providers = new Set([
+        ...Array.from(registered).filter((name) => this.connectorsService.canRead(name)),
+        ...rowsByConnector.keys(),
+        ...refreshResults.keys(),
+      ]);
+      let persistedRows = 0;
+
+      for (const connector of Array.from(providers).sort()) {
+        if (!this.connectorsService.canRead(connector)) continue;
+        const rows = rowsByConnector.get(connector) ?? [];
+        const refresh = refreshResults.get(connector);
+
+        if (refresh?.status === 'failed') {
+          await this.catalogRepo.markProviderStale(connector, refresh.checkedAt);
+          continue;
+        }
+
+        if (refresh?.status === 'success') {
+          // A connector claiming successful enumeration but disappearing from
+          // assembly is an integration gap, not proof that every model was
+          // removed. Preserve LKG and defer.
+          if (rows.length === 0) {
+            await this.catalogRepo.markProviderStale(connector, refresh.observedAt);
+            this.logger.warn(`catalog snapshot deferred for ${connector}: reason=assembly-gap`);
+            continue;
+          }
+          persistedRows += await this.applyProviderSafely({
+            connector,
+            rows,
+            source: 'provider-api',
+            freshness: 'fresh',
+            observedAt: refresh.observedAt,
+            authoritative: true,
+          });
+          continue;
+        }
+
+        if (dynamicProviders.has(connector)) {
+          // No explicit observation is not evidence that buildCatalogSnapshot's
+          // current in-memory rows are the immutable static floor. They may be
+          // last-known dynamic cache. Preserve DB truth and defer.
+          await this.catalogRepo.markProviderStale(connector, cycleObservedAt);
+          this.logger.warn(
+            `catalog snapshot deferred for ${connector}: reason=missing-observation`,
+          );
+          continue;
+        }
+
+        if (rows.length === 0) continue;
+        persistedRows += await this.applyProviderSafely({
+          connector,
+          rows,
+          source: registered.has(connector) ? 'static-capabilities' : 'static-modality-catalog',
+          freshness: 'static',
+          observedAt: cycleObservedAt,
+          authoritative: true,
+        });
+      }
 
       // Pick up any operator-side DB toggle made directly in provider_access
       // since the last cycle, and invalidate the short-TTL catalog cache.
       await this.providerAccess.refresh();
       await this.invalidateCatalogCache();
-      this.logger.log(`fullRefresh persisted ${rows.length} model_catalog rows`);
-    } catch (err) {
-      this.logger.error(`fullRefresh cycle failed: ${err}`);
+      this.logger.log(`fullRefresh persisted ${persistedRows} model_catalog rows`);
+    } catch {
+      this.logger.error('fullRefresh cycle failed: reason=unexpected');
     } finally {
       this.running = false;
     }
@@ -153,8 +200,8 @@ export class CatalogRefreshService implements OnModuleInit {
             status.healthy ? 'online' : 'offline',
             lastChecked,
           );
-        } catch (err) {
-          this.logger.warn(`getStatus failed for ${name} — marking offline: ${err}`);
+        } catch {
+          this.logger.warn(`getStatus failed for ${name}: reason=provider`);
           await this.catalogRepo.updateProviderStatus(name, 'offline', lastChecked);
         }
       }),
@@ -166,10 +213,24 @@ export class CatalogRefreshService implements OnModuleInit {
     try {
       const keys = await this.catalogRedis.keys('conn:catalog:*');
       await Promise.all(keys.map((key) => this.catalogRedis!.del(key)));
-    } catch (err) {
+    } catch {
       // Non-fatal — the short cache TTL (CATALOG_CACHE_TTL_MS, default 30s)
       // self-heals staleness even if invalidation fails.
-      this.logger.warn(`Catalog cache invalidation failed (non-fatal): ${err}`);
+      this.logger.warn('Catalog cache invalidation failed: reason=cache');
+    }
+  }
+
+  private async applyProviderSafely(input: ApplyProviderSnapshotInput): Promise<number> {
+    try {
+      const applied = await this.catalogRepo.applyProviderSnapshot(input);
+      return applied.rowCount;
+    } catch (error) {
+      if (error instanceof CatalogSnapshotConflictError) {
+        this.logger.warn(`catalog snapshot deferred for ${input.connector}: code=${error.code}`);
+      } else {
+        this.logger.warn(`catalog snapshot deferred for ${input.connector}: reason=database`);
+      }
+      return 0;
     }
   }
 }

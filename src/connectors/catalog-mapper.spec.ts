@@ -49,6 +49,12 @@ function baseRow(overrides: Partial<ModelCatalogRow> = {}): ModelCatalogRow {
     firstSeen: new Date('2026-07-01T00:00:00.000Z'),
     lastSeen: new Date('2026-07-05T16:00:00.000Z'),
     absent: false,
+    snapshotId: 'snapshot-1',
+    contentFingerprint: 'a'.repeat(64),
+    observedAt: new Date('2026-07-05T15:59:00.000Z'),
+    source: 'provider-api',
+    freshness: 'fresh',
+    absentSince: null,
     createdAt: new Date('2026-07-01T00:00:00.000Z'),
     updatedAt: new Date('2026-07-05T16:00:00.000Z'),
     ...overrides,
@@ -294,6 +300,31 @@ describe('rowToEntry (CONN-0245 — getCatalog read path)', () => {
     expect(entry.tags).toContain('modality:chat');
     expect(entry.tags).toContain('cost:free');
     expect(entry.rateLimits).toBeNull();
+    expect(entry).toMatchObject({
+      snapshotId: 'snapshot-1',
+      contentFingerprint: 'a'.repeat(64),
+      observedAt: '2026-07-05T15:59:00.000Z',
+      source: 'provider-api',
+      freshness: 'fresh',
+    });
+  });
+
+  it('exposes honest nullable identity for legacy rows', () => {
+    expect(
+      rowToEntry(
+        baseRow({
+          snapshotId: null,
+          contentFingerprint: null,
+          source: 'legacy-unknown',
+          freshness: 'unknown',
+        }),
+      ),
+    ).toMatchObject({
+      snapshotId: null,
+      contentFingerprint: null,
+      source: 'legacy-unknown',
+      freshness: 'unknown',
+    });
   });
 
   it('available reflects row.status === "online" (breaker/reachability already baked in at snapshot time)', () => {

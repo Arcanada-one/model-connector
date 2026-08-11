@@ -8,6 +8,10 @@ import {
   type ModelModality,
 } from './dto/catalog.dto';
 import { IMAGE_CAPABILITIES } from './image-generation/capabilities';
+import { parseEnvBool } from '../config/env.schema';
+import { DEEPGRAM_AURA_MODEL_IDS } from '../speech/tts/deepgram-aura-models';
+import { TOGETHER_ORPHEUS_MODEL_ID } from '../speech/tts/together-orpheus.metadata';
+import { TOGETHER_CARTESIA_SONIC_2_MODEL_ID } from '../speech/tts/together-cartesia-sonic-2.metadata';
 
 // ─── CONN-0232 — non-chat modality completeness ──────────────────────────────
 //
@@ -148,6 +152,35 @@ export class ModalityCatalogService {
         modality: 'text_to_speech',
         endpoint: ENDPOINT_TTS,
         available: true,
+      }),
+    );
+    for (const model of DEEPGRAM_AURA_MODEL_IDS) {
+      entries.push(
+        makeEntry({
+          connector: 'deepgram-tts',
+          model,
+          modality: 'text_to_speech',
+          endpoint: ENDPOINT_TTS,
+          available: parseEnvBool(process.env.TTS_PROVIDER_DEEPGRAM_ENABLED),
+        }),
+      );
+    }
+    entries.push(
+      makeEntry({
+        connector: 'together-tts',
+        model: TOGETHER_ORPHEUS_MODEL_ID,
+        modality: 'text_to_speech',
+        endpoint: ENDPOINT_TTS,
+        available: parseEnvBool(process.env.TTS_PROVIDER_TOGETHER_ENABLED),
+      }),
+    );
+    entries.push(
+      makeEntry({
+        connector: 'together-tts',
+        model: TOGETHER_CARTESIA_SONIC_2_MODEL_ID,
+        modality: 'text_to_speech',
+        endpoint: ENDPOINT_TTS,
+        available: parseEnvBool(process.env.TTS_PROVIDER_TOGETHER_ENABLED),
       }),
     );
 

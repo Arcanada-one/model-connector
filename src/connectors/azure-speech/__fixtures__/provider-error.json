@@ -1,0 +1,15 @@
+{
+  "code": "InvalidRequest",
+  "message": "The request was invalid.",
+  "target": "audio",
+  "details": [
+    {
+      "code": "InvalidAudioFormat",
+      "message": "The format of input audio is not supported."
+    }
+  ],
+  "innerError": {
+    "code": "InvalidAudioFormat",
+    "message": "Unsupported fixture format."
+  }
+}

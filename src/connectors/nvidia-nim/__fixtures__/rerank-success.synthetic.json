@@ -1,0 +1,24 @@
+{
+  "fixture": {
+    "provenance": "handwritten deterministic synthetic fixture; never captured",
+    "task": "CONN-0287",
+    "source_shape": "NVIDIA reranking HTTP reference accessed 2026-07-19"
+  },
+  "response": {
+    "rankings": [
+      {
+        "index": 1,
+        "logit": 3.25
+      },
+      {
+        "index": 0,
+        "logit": -0.5
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 11,
+      "total_tokens": 11
+    },
+    "ignored_synthetic_field": "must-not-cross-normalization"
+  }
+}

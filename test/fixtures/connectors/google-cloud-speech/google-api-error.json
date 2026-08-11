@@ -1,0 +1,12 @@
+{
+  "error": {
+    "code": 400,
+    "message": "Synthetic request rejected",
+    "status": "INVALID_ARGUMENT",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.BadRequest"
+      }
+    ]
+  }
+}

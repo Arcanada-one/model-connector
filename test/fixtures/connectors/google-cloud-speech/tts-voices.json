@@ -1,0 +1,12 @@
+{
+  "voices": [
+    {
+      "languageCodes": [
+        "en-US"
+      ],
+      "name": "synthetic-fixture-voice",
+      "ssmlGender": "NEUTRAL",
+      "naturalSampleRateHertz": 24000
+    }
+  ]
+}

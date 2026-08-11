@@ -2,7 +2,7 @@
 
 Single-glance comparison of all Model Connector backends. Use this to pick the right connector for a workload.
 
-> Last updated: 2026-04-29 (Grok added)
+> Last updated: 2026-07-11 (native Mistral added)
 
 ## Capability Table
 
@@ -11,10 +11,14 @@ Single-glance comparison of all Model Connector backends. Use this to pick the r
 | `claude-code` | CLI | `sonnet` | ✅ | ✅ | ✅ | 4 | Subscription (Max plan) | ~4s | subscription |
 | `cursor` | CLI | `auto` | ❌ | ⚠️ prompt | ✅ | **1** | Subscription | ~10s | subscription |
 | `gemini` | CLI | `gemini-2.5-flash` | ❌ | ⚠️ prompt | ✅ | 4 | Google OAuth | ~8–22s | free tier |
+| `gemini-api` | API | `gemini-2.5-flash` | ✅ | ✅ | ❌ | 10 | `GEMINI_API_KEY` | provider-dependent | provider quota/pricing |
 | `codex` | CLI | `o4-mini` | ❌¹ | ⚠️ prompt | ✅ | 4 | OpenAI OAuth or `OPENAI_API_KEY` | ~6–12s | ChatGPT-tier |
 | `openrouter` | API | (no default — caller must set) | ✅ | ✅ | ✅ | 10 | `OPENROUTER_API_KEY` | ~0.5–1s | per-model |
 | `groq` | API | `llama-3.3-70b-versatile` | ✅ | ✅ | ✅ | 10 | `GROQ_API_KEY` | ~0.15–0.7s | free tier (28.8K min/day) |
+| `azure-openai` | API | configured deployment | ❌ | ✅ | ✅ | 10 | `AZURE_OPENAI_API_KEY` or injected Entra provider | deployment-dependent | classic dated data-plane API `2024-10-21` |
+| `fireworks` | API | `accounts/fireworks/models/llama-v3p1-8b-instruct` | ❌ | ❌ | ❌ | 10 | `FIREWORKS_API_KEY` | provider-dependent | usage-based; adaptive limits |
 | `grok` | API | `grok-4.3` | ✅ | ✅ | ✅ | 10 | `XAI_API_KEY` | ~0.5–2s | per-token (xAI pricing) |
+| `mistral` | API | `mistral-small-latest` | ❌ | ✅ | ❌ | 10 | `MISTRAL_API_KEY` | provider-dependent | per-token |
 | `embedding` | API | `bge-m3` | n/a | n/a | ❌ | 8 | Tailscale internal | ~0.2s | free (self-hosted) |
 
 ¹ Codex CLI supports `--output-schema` via raw flag, but Model Connector doesn't surface it through `responseFormat` yet; treat as `❌` for now.
@@ -23,7 +27,10 @@ Single-glance comparison of all Model Connector backends. Use this to pick the r
 
 ### "I need structured output (json_schema strict mode)"
 
-→ **`openrouter`**, **`groq`**, **`grok`**, or **`claude-code`** (only these enforce schema server-side).
+→ **`openrouter`**, **`groq`**, **`grok`**, **`gemini-api`**, or **`claude-code`** (these enforce schema server-side).
+→ **`openrouter`**, **`groq`**, **`grok`**, or **`claude-code`** (only these currently expose strict schema enforcement).
+
+Mistral supports native JSON Schema and tools, but this adapter currently exposes only JSON-object mode through Model Connector's shared request contract.
 
 CLI connectors that prompt-inject JSON instructions (`cursor`, `gemini`, `codex` via responseFormat) are NOT a substitute — they may return malformed JSON, no schema validation. Don't use them as drop-ins for Graphiti, Cognee, LangChain structured agents.
 

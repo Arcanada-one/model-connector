@@ -1,0 +1,8 @@
+{
+  "audioBase64": "SUQzBAAAAAA=",
+  "headers": {
+    "content-type": "audio/mpeg",
+    "x-amzn-requestcharacters": "11",
+    "x-amzn-requestid": "req-polly-sync"
+  }
+}

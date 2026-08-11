@@ -1,5 +1,20 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  diffCatalogRows,
+  fingerprintProviderSnapshot,
+  prepareCatalogRows,
+  type PreviousCatalogRow,
+} from './catalog-snapshot';
+
+export type CatalogSource =
+  | 'provider-api'
+  | 'static-capabilities'
+  | 'static-modality-catalog'
+  | 'legacy-unknown';
+
+export type CatalogFreshness = 'fresh' | 'stale' | 'static' | 'unknown';
 
 // CONN-0245 — DB-as-source-of-truth model catalog. Write shape used by the
 // cron (CatalogRefreshService) when persisting a snapshot row. Deliberately
@@ -44,9 +59,48 @@ export type ModelCatalogRow = ModelCatalogUpsert & {
   firstSeen: Date;
   lastSeen: Date;
   absent: boolean;
+  snapshotId: string | null;
+  contentFingerprint: string | null;
+  observedAt: Date;
+  source: CatalogSource;
+  freshness: CatalogFreshness;
+  absentSince: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
+
+export interface ApplyProviderSnapshotInput {
+  connector: string;
+  rows: ModelCatalogUpsert[];
+  source: Exclude<CatalogSource, 'legacy-unknown'>;
+  freshness: Extract<CatalogFreshness, 'fresh' | 'static'>;
+  observedAt: Date;
+  authoritative: boolean;
+}
+
+export interface AppliedCatalogSnapshot {
+  snapshotId: string;
+  fingerprint: string;
+  rowCount: number;
+}
+
+export class CatalogSnapshotConflictError extends Error {
+  readonly code = 'CATALOG_SNAPSHOT_CONFLICT';
+
+  constructor() {
+    super('Catalog snapshot conflict; retry on the next refresh cycle');
+    this.name = 'CatalogSnapshotConflictError';
+  }
+}
+
+export class CatalogSnapshotValidationError extends Error {
+  readonly code = 'CATALOG_SNAPSHOT_INVALID_INPUT';
+
+  constructor() {
+    super('Catalog snapshot input is invalid');
+    this.name = 'CatalogSnapshotValidationError';
+  }
+}
 
 /**
  * Narrow structural interface — the only method `ConnectorsService.getCatalog()`
@@ -68,48 +122,38 @@ export class CatalogRepository implements CatalogRepositoryLike {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Upsert a full snapshot of rows by (connector, model). `firstSeen` is set
-   * only in the `create` branch — an existing row's `firstSeen` is therefore
-   * never overwritten by a later refresh cycle. `lastSeen` and `absent:false`
-   * are refreshed on every upsert (create AND update) since a row upserted
-   * this cycle was, by definition, just seen.
+   * Apply one provider observation atomically. The before-state read,
+   * fingerprinted snapshot identity, row mutations, provider-only tombstones,
+   * and drift events share one serializable view.
+   *
+   * Prisma P2034 write conflicts retry the complete transaction, never a
+   * partial step. Exhaustion surfaces a sanitized domain error so callers can
+   * defer this provider without leaking database details.
    */
-  async upsertSnapshot(rows: ModelCatalogUpsert[]): Promise<void> {
-    const now = new Date();
-    for (const row of rows) {
-      await this.prisma.modelCatalog.upsert({
-        where: { connector_model: { connector: row.connector, model: row.model } },
-        create: { ...row, firstSeen: now, lastSeen: now, absent: false },
-        update: { ...row, lastSeen: now, absent: false },
-      });
+  async applyProviderSnapshot(input: ApplyProviderSnapshotInput): Promise<AppliedCatalogSnapshot> {
+    this.validateProviderSnapshotInput(input);
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        return await this.applyProviderSnapshotTransaction(input);
+      } catch (error) {
+        if (!this.isSerializableConflict(error)) {
+          throw error;
+        }
+        if (attempt === 3) {
+          throw new CatalogSnapshotConflictError();
+        }
+        await new Promise((resolve) => setTimeout(resolve, attempt * 5));
+      }
     }
+    throw new CatalogSnapshotConflictError();
   }
 
-  /**
-   * Flip `absent=true` for every non-absent row whose (connector, model) is
-   * NOT in `seen` this cycle. Rows are NEVER deleted — a model that
-   * disappears from a provider's live list keeps its last-known pricing/caps
-   * for history/audit, it is just excluded from `findAll()` (the live read
-   * path) going forward.
-   */
-  async markAbsentExcept(seen: Array<{ connector: string; model: string }>): Promise<void> {
-    if (seen.length === 0) {
-      // Nothing seen this cycle at all (e.g. every provider failed) — mark
-      // everything currently live as absent rather than leaving stale
-      // "online" rows with no corresponding snapshot entry.
-      await this.prisma.modelCatalog.updateMany({
-        where: { absent: false },
-        data: { absent: true },
-      });
-      return;
-    }
-    await this.prisma.modelCatalog.updateMany({
-      where: {
-        absent: false,
-        NOT: { OR: seen.map((s) => ({ connector: s.connector, model: s.model })) },
-      },
-      data: { absent: true },
+  async markProviderStale(connector: string, checkedAt: Date): Promise<number> {
+    const result = await this.prisma.modelCatalog.updateMany({
+      where: { connector, absent: false },
+      data: { freshness: 'stale', lastChecked: checkedAt },
     });
+    return result.count;
   }
 
   /**
@@ -138,5 +182,121 @@ export class CatalogRepository implements CatalogRepositoryLike {
     return this.prisma.modelCatalog.findMany({ where: { absent: false } }) as Promise<
       ModelCatalogRow[]
     >;
+  }
+
+  private async applyProviderSnapshotTransaction(
+    input: ApplyProviderSnapshotInput,
+  ): Promise<AppliedCatalogSnapshot> {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const previousRows = (await tx.modelCatalog.findMany({
+          where: { connector: input.connector },
+        })) as PreviousCatalogRow[];
+        const preparedRows = prepareCatalogRows(input.rows);
+        const fingerprint = fingerprintProviderSnapshot(input.connector, preparedRows);
+        const snapshot = await tx.catalogSnapshot.create({
+          data: {
+            connector: input.connector,
+            fingerprint,
+            source: input.source,
+            observedAt: input.observedAt,
+            freshness: input.freshness,
+            authoritative: input.authoritative,
+            rowCount: preparedRows.length,
+          },
+        });
+        const drift = input.authoritative ? diffCatalogRows(previousRows, preparedRows) : [];
+        const previousModels = new Set(previousRows.map((row) => row.model));
+
+        for (const prepared of preparedRows) {
+          // A static boot floor is evidence only for previously unknown rows.
+          // It must never overwrite or resurrect authoritative historical
+          // state (especially an already-absent row) after a dynamic failure.
+          if (!input.authoritative && previousModels.has(prepared.row.model)) {
+            continue;
+          }
+          const persistence = {
+            ...prepared.row,
+            snapshotId: snapshot.id,
+            contentFingerprint: prepared.contentFingerprint,
+            observedAt: input.observedAt,
+            source: input.source,
+            freshness: input.freshness,
+            lastSeen: input.observedAt,
+            absent: false,
+            absentSince: null,
+          };
+          await tx.modelCatalog.upsert({
+            where: {
+              connector_model: {
+                connector: input.connector,
+                model: prepared.row.model,
+              },
+            },
+            create: {
+              ...persistence,
+              firstSeen: input.observedAt,
+            },
+            update: persistence,
+          });
+        }
+
+        if (input.authoritative) {
+          await tx.modelCatalog.updateMany({
+            where: {
+              connector: input.connector,
+              absent: false,
+              model: { notIn: preparedRows.map(({ row }) => row.model) },
+            },
+            data: {
+              absent: true,
+              absentSince: input.observedAt,
+              snapshotId: snapshot.id,
+            },
+          });
+
+          if (drift.length > 0) {
+            await tx.catalogDriftEvent.createMany({
+              data: drift.map((event) => ({
+                snapshotId: snapshot.id,
+                connector: input.connector,
+                model: event.model,
+                changeType: event.changeType,
+                beforeFingerprint: event.beforeFingerprint,
+                afterFingerprint: event.afterFingerprint,
+                changedFields: event.changedFields,
+                observedAt: input.observedAt,
+              })),
+            });
+          }
+        }
+
+        return {
+          snapshotId: snapshot.id,
+          fingerprint,
+          rowCount: preparedRows.length,
+        };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  }
+
+  private isSerializableConflict(error: unknown): boolean {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: unknown }).code === 'P2034'
+    );
+  }
+
+  private validateProviderSnapshotInput(input: ApplyProviderSnapshotInput): void {
+    const models = new Set<string>();
+    for (const row of input.rows) {
+      if (row.connector !== input.connector || models.has(row.model)) {
+        throw new CatalogSnapshotValidationError();
+      }
+      models.add(row.model);
+    }
   }
 }

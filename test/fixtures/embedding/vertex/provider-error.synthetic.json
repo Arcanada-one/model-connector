@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": 401,
+    "status": "UNAUTHENTICATED",
+    "message": "Synthetic rejection for Authorization: Bearer synthetic-provider-bearer"
+  }
+}

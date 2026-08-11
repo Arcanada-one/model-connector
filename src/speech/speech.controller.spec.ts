@@ -155,6 +155,86 @@ describe('SpeechController', () => {
     expect((sent.body as { error_code: string }).error_code).toBe('upstream_unavailable');
   });
 
+  it.each(['aura-asteria-en', 'aura-luna-en', 'aura-stella-en'] as const)(
+    'TTS Deepgram %s request uses the existing binary response path',
+    async (model) => {
+      const audio = new Uint8Array([0x52, 0x49, 0x46, 0x46]).buffer;
+      serviceMock.tts.mockResolvedValueOnce({
+        kind: 'proxied',
+        result: {
+          status: 200,
+          headers: { 'content-type': 'audio/wav' },
+          body: audio,
+          contentType: 'audio/wav',
+        },
+      });
+
+      const request = {
+        provider: 'deepgram' as const,
+        model,
+        text: 'hello',
+      };
+      const { reply, sent } = makeReply();
+      await controller.tts(request, 'req-deepgram', {} as FastifyRequest, reply);
+
+      expect(serviceMock.tts).toHaveBeenCalledWith(request, 'req-deepgram');
+      expect(sent.status).toBe(200);
+      expect((sent.headers as Record<string, string>)['content-type']).toBe('audio/wav');
+      expect(Buffer.isBuffer(sent.body)).toBe(true);
+    },
+  );
+  it('TTS Together request preserves the exact discriminated body', async () => {
+    const outcome: ProxyOutcome = {
+      kind: 'proxied',
+      result: {
+        status: 200,
+        headers: { 'content-type': 'audio/wav' },
+        body: new Uint8Array([0x52, 0x49, 0x46, 0x46]).buffer,
+        contentType: 'audio/wav',
+      },
+    };
+    serviceMock.tts.mockResolvedValueOnce(outcome);
+    const body = {
+      provider: 'together' as const,
+      model: 'canopylabs/orpheus-3b-0.1-ft' as const,
+      text: 'Hello',
+      voice: 'tara' as const,
+    };
+    const { reply, sent } = makeReply();
+
+    await controller.tts(body, 'req-together-controller', {} as FastifyRequest, reply);
+
+    expect(serviceMock.tts).toHaveBeenCalledWith(body, 'req-together-controller');
+    expect(sent.status).toBe(200);
+    expect((sent.headers as Record<string, string>)['content-type']).toBe('audio/wav');
+  });
+
+  it('TTS Cartesia request preserves the exact UUID voice body', async () => {
+    const outcome: ProxyOutcome = {
+      kind: 'proxied',
+      result: {
+        status: 200,
+        headers: { 'content-type': 'audio/wav' },
+        body: new Uint8Array([0x52, 0x49, 0x46, 0x46]).buffer,
+        contentType: 'audio/wav',
+      },
+    };
+    serviceMock.tts.mockResolvedValueOnce(outcome);
+    const body = {
+      provider: 'together' as const,
+      model: 'cartesia/sonic-2' as const,
+      text: 'Hello',
+      voice: 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4',
+    };
+    const { reply, sent } = makeReply();
+
+    await controller.tts(body, 'req-cartesia-controller', {} as FastifyRequest, reply);
+
+    expect(serviceMock.tts).toHaveBeenCalledWith(body, 'req-cartesia-controller');
+    expect(sent.status).toBe(200);
+    expect((sent.headers as Record<string, string>)['content-type']).toBe('audio/wav');
+  });
+
   it('VAD calls service.vad and propagates response', async () => {
     const outcome: ProxyOutcome = {
       kind: 'proxied',

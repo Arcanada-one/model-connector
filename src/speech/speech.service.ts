@@ -8,9 +8,13 @@ import {
   UpstreamUnavailableError,
   UpstreamNetworkError,
 } from './transcribator.proxy';
-import { TtsRequestDto } from './dto/tts-request.dto';
+import { isDeepgramTtsRequest, TtsRequestDto } from './dto/tts-request.dto';
 import { VadRequestDto } from './dto/vad-request.dto';
 import { SpeechErrorEnvelope } from './dto/speech-response.dto';
+import { DeepgramTtsConnector, DeepgramTtsError } from './tts/deepgram-tts.connector';
+import type { DeepgramAuraModelId } from './tts/deepgram-aura-models';
+import { isTogetherTtsRequest, type TogetherTtsRequestDto } from './dto/tts-request.dto';
+import { TogetherTtsConnector, TogetherTtsError } from './tts/together-tts.connector';
 
 export type ProxyOutcome =
   | { kind: 'proxied'; result: ProxyResult }
@@ -20,9 +24,19 @@ export type ProxyOutcome =
 export class SpeechService {
   private readonly logger = new Logger(SpeechService.name);
 
-  constructor(private readonly proxy: TranscribatorProxy) {}
+  constructor(
+    private readonly proxy: TranscribatorProxy,
+    private readonly deepgramTts: DeepgramTtsConnector,
+    private readonly togetherTts: TogetherTtsConnector,
+  ) {}
 
   async tts(body: TtsRequestDto, requestId?: string): Promise<ProxyOutcome> {
+    if (isDeepgramTtsRequest(body)) {
+      return this.deepgramTtsOrError(body.model, body.text, requestId);
+    }
+    if (isTogetherTtsRequest(body)) {
+      return this.togetherTtsOrError(body, requestId);
+    }
     return this.proxyOrError('tts', body as unknown as Record<string, unknown>, requestId);
   }
 
@@ -46,6 +60,79 @@ export class SpeechService {
       );
       return { kind: 'error', envelope };
     }
+  }
+
+  private async deepgramTtsOrError(
+    model: DeepgramAuraModelId,
+    text: string,
+    requestId?: string,
+  ): Promise<ProxyOutcome> {
+    const id = requestId ?? randomUUID();
+    try {
+      const result = await this.deepgramTts.synthesize(model, text, { requestId: id });
+      return { kind: 'proxied', result };
+    } catch (error) {
+      const envelope = this.mapDeepgramErrorToEnvelope(error);
+      const upstreamStatus =
+        error instanceof DeepgramTtsError && error.upstreamStatus !== undefined
+          ? String(error.upstreamStatus)
+          : 'none';
+      this.logger.warn(
+        `speech tts provider error: request_id=${id} code=${envelope.error_code} upstream_status=${upstreamStatus}`,
+      );
+      return { kind: 'error', envelope };
+    }
+  }
+
+  private mapDeepgramErrorToEnvelope(error: unknown): SpeechErrorEnvelope {
+    if (error instanceof DeepgramTtsError) {
+      return {
+        statusCode: error.statusCode,
+        error_code: error.errorCode,
+        message: error.message,
+      };
+    }
+    return {
+      statusCode: 502,
+      error_code: 'upstream_unavailable',
+      message: 'Deepgram TTS provider is unavailable.',
+    };
+  }
+
+  private async togetherTtsOrError(
+    request: TogetherTtsRequestDto,
+    requestId?: string,
+  ): Promise<ProxyOutcome> {
+    const id = requestId ?? randomUUID();
+    try {
+      const result = await this.togetherTts.synthesize(request, { requestId: id });
+      return { kind: 'proxied', result };
+    } catch (error) {
+      const envelope = this.mapTogetherErrorToEnvelope(error);
+      const upstreamStatus =
+        error instanceof TogetherTtsError && error.upstreamStatus !== undefined
+          ? String(error.upstreamStatus)
+          : 'none';
+      this.logger.warn(
+        `speech tts provider error: request_id=${id} code=${envelope.error_code} upstream_status=${upstreamStatus}`,
+      );
+      return { kind: 'error', envelope };
+    }
+  }
+
+  private mapTogetherErrorToEnvelope(error: unknown): SpeechErrorEnvelope {
+    if (error instanceof TogetherTtsError) {
+      return {
+        statusCode: error.statusCode,
+        error_code: error.errorCode,
+        message: error.message,
+      };
+    }
+    return {
+      statusCode: 502,
+      error_code: 'upstream_unavailable',
+      message: 'Together TTS provider is unavailable.',
+    };
   }
 
   private mapErrorToEnvelope(err: unknown): SpeechErrorEnvelope {

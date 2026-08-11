@@ -1,0 +1,10 @@
+{
+  "fixture_provenance": "synthetic_placeholder_not_provider_output",
+  "error": {
+    "message": "placeholder authentication failure",
+    "type": "authentication_error",
+    "param": null,
+    "code": "placeholder_invalid_key"
+  },
+  "request_id": "request-placeholder"
+}

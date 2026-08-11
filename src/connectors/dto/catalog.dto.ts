@@ -145,6 +145,23 @@ export const CatalogModelEntrySchema = z.object({
    * reachable is NOT blanket-offline.
    */
   available: z.boolean(),
+  /**
+   * CONN-1646 — opaque transactional snapshot provenance. Optional only for
+   * in-memory assembly before persistence; DB-backed public reads always
+   * populate these fields. Identity/fingerprint may be null only for honest
+   * pre-migration legacy rows.
+   */
+  snapshotId: z.string().nullable().optional(),
+  contentFingerprint: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .nullable()
+    .optional(),
+  observedAt: z.string().datetime().optional(),
+  source: z
+    .enum(['provider-api', 'static-capabilities', 'static-modality-catalog', 'legacy-unknown'])
+    .optional(),
+  freshness: z.enum(['fresh', 'stale', 'static', 'unknown']).optional(),
 });
 
 export type CatalogModelEntry = z.infer<typeof CatalogModelEntrySchema>;

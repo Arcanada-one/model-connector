@@ -1,0 +1,29 @@
+{
+  "apiVersion": "v1",
+  "operation": "chat.completions.create",
+  "model": "jamba-mini-2-2026-01",
+  "messages": [
+    {
+      "role": "system",
+      "content": "This is a deterministic synthetic system message."
+    },
+    {
+      "role": "user",
+      "content": "Return a deterministic synthetic answer."
+    },
+    {
+      "role": "assistant",
+      "content": "Synthetic acknowledgement."
+    },
+    {
+      "role": "user",
+      "content": "Continue with the synthetic fixture."
+    }
+  ],
+  "max_tokens": 256,
+  "temperature": 0.4,
+  "top_p": 1,
+  "stop": ["SYNTHETIC_END"],
+  "n": 1,
+  "stream": false
+}

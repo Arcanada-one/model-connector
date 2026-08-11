@@ -1,0 +1,33 @@
+[
+  {
+    "type": "transcript",
+    "requestId": "req-stream-1",
+    "Transcript": {
+      "Results": [
+        {
+          "ResultId": "partial-1",
+          "IsPartial": true,
+          "StartTime": 0,
+          "EndTime": 0.4,
+          "Alternatives": [{ "Transcript": "hello" }]
+        }
+      ]
+    }
+  },
+  {
+    "type": "transcript",
+    "requestId": "req-stream-1",
+    "Transcript": {
+      "Results": [
+        {
+          "ResultId": "final-1",
+          "IsPartial": false,
+          "StartTime": 0,
+          "EndTime": 0.8,
+          "Alternatives": [{ "Transcript": "hello world" }]
+        }
+      ]
+    }
+  },
+  { "type": "end", "requestId": "req-stream-1" }
+]

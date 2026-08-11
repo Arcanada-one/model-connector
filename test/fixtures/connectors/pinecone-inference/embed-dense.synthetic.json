@@ -1,0 +1,9 @@
+{
+  "model": "synthetic-dense-model",
+  "vector_type": "dense",
+  "data": [
+    { "values": [0.125, -0.25, 0.5] },
+    { "values": [0.75, 0.0, -0.125] }
+  ],
+  "usage": { "total_tokens": 9 }
+}

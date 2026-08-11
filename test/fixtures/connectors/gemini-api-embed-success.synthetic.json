@@ -1,0 +1,5 @@
+{
+  "_fixtureProvenance": "Hand-authored synthetic fixture derived from the public embedContent schema; no live call.",
+  "embedding": { "values": [0.125, -0.25, 0.5] },
+  "usageMetadata": { "promptTokenCount": 7 }
+}

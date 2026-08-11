@@ -10,6 +10,7 @@ import { MetricsModule } from './metrics/metrics.module';
 import { AdminModule } from './admin/admin.module';
 import { SpeechModule } from './speech/speech.module';
 import { StatsModule } from './stats/stats.module';
+import { OpenAiCompatModule } from './openai-compat/openai-compat.module';
 import { getConfig } from './config/env.schema';
 
 @Module({
@@ -33,6 +34,7 @@ import { getConfig } from './config/env.schema';
     AdminModule,
     SpeechModule,
     StatsModule,
+    OpenAiCompatModule,
   ],
 })
 export class AppModule {}

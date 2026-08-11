@@ -1,0 +1,14 @@
+{
+  "fixture_provenance": "synthetic_placeholder_not_live_provider_data",
+  "payloads": {
+    "image": { "created": 0, "data": [{ "url": "https://example.invalid/image.png" }] },
+    "asyncImage": { "model": "glm-image", "id": "image_task_synthetic", "task_status": "PROCESSING" },
+    "video": { "model": "cogvideox-3", "id": "video_task_synthetic", "task_status": "PROCESSING" },
+    "asyncResult": { "model": "glm-image", "task_status": "SUCCESS", "image_result": [{ "url": "https://example.invalid/async.png" }] },
+    "audio": { "id": "audio_synthetic", "created": 0, "model": "glm-asr-2512", "text": "synthetic transcript" },
+    "tokenizer": { "id": "token_synthetic", "created": 0, "usage": { "prompt_tokens": 4, "total_tokens": 4 } },
+    "layout": { "id": "layout_synthetic", "created": 0, "model": "glm-ocr", "md_results": "synthetic layout" },
+    "search": { "id": "search_synthetic", "created": 0, "search_result": [{ "title": "Synthetic", "link": "https://example.invalid" }] },
+    "reader": { "id": "reader_synthetic", "created": 0, "reader_result": { "title": "Synthetic", "url": "https://example.invalid", "content": "synthetic content" } }
+  }
+}

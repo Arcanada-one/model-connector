@@ -1,0 +1,9 @@
+{
+  "provenance": "synthetic_placeholder",
+  "response": { "id": "resp_placeholder", "object": "response", "status": "completed", "output_text": "hello" },
+  "translation": { "text": "translated text", "x_groq": { "id": "req_placeholder" } },
+  "model": { "id": "model-placeholder", "object": "model", "created": 1700000000, "owned_by": "Example Owner" },
+  "batch": { "id": "batch_placeholder", "object": "batch", "status": "validating", "input_file_id": "file_placeholder" },
+  "file": { "id": "file_placeholder", "object": "file", "bytes": 42, "created_at": 1700000000, "filename": "batch.jsonl", "purpose": "batch" },
+  "error": { "error": { "message": "synthetic failure", "type": "invalid_request_error", "code": "invalid_request" } }
+}

@@ -1,0 +1,8 @@
+{
+  "categoriesAnalysis": [
+    { "category": "Violence", "severity": 2 },
+    { "category": "Hate", "severity": 0 },
+    { "category": "Sexual", "severity": 4 },
+    { "category": "SelfHarm", "severity": 6 }
+  ]
+}

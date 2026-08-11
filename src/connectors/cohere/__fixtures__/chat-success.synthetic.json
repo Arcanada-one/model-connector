@@ -1,0 +1,15 @@
+{
+  "id": "synthetic-chat-id",
+  "finish_reason": "COMPLETE",
+  "message": {
+    "role": "assistant",
+    "content": [
+      { "type": "text", "text": "Synthetic" },
+      { "type": "text", "text": " Cohere chat" }
+    ]
+  },
+  "usage": {
+    "billed_units": { "input_tokens": 7, "output_tokens": 3 },
+    "tokens": { "input_tokens": 9, "output_tokens": 4 }
+  }
+}

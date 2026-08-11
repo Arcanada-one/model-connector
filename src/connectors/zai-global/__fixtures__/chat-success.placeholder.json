@@ -1,0 +1,24 @@
+{
+  "fixture_provenance": "synthetic_placeholder_not_live_provider_data",
+  "payload": {
+    "id": "chatcmpl_synthetic_001",
+    "request_id": "request_synthetic_001",
+    "created": 0,
+    "model": "glm-5.2",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "synthetic response"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 7,
+      "completion_tokens": 3,
+      "total_tokens": 10
+    }
+  }
+}

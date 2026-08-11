@@ -1,0 +1,8 @@
+{
+  "_fixture_provenance": "Handwritten deterministic synthetic fixture for CONN-0288 from public OpenAI error documentation; no provider call or response capture.",
+  "error": {
+    "message": "Synthetic authorization failure for synthetic-openai-key-CONN-0288",
+    "type": "invalid_request_error",
+    "code": "invalid_api_key"
+  }
+}

@@ -10,7 +10,9 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { createHash, randomUUID } from 'node:crypto';
 import {
+  CatalogRefreshResult,
   CircuitBreakerResetEntry,
+  ConnectorCapabilities,
   ConnectorRequest,
   ConnectorResponse,
   ConnectorStatus,
@@ -173,6 +175,26 @@ export class ConnectorsService {
     return Array.from(this.connectors.keys());
   }
 
+  /**
+   * Dynamic-provider identity is independent of the current refresh result.
+   * CatalogRefreshService uses this to avoid relabeling a failed provider's
+   * in-memory dynamic cache as immutable static provenance.
+   */
+  listDynamicCatalogProviderNames(): string[] {
+    return Array.from(this.connectors.values())
+      .filter((connector) => typeof connector.refreshCatalogModels === 'function')
+      .map((connector) => connector.name);
+  }
+
+  /**
+   * CONN-0243 — in-memory snapshot of every registered connector's capabilities.
+   * Used by the failover gateway to build its free-first candidate list WITHOUT the
+   * per-connector network `getStatus()` probes that `getCatalog()` performs (R-F3).
+   */
+  listCapabilities(): ConnectorCapabilities[] {
+    return Array.from(this.connectors.values()).map((c) => c.getCapabilities());
+  }
+
   async listAll(): Promise<
     Array<{ name: string; type: string; capabilities: ReturnType<IConnector['getCapabilities']> }>
   > {
@@ -188,7 +210,7 @@ export class ConnectorsService {
    * registered connectors. This is the exact CONN-0226 assembly logic
    * (unchanged), just no longer invoked on the request path: the ONLY
    * caller is CatalogRefreshService's cron, which persists the result via
-   * `entryToRow` + `CatalogRepository.upsertSnapshot()`. `getCatalog()`
+   * `entryToRow` + `CatalogRepository.applyProviderSnapshot()`. `getCatalog()`
    * below never calls this — it reads the DB (+ optional cache) instead.
    *
    * Price / free detection strategy per connector:
@@ -315,19 +337,22 @@ export class ConnectorsService {
       try {
         const cached = await this.catalogRedis.get(cacheKey);
         if (cached) {
-          return JSON.parse(cached) as CatalogResponse;
+          const response = JSON.parse(cached) as CatalogResponse;
+          const models = response.models.filter((entry) => this.canRead(entry.connector));
+          return { ...response, models, count: models.length };
         }
-      } catch (err) {
-        this.logger.warn(`Catalog cache read failed, falling back to DB: ${err}`);
+      } catch {
+        this.logger.warn('catalog cache read failed; falling back to DB');
       }
     }
 
     const rows = await this.catalogRepo.findAll();
-    const entries = rows
+    const visibleRows = rows.filter((row) => this.canRead(row.connector));
+    const entries = visibleRows
       .map((row) => rowToEntry(row))
       .filter((entry) => entryMatchesFilters(entry, filters));
-    const generatedAt = rows.length
-      ? new Date(Math.max(...rows.map((r) => r.lastChecked.getTime()))).toISOString()
+    const generatedAt = visibleRows.length
+      ? new Date(Math.max(...visibleRows.map((r) => r.lastChecked.getTime()))).toISOString()
       : new Date().toISOString();
 
     const response: CatalogResponse = {
@@ -344,8 +369,8 @@ export class ConnectorsService {
           'PX',
           this.catalogCacheTtlMs(),
         );
-      } catch (err) {
-        this.logger.warn(`Catalog cache write failed (non-fatal): ${err}`);
+      } catch {
+        this.logger.warn('catalog cache write failed; continuing without cache');
       }
     }
 
@@ -459,31 +484,37 @@ export class ConnectorsService {
   }
 
   /**
-   * CONN-0245 — best-effort trigger of each registered connector's own
-   * live-model-list refresh (e.g. `BaseApiConnector.refreshModels()`) ahead
-   * of a full catalog snapshot. Duck-typed via a runtime check because
-   * `refreshModels` is NOT part of the `IConnector` interface — CLI
-   * connectors (claude-code, cursor, codex) don't have a live `/models`
-   * endpoint to refresh from and simply don't expose it.
-   * `refreshModels()` itself is documented to never throw (falls back to
-   * the cached/static list on any failure), but `Promise.allSettled` here is
-   * an extra belt-and-braces guard so one connector can never block or fail
-   * the others.
+   * CONN-1646 — invoke the explicit dynamic-catalog contract for every
+   * readable provider that implements it. Each result identifies success or
+   * failure without reclassifying an in-memory cached dynamic catalog as a
+   * static floor. Unexpected throws become a sanitized controlled failure;
+   * providers refresh independently.
    */
-  async refreshAllProviderModels(): Promise<void> {
+  async refreshAllProviderModels(): Promise<Map<string, CatalogRefreshResult>> {
     const refreshable = Array.from(this.connectors.values()).filter(
-      (c): c is IConnector & { refreshModels: () => Promise<void> } =>
-        typeof (c as { refreshModels?: unknown }).refreshModels === 'function',
+      (
+        connector,
+      ): connector is IConnector & {
+        refreshCatalogModels: () => Promise<CatalogRefreshResult>;
+      } => this.canRead(connector.name) && typeof connector.refreshCatalogModels === 'function',
     );
-    await Promise.allSettled(
-      refreshable.map((c) =>
-        c
-          .refreshModels()
-          .catch((err) =>
-            this.logger.warn(`refreshModels failed for ${c.name} (keeping cached models): ${err}`),
-          ),
-      ),
+    const results = new Map<string, CatalogRefreshResult>();
+    await Promise.all(
+      refreshable.map(async (connector) => {
+        try {
+          results.set(connector.name, await connector.refreshCatalogModels());
+        } catch {
+          this.logger.warn(`catalog model refresh failed for ${connector.name}: reason=unexpected`);
+          results.set(connector.name, {
+            status: 'failed',
+            source: 'provider-api',
+            checkedAt: new Date(),
+            reason: 'unexpected',
+          });
+        }
+      }),
     );
+    return results;
   }
 
   resetCircuitBreaker(connectorName?: string, model?: string): CircuitBreakerResetEntry[] {
@@ -557,11 +588,18 @@ export class ConnectorsService {
       }
     }
 
+    // CONN-0243 — a per-request `maxRetries` (e.g. 0 from the failover gateway) overrides
+    // the service-level CONNECTOR_MAX_RETRIES so the outer free-first chain owns retry/advance
+    // and the inner loop does not compound exponential backoff on every failover hop.
     let maxRetries: number;
-    try {
-      maxRetries = getConfig().CONNECTOR_MAX_RETRIES;
-    } catch {
-      maxRetries = 1;
+    if (typeof request.maxRetries === 'number') {
+      maxRetries = Math.max(0, request.maxRetries);
+    } else {
+      try {
+        maxRetries = getConfig().CONNECTOR_MAX_RETRIES;
+      } catch {
+        maxRetries = 1;
+      }
     }
     const totalAttempts = Math.max(1, maxRetries + 1);
     const { firstDispatchMeasurement, ...providerRequest } = request;

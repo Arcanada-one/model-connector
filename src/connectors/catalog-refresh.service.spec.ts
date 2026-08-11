@@ -1,265 +1,264 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  CatalogSnapshotConflictError,
+  type ApplyProviderSnapshotInput,
+} from './catalog.repository';
 import { CatalogRefreshService } from './catalog-refresh.service';
-import { ConnectorsService } from './connectors.service';
-import { CatalogRepository } from './catalog.repository';
 import type { CatalogModelEntry } from './dto/catalog.dto';
-import type { ICatalogRedis } from './catalog-redis.token';
-import type { ProviderAccessLike, ProviderAccess } from './provider-access.service';
+import type { CatalogRefreshResult } from './interfaces/connector.interface';
 
-function makeEntry(overrides: Partial<CatalogModelEntry> = {}): CatalogModelEntry {
+function entry(
+  connector: string,
+  model: string,
+  overrides: Partial<CatalogModelEntry> = {},
+): CatalogModelEntry {
   return {
-    connector: 'groq',
-    model: 'llama-3.3-70b-versatile',
+    connector,
+    model,
     modality: 'chat',
     tags: ['modality:chat'],
-    free: true,
-    cheap: true,
+    free: false,
+    cheap: false,
     priceMultiplier: null,
     rateLimits: null,
-    pricing: { inputPerMTok: 0, outputPerMTok: 0, unit: 'per_1m_tokens' },
-    contextWindow: 131072,
-    maxOutputTokens: 32768,
-    capabilities: { supportsStreaming: false, supportsJsonSchema: true, supportsTools: true },
-    routing: { connector: 'groq', model: 'llama-3.3-70b-versatile' },
+    pricing: null,
+    contextWindow: null,
+    maxOutputTokens: null,
+    capabilities: {
+      supportsStreaming: true,
+      supportsJsonSchema: true,
+      supportsTools: true,
+    },
+    routing: { connector, model },
     available: true,
     ...overrides,
   };
 }
 
-// CONN-0245-EXT — fail-open-by-default mock for ProviderAccessService: no
-// seedDefaults/refresh side effects asserted here beyond call-tracking.
-function makeProviderAccess(): {
-  seedDefaults: ReturnType<typeof vi.fn>;
-  refresh: ReturnType<typeof vi.fn>;
-  getAccess: ReturnType<typeof vi.fn>;
-} {
-  return {
-    seedDefaults: vi.fn().mockResolvedValue(undefined),
-    refresh: vi.fn().mockResolvedValue(undefined),
-    getAccess: vi.fn().mockReturnValue({ read: true, use: true } satisfies ProviderAccess),
-  };
-}
-
-describe('CatalogRefreshService (CONN-0245 / CONN-0245-EXT)', () => {
-  let connectorsService: {
+describe('CatalogRefreshService CONN-1646 provider-scoped cycles', () => {
+  let refreshResults: Map<string, CatalogRefreshResult>;
+  let entries: CatalogModelEntry[];
+  let readAccess: Record<string, boolean>;
+  let connectors: {
     refreshAllProviderModels: ReturnType<typeof vi.fn>;
     buildCatalogSnapshot: ReturnType<typeof vi.fn>;
     listNames: ReturnType<typeof vi.fn>;
-    getStatus: ReturnType<typeof vi.fn>;
+    listDynamicCatalogProviderNames: ReturnType<typeof vi.fn>;
+    canRead: ReturnType<typeof vi.fn>;
     canUse: ReturnType<typeof vi.fn>;
+    getStatus: ReturnType<typeof vi.fn>;
   };
-  let catalogRepo: {
-    upsertSnapshot: ReturnType<typeof vi.fn>;
-    markAbsentExcept: ReturnType<typeof vi.fn>;
+  let repository: {
+    applyProviderSnapshot: ReturnType<typeof vi.fn>;
+    markProviderStale: ReturnType<typeof vi.fn>;
     updateProviderStatus: ReturnType<typeof vi.fn>;
   };
-  let catalogRedis: ICatalogRedis;
-  let providerAccess: ReturnType<typeof makeProviderAccess>;
+  let providerAccess: {
+    seedDefaults: ReturnType<typeof vi.fn>;
+    refresh: ReturnType<typeof vi.fn>;
+  };
+  let redis: {
+    keys: ReturnType<typeof vi.fn>;
+    del: ReturnType<typeof vi.fn>;
+  };
   let service: CatalogRefreshService;
 
   beforeEach(() => {
-    connectorsService = {
-      refreshAllProviderModels: vi.fn().mockResolvedValue(undefined),
-      // CONN-0244's READ gate + routable computation already ran INSIDE the
-      // real buildCatalogSnapshot() (see connectors.service.spec.ts) — this
-      // mock returns the POST-gate entries directly, matching what the real
-      // method would hand back.
-      buildCatalogSnapshot: vi.fn().mockResolvedValue([makeEntry()]),
-      listNames: vi.fn().mockReturnValue(['groq']),
-      getStatus: vi.fn().mockResolvedValue({
-        name: 'groq',
-        healthy: true,
-        activeJobs: 0,
-        queuedJobs: 0,
-        rateLimitStatus: 'ok',
-      }),
-      // CONN-0244 — `canUse` is what fullRefresh consults (sync) to persist
-      // `routable` per entry. Fully-usable by default.
-      canUse: vi.fn().mockReturnValue(true),
+    refreshResults = new Map();
+    entries = [];
+    readAccess = {};
+    connectors = {
+      refreshAllProviderModels: vi.fn(async () => refreshResults),
+      buildCatalogSnapshot: vi.fn(async () => entries),
+      listNames: vi.fn(() => ['groq', 'openrouter']),
+      listDynamicCatalogProviderNames: vi.fn(() => Array.from(refreshResults.keys())),
+      canRead: vi.fn((name: string) => readAccess[name] ?? true),
+      canUse: vi.fn(() => true),
+      getStatus: vi.fn().mockResolvedValue({ healthy: true }),
     };
-    catalogRepo = {
-      upsertSnapshot: vi.fn().mockResolvedValue(undefined),
-      markAbsentExcept: vi.fn().mockResolvedValue(undefined),
+    repository = {
+      applyProviderSnapshot: vi.fn().mockResolvedValue({
+        snapshotId: 'snapshot-1',
+        fingerprint: 'f'.repeat(64),
+        rowCount: 1,
+      }),
+      markProviderStale: vi.fn().mockResolvedValue(2),
       updateProviderStatus: vi.fn().mockResolvedValue(undefined),
     };
-    catalogRedis = {
-      get: vi.fn(),
-      set: vi.fn(),
-      del: vi.fn().mockResolvedValue(undefined),
-      keys: vi.fn().mockResolvedValue(['conn:catalog:abc']),
+    providerAccess = {
+      seedDefaults: vi.fn().mockResolvedValue(undefined),
+      refresh: vi.fn().mockResolvedValue(undefined),
     };
-    providerAccess = makeProviderAccess();
+    redis = {
+      keys: vi.fn().mockResolvedValue([]),
+      del: vi.fn().mockResolvedValue(0),
+    };
     service = new CatalogRefreshService(
-      connectorsService as unknown as ConnectorsService,
-      catalogRepo as unknown as CatalogRepository,
-      catalogRedis,
-      providerAccess as unknown as ProviderAccessLike,
+      connectors as never,
+      repository as never,
+      redis as never,
+      providerAccess as never,
     );
   });
 
-  describe('fullRefresh', () => {
-    it('refreshes provider models, builds a snapshot, persists it, refreshes provider access, and invalidates the cache', async () => {
-      await service.fullRefresh();
+  it('preserves a failed provider while applying a successful provider authoritatively', async () => {
+    const observedAt = new Date('2026-07-26T13:00:00.000Z');
+    const checkedAt = new Date('2026-07-26T13:00:01.000Z');
+    refreshResults.set('groq', {
+      status: 'success',
+      source: 'provider-api',
+      observedAt,
+    });
+    refreshResults.set('openrouter', {
+      status: 'failed',
+      source: 'provider-api',
+      checkedAt,
+      reason: 'network',
+    });
+    entries = [entry('groq', 'live'), entry('openrouter', 'last-known-good')];
 
-      expect(connectorsService.refreshAllProviderModels).toHaveBeenCalledTimes(1);
-      expect(connectorsService.buildCatalogSnapshot).toHaveBeenCalledTimes(1);
+    await service.fullRefresh();
 
-      expect(catalogRepo.upsertSnapshot).toHaveBeenCalledTimes(1);
-      const rows = catalogRepo.upsertSnapshot.mock.calls[0][0];
-      expect(rows).toHaveLength(1);
-      expect(rows[0]).toMatchObject({
+    expect(repository.applyProviderSnapshot).toHaveBeenCalledTimes(1);
+    expect(repository.applyProviderSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({
         connector: 'groq',
-        model: 'llama-3.3-70b-versatile',
-        status: 'online',
-        tier: 'free',
-        free: true,
-        routable: true, // canUse('groq') === true
-      });
-
-      expect(catalogRepo.markAbsentExcept).toHaveBeenCalledWith([
-        { connector: 'groq', model: 'llama-3.3-70b-versatile' },
-      ]);
-
-      expect(providerAccess.refresh).toHaveBeenCalledTimes(1);
-      expect(catalogRedis.keys).toHaveBeenCalledWith('conn:catalog:*');
-      expect(catalogRedis.del).toHaveBeenCalledWith('conn:catalog:abc');
-    });
-
-    it('one provider throwing during refreshAllProviderModels does not abort the cycle (still persists)', async () => {
-      connectorsService.refreshAllProviderModels.mockRejectedValueOnce(new Error('boom'));
-      await expect(service.fullRefresh()).resolves.not.toThrow();
-      // buildCatalogSnapshot/upsert should still be attempted best-effort —
-      // the overall cycle survives one failing step.
-    });
-
-    it('does not overlap: a second concurrent call while one is running is a no-op', async () => {
-      let resolveSnapshot: (v: CatalogModelEntry[]) => void = () => {};
-      connectorsService.buildCatalogSnapshot.mockReturnValueOnce(
-        new Promise((resolve) => {
-          resolveSnapshot = resolve;
-        }),
-      );
-      const first = service.fullRefresh();
-      const second = service.fullRefresh(); // should return immediately, skip
-      resolveSnapshot([makeEntry()]);
-      await Promise.all([first, second]);
-      expect(connectorsService.buildCatalogSnapshot).toHaveBeenCalledTimes(1);
-    });
-
-    it('skips cache invalidation gracefully when no Redis client is configured', async () => {
-      const noRedisService = new CatalogRefreshService(
-        connectorsService as unknown as ConnectorsService,
-        catalogRepo as unknown as CatalogRepository,
-        null,
-        providerAccess as unknown as ProviderAccessLike,
-      );
-      await expect(noRedisService.fullRefresh()).resolves.not.toThrow();
-    });
-
-    // QA FIX A (Finding 2) — an empty snapshot must never wipe the live catalog.
-    it('an EMPTY snapshot skips upsertSnapshot/markAbsentExcept entirely (does not blank the live catalog)', async () => {
-      connectorsService.buildCatalogSnapshot.mockResolvedValue([]);
-
-      await expect(service.fullRefresh()).resolves.not.toThrow();
-
-      expect(catalogRepo.upsertSnapshot).not.toHaveBeenCalled();
-      expect(catalogRepo.markAbsentExcept).not.toHaveBeenCalled();
-    });
-
-    it('CONN-0244 READ gate happens inside buildCatalogSnapshot() — this class does NOT re-filter (no entry for a hidden provider ⇒ none persisted)', async () => {
-      // Simulates what the real buildCatalogSnapshot() returns once its own
-      // internal `access.read` check has already excluded a hidden provider
-      // (see connectors.service.spec.ts "hidden provider (none)" for that gate
-      // tested at its actual layer).
-      connectorsService.buildCatalogSnapshot.mockResolvedValue([
-        makeEntry({ connector: 'groq', model: 'llama-3.3-70b-versatile' }),
-      ]);
-      await service.fullRefresh();
-      const rows = catalogRepo.upsertSnapshot.mock.calls[0][0];
-      expect(rows).toHaveLength(1);
-      expect(rows[0].connector).toBe('groq');
-      const seen = catalogRepo.markAbsentExcept.mock.calls[0][0];
-      expect(seen).toEqual([{ connector: 'groq', model: 'llama-3.3-70b-versatile' }]);
-    });
-
-    it('routable is sourced from connectorsService.canUse(entry.connector), per-entry', async () => {
-      connectorsService.buildCatalogSnapshot.mockResolvedValue([
-        makeEntry({
-          connector: 'openmodel',
-          model: 'deepseek-v4-flash',
-          free: false,
-          cheap: false,
-        }),
-      ]);
-      connectorsService.canUse.mockImplementation((name: string) => name !== 'openmodel');
-
-      await service.fullRefresh();
-
-      expect(connectorsService.canUse).toHaveBeenCalledWith('openmodel');
-      const rows = catalogRepo.upsertSnapshot.mock.calls[0][0];
-      expect(rows).toHaveLength(1);
-      expect(rows[0].routable).toBe(false); // USE=off -> not routable, still persisted
-    });
-
-    it('CONN-0245-EXT headline case: canUse=true (default fail-open) persists routable=true', async () => {
-      connectorsService.buildCatalogSnapshot.mockResolvedValue([
-        makeEntry({ connector: 'brand-new' }),
-      ]);
-      await service.fullRefresh();
-      const rows = catalogRepo.upsertSnapshot.mock.calls[0][0];
-      expect(rows).toHaveLength(1);
-      expect(rows[0].routable).toBe(true);
-    });
+        source: 'provider-api',
+        freshness: 'fresh',
+        observedAt,
+        authoritative: true,
+      }),
+    );
+    expect(repository.markProviderStale).toHaveBeenCalledWith('openrouter', checkedAt);
   });
 
-  describe('statusRefresh', () => {
-    it('flips status via updateProviderStatus per connector (status-only refresh)', async () => {
-      await service.statusRefresh();
-      expect(catalogRepo.updateProviderStatus).toHaveBeenCalledWith(
-        'groq',
-        'online',
-        expect.any(Date),
-      );
+  it('does not relabel cached dynamic rows as a static floor after refresh failure', async () => {
+    refreshResults.set('groq', {
+      status: 'failed',
+      source: 'provider-api',
+      checkedAt: new Date('2026-07-26T13:00:00.000Z'),
+      reason: 'empty',
     });
+    // Assembly reads the connector's current cache. After a prior success this
+    // is last-known dynamic data, not evidence of the immutable static floor.
+    entries = [entry('groq', 'cached-dynamic-model')];
+    repository.markProviderStale.mockResolvedValue(0);
 
-    it('a connector whose getStatus() throws is marked offline; other connectors are still processed', async () => {
-      connectorsService.listNames.mockReturnValue(['groq', 'grok']);
-      connectorsService.getStatus.mockImplementation(async (name: string) => {
-        if (name === 'groq') throw new Error('connector unreachable');
-        return { name, healthy: true, activeJobs: 0, queuedJobs: 0, rateLimitStatus: 'ok' };
-      });
+    await service.fullRefresh();
 
-      await expect(service.statusRefresh()).resolves.not.toThrow();
-
-      expect(catalogRepo.updateProviderStatus).toHaveBeenCalledWith(
-        'groq',
-        'offline',
-        expect.any(Date),
-      );
-      expect(catalogRepo.updateProviderStatus).toHaveBeenCalledWith(
-        'grok',
-        'online',
-        expect.any(Date),
-      );
-    });
+    expect(repository.markProviderStale).toHaveBeenCalledWith('groq', expect.any(Date));
+    expect(repository.applyProviderSnapshot).not.toHaveBeenCalledWith(
+      expect.objectContaining({ connector: 'groq' }),
+    );
   });
 
-  describe('onModuleInit', () => {
-    it('seeds provider access BEFORE firing a non-blocking fullRefresh on boot', async () => {
-      const spy = vi.spyOn(service, 'fullRefresh').mockResolvedValue(undefined);
-      // onModuleInit awaits seedDefaults (cheap create-only upserts) but must
-      // NOT await fullRefresh itself (non-blocking boot warm-up) — fullRefresh
-      // calls out to every live provider and must never delay Nest's bootstrap.
-      await service.onModuleInit();
-      expect(providerAccess.seedDefaults).toHaveBeenCalledWith(['groq']);
-      expect(spy).toHaveBeenCalledTimes(1);
-    });
+  it('does not infer static provenance when a dynamic provider result is missing', async () => {
+    connectors.listNames.mockReturnValue(['groq']);
+    connectors.listDynamicCatalogProviderNames.mockReturnValue(['groq']);
+    entries = [entry('groq', 'cached-dynamic-model')];
 
-    it('still fires fullRefresh even if seedDefaults fails (non-fatal)', async () => {
-      providerAccess.seedDefaults.mockRejectedValueOnce(new Error('db down'));
-      const spy = vi.spyOn(service, 'fullRefresh').mockResolvedValue(undefined);
-      await expect(service.onModuleInit()).resolves.not.toThrow();
-      expect(spy).toHaveBeenCalledTimes(1);
+    await service.fullRefresh();
+
+    expect(repository.markProviderStale).toHaveBeenCalledWith('groq', expect.any(Date));
+    expect(repository.applyProviderSnapshot).not.toHaveBeenCalled();
+  });
+
+  it('applies static registered and modality-only providers with distinct provenance', async () => {
+    connectors.listNames.mockReturnValue(['static-api']);
+    entries = [entry('static-api', 'model-a'), entry('image-generation', 'model-b')];
+
+    await service.fullRefresh();
+
+    const inputs = repository.applyProviderSnapshot.mock.calls.map(
+      ([input]) => input as ApplyProviderSnapshotInput,
+    );
+    expect(inputs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          connector: 'static-api',
+          source: 'static-capabilities',
+          freshness: 'static',
+          authoritative: true,
+        }),
+        expect.objectContaining({
+          connector: 'image-generation',
+          source: 'static-modality-catalog',
+          freshness: 'static',
+          authoritative: true,
+        }),
+      ]),
+    );
+  });
+
+  it('does not write a READ-disabled provider even if assembly accidentally contains it', async () => {
+    readAccess.openrouter = false;
+    entries = [entry('groq', 'visible'), entry('openrouter', 'hidden')];
+
+    await service.fullRefresh();
+
+    expect(repository.applyProviderSnapshot).toHaveBeenCalledTimes(1);
+    expect(repository.applyProviderSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({ connector: 'groq' }),
+    );
+    expect(repository.markProviderStale).not.toHaveBeenCalledWith('openrouter', expect.any(Date));
+  });
+
+  it('treats a successful enumeration with no assembled rows as a gap, never a removal', async () => {
+    const observedAt = new Date('2026-07-26T13:00:00.000Z');
+    refreshResults.set('groq', {
+      status: 'success',
+      source: 'provider-api',
+      observedAt,
     });
+    entries = [];
+
+    await service.fullRefresh();
+
+    expect(repository.markProviderStale).toHaveBeenCalledWith('groq', observedAt);
+    expect(repository.applyProviderSnapshot).not.toHaveBeenCalledWith(
+      expect.objectContaining({ connector: 'groq' }),
+    );
+  });
+
+  it('defers a conflicting provider and continues later provider applications', async () => {
+    connectors.listNames.mockReturnValue(['a', 'b']);
+    entries = [entry('a', 'one'), entry('b', 'two')];
+    repository.applyProviderSnapshot
+      .mockRejectedValueOnce(new CatalogSnapshotConflictError())
+      .mockResolvedValueOnce({
+        snapshotId: 'snapshot-b',
+        fingerprint: 'f'.repeat(64),
+        rowCount: 1,
+      });
+
+    await service.fullRefresh();
+
+    expect(repository.applyProviderSnapshot).toHaveBeenCalledTimes(2);
+    expect(repository.applyProviderSnapshot.mock.calls[1][0]).toMatchObject({
+      connector: 'b',
+    });
+    expect(providerAccess.refresh).toHaveBeenCalledTimes(1);
+    expect(redis.keys).toHaveBeenCalled();
+  });
+
+  it('seeds defaults before the non-blocking boot refresh', async () => {
+    const refreshSpy = vi.spyOn(service, 'fullRefresh').mockResolvedValue(undefined);
+
+    await service.onModuleInit();
+
+    expect(providerAccess.seedDefaults).toHaveBeenCalledWith(['groq', 'openrouter']);
+    expect(refreshSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('retains status-only updates without touching catalog content', async () => {
+    connectors.listNames.mockReturnValue(['groq']);
+
+    await service.statusRefresh();
+
+    expect(repository.updateProviderStatus).toHaveBeenCalledWith(
+      'groq',
+      'online',
+      expect.any(Date),
+    );
   });
 });

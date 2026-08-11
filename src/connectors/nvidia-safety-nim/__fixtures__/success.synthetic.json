@@ -1,0 +1,5 @@
+{
+  "contractVersion": "nvidia-safety-nim-transport/v1",
+  "status": 200,
+  "content": "User Safety: unsafe\nResponse Safety: safe\nSafety Categories: Criminal Planning/Confessions"
+}

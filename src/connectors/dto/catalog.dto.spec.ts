@@ -40,6 +40,49 @@ describe('CatalogModelEntrySchema', () => {
     expect(result.success).toBe(true);
   });
 
+  it('preserves validated snapshot provenance and legacy-null identity', () => {
+    const observedAt = new Date('2026-07-26T13:00:00.000Z').toISOString();
+    const current = CatalogModelEntrySchema.parse({
+      ...validEntry,
+      snapshotId: 'snapshot-1',
+      contentFingerprint: 'a'.repeat(64),
+      observedAt,
+      source: 'provider-api',
+      freshness: 'fresh',
+    });
+    const legacy = CatalogModelEntrySchema.parse({
+      ...validEntry,
+      snapshotId: null,
+      contentFingerprint: null,
+      observedAt,
+      source: 'legacy-unknown',
+      freshness: 'unknown',
+    });
+
+    expect(current).toMatchObject({
+      snapshotId: 'snapshot-1',
+      contentFingerprint: 'a'.repeat(64),
+      observedAt,
+      source: 'provider-api',
+      freshness: 'fresh',
+    });
+    expect(legacy.snapshotId).toBeNull();
+    expect(legacy.contentFingerprint).toBeNull();
+  });
+
+  it('rejects fabricated provenance values and malformed fingerprints', () => {
+    expect(
+      CatalogModelEntrySchema.safeParse({
+        ...validEntry,
+        snapshotId: 'snapshot-1',
+        contentFingerprint: 'not-a-sha256',
+        observedAt: new Date().toISOString(),
+        source: 'guessed',
+        freshness: 'probably-fresh',
+      }).success,
+    ).toBe(false);
+  });
+
   it('accepts a paid model with priceMultiplier > 0', () => {
     const entry = { ...validEntry, free: false, cheap: false, priceMultiplier: 2 };
     const result = CatalogModelEntrySchema.safeParse(entry);

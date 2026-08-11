@@ -1,0 +1,10 @@
+{
+  "fixture_provenance": "synthetic_placeholder_not_live_provider_data",
+  "payloads": {
+    "auth": { "code": 1000, "message": "synthetic authentication failure" },
+    "balance": { "code": 1113, "message": "synthetic insufficient balance" },
+    "model": { "code": 1211, "message": "synthetic unknown model" },
+    "network": { "code": 1234, "message": "synthetic network failure" },
+    "rate": { "code": 1302, "message": "synthetic rate limit" }
+  }
+}

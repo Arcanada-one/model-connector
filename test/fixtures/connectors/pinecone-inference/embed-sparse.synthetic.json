@@ -1,0 +1,11 @@
+{
+  "model": "synthetic-sparse-model",
+  "vector_type": "sparse",
+  "data": [
+    {
+      "sparse_indices": [3, 11, 27],
+      "sparse_values": [0.4, 0.3, 0.2]
+    }
+  ],
+  "usage": { "total_tokens": 4 }
+}

@@ -1,0 +1,7 @@
+{
+  "error": {
+    "message": "fixture deployment rejected fixture-deployment-token",
+    "type": "fixture_auth_error",
+    "code": "fixture_unauthorized"
+  }
+}
