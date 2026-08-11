@@ -1,0 +1,1 @@
+{"provider":"openrouter","model":"m","observedAt":"2026-01-01T00:00:00.000Z","source":"health","reachable":true,"circuitState":"open","counters":{"totalRequests":1,"errorCount":1,"timeoutCount":0,"rateLimitedCount":0,"circuitOpenCount":1,"totalLatencyMs":0}}
