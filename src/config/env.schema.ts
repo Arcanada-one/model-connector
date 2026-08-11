@@ -180,6 +180,7 @@ export const envSchema = z
     TTS_TOGETHER_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(60_000),
 
     ADMIN_TOKEN: z.string().min(32).optional(),
+    WATCHER_REPAIR_TOKEN: z.string().min(32).optional(),
 
     // CTRL-0026 Phase 2: purpose-scoped read token for GET /stats/requests/daily
     // (StatsReadGuard). Never accepts ADMIN_TOKEN or an inference ApiKey.

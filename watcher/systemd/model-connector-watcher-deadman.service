@@ -1,0 +1,15 @@
+[Unit]
+Description=Model Connector watcher dead-man check
+
+[Service]
+Type=oneshot
+User=model-connector-watcher
+Group=model-connector-watcher
+EnvironmentFile=/etc/model-connector-watcher/watcher.env
+ExecStart=/usr/bin/node /opt/model-connector-watcher/current/dist/src/deadman-cli.js --config /etc/model-connector-watcher/config.yaml
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/model-connector-watcher
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

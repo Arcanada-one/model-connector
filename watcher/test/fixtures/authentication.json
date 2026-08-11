@@ -1,0 +1,1 @@
+{"provider":"openrouter","model":"m","observedAt":"2026-01-01T00:00:00.000Z","source":"health","reachable":true,"circuitState":"closed","explicitErrorType":"invalid_api_key","counters":{"totalRequests":1,"errorCount":1,"timeoutCount":0,"rateLimitedCount":0,"circuitOpenCount":0,"totalLatencyMs":0}}
