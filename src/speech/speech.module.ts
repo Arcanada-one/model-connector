@@ -15,6 +15,8 @@ import { SttAsyncController } from './stt/stt-async.controller';
 import { SttJobProcessor } from './stt/stt-job.processor';
 import { MetricsModule } from '../metrics/metrics.module';
 import { getConfig } from '../config/env.schema';
+import { DeepgramTtsConnector } from './tts/deepgram-tts.connector';
+import { TogetherTtsConnector } from './tts/together-tts.connector';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { getConfig } from '../config/env.schema';
   providers: [
     SpeechService,
     TranscribatorProxy,
+    DeepgramTtsConnector,
+    TogetherTtsConnector,
     SttRouterService,
     SttQuotaService,
     SttJobProcessor,

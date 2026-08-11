@@ -1,0 +1,30 @@
+{
+  "create": {
+    "createdAt": "2026-07-20T00:00:00.000Z",
+    "guardrailArn": "arn:aws:bedrock:us-east-1:123456789012:guardrail/abc123",
+    "guardrailId": "abc123",
+    "version": "DRAFT"
+  },
+  "createVersion": {
+    "guardrailId": "abc123",
+    "version": "2"
+  },
+  "get": {
+    "blockedInputMessaging": "synthetic blocked input",
+    "blockedOutputsMessaging": "synthetic blocked output",
+    "createdAt": "2026-07-20T00:00:00.000Z",
+    "description": "synthetic guardrail",
+    "guardrailArn": "arn:aws:bedrock:us-east-1:123456789012:guardrail/abc123",
+    "guardrailId": "abc123",
+    "name": "synthetic-guardrail",
+    "status": "READY",
+    "updatedAt": "2026-07-20T00:01:00.000Z",
+    "version": "DRAFT"
+  },
+  "update": {
+    "guardrailArn": "arn:aws:bedrock:us-east-1:123456789012:guardrail/abc123",
+    "guardrailId": "abc123",
+    "updatedAt": "2026-07-20T00:01:00.000Z",
+    "version": "DRAFT"
+  }
+}

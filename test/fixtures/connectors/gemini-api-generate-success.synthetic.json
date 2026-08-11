@@ -1,0 +1,6 @@
+{
+  "_fixtureProvenance": "Hand-authored synthetic fixture for CONN-0284; no live call.",
+  "candidates": [{ "content": { "parts": [{ "text": "{\"answer\":42}" }] } }],
+  "usageMetadata": { "promptTokenCount": 12, "candidatesTokenCount": 5 },
+  "modelVersion": "gemini-2.5-flash-001"
+}

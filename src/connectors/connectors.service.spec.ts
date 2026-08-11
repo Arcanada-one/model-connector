@@ -40,6 +40,12 @@ function repoFromEntries(entries: CatalogModelEntry[]): CatalogRepositoryLike {
     firstSeen: new Date('2026-07-01T00:00:00.000Z'),
     lastSeen: new Date('2026-07-05T16:00:00.000Z'),
     absent: false,
+    snapshotId: `snapshot-${i}`,
+    contentFingerprint: `${i}`.padStart(64, 'a').slice(-64),
+    observedAt: new Date('2026-07-05T16:00:00.000Z'),
+    source: 'provider-api',
+    freshness: 'fresh',
+    absentSince: null,
     createdAt: new Date('2026-07-01T00:00:00.000Z'),
     updatedAt: new Date('2026-07-05T16:00:00.000Z'),
   }));
@@ -127,6 +133,46 @@ describe('ConnectorsService', () => {
   it('should list connector names', () => {
     service.register(mockConnector);
     expect(service.listNames()).toEqual(['test']);
+  });
+
+  it('refreshes only the explicit catalog contract and returns provider results', async () => {
+    const dynamic: IConnector = {
+      ...mockConnector,
+      name: 'dynamic',
+      refreshCatalogModels: vi.fn().mockResolvedValue({
+        status: 'success',
+        source: 'provider-api',
+        observedAt: new Date('2026-07-26T13:00:00.000Z'),
+      }),
+    };
+    const staticOnly: IConnector = { ...mockConnector, name: 'static-only' };
+    service.register(dynamic);
+    service.register(staticOnly);
+
+    const results = await service.refreshAllProviderModels();
+
+    expect(dynamic.refreshCatalogModels).toHaveBeenCalledTimes(1);
+    expect(results.get('dynamic')).toMatchObject({ status: 'success' });
+    expect(results.has('static-only')).toBe(false);
+    expect(service.listDynamicCatalogProviderNames()).toEqual(['dynamic']);
+  });
+
+  it('sanitizes an unexpected catalog refresh rejection', async () => {
+    const dynamic: IConnector = {
+      ...mockConnector,
+      name: 'dynamic',
+      refreshCatalogModels: vi.fn().mockRejectedValue(new Error('raw provider secret')),
+    };
+    service.register(dynamic);
+
+    const results = await service.refreshAllProviderModels();
+
+    expect(results.get('dynamic')).toEqual({
+      status: 'failed',
+      source: 'provider-api',
+      checkedAt: expect.any(Date),
+      reason: 'unexpected',
+    });
   });
 
   describe('execute() modality gate (CONN-0239)', () => {
@@ -344,6 +390,33 @@ describe('ConnectorsService', () => {
       expect(result.attempt).toBe(2);
       expect(result.maxAttempts).toBe(2);
       expect(result.status).toBe('error');
+    });
+
+    it('CONN-0243: per-request maxRetries:0 makes exactly one inner attempt (no backoff)', async () => {
+      // The failover gateway passes maxRetries:0 so the OUTER chain owns retry/advance —
+      // the inner loop must NOT retry a retryable error nor impose exponential backoff.
+      const rateLimitedConnector: IConnector = {
+        ...mockConnector,
+        name: 'test',
+        execute: vi.fn().mockResolvedValue({
+          id: 'r1',
+          connector: 'test',
+          model: 'model',
+          result: '',
+          usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+          latencyMs: 5,
+          status: 'rate_limited',
+          error: { type: 'rate_limited', message: '429', retryable: true, recommendation: 'wait' },
+        }),
+      };
+
+      service.register(rateLimitedConnector);
+      const result = await service.execute('test', { prompt: 'hello', maxRetries: 0 }, 'key-1');
+
+      expect(rateLimitedConnector.execute).toHaveBeenCalledTimes(1);
+      expect(result.attempt).toBe(1);
+      expect(result.maxAttempts).toBe(1);
+      expect(result.error?.type).toBe('rate_limited');
     });
 
     it('should apply JSON sanitization to successful response', async () => {
@@ -1031,6 +1104,37 @@ describe('ConnectorsService', () => {
       expect(connector.getStatus).not.toHaveBeenCalled();
       expect(connector.execute).not.toHaveBeenCalled();
       expect(connector.getCapabilities).not.toHaveBeenCalled();
+    });
+
+    it('filters READ-disabled rows at request time without mutating persistence', async () => {
+      const repo = repoFromEntries([
+        makeChatEntry({ connector: 'groq', model: 'visible' }),
+        makeChatEntry({ connector: 'openrouter', model: 'hidden' }),
+      ]);
+      const providerAccess = {
+        seedDefaults: vi.fn(),
+        refresh: vi.fn(),
+        getAccess: vi.fn((name: string) => ({
+          read: name !== 'openrouter',
+          use: true,
+        })),
+      };
+      const dbService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        repo,
+        null,
+        providerAccess,
+      );
+
+      const result = await dbService.getCatalog(noFilters);
+
+      expect(result.models.map((model) => model.model)).toEqual(['visible']);
+      expect(repo.findAll).toHaveBeenCalledTimes(1);
+      expect(repo).not.toHaveProperty('updateMany');
     });
 
     it('applies filters against the mapped rows (same entryMatchesFilters semantics)', async () => {

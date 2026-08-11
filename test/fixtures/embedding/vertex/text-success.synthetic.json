@@ -1,0 +1,14 @@
+{
+  "predictions": [
+    {
+      "embeddings": {
+        "values": [0.125, -0.25, 0.5],
+        "statistics": {
+          "token_count": 7,
+          "truncated": false
+        }
+      }
+    }
+  ],
+  "deployedModelId": "synthetic-text-deployment"
+}

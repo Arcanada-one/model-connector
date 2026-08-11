@@ -1,0 +1,13 @@
+{
+  "categoriesAnalysis": [
+    { "category": "Hate", "severity": 1 },
+    { "category": "SelfHarm", "severity": 3 }
+  ],
+  "blocklistsMatch": [
+    {
+      "blocklistName": "synthetic-list",
+      "blocklistItemId": "synthetic-item",
+      "blocklistItemText": "synthetic matched text"
+    }
+  ]
+}

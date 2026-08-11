@@ -62,7 +62,7 @@ export interface EntryToRowOptions {
  * CONN-0245 / CONN-0245-EXT — write-path mapper: a `CatalogModelEntry` (as
  * produced by `ConnectorsService.buildCatalogSnapshot()`, which already
  * bakes CONN-0244's READ/USE gate into `available`) to a DB row for
- * `CatalogRepository.upsertSnapshot()`. `lastChecked` is stamped at map time
+ * `CatalogRepository.applyProviderSnapshot()`. `lastChecked` is stamped at map time
  * (cron-run time). `routable` persists CONN-0244's `access.use` value
  * verbatim (via the `useEnabled` option) so the read path
  * (`rowToEntry`) can reconstruct the `access:read-only` tag; `available`
@@ -170,5 +170,10 @@ export function rowToEntry(row: ModelCatalogRow): CatalogModelEntry {
       ...(row.endpoint ? { endpoint: row.endpoint } : {}),
     },
     available: row.status === 'online',
+    snapshotId: row.snapshotId,
+    contentFingerprint: row.contentFingerprint,
+    observedAt: row.observedAt.toISOString(),
+    source: row.source,
+    freshness: row.freshness,
   };
 }

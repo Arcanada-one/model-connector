@@ -1,0 +1,16 @@
+{
+  "model": "synthetic-rerank-model",
+  "data": [
+    {
+      "index": 1,
+      "score": 0.91,
+      "document": { "id": "synthetic-doc-b", "text": "Synthetic beta text." }
+    },
+    {
+      "index": 0,
+      "score": 0.42,
+      "document": { "id": "synthetic-doc-a", "text": "Synthetic alpha text." }
+    }
+  ],
+  "usage": { "rerank_units": 1 }
+}

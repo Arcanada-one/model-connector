@@ -3,12 +3,15 @@ import { z } from 'zod';
 // CONN-0102: z.coerce.boolean() coerces ANY non-empty string to `true`
 // (including the literal "false"). For env flags where operators set
 // `FOO=false` and expect false, we need explicit parsing.
-const envBool = z.union([z.boolean(), z.string()]).transform((v) => {
+export function parseEnvBool(v: boolean | string | undefined): boolean {
+  if (v === undefined) return false;
   if (typeof v === 'boolean') return v;
   const lower = v.trim().toLowerCase();
   if (lower === 'false' || lower === '0' || lower === 'no' || lower === '') return false;
   return true;
-});
+}
+
+const envBool = z.union([z.boolean(), z.string()]).transform(parseEnvBool);
 
 export const envSchema = z
   .object({
@@ -42,6 +45,14 @@ export const envSchema = z
     CLAUDE_CODE_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
     CURSOR_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(1),
     GEMINI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
+    // CONN-0242: native Gemini Developer API, distinct from the Gemini CLI above.
+    GEMINI_API_KEY: z.string().optional(),
+    GEMINI_API_BASE_URL: z
+      .string()
+      .url()
+      .default('https://generativelanguage.googleapis.com/v1beta'),
+    GEMINI_API_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    GEMINI_API_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     CODEX_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
     // CONN-0223: declared here so the paid-tier boot guard (superRefine below) can
     // inspect it. The OpenRouter connector also reads it directly from process.env
@@ -50,12 +61,86 @@ export const envSchema = z
     OPENROUTER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     GROQ_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     GROK_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+    AZURE_OPENAI_ENDPOINT: z.string().url().optional(),
+    AZURE_OPENAI_DEPLOYMENT: z.string().min(1).optional(),
+    AZURE_OPENAI_API_VERSION: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .default('2024-10-21'),
+    AZURE_OPENAI_API_KEY: z.string().optional(),
+    AZURE_OPENAI_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    AZURE_OPENAI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+    FIREWORKS_API_KEY: z.string().optional(),
+    FIREWORKS_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    FIREWORKS_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+    CEREBRAS_API_KEY: z.string().optional(),
+    CEREBRAS_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    CEREBRAS_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+    PERPLEXITY_API_KEY: z.string().optional(),
+    PERPLEXITY_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    PERPLEXITY_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     // CONN-0239: orq.ai OpenAI-compatible gateway connector.
     // Vault: secret/connector/orq_api_key. Key read directly from process.env in connector.
     ORQ_API_KEY: z.string().optional(),
     ORQ_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
     ORQ_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+    // CONN-0255 — native OpenAI Responses API connector. OPENAI_API_KEY is
+    // declared with the image-provider settings below and shared intentionally.
+    OPENAI_BASE_URL: z.string().url().default('https://api.openai.com'),
+    OPENAI_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    OPENAI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+    MISTRAL_API_KEY: z.string().optional(),
+    MISTRAL_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    MISTRAL_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+    COHERE_API_KEY: z.string().optional(),
+    COHERE_BASE_URL: z.string().url().default('https://api.cohere.com'),
+    COHERE_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    COHERE_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+    TOGETHER_API_KEY: z.string().optional(),
+    TOGETHER_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    TOGETHER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+    // CONN-0252: native Cloudflare Workers AI account-scoped REST API.
+    CLOUDFLARE_WORKERS_AI_ACCOUNT_ID: z.string().optional(),
+    CLOUDFLARE_WORKERS_AI_API_TOKEN: z.string().optional(),
+    CLOUDFLARE_WORKERS_AI_BASE_URL: z
+      .string()
+      .url()
+      .default('https://api.cloudflare.com/client/v4'),
+    CLOUDFLARE_WORKERS_AI_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    CLOUDFLARE_WORKERS_AI_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
+    HF_TOKEN: z.string().optional(),
+    HUGGINGFACE_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    HUGGINGFACE_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
+    OLLAMA_BASE_URL: z.string().url().default('http://127.0.0.1:11434'),
+    OLLAMA_DEFAULT_MODEL: z.string().min(1).default('llama3.2'),
+    OLLAMA_TIMEOUT_MS: z.coerce.number().min(1_000).max(600_000).default(300_000),
+    OLLAMA_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(2),
     EMBEDDING_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(8),
+
+    // CONN-0244: non-secret Bedrock routing configuration. Identity is supplied
+    // through the connector's injected signer and is intentionally absent here.
+    BEDROCK_REGION: z
+      .string()
+      .regex(/^[a-z]{2}(?:-gov)?-[a-z]+-\d$/, 'must be an AWS region identifier')
+      .default('us-east-1'),
+    BEDROCK_MODELS: z
+      .string()
+      .default('amazon.nova-lite-v1:0,anthropic.claude-3-5-sonnet-20241022-v2:0')
+      .transform((value, ctx) => {
+        const models = [
+          ...new Set(
+            value
+              .split(',')
+              .map((model) => model.trim())
+              .filter(Boolean),
+          ),
+        ];
+        if (models.length === 0) {
+          ctx.addIssue({ code: 'custom', message: 'must contain at least one model ID' });
+          return z.NEVER;
+        }
+        return models;
+      }),
 
     CIRCUIT_BREAKER_THRESHOLD: z.coerce.number().min(1).max(50).default(5),
     CIRCUIT_BREAKER_COOLDOWN_MS: z.coerce.number().min(1_000).max(300_000).default(30_000),
@@ -67,6 +152,32 @@ export const envSchema = z
     TRANSCRIBATOR_API_URL: z.string().url().default('http://localhost:3700'),
     SPEECH_INTERNAL_TOKEN: z.string().min(16).optional(),
     SPEECH_PROXY_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).default(30_000),
+    TTS_PROVIDER_DEEPGRAM_ENABLED: envBool.default(false),
+    TTS_DEEPGRAM_API_KEY: z.string().min(1).optional(),
+    TTS_DEEPGRAM_BASE_URL: z
+      .string()
+      .url()
+      .refine(
+        (value) => {
+          const url = new URL(value);
+          return (
+            url.protocol === 'https:' &&
+            url.hostname === 'api.deepgram.com' &&
+            url.port === '' &&
+            (url.pathname === '/' || url.pathname === '')
+          );
+        },
+        {
+          message: 'TTS_DEEPGRAM_BASE_URL must be the official HTTPS API origin',
+        },
+      )
+      .default('https://api.deepgram.com'),
+    TTS_DEEPGRAM_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).default(30_000),
+
+    // CONN-0311: native Together Orpheus TTS. Default-off until key provisioning.
+    TTS_PROVIDER_TOGETHER_ENABLED: envBool.default(false),
+    TOGETHER_BASE_URL: z.string().url().default('https://api.together.ai/v1'),
+    TTS_TOGETHER_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(60_000),
 
     ADMIN_TOKEN: z.string().min(32).optional(),
 
@@ -80,11 +191,18 @@ export const envSchema = z
     VERTEX_LOCATION: z.string().default('us-central1'),
     VERTEX_SERVICE_ACCOUNT_JSON: z.string().optional(), // JSON key as string or file path
 
+    // CONN-0256: native unary Vertex generative connector. Authentication is
+    // injected at runtime; these values contain no credentials.
+    VERTEX_GENERATIVE_PROJECT: z.string().min(1).default('unconfigured-project'),
+    VERTEX_GENERATIVE_LOCATION: z.string().min(1).default('us-central1'),
+    VERTEX_GENERATIVE_MODELS: z.string().min(1).default('gemini-2.5-flash'),
+
     // Replicate
     REPLICATE_API_TOKEN: z.string().optional(),
 
     // OpenAI Images (gpt-image-1)
     OPENAI_API_KEY: z.string().optional(),
+    ELEVENLABS_API_KEY: z.string().min(1).optional(),
 
     // CONN-0213: Fal.ai (image generation; video/audio backlog CONN-0215/CONN-0216)
     // Vault: arcanada/prod/env/model-connector-fal-ai · field `api_key`
@@ -164,6 +282,11 @@ export const envSchema = z
     OPENMODEL_FREE_MODELS: z.string().default('deepseek-v4-flash'),
     OPENMODEL_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(30_000),
     OPENMODEL_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(2),
+    ANTHROPIC_ENABLED: envBool.default(false),
+    ANTHROPIC_API_KEY: z.string().optional(),
+    ANTHROPIC_BASE_URL: z.string().url().default('https://api.anthropic.com/v1'),
+    ANTHROPIC_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(120_000),
+    ANTHROPIC_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(4),
     // CONN-0237 Part 1 — three INDEPENDENT free-pool providers (openmodel / groq /
     // openrouter) before the paid rung, so a single provider's rate-limit (e.g. the
     // shared OpenRouter 429 pool) no longer fails the whole free fallback. groq rung
@@ -211,6 +334,19 @@ export const envSchema = z
     CATALOG_STATUS_REFRESH_MS: z.coerce.number().min(1_000).default(300_000),
     CATALOG_CACHE_TTL_MS: z.coerce.number().min(0).default(30_000),
     CATALOG_CACHE_ENABLED: envBool.default(true),
+    // CONN-0243 — OpenAI-compatible failover gateway (POST /v1/chat/completions).
+    // Free-first provider priority for the failover chain (highest first). DeepSeek
+    // (openmodel) is the operator-mandated first free hop and is promoted ahead of the
+    // rest within the free tier regardless of this order.
+    FAILOVER_PROVIDER_ORDER: z.string().default('openmodel,groq,openrouter,gemini'),
+    // The model id that represents DeepSeek's default free hop.
+    FAILOVER_DEEPSEEK_MODEL: z.string().default('deepseek-v4-flash'),
+    // Append paid candidates after all free ones. Default OFF (free-only gateway).
+    FAILOVER_PAID_ENABLED: envBool.default(false),
+    // When true (default), a client-requested model that fails (or is unknown) falls
+    // back to the free-first chain — the Hermes use case. Set false for strict callers
+    // that must not silently downgrade a requested paid model to a free one.
+    FAILOVER_ALLOW_FREE_DOWNGRADE: envBool.default(true),
   })
   .superRefine((data, ctx) => {
     // CONN-0103 V-AC-8 — fail-closed boot when a provider is enabled but its API key
@@ -248,12 +384,26 @@ export const envSchema = z
         });
       }
     }
+    if (data.TTS_PROVIDER_DEEPGRAM_ENABLED && !data.TTS_DEEPGRAM_API_KEY) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'TTS_DEEPGRAM_API_KEY required when TTS_PROVIDER_DEEPGRAM_ENABLED=true',
+        path: ['TTS_DEEPGRAM_API_KEY'],
+      });
+    }
     // CONN-0223 — OpenModel boot-guard
     if (data.OPENMODEL_ENABLED && !data.OPENMODEL_API_KEY) {
       ctx.addIssue({
         code: 'custom',
         message: 'OPENMODEL_API_KEY required when OPENMODEL_ENABLED=true',
         path: ['OPENMODEL_API_KEY'],
+      });
+    }
+    if (data.ANTHROPIC_ENABLED && !data.ANTHROPIC_API_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'ANTHROPIC_API_KEY required when ANTHROPIC_ENABLED=true',
+        path: ['ANTHROPIC_API_KEY'],
       });
     }
     // CONN-0223 — Cascade paid-tier boot-guard (V-AC-10 "paid tier likewise").
@@ -264,6 +414,13 @@ export const envSchema = z
         code: 'custom',
         message: 'OPENROUTER_API_KEY required when CASCADE_PAID_ENABLED=true',
         path: ['OPENROUTER_API_KEY'],
+      });
+    }
+    if (data.TTS_PROVIDER_TOGETHER_ENABLED && !data.TOGETHER_API_KEY) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'TOGETHER_API_KEY required when TTS_PROVIDER_TOGETHER_ENABLED=true',
+        path: ['TOGETHER_API_KEY'],
       });
     }
   });

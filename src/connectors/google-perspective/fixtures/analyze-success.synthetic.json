@@ -1,0 +1,33 @@
+{
+  "attributeScores": {
+    "TOXICITY": {
+      "summaryScore": {
+        "value": 0.42,
+        "type": "PROBABILITY"
+      },
+      "spanScores": [
+        {
+          "begin": 0,
+          "end": 4,
+          "score": {
+            "value": 0.25,
+            "type": "PROBABILITY"
+          }
+        },
+        {
+          "score": {
+            "value": -0.75,
+            "type": "RAW"
+          }
+        }
+      ]
+    }
+  },
+  "clientToken": "synthetic-client-token",
+  "detectedLanguages": [
+    "en"
+  ],
+  "languages": [
+    "en"
+  ]
+}

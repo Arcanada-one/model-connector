@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "InvalidRequest",
+    "message": "synthetic provider message containing api-key-fixture and sensitive input",
+    "target": "synthetic-target",
+    "details": [
+      { "code": "SyntheticDetail", "message": "synthetic detail" }
+    ],
+    "innererror": { "code": "SyntheticInner" }
+  }
+}

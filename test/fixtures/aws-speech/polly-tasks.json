@@ -1,0 +1,41 @@
+{
+  "start": {
+    "SynthesisTask": {
+      "TaskId": "task-1",
+      "TaskStatus": "scheduled",
+      "OutputUri": "s3://output-bucket/prefix/task-1.mp3",
+      "OutputFormat": "mp3",
+      "TextType": "text",
+      "VoiceId": "Joanna",
+      "CreationTime": 1710000000,
+      "RequestCharacters": 11
+    }
+  },
+  "get": {
+    "SynthesisTask": {
+      "TaskId": "task-1",
+      "TaskStatus": "completed",
+      "OutputUri": "s3://output-bucket/prefix/task-1.mp3",
+      "OutputFormat": "mp3",
+      "TextType": "text",
+      "VoiceId": "Joanna",
+      "CreationTime": 1710000000,
+      "RequestCharacters": 11
+    }
+  },
+  "list": {
+    "NextToken": "next-polly-page",
+    "SynthesisTasks": [
+      {
+        "TaskId": "task-1",
+        "TaskStatus": "completed",
+        "OutputUri": "s3://output-bucket/prefix/task-1.mp3",
+        "OutputFormat": "mp3",
+        "TextType": "text",
+        "VoiceId": "Joanna",
+        "CreationTime": 1710000000,
+        "RequestCharacters": 11
+      }
+    ]
+  }
+}

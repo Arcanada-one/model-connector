@@ -1,0 +1,8 @@
+{
+  "_fixtureProvenance": "Hand-authored synthetic fixture for CONN-0284; no live call.",
+  "models": [
+    { "name": "models/gemini-2.5-flash", "supportedGenerationMethods": ["generateContent"] },
+    { "name": "models/gemini-embedding-2", "supportedGenerationMethods": ["embedContent"] },
+    { "name": "models/gemini-2.5-pro", "supportedGenerationMethods": ["generateContent"] }
+  ]
+}

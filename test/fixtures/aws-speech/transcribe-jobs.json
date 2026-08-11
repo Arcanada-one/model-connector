@@ -1,0 +1,33 @@
+{
+  "start": {
+    "TranscriptionJob": {
+      "TranscriptionJobName": "job-1",
+      "TranscriptionJobStatus": "QUEUED",
+      "LanguageCode": "en-US",
+      "Media": { "MediaFileUri": "s3://input-bucket/audio.flac" },
+      "MediaFormat": "flac"
+    }
+  },
+  "get": {
+    "TranscriptionJob": {
+      "TranscriptionJobName": "job-1",
+      "TranscriptionJobStatus": "COMPLETED",
+      "LanguageCode": "en-US",
+      "Media": { "MediaFileUri": "s3://input-bucket/audio.flac" },
+      "Transcript": {
+        "TranscriptFileUri": "https://service-managed.example/transcript.json"
+      }
+    }
+  },
+  "list": {
+    "Status": "COMPLETED",
+    "NextToken": "next-transcribe-page",
+    "TranscriptionJobSummaries": [
+      {
+        "TranscriptionJobName": "job-1",
+        "TranscriptionJobStatus": "COMPLETED",
+        "OutputLocationType": "SERVICE_BUCKET"
+      }
+    ]
+  }
+}

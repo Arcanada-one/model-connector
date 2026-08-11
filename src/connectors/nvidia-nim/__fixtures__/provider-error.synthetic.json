@@ -1,0 +1,13 @@
+{
+  "fixture": {
+    "provenance": "handwritten deterministic synthetic fixture; never captured",
+    "task": "CONN-0287",
+    "source_shape": "NVIDIA error envelope documentation accessed 2026-07-19"
+  },
+  "response": {
+    "error": {
+      "message": "synthetic denial mentions synthetic-secret-CONN-0287\nsecond line",
+      "type": "synthetic_auth_error"
+    }
+  }
+}

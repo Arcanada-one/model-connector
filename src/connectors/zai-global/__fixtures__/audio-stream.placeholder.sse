@@ -1,0 +1,7 @@
+: synthetic_placeholder_not_live_provider_data
+
+data: {"id":"audio_synthetic","model":"glm-asr-2512","type":"transcript.text.delta","delta":"synthetic "}
+
+data: {"id":"audio_synthetic","model":"glm-asr-2512","type":"transcript.text.delta","delta":"audio"}
+
+data: [DONE]

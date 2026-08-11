@@ -1,0 +1,17 @@
+{
+  "results": [
+    {
+      "alternatives": [
+        {
+          "transcript": "synthetic v2 protocol fixture",
+          "confidence": 0.96
+        }
+      ],
+      "resultEndOffset": "1.500s",
+      "languageCode": "en-US"
+    }
+  ],
+  "metadata": {
+    "totalBilledDuration": "2s"
+  }
+}

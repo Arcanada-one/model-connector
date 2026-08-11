@@ -1,0 +1,19 @@
+{
+  "name": "projects/synthetic-project/locations/us-central1/operations/1234567890123456789",
+  "done": true,
+  "error": {
+    "code": 3,
+    "message": "Synthetic invalid request",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.BadRequest",
+        "fieldViolations": [
+          {
+            "field": "config.languageCodes",
+            "description": "Synthetic fixture violation"
+          }
+        ]
+      }
+    ]
+  }
+}

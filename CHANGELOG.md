@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **OpenAI-compatible failover gateway (CONN-0243)** — Model Connector now speaks the
+  OpenAI wire protocol and fails over across providers, so any OpenAI-shaped client
+  (Hermes custom provider, coworker, OpenAI SDK / LiteLLM) can point `base_url` at MC
+  and survive a single provider's rate-limit / over-quota without its own fallback. This
+  is the durable form of the Hermes 2026-06-24 rate-limit fix.
+  - **`POST /v1/chat/completions`** — OpenAI-shaped chat completions with transparent
+    **free-first cross-provider failover** (DeepSeek first) on `429` / `5xx` / connection
+    error / open circuit. The chosen candidate is retried once (no compounded backoff);
+    on failure the next free candidate serves. Exact OpenAI response shape
+    (`chatcmpl-<uuid>`, `usage.{prompt_tokens,completion_tokens,total_tokens}`,
+    `finish_reason:"stop"`). `stream:true` and `tools`/`tool_choice` return `400` (planned
+    follow-ups); all candidates exhausted returns `503` `cascade_exhausted`.
+  - **`GET /v1/models`** — OpenAI model-list shape, chat models only, built from in-memory
+    connector capabilities (no per-request network probes).
+  - **Free-first ordering** is driven by the existing CONN-0233 free-tier metadata +
+    CONN-0232 catalog modality, reusing the CONN-0223 cascade candidate type and error
+    classification. ANTI-FABRICATION: candidates come only from models the connectors
+    declare; live availability is enforced by the failover loop.
+  - New env: `FAILOVER_PROVIDER_ORDER`, `FAILOVER_DEEPSEEK_MODEL`, `FAILOVER_PAID_ENABLED`,
+    `FAILOVER_ALLOW_FREE_DOWNGRADE`. New `ConnectorRequest.maxRetries` lets the gateway
+    bypass the inner per-connector retry loop. Diátaxis docs:
+    `docs/how-to/openai-compatible-failover.md`, `docs/reference/v1-openai-surface.md`.
+
 ### Fixed
 
 - **Catalog accuracy: REPLACE-not-UNION + per-model modality/pricing (CONN-0238)** —

@@ -216,13 +216,62 @@ model ModelCatalog {
   firstSeen          DateTime @default(now())
   lastSeen           DateTime
   absent             Boolean  @default(false)
+  // CONN-1646 — identity/provenance are nullable only for honest legacy rows
+  // that predate transactional snapshots.
+  snapshotId         String?
+  contentFingerprint String?
+  observedAt         DateTime
+  source             String   @default("legacy-unknown")
+  freshness          String   @default("unknown")
+  absentSince        DateTime?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+  snapshot           CatalogSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
 
   @@unique([connector, model])
   @@index([modality])
   @@index([status])
+  @@index([snapshotId])
   @@map("model_catalog")
+}
+
+// CONN-1646 — one immutable identity for every applied provider observation,
+// including sourced non-authoritative static boot floors.
+model CatalogSnapshot {
+  id            String              @id @default(cuid())
+  connector     String
+  fingerprint   String
+  source        String
+  observedAt    DateTime
+  freshness     String
+  authoritative Boolean
+  rowCount      Int
+  createdAt     DateTime            @default(now())
+  modelRows     ModelCatalog[]
+  driftEvents   CatalogDriftEvent[]
+
+  @@index([connector, observedAt])
+  @@map("catalog_snapshots")
+}
+
+// CONN-1646 — append-only provider drift derived inside the same serializable
+// transaction as its snapshot and model row mutations.
+model CatalogDriftEvent {
+  id                String          @id @default(cuid())
+  snapshotId        String
+  connector         String
+  model             String
+  changeType        String
+  beforeFingerprint String?
+  afterFingerprint  String?
+  changedFields     Json
+  observedAt        DateTime
+  createdAt         DateTime        @default(now())
+  snapshot          CatalogSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@index([connector, observedAt])
+  @@index([snapshotId])
+  @@map("catalog_drift_events")
 }
 
 // CONN-0245-EXT — per-provider READ/USE access state. DB is authoritative;

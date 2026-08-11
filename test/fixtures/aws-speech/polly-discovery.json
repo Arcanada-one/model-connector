@@ -1,0 +1,46 @@
+{
+  "voices": {
+    "NextToken": "next-voice-page",
+    "Voices": [
+      {
+        "Id": "Joanna",
+        "Name": "Joanna",
+        "Gender": "Female",
+        "LanguageCode": "en-US",
+        "LanguageName": "US English",
+        "AdditionalLanguageCodes": [],
+        "SupportedEngines": ["standard", "neural", "generative"]
+      }
+    ]
+  },
+  "lexicons": {
+    "NextToken": "next-lexicon-page",
+    "Lexicons": [
+      {
+        "Name": "DomainTerms",
+        "Attributes": {
+          "Alphabet": "ipa",
+          "LanguageCode": "en-US",
+          "LastModified": 1710000000,
+          "LexemesCount": 2,
+          "LexiconArn": "arn:aws:polly:us-west-2:000000000000:lexicon/DomainTerms",
+          "Size": 256
+        }
+      }
+    ]
+  },
+  "lexicon": {
+    "Lexicon": {
+      "Name": "DomainTerms",
+      "Content": "<?xml version=\"1.0\"?><lexicon></lexicon>"
+    },
+    "LexiconAttributes": {
+      "Alphabet": "ipa",
+      "LanguageCode": "en-US",
+      "LastModified": 1710000000,
+      "LexemesCount": 2,
+      "LexiconArn": "arn:aws:polly:us-west-2:000000000000:lexicon/DomainTerms",
+      "Size": 256
+    }
+  }
+}

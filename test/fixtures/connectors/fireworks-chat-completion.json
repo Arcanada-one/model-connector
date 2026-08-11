@@ -1,0 +1,8 @@
+{
+  "id": "chatcmpl-fireworks-fixture",
+  "object": "chat.completion",
+  "created": 1750000000,
+  "model": "accounts/fireworks/models/llama-v3p1-8b-instruct",
+  "choices": [{ "index": 0, "message": { "role": "assistant", "content": "ok" }, "finish_reason": "stop" }],
+  "usage": { "prompt_tokens": 8, "completion_tokens": 2, "total_tokens": 10, "prompt_tokens_details": { "cached_tokens": 3 } }
+}

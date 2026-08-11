@@ -1,0 +1,24 @@
+{
+  "_fixture": {
+    "provenance": "synthetic",
+    "captured": false,
+    "description": "Hand-authored minimal example derived from the public Jina rerank response schema; never returned by a provider call."
+  },
+  "object": "list",
+  "model": "jina-reranker-v3",
+  "usage": {
+    "total_tokens": 23
+  },
+  "results": [
+    {
+      "index": 1,
+      "relevance_score": 0.9375,
+      "document": "The relevant synthetic document."
+    },
+    {
+      "index": 0,
+      "relevance_score": 0.125,
+      "document": "The less relevant synthetic document."
+    }
+  ]
+}

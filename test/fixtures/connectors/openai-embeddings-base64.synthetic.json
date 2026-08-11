@@ -1,0 +1,6 @@
+{
+  "object": "list",
+  "data": [{ "object": "embedding", "embedding": "AACAPwAAAL8=", "index": 0 }],
+  "model": "embedding-model-returned-by-provider",
+  "usage": { "prompt_tokens": 4, "total_tokens": 4 }
+}

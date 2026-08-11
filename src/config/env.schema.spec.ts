@@ -16,6 +16,24 @@ const validEnv = {
 };
 
 describe('envSchema', () => {
+  it('provides deterministic non-secret Vertex generative defaults', () => {
+    const config = validateEnv(validEnv);
+    expect(config.VERTEX_GENERATIVE_PROJECT).toBe('unconfigured-project');
+    expect(config.VERTEX_GENERATIVE_LOCATION).toBe('us-central1');
+    expect(config.VERTEX_GENERATIVE_MODELS).toBe('gemini-2.5-flash');
+  });
+
+  it('accepts explicit Vertex generative project, location and ordered models', () => {
+    const config = validateEnv({
+      ...validEnv,
+      VERTEX_GENERATIVE_PROJECT: 'my-project',
+      VERTEX_GENERATIVE_LOCATION: 'europe-west4',
+      VERTEX_GENERATIVE_MODELS: 'gemini-2.5-flash,gemini-2.5-pro',
+    });
+    expect(config.VERTEX_GENERATIVE_PROJECT).toBe('my-project');
+    expect(config.VERTEX_GENERATIVE_LOCATION).toBe('europe-west4');
+    expect(config.VERTEX_GENERATIVE_MODELS).toBe('gemini-2.5-flash,gemini-2.5-pro');
+  });
   it('should parse valid env', () => {
     const config = validateEnv(validEnv);
     expect(config.PORT).toBe(3900);
@@ -68,10 +86,54 @@ describe('envSchema', () => {
     expect(config.CLAUDE_CODE_MAX_CONCURRENCY).toBe(4);
     expect(config.CURSOR_MAX_CONCURRENCY).toBe(1);
     expect(config.GEMINI_MAX_CONCURRENCY).toBe(4);
+    expect(config.GEMINI_API_KEY).toBeUndefined();
+    expect(config.GEMINI_API_BASE_URL).toBe('https://generativelanguage.googleapis.com/v1beta');
+    expect(config.GEMINI_API_TIMEOUT_MS).toBe(120_000);
+    expect(config.GEMINI_API_MAX_CONCURRENCY).toBe(10);
     expect(config.OPENROUTER_MAX_CONCURRENCY).toBe(10);
     expect(config.EMBEDDING_MAX_CONCURRENCY).toBe(8);
     expect(config.CIRCUIT_BREAKER_THRESHOLD).toBe(5);
     expect(config.CIRCUIT_BREAKER_COOLDOWN_MS).toBe(30_000);
+    expect(config.BEDROCK_REGION).toBe('us-east-1');
+    expect(config.BEDROCK_MODELS).toEqual([
+      'amazon.nova-lite-v1:0',
+      'anthropic.claude-3-5-sonnet-20241022-v2:0',
+    ]);
+  });
+
+  it('parses a deterministic configured Bedrock model list', () => {
+    const config = validateEnv({
+      ...validEnv,
+      BEDROCK_REGION: 'eu-central-1',
+      BEDROCK_MODELS: ' model/a:1,model-b, model/a:1 ,,model-c ',
+    });
+    expect(config.BEDROCK_REGION).toBe('eu-central-1');
+    expect(config.BEDROCK_MODELS).toEqual(['model/a:1', 'model-b', 'model-c']);
+  });
+
+  it('rejects an invalid Bedrock region and empty model list', () => {
+    expect(() => validateEnv({ ...validEnv, BEDROCK_REGION: '../metadata' })).toThrow(
+      'Invalid environment variables',
+    );
+    expect(() => validateEnv({ ...validEnv, BEDROCK_MODELS: ' , ' })).toThrow(
+      'Invalid environment variables',
+    );
+  });
+
+  it('validates native Gemini API settings independently from Gemini CLI settings', () => {
+    const config = validateEnv({
+      ...validEnv,
+      GEMINI_MAX_CONCURRENCY: '2',
+      GEMINI_API_KEY: 'fixture-only',
+      GEMINI_API_BASE_URL: 'https://gemini.invalid/v1beta',
+      GEMINI_API_TIMEOUT_MS: '45000',
+      GEMINI_API_MAX_CONCURRENCY: '7',
+    });
+    expect(config.GEMINI_MAX_CONCURRENCY).toBe(2);
+    expect(config.GEMINI_API_KEY).toBe('fixture-only');
+    expect(config.GEMINI_API_BASE_URL).toBe('https://gemini.invalid/v1beta');
+    expect(config.GEMINI_API_TIMEOUT_MS).toBe(45_000);
+    expect(config.GEMINI_API_MAX_CONCURRENCY).toBe(7);
   });
 
   // TRANS-0035: speech proxy env vars
@@ -116,6 +178,51 @@ describe('envSchema', () => {
         TRANSCRIBATOR_API_URL: 'not-a-url',
       }),
     ).toThrow('Invalid environment variables');
+  });
+
+  describe('Deepgram TTS configuration (CONN-0308)', () => {
+    const tts = (overrides: Record<string, string>) => ({
+      DATABASE_URL: 'postgresql://u:p@localhost/db',
+      STT_GROQ_API_KEY: 'test-groq-key',
+      ...overrides,
+    });
+
+    it('is default-off with the official HTTPS origin and bounded timeout', () => {
+      const config = validateEnv(tts({}));
+      expect(config.TTS_PROVIDER_DEEPGRAM_ENABLED).toBe(false);
+      expect(config.TTS_DEEPGRAM_API_KEY).toBeUndefined();
+      expect(config.TTS_DEEPGRAM_BASE_URL).toBe('https://api.deepgram.com');
+      expect(config.TTS_DEEPGRAM_TIMEOUT_MS).toBe(30_000);
+    });
+
+    it('rejects enabled-without-key and accepts enabled-with-key', () => {
+      expect(() => validateEnv(tts({ TTS_PROVIDER_DEEPGRAM_ENABLED: 'true' }))).toThrow(
+        'TTS_DEEPGRAM_API_KEY required when TTS_PROVIDER_DEEPGRAM_ENABLED=true',
+      );
+      expect(() =>
+        validateEnv(
+          tts({
+            TTS_PROVIDER_DEEPGRAM_ENABLED: 'true',
+            TTS_DEEPGRAM_API_KEY: 'test-deepgram-key',
+          }),
+        ),
+      ).not.toThrow();
+    });
+
+    it('rejects non-HTTPS origins and out-of-bounds timeouts', () => {
+      expect(() => validateEnv(tts({ TTS_DEEPGRAM_BASE_URL: 'http://api.deepgram.com' }))).toThrow(
+        'Invalid environment variables',
+      );
+      expect(() => validateEnv(tts({ TTS_DEEPGRAM_BASE_URL: 'https://example.test' }))).toThrow(
+        'Invalid environment variables',
+      );
+      expect(() => validateEnv(tts({ TTS_DEEPGRAM_TIMEOUT_MS: '999' }))).toThrow(
+        'Invalid environment variables',
+      );
+      expect(() => validateEnv(tts({ TTS_DEEPGRAM_TIMEOUT_MS: '120001' }))).toThrow(
+        'Invalid environment variables',
+      );
+    });
   });
 
   // CONN-0103 remediation — V-AC-8 conditional refine:
@@ -226,6 +333,44 @@ describe('envSchema', () => {
     it('accepts CASCADE_PAID_ENABLED=false with no OPENROUTER_API_KEY (default off)', () => {
       const config = validateEnv(base);
       expect(config.CASCADE_PAID_ENABLED).toBe(false);
+    });
+  });
+
+  describe('Together Orpheus TTS configuration', () => {
+    const base = {
+      DATABASE_URL: 'postgresql://test',
+      STT_GROQ_API_KEY: 'placeholder',
+    };
+
+    it('is default-off with the current .ai URL and bounded timeout', () => {
+      const config = validateEnv(base);
+      expect(config.TTS_PROVIDER_TOGETHER_ENABLED).toBe(false);
+      expect(config.TOGETHER_API_KEY).toBeUndefined();
+      expect(config.TOGETHER_BASE_URL).toBe('https://api.together.ai/v1');
+      expect(config.TTS_TOGETHER_TIMEOUT_MS).toBe(60_000);
+    });
+
+    it('parses the literal false as false', () => {
+      expect(
+        validateEnv({ ...base, TTS_PROVIDER_TOGETHER_ENABLED: 'false' })
+          .TTS_PROVIDER_TOGETHER_ENABLED,
+      ).toBe(false);
+    });
+
+    it('rejects explicit enablement without a Together key', () => {
+      expect(() => validateEnv({ ...base, TTS_PROVIDER_TOGETHER_ENABLED: 'true' })).toThrow(
+        'Invalid environment variables',
+      );
+    });
+
+    it('accepts explicit enablement with a non-empty key slot', () => {
+      expect(() =>
+        validateEnv({
+          ...base,
+          TTS_PROVIDER_TOGETHER_ENABLED: 'true',
+          TOGETHER_API_KEY: 'placeholder',
+        }),
+      ).not.toThrow();
     });
   });
 });

@@ -1,0 +1,28 @@
+{
+  "models": [
+    {
+      "name": "command-a-03-2025",
+      "is_deprecated": false,
+      "endpoints": ["chat"],
+      "context_length": 999999
+    },
+    {
+      "name": "command-r7b-12-2024",
+      "is_deprecated": false,
+      "endpoints": ["chat", "embed"],
+      "context_length": 128000
+    },
+    {
+      "name": "command-r-plus-retired",
+      "is_deprecated": true,
+      "endpoints": ["chat"],
+      "context_length": 128000
+    },
+    {
+      "name": "rerank-v3.5",
+      "is_deprecated": false,
+      "endpoints": ["rerank"]
+    }
+  ],
+  "next_page_token": null
+}

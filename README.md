@@ -1,5 +1,19 @@
 # Model Connector
 
+## Native Vertex AI generative connector
+
+The `vertex-generative` connector calls the unary regional Vertex AI
+`projects.locations.publishers.models:generateContent` REST method. Configure the
+non-secret resource values with `VERTEX_GENERATIVE_PROJECT`,
+`VERTEX_GENERATIVE_LOCATION`, and the ordered CSV `VERTEX_GENERATIVE_MODELS`.
+Authentication is supplied at runtime through the injected asynchronous bearer-token
+provider; the connector does not perform ADC, metadata-server, `gcloud`, or credential-file
+discovery and does not refresh models on boot.
+
+The endpoint contract is documented by Google's
+[Vertex AI v1 generateContent reference](https://cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/projects.locations.publishers.models/generateContent).
+Streaming is not implemented in this increment.
+
 Unified API server for AI CLI agents and cloud model providers. Send prompts to Claude Code, Cursor, Gemini CLI (and more) through a single HTTP endpoint.
 
 > **One human life matters** — Arcanada Ecosystem
@@ -8,7 +22,8 @@ Unified API server for AI CLI agents and cloud model providers. Send prompts to 
 
 Model Connector wraps AI CLI tools as connectors behind a REST API. Each connector handles spawning the CLI process, parsing its output, classifying errors, and reporting token usage — so callers don't need to know the quirks of each tool.
 
-**Supported connectors** (8 total — see [docs/capability-matrix.md](docs/capability-matrix.md) for full comparison):
+**Supported connectors** (9 total — see [docs/capability-matrix.md](docs/capability-matrix.md) for full comparison):
+**Supported connectors** (see [docs/capability-matrix.md](docs/capability-matrix.md) for full comparison):
 
 | Connector | Type | Models | Auth | Avg Latency |
 |-----------|------|--------|------|-------------|
@@ -17,11 +32,17 @@ Model Connector wraps AI CLI tools as connectors behind a REST API. Each connect
 | `gemini` | CLI | gemini-2.5-flash, gemini-3-flash-preview, gemini-2.5-flash-lite | Google OAuth (~/.gemini/) | ~8–22s |
 | `codex` | CLI | o4-mini, o3, codex-mini-latest | OpenAI OAuth or `OPENAI_API_KEY` | ~6–12s |
 | `openrouter` | API | 200+ models (Claude, GPT, Gemini, Llama, Mistral, etc.) | `OPENROUTER_API_KEY` | ~0.5–1s |
+| `perplexity` | API | sonar, sonar-pro, sonar-reasoning-pro, sonar-deep-research | `PERPLEXITY_API_KEY` | provider-dependent |
 | `groq` | API | llama-3.3-70b, llama-3.1-8b, gpt-oss-120b/20b, qwen3-32b, groq/compound | `GROQ_API_KEY` (free tier) | ~0.15–0.7s |
+| `anthropic` | API | Claude models through the native Messages API | `ANTHROPIC_API_KEY` | provider-dependent |
+| `together` | API | Together serverless chat catalog (static offline fallback) | `TOGETHER_API_KEY` | provider-dependent |
+| `fireworks` | API | account-qualified Fireworks serverless chat models | `FIREWORKS_API_KEY` | provider-dependent |
+| `cloudflare-workers-ai` | Native API | Cloudflare Workers AI text-generation models | `CLOUDFLARE_WORKERS_AI_ACCOUNT_ID` + `CLOUDFLARE_WORKERS_AI_API_TOKEN` | provider-dependent |
 | `grok` | API | grok-4-fast (+reasoning), grok-3, grok-3-mini, grok-code-fast-1 | `XAI_API_KEY` | ~0.5–2s |
+| `mistral` | API | dynamic Mistral chat catalog | `MISTRAL_API_KEY` | provider-dependent |
 | `embedding` | API | bge-m3 (dense, sparse, ColBERT, hybrid) | Internal (Tailscale) | ~0.2s |
 
-Per-connector docs: `docs/connectors/<name>.md`. Architecture: `docs/architecture.md`.
+Per-connector docs: `docs/connectors/<name>.md`, including [Amazon Bedrock](docs/connectors/bedrock.md). Architecture: `docs/architecture.md`.
 
 ## Quick Start
 
@@ -493,11 +514,25 @@ pnpm db:push      # Push schema to database
 | `REDIS_PASSWORD` | yes | Redis password |
 | `PORT` | no | Server port (default: 3900) |
 | `OPENROUTER_API_KEY` | yes* | OpenRouter API key (*required for `openrouter` connector) |
+| `PERPLEXITY_API_KEY` | yes* | Perplexity API key (*required when using `perplexity`) |
+| `PERPLEXITY_TIMEOUT_MS` | no | Perplexity timeout (default: 120000) |
 | `OPENROUTER_TIMEOUT_MS` | no | OpenRouter timeout (default: 120000) |
 | `GROQ_API_KEY` | yes* | Groq API key (*required for `groq` connector — https://console.groq.com/keys) |
+| `ANTHROPIC_ENABLED` | no | Enable the native Anthropic Messages API connector (default: false) |
+| `ANTHROPIC_API_KEY` | yes* | Anthropic API key (*required only when `ANTHROPIC_ENABLED=true`) |
+| `ANTHROPIC_BASE_URL` | no | Anthropic API base URL (default: `https://api.anthropic.com/v1`) |
+| `ANTHROPIC_TIMEOUT_MS` | no | Anthropic request timeout (default: 120000) |
 | `GROQ_TIMEOUT_MS` | no | Groq timeout (default: 120000) |
+| `BEDROCK_REGION` | no | Bedrock Runtime region (default: `us-east-1`) |
+| `BEDROCK_MODELS` | no | Ordered comma-separated Bedrock model IDs |
+| `TOGETHER_API_KEY` | yes* | Together Bearer API key (*required only when using `together`) |
+| `TOGETHER_TIMEOUT_MS` | no | Together request timeout (default: 120000) |
+| `FIREWORKS_API_KEY` | yes* | Fireworks API key (*required for `fireworks`) |
+| `FIREWORKS_TIMEOUT_MS` | no | Fireworks timeout (default: 120000) |
 | `XAI_API_KEY` | yes* | xAI API key (*required for `grok` connector — https://console.x.ai/) |
 | `GROK_TIMEOUT_MS` | no | Grok timeout (default: 120000) |
+| `MISTRAL_API_KEY` | yes* | Mistral API key (*required for `mistral` execution) |
+| `MISTRAL_TIMEOUT_MS` | no | Mistral timeout (default: 120000) |
 | `OPENAI_API_KEY` | no | Optional for `codex` (otherwise OAuth via chatgpt.com) |
 | `CLAUDE_BINARY_PATH` | no | Path to Claude CLI (default: `claude`) |
 | `CURSOR_BINARY_PATH` | no | Path to Cursor CLI (default: `cursor-agent`) |
@@ -508,8 +543,12 @@ pnpm db:push      # Push schema to database
 | `CURSOR_MAX_CONCURRENCY` | no | Cursor CLI concurrent limit (default: **1** — DO NOT INCREASE) |
 | `GEMINI_MAX_CONCURRENCY` | no | Gemini CLI concurrent limit (default: 4) |
 | `OPENROUTER_MAX_CONCURRENCY` | no | OpenRouter API concurrent limit (default: 10) |
+| `PERPLEXITY_MAX_CONCURRENCY` | no | Perplexity API concurrent limit (default: 10) |
 | `GROQ_MAX_CONCURRENCY` | no | Groq API concurrent limit (default: 10) |
+| `TOGETHER_MAX_CONCURRENCY` | no | Local Together connector concurrency ceiling (default: 10; provider limits are dynamic) |
+| `FIREWORKS_MAX_CONCURRENCY` | no | Fireworks connector concurrency (default: 10; not a provider quota claim) |
 | `GROK_MAX_CONCURRENCY` | no | Grok API concurrent limit (default: 10) |
+| `MISTRAL_MAX_CONCURRENCY` | no | Mistral API concurrent limit (default: 10) |
 | `EMBEDDING_MAX_CONCURRENCY` | no | Embedding API concurrent limit (default: 8) |
 | `CONNECTOR_QUEUE_TIMEOUT_MS` | no | Max wait time in concurrency queue (default: 60000) |
 | `CONNECTOR_MAX_RETRIES` | no | Auto-retries on transient errors (default: 1, 0=disabled) |

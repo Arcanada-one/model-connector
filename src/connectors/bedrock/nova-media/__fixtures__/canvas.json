@@ -1,0 +1,148 @@
+{
+  "modelId": "amazon.nova-canvas-v1:0",
+  "region": "us-east-1",
+  "tasks": [
+    {
+      "name": "text-image",
+      "input": {
+        "taskType": "TEXT_IMAGE",
+        "textToImageParams": {
+          "text": "A studio photograph of a red ceramic cup",
+          "negativeText": "text, watermark",
+          "style": "PHOTOREALISM"
+        },
+        "imageGenerationConfig": {
+          "width": 1024,
+          "height": 1024,
+          "quality": "premium",
+          "cfgScale": 6.5,
+          "seed": 12,
+          "numberOfImages": 1
+        }
+      }
+    },
+    {
+      "name": "color-guided",
+      "input": {
+        "taskType": "COLOR_GUIDED_GENERATION",
+        "colorGuidedGenerationParams": {
+          "colors": ["#FF9800", "#00FF00"],
+          "text": "A geometric poster"
+        },
+        "imageGenerationConfig": {
+          "width": 1024,
+          "height": 768,
+          "quality": "standard",
+          "cfgScale": 6.5,
+          "seed": 0,
+          "numberOfImages": 2
+        }
+      }
+    },
+    {
+      "name": "image-variation",
+      "input": {
+        "taskType": "IMAGE_VARIATION",
+        "imageVariationParams": {
+          "images": ["iVBORw0KGgo="],
+          "similarityStrength": 0.7
+        },
+        "imageGenerationConfig": {
+          "width": 1024,
+          "height": 1024,
+          "quality": "standard",
+          "cfgScale": 6.5,
+          "seed": 2147483646,
+          "numberOfImages": 1
+        }
+      }
+    },
+    {
+      "name": "inpainting",
+      "input": {
+        "taskType": "INPAINTING",
+        "inPaintingParams": {
+          "image": "iVBORw0KGgo=",
+          "maskPrompt": "the cup"
+        },
+        "imageGenerationConfig": {
+          "quality": "standard",
+          "cfgScale": 6.5,
+          "seed": 12,
+          "numberOfImages": 1
+        }
+      }
+    },
+    {
+      "name": "outpainting",
+      "input": {
+        "taskType": "OUTPAINTING",
+        "outPaintingParams": {
+          "image": "iVBORw0KGgo=",
+          "maskImage": "iVBORw0KGgo=",
+          "outPaintingMode": "PRECISE",
+          "text": "A wider wooden table"
+        },
+        "imageGenerationConfig": {
+          "quality": "premium",
+          "cfgScale": 7,
+          "seed": 12,
+          "numberOfImages": 1
+        }
+      }
+    },
+    {
+      "name": "background-removal",
+      "input": {
+        "taskType": "BACKGROUND_REMOVAL",
+        "backgroundRemovalParams": {
+          "image": "iVBORw0KGgo="
+        }
+      }
+    },
+    {
+      "name": "virtual-try-on",
+      "input": {
+        "taskType": "VIRTUAL_TRY_ON",
+        "virtualTryOnParams": {
+          "sourceImage": "iVBORw0KGgo=",
+          "referenceImage": "iVBORw0KGgo=",
+          "maskType": "GARMENT",
+          "garmentBasedMask": {
+            "maskShape": "CONTOUR",
+            "garmentClass": "UPPER_BODY",
+            "garmentStyling": {
+              "longSleeveStyle": "SLEEVE_DOWN",
+              "tuckingStyle": "TUCKED",
+              "outerLayerStyle": "OPEN"
+            }
+          },
+          "maskExclusions": {
+            "preserveBodyPose": "ON",
+            "preserveHands": "DEFAULT",
+            "preserveFace": "ON"
+          },
+          "mergeStyle": "SEAMLESS",
+          "returnMask": true
+        },
+        "imageGenerationConfig": {
+          "quality": "standard",
+          "cfgScale": 6.5,
+          "seed": 12,
+          "numberOfImages": 1
+        }
+      }
+    }
+  ],
+  "successResponse": {
+    "images": ["iVBORw0KGgo="]
+  },
+  "partialFilterResponse": {
+    "images": ["iVBORw0KGgo="],
+    "error": "One or more generated images were blocked by content filters."
+  },
+  "bedrockError": {
+    "__type": "ValidationException",
+    "message": "The request failed validation."
+  }
+}

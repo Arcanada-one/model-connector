@@ -6,6 +6,7 @@ import {
   ConnectorRequest,
   ConnectorResponse,
   ConnectorStatus,
+  CatalogRefreshResult,
   IConnector,
   ProviderModelMeta,
   classifyErrorAction,
@@ -24,6 +25,14 @@ export interface ParsedApiOutput {
   costUsd: number;
   isError: boolean;
   errorMessage?: string;
+}
+
+/** CONN-0254 — provider-specific decomposition of a non-2xx HTTP response. */
+export interface ParsedHttpError {
+  type: string;
+  message: string;
+  retryAfter?: number;
+  details?: unknown;
 }
 
 export abstract class BaseApiConnector implements IConnector {
@@ -98,8 +107,32 @@ export abstract class BaseApiConnector implements IConnector {
     return 30_000;
   }
 
-  protected getHeaders(): Record<string, string> {
+  protected getHeaders(): Record<string, string> | Promise<Record<string, string>> {
     return { 'Content-Type': 'application/json' };
+  }
+
+  /**
+   * CONN-0243 — per-request headers. Defaults to {@link getHeaders}; override when
+   * the auth material depends on the request (e.g. Azure deployment-scoped keys).
+   */
+  protected async getRequestHeaders(_request: ConnectorRequest): Promise<Record<string, string>> {
+    return this.getHeaders();
+  }
+
+  /** CONN-0243 — provider-specific rendering of a non-2xx response body. */
+  protected formatHttpErrorMessage(_status: number, body: string): string {
+    return body.slice(0, 500);
+  }
+
+  /**
+   * CONN-0254 — provider-specific decomposition of a non-2xx response. The default
+   * composes {@link classifyHttpError} with {@link formatHttpErrorMessage}.
+   */
+  protected parseHttpError(status: number, text: string, _headers: Headers): ParsedHttpError {
+    return {
+      type: this.classifyHttpError(status, text),
+      message: this.formatHttpErrorMessage(status, text),
+    };
   }
 
   // ARCA-0011 — connectors opt into multimodal `ContentBlock[]` prompts.
@@ -115,8 +148,9 @@ export abstract class BaseApiConnector implements IConnector {
   // (CONN-0233): fetch the provider's `/models` listing, parse the ids, and cache
   // them so getCapabilities().models reflects the provider's REAL catalogue instead
   // of a hand-maintained stub. The static list (getStaticModels) is the source of
-  // truth offline and in CI — refreshModels() never runs during tests (which mock
-  // fetch) and tolerates every failure mode, leaving the static list intact.
+  // truth for in-memory connector operation offline and in CI. A failed dynamic
+  // observation leaves that list intact but does not make it persistence-grade
+  // static provenance; CatalogRefreshService defers the provider instead.
   //
   // NOTE: OpenRouterConnector keeps its own specialized refreshFreeModels()
   // (CONN-0233) instead of this generic refresh — it additionally derives the
@@ -184,6 +218,11 @@ export abstract class BaseApiConnector implements IConnector {
     return this.dynamicModelMetas.map((m) => m.id);
   }
 
+  /** CONN-0247 — replace the provider-model cache after a connector-specific refresh. */
+  protected replaceRefreshedModels(models: ProviderModelMeta[]): void {
+    this._refreshedModels = models;
+  }
+
   /**
    * Headers for the `/models` listing request. Defaults to the connector's normal
    * {@link getHeaders}. Override when the model-listing endpoint needs a different
@@ -191,8 +230,13 @@ export abstract class BaseApiConnector implements IConnector {
    * (Anthropic-style) while its OpenAI-compatible `/v1/models` requires
    * `Authorization: Bearer` (CONN-0236).
    */
-  protected getModelsHeaders(): Record<string, string> {
+  protected getModelsHeaders(): Record<string, string> | Promise<Record<string, string>> {
     return this.getHeaders();
+  }
+
+  /** CONN-0242 — optional provider-specific continuation URL for paginated model listings. */
+  protected getNextModelsUrl(_json: unknown): string | undefined {
+    return undefined;
   }
 
   /**
@@ -204,39 +248,64 @@ export abstract class BaseApiConnector implements IConnector {
    * (non-2xx, empty, network/parse error) by leaving the static list in place.
    * Never throws — safe to `void` from OnModuleInit.
    */
-  async refreshModels(): Promise<void> {
+  async refreshModels(): Promise<CatalogRefreshResult> {
     const staticCount = this.getStaticModels().length;
-    try {
-      const url = this.getModelsUrl();
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getModelsHeaders(),
-        signal: AbortSignal.timeout(10_000),
-      });
+    const checkedAt = new Date();
+    const metas: ProviderModelMeta[] = [];
+    // CONN-0242 — providers with paginated /models listings continue via getNextModelsUrl().
+    let pageUrl: string | undefined = this.getModelsUrl();
+    while (pageUrl) {
+      let response: Response;
+      try {
+        response = await fetch(pageUrl, {
+          method: 'GET',
+          headers: await this.getModelsHeaders(),
+          signal: AbortSignal.timeout(10_000),
+        });
+      } catch {
+        this._modelsLogger.warn(
+          `${this.name} model refresh failed: reason=network — keeping ${staticCount} static models`,
+        );
+        return { status: 'failed', source: 'provider-api', checkedAt, reason: 'network' };
+      }
       if (!response.ok) {
         this._modelsLogger.warn(
-          `${this.name} ${url} returned ${response.status} — keeping ${staticCount} static models`,
+          `${this.name} model refresh returned status=${response.status} — keeping ${staticCount} in-memory fallback models`,
         );
-        return;
+        return { status: 'failed', source: 'provider-api', checkedAt, reason: 'http' };
       }
-      const json = await response.json();
-      const metas = this.extractModels(json);
-      if (metas.length === 0) {
+
+      let json: unknown;
+      try {
+        json = await response.json();
+      } catch {
         this._modelsLogger.warn(
-          `${this.name} /models response had no usable ids — keeping ${staticCount} static models`,
+          `${this.name} model refresh failed: reason=parse — keeping ${staticCount} static models`,
         );
-        return;
+        return { status: 'failed', source: 'provider-api', checkedAt, reason: 'parse' };
       }
-      // REPLACE, not UNION — the live provider list is the sole source of truth.
-      this._refreshedModels = metas;
-      this._modelsLogger.log(
-        `${this.name} model refresh: ${metas.length} provider models (replaced ${staticCount} static)`,
-      );
-    } catch (err) {
-      this._modelsLogger.warn(
-        `${this.name} model refresh failed: ${(err as Error).message} — keeping ${staticCount} static models`,
-      );
+
+      metas.push(...this.extractModels(json));
+      pageUrl = this.getNextModelsUrl(json);
     }
+
+    if (metas.length === 0) {
+      this._modelsLogger.warn(
+        `${this.name} /models response had no usable ids — keeping ${staticCount} static models`,
+      );
+      return { status: 'failed', source: 'provider-api', checkedAt, reason: 'empty' };
+    }
+    // REPLACE, not UNION — the live provider list is the sole source of truth.
+    this.replaceRefreshedModels(metas);
+    const observedAt = new Date();
+    this._modelsLogger.log(
+      `${this.name} model refresh: ${metas.length} provider models (replaced ${staticCount} static)`,
+    );
+    return { status: 'success', source: 'provider-api', observedAt };
+  }
+
+  async refreshCatalogModels(): Promise<CatalogRefreshResult> {
+    return this.refreshModels();
   }
 
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
@@ -321,14 +390,15 @@ export abstract class BaseApiConnector implements IConnector {
 
       const res = await fetch(url, {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers: await this.getRequestHeaders(request),
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(timeout),
       });
 
       if (!res.ok) {
         const text = await res.text();
-        const errorType = this.classifyHttpError(res.status, text);
+        const parsedError = this.parseHttpError(res.status, text, res.headers);
+        const errorType = parsedError.type;
         const action = classifyErrorAction(errorType);
         modelCb.recordFailure(errorType);
         return {
@@ -340,7 +410,7 @@ export abstract class BaseApiConnector implements IConnector {
           latencyMs: Date.now() - start,
           queueWaitMs,
           status: errorType === 'rate_limited' ? 'rate_limited' : 'error',
-          error: { type: errorType, message: text.slice(0, 500), ...action },
+          error: { ...parsedError, ...action },
         };
       }
 

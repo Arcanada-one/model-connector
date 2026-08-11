@@ -1,0 +1,6 @@
+{
+  "predictions": [],
+  "debug": {
+    "authorization": "Bearer synthetic-malformed-success-bearer"
+  }
+}

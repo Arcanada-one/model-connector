@@ -1,0 +1,19 @@
+{
+  "durationMilliseconds": 1700,
+  "combinedPhrases": [
+    {
+      "channel": 0,
+      "text": "Hello from Azure Speech."
+    }
+  ],
+  "phrases": [
+    {
+      "channel": 0,
+      "offsetMilliseconds": 0,
+      "durationMilliseconds": 1700,
+      "text": "Hello from Azure Speech.",
+      "locale": "en-US",
+      "confidence": 0.97
+    }
+  ]
+}

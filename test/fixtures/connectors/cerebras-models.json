@@ -1,0 +1,7 @@
+{
+  "object": "list",
+  "data": [
+    { "id": "gpt-oss-120b", "object": "model", "created": 1783728000, "owned_by": "cerebras" },
+    { "id": "zai-glm-4.7", "object": "model", "created": 1783728000, "owned_by": "cerebras" }
+  ]
+}

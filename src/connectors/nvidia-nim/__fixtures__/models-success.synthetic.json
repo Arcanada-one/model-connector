@@ -1,0 +1,20 @@
+{
+  "fixture": {
+    "provenance": "handwritten deterministic synthetic fixture; never captured",
+    "task": "CONN-0287",
+    "source_shape": "NVIDIA self-hosted GET /v1/models reference accessed 2026-07-19"
+  },
+  "response": {
+    "object": "list",
+    "data": [
+      {
+        "id": "self-hosted-embed-synthetic",
+        "object": "model"
+      },
+      {
+        "id": "self-hosted-rerank-synthetic",
+        "object": "model"
+      }
+    ]
+  }
+}

@@ -319,7 +319,8 @@ describe('OpenRouterConnector', () => {
         json: () => Promise.resolve(modelsApiFixture),
       });
 
-      await connector.refreshFreeModels();
+      const result = await connector.refreshCatalogModels();
+      expect(result).toMatchObject({ status: 'success', source: 'provider-api' });
       const caps = connector.getCapabilities();
 
       expect(caps.freeModels).toContain('google/gemma-4-31b-it:free');
@@ -354,7 +355,10 @@ describe('OpenRouterConnector', () => {
     it('refreshFreeModels: tolerates API failure gracefully (freeModels stays [])', async () => {
       fetchSpy.mockRejectedValueOnce(new Error('Network error'));
 
-      await expect(connector.refreshFreeModels()).resolves.not.toThrow();
+      await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
+        status: 'failed',
+        reason: 'network',
+      });
       const caps = connector.getCapabilities();
       expect(Array.isArray(caps.freeModels)).toBe(true);
     });

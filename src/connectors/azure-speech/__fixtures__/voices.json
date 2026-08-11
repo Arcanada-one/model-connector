@@ -1,0 +1,26 @@
+[
+  {
+    "Name": "Microsoft Server Speech Text to Speech Voice (en-US, AvaNeural)",
+    "DisplayName": "Ava",
+    "LocalName": "Ava",
+    "ShortName": "en-US-AvaNeural",
+    "Gender": "Female",
+    "Locale": "en-US",
+    "LocaleName": "English (United States)",
+    "VoiceType": "Neural",
+    "Status": "GA",
+    "WordsPerMinute": "148"
+  },
+  {
+    "Name": "Microsoft Server Speech Text to Speech Voice (en-US, FixturePreviewNeural)",
+    "DisplayName": "Fixture Preview",
+    "LocalName": "Fixture Preview",
+    "ShortName": "en-US-FixturePreviewNeural",
+    "Gender": "Female",
+    "Locale": "en-US",
+    "LocaleName": "English (United States)",
+    "VoiceType": "Neural",
+    "Status": "Preview",
+    "WordsPerMinute": "150"
+  }
+]

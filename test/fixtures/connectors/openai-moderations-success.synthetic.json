@@ -1,0 +1,55 @@
+{
+  "_fixture_provenance": "Handwritten deterministic synthetic fixture for CONN-0288 from public OpenAI Moderations documentation; no provider call or response capture.",
+  "id": "modr_synthetic_text_001",
+  "model": "omni-moderation-latest",
+  "results": [
+    {
+      "flagged": true,
+      "categories": {
+        "harassment": true,
+        "harassment/threatening": false,
+        "hate": false,
+        "hate/threatening": false,
+        "illicit": false,
+        "illicit/violent": false,
+        "self-harm": false,
+        "self-harm/intent": false,
+        "self-harm/instructions": false,
+        "sexual": false,
+        "sexual/minors": false,
+        "violence": false,
+        "violence/graphic": false
+      },
+      "category_scores": {
+        "harassment": 0.91,
+        "harassment/threatening": 0.04,
+        "hate": 0.01,
+        "hate/threatening": 0.005,
+        "illicit": 0.01,
+        "illicit/violent": 0.002,
+        "self-harm": 0.003,
+        "self-harm/intent": 0.002,
+        "self-harm/instructions": 0.001,
+        "sexual": 0.006,
+        "sexual/minors": 0.001,
+        "violence": 0.02,
+        "violence/graphic": 0.001
+      },
+      "category_applied_input_types": {
+        "harassment": ["text"],
+        "harassment/threatening": ["text"],
+        "hate": ["text"],
+        "hate/threatening": ["text"],
+        "illicit": ["text"],
+        "illicit/violent": ["text"],
+        "self-harm": ["text"],
+        "self-harm/intent": ["text"],
+        "self-harm/instructions": ["text"],
+        "sexual": ["text"],
+        "sexual/minors": ["text"],
+        "violence": ["text"],
+        "violence/graphic": ["text"]
+      }
+    }
+  ]
+}

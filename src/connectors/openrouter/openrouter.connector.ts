@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
 import {
+  CatalogRefreshResult,
   ConnectorCapabilities,
   ConnectorRequest,
   ContentBlock,
@@ -83,10 +84,12 @@ export class OpenRouterConnector extends BaseApiConnector {
    * and update cached state. Called from OnModuleInit; tolerates failure
    * (leaves freeModels empty, logs a warning — never throws).
    */
-  async refreshFreeModels(): Promise<void> {
+  async refreshFreeModels(): Promise<CatalogRefreshResult> {
+    const checkedAt = new Date();
+    let response: Response;
     try {
       const url = `${this.getBaseUrl()}/v1/models`;
-      const response = await fetch(url, {
+      response = await fetch(url, {
         headers: this.getHeaders(),
         signal: AbortSignal.timeout(10_000),
       });
@@ -94,58 +97,70 @@ export class OpenRouterConnector extends BaseApiConnector {
         this.logger.warn(
           `OpenRouter /v1/models returned ${response.status} — skipping free refresh`,
         );
-        return;
+        return { status: 'failed', source: 'provider-api', checkedAt, reason: 'http' };
       }
-      const json = (await response.json()) as OpenRouterModelsApiResponse;
-      if (!Array.isArray(json?.data)) {
-        this.logger.warn('OpenRouter /v1/models response has no data[] — skipping free refresh');
-        return;
-      }
-
-      // CONN-0238 — REPLACE the cache with EVERY model the API returns (all ~340),
-      // not just the free subset. free=true flags the ~26 free; pricing/context come
-      // from each live entry. The catalog surfaces all of them; the page defaults to
-      // free-first via a filter, but completeness lives in the catalog.
-      const metas: ProviderModelMeta[] = [];
-      for (const entry of json.data) {
-        if (typeof entry?.id !== 'string') continue;
-        const isFreeById = entry.id.endsWith(':free');
-        const isFreeByPricing =
-          entry.pricing != null && entry.pricing.prompt === '0' && entry.pricing.completion === '0';
-        const inputPerMTok = normalizePerMTokPrice(entry.pricing?.prompt);
-        const outputPerMTok = normalizePerMTokPrice(entry.pricing?.completion);
-        const pricing =
-          inputPerMTok !== null || outputPerMTok !== null
-            ? { inputPerMTok, outputPerMTok, unit: 'per_1m_tokens' }
-            : null;
-        const contextWindow = entry.top_provider?.context_length ?? entry.context_length ?? null;
-        metas.push({
-          id: entry.id,
-          modality: 'chat',
-          free: isFreeById || isFreeByPricing,
-          pricing,
-          contextWindow: typeof contextWindow === 'number' ? contextWindow : null,
-          maxOutputTokens:
-            typeof entry.top_provider?.max_completion_tokens === 'number'
-              ? entry.top_provider.max_completion_tokens
-              : null,
-        });
-      }
-
-      if (metas.length === 0) {
-        this.logger.warn('OpenRouter /v1/models returned no usable ids — keeping static floor');
-        return;
-      }
-      this._dynamicModelMeta = metas;
-
-      this.logger.log(
-        `OpenRouter refresh: ${metas.length} models (${this._dynamicFreeModels.length} free) — REPLACED static floor`,
-      );
-    } catch (err) {
-      this.logger.warn(
-        `OpenRouter refresh failed: ${(err as Error).message} — keeping the static paid floor`,
-      );
+    } catch {
+      this.logger.warn('OpenRouter refresh failed: reason=network — keeping static paid floor');
+      return { status: 'failed', source: 'provider-api', checkedAt, reason: 'network' };
     }
+
+    let json: OpenRouterModelsApiResponse;
+    try {
+      json = (await response.json()) as OpenRouterModelsApiResponse;
+    } catch {
+      this.logger.warn('OpenRouter refresh failed: reason=parse — keeping static paid floor');
+      return { status: 'failed', source: 'provider-api', checkedAt, reason: 'parse' };
+    }
+    if (!Array.isArray(json?.data)) {
+      this.logger.warn('OpenRouter /v1/models response has no data[] — skipping free refresh');
+      return { status: 'failed', source: 'provider-api', checkedAt, reason: 'parse' };
+    }
+
+    // CONN-0238 — REPLACE the cache with EVERY model the API returns (all ~340),
+    // not just the free subset. free=true flags the ~26 free; pricing/context come
+    // from each live entry. The catalog surfaces all of them; the page defaults to
+    // free-first via a filter, but completeness lives in the catalog.
+    const metas: ProviderModelMeta[] = [];
+    for (const entry of json.data) {
+      if (typeof entry?.id !== 'string') continue;
+      const isFreeById = entry.id.endsWith(':free');
+      const isFreeByPricing =
+        entry.pricing != null && entry.pricing.prompt === '0' && entry.pricing.completion === '0';
+      const inputPerMTok = normalizePerMTokPrice(entry.pricing?.prompt);
+      const outputPerMTok = normalizePerMTokPrice(entry.pricing?.completion);
+      const pricing =
+        inputPerMTok !== null || outputPerMTok !== null
+          ? { inputPerMTok, outputPerMTok, unit: 'per_1m_tokens' }
+          : null;
+      const contextWindow = entry.top_provider?.context_length ?? entry.context_length ?? null;
+      metas.push({
+        id: entry.id,
+        modality: 'chat',
+        free: isFreeById || isFreeByPricing,
+        pricing,
+        contextWindow: typeof contextWindow === 'number' ? contextWindow : null,
+        maxOutputTokens:
+          typeof entry.top_provider?.max_completion_tokens === 'number'
+            ? entry.top_provider.max_completion_tokens
+            : null,
+      });
+    }
+
+    if (metas.length === 0) {
+      this.logger.warn('OpenRouter /v1/models returned no usable ids — keeping static floor');
+      return { status: 'failed', source: 'provider-api', checkedAt, reason: 'empty' };
+    }
+    this._dynamicModelMeta = metas;
+
+    const observedAt = new Date();
+    this.logger.log(
+      `OpenRouter refresh: ${metas.length} models (${this._dynamicFreeModels.length} free) — REPLACED static floor`,
+    );
+    return { status: 'success', source: 'provider-api', observedAt };
+  }
+
+  override async refreshCatalogModels(): Promise<CatalogRefreshResult> {
+    return this.refreshFreeModels();
   }
 
   protected getBaseUrl(): string {

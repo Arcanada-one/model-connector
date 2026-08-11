@@ -1,0 +1,15 @@
+{
+  "id": "cohere-chat-fixture-1",
+  "finish_reason": "COMPLETE",
+  "message": {
+    "role": "assistant",
+    "content": [
+      { "type": "text", "text": "Hello" },
+      { "type": "text", "text": " from Cohere" }
+    ]
+  },
+  "usage": {
+    "billed_units": { "input_tokens": 17, "output_tokens": 4 },
+    "tokens": { "input_tokens": 25, "output_tokens": 4 }
+  }
+}

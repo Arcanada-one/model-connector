@@ -1,0 +1,7 @@
+: synthetic_placeholder_not_live_provider_data
+
+data: {"id":"chat_synthetic","model":"glm-5.2","choices":[{"index":0,"delta":{"content":"synthetic "},"finish_reason":null}]}
+
+data: {"id":"chat_synthetic","model":"glm-5.2","choices":[{"index":0,"delta":{"content":"stream"},"finish_reason":null}]}
+
+data: [DONE]

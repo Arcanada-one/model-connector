@@ -1,0 +1,26 @@
+{
+  "models": [
+    {
+      "name": "command-a-03-2025",
+      "is_deprecated": false,
+      "endpoints": ["chat"],
+      "features": ["chat-completions"],
+      "context_length": 256000
+    },
+    {
+      "name": "embed-v4.0",
+      "is_deprecated": false,
+      "endpoints": ["embed"],
+      "features": ["embeddings"],
+      "context_length": 128000
+    },
+    {
+      "name": "command-r-old",
+      "is_deprecated": true,
+      "endpoints": ["chat"],
+      "features": ["chat-completions"],
+      "context_length": 128000
+    }
+  ],
+  "next_page_token": "page-2"
+}

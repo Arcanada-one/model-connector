@@ -1,0 +1,22 @@
+{
+  "models": [
+    {
+      "name": "synthetic-chat-current",
+      "is_deprecated": false,
+      "endpoints": ["chat"],
+      "context_length": 99999
+    },
+    {
+      "name": "synthetic-rerank-current",
+      "is_deprecated": false,
+      "endpoints": ["rerank"],
+      "context_length": 6000
+    },
+    {
+      "name": "synthetic-rerank-deprecated",
+      "is_deprecated": true,
+      "endpoints": ["rerank"]
+    }
+  ],
+  "next_page_token": null
+}

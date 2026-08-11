@@ -239,7 +239,8 @@ describe('OrqConnector', () => {
         json: () => Promise.resolve(modelsFixture),
       });
 
-      await connector.refreshModels();
+      const result = await connector.refreshCatalogModels();
+      expect(result).toMatchObject({ status: 'success', source: 'provider-api' });
       const caps = connector.getCapabilities();
 
       // UUID from fixture: ab37aecd-bac0-4c75-80ae-e87976dbb965 (gpt-4o entry)
@@ -290,7 +291,10 @@ describe('OrqConnector', () => {
 
     it('should keep seed list when fetch throws', async () => {
       fetchSpy.mockRejectedValueOnce(new Error('Network error'));
-      await expect(connector.refreshModels()).resolves.not.toThrow();
+      await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
+        status: 'failed',
+        reason: 'network',
+      });
       const caps = connector.getCapabilities();
       // Seed must still be present
       for (const m of SEED_MODELS) {
@@ -300,7 +304,10 @@ describe('OrqConnector', () => {
 
     it('should keep seed list on non-200 response', async () => {
       fetchSpy.mockResolvedValueOnce({ ok: false, status: 503 });
-      await connector.refreshModels();
+      await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
+        status: 'failed',
+        reason: 'http',
+      });
       const caps = connector.getCapabilities();
       for (const m of SEED_MODELS) {
         expect(caps.models).toContain(m);
@@ -313,7 +320,10 @@ describe('OrqConnector', () => {
         status: 200,
         json: () => Promise.resolve({ data: [] }), // object, not array
       });
-      await connector.refreshModels();
+      await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
+        status: 'failed',
+        reason: 'parse',
+      });
       const caps = connector.getCapabilities();
       for (const m of SEED_MODELS) {
         expect(caps.models).toContain(m);
@@ -326,7 +336,10 @@ describe('OrqConnector', () => {
         status: 200,
         json: () => Promise.resolve([{ model_id: 'img', model_type: 'image', is_active: true }]),
       });
-      await connector.refreshModels();
+      await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
+        status: 'failed',
+        reason: 'empty',
+      });
       const caps = connector.getCapabilities();
       for (const m of SEED_MODELS) {
         expect(caps.models).toContain(m);

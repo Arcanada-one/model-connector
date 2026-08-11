@@ -1,0 +1,22 @@
+{
+  "id": "chatcmpl-conn-0248",
+  "object": "chat.completion",
+  "created": 1720000000,
+  "model": "deepseek-reasoner",
+  "choices": [{
+    "index": 0,
+    "message": {
+      "role": "assistant",
+      "reasoning_content": "Synthetic reasoning fixture.",
+      "content": "Synthetic final answer."
+    },
+    "finish_reason": "stop"
+  }],
+  "usage": {
+    "prompt_tokens": 12,
+    "completion_tokens": 8,
+    "total_tokens": 20,
+    "prompt_cache_hit_tokens": 7,
+    "prompt_cache_miss_tokens": 5
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "__type": "ValidationException",
+  "message": "synthetic provider message with FAKE_SECRET and sensitive input",
+  "requestId": "synthetic-body-request-id",
+  "extra": "must not survive"
+}

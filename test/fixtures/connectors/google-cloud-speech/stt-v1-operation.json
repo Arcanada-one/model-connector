@@ -1,0 +1,9 @@
+{
+  "name": "operations/1234567890123456789",
+  "metadata": {
+    "@type": "type.googleapis.com/google.cloud.speech.v1.LongRunningRecognizeMetadata",
+    "progressPercent": 0,
+    "startTime": "2026-07-23T00:00:00Z"
+  },
+  "done": false
+}

@@ -34,6 +34,7 @@ IConnector implementation
         ├── OpenRouterConnector  (openrouter.ai/api/v1)
         ├── GroqConnector        (api.groq.com/openai/v1)
         ├── GrokConnector        (api.x.ai/v1)
+        ├── MistralConnector     (api.mistral.ai/v1)
         └── EmbeddingConnector   (arcana-db:8300, BGE-M3)
 ```
 

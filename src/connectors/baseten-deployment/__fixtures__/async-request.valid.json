@@ -1,0 +1,15 @@
+{
+  "apiVersion": "inference-v1",
+  "operation": "deployment.predict.async_submit",
+  "hostingMode": "non_regional",
+  "modelId": "7wz2p0q",
+  "target": {
+    "kind": "production"
+  },
+  "authorizationScheme": "Api-Key",
+  "model_input": {
+    "prompt": "Synthetic deterministic async input."
+  },
+  "priority": 0,
+  "max_time_in_queue_seconds": 600
+}

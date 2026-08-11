@@ -1,0 +1,30 @@
+{
+  "throttled": {
+    "statusCode": 429,
+    "headers": {
+      "x-amzn-errortype": "ThrottlingException",
+      "x-amzn-requestid": "req-throttle"
+    },
+    "body": {
+      "__type": "ThrottlingException",
+      "message": "Rate exceeded"
+    }
+  },
+  "signature": {
+    "statusCode": 403,
+    "headers": {
+      "x-amzn-errortype": "UnrecognizedClientException",
+      "x-amzn-requestid": "req-auth"
+    },
+    "body": {
+      "__type": "UnrecognizedClientException",
+      "message": "The security token is invalid"
+    }
+  },
+  "event": {
+    "type": "exception",
+    "code": "LimitExceededException",
+    "message": "Concurrent stream limit exceeded",
+    "requestId": "req-event-limit"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "projects/synthetic-project/locations/us-central1/operations/1234567890123456789",
+  "metadata": {
+    "@type": "type.googleapis.com/google.cloud.speech.v2.BatchRecognizeMetadata",
+    "progressPercent": 40
+  },
+  "done": false
+}

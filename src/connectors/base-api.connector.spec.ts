@@ -42,6 +42,21 @@ class TestApiConnector extends BaseApiConnector {
   }
 }
 
+class AsyncHeaderTestConnector extends TestApiConnector {
+  readonly name = 'async-header-test';
+
+  protected async getRequestHeaders(request: ConnectorRequest): Promise<Record<string, string>> {
+    await Promise.resolve();
+    return { 'Content-Type': 'application/json', 'X-Request-Prompt': String(request.prompt) };
+  }
+}
+
+class AsyncHeadersApiConnector extends TestApiConnector {
+  protected async getHeaders(): Promise<Record<string, string>> {
+    return { 'Content-Type': 'application/json', Authorization: 'Bearer synthetic' };
+  }
+}
+
 // CONN-0238 — a connector that participates in dynamic model refresh, with a
 // static floor that DIFFERS from the live list so REPLACE-vs-UNION is observable.
 class RefreshTestConnector extends BaseApiConnector {
@@ -96,8 +111,10 @@ describe('BaseApiConnector — CONN-0238 REPLACE-not-UNION + extractModels', () 
 
   it('REPLACES the static list with the live list on success (no UNION leftovers)', async () => {
     mockModelsOk(['static-b', 'live-c']);
-    await connector.refreshModels();
+    const result = await connector.refreshCatalogModels();
     const models = connector.getCapabilities().models;
+    expect(result).toMatchObject({ status: 'success', source: 'provider-api' });
+    expect(result.status === 'success' && result.observedAt).toBeInstanceOf(Date);
     // 'static-a' is NOT in the live response → REPLACE drops it (UNION would keep it).
     expect(models).toEqual(['static-b', 'live-c']);
     expect(models).not.toContain('static-a');
@@ -105,13 +122,20 @@ describe('BaseApiConnector — CONN-0238 REPLACE-not-UNION + extractModels', () 
 
   it('falls back to the static list (offline/CI) when the live fetch fails', async () => {
     fetchSpy.mockRejectedValueOnce(new Error('network down'));
-    await expect(connector.refreshModels()).resolves.not.toThrow();
+    await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
+      status: 'failed',
+      source: 'provider-api',
+      reason: 'network',
+    });
     expect(connector.getCapabilities().models).toEqual(['static-a', 'static-b']);
   });
 
   it('keeps the static list on a non-2xx response (no phantom replacement)', async () => {
     fetchSpy.mockResolvedValueOnce({ ok: false, status: 503 });
-    await connector.refreshModels();
+    await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
+      status: 'failed',
+      reason: 'http',
+    });
     expect(connector.getCapabilities().models).toEqual(['static-a', 'static-b']);
   });
 
@@ -128,7 +152,10 @@ describe('BaseApiConnector — CONN-0238 REPLACE-not-UNION + extractModels', () 
       status: 200,
       json: () => Promise.resolve({ data: [] }),
     });
-    await connector.refreshModels();
+    await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
+      status: 'failed',
+      reason: 'empty',
+    });
     expect(connector.getCapabilities().models).toEqual(['static-a', 'static-b']);
   });
 
@@ -138,8 +165,26 @@ describe('BaseApiConnector — CONN-0238 REPLACE-not-UNION + extractModels', () 
       status: 200,
       json: () => Promise.resolve({ nope: 1 }),
     });
-    await expect(connector.refreshModels()).resolves.not.toThrow();
+    await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
+      status: 'failed',
+      reason: 'empty',
+    });
     expect(connector.getCapabilities().models).toEqual(['static-a', 'static-b']);
+  });
+
+  it('classifies response JSON failures as parse without exposing the error', async () => {
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.reject(new SyntaxError('raw provider payload')),
+    });
+
+    await expect(connector.refreshCatalogModels()).resolves.toEqual({
+      status: 'failed',
+      source: 'provider-api',
+      checkedAt: expect.any(Date),
+      reason: 'parse',
+    });
   });
 });
 
@@ -158,6 +203,40 @@ describe('BaseApiConnector', () => {
   });
 
   describe('execute', () => {
+    it('preserves legacy getHeaders behavior while allowing an async per-request override', async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ result: 'hello', tokens: 5 }),
+      });
+
+      await connector.execute({ prompt: 'legacy' });
+      expect(fetchSpy.mock.calls[0][1].headers).toEqual({ 'Content-Type': 'application/json' });
+
+      const asyncConnector = new AsyncHeaderTestConnector();
+      await asyncConnector.execute({ prompt: 'fresh-token-input' });
+      expect(fetchSpy.mock.calls[1][1].headers).toEqual({
+        'Content-Type': 'application/json',
+        'X-Request-Prompt': 'fresh-token-input',
+      });
+    });
+
+    it('awaits asynchronous request headers while retaining synchronous-subclass compatibility', async () => {
+      const asyncConnector = new AsyncHeadersApiConnector();
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ result: 'hello', tokens: 1 }),
+      });
+
+      await asyncConnector.execute({ prompt: 'test input' });
+
+      expect(fetchSpy.mock.calls[0][1].headers).toEqual({
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer synthetic',
+      });
+    });
+
     it('should make POST request and return success response', async () => {
       fetchSpy.mockResolvedValueOnce({
         ok: true,

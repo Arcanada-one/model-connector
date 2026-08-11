@@ -1,0 +1,14 @@
+{
+  "fixture_provenance": "synthetic_placeholder_not_provider_output",
+  "object": "list",
+  "data": [
+    {
+      "id": "placeholder-model",
+      "object": "model",
+      "owned_by": "placeholder-owner",
+      "context_length": 128,
+      "max_completion_tokens": 32,
+      "sn_metadata": {}
+    }
+  ]
+}

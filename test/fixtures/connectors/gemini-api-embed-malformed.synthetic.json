@@ -1,0 +1,5 @@
+{
+  "_fixtureProvenance": "Hand-authored malformed-success fixture for CONN-0284; no live call.",
+  "embedding": { "values": [] },
+  "usageMetadata": { "promptTokenCount": 3 }
+}

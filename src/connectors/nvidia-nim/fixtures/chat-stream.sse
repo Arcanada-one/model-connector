@@ -1,0 +1,7 @@
+data: {"id":"chatcmpl-fixture-stream","object":"chat.completion.chunk","model":"fixture/model-1","choices":[{"index":0,"delta":{"role":"assistant","content":"fixture "},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-fixture-stream","object":"chat.completion.chunk","model":"fixture/model-1","choices":[{"index":0,"delta":{"content":"stream"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-fixture-stream","object":"chat.completion.chunk","model":"fixture/model-1","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+data: [DONE]
