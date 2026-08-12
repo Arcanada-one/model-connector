@@ -80,3 +80,35 @@ export class SttBudgetExhaustedError extends Error {
     super(`STT daily budget exhausted: $${dailyCostUsd.toFixed(4)} ≥ $${budgetUsd.toFixed(2)}`);
   }
 }
+
+/**
+ * CONN-1671 — the caller's per-API-key access policy denied EVERY candidate STT
+ * provider (the router dispatches directly, bypassing the ConnectorsService
+ * choke point, so the gate is applied inline). Distinct from
+ * `SttAllProvidersExhausted` (all providers were TRIED and failed) — here no
+ * provider was ever attempted. Maps to HTTP 403 in SpeechController.
+ *
+ * The message names only provider identifiers (public) — NEVER env var names.
+ */
+export class SttPolicyViolationError extends Error {
+  readonly name = 'SttPolicyViolationError';
+  constructor(readonly providersDenied: string[]) {
+    super(
+      `STT request denied by this API key's access policy; ` +
+        `all candidate providers were blocked: ${providersDenied.join(', ')}`,
+    );
+  }
+}
+
+/**
+ * CONN-1671 — the stored `ApiKey.policy` failed schema validation on read
+ * (`InvalidStoredPolicyError`). Fail-closed: the request is DENIED rather than
+ * silently treated as unrestricted. Maps to HTTP 403 in SpeechController. The
+ * message is intentionally generic (no policy internals, no env var names).
+ */
+export class SttPolicyConfigError extends Error {
+  readonly name = 'SttPolicyConfigError';
+  constructor() {
+    super('Access policy for this API key could not be evaluated; request denied (fail-closed).');
+  }
+}
