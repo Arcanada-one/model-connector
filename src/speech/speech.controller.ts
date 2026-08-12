@@ -25,6 +25,8 @@ import {
   SttBudgetExhaustedError,
   SttProviderError,
   SttUnsupportedMimeError,
+  SttPolicyViolationError,
+  SttPolicyConfigError,
 } from './stt/stt-pilot.errors';
 import type { SpeechErrorEnvelope } from './dto/speech-response.dto';
 
@@ -47,13 +49,15 @@ export class SpeechController {
   async tts(
     @Body() body: TtsRequestDto,
     @Headers('x-request-id') incomingRequestId: string | undefined,
-    @Req() _req: FastifyRequest,
+    @Req() req: AuthenticatedRequest,
     @Res() reply: FastifyReply,
   ): Promise<void> {
     const startedAt = Date.now();
     const requestId = incomingRequestId ?? randomUUID();
     try {
-      const outcome = await this.service.tts(body, requestId);
+      // CONN-1671 — thread the caller's API key so SpeechService can apply the
+      // per-key policy gate on the named TTS provider dispatch paths.
+      const outcome = await this.service.tts(body, requestId, req.apiKey?.id);
       this.send(reply, outcome, requestId);
     } finally {
       this.recordMetric('tts', reply, startedAt);
@@ -236,6 +240,24 @@ export class SpeechController {
         statusCode: 400,
         error_code: 'stt_validation_error',
         message: err.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
+      };
+    }
+    // CONN-1671 — per-key policy denied every candidate provider (fail-closed
+    // at the STT bypass). 403, not the 503 exhausted path.
+    if (err instanceof SttPolicyViolationError) {
+      return {
+        statusCode: 403,
+        error_code: 'stt_policy_violation',
+        message: err.message,
+        details: { providers_denied: err.providersDenied },
+      };
+    }
+    // CONN-1671 — malformed stored policy; fail-closed deny (never unrestricted).
+    if (err instanceof SttPolicyConfigError) {
+      return {
+        statusCode: 403,
+        error_code: 'stt_policy_config_error',
+        message: err.message,
       };
     }
     if (err instanceof SttBudgetExhaustedError) {

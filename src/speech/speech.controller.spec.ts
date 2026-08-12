@@ -177,7 +177,9 @@ describe('SpeechController', () => {
       const { reply, sent } = makeReply();
       await controller.tts(request, 'req-deepgram', {} as FastifyRequest, reply);
 
-      expect(serviceMock.tts).toHaveBeenCalledWith(request, 'req-deepgram');
+      // CONN-1671 — controller now threads the caller's API key id (undefined
+      // here: the stub request carries no apiKey) as the 3rd arg for the policy gate.
+      expect(serviceMock.tts).toHaveBeenCalledWith(request, 'req-deepgram', undefined);
       expect(sent.status).toBe(200);
       expect((sent.headers as Record<string, string>)['content-type']).toBe('audio/wav');
       expect(Buffer.isBuffer(sent.body)).toBe(true);
@@ -204,7 +206,7 @@ describe('SpeechController', () => {
 
     await controller.tts(body, 'req-together-controller', {} as FastifyRequest, reply);
 
-    expect(serviceMock.tts).toHaveBeenCalledWith(body, 'req-together-controller');
+    expect(serviceMock.tts).toHaveBeenCalledWith(body, 'req-together-controller', undefined);
     expect(sent.status).toBe(200);
     expect((sent.headers as Record<string, string>)['content-type']).toBe('audio/wav');
   });
@@ -230,7 +232,7 @@ describe('SpeechController', () => {
 
     await controller.tts(body, 'req-cartesia-controller', {} as FastifyRequest, reply);
 
-    expect(serviceMock.tts).toHaveBeenCalledWith(body, 'req-cartesia-controller');
+    expect(serviceMock.tts).toHaveBeenCalledWith(body, 'req-cartesia-controller', undefined);
     expect(sent.status).toBe(200);
     expect((sent.headers as Record<string, string>)['content-type']).toBe('audio/wav');
   });

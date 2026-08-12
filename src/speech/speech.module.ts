@@ -17,6 +17,9 @@ import { MetricsModule } from '../metrics/metrics.module';
 import { getConfig } from '../config/env.schema';
 import { DeepgramTtsConnector } from './tts/deepgram-tts.connector';
 import { TogetherTtsConnector } from './tts/together-tts.connector';
+// CONN-1671 — per-key access policy enforcement on STT/TTS dispatch paths that
+// bypass the ConnectorsService choke point. Provides the real PolicyService.
+import { PolicyModule } from '../policy/policy.module';
 
 @Module({
   imports: [
@@ -26,6 +29,7 @@ import { TogetherTtsConnector } from './tts/together-tts.connector';
     OpenAiSttModule,
     LocalWhisperSttModule,
     MetricsModule,
+    PolicyModule,
     // CONN-0104 — async STT pipeline queue. Distinct from connector-jobs
     // (chat/CLI) so concurrency=1 + 2 attempts apply only to faster-whisper.
     BullModule.registerQueue({

@@ -257,4 +257,84 @@ describe('SpeechService', () => {
   // STT moved out of SpeechService to SttRouterService per CONN-0102 —
   // no `.stt()` method here anymore. Coverage lives in stt-router.service.spec.ts
   // and the SpeechController STT-route spec below.
+
+  // CONN-1671 — per-key policy gate on the named TTS provider dispatch paths.
+  // These connectors bypass the ConnectorsService choke point, so the gate is
+  // applied inline (same class of bypass as STT). Mutation target: removing the
+  // gate makes the "policy denies deepgram" case dispatch instead of 403.
+  describe('CONN-1671 TTS policy enforcement', () => {
+    const V1 = { policyVersion: 1 as const };
+    const audio = {
+      status: 200,
+      headers: { 'content-type': 'audio/wav' },
+      body: new ArrayBuffer(4),
+      contentType: 'audio/wav',
+    };
+
+    function withPolicy(opts: { policy?: unknown; reject?: Error }): {
+      svc: SpeechService;
+      deepgram: { synthesize: ReturnType<typeof vi.fn> };
+    } {
+      const deepgram = { synthesize: vi.fn().mockResolvedValue(audio) };
+      const together = { synthesize: vi.fn().mockResolvedValue(audio) };
+      const proxy = { proxy: vi.fn().mockResolvedValue(audio) };
+      const policyService = {
+        getPolicyForKey: opts.reject
+          ? vi.fn().mockRejectedValue(opts.reject)
+          : vi.fn().mockResolvedValue(opts.policy ?? null),
+        isProviderAllowed: (policy: { providers?: string[] } | null, provider: string) =>
+          !policy?.providers || policy.providers.includes(provider),
+        isModelAllowed: () => ({ allowed: true }),
+        getTier: vi.fn().mockResolvedValue(undefined),
+        resolveProviderKeyEnv: () => null,
+        invalidateKey: () => undefined,
+      };
+      const svc = new SpeechService(
+        proxy as unknown as TranscribatorProxy,
+        deepgram as unknown as DeepgramTtsConnector,
+        together as unknown as TogetherTtsConnector,
+        policyService as never,
+      );
+      return { svc, deepgram };
+    }
+
+    const deepgramReq = { provider: 'deepgram' as const, model: 'aura-asteria-en', text: 'hi' };
+
+    it('null apiKeyId → dispatches unchanged (legacy unrestricted baseline)', async () => {
+      const { svc, deepgram } = withPolicy({ policy: { ...V1, providers: ['groq'] } });
+      const outcome = await svc.tts(deepgramReq, 'req-x'); // no apiKeyId
+      expect(outcome.kind).toBe('proxied');
+      expect(deepgram.synthesize).toHaveBeenCalledTimes(1);
+    });
+
+    it('policy allows deepgram → dispatches', async () => {
+      const { svc, deepgram } = withPolicy({ policy: { ...V1, providers: ['deepgram'] } });
+      const outcome = await svc.tts(deepgramReq, 'req-x', 'apikey-1');
+      expect(outcome.kind).toBe('proxied');
+      expect(deepgram.synthesize).toHaveBeenCalledTimes(1);
+    });
+
+    it('policy denies deepgram → 403 tts_policy_violation, connector NOT called', async () => {
+      const { svc, deepgram } = withPolicy({ policy: { ...V1, providers: ['groq'] } });
+      const outcome = await svc.tts(deepgramReq, 'req-x', 'apikey-1');
+      expect(outcome.kind).toBe('error');
+      if (outcome.kind === 'error') {
+        expect(outcome.envelope.statusCode).toBe(403);
+        expect(outcome.envelope.error_code).toBe('tts_policy_violation');
+      }
+      expect(deepgram.synthesize).not.toHaveBeenCalled();
+    });
+
+    it('malformed stored policy → fail closed 403, connector NOT called', async () => {
+      const { InvalidStoredPolicyError } = await import('../policy/policy.service');
+      const { svc, deepgram } = withPolicy({ reject: new InvalidStoredPolicyError('apikey-bad') });
+      const outcome = await svc.tts(deepgramReq, 'req-x', 'apikey-bad');
+      expect(outcome.kind).toBe('error');
+      if (outcome.kind === 'error') {
+        expect(outcome.envelope.statusCode).toBe(403);
+        expect(outcome.envelope.error_code).toBe('stt_policy_config_error');
+      }
+      expect(deepgram.synthesize).not.toHaveBeenCalled();
+    });
+  });
 });

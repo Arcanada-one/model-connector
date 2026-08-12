@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { uuidv7 } from 'uuidv7';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MetricsService } from '../../metrics/metrics.service';
@@ -14,9 +14,20 @@ import {
   SttProviderError,
   SttUnsupportedMimeError,
   SttAudioTooLargeError,
+  SttPolicyViolationError,
+  SttPolicyConfigError,
 } from './stt-pilot.errors';
 import { STT_ALLOWED_MIME_TYPES } from '../dto/stt-request.dto';
 import { getConfig } from '../../config/env.schema';
+// CONN-1671 — per-key access policy. The STT router dispatches to connectors
+// directly (never through ConnectorsService.execute, the CONN-1665 choke
+// point), so the policy gate is applied inline here to close that bypass.
+import {
+  InvalidStoredPolicyError,
+  PolicyService,
+  type PolicyServiceLike,
+} from '../../policy/policy.service';
+import type { ApiKeyPolicy } from '../../policy/policy.schema';
 import type {
   ISttConnector,
   SttConnectorRequest,
@@ -69,6 +80,15 @@ export class SttRouterService {
     localWhisperStt: LocalWhisperSttConnector,
     private readonly prisma: PrismaService,
     private readonly metrics: MetricsService,
+    // CONN-1671 — per-key access policy, injected via PolicyModule. NestJS
+    // treats a constructor param with a default value as optional and, in this
+    // codebase's DI graph, was passing the default instead of the exported
+    // PolicyService — silently disabling the gate in production while unit
+    // specs (which pass an explicit stub) stayed green. So there is NO default
+    // here: the real PolicyService is always injected in prod, and every manual
+    // `new SttRouterService(...)` construction passes an explicit stub.
+    @Inject(PolicyService)
+    private readonly policyService: PolicyServiceLike,
   ) {
     this.registry = buildRegistry(groqStt, deepgramStt, assemblyAiStt, openAiStt, localWhisperStt);
   }
@@ -87,6 +107,11 @@ export class SttRouterService {
     // Hard CB pre-loop — before any outbound HTTP egress.
     await this.checkBudgetOrThrow(config);
 
+    // CONN-1671 — load the caller's per-key access policy ONCE before the
+    // provider loop. Fail closed on a malformed stored policy (never fall back
+    // to unrestricted). Null policy = legacy unrestricted → gate is a no-op.
+    const policy = await this.loadPolicyOrFailClosed(apiKeyId);
+
     const order = this.parseProvidersOrder(config?.STT_PROVIDERS_ORDER ?? 'groq');
     const multi = config?.STT_MULTI_PROVIDER ?? false;
     const candidates = this.filterEnabled(order, config);
@@ -96,12 +121,24 @@ export class SttRouterService {
     }
 
     const tried: string[] = [];
+    const policyDenied: string[] = [];
     let lastErr: SttProviderError | undefined;
 
     for (const providerName of candidates) {
       const connector = this.registry.get(providerName);
       if (!connector) {
         this.logger.warn(`Provider "${providerName}" listed in order but not registered — skip`);
+        continue;
+      }
+      // CONN-1671 — per-key policy gate BEFORE dispatch. A denied provider is
+      // skipped exactly like an unregistered one (log + continue failover);
+      // if EVERY candidate is denied we surface an explicit policy_violation
+      // (403) below instead of a generic exhausted (503).
+      if (
+        policy &&
+        !(await this.isCandidatePolicyAllowed(policy, connector.provider, request.model))
+      ) {
+        policyDenied.push(connector.provider);
         continue;
       }
       tried.push(providerName);
@@ -165,7 +202,65 @@ export class SttRouterService {
       }
     }
 
+    // CONN-1671 — ZERO providers attempted because ALL candidates were
+    // policy-denied → explicit 403 policy_violation, not a generic 503
+    // exhausted. If at least one provider was attempted, the normal exhausted
+    // path above governs (some-denied-some-tried behaves normally).
+    if (tried.length === 0 && policyDenied.length > 0) {
+      this.logger.warn(
+        `STT request blocked by API key policy — all candidates denied: ${policyDenied.join(', ')}`,
+      );
+      throw new SttPolicyViolationError(policyDenied);
+    }
+
     throw new SttAllProvidersExhausted(tried, lastErr);
+  }
+
+  /**
+   * CONN-1671 — resolve the caller's per-key policy, failing CLOSED on a
+   * malformed stored value. Null return = legacy unrestricted key (gate no-op).
+   */
+  private async loadPolicyOrFailClosed(apiKeyId: string): Promise<ApiKeyPolicy | null> {
+    try {
+      return await this.policyService.getPolicyForKey(apiKeyId);
+    } catch (err) {
+      if (err instanceof InvalidStoredPolicyError) {
+        this.logger.error(
+          `STT access policy for key ${apiKeyId} is invalid — failing closed (request denied)`,
+        );
+        throw new SttPolicyConfigError();
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * CONN-1671 — per-candidate policy decision, mirroring
+   * ConnectorsService.isCandidateAllowedByPolicy. Provider gate first; the
+   * model gate runs ONLY when the request carries a non-empty model AND the
+   * policy actually restricts models (mode !== 'all'). STT commonly omits the
+   * model (provider default) — a null/empty model is NEVER default-denied; the
+   * provider gate alone governs it.
+   */
+  private async isCandidatePolicyAllowed(
+    policy: ApiKeyPolicy,
+    provider: string,
+    model: string | undefined,
+  ): Promise<boolean> {
+    if (!this.policyService.isProviderAllowed(policy, provider)) return false;
+    if (
+      typeof model === 'string' &&
+      model.length > 0 &&
+      policy.models &&
+      policy.models.mode !== 'all'
+    ) {
+      const tier =
+        policy.models.mode === 'free-only'
+          ? await this.policyService.getTier(provider, model)
+          : undefined;
+      if (!this.policyService.isModelAllowed(policy, provider, model, tier).allowed) return false;
+    }
+    return true;
   }
 
   private async attemptProvider(
