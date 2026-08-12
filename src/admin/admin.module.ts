@@ -7,9 +7,11 @@ import { WatcherRepairController } from './watcher-repair.controller';
 import { WatcherRepairGuard } from './watcher-repair.guard';
 // CONN-1665 — shared PolicyService singleton (write path invalidates the read cache).
 import { PolicyModule } from '../policy/policy.module';
+// CONN-1668 — shared AuthService singleton so create/revoke flush its verify cache.
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [ConnectorsModule, PolicyModule],
+  imports: [ConnectorsModule, PolicyModule, AuthModule],
   controllers: [AdminController, CircuitBreakerAdminController, WatcherRepairController],
   providers: [AdminService, WatcherRepairGuard],
 })

@@ -7,6 +7,8 @@ import { getConfig } from '../config/env.schema';
 // CONN-1665 — per-key access policy (validated by the controller BEFORE it gets here).
 import { PolicyService } from '../policy/policy.service';
 import type { ApiKeyPolicy } from '../policy/policy.schema';
+// CONN-1668 — flush the verified-key cache on key create/revoke.
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class AdminService {
@@ -16,6 +18,10 @@ export class AdminService {
     // the module provides the real singleton (shared with the choke point) so
     // policy writes invalidate the 60s read cache immediately.
     @Optional() private readonly policyService?: PolicyService,
+    // CONN-1668 — optional AuthService so create/revoke flush the verified-key
+    // cache immediately (a revoked key must stop authenticating, and a freshly
+    // created key must not be shadowed by a negative-cache entry).
+    @Optional() private readonly authService?: AuthService,
   ) {}
 
   async createKey(
@@ -34,6 +40,7 @@ export class AdminService {
         ...(policy !== undefined ? { policy: policy as Prisma.InputJsonValue } : {}),
       },
     });
+    this.authService?.flushVerifyCache();
     return { id: record.id, name: record.name, key: raw };
   }
 
@@ -50,6 +57,7 @@ export class AdminService {
     const key = await this.prisma.apiKey.findUnique({ where: { id } });
     if (!key) throw new NotFoundException(`Key ${id} not found`);
     await this.prisma.apiKey.update({ where: { id }, data: { active: false } });
+    this.authService?.flushVerifyCache();
   }
 
   /**
