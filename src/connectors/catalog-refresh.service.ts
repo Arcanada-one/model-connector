@@ -95,6 +95,18 @@ export class CatalogRefreshService implements OnModuleInit {
     this.running = true;
     try {
       const cycleObservedAt = new Date();
+      // CONN-1672 / INFRA-0384 — last-known-good snapshot, captured BEFORE this
+      // cycle writes anything, so the narrowing alarm below can compare the newly
+      // assembled snapshot against what the DB is about to preserve. Best-effort:
+      // a read failure just disables the alarm for this cycle (never blocks refresh).
+      const lkgByConnector = new Map<string, number>();
+      try {
+        for (const row of await this.catalogRepo.findAll()) {
+          lkgByConnector.set(row.connector, (lkgByConnector.get(row.connector) ?? 0) + 1);
+        }
+      } catch {
+        this.logger.warn('narrowing-alarm baseline read failed: reason=database');
+      }
       const refreshResults = await this.connectorsService.refreshAllProviderModels().catch(() => {
         this.logger.warn('refreshAllProviderModels failed: reason=unexpected');
         return new Map();
@@ -173,6 +185,35 @@ export class CatalogRefreshService implements OnModuleInit {
           observedAt: cycleObservedAt,
           authoritative: true,
         });
+      }
+
+      // CONN-1672 / INFRA-0384 — narrowing alarm. The LKG-preservation above
+      // (QA-FIX-A) deliberately keeps a provider's last-known-good rows when a
+      // cycle assembles nothing for it — a genuine safety, but one that also HIDES
+      // a silent narrowing (a readable provider suddenly assembling zero rows, or
+      // the whole catalog shrinking hard between cycles). "Silence must never look
+      // like health": diagnose it LOUDLY. This is pure observability layered on top
+      // — it does NOT change the preservation behavior above. Compared over the set
+      // of currently-readable providers only, so an operator READ toggle (a
+      // deliberate hide) never trips a false alarm.
+      let assembledTotal = 0;
+      for (const rows of rowsByConnector.values()) assembledTotal += rows.length;
+      let lkgReadableTotal = 0;
+      for (const [connector, lkgCount] of lkgByConnector) {
+        if (!this.connectorsService.canRead(connector)) continue;
+        lkgReadableTotal += lkgCount;
+        if (lkgCount > 0 && (rowsByConnector.get(connector)?.length ?? 0) === 0) {
+          this.logger.warn(
+            `catalog narrowing alarm: ${connector} assembled 0 rows this cycle but ` +
+              `last-known-good held ${lkgCount} (rows preserved via LKG — investigate: silent narrowing)`,
+          );
+        }
+      }
+      if (lkgReadableTotal > 0 && assembledTotal < lkgReadableTotal * 0.8) {
+        this.logger.warn(
+          `catalog narrowing alarm: assembled ${assembledTotal} rows this cycle vs ` +
+            `last-known-good ${lkgReadableTotal} (>20% shrink across readable providers — investigate)`,
+        );
       }
 
       // Pick up any operator-side DB toggle made directly in provider_access

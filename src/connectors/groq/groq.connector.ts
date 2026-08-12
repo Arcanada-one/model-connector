@@ -5,6 +5,7 @@ import {
   ProviderModelMeta,
 } from '../interfaces/connector.interface';
 import { ModelModality, normalizePerMTokPrice } from '../dto/catalog.dto';
+import { buildGroqFreeModels } from './groq.catalogue';
 
 interface GroqChatResponse {
   id: string;
@@ -88,14 +89,26 @@ export class GroqConnector extends BaseApiConnector {
   protected extractModels(json: unknown): ProviderModelMeta[] {
     const data = (json as { data?: unknown })?.data;
     if (!Array.isArray(data)) return [];
+    // CONN-1672 — operator-curated free-tier chat allowlist (GROQ_FREE_MODELS env,
+    // default GROQ_FREE_MODELS_DEFAULT). Groq's free tier is genuinely $0
+    // (rate-limited), but its /models list still reports list-pricing for these
+    // models, which catalog-mapper's deriveTier reads as PAID and lets override the
+    // free flag. For an allowlisted model we SUPPRESS the list-price (pricing→null)
+    // so deriveTier's free-flag rule marks it catalog-free. Read per call (mirrors
+    // getTimeout/getHeaders) so an operator env change is picked up on next refresh.
+    const freeAllowlist = new Set(buildGroqFreeModels(process.env.GROQ_FREE_MODELS));
     const out: ProviderModelMeta[] = [];
     for (const entry of data) {
       const e = entry as GroqModelEntry;
       if (typeof e.id !== 'string' || e.id.length === 0) continue;
       const modality = this.classifyGroqModality(e);
       const textOutput = modality === 'chat' || modality === 'moderation';
+      // CONN-1672 — on the allowlist ⇒ suppress the reported list-price so the tier
+      // derivation honours the free flag (rule 2) instead of the price (rule 1).
+      // NOT on the list ⇒ pricing flows through unchanged and the model stays paid.
+      const suppressPricing = freeAllowlist.has(e.id);
       const pricing =
-        textOutput && e.pricing
+        !suppressPricing && textOutput && e.pricing
           ? {
               inputPerMTok: normalizePerMTokPrice(e.pricing.prompt),
               outputPerMTok: normalizePerMTokPrice(e.pricing.completion),

@@ -580,6 +580,28 @@ describe('ConnectorsService', () => {
         expect(result.some((m) => m.connector === 'claude-code')).toBe(true);
       });
 
+      // CONN-1672 (AC3) — negative control: prove the READ gate is what actually
+      // controls catalog visibility, not some incidental filter. Same connector,
+      // same fixture, toggled read=true→N rows / read=false→0 rows in one test.
+      // Mutation-honest: deleting `if (!access.read) continue;` from
+      // buildCatalogSnapshot makes the read=false arm yield the provider's rows,
+      // failing the `toBe(0)` assertion.
+      it('READ-gate negative control: read=true yields N rows, read=false yields 0', async () => {
+        service.register(freeProviderConnector); // groq, 1 model
+
+        // read=TRUE (groq unlisted → fully enabled)
+        process.env.PROVIDER_ACCESS = '';
+        const readable = (await service.buildCatalogSnapshot()).filter(
+          (m) => m.connector === 'groq',
+        );
+        expect(readable.length).toBe(1);
+
+        // read=FALSE (explicitly hidden)
+        process.env.PROVIDER_ACCESS = 'groq:none';
+        const hidden = (await service.buildCatalogSnapshot()).filter((m) => m.connector === 'groq');
+        expect(hidden.length).toBe(0);
+      });
+
       it('canRead/canUse reflect the configured access level', () => {
         process.env.PROVIDER_ACCESS = 'openmodel:read';
         expect(service.canRead('openmodel')).toBe(true);

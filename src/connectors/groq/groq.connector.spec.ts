@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { GroqConnector } from './groq.connector';
+import { GROQ_FREE_MODELS_DEFAULT } from './groq.catalogue';
+import { deriveTier } from '../catalog-mapper';
 
 // Live capture — GET https://api.groq.com/openai/v1/models, arcana-dev 2026-06-23.
 // 17 entries incl. non-chat families (whisper STT, orpheus TTS, llama-prompt-guard).
@@ -23,6 +25,7 @@ describe('GroqConnector', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     delete process.env.GROQ_API_KEY;
+    delete process.env.GROQ_FREE_MODELS;
   });
 
   // --- Fixtures (Groq OpenAI-compatible response, see datarim/tasks/CONN-0047-fixtures.md) ---
@@ -378,6 +381,11 @@ describe('GroqConnector', () => {
     });
 
     it('surfaces real per-1M-token pricing + context for chat models (no fabrication)', async () => {
+      // CONN-1672 — llama-3.3-70b-versatile is on the DEFAULT free allowlist, so its
+      // list-price is now suppressed by default. Narrow the allowlist here to a
+      // non-matching id so this test keeps proving the price NORMALIZATION path
+      // (per-token → per-1M) for a non-allowlisted priced chat model.
+      process.env.GROQ_FREE_MODELS = 'allam-2-7b';
       mockModelsOk();
       await connector.refreshModels();
       const caps = connector.getCapabilities();
@@ -423,6 +431,82 @@ describe('GroqConnector', () => {
       expect(caps.models).not.toContain('allam-2-7b');
       // static floor is chat-only — no STT/TTS offline
       expect(caps.models).not.toContain('whisper-large-v3');
+    });
+  });
+
+  // CONN-1672 — Groq's free tier is genuinely $0 (rate-limited) for its chat
+  // families, but the /models list reports list-pricing for them, which
+  // catalog-mapper.deriveTier rule 1 (any known price > 0 → paid) would let
+  // OVERRIDE the free flag. The connector suppresses the list-price for models on
+  // the operator-curated GROQ_FREE_MODELS allowlist so they tier as catalog-free.
+  // Models OFF the list keep their pricing and stay paid (CONN-0244-safe — an
+  // explicit allowlist, not a blanket free-flag override).
+  describe('GROQ_FREE_MODELS allowlist (CONN-1672 free-tier suppression)', () => {
+    function mockModelsOk() {
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(GROQ_MODELS_FIXTURE),
+      });
+    }
+    const metaFor = (caps: ReturnType<GroqConnector['getCapabilities']>, id: string) =>
+      (caps.modelMeta ?? []).find((m) => m.id === id);
+
+    it('allowlisted chat model WITH list-pricing → pricing suppressed → deriveTier free=true', async () => {
+      // Narrow the allowlist to exactly the model under test so the negative case
+      // below (same fixture, same run) is a genuine non-member.
+      process.env.GROQ_FREE_MODELS = 'llama-3.3-70b-versatile';
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      const m = metaFor(caps, 'llama-3.3-70b-versatile');
+      // fixture prices this model 0.59/0.79 per-1M — suppressed because allowlisted.
+      expect(m?.pricing).toBeNull();
+      expect(m?.free).toBe(true);
+      const tier = deriveTier({
+        inputPerMTok: m?.pricing?.inputPerMTok ?? null,
+        outputPerMTok: m?.pricing?.outputPerMTok ?? null,
+        free: m?.free ?? false,
+      });
+      expect(tier).toEqual({ tier: 'free', free: true });
+    });
+
+    it('NON-allowlisted chat model WITH list-pricing → pricing preserved → deriveTier free=false', async () => {
+      // Only llama-3.3-70b-versatile is free here; llama-3.1-8b-instant is priced
+      // and NOT on the (narrowed) allowlist, so it must stay paid.
+      process.env.GROQ_FREE_MODELS = 'llama-3.3-70b-versatile';
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      const m = metaFor(caps, 'llama-3.1-8b-instant');
+      // fixture: prompt 0.00000005, completion 0.00000008 per token → ×1e6.
+      expect(m?.pricing?.inputPerMTok).toBe(0.05);
+      expect(m?.pricing?.outputPerMTok).toBe(0.08);
+      const tier = deriveTier({
+        inputPerMTok: m?.pricing?.inputPerMTok ?? null,
+        outputPerMTok: m?.pricing?.outputPerMTok ?? null,
+        free: m?.free ?? false,
+      });
+      expect(tier).toEqual({ tier: 'paid', free: false });
+    });
+
+    it('DEFAULT allowlist (no env override) suppresses list-pricing for every curated chat model present', async () => {
+      // No GROQ_FREE_MODELS override → the built-in 11-model curated default applies.
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      for (const id of GROQ_FREE_MODELS_DEFAULT) {
+        const m = metaFor(caps, id);
+        if (!m) continue; // fixture need not carry every curated id
+        expect(
+          m.pricing,
+          `${id} list-pricing should be suppressed by the default allowlist`,
+        ).toBeNull();
+        expect(m.free, `${id} should keep free=true`).toBe(true);
+      }
+      // sanity: at least one curated model was actually exercised from the fixture
+      const exercised = GROQ_FREE_MODELS_DEFAULT.filter((id) => metaFor(caps, id));
+      expect(exercised.length).toBeGreaterThanOrEqual(5);
     });
   });
 
