@@ -28,6 +28,9 @@ const HTTP_ERROR_STATUS: Record<string, HttpStatus> = {
   queue_timeout: HttpStatus.SERVICE_UNAVAILABLE,
   unsupported_modality: HttpStatus.BAD_REQUEST,
   validation_error: HttpStatus.BAD_REQUEST,
+  // CONN-1665 — per-key access policy denial / server-side policy misconfiguration.
+  policy_violation: HttpStatus.FORBIDDEN,
+  config_error: HttpStatus.INTERNAL_SERVER_ERROR,
 };
 
 function nowUnixSeconds(): number {

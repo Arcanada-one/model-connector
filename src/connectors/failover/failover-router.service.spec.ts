@@ -56,6 +56,10 @@ function makeService(execImpl: (connector: string) => Promise<ConnectorResponse>
   const mockConnectors = {
     listCapabilities: vi.fn(() => CAPS),
     execute,
+    // CONN-1665 — failover consults the per-key policy before dispatch; these
+    // tests exercise legacy (policy-less) keys.
+    getKeyPolicy: vi.fn(async () => null),
+    isCandidateAllowedByPolicy: vi.fn(async () => true),
   };
   const service = new FailoverRouterService(
     mockConnectors as unknown as ConstructorParameters<typeof FailoverRouterService>[0],

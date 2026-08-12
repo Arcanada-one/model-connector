@@ -12,7 +12,11 @@ import { ConnectorsService } from '../connectors.service';
 import { ConnectorRequest, ConnectorResponse } from '../interfaces/connector.interface';
 import { buildFailoverCandidates } from './failover.candidates';
 import { runFailoverChain } from './failover.chain';
+import { FailoverAbortError } from './failover.errors';
 import { getConfig } from '../../config/env.schema';
+// CONN-1665 — per-key policy candidate filtering (attribution before dispatch).
+import type { ApiKeyPolicy } from '../../policy/policy.schema';
+import type { CascadeCandidate } from '../cascade/cascade.profiles';
 
 export interface FailoverOptions {
   /** OpenAI `model` field — a preference, not a hard constraint (see candidate builder). */
@@ -69,7 +73,7 @@ export class FailoverRouterService {
     opts: FailoverOptions = {},
   ): Promise<ConnectorResponse> {
     const cfg = this.readConfig();
-    const candidates = buildFailoverCandidates({
+    let candidates = buildFailoverCandidates({
       capabilities: this.connectorsService.listCapabilities(),
       requestedModel: opts.requestedModel,
       providerOrder: cfg.providerOrder,
@@ -77,6 +81,42 @@ export class FailoverRouterService {
       paidEnabled: cfg.paidEnabled,
       allowFreeDowngrade: cfg.allowFreeDowngrade,
     });
+
+    // CONN-1665 — filter candidates by the caller's per-key policy BEFORE
+    // dispatch. The execute() choke point remains the hard guarantee; this
+    // filter exists so an all-denied chain surfaces an explicit
+    // policy_violation instead of a misleading cascade_exhausted, and so
+    // denied candidates never burn failover hops. AND semantics with the
+    // global gates (paidEnabled etc.) — the policy only narrows the list.
+    let policy: ApiKeyPolicy | null = null;
+    try {
+      policy = await this.connectorsService.getKeyPolicy(apiKeyId);
+    } catch {
+      // Malformed stored policy — fail closed (details logged by PolicyService).
+      throw new FailoverAbortError(
+        'none',
+        opts.requestedModel ?? 'auto',
+        'config_error',
+        'The access policy stored for this API key is invalid; contact the administrator.',
+      );
+    }
+    if (policy) {
+      const filtered: CascadeCandidate[] = [];
+      for (const c of candidates) {
+        if (await this.connectorsService.isCandidateAllowedByPolicy(policy, c.connector, c.model)) {
+          filtered.push(c);
+        }
+      }
+      if (filtered.length === 0) {
+        throw new FailoverAbortError(
+          'none',
+          opts.requestedModel ?? 'auto',
+          'policy_violation',
+          "No candidate models are permitted by this API key's access policy.",
+        );
+      }
+      candidates = filtered;
+    }
 
     this.logger.log(
       `Failover: ${candidates.length} candidate(s) for model="${opts.requestedModel ?? 'auto'}": ` +

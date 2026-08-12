@@ -8,6 +8,8 @@ import {
   ProviderModelMeta,
 } from '../interfaces/connector.interface';
 import { normalizePerMTokPrice } from '../dto/catalog.dto';
+// CONN-1665 — per-request provider-key override (set by ConnectorsService.execute).
+import { getProviderKeyOverride } from '../../policy/provider-key.context';
 
 interface OpenRouterResponse {
   id: string;
@@ -172,7 +174,13 @@ export class OpenRouterConnector extends BaseApiConnector {
   }
 
   protected getHeaders(): Record<string, string> {
-    const apiKey = process.env.OPENROUTER_API_KEY || '';
+    // CONN-1665 — per-key policy override: when the caller's key policy names
+    // a dedicated env key for openrouter, ConnectorsService.execute wraps the
+    // retry loop in the provider-key ALS context and this connector uses that
+    // key instead of the shared OPENROUTER_API_KEY. The helper returns null
+    // unless the active context is scoped to THIS provider, so a failover hop
+    // to another connector inside the same context never sees the override.
+    const apiKey = getProviderKeyOverride(this.name) ?? (process.env.OPENROUTER_API_KEY || '');
     return {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,

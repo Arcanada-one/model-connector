@@ -41,6 +41,9 @@ const HTTP_ERROR_STATUS: Record<string, HttpStatus> = {
   service_unavailable: HttpStatus.SERVICE_UNAVAILABLE,
   rate_limited: HttpStatus.TOO_MANY_REQUESTS,
   unsupported_modality: HttpStatus.BAD_REQUEST,
+  // CONN-1665 — per-key access policy denial / server-side policy misconfiguration.
+  policy_violation: HttpStatus.FORBIDDEN,
+  config_error: HttpStatus.INTERNAL_SERVER_ERROR,
 };
 
 @Controller()
