@@ -169,11 +169,26 @@ export class OrqConnector extends BaseApiConnector {
     }
 
     const ids: string[] = [];
+    // CONN-0270 — dedupe by model_id. orq's /models can list the same model_id
+    // more than once; a single duplicate makes the downstream snapshot
+    // validation (CatalogSnapshotValidationError) reject the ENTIRE orq
+    // snapshot, silently dropping all ~524 models from the catalog. Keep the
+    // first occurrence and surface the count.
+    const seen = new Set<string>();
+    let duplicates = 0;
     for (const entry of json as OrqModelEntry[]) {
       if (typeof entry?.model_id !== 'string') continue;
       if (entry.model_type === 'chat' && entry.is_active === true) {
+        if (seen.has(entry.model_id)) {
+          duplicates += 1;
+          continue;
+        }
+        seen.add(entry.model_id);
         ids.push(entry.model_id);
       }
+    }
+    if (duplicates > 0) {
+      this.logger.warn(`orq /models returned ${duplicates} duplicate model_id(s) — deduped`);
     }
 
     if (ids.length === 0) {
