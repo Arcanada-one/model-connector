@@ -12,15 +12,15 @@
   "dependencies": {
     "pino": "^10.3.1",
     "yaml": "2.9.0",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
-    "@typescript-eslint/eslint-plugin": "^8.61.1",
-    "@typescript-eslint/parser": "^8.61.1",
-    "@vitest/coverage-v8": "^4.1.4",
-    "eslint": "^10.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.66.0",
+    "@typescript-eslint/parser": "^8.66.0",
+    "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.8.1",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.10"
   }
 }
