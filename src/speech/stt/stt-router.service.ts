@@ -80,19 +80,15 @@ export class SttRouterService {
     localWhisperStt: LocalWhisperSttConnector,
     private readonly prisma: PrismaService,
     private readonly metrics: MetricsService,
-    // CONN-1671 — per-key access policy. Defaulted to a permissive no-op
-    // (null policy = legacy unrestricted) so existing manual
-    // `new SttRouterService(...)` constructions keep working unchanged; the
-    // module provides the real PolicyService.
+    // CONN-1671 — per-key access policy, injected via PolicyModule. NestJS
+    // treats a constructor param with a default value as optional and, in this
+    // codebase's DI graph, was passing the default instead of the exported
+    // PolicyService — silently disabling the gate in production while unit
+    // specs (which pass an explicit stub) stayed green. So there is NO default
+    // here: the real PolicyService is always injected in prod, and every manual
+    // `new SttRouterService(...)` construction passes an explicit stub.
     @Inject(PolicyService)
-    private readonly policyService: PolicyServiceLike = {
-      getPolicyForKey: async () => null,
-      isProviderAllowed: () => true,
-      isModelAllowed: () => ({ allowed: true }),
-      getTier: async () => undefined,
-      resolveProviderKeyEnv: () => null,
-      invalidateKey: () => undefined,
-    },
+    private readonly policyService: PolicyServiceLike,
   ) {
     this.registry = buildRegistry(groqStt, deepgramStt, assemblyAiStt, openAiStt, localWhisperStt);
   }

@@ -51,6 +51,8 @@ function buildRouter(opts: {
     fakeLocalWhisper as never,
     prisma as never,
     metrics as never,
+    // CONN-1671 — this spec does not exercise policy; inject a permissive stub.
+    { getPolicyForKey: async () => null } as never,
   );
   if (opts.registry) {
     router.setRegistry(opts.registry);
