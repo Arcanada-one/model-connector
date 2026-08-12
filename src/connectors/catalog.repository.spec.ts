@@ -122,7 +122,12 @@ describe('CatalogRepository CONN-1646', () => {
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
-  it('rejects duplicate provider model identities before opening a transaction', async () => {
+  it('dedupes duplicate provider model identities instead of rejecting the whole provider (CONN-0270)', async () => {
+    // A provider (orq) returning a duplicate model id must lose only that dup
+    // row, not its entire catalog — the persist upserts by the connector_model
+    // unique key so a dup is idempotent-safe. Previously this THREW and dropped
+    // all of the provider's models; now it dedupes (keep first) and persists.
+    transaction.modelCatalog.findMany.mockResolvedValue([]);
     await expect(
       repository.applyProviderSnapshot({
         connector: 'groq',
@@ -132,10 +137,25 @@ describe('CatalogRepository CONN-1646', () => {
         observedAt: new Date('2026-07-26T13:00:00.000Z'),
         authoritative: true,
       }),
+    ).resolves.toBeDefined();
+    // The transaction ran, and only ONE unique row was upserted (the dup dropped).
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(transaction.modelCatalog.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('still rejects a genuine connector mismatch before opening a transaction', async () => {
+    await expect(
+      repository.applyProviderSnapshot({
+        connector: 'groq',
+        rows: [row({ model: 'm', connector: 'not-groq' })],
+        source: 'provider-api',
+        freshness: 'fresh',
+        observedAt: new Date('2026-07-26T13:00:00.000Z'),
+        authoritative: true,
+      }),
     ).rejects.toMatchObject({
       name: 'CatalogSnapshotValidationError',
       code: 'CATALOG_SNAPSHOT_INVALID_INPUT',
-      message: 'Catalog snapshot input is invalid',
     });
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
