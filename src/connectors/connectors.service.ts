@@ -878,14 +878,15 @@ export class ConnectorsService {
     // context is never handed off through the BullMQ queue path (ALS does not
     // survive serialization; that path bypasses all gates and is asserted
     // dead in enqueue-dead-path.spec.ts).
-    const runAttempts = async (): Promise<void> => {
+    const runAttempts = async (): Promise<OutputGuardReport | null> => {
+      let report: OutputGuardReport | null = null;
       for (let attempt = 1; attempt <= attemptsForRequest; attempt++) {
         let response: ConnectorResponse;
         if (guardActive) {
           const outcome = await this.outputGuardMiddleware.wrapExecute(connector, providerRequest);
           response = outcome.response;
           if (outcome.report) {
-            guardReport = outcome.report;
+            report = outcome.report;
           }
         } else {
           response = await connector.execute(providerRequest);
@@ -923,13 +924,14 @@ export class ConnectorsService {
         this.logger.warn(`Retry ${attempt}/${maxRetries} for ${connectorName}: ${errorType}`);
         await new Promise((r) => setTimeout(r, delay + jitter));
       }
+      return report;
     };
 
     try {
       if (providerKeyOverride) {
-        await providerKeyContext.run(providerKeyOverride, runAttempts);
+        guardReport = await providerKeyContext.run(providerKeyOverride, runAttempts);
       } else {
-        await runAttempts();
+        guardReport = await runAttempts();
       }
 
       let response = lastResponse!;
