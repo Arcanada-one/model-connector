@@ -59,6 +59,10 @@ function makeMockConnectorsService(
       return Promise.resolve(item ?? makeErrorResponse('server_error'));
     }),
     canUse: vi.fn((connector: string) => canUse(connector)),
+    // CONN-1665 — cascade consults the per-key policy before dispatch; these
+    // tests exercise legacy (policy-less) keys.
+    getKeyPolicy: vi.fn(async () => null),
+    isCandidateAllowedByPolicy: vi.fn(async () => true),
   };
 }
 

@@ -5,9 +5,11 @@ import { CircuitBreakerAdminController } from './circuit-breaker.controller';
 import { ConnectorsModule } from '../connectors/connectors.module';
 import { WatcherRepairController } from './watcher-repair.controller';
 import { WatcherRepairGuard } from './watcher-repair.guard';
+// CONN-1665 — shared PolicyService singleton (write path invalidates the read cache).
+import { PolicyModule } from '../policy/policy.module';
 
 @Module({
-  imports: [ConnectorsModule],
+  imports: [ConnectorsModule, PolicyModule],
   controllers: [AdminController, CircuitBreakerAdminController, WatcherRepairController],
   providers: [AdminService, WatcherRepairGuard],
 })

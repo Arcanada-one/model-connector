@@ -74,6 +74,65 @@ describe('AdminService', () => {
     });
   });
 
+  // ── CONN-1665 — per-key policy write path ──
+  describe('createKey with policy', () => {
+    it('persists the (pre-validated) policy JSON', async () => {
+      mockPrisma.apiKey.create.mockResolvedValue({ id: 'uuid-1', name: 'test' });
+      const policy = { policyVersion: 1 as const, models: { mode: 'free-only' as const } };
+
+      await service.createKey('test', undefined, policy);
+
+      expect(mockPrisma.apiKey.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ policy }) }),
+      );
+    });
+
+    it('omits the policy field entirely when not provided', async () => {
+      mockPrisma.apiKey.create.mockResolvedValue({ id: 'uuid-1', name: 'test' });
+
+      await service.createKey('test');
+
+      const data = mockPrisma.apiKey.create.mock.calls[0][0].data;
+      expect('policy' in data).toBe(false);
+    });
+  });
+
+  describe('setKeyPolicy', () => {
+    const policy = { policyVersion: 1 as const, providers: ['openrouter'] };
+
+    it('updates the policy and invalidates the PolicyService cache', async () => {
+      const policyService = { invalidateKey: vi.fn() };
+      const svc = new AdminService(mockPrisma as unknown as PrismaService, policyService as never);
+      mockPrisma.apiKey.findUnique.mockResolvedValue({ id: 'uuid-1' });
+      mockPrisma.apiKey.update.mockResolvedValue({ id: 'uuid-1' });
+
+      await svc.setKeyPolicy('uuid-1', policy);
+
+      expect(mockPrisma.apiKey.update).toHaveBeenCalledWith({
+        where: { id: 'uuid-1' },
+        data: { policy },
+      });
+      expect(policyService.invalidateKey).toHaveBeenCalledWith('uuid-1');
+    });
+
+    it('null clears the stored policy (DbNull)', async () => {
+      mockPrisma.apiKey.findUnique.mockResolvedValue({ id: 'uuid-1' });
+      mockPrisma.apiKey.update.mockResolvedValue({ id: 'uuid-1' });
+
+      await service.setKeyPolicy('uuid-1', null);
+
+      const data = mockPrisma.apiKey.update.mock.calls[0][0].data;
+      // Prisma.DbNull sentinel — anything but a plain null/undefined pass-through.
+      expect(data.policy).not.toBeNull();
+      expect(data.policy).toBeDefined();
+    });
+
+    it('throws NotFoundException for a non-existent key', async () => {
+      mockPrisma.apiKey.findUnique.mockResolvedValue(null);
+      await expect(service.setKeyPolicy('missing', policy)).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('listKeys', () => {
     it('should return keys without hash, sorted by createdAt desc', async () => {
       const keys = [

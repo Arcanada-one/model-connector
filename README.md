@@ -433,6 +433,58 @@ printf 'header = "Authorization: Bearer %s"\n' "$MC_API_KEY" | \
 # 401 → ключ невалиден
 ```
 
+### Per-key access policy
+
+Every API key may carry an optional access policy (`ApiKey.policy`, JSONB).
+A key without a policy is a legacy unrestricted key. The shape's single source
+of truth is the Zod schema `apiKeyPolicySchema` in `src/policy/policy.schema.ts`:
+
+```json
+{
+  "policyVersion": 1,
+  "providers": ["openrouter"],
+  "models": { "mode": "free-only" },
+  "providerKeys": { "openrouter": "OPENROUTER_API_KEY_EMAIL_AGENT" }
+}
+```
+
+- **`providers`** (optional) — allowlist of connector names. Absent = all
+  providers.
+- **`models.mode`** — `all` | `free-only` | `list` (with `models.list` of
+  model ids). Under `free-only` the tier comes from the **model catalog**
+  (`deriveTier`-persisted, real provider tariffs) — never from a `:free` id
+  suffix. A model with unknown catalog tier is **denied / omitted**
+  (fail-closed).
+- **`providerKeys`** — provider name → **env var NAME** (never a key value)
+  holding a dedicated API key for that provider. Names are validated
+  (`^[A-Z][A-Z0-9_]*$`) and restricted at write time to override-capable
+  connectors (`KEY_OVERRIDE_CAPABLE`, currently `openrouter` only). At
+  request time the resolved key is threaded to the connector through an
+  AsyncLocalStorage context covering the whole retry loop; a missing env var
+  fails loud with `config_error` — there is **no silent fallback** to the
+  shared provider key.
+
+Policies are **write-time validated** (admin API rejects malformed payloads
+before Prisma) and enforced at the single `ConnectorsService.execute()` choke
+point (`policy_violation` errors, HTTP 403). Discovery surfaces
+(`GET /v1/models`, `GET /connectors/catalog`) are filtered by the same rules.
+A per-key policy is **AND-ed** with the global gates (`PROVIDER_ACCESS`
+canUse, `FAILOVER_PAID_ENABLED`, budgets) — both must allow.
+
+Admin endpoints:
+
+```bash
+# Create a key with a policy
+POST /admin/keys        { "name": "email-agent", "policy": { ... } }
+# Set / replace / clear a key's policy (null clears)
+PATCH /admin/keys/:id/policy   { "policy": { ... } | null }
+```
+
+Canonical policies:
+
+- **"Email Agent"** — `{"policyVersion":1,"providers":["openrouter"],"models":{"mode":"free-only"},"providerKeys":{"openrouter":"OPENROUTER_API_KEY_EMAIL_AGENT"}}`
+- **"Agents Free Arcanada"** — `{"policyVersion":1,"providers":["openrouter"],"models":{"mode":"free-only"},"providerKeys":{"openrouter":"OPENROUTER_API_KEY_AGENTS_FREE"}}`
+
 ## Architecture
 
 ```

@@ -12,6 +12,8 @@ import {
 import { buildLowReasoningCandidates, CascadeCandidate } from './cascade.profiles';
 import { CascadeExhaustedError, CascadeBudgetExceededError } from './cascade.errors';
 import { getConfig } from '../../config/env.schema';
+// CONN-1665 — per-key policy candidate filtering (attribution before dispatch).
+import type { ApiKeyPolicy } from '../../policy/policy.schema';
 
 function todayUtc(): string {
   return new Date().toISOString().slice(0, 10);
@@ -67,6 +69,24 @@ export class CascadeRouterService {
     throw new Error(`Unknown cascade profile: "${profile}"`);
   }
 
+  /** CONN-1665 — explicit policy/config denial envelope for the cascade surface. */
+  private policyDenialResponse(
+    type: 'policy_violation' | 'config_error',
+    message: string,
+  ): ConnectorResponse {
+    const action = classifyErrorAction(type);
+    return {
+      id: '',
+      connector: 'none',
+      model: 'none',
+      result: '',
+      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+      latencyMs: 0,
+      status: 'error',
+      error: { type, message, ...action },
+    };
+  }
+
   private getBudgetLimitUsd(): number {
     try {
       return getConfig().CASCADE_PAID_DAILY_BUDGET_USD;
@@ -82,7 +102,37 @@ export class CascadeRouterService {
   ): Promise<ConnectorResponse> {
     this.resetDailyBudgetIfNeeded();
 
-    const candidates = this.getCandidates(profile);
+    let candidates = this.getCandidates(profile);
+
+    // CONN-1665 — filter cascade candidates by the caller's per-key policy
+    // BEFORE dispatch. The ConnectorsService.execute() choke point remains the
+    // hard guarantee; this filter provides correct attribution: an all-denied
+    // list yields an explicit policy_violation, not a generic exhausted error.
+    let policy: ApiKeyPolicy | null = null;
+    try {
+      policy = await this.connectorsService.getKeyPolicy(apiKeyId);
+    } catch {
+      // Malformed stored policy — fail closed (details logged by PolicyService).
+      return this.policyDenialResponse(
+        'config_error',
+        'The access policy stored for this API key is invalid; contact the administrator.',
+      );
+    }
+    if (policy) {
+      const filtered: CascadeCandidate[] = [];
+      for (const c of candidates) {
+        if (await this.connectorsService.isCandidateAllowedByPolicy(policy, c.connector, c.model)) {
+          filtered.push(c);
+        }
+      }
+      if (filtered.length === 0) {
+        return this.policyDenialResponse(
+          'policy_violation',
+          "No cascade candidates are permitted by this API key's access policy.",
+        );
+      }
+      candidates = filtered;
+    }
     const tried: { connector: string; model: string; errorType: string }[] = [];
     const startMs = Date.now();
     let fallbackCount = 0;

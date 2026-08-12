@@ -41,6 +41,9 @@ const HTTP_ERROR_STATUS: Record<string, HttpStatus> = {
   service_unavailable: HttpStatus.SERVICE_UNAVAILABLE,
   rate_limited: HttpStatus.TOO_MANY_REQUESTS,
   unsupported_modality: HttpStatus.BAD_REQUEST,
+  // CONN-1665 — per-key access policy denial / server-side policy misconfiguration.
+  policy_violation: HttpStatus.FORBIDDEN,
+  config_error: HttpStatus.INTERNAL_SERVER_ERROR,
 };
 
 @Controller()
@@ -76,7 +79,7 @@ export class ConnectorsController {
    * match the literal segment "catalog" as a :name parameter.
    */
   @Get('connectors/catalog')
-  async getCatalog(@Query() rawQuery: Record<string, string>) {
+  async getCatalog(@Query() rawQuery: Record<string, string>, @Req() req: AuthenticatedRequest) {
     // CONN-0232: `?type=` is an operator-facing alias for `?modality=`. Map it
     // before parsing; an explicit `?modality=` always wins.
     const { type, ...rest } = rawQuery;
@@ -89,7 +92,11 @@ export class ConnectorsController {
         HttpStatus.BAD_REQUEST,
       );
     }
-    return this.connectorsService.getCatalog(parsed.data);
+    // CONN-1665 — discovery mirrors enforcement: filter by the caller's policy.
+    const apiKeyId = req.apiKey?.id;
+    return apiKeyId
+      ? this.connectorsService.getCatalog(parsed.data, apiKeyId)
+      : this.connectorsService.getCatalog(parsed.data);
   }
 
   @Get('connectors/:name/status')

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   Body,
@@ -13,7 +14,7 @@ import {
 import { Public } from '../auth/public.decorator';
 import { AdminGuard } from './admin.guard';
 import { AdminService } from './admin.service';
-import { CreateKeySchema } from './dto';
+import { CreateKeySchema, SetKeyPolicySchema } from './dto';
 
 @Controller('admin/keys')
 @UseGuards(AdminGuard)
@@ -28,12 +29,27 @@ export class AdminController {
     if (!result.success) {
       throw new BadRequestException(result.error.issues);
     }
-    return this.adminService.createKey(result.data.name, result.data.rateLimit);
+    return this.adminService.createKey(result.data.name, result.data.rateLimit, result.data.policy);
   }
 
   @Get()
   async list() {
     return this.adminService.listKeys();
+  }
+
+  /**
+   * CONN-1665 — set/replace a key's access policy (body `{ policy: {...} }`);
+   * `{ policy: null }` clears it. Zod write-time validation — malformed
+   * policies (wrong shape, non-env-name providerKeys values, providers
+   * without override support) are rejected before Prisma.
+   */
+  @Patch(':id/policy')
+  async setPolicy(@Param('id') id: string, @Body() body: unknown) {
+    const result = SetKeyPolicySchema.safeParse(body);
+    if (!result.success) {
+      throw new BadRequestException(result.error.issues);
+    }
+    return this.adminService.setKeyPolicy(id, result.data.policy);
   }
 
   @Delete(':id')

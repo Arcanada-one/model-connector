@@ -34,4 +34,17 @@ if ! node_modules/.bin/prisma migrate deploy 2>/tmp/mc-migrate.err; then
   fi
 fi
 
+# CONN-1666: source per-agent provider keys from Vault into process env only
+# (never written to disk). No-op when MC_VAULT_ROLE_ID is unset (.env keys
+# stay in effect); FATAL on partial config or an unreadable secret, because a
+# silently missing per-agent key would route that agent's traffic through the
+# shared key — exactly what the CONN-1665 policy layer forbids.
+echo "[entrypoint] sourcing provider keys from Vault (if configured)..."
+if ! VAULT_EXPORTS="$(node scripts/vault-provider-keys.mjs)"; then
+  echo "[entrypoint] Vault provider-key sourcing FAILED"
+  exit 78
+fi
+eval "$VAULT_EXPORTS"
+unset VAULT_EXPORTS
+
 exec "$@"

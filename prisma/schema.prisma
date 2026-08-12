@@ -41,6 +41,11 @@ model ApiKey {
   imageGenerations  ImageGeneration[]
   sttTranscriptions SttTranscription[]
   firstDispatchObservations FirstDispatchObservation[]
+  // CONN-1665 — per-key access policy. Shape's single source of truth is the
+  // Zod schema `apiKeyPolicySchema` in src/policy/policy.schema.ts — validated
+  // at WRITE time by the admin API; never write this column outside that path.
+  // Null = legacy unrestricted key (all providers/models, shared env keys).
+  policy            Json?
   createdAt         DateTime           @default(now())
 }
 

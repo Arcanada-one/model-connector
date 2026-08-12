@@ -7,6 +7,7 @@ const mockService = {
   createKey: vi.fn(),
   listKeys: vi.fn(),
   revokeKey: vi.fn(),
+  setKeyPolicy: vi.fn(),
 };
 
 describe('AdminController', () => {
@@ -24,7 +25,7 @@ describe('AdminController', () => {
       const result = await controller.create({ name: 'test' });
 
       expect(result).toEqual({ id: '1', name: 'test', key: 'mc-abc123' });
-      expect(mockService.createKey).toHaveBeenCalledWith('test', undefined);
+      expect(mockService.createKey).toHaveBeenCalledWith('test', undefined, undefined);
     });
 
     it('should create key with custom rateLimit', async () => {
@@ -32,7 +33,38 @@ describe('AdminController', () => {
 
       await controller.create({ name: 'test', rateLimit: 200 });
 
-      expect(mockService.createKey).toHaveBeenCalledWith('test', 200);
+      expect(mockService.createKey).toHaveBeenCalledWith('test', 200, undefined);
+    });
+
+    // ── CONN-1665 — optional policy, validated at WRITE time ──
+    it('should create key with a valid policy and pass it through', async () => {
+      mockService.createKey.mockResolvedValue({ id: '1', name: 'test', key: 'mc-abc123' });
+      const policy = {
+        policyVersion: 1,
+        providers: ['openrouter'],
+        models: { mode: 'free-only' },
+      };
+
+      await controller.create({ name: 'test', policy });
+
+      expect(mockService.createKey).toHaveBeenCalledWith('test', undefined, policy);
+    });
+
+    it('should reject a malformed policy BEFORE the service is called', async () => {
+      await expect(
+        controller.create({ name: 'test', policy: { policyVersion: 2 } }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockService.createKey).not.toHaveBeenCalled();
+    });
+
+    it('should reject providerKeys naming a non-override-capable provider', async () => {
+      await expect(
+        controller.create({
+          name: 'test',
+          policy: { policyVersion: 1, providerKeys: { groq: 'GROQ_API_KEY_X' } },
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockService.createKey).not.toHaveBeenCalled();
     });
 
     it('should throw BadRequestException for missing name', async () => {
@@ -58,6 +90,38 @@ describe('AdminController', () => {
       const result = await controller.list();
 
       expect(result).toEqual(keys);
+    });
+  });
+
+  // ── CONN-1665 — PATCH /admin/keys/:id/policy ──
+  describe('PATCH /admin/keys/:id/policy', () => {
+    it('sets a valid policy', async () => {
+      mockService.setKeyPolicy.mockResolvedValue({ id: 'uuid-1' });
+      const policy = { policyVersion: 1, models: { mode: 'free-only' } };
+
+      const result = await controller.setPolicy('uuid-1', { policy });
+
+      expect(result).toEqual({ id: 'uuid-1' });
+      expect(mockService.setKeyPolicy).toHaveBeenCalledWith('uuid-1', policy);
+    });
+
+    it('clears the policy with null', async () => {
+      mockService.setKeyPolicy.mockResolvedValue({ id: 'uuid-1' });
+
+      await controller.setPolicy('uuid-1', { policy: null });
+
+      expect(mockService.setKeyPolicy).toHaveBeenCalledWith('uuid-1', null);
+    });
+
+    it('rejects malformed policies before the service is called', async () => {
+      for (const bad of [
+        {},
+        { policy: { policyVersion: 1, models: { mode: 'list' } } },
+        { policy: { policyVersion: 1, providerKeys: { openrouter: 'sk-live-value' } } },
+      ]) {
+        await expect(controller.setPolicy('uuid-1', bad)).rejects.toThrow(BadRequestException);
+      }
+      expect(mockService.setKeyPolicy).not.toHaveBeenCalled();
     });
   });
 

@@ -47,6 +47,14 @@ import { rowToEntry } from './catalog-mapper';
 import { CATALOG_REDIS_CLIENT, type ICatalogRedis } from './catalog-redis.token';
 import { ProviderAccessService, type ProviderAccessLike } from './provider-access.service';
 import { firstDispatchMeasurementSchema, type FirstDispatchMeasurementV0 } from './dto/execute.dto';
+// CONN-1665 — per-API-key access policy (single choke-point enforcement).
+import {
+  InvalidStoredPolicyError,
+  PolicyService,
+  type PolicyServiceLike,
+} from '../policy/policy.service';
+import type { ApiKeyPolicy } from '../policy/policy.schema';
+import { providerKeyContext } from '../policy/provider-key.context';
 import {
   finalizeFirstDispatchObservationV0,
   reserveFirstDispatchObservationV0,
@@ -138,6 +146,19 @@ export class ConnectorsService {
         return resolveProviderAccess(parseProviderAccess(csv), name);
       },
     },
+    // CONN-1665 — per-key access policy. Defaulted to a permissive no-op
+    // (null policy = legacy unrestricted) so existing manual
+    // `new ConnectorsService(...)` constructions keep working unchanged; the
+    // module provides the real PolicyService.
+    @Inject(PolicyService)
+    private readonly policyService: PolicyServiceLike = {
+      getPolicyForKey: async () => null,
+      isProviderAllowed: () => true,
+      isModelAllowed: () => ({ allowed: true }),
+      getTier: async () => undefined,
+      resolveProviderKeyEnv: () => null,
+      invalidateKey: () => undefined,
+    },
   ) {}
 
   // CONN-0244 — per-provider access (READ = catalog-visible, USE = routable).
@@ -156,6 +177,55 @@ export class ConnectorsService {
   /** MC will route traffic through this provider (cascade / execute). */
   canUse(name: string): boolean {
     return this.getAccess(name).use;
+  }
+
+  /**
+   * CONN-1665 — the caller's per-key access policy (null = legacy
+   * unrestricted key). Throws {@link InvalidStoredPolicyError} on a malformed
+   * stored policy — callers must fail closed, never fall back to unrestricted.
+   */
+  async getKeyPolicy(apiKeyId: string): Promise<ApiKeyPolicy | null> {
+    return this.policyService.getPolicyForKey(apiKeyId);
+  }
+
+  /**
+   * CONN-1665 — candidate-level policy check used by the failover/cascade
+   * routers to filter candidate lists BEFORE dispatch, so an all-denied list
+   * surfaces an explicit policy_violation instead of a generic exhausted
+   * error. Attribution only — the execute() choke point below remains the
+   * hard guarantee.
+   */
+  async isCandidateAllowedByPolicy(
+    policy: ApiKeyPolicy,
+    connector: string,
+    model: string,
+  ): Promise<boolean> {
+    if (!this.policyService.isProviderAllowed(policy, connector)) return false;
+    const tier =
+      policy.models?.mode === 'free-only'
+        ? await this.policyService.getTier(connector, model)
+        : undefined;
+    return this.policyService.isModelAllowed(policy, connector, model, tier).allowed;
+  }
+
+  /** CONN-1665 — uniform error envelope for policy/config denials at the choke point. */
+  private policyErrorResponse(
+    connectorName: string,
+    model: string | undefined,
+    type: 'policy_violation' | 'config_error',
+    message: string,
+  ): ConnectorResponse {
+    const action = classifyErrorAction(type);
+    return {
+      id: '',
+      connector: connectorName,
+      model: model || 'unknown',
+      result: '',
+      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+      latencyMs: 0,
+      status: 'error',
+      error: { type, message, ...action },
+    };
   }
 
   register(connector: IConnector) {
@@ -193,6 +263,58 @@ export class ConnectorsService {
    */
   listCapabilities(): ConnectorCapabilities[] {
     return Array.from(this.connectors.values()).map((c) => c.getCapabilities());
+  }
+
+  /**
+   * CONN-1665 — capabilities view filtered by the caller's per-key policy
+   * (GET /v1/models). Legacy keys (no policy) and calls without a key id see
+   * the full list. Under 'free-only' the tier comes from the CATALOG
+   * (PolicyService.getTier); models with unknown tier are OMITTED
+   * (fail-closed). A malformed stored policy exposes nothing.
+   */
+  async listCapabilitiesForKey(apiKeyId?: string): Promise<ConnectorCapabilities[]> {
+    const all = this.listCapabilities();
+    if (!apiKeyId) return all;
+    let policy: ApiKeyPolicy | null;
+    try {
+      policy = await this.policyService.getPolicyForKey(apiKeyId);
+    } catch {
+      return [];
+    }
+    if (!policy) return all;
+
+    const out: ConnectorCapabilities[] = [];
+    for (const caps of all) {
+      if (!this.policyService.isProviderAllowed(policy, caps.name)) continue;
+      if (!policy.models || policy.models.mode === 'all') {
+        out.push(caps);
+        continue;
+      }
+      const metas: ProviderModelMeta[] = caps.modelMeta?.length
+        ? caps.modelMeta
+        : caps.models.map((id) => ({ id }));
+      const allowedMetas: ProviderModelMeta[] = [];
+      for (const meta of metas) {
+        const tier =
+          policy.models.mode === 'free-only'
+            ? await this.policyService.getTier(caps.name, meta.id)
+            : undefined;
+        if (this.policyService.isModelAllowed(policy, caps.name, meta.id, tier).allowed) {
+          allowedMetas.push(meta);
+        }
+      }
+      if (!allowedMetas.length) continue;
+      const allowedIds = new Set(allowedMetas.map((m) => m.id));
+      out.push({
+        ...caps,
+        models: [...allowedIds],
+        ...(caps.modelMeta?.length ? { modelMeta: allowedMetas } : {}),
+        ...(caps.freeModels
+          ? { freeModels: caps.freeModels.filter((id) => allowedIds.has(id)) }
+          : {}),
+      });
+    }
+    return out;
   }
 
   async listAll(): Promise<
@@ -328,8 +450,14 @@ export class ConnectorsService {
    * short-TTL Redis cache in front of it). Never calls a provider on this
    * path — the `model_catalog` table is the single source of truth, kept
    * warm by `CatalogRefreshService`'s cron (full refresh + status interval).
+   *
+   * CONN-1665 — when `apiKeyId` is provided, the response is additionally
+   * filtered by that key's access policy (consilium decision: discovery
+   * surfaces mirror the enforcement so a client never sees a model it cannot
+   * call). Filtering happens AFTER the shared cache read/write so the cache
+   * stays per-filter, never per-key.
    */
-  async getCatalog(filters: CatalogFilters): Promise<CatalogResponse> {
+  async getCatalog(filters: CatalogFilters, apiKeyId?: string): Promise<CatalogResponse> {
     const cacheEnabled = this.isCatalogCacheEnabled();
     const cacheKey = this.catalogCacheKey(filters);
 
@@ -339,7 +467,7 @@ export class ConnectorsService {
         if (cached) {
           const response = JSON.parse(cached) as CatalogResponse;
           const models = response.models.filter((entry) => this.canRead(entry.connector));
-          return { ...response, models, count: models.length };
+          return this.applyPolicyToCatalog({ ...response, models, count: models.length }, apiKeyId);
         }
       } catch {
         this.logger.warn('catalog cache read failed; falling back to DB');
@@ -374,7 +502,38 @@ export class ConnectorsService {
       }
     }
 
-    return response;
+    return this.applyPolicyToCatalog(response, apiKeyId);
+  }
+
+  /**
+   * CONN-1665 — per-key policy view on the catalog. Provider gate + model
+   * gate. Under 'free-only' the catalog row itself is the tier source of
+   * truth: `entry.free` is persisted by `deriveTier()` (free ⇔ tier 'free';
+   * an 'unknown' tier persists free=false), so unknown-tier models are
+   * OMITTED — the same fail-closed semantics as the execute() choke point.
+   * A malformed stored policy exposes nothing (fail-closed).
+   */
+  private async applyPolicyToCatalog(
+    response: CatalogResponse,
+    apiKeyId?: string,
+  ): Promise<CatalogResponse> {
+    if (!apiKeyId) return response;
+    let policy: ApiKeyPolicy | null;
+    try {
+      policy = await this.policyService.getPolicyForKey(apiKeyId);
+    } catch {
+      return { ...response, models: [], count: 0 };
+    }
+    if (!policy) return response;
+
+    const models = response.models.filter((entry) => {
+      if (!this.policyService.isProviderAllowed(policy, entry.connector)) return false;
+      if (!policy.models || policy.models.mode === 'all') return true;
+      if (policy.models.mode === 'list') return (policy.models.list ?? []).includes(entry.model);
+      // free-only
+      return entry.free === true;
+    });
+    return { ...response, models, count: models.length };
   }
 
   private isCatalogCacheEnabled(): boolean {
@@ -557,6 +716,94 @@ export class ConnectorsService {
       };
     }
 
+    // CONN-1665 — per-key policy gates, adjacent to the CONN-0244 canUse() gate
+    // at the same single choke point (direct /execute, universal /execute and
+    // every failover/cascade candidate all route through here). AND semantics:
+    // the global gate above already denied non-routable providers; a per-key
+    // policy can only NARROW further, never widen past a global deny.
+    let policy: ApiKeyPolicy | null;
+    try {
+      policy = await this.policyService.getPolicyForKey(apiKeyId);
+    } catch (err) {
+      if (err instanceof InvalidStoredPolicyError) {
+        // Fail closed. Details (incl. the key id) are logged by PolicyService;
+        // the client-facing message stays generic.
+        return this.policyErrorResponse(
+          connectorName,
+          request.model,
+          'config_error',
+          'The access policy stored for this API key is invalid; contact the administrator.',
+        );
+      }
+      throw err;
+    }
+    if (policy) {
+      if (!this.policyService.isProviderAllowed(policy, connectorName)) {
+        return this.policyErrorResponse(
+          connectorName,
+          request.model,
+          'policy_violation',
+          `Provider '${connectorName}' is not permitted by this API key's access policy.`,
+        );
+      }
+      if (policy.models && policy.models.mode !== 'all') {
+        if (!request.model) {
+          return this.policyErrorResponse(
+            connectorName,
+            request.model,
+            'policy_violation',
+            `This API key's access policy restricts models on provider '${connectorName}', ` +
+              `but the request did not name a model (fail-closed).`,
+          );
+        }
+        // Tier comes from the CATALOG (deriveTier-persisted), NEVER from a
+        // ':free' id suffix (would reopen the CONN-0244 false-free bug).
+        const tier =
+          policy.models.mode === 'free-only'
+            ? await this.policyService.getTier(connectorName, request.model)
+            : undefined;
+        const decision = this.policyService.isModelAllowed(
+          policy,
+          connectorName,
+          request.model,
+          tier,
+        );
+        if (!decision.allowed) {
+          return this.policyErrorResponse(
+            connectorName,
+            request.model,
+            'policy_violation',
+            decision.reason ??
+              `Model '${request.model}' is not permitted by this API key's access policy.`,
+          );
+        }
+      }
+    }
+
+    // CONN-1665 — per-key provider-key override: resolve the policy's env
+    // NAME to a key VALUE. A missing/empty env var fails LOUD (config_error)
+    // — never a silent fallback to the shared provider key. The env var NAME
+    // is logged server-side only and never appears in the client message.
+    let providerKeyOverride: { provider: string; apiKey: string } | null = null;
+    if (policy) {
+      const envName = this.policyService.resolveProviderKeyEnv(policy, connectorName);
+      if (envName) {
+        const value = process.env[envName];
+        if (!value) {
+          this.logger.error(
+            `Provider key alias for '${connectorName}' (env var ${envName}) is not configured — denying request for key ${apiKeyId}`,
+          );
+          return this.policyErrorResponse(
+            connectorName,
+            request.model,
+            'config_error',
+            `Provider key alias for '${connectorName}' is not configured on the server; contact the administrator.`,
+          );
+        }
+        providerKeyOverride = { provider: connectorName, apiKey: value };
+      }
+    }
+
     // CONN-0239 — modality pre-flight gate. The catalog surfaces non-chat families
     // (STT/TTS/image/video) for completeness with `available:false`; this connector's
     // chat `/execute` path cannot serve them. Reject such a request HERE with
@@ -625,14 +872,21 @@ export class ConnectorsService {
     let guardReport: OutputGuardReport | null = null;
     let observationFailureStage: FirstDispatchFailureStage = 'connector_or_response_processing';
 
-    try {
+    // CONN-1665 — the ENTIRE retry loop runs inside the provider-key ALS
+    // context (when the policy names an override), so every attempt —
+    // including output-guard wrapped ones — sees the dedicated key. The
+    // context is never handed off through the BullMQ queue path (ALS does not
+    // survive serialization; that path bypasses all gates and is asserted
+    // dead in enqueue-dead-path.spec.ts).
+    const runAttempts = async (): Promise<OutputGuardReport | null> => {
+      let report: OutputGuardReport | null = null;
       for (let attempt = 1; attempt <= attemptsForRequest; attempt++) {
         let response: ConnectorResponse;
         if (guardActive) {
           const outcome = await this.outputGuardMiddleware.wrapExecute(connector, providerRequest);
           response = outcome.response;
           if (outcome.report) {
-            guardReport = outcome.report;
+            report = outcome.report;
           }
         } else {
           response = await connector.execute(providerRequest);
@@ -669,6 +923,15 @@ export class ConnectorsService {
         const jitter = Math.random() * delay * 0.3;
         this.logger.warn(`Retry ${attempt}/${maxRetries} for ${connectorName}: ${errorType}`);
         await new Promise((r) => setTimeout(r, delay + jitter));
+      }
+      return report;
+    };
+
+    try {
+      if (providerKeyOverride) {
+        guardReport = await providerKeyContext.run(providerKeyOverride, runAttempts);
+      } else {
+        guardReport = await runAttempts();
       }
 
       let response = lastResponse!;

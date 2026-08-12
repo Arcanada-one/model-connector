@@ -27,7 +27,12 @@ function makeController(opts: {
   caps?: ConnectorCapabilities[];
 }) {
   const failover = { complete: vi.fn(opts.complete ?? (() => Promise.resolve(success()))) };
-  const connectors = { listCapabilities: vi.fn(() => opts.caps ?? []) };
+  const connectors = {
+    listCapabilities: vi.fn(() => opts.caps ?? []),
+    // CONN-1665 — listModels routes through the policy-filtered view; these
+    // tests exercise legacy (policy-less) keys, so it returns the full list.
+    listCapabilitiesForKey: vi.fn(async () => opts.caps ?? []),
+  };
   const controller = new OpenAiCompatController(
     failover as unknown as ConstructorParameters<typeof OpenAiCompatController>[0],
     connectors as unknown as ConstructorParameters<typeof OpenAiCompatController>[1],
@@ -117,7 +122,7 @@ describe('OpenAiCompatController.chatCompletions', () => {
 });
 
 describe('OpenAiCompatController.listModels', () => {
-  it('AC4: GET /v1/models → OpenAI list shape, chat only', () => {
+  it('AC4: GET /v1/models → OpenAI list shape, chat only', async () => {
     const caps: ConnectorCapabilities[] = [
       {
         name: 'openmodel',
@@ -131,7 +136,7 @@ describe('OpenAiCompatController.listModels', () => {
       },
     ];
     const { controller } = makeController({ caps });
-    const out = controller.listModels();
+    const out = await controller.listModels(req);
     expect(out.object).toBe('list');
     expect(out.data[0]).toMatchObject({
       id: 'deepseek-v4-flash',
