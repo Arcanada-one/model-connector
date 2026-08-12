@@ -34,6 +34,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Read-only showcase keys can no longer silently collapse the public catalog (CONN-1674)** —
+  a per-key policy change on the `arcanada-landing-catalog` key (which backs the public
+  ecosystem catalog page) narrowed the public surface from 998 models / 26 providers to
+  33 / 3, and nothing alarmed — it was caught by eye. A showcase key backs a read-only
+  public surface and must see the full catalog; any narrowing of its policy is a defect.
+  Two guards now enforce this, driven by a new `SHOWCASE_KEY_IDS` env (CSV of key ids):
+  - **Write-time guard** — `PATCH /admin/keys/:id/policy` rejects (400) any policy that
+    restricts `providers` or sets `models.mode` to non-`all` on a listed showcase key.
+  - **Runtime alarm** — `getCatalog` warns when a showcase key's response is trimmed past
+    `SHOWCASE_CATALOG_NARROW_ALARM_PCT` (default 0.5) of the visible catalog, catching a
+    narrowing applied out of band (e.g. a direct DB edit) that the write-time guard cannot
+    see. The served response is unchanged (observational). Consumer-key registry + rule
+    documented in `docs/how-to/onboard-agent-to-mc.md` § Read-only showcase keys.
 - **Catalog accuracy: REPLACE-not-UNION + per-model modality/pricing (CONN-0238)** —
   the deployed catalog diverged from each provider's real `/models` API. Root cause:
   `refreshModels()` cached `static ∪ provider` (UNION), so on a successful live fetch

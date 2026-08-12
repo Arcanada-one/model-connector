@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { hash } from 'bcryptjs';
 import { Prisma } from '@prisma/client';
@@ -69,11 +69,48 @@ export class AdminService {
   async setKeyPolicy(id: string, policy: ApiKeyPolicy | null): Promise<{ id: string }> {
     const key = await this.prisma.apiKey.findUnique({ where: { id } });
     if (!key) throw new NotFoundException(`Key ${id} not found`);
+    // CONN-1674 — a read-only showcase key backs a PUBLIC catalog surface and
+    // MUST see the full catalog. Reject any policy that narrows its view
+    // (provider subset or a non-'all' model restriction) BEFORE it can silently
+    // collapse the public page, as free-only did (998→33). Clearing the policy,
+    // or a bare {policyVersion:1} with no restriction, stays allowed.
+    if (policy !== null && this.isShowcaseKey(id) && AdminService.policyNarrowsCatalog(policy)) {
+      throw new BadRequestException(
+        `Key ${id} is a read-only showcase key (SHOWCASE_KEY_IDS): its policy must ` +
+          `not restrict providers or models — a narrowing policy would silently ` +
+          `collapse the public catalog. Clear the policy or leave it unrestricted.`,
+      );
+    }
     await this.prisma.apiKey.update({
       where: { id },
       data: { policy: policy === null ? Prisma.DbNull : (policy as Prisma.InputJsonValue) },
     });
     this.policyService?.invalidateKey(id);
     return { id };
+  }
+
+  /** CONN-1674 — is `id` in the SHOWCASE_KEY_IDS allowlist? Defensive getConfig
+   * (matches the getCatalog convention): an unvalidated env in unit context
+   * yields no showcase keys rather than throwing. */
+  private isShowcaseKey(id: string): boolean {
+    let raw: string;
+    try {
+      raw = getConfig().SHOWCASE_KEY_IDS;
+    } catch {
+      return false;
+    }
+    return raw
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .includes(id);
+  }
+
+  /** CONN-1674 — a policy narrows the catalog when it restricts providers to a
+   * subset or restricts models to anything other than 'all'. */
+  static policyNarrowsCatalog(policy: ApiKeyPolicy): boolean {
+    if (policy.providers !== undefined) return true;
+    if (policy.models !== undefined && policy.models.mode !== 'all') return true;
+    return false;
   }
 }

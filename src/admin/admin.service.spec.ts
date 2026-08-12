@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AdminService } from './admin.service';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { compare } from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -13,8 +13,12 @@ const mockPrisma = {
   },
 };
 
+// CONN-1674 — mutable config so tests can toggle SHOWCASE_KEY_IDS per case.
+const cfg = vi.hoisted(() => ({
+  value: { API_KEY_SALT_ROUNDS: 4, SHOWCASE_KEY_IDS: '' } as Record<string, unknown>,
+}));
 vi.mock('../config/env.schema', () => ({
-  getConfig: () => ({ API_KEY_SALT_ROUNDS: 4 }),
+  getConfig: () => cfg.value,
 }));
 
 describe('AdminService', () => {
@@ -22,6 +26,7 @@ describe('AdminService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    cfg.value = { API_KEY_SALT_ROUNDS: 4, SHOWCASE_KEY_IDS: '' };
     service = new AdminService(mockPrisma as unknown as PrismaService);
   });
 
@@ -130,6 +135,61 @@ describe('AdminService', () => {
     it('throws NotFoundException for a non-existent key', async () => {
       mockPrisma.apiKey.findUnique.mockResolvedValue(null);
       await expect(service.setKeyPolicy('missing', policy)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ── CONN-1674 — showcase-key narrowing guard (NEGATIVE CONTROL) ──
+  // This suite is the negative control the task demands: it MUST fail if the
+  // guard is removed. A read-only showcase key backing the public catalog page
+  // must reject any narrowing policy (the exact free-only that collapsed the
+  // arcanada.ai catalog 998→33 under CONN-1669).
+  describe('setKeyPolicy — showcase-key guard (CONN-1674)', () => {
+    const showcaseId = 'show-1';
+    beforeEach(() => {
+      cfg.value = { API_KEY_SALT_ROUNDS: 4, SHOWCASE_KEY_IDS: 'show-1, show-2' };
+      mockPrisma.apiKey.findUnique.mockResolvedValue({ id: showcaseId });
+      mockPrisma.apiKey.update.mockResolvedValue({ id: showcaseId });
+    });
+
+    it('REJECTS free-only on a showcase key (the CONN-1669 regression)', async () => {
+      const freeOnly = { policyVersion: 1 as const, models: { mode: 'free-only' as const } };
+      await expect(service.setKeyPolicy(showcaseId, freeOnly)).rejects.toThrow(BadRequestException);
+      expect(mockPrisma.apiKey.update).not.toHaveBeenCalled();
+    });
+
+    it('REJECTS a provider-subset policy on a showcase key', async () => {
+      const subset = { policyVersion: 1 as const, providers: ['openrouter'] };
+      await expect(service.setKeyPolicy(showcaseId, subset)).rejects.toThrow(BadRequestException);
+      expect(mockPrisma.apiKey.update).not.toHaveBeenCalled();
+    });
+
+    it('REJECTS a list restriction on a showcase key', async () => {
+      const list = {
+        policyVersion: 1 as const,
+        models: { mode: 'list' as const, list: ['gpt-x'] },
+      };
+      await expect(service.setKeyPolicy(showcaseId, list)).rejects.toThrow(BadRequestException);
+    });
+
+    it('ALLOWS clearing the policy (null) on a showcase key', async () => {
+      await expect(service.setKeyPolicy(showcaseId, null)).resolves.toEqual({ id: showcaseId });
+      expect(mockPrisma.apiKey.update).toHaveBeenCalled();
+    });
+
+    it("ALLOWS a bare {policyVersion:1} (models.mode 'all') on a showcase key", async () => {
+      const unrestricted = { policyVersion: 1 as const, models: { mode: 'all' as const } };
+      await expect(service.setKeyPolicy(showcaseId, unrestricted)).resolves.toEqual({
+        id: showcaseId,
+      });
+      expect(mockPrisma.apiKey.update).toHaveBeenCalled();
+    });
+
+    it('does NOT guard a non-showcase key (free-only still allowed there)', async () => {
+      const freeOnly = { policyVersion: 1 as const, models: { mode: 'free-only' as const } };
+      mockPrisma.apiKey.findUnique.mockResolvedValue({ id: 'other' });
+      mockPrisma.apiKey.update.mockResolvedValue({ id: 'other' });
+      await expect(service.setKeyPolicy('other', freeOnly)).resolves.toEqual({ id: 'other' });
+      expect(mockPrisma.apiKey.update).toHaveBeenCalled();
     });
   });
 

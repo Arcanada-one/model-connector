@@ -533,7 +533,48 @@ export class ConnectorsService {
       // free-only
       return entry.free === true;
     });
+    // CONN-1674 — a read-only showcase key backs a PUBLIC catalog surface and
+    // should see the FULL catalog; if its policy still trims a large fraction,
+    // the public page silently collapsed (as CONN-1669's out-of-band DB edit did
+    // 998→33, which the admin write-time guard cannot catch). Alarm on it so the
+    // narrowing never reads as health (INFRA-0384). Defense-in-depth behind the
+    // admin guard — this is the layer that catches narrowing applied OUT of band.
+    if (apiKeyId) this.alarmShowcaseNarrowing(apiKeyId, response.models.length, models.length);
     return { ...response, models, count: models.length };
+  }
+
+  /** CONN-1674 — warn when a showcase key's policy trims the catalog past the
+   * configured threshold. Purely observational (never alters the response) and
+   * fail-safe (an unvalidated env in unit context simply skips the check). */
+  private alarmShowcaseNarrowing(
+    apiKeyId: string,
+    visibleCount: number,
+    servedCount: number,
+  ): void {
+    if (visibleCount === 0) return;
+    let ids: string;
+    let threshold: number;
+    try {
+      const cfg = getConfig();
+      ids = cfg.SHOWCASE_KEY_IDS;
+      threshold = cfg.SHOWCASE_CATALOG_NARROW_ALARM_PCT;
+    } catch {
+      return;
+    }
+    const isShowcase = ids
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .includes(apiKeyId);
+    if (!isShowcase) return;
+    const trimmedFraction = (visibleCount - servedCount) / visibleCount;
+    if (trimmedFraction > threshold) {
+      this.logger.warn(
+        `CONN-1674 showcase catalog narrowed: key=${apiKeyId} served ${servedCount}/${visibleCount} ` +
+          `models (${(trimmedFraction * 100).toFixed(1)}% trimmed > ${(threshold * 100).toFixed(0)}% ` +
+          `threshold) — a read-only showcase key should see the full catalog; check its policy.`,
+      );
+    }
   }
 
   private isCatalogCacheEnabled(): boolean {
