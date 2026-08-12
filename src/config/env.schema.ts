@@ -342,6 +342,18 @@ export const envSchema = z
     CATALOG_STATUS_REFRESH_MS: z.coerce.number().min(1_000).default(300_000),
     CATALOG_CACHE_TTL_MS: z.coerce.number().min(0).default(30_000),
     CATALOG_CACHE_ENABLED: envBool.default(true),
+    // CONN-1674 — read-only showcase keys (CSV of ApiKey ids). These keys back a
+    // PUBLIC catalog surface (e.g. arcanada-landing-catalog on
+    // arcanada.ai/…/model-connector?tab=catalog) and are expected to see the
+    // FULL catalog. Two guards hang off this list: (1) a write-time gate that
+    // REJECTS any catalog-narrowing policy (providers/​models restriction) on a
+    // showcase key via the admin API; (2) a runtime alarm when the policy filter
+    // still trims a showcase response (covers narrowing applied OUT of band —
+    // e.g. a direct DB edit, which is exactly how CONN-1669 collapsed 998→33).
+    SHOWCASE_KEY_IDS: z.string().default(''),
+    // Fraction of the visible catalog a showcase response may lose to its policy
+    // before the runtime alarm fires (0–1). 0.5 = warn once >50% is trimmed.
+    SHOWCASE_CATALOG_NARROW_ALARM_PCT: z.coerce.number().min(0).max(1).default(0.5),
     // CONN-0243 — OpenAI-compatible failover gateway (POST /v1/chat/completions).
     // Free-first provider priority for the failover chain (highest first). DeepSeek
     // (openmodel) is the operator-mandated first free hop and is promoted ahead of the

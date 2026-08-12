@@ -137,3 +137,46 @@ silent 201), then restore.
 Then verify the **actual consumer** end to end (send it a real unit of work and
 watch it reach MC), because a green `/health` proves only that MC is up, not
 that the consumer's token, env, and deploy path are wired.
+
+## 6. Read-only showcase keys (CONN-1674)
+
+Not every consumer is an *agent that executes*. A **showcase key** backs a
+PUBLIC read-only surface — the arcanada.ai ecosystem page renders the full model
+catalog by fetching `GET /connectors/catalog` (no `?free=true` — it asks for
+**everything**) with the `arcanada-landing-catalog` key. Such a key never calls
+`/execute`, so widening its visibility grants no execution rights; conversely,
+**any narrowing of its policy silently collapses the public page**. That is
+exactly what happened on 2026-08-12 (CONN-1669): a `{"models":{"mode":"free-only"}}`
+policy on the showcase key cut the public catalog from **998 models / 26
+providers to 33 / 3**, and nothing alarmed — an operator caught it by eye
+(INFRA-0410/0412).
+
+**Rule: a showcase key's policy must never restrict `providers` or set
+`models.mode` to anything but `all`. Leave it unrestricted (clear the policy, or
+`{"policyVersion":1}`).** Two guards enforce this (CONN-1674):
+
+- **Write-time guard.** List every showcase key's id in the `SHOWCASE_KEY_IDS`
+  env (CSV). `PATCH /admin/keys/:id/policy` then **rejects** (400) any narrowing
+  policy on a listed key. This stops the common path (an admin API call).
+- **Runtime alarm.** `getCatalog` warns (`CONN-1674 showcase catalog narrowed:
+  …`) whenever a showcase key's policy still trims more than
+  `SHOWCASE_CATALOG_NARROW_ALARM_PCT` (default 0.5) of the visible catalog. This
+  is the layer that catches a narrowing applied **out of band** — e.g. a direct
+  DB edit, which is how CONN-1669 actually landed and which the write-time guard
+  cannot see. Wire the warn into the alerting sink so silence never reads as
+  health.
+
+### Consumer-key registry (purpose → expected visibility)
+
+Keep this list current when onboarding a consumer, so a future policy change can
+be checked against what each key is *for* before it ships:
+
+| Key | Purpose | Policy | Expected visibility |
+|---|---|---|---|
+| `arcanada-landing-catalog` | **Read-only showcase** — public ecosystem catalog page (arcanada.ai). Never executes. | unrestricted (`{"policyVersion":1}`), in `SHOWCASE_KEY_IDS` | **Full catalog** (all providers, all tiers). Any narrowing is a defect. |
+| `Email Agent` | Email Agent free-model pool; own OpenRouter key | `providers:["openrouter","groq"]`, `models.mode:"free-only"`, `providerKeys.openrouter` | Free models of openrouter + groq (gemini deliberately excluded) |
+| Verdicus (user-facing) | Billed product | Out of scope for free-only — explicit `list` or deliberately unrestricted, **recorded** | Per its recorded policy |
+
+When MC adds a free provider and an agent should use it, PATCH that agent's
+policy to add the provider — the catalog read does **not** auto-expand across the
+policy boundary (CONN-1665: discovery mirrors enforcement).
