@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -130,6 +130,8 @@ export interface CatalogRepositoryLike {
  */
 @Injectable()
 export class CatalogRepository implements CatalogRepositoryLike {
+  private readonly logger = new Logger(CatalogRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -142,10 +144,12 @@ export class CatalogRepository implements CatalogRepositoryLike {
    * defer this provider without leaking database details.
    */
   async applyProviderSnapshot(input: ApplyProviderSnapshotInput): Promise<AppliedCatalogSnapshot> {
-    this.validateProviderSnapshotInput(input);
+    const deduped = this.dedupeProviderSnapshotInput(input);
+    this.validateProviderSnapshotInput(deduped);
+
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       try {
-        return await this.applyProviderSnapshotTransaction(input);
+        return await this.applyProviderSnapshotTransaction(deduped);
       } catch (error) {
         if (!this.isSerializableConflict(error)) {
           throw error;
@@ -305,13 +309,42 @@ export class CatalogRepository implements CatalogRepositoryLike {
     );
   }
 
+  // A row claiming a different connector is a genuine assembly bug and is
+  // rejected. Duplicate model ids are NOT rejected here — they are deduped in
+  // dedupeProviderSnapshotInput first (CONN-0270).
   private validateProviderSnapshotInput(input: ApplyProviderSnapshotInput): void {
-    const models = new Set<string>();
     for (const row of input.rows) {
-      if (row.connector !== input.connector || models.has(row.model)) {
+      if (row.connector !== input.connector) {
         throw new CatalogSnapshotValidationError();
       }
-      models.add(row.model);
     }
+  }
+
+  // CONN-0270 — a provider returning a duplicate model id must lose only that
+  // duplicate row, never its ENTIRE catalog. The persist upserts by the
+  // connector_model unique key (idempotent), so a dup is harmless downstream;
+  // the pre-transaction validation used to THROW on any dup, which dropped a
+  // whole provider (orq: 73 dups → all 524 models gone). Keep first; warn loud.
+  private dedupeProviderSnapshotInput(
+    input: ApplyProviderSnapshotInput,
+  ): ApplyProviderSnapshotInput {
+    const seen = new Set<string>();
+    const rows = [] as ApplyProviderSnapshotInput['rows'];
+    let dropped = 0;
+    for (const row of input.rows) {
+      if (seen.has(row.model)) {
+        dropped += 1;
+        continue;
+      }
+      seen.add(row.model);
+      rows.push(row);
+    }
+    if (dropped > 0) {
+      this.logger.warn(
+        `deduped ${dropped} duplicate model id(s) for connector ${input.connector} — persisting ${rows.length} unique`,
+      );
+      return { ...input, rows };
+    }
+    return input;
   }
 }
