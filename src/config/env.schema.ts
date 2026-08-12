@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GROQ_FREE_MODELS_DEFAULT_CSV } from '../connectors/groq/groq.catalogue';
 
 // CONN-0102: z.coerce.boolean() coerces ANY non-empty string to `true`
 // (including the literal "false"). For env flags where operators set
@@ -281,6 +282,12 @@ export const envSchema = z
     OPENMODEL_API_KEY: z.string().optional(),
     OPENMODEL_BASE_URL: z.string().url().default('https://api.openmodel.ai/v1'),
     OPENMODEL_FREE_MODELS: z.string().default('deepseek-v4-flash'),
+    // CONN-1672 — operator-curated groq free-tier chat allowlist (CSV). Groq's
+    // free tier is genuinely $0 (rate-limited); the groq connector suppresses the
+    // provider's list-price for these ids so they tier as catalog-free instead of
+    // being overridden to paid by deriveTier. Default sourced from
+    // GROQ_FREE_MODELS_DEFAULT_CSV (single source of truth — no drift).
+    GROQ_FREE_MODELS: z.string().default(GROQ_FREE_MODELS_DEFAULT_CSV),
     OPENMODEL_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(30_000),
     OPENMODEL_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(2),
     ANTHROPIC_ENABLED: envBool.default(false),

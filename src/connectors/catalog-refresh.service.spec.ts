@@ -52,6 +52,7 @@ describe('CatalogRefreshService CONN-1646 provider-scoped cycles', () => {
     applyProviderSnapshot: ReturnType<typeof vi.fn>;
     markProviderStale: ReturnType<typeof vi.fn>;
     updateProviderStatus: ReturnType<typeof vi.fn>;
+    findAll: ReturnType<typeof vi.fn>;
   };
   let providerAccess: {
     seedDefaults: ReturnType<typeof vi.fn>;
@@ -84,6 +85,9 @@ describe('CatalogRefreshService CONN-1646 provider-scoped cycles', () => {
       }),
       markProviderStale: vi.fn().mockResolvedValue(2),
       updateProviderStatus: vi.fn().mockResolvedValue(undefined),
+      // CONN-1672 — narrowing-alarm baseline read. Empty by default so existing
+      // tests see no last-known-good and never trip the alarm.
+      findAll: vi.fn().mockResolvedValue([]),
     };
     providerAccess = {
       seedDefaults: vi.fn().mockResolvedValue(undefined),
@@ -260,5 +264,87 @@ describe('CatalogRefreshService CONN-1646 provider-scoped cycles', () => {
       'online',
       expect.any(Date),
     );
+  });
+
+  // CONN-1672 / INFRA-0384 — the LKG-preservation safety keeps a provider's rows
+  // when a cycle assembles nothing for it, which also HIDES a silent narrowing.
+  // The alarm surfaces that as a WARNING without changing the preservation itself.
+  describe('narrowing alarm (CONN-1672 / INFRA-0384 — silence must never look like health)', () => {
+    it('warns when a readable provider assembles 0 rows but last-known-good had rows', async () => {
+      connectors.listNames.mockReturnValue(['groq']);
+      // LKG: groq had 3 rows in the DB before this cycle.
+      repository.findAll.mockResolvedValue([
+        { connector: 'groq' },
+        { connector: 'groq' },
+        { connector: 'groq' },
+      ]);
+      // This cycle assembles nothing for groq (no refresh result, not dynamic) →
+      // rows preserved via LKG, but that silence must be diagnosed.
+      entries = [];
+      const warnSpy = vi.spyOn(
+        (service as unknown as { logger: { warn: (m: string) => void } }).logger,
+        'warn',
+      );
+
+      await service.fullRefresh();
+
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('groq assembled 0 rows'));
+    });
+
+    it('warns on a >20% total shrink across readable providers even when no provider hit zero', async () => {
+      connectors.listNames.mockReturnValue(['groq']);
+      repository.findAll.mockResolvedValue(
+        Array.from({ length: 10 }, () => ({ connector: 'groq' })),
+      );
+      refreshResults.set('groq', {
+        status: 'success',
+        source: 'provider-api',
+        observedAt: new Date('2026-08-12T00:00:00.000Z'),
+      });
+      // 2 assembled vs 10 LKG = 80% shrink; groq itself is non-zero (no per-provider alarm).
+      entries = [entry('groq', 'm1'), entry('groq', 'm2')];
+      const warnSpy = vi.spyOn(
+        (service as unknown as { logger: { warn: (m: string) => void } }).logger,
+        'warn',
+      );
+
+      await service.fullRefresh();
+
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('>20% shrink'));
+    });
+
+    it('stays silent when the catalog is steady (no false-positive alarm)', async () => {
+      connectors.listNames.mockReturnValue(['groq']);
+      repository.findAll.mockResolvedValue([{ connector: 'groq' }]);
+      refreshResults.set('groq', {
+        status: 'success',
+        source: 'provider-api',
+        observedAt: new Date('2026-08-12T00:00:00.000Z'),
+      });
+      entries = [entry('groq', 'm1')]; // 1 assembled vs 1 LKG → steady
+      const warnSpy = vi.spyOn(
+        (service as unknown as { logger: { warn: (m: string) => void } }).logger,
+        'warn',
+      );
+
+      await service.fullRefresh();
+
+      expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('narrowing alarm'));
+    });
+
+    it('does not alarm on a provider the operator hid via a READ toggle (not narrowing)', async () => {
+      connectors.listNames.mockReturnValue(['groq']);
+      readAccess.groq = false; // operator hid groq deliberately
+      repository.findAll.mockResolvedValue([{ connector: 'groq' }, { connector: 'groq' }]);
+      entries = [];
+      const warnSpy = vi.spyOn(
+        (service as unknown as { logger: { warn: (m: string) => void } }).logger,
+        'warn',
+      );
+
+      await service.fullRefresh();
+
+      expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('narrowing alarm'));
+    });
   });
 });
