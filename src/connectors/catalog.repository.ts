@@ -8,6 +8,17 @@ import {
   type PreviousCatalogRow,
 } from './catalog-snapshot';
 
+// CONN — a provider snapshot is persisted as ONE Serializable transaction that
+// upserts every model row sequentially. Prisma's default interactive-transaction
+// timeout is 5000ms, which large providers blow past: orq discovers 524 models
+// and the ~524 sequential upserts exceeded 5s, so the whole snapshot threw a
+// timeout (surfaced as `reason=database`) and orq's models were silently dropped
+// from the catalog. This is a background cron, not a request path, so it can
+// afford a long atomic transaction. Env-tunable; defaults sized for the current
+// largest provider with headroom.
+const CATALOG_TX_TIMEOUT_MS = Number(process.env.CATALOG_TX_TIMEOUT_MS ?? 120_000);
+const CATALOG_TX_MAXWAIT_MS = Number(process.env.CATALOG_TX_MAXWAIT_MS ?? 15_000);
+
 export type CatalogSource =
   | 'provider-api'
   | 'static-capabilities'
@@ -277,7 +288,11 @@ export class CatalogRepository implements CatalogRepositoryLike {
           rowCount: preparedRows.length,
         };
       },
-      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        timeout: CATALOG_TX_TIMEOUT_MS,
+        maxWait: CATALOG_TX_MAXWAIT_MS,
+      },
     );
   }
 

@@ -156,8 +156,14 @@ describe('CatalogRepository CONN-1646', () => {
       authoritative: true,
     });
 
+    // The snapshot transaction carries an explicit interactive-transaction
+    // timeout above Prisma's 5000ms default — a large provider (orq: 524 models)
+    // does ~524 sequential upserts and exceeded 5s, so the whole snapshot threw
+    // a timeout surfaced as `reason=database` and its models were dropped.
     expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: 'Serializable',
+      timeout: 120000,
+      maxWait: 15000,
     });
     expect(transaction.modelCatalog.findMany).toHaveBeenCalledWith({
       where: { connector: 'groq' },
