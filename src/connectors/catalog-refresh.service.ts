@@ -269,7 +269,16 @@ export class CatalogRefreshService implements OnModuleInit {
       if (error instanceof CatalogSnapshotConflictError) {
         this.logger.warn(`catalog snapshot deferred for ${input.connector}: code=${error.code}`);
       } else {
-        this.logger.warn(`catalog snapshot deferred for ${input.connector}: reason=database`);
+        // CONN-0270 — do NOT swallow the real cause. `reason=database` alone hid
+        // why orq (524 models) kept deferring: the actual error type/code/message
+        // was invisible, so the failure could not be root-caused. Surface it (no
+        // secrets — Prisma errors carry a code + a message, not credentials).
+        const err = error as { name?: string; code?: string; message?: string };
+        this.logger.error(
+          `catalog snapshot deferred for ${input.connector}: reason=database ` +
+            `err=${err?.name ?? typeof error} code=${err?.code ?? 'none'} ` +
+            `msg=${(err?.message ?? String(error)).slice(0, 300)}`,
+        );
       }
       return 0;
     }
