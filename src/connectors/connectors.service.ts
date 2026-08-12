@@ -265,6 +265,58 @@ export class ConnectorsService {
     return Array.from(this.connectors.values()).map((c) => c.getCapabilities());
   }
 
+  /**
+   * CONN-1665 — capabilities view filtered by the caller's per-key policy
+   * (GET /v1/models). Legacy keys (no policy) and calls without a key id see
+   * the full list. Under 'free-only' the tier comes from the CATALOG
+   * (PolicyService.getTier); models with unknown tier are OMITTED
+   * (fail-closed). A malformed stored policy exposes nothing.
+   */
+  async listCapabilitiesForKey(apiKeyId?: string): Promise<ConnectorCapabilities[]> {
+    const all = this.listCapabilities();
+    if (!apiKeyId) return all;
+    let policy: ApiKeyPolicy | null;
+    try {
+      policy = await this.policyService.getPolicyForKey(apiKeyId);
+    } catch {
+      return [];
+    }
+    if (!policy) return all;
+
+    const out: ConnectorCapabilities[] = [];
+    for (const caps of all) {
+      if (!this.policyService.isProviderAllowed(policy, caps.name)) continue;
+      if (!policy.models || policy.models.mode === 'all') {
+        out.push(caps);
+        continue;
+      }
+      const metas: ProviderModelMeta[] = caps.modelMeta?.length
+        ? caps.modelMeta
+        : caps.models.map((id) => ({ id }));
+      const allowedMetas: ProviderModelMeta[] = [];
+      for (const meta of metas) {
+        const tier =
+          policy.models.mode === 'free-only'
+            ? await this.policyService.getTier(caps.name, meta.id)
+            : undefined;
+        if (this.policyService.isModelAllowed(policy, caps.name, meta.id, tier).allowed) {
+          allowedMetas.push(meta);
+        }
+      }
+      if (!allowedMetas.length) continue;
+      const allowedIds = new Set(allowedMetas.map((m) => m.id));
+      out.push({
+        ...caps,
+        models: [...allowedIds],
+        ...(caps.modelMeta?.length ? { modelMeta: allowedMetas } : {}),
+        ...(caps.freeModels
+          ? { freeModels: caps.freeModels.filter((id) => allowedIds.has(id)) }
+          : {}),
+      });
+    }
+    return out;
+  }
+
   async listAll(): Promise<
     Array<{ name: string; type: string; capabilities: ReturnType<IConnector['getCapabilities']> }>
   > {
@@ -398,8 +450,14 @@ export class ConnectorsService {
    * short-TTL Redis cache in front of it). Never calls a provider on this
    * path — the `model_catalog` table is the single source of truth, kept
    * warm by `CatalogRefreshService`'s cron (full refresh + status interval).
+   *
+   * CONN-1665 — when `apiKeyId` is provided, the response is additionally
+   * filtered by that key's access policy (consilium decision: discovery
+   * surfaces mirror the enforcement so a client never sees a model it cannot
+   * call). Filtering happens AFTER the shared cache read/write so the cache
+   * stays per-filter, never per-key.
    */
-  async getCatalog(filters: CatalogFilters): Promise<CatalogResponse> {
+  async getCatalog(filters: CatalogFilters, apiKeyId?: string): Promise<CatalogResponse> {
     const cacheEnabled = this.isCatalogCacheEnabled();
     const cacheKey = this.catalogCacheKey(filters);
 
@@ -409,7 +467,7 @@ export class ConnectorsService {
         if (cached) {
           const response = JSON.parse(cached) as CatalogResponse;
           const models = response.models.filter((entry) => this.canRead(entry.connector));
-          return { ...response, models, count: models.length };
+          return this.applyPolicyToCatalog({ ...response, models, count: models.length }, apiKeyId);
         }
       } catch {
         this.logger.warn('catalog cache read failed; falling back to DB');
@@ -444,7 +502,38 @@ export class ConnectorsService {
       }
     }
 
-    return response;
+    return this.applyPolicyToCatalog(response, apiKeyId);
+  }
+
+  /**
+   * CONN-1665 — per-key policy view on the catalog. Provider gate + model
+   * gate. Under 'free-only' the catalog row itself is the tier source of
+   * truth: `entry.free` is persisted by `deriveTier()` (free ⇔ tier 'free';
+   * an 'unknown' tier persists free=false), so unknown-tier models are
+   * OMITTED — the same fail-closed semantics as the execute() choke point.
+   * A malformed stored policy exposes nothing (fail-closed).
+   */
+  private async applyPolicyToCatalog(
+    response: CatalogResponse,
+    apiKeyId?: string,
+  ): Promise<CatalogResponse> {
+    if (!apiKeyId) return response;
+    let policy: ApiKeyPolicy | null;
+    try {
+      policy = await this.policyService.getPolicyForKey(apiKeyId);
+    } catch {
+      return { ...response, models: [], count: 0 };
+    }
+    if (!policy) return response;
+
+    const models = response.models.filter((entry) => {
+      if (!this.policyService.isProviderAllowed(policy, entry.connector)) return false;
+      if (!policy.models || policy.models.mode === 'all') return true;
+      if (policy.models.mode === 'list') return (policy.models.list ?? []).includes(entry.model);
+      // free-only
+      return entry.free === true;
+    });
+    return { ...response, models, count: models.length };
   }
 
   private isCatalogCacheEnabled(): boolean {

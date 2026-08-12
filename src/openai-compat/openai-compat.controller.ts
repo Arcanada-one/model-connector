@@ -113,9 +113,12 @@ export class OpenAiCompatController {
   /**
    * GET /v1/models — OpenAI-compatible model list. Built from in-memory connector
    * capabilities (no getCatalog network probes — R-F3); chat models only.
+   * CONN-1665 — filtered by the caller's per-key access policy (provider +
+   * model gates; under free-only, unknown-catalog-tier models are omitted).
    */
   @Get('v1/models')
-  listModels() {
-    return toOpenAiModelList(this.connectorsService.listCapabilities(), nowUnixSeconds());
+  async listModels(@Req() req: AuthenticatedRequest) {
+    const capabilities = await this.connectorsService.listCapabilitiesForKey(req.apiKey?.id);
+    return toOpenAiModelList(capabilities, nowUnixSeconds());
   }
 }

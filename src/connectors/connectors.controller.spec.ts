@@ -54,6 +54,10 @@ describe('ConnectorsController', () => {
 
   let controller: ConnectorsController;
 
+  // CONN-1665 — unauthenticated-shaped request stub: no apiKey attached, so
+  // getCatalog takes the legacy single-argument (policy-less) service path.
+  const catalogReq = {} as never;
+
   beforeEach(() => {
     controller = new ConnectorsController(
       mockService as unknown as ConnectorsService,
@@ -240,7 +244,7 @@ describe('ConnectorsController', () => {
     });
 
     it('returns catalog with count and generatedAt when no filters applied', async () => {
-      const result = await controller.getCatalog({});
+      const result = await controller.getCatalog({}, catalogReq);
       expect(result.count).toBe(1);
       expect(result.generatedAt).toBeDefined();
       expect(result.models).toHaveLength(1);
@@ -248,17 +252,17 @@ describe('ConnectorsController', () => {
     });
 
     it('passes free=true filter through to service', async () => {
-      await controller.getCatalog({ free: 'true' });
+      await controller.getCatalog({ free: 'true' }, catalogReq);
       expect(mockService.getCatalog).toHaveBeenCalledWith(expect.objectContaining({ free: true }));
     });
 
     it('passes cheap=true filter through to service', async () => {
-      await controller.getCatalog({ cheap: 'true' });
+      await controller.getCatalog({ cheap: 'true' }, catalogReq);
       expect(mockService.getCatalog).toHaveBeenCalledWith(expect.objectContaining({ cheap: true }));
     });
 
     it('passes capability filter through to service', async () => {
-      await controller.getCatalog({ capability: 'supportsJsonSchema' });
+      await controller.getCatalog({ capability: 'supportsJsonSchema' }, catalogReq);
       expect(mockService.getCatalog).toHaveBeenCalledWith(
         expect.objectContaining({ capability: 'supportsJsonSchema' }),
       );
@@ -266,12 +270,15 @@ describe('ConnectorsController', () => {
 
     // ── CONN-0232: new filters + ?type= alias ──
     it('passes modality / connector / tag / group filters through to service', async () => {
-      await controller.getCatalog({
-        modality: 'image_generation',
-        connector: 'vertex',
-        tag: 'modality:image_generation',
-        group: 'cost',
-      });
+      await controller.getCatalog(
+        {
+          modality: 'image_generation',
+          connector: 'vertex',
+          tag: 'modality:image_generation',
+          group: 'cost',
+        },
+        catalogReq,
+      );
       expect(mockService.getCatalog).toHaveBeenCalledWith(
         expect.objectContaining({
           modality: 'image_generation',
@@ -283,33 +290,35 @@ describe('ConnectorsController', () => {
     });
 
     it('maps ?type= alias to modality', async () => {
-      await controller.getCatalog({ type: 'speech_to_text' });
+      await controller.getCatalog({ type: 'speech_to_text' }, catalogReq);
       expect(mockService.getCatalog).toHaveBeenCalledWith(
         expect.objectContaining({ modality: 'speech_to_text' }),
       );
     });
 
     it('explicit ?modality= wins over ?type= alias', async () => {
-      await controller.getCatalog({ type: 'chat', modality: 'embedding' });
+      await controller.getCatalog({ type: 'chat', modality: 'embedding' }, catalogReq);
       expect(mockService.getCatalog).toHaveBeenCalledWith(
         expect.objectContaining({ modality: 'embedding' }),
       );
     });
 
     it('returns 400 for unknown modality value', async () => {
-      await expect(controller.getCatalog({ modality: 'telepathy' })).rejects.toMatchObject({
+      await expect(
+        controller.getCatalog({ modality: 'telepathy' }, catalogReq),
+      ).rejects.toMatchObject({
         status: 400,
       });
     });
 
     it('returns 400 for unknown capability value', async () => {
-      await expect(controller.getCatalog({ capability: 'supportsUnicorns' })).rejects.toMatchObject(
-        { status: 400 },
-      );
+      await expect(
+        controller.getCatalog({ capability: 'supportsUnicorns' }, catalogReq),
+      ).rejects.toMatchObject({ status: 400 });
     });
 
     it('returns models with connector, model, free, cheap, rateLimits, routing fields', async () => {
-      const result = await controller.getCatalog({});
+      const result = await controller.getCatalog({}, catalogReq);
       const model = result.models[0];
       expect(model.connector).toBe('openmodel');
       expect(model.model).toBe('deepseek-v4-flash');
@@ -323,7 +332,7 @@ describe('ConnectorsController', () => {
     it('returns 400 for invalid filter combination (unknown capability type)', async () => {
       let caught: unknown;
       try {
-        await controller.getCatalog({ capability: 'invalidValue' as 'supportsTools' });
+        await controller.getCatalog({ capability: 'invalidValue' as 'supportsTools' }, catalogReq);
       } catch (err) {
         caught = err;
       }
@@ -332,7 +341,7 @@ describe('ConnectorsController', () => {
     });
 
     it('free=1 is treated as truthy filter', async () => {
-      await controller.getCatalog({ free: '1' });
+      await controller.getCatalog({ free: '1' }, catalogReq);
       expect(mockService.getCatalog).toHaveBeenCalledWith(expect.objectContaining({ free: true }));
     });
   });

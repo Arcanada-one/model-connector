@@ -79,7 +79,7 @@ export class ConnectorsController {
    * match the literal segment "catalog" as a :name parameter.
    */
   @Get('connectors/catalog')
-  async getCatalog(@Query() rawQuery: Record<string, string>) {
+  async getCatalog(@Query() rawQuery: Record<string, string>, @Req() req: AuthenticatedRequest) {
     // CONN-0232: `?type=` is an operator-facing alias for `?modality=`. Map it
     // before parsing; an explicit `?modality=` always wins.
     const { type, ...rest } = rawQuery;
@@ -92,7 +92,11 @@ export class ConnectorsController {
         HttpStatus.BAD_REQUEST,
       );
     }
-    return this.connectorsService.getCatalog(parsed.data);
+    // CONN-1665 — discovery mirrors enforcement: filter by the caller's policy.
+    const apiKeyId = req.apiKey?.id;
+    return apiKeyId
+      ? this.connectorsService.getCatalog(parsed.data, apiKeyId)
+      : this.connectorsService.getCatalog(parsed.data);
   }
 
   @Get('connectors/:name/status')
