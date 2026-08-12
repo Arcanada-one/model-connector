@@ -38,6 +38,8 @@ COPY --from=build --chown=connector /app/node_modules ./node_modules
 COPY --from=build --chown=connector /app/package.json ./
 COPY --from=build --chown=connector /app/prisma ./prisma
 COPY --from=build --chown=connector /app/prisma.config.ts ./
+# CONN-1666: Vault provider-key sourcing runs from the entrypoint at boot.
+COPY --from=build --chown=connector /app/scripts ./scripts
 
 COPY --chown=connector entrypoint.sh /usr/local/bin/entrypoint.sh
 
