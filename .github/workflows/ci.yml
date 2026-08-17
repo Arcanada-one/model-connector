@@ -10,7 +10,7 @@ jobs:
   lint-and-test:
     runs-on: [self-hosted, Linux, ci-general]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Credential documentation regression
         run: bash dev-tools/credential-docs-regression.sh
@@ -71,7 +71,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build Docker image
         run: docker build -t model-connector-e2e .
