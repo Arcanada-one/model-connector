@@ -4,6 +4,11 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "lib": ["ES2022", "DOM"],
+    // `process` is referenced behind a `typeof process !== 'undefined'` guard
+    // in client.ts, so the SDK stays browser-safe but still needs the ambient
+    // node types to compile. TS 6 no longer pulls them in implicitly here, and
+    // the resulting TS2591 was masked by TS5101 until that was fixed.
+    "types": ["node"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -16,7 +21,18 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+
+    // Required by the tsup DTS build under TypeScript 6, not by our own code.
+    // tsup hardcodes `baseUrl: compilerOptions.baseUrl || "."` when it invokes
+    // the rollup dts plugin (tsup 8.5.1, dist/rollup.js:6837), so `baseUrl` is
+    // injected whether or not any tsconfig here declares it. TS 6.0 turned the
+    // deprecation of `baseUrl` into error TS5101, which broke `pnpm build`.
+    //
+    // Note this is NOT fixable by editing tsconfig alone in the obvious way:
+    // removing `baseUrl` from the root tsconfig does nothing, because the value
+    // never came from there. Remove this only once tsup stops injecting it.
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules", "test"]
