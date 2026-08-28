@@ -27,6 +27,7 @@ import { sanitizeJsonResponse, JsonSanitizeError } from '../core/utils/json-sani
 import { getConfig } from '../config/env.schema';
 import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
+import { BillingService } from '../billing/billing.service';
 import type { OutputGuardReport } from './output-guard/types';
 import { OPENMODEL_CATALOGUE } from './openmodel/openmodel.catalogue';
 import { parseProviderAccess, resolveProviderAccess, type ProviderAccess } from './provider-access';
@@ -159,6 +160,13 @@ export class ConnectorsService {
       resolveProviderKeyEnv: () => null,
       invalidateKey: () => undefined,
     },
+    // ARAS-0064 — appended LAST, and that position is load-bearing. Many specs
+    // construct this service positionally, so inserting an optional parameter
+    // in the middle silently shifts every argument after it: doing exactly
+    // that broke 67 tests that had nothing to do with billing. Optional so
+    // those manual constructions keep working; when absent, spend is simply
+    // not settled.
+    private readonly billing?: BillingService,
   ) {}
 
   // CONN-0244 — per-provider access (READ = catalog-visible, USE = routable).
@@ -1075,7 +1083,7 @@ export class ConnectorsService {
     repairReport: OutputGuardReport | null = null,
   ) {
     const digest = BaseCliConnector.promptDigest(request.prompt);
-    await this.prisma.request.create({
+    const created = await this.prisma.request.create({
       data: {
         connector: response.connector,
         model: response.model,
@@ -1093,6 +1101,44 @@ export class ConnectorsService {
         repairReport: repairReport ? (repairReport as unknown as object) : undefined,
       },
     });
+
+    await this.settleSpend(created.id, apiKeyId, response.usage.costUsd);
+  }
+
+  /**
+   * ARAS-0064 — debit the ACTUAL measured cost of a completed request.
+   *
+   * Keyed on the request row's own id, so a retry of the same request settles
+   * once: the id is the natural idempotency key, and the database rejects a
+   * second ledger row for it.
+   *
+   * Deliberately non-fatal. The response has already been produced and the
+   * provider has already been paid; throwing here would lose a result the
+   * caller is entitled to in order to report an accounting problem. The debit
+   * is logged loudly instead, and the ledger's absence is recoverable from the
+   * Request row, which is written first.
+   */
+  private async settleSpend(
+    requestId: string,
+    apiKeyId: string,
+    costUsd: number | string,
+  ): Promise<void> {
+    if (!this.billing) return;
+    try {
+      await this.billing.settle({
+        apiKeyId,
+        amountUsd: costUsd,
+        idempotencyKey: `request:${requestId}`,
+        requestId,
+        reason: 'model-request',
+      });
+    } catch (err) {
+      this.logger.error(
+        `ARAS-0064 billing: failed to settle request ${requestId}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
   }
 
   private async reserveFirstDispatchObservation(
