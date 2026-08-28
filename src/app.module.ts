@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from './prisma/prisma.module';
+import { BillingModule } from './billing/billing.module';
 import { ConfigModule } from './config/config.module';
 import { AuthModule } from './auth/auth.module';
 import { ConnectorsModule } from './connectors/connectors.module';
@@ -17,6 +18,7 @@ import { getConfig } from './config/env.schema';
   imports: [
     ConfigModule,
     PrismaModule,
+    BillingModule,
     // CONN-0245 — enables @Cron/@Interval for CatalogRefreshService.
     ScheduleModule.forRoot(),
     BullModule.forRoot({

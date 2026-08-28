@@ -46,6 +46,8 @@ model ApiKey {
   // at WRITE time by the admin API; never write this column outside that path.
   // Null = legacy unrestricted key (all providers/models, shared env keys).
   policy            Json?
+  creditsBalance    CreditsBalance?
+  creditsLedger     CreditsLedger[]
   createdAt         DateTime           @default(now())
 }
 
@@ -295,4 +297,51 @@ model ProviderAccess {
   updatedAt   DateTime @updatedAt
 
   @@map("provider_access")
+}
+
+// ARAS-0064 — credit balance and ledger.
+//
+// The connector already MEASURED money (`Request.costUsd`) without ever
+// SPENDING it. These two models close that gap: the ledger is the append-only
+// record of every movement, and the balance is a materialised running total so
+// a precheck is one indexed read rather than a sum over history.
+//
+// The ledger is the source of truth. If the two ever disagree, rebuild the
+// balance from the ledger, never the other way round.
+model CreditsBalance {
+  apiKeyId   String   @id @map("api_key_id")
+  apiKey     ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  // 12,6 rather than Request.costUsd's 10,6: a balance accumulates many
+  // requests, so it needs headroom the per-request column does not.
+  balanceUsd Decimal  @default(0) @map("balance_usd") @db.Decimal(12, 6)
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("credits_balance")
+}
+
+model CreditsLedger {
+  id String @id @default(uuid())
+
+  apiKeyId String @map("api_key_id")
+  apiKey   ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  // Signed: positive credits the account, negative debits it. One column rather
+  // than a type discriminator plus a magnitude, so the balance is a plain SUM
+  // and no reader can misinterpret a sign convention.
+  amountUsd Decimal @map("amount_usd") @db.Decimal(12, 6)
+
+  reason String
+
+  // The anti-double-charge invariant, enforced by the DATABASE rather than by
+  // application logic: a retried commit reuses its key and the unique
+  // constraint rejects the second insert. A check in code would race.
+  idempotencyKey String @unique @map("idempotency_key")
+
+  // Set for a debit that settles a specific request; null for a manual credit.
+  requestId String? @map("request_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([apiKeyId, createdAt])
+  @@map("credits_ledger")
 }

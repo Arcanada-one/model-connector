@@ -38,6 +38,15 @@ export const envSchema = z
     // runtime guard already short-circuits non-openrouter connectors.
     MC_MULTI_MODAL_ENABLED: envBool.default(true),
 
+    // ARAS-0064 billing. Ships DARK: the ledger records spend from the moment
+    // this lands, but nothing is REFUSED until an operator turns enforcement
+    // on. Switching a live connector to hard-fail on balance in the same
+    // change that introduces the balance would take the service down for every
+    // caller whose account has never been credited — which is all of them.
+    // Uses envBool, not z.coerce.boolean(): the latter coerces the literal
+    // string "false" to true (CONN-0102).
+    BILLING_ENFORCED: envBool.default(false),
+
     // CONN-0089 output-guard middleware
     OUTPUT_GUARD_ENABLED: z.coerce.boolean().default(true),
     OUTPUT_GUARD_MAX_RETRIES: z.coerce.number().min(0).max(5).default(3),
