@@ -28,6 +28,8 @@ import { getConfig } from '../config/env.schema';
 import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import { BillingService } from '../billing/billing.service';
+import { InsufficientCreditsError } from '../billing/billing.errors';
+import { estimateCostUsd } from '../billing/cost-estimate';
 import type { OutputGuardReport } from './output-guard/types';
 import { OPENMODEL_CATALOGUE } from './openmodel/openmodel.catalogue';
 import { parseProviderAccess, resolveProviderAccess, type ProviderAccess } from './provider-access';
@@ -765,6 +767,24 @@ export class ConnectorsService {
       };
     }
 
+    // ARAS-0064 — credit gate, at the same single choke point as the access and
+    // policy gates below. Refusing here is the only place refusing is FREE: one
+    // step later the provider has been called and the money is spent whatever
+    // the balance says.
+    //
+    // Gated on BILLING_ENFORCED, which defaults to false. The ledger records
+    // spend from the moment billing shipped, but nothing is refused until an
+    // operator turns this on — flipping a live connector to hard-fail on
+    // balance without that switch would deny every caller whose account has
+    // never been credited, i.e. all of them.
+    // `this.billing` is checked FIRST so a caller without billing wired never
+    // touches config at all — reading it unconditionally made every spec that
+    // constructs this service without an env fail environment validation.
+    if (this.billing && this.billingEnforced()) {
+      const denial = await this.creditDenial(connectorName, request, apiKeyId);
+      if (denial) return denial;
+    }
+
     // CONN-1665 — per-key policy gates, adjacent to the CONN-0244 canUse() gate
     // at the same single choke point (direct /execute, universal /execute and
     // every failover/cascade candidate all route through here). AND semantics:
@@ -1103,6 +1123,73 @@ export class ConnectorsService {
     });
 
     await this.settleSpend(created.id, apiKeyId, response.usage.costUsd);
+  }
+
+  /**
+   * Is credit enforcement switched on?
+   *
+   * Fails SAFE: if config cannot be read, billing is treated as not enforced.
+   * A configuration problem must not become a billing outage that denies every
+   * caller — the ledger still records spend either way.
+   */
+  private billingEnforced(): boolean {
+    try {
+      return getConfig().BILLING_ENFORCED === true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * ARAS-0064 — refuse a request the account cannot afford.
+   *
+   * Returns a structured error response rather than throwing, matching the
+   * access and policy gates: an agent must be able to READ "you are out of
+   * money" and stop, and `credit_depleted` is already classified
+   * non-retryable/abort, so a cascade will not hammer a depleted account.
+   * Throwing here would surface as a generic 500 and look like an outage.
+   */
+  private async creditDenial(
+    connectorName: string,
+    request: ServiceExecuteRequest,
+    apiKeyId: string,
+  ): Promise<ConnectorResponse | null> {
+    const model = request.model || 'unknown';
+    let estimate: number;
+    try {
+      const catalog = await this.catalogRepo.findAll();
+      const row = catalog.find(
+        (entry: { connector?: string; model?: string }) =>
+          entry.connector === connectorName && entry.model === request.model,
+      );
+      estimate = estimateCostUsd(request.prompt?.length ?? 0, row);
+    } catch {
+      // A catalogue read failure must not become a free pass: fall back to the
+      // unpriced estimate rather than skipping the gate.
+      estimate = estimateCostUsd(request.prompt?.length ?? 0, null);
+    }
+
+    try {
+      await this.billing!.precheck(apiKeyId, estimate);
+      return null;
+    } catch (err) {
+      if (!(err instanceof InsufficientCreditsError)) throw err;
+      const action = classifyErrorAction('credit_depleted');
+      return {
+        id: '',
+        connector: connectorName,
+        model,
+        result: '',
+        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+        latencyMs: 0,
+        status: 'error',
+        error: {
+          type: 'credit_depleted',
+          message: `Insufficient credits: balance ${err.balanceUsd} USD does not cover the estimated ${err.requiredUsd} USD for this request. Top up the account to continue.`,
+          ...action,
+        },
+      };
+    }
   }
 
   /**
