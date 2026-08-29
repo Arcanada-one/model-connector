@@ -332,6 +332,17 @@ model CreditsLedger {
 
   reason String
 
+  // ARAS-0071 — what KIND of movement this is, as a first-class column rather
+  // than a substring of `reason`. A gift must be distinguishable from money the
+  // customer paid: they are the same arithmetic and completely different facts,
+  // and an accounting history that cannot tell them apart cannot be audited.
+  // Free-text `reason` is not enough — it is operator-supplied and unqueryable.
+  //
+  // 'charge' = spend debited for a request
+  // 'gift'   = credit granted by an operator, not paid for
+  // 'credit' = credit from any other source (kept for entries pre-dating gifts)
+  entryType String @default("charge") @map("entry_type")
+
   // The anti-double-charge invariant, enforced by the DATABASE rather than by
   // application logic: a retried commit reuses its key and the unique
   // constraint rejects the second insert. A check in code would race.
@@ -343,5 +354,8 @@ model CreditsLedger {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([apiKeyId, createdAt])
+  // Gifts are reported separately from payments in the cabinet (CTRL-0087), so
+  // the history query filters on this.
+  @@index([apiKeyId, entryType])
   @@map("credits_ledger")
 }
