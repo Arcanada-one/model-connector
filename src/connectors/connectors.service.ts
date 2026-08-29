@@ -30,6 +30,12 @@ import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import { BillingService, RequestIntentHandle } from '../billing/billing.service';
 import { estimateCostUsd, promptCharLength } from '../billing/cost-estimate';
 import { mintServerIntentKey, intentPayloadFingerprint } from '../billing/intent';
+import {
+  measureCostUsd,
+  type CostSource,
+  type MeasuredCost,
+  type MeasuredCostPricing,
+} from '../billing/measured-cost';
 import type { OutputGuardReport } from './output-guard/types';
 import { OPENMODEL_CATALOGUE } from './openmodel/openmodel.catalogue';
 import { parseProviderAccess, resolveProviderAccess, type ProviderAccess } from './provider-access';
@@ -1060,7 +1066,27 @@ export class ConnectorsService {
       throw error;
     }
 
-    const response = lastResponse!;
+    const unmetered = lastResponse!;
+
+    // ARAS-0058 — the money meter, at the same single choke point as the access,
+    // credit and policy gates above. Placed HERE rather than in each connector
+    // for two reasons: the arithmetic is identical for all ~60 of them, and the
+    // catalogue is reachable from the service but not from a connector (they are
+    // plain singletons with no DI). One implementation, every provider.
+    //
+    // Before this, nearly every connector captured the provider's token counts
+    // and then returned `costUsd: 0`, so `Request.costUsd` — and therefore every
+    // `charge` row in `credits_ledger` — was $0.000000 for every provider except
+    // the two that happen to report a cost of their own.
+    //
+    // The first-dispatch observation deliberately keeps the UNMETERED figure: it
+    // is stamped `CONNECTOR_RESPONSE_UNVERIFIED` and is evidence of what the
+    // provider actually returned, not of what we decided to charge.
+    const metered = await this.meterCost(connectorName, unmetered);
+    const response: ConnectorResponse = {
+      ...unmetered,
+      usage: { ...unmetered.usage, costUsd: metered.costUsd },
+    };
 
     // Metrics recording (per-model)
     this.metricsService.record({
@@ -1098,7 +1124,19 @@ export class ConnectorsService {
     // The cost is real — every request now waits on a database write before it
     // answers. That is the right trade the moment the write is money rather
     // than a metric.
-    await this.persistAndSettle(response, providerRequest, apiKeyId, guardReport, intent);
+    //
+    // `metered.source` rides along so the provenance of `costUsd` is written in
+    // the SAME transaction as the number itself. Recording the amount and its
+    // provenance separately would let them disagree, and the whole point of the
+    // column is to be trustworthy about a $0.000000 row.
+    await this.persistAndSettle(
+      response,
+      providerRequest,
+      apiKeyId,
+      guardReport,
+      intent,
+      metered.source,
+    );
 
     return response;
   }
@@ -1140,6 +1178,93 @@ export class ConnectorsService {
   }
 
   /**
+   * ARAS-0058 — price a completed response.
+   *
+   * The catalogue is the ONLY pricing source (`estimateCostUsd` reads the same
+   * rows for the pre-call gate); a second one would drift from the first. The
+   * arithmetic itself lives in `measureCostUsd` so the pre-call estimate and the
+   * post-call charge stay recognisably the same shape.
+   *
+   * The model looked up is `response.model` — what the provider says it actually
+   * served — not `request.model`, which may be blank or an alias.
+   *
+   * A catalogue read failure resolves to `unpriced`, never to a silent zero:
+   * "the database was down" and "this model is free" must not produce the same
+   * ledger row.
+   */
+  private async meterCost(
+    connectorName: string,
+    response: ConnectorResponse,
+  ): Promise<MeasuredCost> {
+    let pricing: MeasuredCostPricing | null = null;
+    try {
+      pricing = await this.lookupPricing(connectorName, response.model);
+    } catch (err) {
+      this.logger.error(
+        `ARAS-0058 meter: catalogue pricing lookup failed for ${connectorName}/${response.model}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+
+    const metered = measureCostUsd({
+      providerCostUsd: response.usage.costUsd,
+      inputTokens: response.usage.inputTokens,
+      outputTokens: response.usage.outputTokens,
+      pricing,
+    });
+
+    if (metered.source === 'unpriced') {
+      // Loud on purpose. Every line here is a request served at a price nobody
+      // knew, i.e. money the catalogue owes an explanation for.
+      this.logger.warn(
+        `ARAS-0058 meter: no catalogue price for ${connectorName}/${response.model}; ` +
+          `${response.usage.totalTokens} tokens recorded as unpriced, not charged`,
+      );
+    }
+    return metered;
+  }
+
+  /**
+   * The catalogue row for one model. Prefers the indexed single-row lookup; the
+   * `findAll()` scan is the fallback for the narrow `{ findAll }` mocks specs
+   * inject (see `CatalogRepositoryLike`).
+   */
+  private async lookupPricing(
+    connectorName: string,
+    model: string | undefined,
+  ): Promise<MeasuredCostPricing | null> {
+    if (!model) return null;
+    if (this.catalogRepo.findPricing) {
+      return await this.catalogRepo.findPricing(connectorName, model);
+    }
+    const rows = await this.catalogRepo.findAll();
+    return (
+      rows.find(
+        (row: { connector?: string; model?: string }) =>
+          row.connector === connectorName && row.model === model,
+      ) ?? null
+    );
+  }
+
+  /**
+   * The ledger `reason` for a settle, carrying the cost's provenance.
+   *
+   * A $0.000000 charge is ambiguous three ways — a free model, a request that
+   * consumed nothing, and a model whose price we never knew — and only the last
+   * is a revenue leak. `Request.costSource` records that for the request row;
+   * this puts it in the LEDGER too, because the ledger is the audit surface and
+   * has to carry the distinction itself rather than rely on a join against a
+   * table with a different retention policy.
+   *
+   * Only `unpriced` is marked. The other sources describe a number we stand
+   * behind; `unpriced` describes one we do not.
+   */
+  private static settleReason(costSource: CostSource | null): string {
+    return costSource === 'unpriced' ? 'model-request:unpriced' : 'model-request';
+  }
+
+  /**
    * ARAS-0058 — write the `Request` row and settle its spend in ONE
    * transaction.
    *
@@ -1166,8 +1291,29 @@ export class ConnectorsService {
     apiKeyId: string,
     repairReport: OutputGuardReport | null = null,
     intent: RequestIntentHandle | null = null,
+    // ARAS-0058 — appended LAST. Callers construct this positionally and an
+    // optional parameter inserted mid-list silently shifts everything after it.
+    costSource: CostSource | null = null,
   ): Promise<void> {
     const digest = BaseCliConnector.promptDigest(request.prompt);
+    const reason = ConnectorsService.settleReason(costSource);
+
+    if (costSource === 'unpriced' && intent) {
+      // The hold is about to be released in full against a charge of $0.000000,
+      // because we served tokens at a price nobody knew. That is not the same
+      // failure as an over-estimate — an over-estimate lands as an
+      // `uncollectible` entry that a dashboard can sum, whereas this leaves NO
+      // amount to write off, only tokens burned and a reservation handed back.
+      // It is therefore the one settle that has to say so on its own, above and
+      // beyond the `:unpriced` reason on the ledger row.
+      this.logger.warn(
+        `ARAS-0058 billing: releasing hold ${intent.id} in full and charging 0 USD for an ` +
+          `UNPRICED request (api key ${apiKeyId}, connector ${response.connector}, model ` +
+          `${response.model}, ${response.usage.totalTokens} tokens). The catalogue owes this ` +
+          'model a price; until it has one the tokens are served free. Alert on this line.',
+      );
+    }
+
     try {
       await this.prisma.$transaction(async (tx) => {
         const created = await tx.request.create({
@@ -1185,6 +1331,9 @@ export class ConnectorsService {
             errorType: response.error?.type,
             errorMessage: response.error?.message?.slice(0, 500),
             apiKeyId,
+            // Written in the SAME transaction as `costUsd`, so the amount and
+            // the provenance of the amount cannot disagree.
+            costSource,
             repairReport: repairReport ? (repairReport as unknown as object) : undefined,
           },
         });
@@ -1199,7 +1348,7 @@ export class ConnectorsService {
             // Stored so a replay of this intent key returns THIS answer rather
             // than calling the provider again.
             response,
-            reason: 'model-request',
+            reason,
           });
           return;
         }
@@ -1214,14 +1363,14 @@ export class ConnectorsService {
           amountUsd: response.usage.costUsd,
           idempotencyKey: `request:${created.id}`,
           requestId: created.id,
-          reason: 'model-request',
+          reason,
         });
       });
     } catch (err) {
       this.logger.error(
         `ARAS-0058 billing: FAILED TO PERSIST AND SETTLE a completed request for api key ` +
           `${apiKeyId} (connector ${response.connector}, model ${response.model}, ` +
-          `cost ${response.usage.costUsd} USD): ` +
+          `cost ${response.usage.costUsd} USD, source ${costSource ?? 'unknown'}): ` +
           (err instanceof Error ? err.message : String(err)) +
           ' — the provider was paid and this spend is NOT recorded. Alert on this line.',
       );

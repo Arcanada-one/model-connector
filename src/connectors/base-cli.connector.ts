@@ -77,6 +77,11 @@ export interface ParsedCliOutput {
   model: string;
   inputTokens: number;
   outputTokens: number;
+  /**
+   * Cost as the PROVIDER reported it, or 0 when it reports none. See the same
+   * field on {@link ParsedApiOutput}: 0 means "unreported", not "free", and
+   * `ConnectorsService.meterCost()` (ARAS-0058) does the pricing.
+   */
   costUsd: number;
   isError: boolean;
   errorType?: string;

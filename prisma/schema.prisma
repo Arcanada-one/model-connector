@@ -16,6 +16,16 @@ model Request {
   outputTokens Int      @default(0)
   totalTokens  Int      @default(0)
   costUsd      Decimal  @default(0) @db.Decimal(10, 6)
+  // ARAS-0058 — WHERE `costUsd` came from, as a first-class column rather than
+  // something a reader has to infer from the number itself. Zero is ambiguous:
+  // a free model, a request that consumed nothing, and a model whose price we
+  // never knew all settle at $0.000000, and only the last of those is a revenue
+  // leak. See `src/billing/measured-cost.ts` (CostSource) for the values.
+  //
+  // Nullable with no default: rows written before this shipped genuinely do not
+  // know their provenance, and back-filling them with a guess would invent
+  // evidence. NULL means "predates the meter".
+  costSource   String?
   latencyMs    Int
   status       String // 'success', 'error', 'timeout', 'rate_limited'
   errorType    String?
