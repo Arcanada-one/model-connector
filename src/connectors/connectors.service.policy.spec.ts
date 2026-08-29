@@ -80,8 +80,11 @@ interface StackOptions {
 const API_KEY_ID = 'policy-key-1';
 
 function buildStack(connectors: FakeConnector[], opts: StackOptions = {}) {
-  const prisma = {
+  const prisma: Record<string, unknown> = {
     request: { create: () => Promise.resolve({}) },
+    // ARAS-0058 — the request row and its settlement now commit together, so a
+    // prisma mock without $transaction would model a client that cannot exist.
+    $transaction: (fn: (tx: unknown) => unknown) => fn(prisma),
     apiKey: {
       findUnique: async () => ({ policy: opts.policy ?? null }),
     },

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpException,
   HttpStatus,
   Param,
@@ -26,6 +27,11 @@ import { ImageGenerationService } from './image-generation/image-generation.serv
 import { IMAGE_CAPABILITIES } from './image-generation/capabilities';
 import { CascadeRouterService } from './cascade/cascade-router.service';
 import { CascadeExhaustedError, CascadeBudgetExceededError } from './cascade/cascade.errors';
+import {
+  IDEMPOTENCY_HEADER,
+  InvalidIdempotencyKeyError,
+  normalizeIdempotencyKey,
+} from '../billing/intent';
 
 interface AuthenticatedRequest extends FastifyRequest {
   apiKey?: { id: string };
@@ -44,7 +50,35 @@ const HTTP_ERROR_STATUS: Record<string, HttpStatus> = {
   // CONN-1665 — per-key access policy denial / server-side policy misconfiguration.
   policy_violation: HttpStatus.FORBIDDEN,
   config_error: HttpStatus.INTERNAL_SERVER_ERROR,
+  // ARAS-0058 — idempotency outcomes get real status codes, because a client
+  // library's retry logic branches on the status long before it reads the body.
+  // A conflict returned as 200 would be retried as a success.
+  idempotency_conflict: HttpStatus.CONFLICT,
+  idempotency_key_reused: HttpStatus.UNPROCESSABLE_ENTITY,
+  idempotency_replay_unavailable: HttpStatus.CONFLICT,
+  request_cost_limit_exceeded: HttpStatus.BAD_REQUEST,
 };
+
+/**
+ * ARAS-0058 — lift the caller's `Idempotency-Key` header onto the request.
+ *
+ * A malformed key is a 400, never a silent drop. Dropping it would leave the
+ * caller believing they had an at-most-once guarantee they do not have, and
+ * they would discover otherwise by being charged twice.
+ */
+function parseIdempotencyKey(raw: string | undefined): string | undefined {
+  try {
+    return normalizeIdempotencyKey(raw) ?? undefined;
+  } catch (err) {
+    if (err instanceof InvalidIdempotencyKeyError) {
+      throw new HttpException(
+        { error: 'validation_error', message: err.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    throw err;
+  }
+}
 
 @Controller()
 export class ConnectorsController {
@@ -108,21 +142,47 @@ export class ConnectorsController {
   async executePerConnector(
     @Param('name') name: string,
     @Body(new ZodValidationPipe(perConnectorExecuteSchema)) body: PerConnectorExecuteDto,
+    @Headers(IDEMPOTENCY_HEADER) idempotencyKey: string | undefined,
     @Req() req: AuthenticatedRequest,
   ) {
     const apiKeyId = req.apiKey?.id ?? 'unknown';
-    const response = await this.connectorsService.execute(name, body, apiKeyId);
+    const response = await this.connectorsService.execute(
+      name,
+      { ...body, idempotencyKey: parseIdempotencyKey(idempotencyKey) },
+      apiKeyId,
+    );
     return this.mapResponseStatus(response);
   }
 
   @Post('execute')
   async executeUniversal(
     @Body(new ZodValidationPipe(executeRequestSchema)) body: ExecuteRequestDto,
+    @Headers(IDEMPOTENCY_HEADER) idempotencyKey: string | undefined,
     @Req() req: AuthenticatedRequest,
   ) {
     const apiKeyId = req.apiKey?.id ?? 'unknown';
+    const intentKey = parseIdempotencyKey(idempotencyKey);
 
     if (body.profile != null) {
+      // ARAS-0058 — a cascade fans one intent out across N candidate
+      // connectors, each of which opens and settles its own intent. A single
+      // key threaded down that path would be claimed by the first candidate and
+      // then collide with itself on every subsequent hop, which is worse than
+      // no idempotency at all: the caller would believe they had a guarantee.
+      // Refused explicitly until the intent is hoisted to the cascade level.
+      // No caller can be broken by this — the header did not exist before.
+      if (intentKey) {
+        throw new HttpException(
+          {
+            error: 'idempotency_unsupported',
+            message:
+              'Idempotency-Key is not yet supported together with `profile`: a cascade ' +
+              'dispatches to several connectors and the key cannot span them safely. ' +
+              'Name an explicit `connector` to use idempotency.',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
       const { profile, ...request } = body;
       try {
         const response = await this.cascadeRouterService.execute(profile, request, apiKeyId);
@@ -150,7 +210,11 @@ export class ConnectorsController {
     }
 
     const { connector, ...request } = body;
-    const response = await this.connectorsService.execute(connector!, request, apiKeyId);
+    const response = await this.connectorsService.execute(
+      connector!,
+      { ...request, idempotencyKey: intentKey },
+      apiKeyId,
+    );
     return this.mapResponseStatus(response);
   }
 

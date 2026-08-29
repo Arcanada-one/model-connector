@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The ledger now survives real money (ARAS-0058)** — six findings on the billing path,
+  every one of which was invisible while `costUsd` was still zero and every one of which
+  becomes a way to lose money the moment it is not.
+
+  - **Settlement was fire-and-forget.** `logRequest(...).catch(...)` was not awaited, and
+    `settleSpend` lived inside it. The response reached the customer before the `Request`
+    row or the ledger row existed, so a SIGTERM, a deploy or an OOM in that window meant
+    the provider had been paid and the customer had not. Billing was bolted onto a
+    telemetry path and the durability requirement was never re-derived. The call is now
+    awaited, and the `Request` row and its charge commit in **one transaction** — so the
+    two cannot diverge, rather than being repaired after they do.
+  - **The compensating control now exists.** `settleSpend`'s docstring justified being
+    non-fatal on the grounds that the ledger was recoverable from the `Request` row. That
+    recovery job was never written. `BillingReconcilerService` is it: an anti-join for
+    `Request` rows carrying spend with no matching `credits_ledger.request_id`, exposed at
+    `POST /admin/credits/reconcile` (**dry run by default**) and bounded to the recent past
+    so it can never backfill history it was not asked to. Automatic charging ships **off**
+    (`BILLING_RECONCILE_ENABLED`).
+  - **The precheck did not hold anything.** `precheck()` was a plain `findUnique` and
+    `post()` an unguarded `increment` with a negative value: N parallel requests on one
+    balance all read it, all passed, all dispatched, all debited — and `arcana` IS a
+    parallel agent, so that was the normal traffic shape. Replaced with a real reservation
+    (`credits_balance.held_usd` + `request_intent`) taken by a conditional `UPDATE`
+    carrying `WHERE balance_usd - held_usd >= amount`. Proved with twelve concurrent
+    requests against a one-request balance: exactly one is admitted.
+  - **A floor the database enforces.** `CHECK (balance_usd >= 0)` on `credits_balance`,
+    which is the only thing that cannot be raced. Because the provider is already paid by
+    the time settlement runs, a charge is never allowed to fail against it: the charge is
+    recorded in full and the part a depleted balance cannot cover is posted back as an
+    explicit `uncollectible` ledger entry, so `balance = SUM(ledger)` and `balance >= 0`
+    hold at once and lost revenue is a queryable SUM.
+  - **Idempotency is per intent, not per attempt.** The ledger key was
+    `request:${created.id}`, a uuid minted inside the logging path — unique per ATTEMPT, so
+    it could only deduplicate a retry of `settle()`, which nothing performs. A client
+    timeout plus a re-POST was a second provider call and a second charge. `POST /execute`
+    and `POST /connectors/:name/execute` now accept an `Idempotency-Key` header: one
+    provider call and one ledger row across a replay.
+  - **The estimate was beatable by a caller-controlled parameter.** `estimateCostUsd`
+    hardcoded 2 000 output tokens and ignored `max_tokens` entirely — roughly a 32x
+    under-estimate on an expensive model, chosen by the caller. `max_tokens` is now folded
+    in (upward only; a small value is a request, not a guarantee), multi-modal prompts are
+    measured in characters rather than blocks, and `BILLING_MAX_REQUEST_COST_USD` caps
+    what one request may cost.
+  - **`BILLING_ENFORCED` was declared nowhere outside `src/`** — not in `.env.example`,
+    not in `docker-compose.yml`, not in `deploy/`, not in CI. It was set by hand on the
+    prod container, so the next deploy that rebuilt the env from the template would have
+    silently disabled billing, and the failure mode is *successful free service*. Now
+    declared in `.env.example`, asserted in CI by `dev-tools/env-declaration-parity.sh`,
+    and asserted against the running container by the deploy job.
+
+  `billingEnforced()` still fails OPEN, deliberately: with gift credits a config error must
+  not deny every caller. The seam for the live-money inversion (`BILLING_LIVE_MODE`) is in
+  place and inert — flipping it is a separate, operator-approved change.
+
 ### Added
 
 - **OpenAI-compatible failover gateway (CONN-0243)** — Model Connector now speaks the

@@ -79,7 +79,9 @@ const mixedEntries: CatalogModelEntry[] = [
 ];
 
 function buildService(policy: ApiKeyPolicy | null) {
-  const prisma = { request: { create: vi.fn().mockResolvedValue({}) } };
+  // ARAS-0058 — the request row and its settlement now commit together.
+  const prisma: Record<string, unknown> = { request: { create: vi.fn().mockResolvedValue({}) } };
+  prisma.$transaction = (fn: (tx: unknown) => unknown) => fn(prisma);
   const policyService = {
     getPolicyForKey: vi.fn(async () => policy),
     isProviderAllowed: () => true,

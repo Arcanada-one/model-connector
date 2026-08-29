@@ -57,6 +57,9 @@ describe('ConnectorsService', () => {
   const mockQueue = { add: vi.fn() };
   const mockPrisma = {
     request: { create: vi.fn().mockResolvedValue({}) },
+    // ARAS-0058 — the request row and its settlement now commit together, so a
+    // prisma mock without $transaction would model a client that cannot exist.
+    $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(mockPrisma)),
     firstDispatchObservation: {
       create: vi.fn().mockResolvedValue({}),
       updateMany: vi.fn().mockResolvedValue({ count: 1 }),

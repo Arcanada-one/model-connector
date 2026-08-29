@@ -26,6 +26,7 @@ import { z } from 'zod';
 import { Public } from '../auth/public.decorator';
 import { AdminGuard } from '../admin/admin.guard';
 import { BillingService } from './billing.service';
+import { BillingReconcilerService } from './reconciler.service';
 
 /**
  * ARAS-0071 — a gift. Stricter than a plain credit on purpose.
@@ -44,6 +45,23 @@ const GiftSchema = z.object({
   reason: z.string().trim().min(3).max(200),
 });
 
+/**
+ * `dryRun` defaults to true — see the endpoint's docstring. `maxAgeMs` is
+ * capped at 90 days so a typo cannot turn a routine sweep into a backfill of
+ * everything the system has ever done.
+ */
+const ReconcileSchema = z.object({
+  dryRun: z.boolean().default(true),
+  limit: z.number().int().min(1).max(5_000).optional(),
+  maxAgeMs: z
+    .number()
+    .int()
+    .min(60_000)
+    .max(90 * 86_400_000)
+    .optional(),
+  graceMs: z.number().int().min(0).max(86_400_000).optional(),
+});
+
 const CreditSchema = z.object({
   amountUsd: z
     .union([z.number(), z.string()])
@@ -59,7 +77,42 @@ const CreditSchema = z.object({
 @UseGuards(AdminGuard)
 @Public()
 export class CreditsController {
-  constructor(private readonly billing: BillingService) {}
+  constructor(
+    private readonly billing: BillingService,
+    private readonly reconciler: BillingReconcilerService,
+  ) {}
+
+  /**
+   * ARAS-0058 — find measured spend that never reached the ledger, and
+   * optionally settle it.
+   *
+   * `dryRun` defaults to TRUE. This endpoint charges real accounts, and the
+   * operator asking "what did we miss?" and the operator saying "now bill for
+   * it" are two different decisions; making the safe one the default keeps a
+   * curious `curl` from becoming an invoice.
+   */
+  @Post('reconcile')
+  @HttpCode(HttpStatus.OK)
+  async reconcile(@Body() body: unknown) {
+    const parsed = ReconcileSchema.safeParse(body ?? {});
+    if (!parsed.success) {
+      throw new BadRequestException(parsed.error.issues);
+    }
+    return this.reconciler.reconcile(parsed.data);
+  }
+
+  /**
+   * ARAS-0058 — release reservations whose owner never came back.
+   *
+   * Runs hourly on its own; exposed so an operator recovering from an incident
+   * does not have to wait for the tick. Safe to call at any time: it only ever
+   * gives money back, and only for holds already past their expiry.
+   */
+  @Post('holds/sweep')
+  @HttpCode(HttpStatus.OK)
+  async sweepHolds() {
+    return this.billing.sweepExpiredIntents();
+  }
 
   @Get(':apiKeyId')
   async balance(@Param('apiKeyId') apiKeyId: string) {

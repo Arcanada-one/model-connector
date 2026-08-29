@@ -87,6 +87,16 @@ const ERROR_ACTION_MAP: Record<string, { retryable: boolean; recommendation: Err
   model_not_found: { retryable: false, recommendation: 'abort' },
   api_error: { retryable: true, recommendation: 'retry' },
   unsupported_modality: { retryable: false, recommendation: 'abort' },
+  // ARAS-0058 — idempotency outcomes.
+  //
+  // `idempotency_conflict` is the one entry here that is retryable: the first
+  // request under this key is still running, so the answer genuinely may exist
+  // shortly. Everything else is a caller-side fault that repeating cannot fix,
+  // and a cascade must not hammer a depleted account or a mismatched key.
+  idempotency_conflict: { retryable: true, recommendation: 'wait' },
+  idempotency_key_reused: { retryable: false, recommendation: 'abort' },
+  idempotency_replay_unavailable: { retryable: false, recommendation: 'abort' },
+  request_cost_limit_exceeded: { retryable: false, recommendation: 'abort' },
 };
 
 export function classifyErrorAction(errorType: string): {

@@ -81,14 +81,18 @@ describe('ConnectorsController', () => {
 
   it('should execute per-connector', async () => {
     const req = { apiKey: { id: 'key-1' } };
-    const result = await controller.executePerConnector('test', { prompt: 'hi' }, req);
+    const result = await controller.executePerConnector('test', { prompt: 'hi' }, undefined, req);
     expect(result.status).toBe('success');
     expect(mockService.execute).toHaveBeenCalledWith('test', { prompt: 'hi' }, 'key-1');
   });
 
   it('should execute universal', async () => {
     const req = { apiKey: { id: 'key-1' } };
-    const result = await controller.executeUniversal({ connector: 'test', prompt: 'hi' }, req);
+    const result = await controller.executeUniversal(
+      { connector: 'test', prompt: 'hi' },
+      undefined,
+      req,
+    );
     expect(result.status).toBe('success');
     expect(mockService.execute).toHaveBeenCalledWith('test', { prompt: 'hi' }, 'key-1');
   });
@@ -113,6 +117,7 @@ describe('ConnectorsController', () => {
         { profile: 'low-reasoning', prompt: 'classify this' } as Parameters<
           typeof controller.executeUniversal
         >[0],
+        undefined,
         req,
       );
       expect(result.status).toBe('success');
@@ -137,6 +142,7 @@ describe('ConnectorsController', () => {
           { profile: 'low-reasoning', prompt: 'hi' } as Parameters<
             typeof controller.executeUniversal
           >[0],
+          undefined,
           req,
         ),
       ).rejects.toMatchObject({
@@ -155,6 +161,7 @@ describe('ConnectorsController', () => {
           { profile: 'low-reasoning', prompt: 'hi' } as Parameters<
             typeof controller.executeUniversal
           >[0],
+          undefined,
           req,
         ),
       ).rejects.toMatchObject({
@@ -172,6 +179,7 @@ describe('ConnectorsController', () => {
           { profile: 'low-reasoning', prompt: 'hi' } as Parameters<
             typeof controller.executeUniversal
           >[0],
+          undefined,
           req,
         );
       } catch (err) {

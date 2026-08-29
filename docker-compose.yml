@@ -4,6 +4,14 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:3900:3900"
+    # Every runtime variable reaches the container through this file, so
+    # `.env.example` — not this compose file — is where a variable is DECLARED.
+    # ARAS-0058: recorded explicitly because BILLING_ENFORCED was missing from
+    # the template and someone looking here would reasonably conclude compose
+    # was the place it should have been. It is not; adding an `environment:`
+    # entry would in fact make things worse, since that takes precedence over
+    # `env_file` and would override a value the operator set in `.env`.
+    # `dev-tools/env-declaration-parity.sh` guards the template in CI.
     env_file:
       - .env
     volumes:

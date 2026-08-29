@@ -373,6 +373,41 @@ When `responseFormat: { type: "json_object" }` is set, MC sanitizes the response
 
 The cleaned JSON is placed in `response.structured`. If sanitization fails after all retries, `error.type` is `json_parse_error`.
 
+### Idempotency (ARAS-0058)
+
+`POST /execute` (with an explicit `connector`) and `POST /connectors/:name/execute`
+accept an optional `Idempotency-Key` request header. Send the same key with the same
+body and the request is dispatched to the provider — and charged — **exactly once**;
+every repeat returns the stored response.
+
+```bash
+curl -X POST http://100.121.155.54:3900/execute \
+  -H 'Authorization: Bearer <MODEL_CONNECTOR_API_KEY>' \
+  -H 'Idempotency-Key: 5c8f1e7a-order-4821-retry' \
+  -H 'Content-Type: application/json' \
+  -d '{"connector":"openrouter","prompt":"..."}'
+```
+
+The key identifies the INTENT, not the attempt. Without it a client timeout followed by
+a re-POST is a second provider call and a second charge, because the server has no way
+to know the caller meant one request. **No key, no promise** — this is opt-in.
+
+| Situation | Result |
+|-----------|--------|
+| Same key, same body, first request completed | `200` with the stored response; the provider is not called again |
+| Same key, first request still running | `409 idempotency_conflict` — retry shortly; do NOT reissue under a new key |
+| Same key, **different** body | `422 idempotency_key_reused` — a caller bug, reported rather than hidden behind the first response |
+| Same key, completed but response too large to store | `409 idempotency_replay_unavailable` — it ran and was charged once; fetch the original result |
+| Malformed key (over 255 chars, or not printable ASCII) | `400 validation_error` — never silently dropped |
+
+Keys are scoped per API key, so two callers may safely choose the same string. A
+completed intent stays replayable for `BILLING_INTENT_RETENTION_MS` (default 24h).
+
+Not yet supported on the multi-provider surfaces — `POST /execute` with `profile`, and
+`POST /v1/chat/completions` — which dispatch to several providers in turn; one key
+cannot span them safely, so those endpoints reject the header with `400` rather than
+accepting it and quietly not honouring it.
+
 ## Authentication
 
 API keys are stored bcrypt-hashed in the `ApiKey` PostgreSQL table on arcana-db. Every request (кроме `/health`) требует заголовок `Authorization: Bearer <key>`.
@@ -589,6 +624,12 @@ pnpm db:push      # Push schema to database
 | `CLAUDE_BINARY_PATH` | no | Path to Claude CLI (default: `claude`) |
 | `CURSOR_BINARY_PATH` | no | Path to Cursor CLI (default: `cursor-agent`) |
 | `GEMINI_BINARY_PATH` | no | Path to Gemini CLI (default: `gemini`) |
+| `BILLING_ENFORCED` | no | Refuse a request the balance cannot cover, before the provider is called (default: **false** — the ledger records spend either way) |
+| `BILLING_LIVE_MODE` | no | Marks this instance as handling real money rather than gift credits. Reserved for the fail-closed inversion of the enforcement gate; declared and currently inert (default: false) |
+| `BILLING_MAX_REQUEST_COST_USD` | no | Server-side ceiling on the estimated cost of ONE request, applied at the credit gate. `max_tokens` is caller-controlled, so without this the blast radius of a single call is too (default: 10; 0 disables) |
+| `BILLING_HOLD_TTL_MS` | no | How long a reservation survives without its owner returning (default: 1800000) |
+| `BILLING_INTENT_RETENTION_MS` | no | How long a completed request intent stays replayable under its `Idempotency-Key` (default: 86400000) |
+| `BILLING_RECONCILE_ENABLED` | no | Allow the hourly reconciler to CHARGE for measured spend that never reached the ledger (default: **false**; the sweep that returns abandoned holds always runs) |
 | `CONNECTOR_TIMEOUT_MS` | no | Default execution timeout (default: 120000) |
 | `CONNECTOR_MAX_CONCURRENCY` | no | Global fallback concurrency limit (default: 4) |
 | `CLAUDE_CODE_MAX_CONCURRENCY` | no | Claude Code CLI concurrent limit (default: 4) |
