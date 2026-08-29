@@ -44,7 +44,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
-import { InsufficientCreditsError } from './billing.errors';
+import { InsufficientCreditsError, ReversalRefusedError } from './billing.errors';
 import {
   DEFAULT_HOLD_TTL_MS,
   DEFAULT_INTENT_RETENTION_MS,
@@ -60,7 +60,118 @@ import {
  * Keeping them apart is an accounting requirement, not a cosmetic one: revenue
  * must never include money nobody paid.
  */
-export type LedgerEntryType = 'charge' | 'gift' | 'credit' | 'uncollectible';
+export type LedgerEntryType =
+  | 'charge'
+  | 'gift'
+  | 'credit'
+  | 'uncollectible'
+  | 'payment'
+  | 'refund'
+  | 'chargeback';
+
+/**
+ * BILL-0008 — the two ways a credit can be taken back.
+ *
+ * Same arithmetic, different facts, so they are different types for the same
+ * reason 'gift' and 'payment' are: a refund is a decision we made, a chargeback
+ * is one the provider made for us, and an accounting history that cannot tell
+ * them apart cannot answer "how much money did we choose to return" — which is
+ * a customer-service number — separately from "how much was taken from us",
+ * which is a fraud number.
+ */
+export type ReversalEntryType = Extract<LedgerEntryType, 'refund' | 'chargeback'>;
+
+/**
+ * BILL-0008 — the ceiling on any single credit posted through this service.
+ *
+ * Consilium §6.3 found `CreditSchema` accepting `Infinity`; the finite refine
+ * closes that, but "finite" is not a bound and there is no un-post. This is the
+ * bound.
+ *
+ * The value is not arbitrary. `credits_balance.balance_usd` is DECIMAL(12,6) —
+ * six integer digits — so the LEDGER PHYSICALLY CANNOT REPRESENT a balance at
+ * or above $1,000,000: a credit that crossed it would not be caught by a guard,
+ * it would abort the transaction with a numeric overflow from Postgres, at the
+ * moment money had already been received. $100,000 sits an order of magnitude
+ * under the column's own limit so that a legitimate large top-up plus an
+ * existing balance still fits, and is absurd enough as a single movement that
+ * anything above it is a typo or an attack either way.
+ *
+ * Raising it means widening the column first, in that order.
+ */
+export const MAX_CREDIT_USD = 100_000;
+
+/**
+ * BILL-0008 — the audit record of how a USD payment amount came to exist.
+ *
+ * Every field is INERT. `amountUsd` is the ledger number and the only one any
+ * money query may read; these are kept because "the customer paid 0.0031 BTC
+ * and we called it $180" is a claim we must be able to reproduce later and
+ * cannot reconstruct — the rate at receipt is gone the instant it passes.
+ *
+ * Consilium §2 forbids a coin ticker or an exchange rate from crossing the
+ * provider boundary, and §4.2 requires the valuation at receipt to be recorded
+ * before the first payment. Those pull in opposite directions and the
+ * resolution is the direction of dependence, not the presence of the fields:
+ * §2's prohibition is on a crypto amount DECIDING the credit, and nothing here
+ * can. `recordPayment()` never reads this object to compute anything —
+ * `amountUsd` arrives already decided by the payments module — so the coin
+ * never reaches a money decision even though it reaches the audit log.
+ */
+export interface PaymentValuation {
+  /** Amount in the asset actually sent. */
+  assetAmount?: Prisma.Decimal | number | string;
+  /** Ticker of the asset actually sent. */
+  asset?: string;
+  /** USD per unit of `asset` at receipt, as the GATEWAY reported it. */
+  usdRateAtReceipt?: Prisma.Decimal | number | string;
+  /** When the valuation was taken — not when we got round to posting it. */
+  valuedAt?: Date;
+}
+
+/**
+ * What {@link BillingService.reverse} did.
+ *
+ * `recoveredUsd` and `writtenOffUsd` are reported separately because they are
+ * different outcomes wearing the same number: the first is money actually taken
+ * back off the balance, the second is money the customer had already spent and
+ * we could not. A caller that only checks `applied` cannot tell a clean refund
+ * from a total loss.
+ */
+export interface ReversalResult {
+  applied: boolean;
+  reversedUsd: string;
+  recoveredUsd: string;
+  writtenOffUsd: string;
+}
+
+/**
+ * BILL-0008 — the provenance columns, as one object so `post()` threads them
+ * without growing eight parameters that every non-payment caller passes as
+ * undefined.
+ */
+type LedgerProvenance = {
+  source?: string | null;
+  externalRef?: string | null;
+  livemode?: boolean | null;
+  actor?: string | null;
+  assetAmount?: Prisma.Decimal | null;
+  asset?: string | null;
+  usdRateAtReceipt?: Prisma.Decimal | null;
+  valuedAt?: Date | null;
+};
+
+/**
+ * What `reverse()` will act on.
+ *
+ * Only a CREDIT can be reversed. Reversing a 'charge' is not a reversal, it is
+ * a credit, and it must look like one in the history — otherwise the sum over
+ * refunds stops meaning "money returned to customers". 'uncollectible' is
+ * excluded for the same reason plus a sharper one: it is itself the residue of
+ * a movement that could not complete, and reversing it would compound a
+ * write-off into a second write-off.
+ */
+const REVERSIBLE_ENTRY_TYPES: ReadonlySet<string> = new Set(['payment', 'gift', 'credit']);
 
 /** A live reservation, and the handle every later step is keyed on. */
 export interface RequestIntentHandle {
@@ -374,6 +485,321 @@ export class BillingService {
       reason,
       entryType: 'gift',
     });
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // BILL-0008 — money a customer actually sent, and taking it back.
+  // ──────────────────────────────────────────────────────────────────────
+
+  /**
+   * Record a PAYMENT: money a customer actually sent, credited from a verified
+   * gateway event.
+   *
+   * This is the MC half of the contract in consilium §2. The payments module in
+   * control-bff owns the invoice, the webhook, the signature check and every
+   * question about what a partial payment means; it calls this with an amount
+   * already decided. The four scalars that matter — `apiKeyId`, `amountUsd`,
+   * `idempotencyKey`, `source` — are the enforcement of that boundary, not a
+   * description of it: a coin ticker, a wallet address, a confirmation count or
+   * a provider status string cannot physically pass through a signature that
+   * has nowhere to put them.
+   *
+   * What this method deliberately does NOT know:
+   *
+   *   - what an under-payment is. It credits what it is told. Under, over and
+   *     late are policy, they live in control-bff (consilium §3), and a ledger
+   *     that had an opinion about them would be a second place for that policy
+   *     to be wrong.
+   *   - what the money was worth in anything but dollars. `valuation` is stored
+   *     and never read.
+   *
+   * Idempotency rides the existing `credits_ledger.idempotencyKey @unique` and
+   * the `P2002` catch in `post()` — the same mechanism as every other credit,
+   * namespaced by the caller (`oxapay:payment:<track_id>`). Consilium §9.3:
+   * reuse, do not add a second mechanism. `false` means the key was already
+   * used and NOTHING happened; a replayed webhook is a no-op, not a second
+   * credit.
+   */
+  async recordPayment(params: {
+    apiKeyId: string;
+    amountUsd: Prisma.Decimal | number | string;
+    idempotencyKey: string;
+    /** The provider that took the money — 'oxapay', later 'paypal'/'stripe'. */
+    source: string;
+    /** Real money or sandbox money. Required: see consilium §5's sandbox trap. */
+    livemode: boolean;
+    /** The gateway's own immutable reference. */
+    externalRef?: string;
+    /** Who posted this. 'the ADMIN_TOKEN' is not an actor — consilium §4.6. */
+    actor?: string;
+    reason?: string;
+    /** Inert audit record; never read to compute anything. */
+    valuation?: PaymentValuation;
+  }): Promise<boolean> {
+    const amount = new Prisma.Decimal(params.amountUsd);
+    // Finite first. `new Prisma.Decimal(Infinity)` is a perfectly good Decimal
+    // and compares greater than everything, so a positivity check alone passes
+    // it straight through to a column that cannot hold it (consilium §6.3).
+    if (!amount.isFinite()) {
+      throw new Error('recordPayment() requires a finite amount');
+    }
+    if (!amount.greaterThan(0)) {
+      throw new Error(
+        'recordPayment() records money received; the amount must be greater than zero',
+      );
+    }
+    if (amount.greaterThan(MAX_CREDIT_USD)) {
+      throw new Error(
+        `recordPayment() refuses ${amount.toString()} USD: above the ${MAX_CREDIT_USD} USD ` +
+          'per-credit ceiling. There is no un-post, so the ceiling is checked before the row.',
+      );
+    }
+    const source = params.source?.trim();
+    if (!source) {
+      throw new Error(
+        'recordPayment() requires a source — a payment with no provider is not auditable',
+      );
+    }
+
+    return this.post({
+      apiKeyId: params.apiKeyId,
+      amountUsd: amount,
+      idempotencyKey: params.idempotencyKey,
+      reason: params.reason?.trim() || `payment:${source}`,
+      entryType: 'payment',
+      provenance: {
+        source,
+        externalRef: params.externalRef ?? null,
+        livemode: params.livemode,
+        actor: params.actor ?? null,
+        ...BillingService.valuationColumns(params.valuation),
+      },
+    });
+  }
+
+  /**
+   * BILL-0008 — post a NEGATIVE entry reversing an earlier credit.
+   *
+   * This is the hard gate crypto created (consilium §4.1). Before it, `gift()`
+   * and `credit()` rejected non-positive amounts and `settle()` rejected
+   * negative ones, so an irreversible bad credit could not be undone in the
+   * ledger AT ALL — the only available fix was to hand-write a row outside
+   * every invariant this service exists to hold. With cards the issuer could
+   * reverse for us; with crypto nothing does, so the primitive has to exist
+   * before the first live key even though no adapter reaches it yet.
+   *
+   * Four refusals, all of them the same principle — a reversal must be
+   * explainable by the ledger alone:
+   *
+   *   - the original must exist. Reversing a key we never posted would create a
+   *     negative entry with nothing behind it.
+   *   - the original must be a CREDIT. Reversing a charge is not a reversal, it
+   *     is a credit, and it should look like one in the history.
+   *   - the total reversed must never exceed the original. Otherwise a repeated
+   *     partial refund quietly becomes a withdrawal.
+   *   - a reversal is never zero. A zero row moves nothing and burns an
+   *     idempotency key, so the real reversal that follows under that key is
+   *     swallowed in silence.
+   *
+   * THE BALANCE FLOOR. The customer may already have spent the money. Posting
+   * the full negative and decrementing by it would drive `balance_usd` under
+   * the database's `CHECK (balance_usd >= 0)` and abort — at the exact moment
+   * the money has already left. So the reversal is recorded IN FULL and the
+   * part that could not be recovered is written off as `uncollectible`, which
+   * is the same move `chargeInTx` already makes for a charge that outruns the
+   * balance, in the opposite direction. That keeps both invariants true at
+   * once, which is the whole difficulty:
+   *
+   *     `balance_usd = SUM(amount_usd)`   and   `balance_usd >= 0`
+   *
+   * and it makes money lost to reversal a single queryable SUM rather than an
+   * inference from a balance that silently failed to move.
+   *
+   * Recovery is clamped to `balance_usd - held_usd`, not to `balance_usd`: the
+   * held portion is reserved for a request already in flight against a provider
+   * we will be billed for. Taking it back here would let a refund cause an
+   * overdraft in a request that had already been told it could proceed.
+   */
+  async reverse(params: {
+    /** The `idempotency_key` of the entry being reversed. */
+    originalIdempotencyKey: string;
+    /** Positive magnitude to reverse; the row is written negative. */
+    amountUsd: Prisma.Decimal | number | string;
+    /** The reversal row's OWN key — this operation is idempotent too. */
+    idempotencyKey: string;
+    reason: string;
+    /** Voluntary ('refund') or provider-initiated ('chargeback'). */
+    entryType?: ReversalEntryType;
+    actor?: string;
+  }): Promise<ReversalResult> {
+    const amount = new Prisma.Decimal(params.amountUsd);
+    if (!amount.isFinite() || !amount.greaterThan(0)) {
+      throw new ReversalRefusedError(
+        'invalid_amount',
+        'reverse() takes the positive magnitude to reverse; the row is written negative',
+      );
+    }
+    const reason = params.reason?.trim();
+    if (!reason) {
+      throw new ReversalRefusedError(
+        'invalid_amount',
+        'reverse() requires a reason — taking money back must be auditable',
+      );
+    }
+    const entryType: ReversalEntryType = params.entryType ?? 'refund';
+    const nil = {
+      applied: false,
+      reversedUsd: amount.toString(),
+      recoveredUsd: '0',
+      writtenOffUsd: '0',
+    };
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const original = await tx.creditsLedger.findUnique({
+          where: { idempotencyKey: params.originalIdempotencyKey },
+        });
+        if (!original) {
+          throw new ReversalRefusedError(
+            'original_not_found',
+            `no ledger entry with idempotency key ${params.originalIdempotencyKey}`,
+          );
+        }
+        if (!REVERSIBLE_ENTRY_TYPES.has(original.entryType)) {
+          throw new ReversalRefusedError(
+            'original_not_reversible',
+            `entry ${params.originalIdempotencyKey} is a '${original.entryType}'; only a credit ` +
+              "('payment', 'gift', 'credit') can be reversed — undoing a charge is a credit, and " +
+              'should look like one in the history',
+          );
+        }
+        // Everything already reversed against this original, so a sequence of
+        // partial refunds cannot add up past it. Summed inside the transaction
+        // so two concurrent partials cannot both read the same headroom.
+        const priorRows = await tx.creditsLedger.findMany({
+          where: { reversalOf: params.originalIdempotencyKey },
+          select: { amountUsd: true },
+        });
+        const alreadyReversed = priorRows.reduce(
+          (acc, row) => acc.plus(row.amountUsd.abs()),
+          new Prisma.Decimal(0),
+        );
+        const headroom = original.amountUsd.abs().minus(alreadyReversed);
+        if (amount.greaterThan(headroom)) {
+          throw new ReversalRefusedError(
+            'exceeds_original',
+            `cannot reverse ${amount.toString()} USD against ${params.originalIdempotencyKey}: ` +
+              `${original.amountUsd.abs().toString()} USD was posted and ` +
+              `${alreadyReversed.toString()} USD is already reversed, leaving ` +
+              `${headroom.toString()} USD`,
+          );
+        }
+
+        // The negative row goes in FIRST, and in full. Its unique index is what
+        // rejects a replayed reversal, and it must do so before any balance has
+        // moved. Provenance is copied from the original so the two are joinable
+        // in a report without a lookup.
+        await tx.creditsLedger.create({
+          data: {
+            apiKeyId: original.apiKeyId,
+            amountUsd: amount.negated(),
+            idempotencyKey: params.idempotencyKey,
+            reason,
+            entryType,
+            reversalOf: params.originalIdempotencyKey,
+            source: original.source,
+            externalRef: original.externalRef,
+            livemode: original.livemode,
+            actor: params.actor ?? null,
+          },
+        });
+
+        // Lock before reading: the recoverable/written-off split has to be
+        // computed against a balance no concurrent settle can move underneath
+        // us. `FOR UPDATE` rather than a conditional UPDATE because we need the
+        // VALUE, not a yes/no.
+        await tx.creditsBalance.upsert({
+          where: { apiKeyId: original.apiKeyId },
+          create: { apiKeyId: original.apiKeyId, balanceUsd: 0, heldUsd: 0 },
+          update: {},
+        });
+        const locked = await tx.$queryRaw<
+          { balance_usd: Prisma.Decimal; held_usd: Prisma.Decimal }[]
+        >`
+          SELECT balance_usd, held_usd FROM credits_balance
+           WHERE api_key_id = ${original.apiKeyId} FOR UPDATE
+        `;
+        const balance = new Prisma.Decimal(locked[0]?.balance_usd ?? 0);
+        const held = new Prisma.Decimal(locked[0]?.held_usd ?? 0);
+        const spendable = Prisma.Decimal.max(balance.minus(held), 0);
+        const recovered = amount.greaterThan(spendable) ? spendable : amount;
+        const writtenOff = amount.minus(recovered);
+
+        if (writtenOff.greaterThan(0)) {
+          await tx.creditsLedger.create({
+            data: {
+              apiKeyId: original.apiKeyId,
+              amountUsd: writtenOff,
+              idempotencyKey: `${params.idempotencyKey}:unrecovered`,
+              reason: `unrecovered:${reason}`,
+              entryType: 'uncollectible',
+              reversalOf: params.originalIdempotencyKey,
+              actor: params.actor ?? null,
+            },
+          });
+          this.logger.warn(
+            `BILL-0008 billing: reversed ${amount.toString()} USD against a ` +
+              `${spendable.toString()} USD spendable balance for api key ${original.apiKeyId}; ` +
+              `${writtenOff.toString()} USD could not be recovered ` +
+              `(reversal=${params.idempotencyKey}, original=${params.originalIdempotencyKey})`,
+          );
+        }
+
+        if (recovered.greaterThan(0)) {
+          await tx.creditsBalance.update({
+            where: { apiKeyId: original.apiKeyId },
+            data: { balanceUsd: { decrement: recovered } },
+          });
+        }
+
+        return {
+          applied: true,
+          reversedUsd: amount.toString(),
+          recoveredUsd: recovered.toString(),
+          writtenOffUsd: writtenOff.toString(),
+        };
+      });
+    } catch (err) {
+      // A replayed reversal is a no-op, exactly like a replayed credit. The
+      // whole transaction rolled back, so no balance moved either.
+      if (BillingService.isDuplicateKey(err)) {
+        this.logger.log(
+          `billing: reversal idempotency key ${params.idempotencyKey} already posted, not reversing again`,
+        );
+        return nil;
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Map an optional {@link PaymentValuation} onto its columns.
+   *
+   * Absent stays NULL rather than becoming zero: "we did not record a rate" and
+   * "the rate was zero" are different claims, and only one of them is ever
+   * true.
+   */
+  private static valuationColumns(valuation?: PaymentValuation) {
+    return {
+      assetAmount:
+        valuation?.assetAmount === undefined ? null : new Prisma.Decimal(valuation.assetAmount),
+      asset: valuation?.asset?.trim() || null,
+      usdRateAtReceipt:
+        valuation?.usdRateAtReceipt === undefined
+          ? null
+          : new Prisma.Decimal(valuation.usdRateAtReceipt),
+      valuedAt: valuation?.valuedAt ?? null,
+    };
   }
 
   /** Ledger history, newest first. */
@@ -841,6 +1267,7 @@ export class BillingService {
     requestId?: string;
     reason: string;
     entryType: LedgerEntryType;
+    provenance?: LedgerProvenance;
   }): Promise<boolean> {
     try {
       await this.prisma.$transaction(async (tx) => {
@@ -852,6 +1279,7 @@ export class BillingService {
             requestId: entry.requestId,
             reason: entry.reason,
             entryType: entry.entryType,
+            ...(entry.provenance ?? {}),
           },
         });
         await tx.creditsBalance.upsert({

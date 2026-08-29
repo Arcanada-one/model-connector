@@ -78,6 +78,27 @@ describe('StatsReadGuard', () => {
     expect(String(logLine)).toMatch(/reason=/);
   });
 
+  /**
+   * ARAS-0058 (consilium §6.2). This guard's own header says it was "Modeled
+   * on" admin.guard, and what it inherited was the byte-length crash-oracle:
+   * `token.length !== expected.length` (UTF-16) in front of a `timingSafeEqual`
+   * over UTF-8 buffers. Fails on the pre-fix code.
+   *
+   * It matters more here than the shared defect suggests: this guard's whole
+   * reason to exist is that stats reads must not accept `ADMIN_TOKEN`, and a
+   * 500-vs-403 oracle on `STATS_READ_TOKEN` undermines that separation from the
+   * other end.
+   */
+  it('does not crash on a multi-byte token of equal string length (crash-oracle)', () => {
+    const oracle = 'é' + 'a'.repeat(31);
+    expect(oracle.length).toBe(VALID_TOKEN.length);
+    expect(Buffer.byteLength(oracle, 'utf8')).not.toBe(Buffer.byteLength(VALID_TOKEN, 'utf8'));
+
+    const ctx = createMockContext({ 'x-stats-token': oracle });
+    expect(() => guard.canActivate(ctx)).not.toThrow();
+    expect(guard.canActivate(ctx)).toBe(false);
+  });
+
   it('should NOT log on a successful auth attempt', () => {
     const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
     const ctx = createMockContext({ 'x-stats-token': VALID_TOKEN });

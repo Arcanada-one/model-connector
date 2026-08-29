@@ -1,13 +1,20 @@
 import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
-import { timingSafeEqual } from 'crypto';
+
+import { secretsMatch } from '../common/secret-compare';
 
 /**
  * CTRL-0026 Phase 2 — purpose-scoped guard for GET /stats/requests/daily.
  *
- * Modeled on src/admin/admin.guard.ts (timingSafeEqual, length-check before
- * compare, fail-closed on any missing piece) but is a DELIBERATELY separate
- * guard/token: stats reads must never accept ADMIN_TOKEN or an inference
- * ApiKey (threat T2 in datarim/plans/CTRL-0026-plan.md).
+ * Modeled on src/admin/admin.guard.ts (constant-time compare, fail-closed on
+ * any missing piece) but is a DELIBERATELY separate guard/token: stats reads
+ * must never accept ADMIN_TOKEN or an inference ApiKey (threat T2 in
+ * datarim/plans/CTRL-0026-plan.md).
+ *
+ * ARAS-0058 (consilium §6.2): it was modeled on admin.guard closely enough to
+ * inherit its byte-length crash-oracle — `token.length !== expected.length`
+ * (UTF-16) guarding a `timingSafeEqual` over UTF-8 buffers. Both now compare
+ * through `secretsMatch`, which cannot throw and has no length pre-check to
+ * report a mismatch cheaply.
  */
 @Injectable()
 export class StatsReadGuard implements CanActivate {
@@ -29,10 +36,9 @@ export class StatsReadGuard implements CanActivate {
     if (Array.isArray(token)) {
       return this.deny('duplicate-header');
     }
-    if (token.length !== expected.length) {
-      return this.deny('length-mismatch');
-    }
-    if (!timingSafeEqual(Buffer.from(token), Buffer.from(expected))) {
+    // No length pre-check: 'this token is the right length' was itself a free
+    // answer, and the pre-check is what made the comparison able to throw.
+    if (!secretsMatch(token, expected)) {
       return this.deny('token-mismatch');
     }
 
