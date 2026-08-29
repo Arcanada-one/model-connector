@@ -11,6 +11,34 @@ vhost files are the **IaC mirror / source of truth** — the live host copies li
 | `connector.arcanada.ai.conf` | Active vhost: TLS (wildcard), rate-limit `zone=connector_api`, `proxy_read/send_timeout 600s` (long CLI runs), `client_max_body_size 32m` (STT audio uploads — CONN-0221), proxy → `127.0.0.1:3900`. |
 | `connector.arcanada.one.conf` | Legacy domain: 301 → `connector.arcanada.ai` (ARCA-0155). Keeps the `limit_req_zone connector_api` declaration the `.ai` vhost references. |
 
+## ⚠️ SEC-0075 — applying this is now security-critical
+
+The `.ai` vhost carries the only network-level fence on the money-mint surfaces:
+`deny all` on `/admin` (which includes `POST /admin/credits/:id/gift`) and on
+`/internal/credits`, plus a `400` on double-encoded paths that would otherwise
+walk straight past those denies.
+
+Because nginx here is **manually managed**, merging the repo change does nothing.
+Until the scp + reload below has run, `POST https://connector.arcanada.ai/admin/credits/:id/gift`
+stays reachable from the internet behind one static `ADMIN_TOKEN` — the exposure
+consilium §6.1 rated more urgent than BILL-0008 itself.
+
+After applying, confirm the fence rather than assuming it (from anywhere off-host):
+
+```bash
+# All three must print 403, 403, 400.
+for p in /admin/credits/x/gift /internal/credits/x/payment /%2561dmin/credits/x/gift; do
+  printf '%s -> ' "$p"
+  curl -s -o /dev/null -w '%{http_code}\n' -X POST "https://connector.arcanada.ai$p"
+done
+
+# And these must still print 200/401/404 (reached the app), never 403:
+curl -s -o /dev/null -w '%{http_code}\n' -X POST https://connector.arcanada.ai/internal/watcher/circuit-breaker/reset
+```
+
+The operator's own gift runner is unaffected: it reaches `127.0.0.1:3900`
+directly and never traverses nginx.
+
 ## Why `client_max_body_size 32m`
 
 The vhost originally had no `client_max_body_size` → nginx default **1m** → any STT
