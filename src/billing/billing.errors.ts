@@ -22,3 +22,29 @@ export class InsufficientCreditsError extends Error {
     this.name = 'InsufficientCreditsError';
   }
 }
+
+/**
+ * BILL-0008 — a reversal that must not be posted.
+ *
+ * Distinct from a crash for the same reason `InsufficientCreditsError` is:
+ * "there is no such payment", "that payment is already fully reversed" and
+ * "you cannot reverse a charge" are all correct answers to a well-formed
+ * request, and a caller has to be able to tell them from the connector
+ * breaking. `reason` is a stable code so the payments module can branch on it
+ * without parsing a message.
+ */
+export class ReversalRefusedError extends Error {
+  readonly code = 'reversal_refused';
+
+  constructor(
+    readonly reason:
+      | 'original_not_found'
+      | 'original_not_reversible'
+      | 'exceeds_original'
+      | 'invalid_amount',
+    message: string,
+  ) {
+    super(message);
+    this.name = 'ReversalRefusedError';
+  }
+}

@@ -353,7 +353,23 @@ model CreditsLedger {
   id String @id @default(uuid())
 
   apiKeyId String @map("api_key_id")
-  apiKey   ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  // ARAS-0058 / BILL-0008 (consilium §6.4) — Restrict, NOT Cascade.
+  //
+  // It was Cascade, which meant revoking an API key DELETED its ledger history.
+  // That was survivable while every row was either an operator gift or our own
+  // measured spend. It stops being survivable the moment a row records money a
+  // stranger actually sent: key revocation would destroy the financial record
+  // of a real receipt, and crypto receipts are irreversible, so there is no
+  // second copy anywhere to rebuild it from.
+  //
+  // Restrict means an ApiKey with ledger history cannot be deleted at all. That
+  // is the intended answer, not a inconvenience to work around: a key with
+  // money in its history is not a row to delete, it is a row to deactivate
+  // (`ApiKey.active = false`, which the admin surface already does). Nothing in
+  // the shipped code deletes an ApiKey; only integration specs do, and they
+  // clear the ledger first.
+  apiKey   ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Restrict)
 
   // Signed: positive credits the account, negative debits it. One column rather
   // than a type discriminator plus a magnitude, so the balance is a plain SUM
@@ -371,6 +387,18 @@ model CreditsLedger {
   // 'charge'       = spend debited for a request
   // 'gift'         = credit granted by an operator, not paid for
   // 'credit'       = credit from any other source (pre-dates gifts)
+  // 'payment'      = BILL-0008. Money a customer actually sent, credited from a
+  //                  verified gateway event. Distinct from 'gift' because
+  //                  revenue must never include money nobody paid, and distinct
+  //                  from 'credit' because a payment has provenance (see the
+  //                  columns below) that an operator top-up does not.
+  // 'refund'       = BILL-0008. A NEGATIVE entry reversing a payment we chose to
+  //                  return.
+  // 'chargeback'   = BILL-0008. A NEGATIVE entry reversing a payment the
+  //                  provider took back from us. Voluntary and involuntary
+  //                  reversals are the same arithmetic and different facts, so
+  //                  they are different types for the same reason gift and
+  //                  payment are.
   // 'uncollectible'= ARAS-0058. A positive entry that writes off the part of a
   //                  charge the balance could not cover. The provider was
   //                  already paid, so the charge is ALWAYS recorded in full;
@@ -380,7 +408,18 @@ model CreditsLedger {
   //                  `CHECK (balance_usd >= 0)`, and makes revenue lost to
   //                  estimate overshoot a single queryable SUM instead of an
   //                  inference from a negative balance nobody looks at.
-  entryType String @default("charge") @map("entry_type")
+  //                  BILL-0008 gives it a second, symmetric use: the part of a
+  //                  REVERSAL the balance could not give back, for exactly the
+  //                  same reason in the opposite direction.
+  //
+  // ARAS-0058 / BILL-0008 — NO DEFAULT, and NOT NULL. It was
+  // `@default("charge")`, so a caller that forgot the field posted a row
+  // labelled a debit; a payment landing labelled 'charge' is a credit recorded
+  // as spend, and no reader could tell. The permitted values are enforced by
+  // `CHECK (entry_type IN (...))` in the migration — Prisma's schema language
+  // cannot express it, and it must be the DATABASE that refuses, because the
+  // whole failure mode is a write path nobody reviewed.
+  entryType String @map("entry_type")
 
   // The anti-double-charge invariant, enforced by the DATABASE rather than by
   // application logic: a retried commit reuses its key and the unique
@@ -389,6 +428,80 @@ model CreditsLedger {
 
   // Set for a debit that settles a specific request; null for a manual credit.
   requestId String? @map("request_id")
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // BILL-0008 — payment provenance and valuation.
+  //
+  // Every column below is UN-BACKFILLABLE, which is the whole reason they land
+  // before the first payment rather than after it. The rate a crypto payment
+  // was valued at is gone the instant it passes; the gateway reference is only
+  // in the event that carried it; and whether a row was live or sandbox money
+  // is not recoverable by inspection once both exist in the same table.
+  //
+  // All nullable, with NO default, for the same reason `Request.costSource` is:
+  // rows written before this shipped genuinely have no provenance, and
+  // back-filling them with a guess would invent evidence. NULL means "not a
+  // payment" or "predates payments" — never "a payment we lost the details of",
+  // because the migration's CHECK makes a payment row without provenance
+  // impossible to write.
+
+  /// The provider that took the money — 'oxapay', later 'paypal'/'stripe'.
+  /// The ONLY provider-shaped string that crosses into the ledger; see the
+  /// four-scalar `credit()` contract in consilium §2.
+  source String?
+
+  /// The gateway's own immutable reference (Oxapay's `track_id`). What a human
+  /// reconciling our books against the gateway's dashboard joins on. Not
+  /// unique here: a reversal legitimately carries the same external ref as the
+  /// payment it reverses.
+  externalRef String? @map("external_ref")
+
+  /// Real money or sandbox money. Nullable ONLY because non-payment rows have
+  /// no answer; a payment row without it is refused by the migration's CHECK.
+  /// Consilium §5's sandbox trap: if the gateway's sandbox shares a signing key
+  /// with live, this column is the only boundary there is.
+  livemode Boolean?
+
+  // The crypto valuation trio. The USD amount credited is `amount_usd` above —
+  // THAT is the ledger number and the only one any money query may read. These
+  // three are the audit record of how that USD number came to exist, kept
+  // because "the customer paid 0.0031 BTC and we called it $180" is a claim we
+  // must be able to reproduce later and cannot reconstruct.
+  //
+  // 38,18 rather than 12,6: a satoshi is 1e-8 BTC and a wei is 1e-18 ETH, so
+  // the column has to hold an amount whose precision has nothing to do with
+  // dollars. Deliberately NOT usable for arithmetic against `amount_usd`.
+
+  /// Amount in the asset actually sent.
+  assetAmount Decimal? @map("asset_amount") @db.Decimal(38, 18)
+
+  /// Ticker of the asset actually sent ('BTC', 'USDT'). Audit only.
+  asset String?
+
+  /// USD per one unit of `asset` at the moment of receipt, as the gateway
+  /// reported it. We never quote a rate ourselves — consilium §3: the gateway
+  /// bears the volatility and we bear none.
+  usdRateAtReceipt Decimal? @map("usd_rate_at_receipt") @db.Decimal(38, 18)
+
+  /// When the valuation above was taken. NOT `created_at`: a late-credited
+  /// payment is valued at receipt, and posted whenever we found out.
+  valuedAt DateTime? @map("valued_at")
+
+  /// BILL-0008 — for a 'refund'/'chargeback' row, the `idempotency_key` of the
+  /// entry it reverses. A reversal that names no original is an unexplained
+  /// negative entry, so the migration's CHECK requires it.
+  ///
+  /// A plain string rather than a self-referencing FK: the target is addressed
+  /// by its idempotency key (the identity the payments module and the gateway
+  /// share) rather than by our internal row id, which no caller outside this
+  /// service ever sees.
+  reversalOf String? @map("reversal_of")
+
+  /// BILL-0008 (consilium §4.6) — WHO caused this movement. 'the ADMIN_TOKEN'
+  /// is not an actor; every credit mutation must be attributable before live
+  /// intake. Nullable for rows that predate attribution; the payment endpoint
+  /// always writes it.
+  actor String?
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -400,6 +513,12 @@ model CreditsLedger {
   // for measured spend that never reached the ledger. Without an index that is
   // a sequential scan of the whole ledger on every sweep.
   @@index([requestId])
+  // BILL-0008 — reconciling our ledger against the gateway's dashboard, and
+  // resolving 'what did we already post for this gateway reference'.
+  @@index([source, externalRef])
+  // BILL-0008 — 'what reverses this payment', asked whenever a payment is
+  // examined and on every reversal to refuse a double-reverse.
+  @@index([reversalOf])
   @@map("credits_ledger")
 }
 

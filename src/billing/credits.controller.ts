@@ -25,7 +25,7 @@ import { z } from 'zod';
 
 import { Public } from '../auth/public.decorator';
 import { AdminGuard } from '../admin/admin.guard';
-import { BillingService } from './billing.service';
+import { BillingService, MAX_CREDIT_USD } from './billing.service';
 import { BillingReconcilerService } from './reconciler.service';
 
 /**
@@ -40,7 +40,14 @@ const GiftSchema = z.object({
   amountUsd: z
     .union([z.number(), z.string()])
     .refine((v) => Number.isFinite(Number(v)), 'amountUsd must be a finite number')
-    .refine((v) => Number(v) > 0, 'a gift must be greater than zero — gifts only add credit'),
+    .refine((v) => Number(v) > 0, 'a gift must be greater than zero — gifts only add credit')
+    // BILL-0008 — the same ceiling as a credit. A gift creates balance by
+    // identical arithmetic and is equally un-postable, so exempting it would
+    // leave the bound in place on the path an attacker cares about least.
+    .refine(
+      (v) => Number(v) <= MAX_CREDIT_USD,
+      `amountUsd must not exceed ${MAX_CREDIT_USD} — there is no un-post`,
+    ),
   idempotencyKey: z.string().min(8).max(200),
   reason: z.string().trim().min(3).max(200),
 });
@@ -62,10 +69,31 @@ const ReconcileSchema = z.object({
   graceMs: z.number().int().min(0).max(86_400_000).optional(),
 });
 
+/**
+ * BILL-0008 (consilium §6.3) — `CreditSchema` accepted `Infinity`.
+ *
+ * It refined only `Number(v) > 0`, and `Number("Infinity") > 0` is true.
+ * `GiftSchema` above has had the `Number.isFinite` refine all along, so the two
+ * schemas guarding the same money differed in exactly the way that mattered,
+ * and the weaker one was the top-up path. `Infinity` then survives
+ * `credit()`'s `greaterThan(0)` because `new Prisma.Decimal(Infinity)` is a
+ * valid Decimal that compares greater than everything.
+ *
+ * The ceiling is the second half and is not implied by the first: "finite" is
+ * not a bound. `MAX_CREDIT_USD` is set below the width of
+ * `credits_balance.balance_usd` itself — see its docstring — so an oversized
+ * credit is refused by a rule with a reason rather than by a Postgres numeric
+ * overflow at the moment money has already been received.
+ */
 const CreditSchema = z.object({
   amountUsd: z
     .union([z.number(), z.string()])
-    .refine((v) => Number(v) > 0, 'amountUsd must be positive'),
+    .refine((v) => Number.isFinite(Number(v)), 'amountUsd must be a finite number')
+    .refine((v) => Number(v) > 0, 'amountUsd must be positive')
+    .refine(
+      (v) => Number(v) <= MAX_CREDIT_USD,
+      `amountUsd must not exceed ${MAX_CREDIT_USD} — a larger single credit is a typo or an attack, and there is no un-post`,
+    ),
   // Required, not generated: a top-up is money, and the caller must be able to
   // retry a request it is unsure landed WITHOUT adding funds twice. Generating
   // a key here would make every retry a fresh credit.
@@ -132,6 +160,14 @@ export class CreditsController {
         amountUsd: e.amountUsd.toString(),
         reason: e.reason,
         requestId: e.requestId,
+        // BILL-0008 — provenance the operator can actually see. Storing it and
+        // never surfacing it would mean the only way to answer "where did this
+        // money come from" is a psql session on the production database.
+        source: e.source,
+        externalRef: e.externalRef,
+        livemode: e.livemode,
+        reversalOf: e.reversalOf,
+        actor: e.actor,
         createdAt: e.createdAt,
       })),
     };
