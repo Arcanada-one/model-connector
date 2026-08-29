@@ -48,6 +48,7 @@ model ApiKey {
   policy            Json?
   creditsBalance    CreditsBalance?
   creditsLedger     CreditsLedger[]
+  requestIntents    RequestIntent[]
   createdAt         DateTime           @default(now())
 }
 
@@ -313,7 +314,26 @@ model CreditsBalance {
   apiKey     ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
   // 12,6 rather than Request.costUsd's 10,6: a balance accumulates many
   // requests, so it needs headroom the per-request column does not.
+  //
+  // ARAS-0058 — the database carries CHECK (balance_usd >= 0) and
+  // CHECK (held_usd >= 0). Prisma's schema language cannot express a CHECK
+  // constraint, so both live only in
+  // `20260829120000_aras_0058_ledger_hardening/migration.sql`. They are not
+  // decoration: application-level guards are the thing that races, and every
+  // guarded write in BillingService is written on the assumption that if the
+  // guard is ever bypassed the database refuses the row rather than silently
+  // lending money. Do not drop them, and do not let a future `prisma migrate
+  // dev` diff quietly regenerate this table without them.
   balanceUsd Decimal  @default(0) @map("balance_usd") @db.Decimal(12, 6)
+
+  // ARAS-0058 — funds reserved by an in-flight request and not yet spent.
+  // SPENDABLE balance is `balance_usd - held_usd`; `balance_usd` alone stays
+  // the materialised SUM of the ledger, so the ledger remains the single
+  // source of truth and a hold never has to be represented as a fake movement.
+  // A hold is released (settled or abandoned) by RequestIntent; a crashed
+  // process leaves one behind, which is what the expiry sweep exists for.
+  heldUsd    Decimal  @default(0) @map("held_usd") @db.Decimal(12, 6)
+
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("credits_balance")
@@ -338,9 +358,18 @@ model CreditsLedger {
   // and an accounting history that cannot tell them apart cannot be audited.
   // Free-text `reason` is not enough — it is operator-supplied and unqueryable.
   //
-  // 'charge' = spend debited for a request
-  // 'gift'   = credit granted by an operator, not paid for
-  // 'credit' = credit from any other source (kept for entries pre-dating gifts)
+  // 'charge'       = spend debited for a request
+  // 'gift'         = credit granted by an operator, not paid for
+  // 'credit'       = credit from any other source (pre-dates gifts)
+  // 'uncollectible'= ARAS-0058. A positive entry that writes off the part of a
+  //                  charge the balance could not cover. The provider was
+  //                  already paid, so the charge is ALWAYS recorded in full;
+  //                  when it exceeds the balance the shortfall is written off
+  //                  here rather than driving the balance negative. That keeps
+  //                  `balance_usd = SUM(amount_usd)` true alongside
+  //                  `CHECK (balance_usd >= 0)`, and makes revenue lost to
+  //                  estimate overshoot a single queryable SUM instead of an
+  //                  inference from a negative balance nobody looks at.
   entryType String @default("charge") @map("entry_type")
 
   // The anti-double-charge invariant, enforced by the DATABASE rather than by
@@ -357,5 +386,88 @@ model CreditsLedger {
   // Gifts are reported separately from payments in the cabinet (CTRL-0087), so
   // the history query filters on this.
   @@index([apiKeyId, entryType])
+  // ARAS-0058 — the reconciler anti-joins Request against this column looking
+  // for measured spend that never reached the ledger. Without an index that is
+  // a sequential scan of the whole ledger on every sweep.
+  @@index([requestId])
   @@map("credits_ledger")
+}
+
+/// ARAS-0058 — one row per REQUEST INTENT, which is not the same thing as one
+/// row per attempt.
+///
+/// It carries two guarantees that the previous design could not express:
+///
+///  1. THE HOLD. `precheck()` used to be a bare read: N parallel requests all
+///     read the same sufficient balance, all passed, all dispatched, and all
+///     debited. `arcana` IS a parallel agent, so that is the normal traffic
+///     shape rather than an edge case. A hold moves the estimate into
+///     `credits_balance.held_usd` under a conditional UPDATE, so the (N-1)
+///     losers of the race are refused BEFORE the provider is called — the only
+///     point at which refusing is still free.
+///
+///  2. IDEMPOTENCY PER INTENT. The ledger key used to be `request:<uuid>`,
+///     where the uuid was minted inside the logging path — so it was unique per
+///     ATTEMPT and could only deduplicate a retry of the settle call itself,
+///     which nothing ever performed. A client timeout plus a re-POST was a
+///     second provider call and a second charge. `intentKey` is the caller's
+///     own `Idempotency-Key`, so a replay resolves to THIS row, returns the
+///     stored response, and calls neither the provider nor the ledger again.
+///
+/// When the caller supplies no header the key is server-minted and unique, so
+/// the hold still works and replay simply never matches — no key, no promise.
+model RequestIntent {
+  id String @id @default(uuid())
+
+  apiKeyId String @map("api_key_id")
+  apiKey   ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  /// Unique per KEY, not globally: two customers may legitimately choose the
+  /// same idempotency key, and one must never be able to read the other's
+  /// stored response by guessing it.
+  intentKey String @map("intent_key")
+
+  /// False when the key was server-minted because the caller sent no header.
+  /// Kept so the replay path can tell "the client asked for idempotency" from
+  /// "we invented a key to hang a hold on", and so adoption is measurable.
+  clientSupplied Boolean @default(false) @map("client_supplied")
+
+  /// The estimate reserved in `credits_balance.held_usd`. Zero when billing is
+  /// not enforced, or for a catalogued free model.
+  holdUsd Decimal @default(0) @map("hold_usd") @db.Decimal(12, 6)
+
+  /// held     — reserved, in flight; the hold is live and counted in held_usd
+  /// completed— dispatched and settled; the hold is released
+  /// released — abandoned before or during dispatch; the hold is released
+  /// expired  — the sweeper released a hold whose owner never came back
+  state String @default("held")
+
+  /// SHA-256 of the request payload this key was first used with.
+  ///
+  /// Stripe's rule, and the right one: reusing an idempotency key with a
+  /// DIFFERENT body is a caller bug. Replaying the first body would hide that
+  /// bug behind a correct-looking response, so the mismatch is reported
+  /// instead. Hashed rather than stored, because the payload is the customer's
+  /// prompt and this table is not where it belongs.
+  payloadFingerprint String @map("payload_fingerprint")
+
+  /// The Request row this intent produced, once there is one.
+  requestId String? @map("request_id")
+
+  /// The response returned to the caller, replayed verbatim on a repeat of the
+  /// same intent key. Null when the response was too large to store, in which
+  /// case a replay is refused rather than answered with a different body.
+  response Json?
+
+  /// After this instant the hold may be swept. A hold is a claim on the
+  /// customer's money; a process that dies mid-dispatch must not be able to
+  /// freeze funds forever.
+  expiresAt DateTime @map("expires_at")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  completedAt DateTime? @map("completed_at")
+
+  @@unique([apiKeyId, intentKey])
+  @@index([state, expiresAt])
+  @@map("request_intent")
 }

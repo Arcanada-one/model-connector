@@ -15,6 +15,17 @@ jobs:
       - name: Credential documentation regression
         run: bash dev-tools/credential-docs-regression.sh
 
+      # ARAS-0058 — BILLING_ENFORCED was declared nowhere outside src/: not in
+      # .env.example, not in docker-compose.yml, not in deploy/, not here. It
+      # was set by hand on the prod container, so the next deploy that rebuilt
+      # the env from the template would have silently disabled billing — and
+      # the failure mode is SUCCESSFUL FREE SERVICE, which nothing alerts on.
+      # This fails the PR that drops the declaration.
+      - name: Env declaration parity
+        run: |
+          bash -n dev-tools/env-declaration-parity.sh
+          bash dev-tools/env-declaration-parity.sh
+
       - name: Fixed aggregate readback broker contract
         run: |
           bash -n deploy/arcanada-compose-broker.sh
@@ -197,4 +208,18 @@ jobs:
             docker exec model-connector-model-connector-1 sh -c \
               'test -n "$CODEX_BINARY_PATH" && test -n "$CODEX_HOME" && test -n "$CODEX_VAULT_ROLE_ID" && test -n "$CODEX_VAULT_SECRET_ID"' \
               || (echo "FAIL CONN-0073: codex overlay env not applied"; exit 1)
+            # ARAS-0058: assert the billing switch actually reached the running
+            # container. It used to be set by hand and declared nowhere, so a
+            # rebuild of .env from the template would drop it — and the symptom
+            # of dropping it is that everything keeps working, for free. This is
+            # deliberately fatal rather than a warning: a warning in a deploy log
+            # is indistinguishable from the silence it is meant to replace.
+            docker exec model-connector-model-connector-1 sh -c \
+              'test -n "$BILLING_ENFORCED"' \
+              || (echo "FAIL ARAS-0058: BILLING_ENFORCED is not set in the container env."; \
+                  echo "  Add an explicit BILLING_ENFORCED=<true|false> line to"; \
+                  echo "  /srv/apps/model-connector/.env — the schema default (false) means"; \
+                  echo "  an absent value disables billing SILENTLY, which is the exact"; \
+                  echo "  failure this check exists to make loud."; exit 1)
+            echo "ARAS-0058: BILLING_ENFORCED=$(docker exec model-connector-model-connector-1 printenv BILLING_ENFORCED)"
             echo "Deploy successful: $($COMPOSE ps --format '{{.Name}} {{.Status}}')"

@@ -3,7 +3,18 @@
 // completion served by the free-first cross-provider failover chain. The global
 // AuthGuard applies (Authorization: Bearer <MC key>) — these routes are NOT @Public.
 
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpException,
+  HttpStatus,
+  Post,
+  Req,
+} from '@nestjs/common';
+
+import { IDEMPOTENCY_HEADER } from '../billing/intent';
 import { FastifyRequest } from 'fastify';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import {
@@ -56,8 +67,31 @@ export class OpenAiCompatController {
   async chatCompletions(
     @Body(new ZodValidationPipe(openAiChatCompletionRequestSchema))
     body: OpenAiChatCompletionRequest,
+    @Headers(IDEMPOTENCY_HEADER) idempotencyKey: string | undefined,
     @Req() req: AuthenticatedRequest,
   ) {
+    // ARAS-0058 — this surface ALWAYS goes through the free-first failover
+    // chain, which dispatches to several providers in turn; each hop opens and
+    // settles its own request intent. One key threaded down that path would be
+    // claimed by the first candidate and then collide with itself on every
+    // subsequent hop — the caller would hold a guarantee that silently does not
+    // apply. Refused explicitly, in the same shape as the other unsupported
+    // features on this endpoint, until the intent is hoisted to the failover
+    // level. Additive: the header did not exist before, and neither the OpenAI
+    // nor the Anthropic SDK sends one by default.
+    // The RAW header, not the normalised one: `normalizeIdempotencyKey` throws
+    // on a malformed value, and turning "your key was slightly wrong" into a
+    // 500 on an endpoint that rejects the header anyway would be absurd.
+    if (idempotencyKey?.trim()) {
+      openAiError(
+        'Idempotency-Key is not supported by the Model Connector failover gateway yet: a ' +
+          'request may be dispatched to several providers in turn and one key cannot span ' +
+          'them safely. Use POST /execute with an explicit `connector` for idempotent calls.',
+        'unsupported',
+        HttpStatus.BAD_REQUEST,
+        'idempotency_unsupported',
+      );
+    }
     // Streaming and tool-calling are not yet supported on the failover surface —
     // reject explicitly rather than silently degrade (consilium R-F5/R-F6).
     if (body.stream === true) {

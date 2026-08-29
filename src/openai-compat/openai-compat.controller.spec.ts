@@ -55,7 +55,7 @@ describe('OpenAiCompatController.chatCompletions', () => {
 
   it('AC1: valid body → 200 OpenAI chat.completion shape', async () => {
     const { controller, failover } = makeController({});
-    const out = await controller.chatCompletions(body(), req);
+    const out = await controller.chatCompletions(body(), undefined, req);
     expect(out.object).toBe('chat.completion');
     expect(out.choices[0].message.content).toBe('hi there');
     expect(out.usage).toEqual({ prompt_tokens: 3, completion_tokens: 2, total_tokens: 5 });
@@ -68,23 +68,25 @@ describe('OpenAiCompatController.chatCompletions', () => {
 
   it('stream:true → 400 unsupported', async () => {
     const { controller } = makeController({});
-    await expect(controller.chatCompletions(body({ stream: true }), req)).rejects.toMatchObject({
+    await expect(
+      controller.chatCompletions(body({ stream: true }), undefined, req),
+    ).rejects.toMatchObject({
       status: HttpStatus.BAD_REQUEST,
     });
   });
 
   it('tools present → 400 unsupported', async () => {
     const { controller } = makeController({});
-    await expect(controller.chatCompletions(body({ tools: [{}] }), req)).rejects.toBeInstanceOf(
-      HttpException,
-    );
+    await expect(
+      controller.chatCompletions(body({ tools: [{}] }), undefined, req),
+    ).rejects.toBeInstanceOf(HttpException);
   });
 
   it('FailoverExhaustedError → 503 cascade_exhausted', async () => {
     const { controller } = makeController({
       complete: () => Promise.reject(new FailoverExhaustedError([])),
     });
-    await expect(controller.chatCompletions(body(), req)).rejects.toMatchObject({
+    await expect(controller.chatCompletions(body(), undefined, req)).rejects.toMatchObject({
       status: HttpStatus.SERVICE_UNAVAILABLE,
     });
   });
@@ -94,7 +96,7 @@ describe('OpenAiCompatController.chatCompletions', () => {
       complete: () =>
         Promise.reject(new FailoverAbortError('openmodel', 'm', 'validation_error', 'bad input')),
     });
-    await expect(controller.chatCompletions(body(), req)).rejects.toMatchObject({
+    await expect(controller.chatCompletions(body(), undefined, req)).rejects.toMatchObject({
       status: HttpStatus.BAD_REQUEST,
     });
   });
@@ -103,7 +105,7 @@ describe('OpenAiCompatController.chatCompletions', () => {
     const { controller } = makeController({
       complete: () => Promise.reject(new FailoverAbortError('groq', 'm', 'auth_error', 'no key')),
     });
-    await expect(controller.chatCompletions(body(), req)).rejects.toMatchObject({
+    await expect(controller.chatCompletions(body(), undefined, req)).rejects.toMatchObject({
       status: HttpStatus.SERVICE_UNAVAILABLE,
     });
   });
@@ -115,7 +117,7 @@ describe('OpenAiCompatController.chatCompletions', () => {
       error: { type: 'rate_limited', message: '429', retryable: true, recommendation: 'wait' },
     };
     const { controller } = makeController({ complete: () => Promise.resolve(limited) });
-    await expect(controller.chatCompletions(body(), req)).rejects.toMatchObject({
+    await expect(controller.chatCompletions(body(), undefined, req)).rejects.toMatchObject({
       status: HttpStatus.TOO_MANY_REQUESTS,
     });
   });

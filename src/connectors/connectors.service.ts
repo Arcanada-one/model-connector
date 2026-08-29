@@ -27,9 +27,9 @@ import { sanitizeJsonResponse, JsonSanitizeError } from '../core/utils/json-sani
 import { getConfig } from '../config/env.schema';
 import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
-import { BillingService } from '../billing/billing.service';
-import { InsufficientCreditsError } from '../billing/billing.errors';
-import { estimateCostUsd } from '../billing/cost-estimate';
+import { BillingService, RequestIntentHandle } from '../billing/billing.service';
+import { estimateCostUsd, promptCharLength } from '../billing/cost-estimate';
+import { mintServerIntentKey, intentPayloadFingerprint } from '../billing/intent';
 import type { OutputGuardReport } from './output-guard/types';
 import { OPENMODEL_CATALOGUE } from './openmodel/openmodel.catalogue';
 import { parseProviderAccess, resolveProviderAccess, type ProviderAccess } from './provider-access';
@@ -77,6 +77,15 @@ export type ServiceExecuteRequest = ConnectorRequest & {
   output_format?: 'json' | 'yaml' | 'toml' | 'python' | 'auto';
   schema?: Record<string, unknown>;
   firstDispatchMeasurement?: FirstDispatchMeasurementV0;
+  /**
+   * ARAS-0058 — the caller's `Idempotency-Key` header, lifted onto the request
+   * by the controller.
+   *
+   * Not part of the provider payload and deliberately stripped before dispatch:
+   * it identifies the INTENT, not the content, so two requests differing only
+   * in this field must still reach the provider identically.
+   */
+  idempotencyKey?: string;
 };
 
 const RETRYABLE_ERRORS = new Set([
@@ -767,23 +776,12 @@ export class ConnectorsService {
       };
     }
 
-    // ARAS-0064 — credit gate, at the same single choke point as the access and
-    // policy gates below. Refusing here is the only place refusing is FREE: one
-    // step later the provider has been called and the money is spent whatever
-    // the balance says.
-    //
-    // Gated on BILLING_ENFORCED, which defaults to false. The ledger records
-    // spend from the moment billing shipped, but nothing is refused until an
-    // operator turns this on — flipping a live connector to hard-fail on
-    // balance without that switch would deny every caller whose account has
-    // never been credited, i.e. all of them.
-    // `this.billing` is checked FIRST so a caller without billing wired never
-    // touches config at all — reading it unconditionally made every spec that
-    // constructs this service without an env fail environment validation.
-    if (this.billing && this.billingEnforced()) {
-      const denial = await this.creditDenial(connectorName, request, apiKeyId);
-      if (denial) return denial;
-    }
+    // ARAS-0064 — the credit gate used to sit here. ARAS-0058 moved it to just
+    // before dispatch, below, because it now RESERVES funds rather than merely
+    // reading them: holding a customer's money and then refusing the request on
+    // a policy rule two gates later would have leaked a reservation on every
+    // policy denial. Refusing later is still refusing before the provider call,
+    // which is the only property that mattered.
 
     // CONN-1665 — per-key policy gates, adjacent to the CONN-0244 canUse() gate
     // at the same single choke point (direct /execute, universal /execute and
@@ -918,7 +916,12 @@ export class ConnectorsService {
       }
     }
     const totalAttempts = Math.max(1, maxRetries + 1);
-    const { firstDispatchMeasurement, ...providerRequest } = request;
+    // ARAS-0058 — `idempotencyKey` is stripped alongside the measurement
+    // envelope: it names the INTENT, not the content, so it must never reach a
+    // provider payload. Two requests differing only in this field have to be
+    // byte-identical on the wire, or the connector-level caches and the
+    // fingerprint above would disagree about what "the same request" means.
+    const { firstDispatchMeasurement, idempotencyKey: _intentKey, ...providerRequest } = request;
     const validatedMeasurement =
       firstDispatchMeasurement === undefined
         ? undefined
@@ -928,14 +931,37 @@ export class ConnectorsService {
     }
     const guardActive = Boolean(providerRequest.output_format);
     const attemptsForRequest = validatedMeasurement === undefined ? totalAttempts : 1;
-    const observationReservation = validatedMeasurement
-      ? await this.reserveFirstDispatchObservation(
-          connectorName,
-          providerRequest,
-          apiKeyId,
-          validatedMeasurement,
-        )
-      : null;
+    // ARAS-0064 / ARAS-0058 — the credit and idempotency gate, at the last
+    // point before any outbound call. Everything above this line can still
+    // refuse the request for free; everything below it may spend money.
+    //
+    // `this.billing` is checked FIRST so a caller without billing wired never
+    // touches config at all — reading it unconditionally made every spec that
+    // constructs this service without an env fail environment validation
+    // (CONN: 35 specs, once).
+    let intent: RequestIntentHandle | null = null;
+    if (this.billing) {
+      const gate = await this.openRequestIntent(connectorName, request, apiKeyId);
+      if (gate.response) return gate.response;
+      intent = gate.intent;
+    }
+
+    let observationReservation: FirstDispatchReservationV0 | null = null;
+    try {
+      observationReservation = validatedMeasurement
+        ? await this.reserveFirstDispatchObservation(
+            connectorName,
+            providerRequest,
+            apiKeyId,
+            validatedMeasurement,
+          )
+        : null;
+    } catch (err) {
+      // Nothing was dispatched, so the reservation must go back immediately
+      // rather than waiting for the expiry sweep to notice.
+      await this.releaseIntent(intent);
+      throw err;
+    }
 
     let lastResponse: ConnectorResponse | undefined;
     let guardReport: OutputGuardReport | null = null;
@@ -1025,6 +1051,12 @@ export class ConnectorsService {
           this.logger.error('Failed to mark first-dispatch observation indeterminate');
         });
       }
+      // ARAS-0058 — hand the reservation back. A throw here means no response
+      // was produced and so no charge will be, and a hold nobody releases is a
+      // customer's money frozen until the expiry sweep. The sweep is the
+      // backstop for a process that dies, not the normal path for one that
+      // merely fails.
+      await this.releaseIntent(intent);
       throw error;
     }
 
@@ -1052,10 +1084,21 @@ export class ConnectorsService {
         : undefined,
     });
 
-    // Fire-and-forget DB logging
-    this.logRequest(response, providerRequest, apiKeyId, guardReport).catch((err) =>
-      this.logger.error(`Failed to log request: ${err}`),
-    );
+    // ARAS-0058 — AWAITED, not fire-and-forget.
+    //
+    // This line used to be `this.logRequest(...).catch(...)`, dating from when
+    // it only wrote telemetry. `settleSpend` was later added inside
+    // `logRequest` and the durability requirement was never re-derived: the
+    // response reached the customer before the `Request` row or the ledger row
+    // existed, so a SIGTERM, a deploy or an OOM in that window meant the
+    // provider had been paid and the customer had not — with no dead-letter and
+    // no retry. Awaiting closes the window: nothing is returned to the caller
+    // until the row and the charge have committed together.
+    //
+    // The cost is real — every request now waits on a database write before it
+    // answers. That is the right trade the moment the write is money rather
+    // than a metric.
+    await this.persistAndSettle(response, providerRequest, apiKeyId, guardReport, intent);
 
     return response;
   }
@@ -1096,135 +1139,392 @@ export class ConnectorsService {
     return job.id!;
   }
 
-  private async logRequest(
+  /**
+   * ARAS-0058 — write the `Request` row and settle its spend in ONE
+   * transaction.
+   *
+   * The two used to be sequential awaits inside a promise nobody waited on, so
+   * a crash between them left a measured cost with no charge against it, and
+   * the recovery job the docstring pointed at did not exist. Now they commit
+   * together or not at all, which removes the divergence rather than promising
+   * to repair it.
+   *
+   * Still non-fatal for the RESPONSE, and that is a deliberate, narrower
+   * decision than the one it replaces. The provider has been paid and the
+   * caller is entitled to the result they paid for; throwing here would
+   * withhold it in order to report an accounting problem the caller cannot act
+   * on. What changed is that failure is no longer silent-by-design: the whole
+   * transaction failing means the `Request` row is absent too, so nothing
+   * downstream can reconstruct the charge, and the log line below is the alert
+   * surface for it. `BillingReconcilerService` covers the weaker case where the
+   * row landed and the charge did not — which the old code path could produce
+   * and this one cannot.
+   */
+  private async persistAndSettle(
     response: ConnectorResponse,
     request: ConnectorRequest,
     apiKeyId: string,
     repairReport: OutputGuardReport | null = null,
-  ) {
+    intent: RequestIntentHandle | null = null,
+  ): Promise<void> {
     const digest = BaseCliConnector.promptDigest(request.prompt);
-    const created = await this.prisma.request.create({
-      data: {
-        connector: response.connector,
-        model: response.model,
-        promptHash: digest.promptHash,
-        promptLength: digest.promptLength,
-        inputTokens: response.usage.inputTokens,
-        outputTokens: response.usage.outputTokens,
-        totalTokens: response.usage.totalTokens,
-        costUsd: response.usage.costUsd,
-        latencyMs: response.latencyMs,
-        status: response.status,
-        errorType: response.error?.type,
-        errorMessage: response.error?.message?.slice(0, 500),
-        apiKeyId,
-        repairReport: repairReport ? (repairReport as unknown as object) : undefined,
-      },
-    });
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const created = await tx.request.create({
+          data: {
+            connector: response.connector,
+            model: response.model,
+            promptHash: digest.promptHash,
+            promptLength: digest.promptLength,
+            inputTokens: response.usage.inputTokens,
+            outputTokens: response.usage.outputTokens,
+            totalTokens: response.usage.totalTokens,
+            costUsd: response.usage.costUsd,
+            latencyMs: response.latencyMs,
+            status: response.status,
+            errorType: response.error?.type,
+            errorMessage: response.error?.message?.slice(0, 500),
+            apiKeyId,
+            repairReport: repairReport ? (repairReport as unknown as object) : undefined,
+          },
+        });
 
-    await this.settleSpend(created.id, apiKeyId, response.usage.costUsd);
+        if (!this.billing) return;
+
+        if (intent) {
+          await this.billing.settleIntentInTx(tx, {
+            intent,
+            amountUsd: response.usage.costUsd,
+            requestId: created.id,
+            // Stored so a replay of this intent key returns THIS answer rather
+            // than calling the provider again.
+            response,
+            reason: 'model-request',
+          });
+          return;
+        }
+
+        // No intent: billing is not enforced and the caller sent no
+        // idempotency key. The ledger still records the spend — that dark-ship
+        // behaviour is what makes enabling enforcement later a switch rather
+        // than a migration. The key stays `request:<id>`, matching what the
+        // reconciler looks for.
+        await this.billing.settleInTx(tx, {
+          apiKeyId,
+          amountUsd: response.usage.costUsd,
+          idempotencyKey: `request:${created.id}`,
+          requestId: created.id,
+          reason: 'model-request',
+        });
+      });
+    } catch (err) {
+      this.logger.error(
+        `ARAS-0058 billing: FAILED TO PERSIST AND SETTLE a completed request for api key ` +
+          `${apiKeyId} (connector ${response.connector}, model ${response.model}, ` +
+          `cost ${response.usage.costUsd} USD): ` +
+          (err instanceof Error ? err.message : String(err)) +
+          ' — the provider was paid and this spend is NOT recorded. Alert on this line.',
+      );
+      // The reservation outlives the failed transaction. Give it back rather
+      // than leaving the customer's money frozen for a database problem that
+      // was not their doing; the spend is unrecorded either way, and holding
+      // funds hostage does not un-lose it.
+      await this.releaseIntent(intent);
+    }
   }
 
   /**
    * Is credit enforcement switched on?
    *
-   * Fails SAFE: if config cannot be read, billing is treated as not enforced.
-   * A configuration problem must not become a billing outage that denies every
-   * caller — the ledger still records spend either way.
+   * Fails OPEN on a config error, and ARAS-0058 deliberately left it that way
+   * while adding the seam to invert it. The two modes are not the same problem:
+   *
+   *   GIFT CREDITS (today). Nobody has paid. A config error that denied every
+   *     caller would be a self-inflicted outage in exchange for protecting
+   *     revenue that does not exist. Failing open is right.
+   *
+   *   LIVE MONEY (BILLING_LIVE_MODE). Failing open means one bad env parse
+   *     turns every paying customer into free inference — and it is invisible,
+   *     because the ledger still looks normal: a charge nobody gated is still a
+   *     charge, of the correct amount, against a balance nothing checked. The
+   *     failure mode is SUCCESSFUL FREE SERVICE, which no alert fires on and no
+   *     customer reports. That is the auth-arcana pattern, on the money path.
+   *
+   * The seam exists and is deliberately inert. Flipping it is a separate,
+   * operator-approved change made with a live payment key in hand: turning it
+   * on today, when `BILLING_ENFORCED` is not declared in `.env.example` or the
+   * deploy path either, would convert a config gap into a total outage on the
+   * first deploy that rebuilt the env from the template.
+   *
+   * When it IS flipped, the intended behaviour is: a config error under live
+   * mode denies the request (`config_error`), because refusing to serve is
+   * recoverable and giving away paid inference is not.
    */
   private billingEnforced(): boolean {
     try {
-      return getConfig().BILLING_ENFORCED === true;
+      const config = getConfig();
+      return config.BILLING_ENFORCED === true;
+    } catch (err) {
+      if (ConnectorsService.billingLiveMode()) {
+        // Not yet reachable — `billingLiveMode()` reads the same config that
+        // just failed, so it answers false and this branch is dead until the
+        // flag is sourced independently (an explicit process.env read, or a
+        // value captured at boot). Kept as the named landing site for that
+        // change, so the inversion is a one-line edit in a reviewed place
+        // rather than a rediscovery of why it matters.
+        this.logger.error(
+          'ARAS-0058 billing: config unreadable while BILLING_LIVE_MODE is set — ' +
+            'enforcement must fail CLOSED here, not open: ' +
+            (err instanceof Error ? err.message : String(err)),
+        );
+        return true;
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Is this instance handling real money?
+   *
+   * Read through the same `getConfig()` as everything else, which is precisely
+   * the limitation the seam above documents: it cannot report the truth in the
+   * one situation it exists for. Left honest rather than papered over with a
+   * raw `process.env` read that would silently diverge from the validated
+   * config everywhere else.
+   */
+  private static billingLiveMode(): boolean {
+    try {
+      return getConfig().BILLING_LIVE_MODE === true;
     } catch {
       return false;
     }
   }
 
   /**
-   * ARAS-0064 — refuse a request the account cannot afford.
+   * ARAS-0064 / ARAS-0058 — open the request intent: refuse what the account
+   * cannot afford, replay what it has already asked for, and RESERVE the rest.
    *
    * Returns a structured error response rather than throwing, matching the
    * access and policy gates: an agent must be able to READ "you are out of
-   * money" and stop, and `credit_depleted` is already classified
-   * non-retryable/abort, so a cascade will not hammer a depleted account.
-   * Throwing here would surface as a generic 500 and look like an outage.
+   * money" and stop. `credit_depleted` is classified non-retryable/abort, so a
+   * cascade will not hammer a depleted account. Throwing would surface as a
+   * generic 500 and look like an outage.
    */
-  private async creditDenial(
+  private async openRequestIntent(
     connectorName: string,
     request: ServiceExecuteRequest,
     apiKeyId: string,
-  ): Promise<ConnectorResponse | null> {
+  ): Promise<{ response?: ConnectorResponse; intent: RequestIntentHandle | null }> {
+    const clientKey = request.idempotencyKey;
+    const enforced = this.billingEnforced();
+
+    // Neither gate applies: billing is dark and the caller wants no idempotency
+    // guarantee. Do nothing at all — not even a read. This is the path almost
+    // every request takes today, and it must stay free.
+    if (!enforced && !clientKey) return { intent: null };
+
     const model = request.model || 'unknown';
-    let estimate: number;
+    const estimate = enforced ? await this.estimateRequestCost(connectorName, request) : 0;
+
+    if (enforced) {
+      // ARAS-0058 — a server-side ceiling on ONE request's cost. A balance
+      // check limits the total spend; it says nothing about how much a single
+      // call may burn, and `max_tokens` — which is what makes a call expensive
+      // — is chosen by the caller. Without a ceiling the blast radius of one
+      // request is caller-controlled.
+      const cap = this.maxRequestCostUsd();
+      if (cap > 0 && estimate > cap) {
+        return {
+          intent: null,
+          response: this.gateErrorResponse(
+            connectorName,
+            model,
+            'request_cost_limit_exceeded',
+            `This request is estimated at ${estimate.toFixed(6)} USD, above the ` +
+              `${cap} USD per-request ceiling. Lower max_tokens, shorten the prompt, ` +
+              'or choose a cheaper model.',
+          ),
+        };
+      }
+    }
+
+    const result = await this.billing!.openIntent({
+      apiKeyId,
+      // No caller key means no idempotency PROMISE to the caller — but the hold
+      // still needs an owner, so we mint one that can never collide with a
+      // replay.
+      intentKey: clientKey ?? mintServerIntentKey(randomUUID()),
+      clientSupplied: Boolean(clientKey),
+      payloadFingerprint: ConnectorsService.requestFingerprint(connectorName, request),
+      holdUsd: estimate,
+      ttlMs: this.holdTtlMs(),
+    });
+
+    switch (result.outcome) {
+      case 'opened':
+        return { intent: result.intent };
+
+      case 'replay':
+        // One provider call and one ledger row, however many times the client
+        // re-POSTs. This is the whole point of threading the header through.
+        this.logger.log(
+          `ARAS-0058 idempotency: replaying stored response for key ${clientKey} (api key ${apiKeyId})`,
+        );
+        return { intent: null, response: result.response as ConnectorResponse };
+
+      case 'in_flight':
+        return {
+          intent: null,
+          response: this.gateErrorResponse(
+            connectorName,
+            model,
+            'idempotency_conflict',
+            'A request with this Idempotency-Key is still in flight. Retry shortly to ' +
+              'receive its result; do not reissue it under a new key or it will be ' +
+              'dispatched and charged twice.',
+          ),
+        };
+
+      case 'payload_mismatch':
+        return {
+          intent: null,
+          response: this.gateErrorResponse(
+            connectorName,
+            model,
+            'idempotency_key_reused',
+            'This Idempotency-Key was already used for a DIFFERENT request. Replaying the ' +
+              "first request's response would hide the mismatch, so it is reported instead. " +
+              'Use a fresh key for a new request.',
+          ),
+        };
+
+      case 'not_replayable':
+        return {
+          intent: null,
+          response: this.gateErrorResponse(
+            connectorName,
+            model,
+            'idempotency_replay_unavailable',
+            'This request completed, but its response was too large to store for replay. ' +
+              'It has been dispatched and charged exactly once; retrieve the result from ' +
+              'the original call rather than reissuing it.',
+          ),
+        };
+
+      case 'insufficient':
+        return {
+          intent: null,
+          response: this.gateErrorResponse(
+            connectorName,
+            model,
+            'credit_depleted',
+            `Insufficient credits: spendable balance ${result.balanceUsd} USD does not cover ` +
+              `the estimated ${result.requiredUsd} USD for this request. Top up the account ` +
+              'to continue.',
+          ),
+        };
+    }
+  }
+
+  /**
+   * The pre-call estimate for this request.
+   *
+   * A catalogue read failure must not become a free pass, so it falls back to
+   * the unpriced floor rather than skipping the gate.
+   */
+  private async estimateRequestCost(
+    connectorName: string,
+    request: ServiceExecuteRequest,
+  ): Promise<number> {
+    // ARAS-0058 — `promptCharLength`, not `prompt?.length`. On a multi-modal
+    // ContentBlock[] prompt the latter is the number of BLOCKS, so a 40 000
+    // character two-block prompt priced as "2 characters".
+    const promptLength = promptCharLength(request.prompt);
+    // ARAS-0058 — and the caller's own `max_tokens`, which the original
+    // estimate ignored entirely in favour of a hardcoded 2 000. On an
+    // expensive model that was roughly a 32x under-estimate the precheck never
+    // saw, driven by a parameter the caller chooses.
+    const maxTokens = request.extra?.max_tokens;
     try {
       const catalog = await this.catalogRepo.findAll();
       const row = catalog.find(
         (entry: { connector?: string; model?: string }) =>
           entry.connector === connectorName && entry.model === request.model,
       );
-      estimate = estimateCostUsd(request.prompt?.length ?? 0, row);
+      return estimateCostUsd(promptLength, row, { maxTokens });
     } catch {
-      // A catalogue read failure must not become a free pass: fall back to the
-      // unpriced estimate rather than skipping the gate.
-      estimate = estimateCostUsd(request.prompt?.length ?? 0, null);
-    }
-
-    try {
-      await this.billing!.precheck(apiKeyId, estimate);
-      return null;
-    } catch (err) {
-      if (!(err instanceof InsufficientCreditsError)) throw err;
-      const action = classifyErrorAction('credit_depleted');
-      return {
-        id: '',
-        connector: connectorName,
-        model,
-        result: '',
-        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
-        latencyMs: 0,
-        status: 'error',
-        error: {
-          type: 'credit_depleted',
-          message: `Insufficient credits: balance ${err.balanceUsd} USD does not cover the estimated ${err.requiredUsd} USD for this request. Top up the account to continue.`,
-          ...action,
-        },
-      };
+      return estimateCostUsd(promptLength, null, { maxTokens });
     }
   }
 
+  /** A gate refusal, in the shape every other gate at this choke point uses. */
+  private gateErrorResponse(
+    connectorName: string,
+    model: string,
+    type: string,
+    message: string,
+  ): ConnectorResponse {
+    const action = classifyErrorAction(type);
+    return {
+      id: '',
+      connector: connectorName,
+      model,
+      result: '',
+      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+      latencyMs: 0,
+      status: 'error',
+      error: { type, message, ...action },
+    };
+  }
+
   /**
-   * ARAS-0064 — debit the ACTUAL measured cost of a completed request.
+   * What "the same request" means for idempotency purposes.
    *
-   * Keyed on the request row's own id, so a retry of the same request settles
-   * once: the id is the natural idempotency key, and the database rejects a
-   * second ledger row for it.
-   *
-   * Deliberately non-fatal. The response has already been produced and the
-   * provider has already been paid; throwing here would lose a result the
-   * caller is entitled to in order to report an accounting problem. The debit
-   * is logged loudly instead, and the ledger's absence is recoverable from the
-   * Request row, which is written first.
+   * Everything that changes what the provider is asked to do, and nothing that
+   * does not — `idempotencyKey` itself is excluded, or a key would never match
+   * its own replay.
    */
-  private async settleSpend(
-    requestId: string,
-    apiKeyId: string,
-    costUsd: number | string,
-  ): Promise<void> {
-    if (!this.billing) return;
+  private static requestFingerprint(connectorName: string, request: ServiceExecuteRequest): string {
+    const {
+      idempotencyKey: _ignored,
+      firstDispatchMeasurement: _measurement,
+      ...payload
+    } = request;
+    return intentPayloadFingerprint({ connector: connectorName, ...payload });
+  }
+
+  /** Give a reservation back. Safe to call with null, and safe to repeat. */
+  private async releaseIntent(intent: RequestIntentHandle | null): Promise<void> {
+    if (!intent || !this.billing) return;
     try {
-      await this.billing.settle({
-        apiKeyId,
-        amountUsd: costUsd,
-        idempotencyKey: `request:${requestId}`,
-        requestId,
-        reason: 'model-request',
-      });
+      await this.billing.releaseIntent(intent);
     } catch (err) {
+      // The expiry sweep is the backstop; a failure to release promptly costs
+      // the customer temporary headroom, never money, so it must not turn into
+      // the caller's error.
       this.logger.error(
-        `ARAS-0064 billing: failed to settle request ${requestId}: ${
-          err instanceof Error ? err.message : String(err)
-        }`,
+        `ARAS-0058 billing: failed to release hold ${intent.id}: ` +
+          (err instanceof Error ? err.message : String(err)),
       );
+    }
+  }
+
+  private maxRequestCostUsd(): number {
+    try {
+      return getConfig().BILLING_MAX_REQUEST_COST_USD;
+    } catch {
+      // Unreadable config must not silently remove a spend ceiling. This
+      // matches the ARAS-0064 catalogue-read fallback: when in doubt, keep the
+      // limit rather than the traffic.
+      return 10;
+    }
+  }
+
+  private holdTtlMs(): number {
+    try {
+      return getConfig().BILLING_HOLD_TTL_MS;
+    } catch {
+      return 1_800_000;
     }
   }
 

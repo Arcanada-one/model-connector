@@ -47,6 +47,59 @@ export const envSchema = z
     // string "false" to true (CONN-0102).
     BILLING_ENFORCED: envBool.default(false),
 
+    // ARAS-0058 — the seam for a fail-closed inversion, not the inversion
+    // itself. `billingEnforced()` catches config errors and returns false,
+    // which is RIGHT for gift credits (a bad env parse must not deny every
+    // caller whose account has never been credited) and WRONG for revenue (one
+    // bad env parse turns every paying customer into free inference, and the
+    // ledger still looks normal because a charge nobody gated is still a charge
+    // of zero). The two modes genuinely differ, so the flag that distinguishes
+    // them has to exist before the behaviour can.
+    //
+    // Deliberately NOT wired to change behaviour in this stream — flipping the
+    // default is a separate, operator-approved change with a live payment key
+    // behind it. See `ConnectorsService.billingEnforced()`.
+    BILLING_LIVE_MODE: envBool.default(false),
+
+    // ARAS-0058 — server-side ceiling on the ESTIMATED cost of a single
+    // request, in USD. `max_tokens` is caller-controlled, so without a ceiling
+    // a single request's cost is caller-controlled too; a balance check alone
+    // only limits the total, never the blast radius of one call. Applied at the
+    // credit gate, so it engages with BILLING_ENFORCED and a caller's traffic
+    // cannot start being refused without an operator opting in. Zero disables
+    // the ceiling.
+    BILLING_MAX_REQUEST_COST_USD: z.coerce.number().min(0).default(10),
+
+    // ARAS-0058 — how long a reservation survives without its owner returning.
+    // A hold is a claim on a customer's money; a process SIGKILLed between
+    // reserving and settling must not freeze funds forever. Comfortably above
+    // the 600s connector timeout ceiling so a slow request is never swept out
+    // from under itself.
+    BILLING_HOLD_TTL_MS: z.coerce
+      .number()
+      .min(60_000)
+      .max(6 * 3_600_000)
+      .default(1_800_000),
+
+    // ARAS-0058 — whether the reconciler is allowed to CHARGE on its own.
+    //
+    // Ships off. The sweep that RETURNS money runs unconditionally; a job that
+    // takes money must not start doing so as a side effect of a deploy.
+    // Production carries `Request` rows that pre-date the credits tables
+    // existing, and the first automatic tick after this lands would otherwise
+    // charge accounts for historic usage. `POST /admin/credits/reconcile` with
+    // `dryRun` shows an operator the bill before they authorise it.
+    BILLING_RECONCILE_ENABLED: envBool.default(false),
+
+    // ARAS-0058 — how long a completed request intent stays replayable.
+    // Idempotency is a promise with an expiry date: without one the table grows
+    // without bound and a key reused much later silently returns a stale answer.
+    BILLING_INTENT_RETENTION_MS: z.coerce
+      .number()
+      .min(60_000)
+      .max(30 * 86_400_000)
+      .default(86_400_000),
+
     // CONN-0089 output-guard middleware
     OUTPUT_GUARD_ENABLED: z.coerce.boolean().default(true),
     OUTPUT_GUARD_MAX_RETRIES: z.coerce.number().min(0).max(5).default(3),

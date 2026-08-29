@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 
 import { PrismaModule } from '../prisma/prisma.module';
 import { BillingService } from './billing.service';
+import { BillingReconcilerService } from './reconciler.service';
 import { CreditsController } from './credits.controller';
 
 /**
@@ -12,7 +13,7 @@ import { CreditsController } from './credits.controller';
 @Module({
   imports: [PrismaModule],
   controllers: [CreditsController],
-  providers: [BillingService],
-  exports: [BillingService],
+  providers: [BillingService, BillingReconcilerService],
+  exports: [BillingService, BillingReconcilerService],
 })
 export class BillingModule {}

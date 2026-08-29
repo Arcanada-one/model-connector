@@ -86,7 +86,10 @@ function buildStack(connectors: FakeConnector[]) {
   // Minimal stubs for the deps ConnectorsService.execute actually touches:
   // metrics.record (no-op) and prisma.request.create (fire-and-forget, caught).
   const jobQueue = {} as never;
-  const prisma = { request: { create: () => Promise.resolve({}) } } as never;
+  // ARAS-0058 — the request row and its settlement now commit together.
+  const prismaMock: Record<string, unknown> = { request: { create: () => Promise.resolve({}) } };
+  prismaMock.$transaction = (fn: (tx: unknown) => unknown) => fn(prismaMock);
+  const prisma = prismaMock as never;
   const metrics = { record: () => undefined } as never;
   const outputGuard = { wrapExecute: () => Promise.resolve({ response: null }) } as never;
 
