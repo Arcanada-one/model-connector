@@ -22,6 +22,15 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { InsufficientCreditsError } from './billing.errors';
 
+/**
+ * ARAS-0071 — what kind of movement a ledger entry records.
+ *
+ * A gift and a payment are the same arithmetic and completely different facts.
+ * Keeping them apart is an accounting requirement, not a cosmetic one: revenue
+ * must never include money nobody paid.
+ */
+export type LedgerEntryType = 'charge' | 'gift' | 'credit';
+
 @Injectable()
 export class BillingService {
   private readonly logger = new Logger(BillingService.name);
@@ -78,6 +87,7 @@ export class BillingService {
       idempotencyKey: params.idempotencyKey,
       requestId: params.requestId,
       reason: params.reason ?? 'request',
+      entryType: 'charge',
     });
   }
 
@@ -87,6 +97,7 @@ export class BillingService {
     amountUsd: Prisma.Decimal | number | string;
     idempotencyKey: string;
     reason?: string;
+    entryType?: LedgerEntryType;
   }): Promise<boolean> {
     const amount = new Prisma.Decimal(params.amountUsd);
     if (!amount.greaterThan(0)) {
@@ -97,6 +108,57 @@ export class BillingService {
       amountUsd: amount,
       idempotencyKey: params.idempotencyKey,
       reason: params.reason ?? 'manual-credit',
+      entryType: params.entryType ?? 'credit',
+    });
+  }
+
+  /**
+   * ARAS-0071 — grant credit the recipient did not pay for.
+   *
+   * Separate from `credit()` so the gift path cannot be reached by accident and
+   * so its extra rules live in one place:
+   *   - the amount must be strictly positive; zero is a no-op that would still
+   *     burn an idempotency key, and a negative would be a debit wearing a
+   *     gift's label
+   *   - a reason is REQUIRED. A gift is money appearing from nowhere; an
+   *     auditor asking "why does this account have $50" must find the answer
+   *     in the ledger, not in someone's memory.
+   *
+   * Gifts can only ADD. There is deliberately no gift-shaped debit: taking
+   * money back is a charge, and it should look like one in the history.
+   */
+  async gift(params: {
+    apiKeyId: string;
+    amountUsd: Prisma.Decimal | number | string;
+    idempotencyKey: string;
+    reason: string;
+  }): Promise<boolean> {
+    const amount = new Prisma.Decimal(params.amountUsd);
+    if (!amount.isFinite()) {
+      throw new Error('gift() requires a finite amount');
+    }
+    if (!amount.greaterThan(0)) {
+      throw new Error('gift() only adds credit; the amount must be greater than zero');
+    }
+    const reason = params.reason?.trim();
+    if (!reason) {
+      throw new Error('gift() requires a reason — a gift must be auditable');
+    }
+    return this.post({
+      apiKeyId: params.apiKeyId,
+      amountUsd: amount,
+      idempotencyKey: params.idempotencyKey,
+      reason,
+      entryType: 'gift',
+    });
+  }
+
+  /** Ledger history, newest first. */
+  async history(apiKeyId: string, limit = 50) {
+    return this.prisma.creditsLedger.findMany({
+      where: { apiKeyId },
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(Math.max(limit, 1), 500),
     });
   }
 
@@ -111,6 +173,7 @@ export class BillingService {
     idempotencyKey: string;
     requestId?: string;
     reason: string;
+    entryType: LedgerEntryType;
   }): Promise<boolean> {
     try {
       await this.prisma.$transaction(async (tx) => {
@@ -121,6 +184,7 @@ export class BillingService {
             idempotencyKey: entry.idempotencyKey,
             requestId: entry.requestId,
             reason: entry.reason,
+            entryType: entry.entryType,
           },
         });
         await tx.creditsBalance.upsert({
