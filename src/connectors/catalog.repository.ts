@@ -120,6 +120,32 @@ export class CatalogSnapshotValidationError extends Error {
  */
 export interface CatalogRepositoryLike {
   findAll(): Promise<ModelCatalogRow[]>;
+  /**
+   * ARAS-0058 — single-row pricing lookup for the money meter.
+   *
+   * OPTIONAL on purpose. Dozens of specs inject `{ findAll: vi.fn() }` as this
+   * interface; making the method required would break every one of them at
+   * compile time for no behavioural gain. Callers that need it check for it and
+   * fall back to scanning `findAll()`.
+   *
+   * Separate from `findAll()` because the meter runs on EVERY request, and
+   * `findAll()` is a full scan of `model_catalog` (one provider alone
+   * contributes 524 rows). This is one hit on the `(connector, model)` unique
+   * index.
+   */
+  findPricing?(connector: string, model: string): Promise<CatalogPricingRow | null>;
+}
+
+/**
+ * ARAS-0058 — the pricing fields of a `model_catalog` row, and nothing else.
+ * `tier` is carried alongside the tariffs because a free-tier row legitimately
+ * has NULL tariffs (see `deriveTier` rule 2), and "free" and "we have no idea"
+ * must not collapse into the same answer.
+ */
+export interface CatalogPricingRow {
+  inputPerMTok: number | null;
+  outputPerMTok: number | null;
+  tier: string;
 }
 
 /**
@@ -185,6 +211,27 @@ export class CatalogRepository implements CatalogRepositoryLike {
       where: { connector },
       data: { status, lastChecked },
     });
+  }
+
+  /**
+   * ARAS-0058 — the tariffs for one model, by its unique `(connector, model)`
+   * key. Returns null when the model is not catalogued, which the meter records
+   * as `unpriced` rather than as free.
+   *
+   * `absent: false` matches `findAll()` deliberately. An absent row is a
+   * tombstone for a model the provider stopped listing, and its tariff is a
+   * last-known figure, not a current one. The pre-call gate reads through
+   * `findAll()` and would price such a model at the unknown-model floor; the
+   * meter agreeing with the gate is worth more than a price we would have to
+   * caveat. `findFirst` rather than `findUnique` only because the predicate is
+   * now compound — it is the same unique index.
+   */
+  async findPricing(connector: string, model: string): Promise<CatalogPricingRow | null> {
+    const row = await this.prisma.modelCatalog.findFirst({
+      where: { connector, model, absent: false },
+      select: { inputPerMTok: true, outputPerMTok: true, tier: true },
+    });
+    return row ?? null;
   }
 
   /**

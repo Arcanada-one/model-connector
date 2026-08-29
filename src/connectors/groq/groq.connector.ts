@@ -215,6 +215,12 @@ export class GroqConnector extends BaseApiConnector {
       model: json.model || request.model || DEFAULT_MODEL,
       inputTokens: json.usage?.prompt_tokens ?? 0,
       outputTokens: json.usage?.completion_tokens ?? 0,
+      // ARAS-0058 — Groq's chat completion carries token counts but no price, so
+      // there is no provider cost to report and 0 here means exactly that.
+      // `ConnectorsService.meterCost()` turns the tokens above into money using
+      // the catalogue tariff. Do NOT invent a number here: a per-connector price
+      // would be a second pricing source, and it was a hardcoded 0 at this exact
+      // spot that made every `charge` row in `credits_ledger` $0.000000.
       costUsd: 0,
       isError: false,
     };

@@ -22,6 +22,14 @@ export interface ParsedApiOutput {
   model: string;
   inputTokens: number;
   outputTokens: number;
+  /**
+   * Cost as the PROVIDER reported it, or 0 when the provider reports none —
+   * which is almost all of them (only claude-code and openrouter return a real
+   * figure). 0 is not a claim that the call was free; it means "unreported", and
+   * `ConnectorsService.meterCost()` (ARAS-0058) prices the tokens from the
+   * catalogue instead. A connector must never compute a price of its own here:
+   * that would be a second pricing source, drifting from the first.
+   */
   costUsd: number;
   isError: boolean;
   errorMessage?: string;
