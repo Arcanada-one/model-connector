@@ -25,6 +25,16 @@ interface OrqChatResponse {
     prompt_tokens: number;
     completion_tokens: number;
     total_tokens: number;
+    // CONN-0273 — the provider reports these and we used to drop them.
+    // Both are SUBSETS of the totals above, not additions to them.
+    prompt_tokens_details?: {
+      /** Prompt tokens served from the provider's cache. */
+      cached_tokens?: number | null;
+    } | null;
+    completion_tokens_details?: {
+      /** Completion tokens spent reasoning rather than on the visible answer. */
+      reasoning_tokens?: number | null;
+    } | null;
   };
 }
 
@@ -146,6 +156,13 @@ export class OrqConnector extends BaseApiConnector {
       model: response.model || request.model || DEFAULT_MODEL,
       inputTokens: response.usage?.prompt_tokens ?? 0,
       outputTokens: response.usage?.completion_tokens ?? 0,
+      // CONN-0273 — carried so `Request.cachedInputTokens` and
+      // `reasoningOutputTokens` stop being NULL on every orq row. `undefined`
+      // when the provider omits the block entirely, which is a different fact
+      // from a reported zero and is kept different all the way to the column.
+      cachedInputTokens: response.usage?.prompt_tokens_details?.cached_tokens ?? undefined,
+      reasoningOutputTokens:
+        response.usage?.completion_tokens_details?.reasoning_tokens ?? undefined,
       // orq is a paid gateway that does not echo per-call cost in the response.
       // Never invent a cost figure — always 0.
       costUsd: 0,

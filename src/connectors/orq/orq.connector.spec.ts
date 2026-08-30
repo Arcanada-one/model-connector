@@ -394,6 +394,79 @@ describe('OrqConnector', () => {
     });
   });
 
+  // --- Usage detail (CONN-0273) ---
+
+  describe('cache and reasoning counts', () => {
+    // Shape verified against the live API today (deepseek-v4-flash):
+    //   prompt_tokens 5, completion_tokens 6,
+    //   prompt_tokens_details.cached_tokens 0,
+    //   completion_tokens_details.reasoning_tokens 5
+    // 5 of 6 output tokens were reasoning — invisible in the reply the customer
+    // reads and billed at the output rate, so a meter blind to it cannot
+    // explain the bill.
+    function chatReply(usage: Record<string, unknown>) {
+      return {
+        model: 'deepseek-v4-flash',
+        choices: [
+          { index: 0, message: { role: 'assistant', content: 'hi' }, finish_reason: 'stop' },
+        ],
+        usage,
+      };
+    }
+
+    it('carries cached prompt tokens and reasoning output tokens', async () => {
+      mockOk(
+        chatReply({
+          prompt_tokens: 900,
+          completion_tokens: 100,
+          total_tokens: 1000,
+          prompt_tokens_details: { cached_tokens: 750 },
+          completion_tokens_details: { reasoning_tokens: 80 },
+        }),
+      );
+
+      const res = await connector.execute({ model: 'deepseek-v4-flash', prompt: 'x' } as never);
+
+      expect(res.usage.cachedInputTokens).toBe(750);
+      expect(res.usage.reasoningOutputTokens).toBe(80);
+      // Subsets, never additions — a cached count above the prompt total would
+      // mean we were double-counting the prompt.
+      expect(res.usage.cachedInputTokens as number).toBeLessThanOrEqual(res.usage.inputTokens);
+      expect(res.usage.reasoningOutputTokens as number).toBeLessThanOrEqual(res.usage.outputTokens);
+    });
+
+    it('keeps a reported zero distinct from an unreported count', async () => {
+      mockOk(
+        chatReply({
+          prompt_tokens: 5,
+          completion_tokens: 6,
+          total_tokens: 11,
+          prompt_tokens_details: { cached_tokens: 0 },
+          completion_tokens_details: { reasoning_tokens: 5 },
+        }),
+      );
+
+      const res = await connector.execute({ model: 'deepseek-v4-flash', prompt: 'x' } as never);
+
+      // 0 means "the cache did not fire". Collapsing it to undefined would make
+      // a measured miss indistinguishable from a provider that says nothing.
+      expect(res.usage.cachedInputTokens).toBe(0);
+      expect(res.usage.reasoningOutputTokens).toBe(5);
+    });
+
+    it('reports undefined when the provider omits the detail blocks', async () => {
+      mockOk(chatReply({ prompt_tokens: 10, completion_tokens: 4, total_tokens: 14 }));
+
+      const res = await connector.execute({ model: 'deepseek-v4-flash', prompt: 'x' } as never);
+
+      expect(res.usage.cachedInputTokens).toBeUndefined();
+      expect(res.usage.reasoningOutputTokens).toBeUndefined();
+      // The totals must still be read normally.
+      expect(res.usage.inputTokens).toBe(10);
+      expect(res.usage.outputTokens).toBe(4);
+    });
+  });
+
   // --- Pricing (CONN-0271) ---
 
   describe('provider pricing', () => {
