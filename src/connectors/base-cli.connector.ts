@@ -83,6 +83,16 @@ export interface ParsedCliOutput {
    * `ConnectorsService.meterCost()` (ARAS-0058) does the pricing.
    */
   costUsd: number;
+  /**
+   * Cache and reasoning counts, when the CLI reports them (CONN-0272).
+   *
+   * These were previously parsed and discarded: this interface had nowhere to
+   * put them, so codex buried them in `structured` and claude-code declared
+   * them in its usage type and never read them. Both are subsets of the
+   * corresponding total.
+   */
+  cachedInputTokens?: number;
+  reasoningOutputTokens?: number;
   isError: boolean;
   errorType?: string;
   errorMessage?: string;
@@ -268,6 +278,11 @@ export abstract class BaseCliConnector implements IConnector {
           outputTokens: parsed.outputTokens,
           totalTokens: parsed.inputTokens + parsed.outputTokens,
           costUsd: parsed.costUsd,
+          // CONN-0272 — forwarded only when the provider reported them.
+          // `undefined` (provider is silent) and `0` (provider reported a miss)
+          // are different facts and are kept different all the way to the row.
+          cachedInputTokens: parsed.cachedInputTokens,
+          reasoningOutputTokens: parsed.reasoningOutputTokens,
         },
         latencyMs,
         queueWaitMs,

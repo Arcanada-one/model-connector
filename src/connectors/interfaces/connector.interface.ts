@@ -50,6 +50,30 @@ export interface ConnectorResponse {
     outputTokens: number;
     totalTokens: number;
     costUsd: number;
+    /**
+     * Input tokens the provider served from its cache (CONN-0272).
+     *
+     * A SUBSET of `inputTokens`, never an addition to it — that is how every
+     * provider reports it, and treating it as separate would double-count the
+     * prompt. Undefined means the provider did not report caching; 0 means it
+     * reported a miss. The difference matters: the first cannot tell you
+     * whether caching works, the second says it did not fire.
+     */
+    cachedInputTokens?: number;
+    /**
+     * Output tokens spent on reasoning rather than the visible answer
+     * (CONN-0272). Billed at the output rate but absent from the reply the
+     * customer reads, so a request can cost many times what its visible output
+     * suggests. Included in `outputTokens`.
+     */
+    reasoningOutputTokens?: number;
+    /**
+     * `costUsd` split by what was billed for. Null when the split is unknown —
+     * a provider invoice is a single number, and a fabricated split would be
+     * indistinguishable from a measured one.
+     */
+    inputCostUsd?: number | null;
+    outputCostUsd?: number | null;
   };
   latencyMs: number;
   queueWaitMs?: number;

@@ -46,6 +46,18 @@ export type CostSource =
 export interface MeasuredCostPricing {
   inputPerMTok: number | null;
   outputPerMTok: number | null;
+  /**
+   * Price of an input token served FROM the provider's cache, when the
+   * catalogue carries one (CONN-0272). Typically a fraction of `inputPerMTok` —
+   * that discount is the entire economic point of prompt caching, and billing
+   * cached tokens at the full input rate overstates the cost of every cached
+   * request.
+   *
+   * Null means the catalogue has no cache tariff, NOT that caching is free:
+   * cached tokens then fall back to `inputPerMTok`, which is the conservative
+   * direction (we never under-bill on an assumption).
+   */
+  cachedInputPerMTok?: number | null;
   /** `deriveTier` output: 'free' | 'paid' | 'unknown'. */
   tier?: string | null;
 }
@@ -53,6 +65,17 @@ export interface MeasuredCostPricing {
 export interface MeasuredCost {
   costUsd: number;
   source: CostSource;
+  /**
+   * The `costUsd` total, split by what was billed for (CONN-0272).
+   *
+   * Both halves are already computed to produce the total; keeping them is what
+   * makes "which half is the bill" answerable. Null — not zero — when the split
+   * is genuinely unknown: a provider invoice arrives as one number, and
+   * inventing a split for it would fabricate evidence exactly as a back-filled
+   * `costSource` would. Zero means "measured, and it was zero".
+   */
+  inputCostUsd: number | null;
+  outputCostUsd: number | null;
 }
 
 /** Catalogue tariffs are USD per 1M tokens (`priceUnit` = 'USD/1M tokens'). */
@@ -115,6 +138,15 @@ export function measureCostUsd(input: {
   providerCostUsd?: number | null;
   inputTokens?: number | null;
   outputTokens?: number | null;
+  /**
+   * Input tokens served from the provider's cache (CONN-0272).
+   *
+   * MUST be a SUBSET of `inputTokens`, matching how providers report it: the
+   * cached count is part of the input total, not an addition to it. Passing a
+   * value larger than `inputTokens` would compute a negative uncached
+   * remainder, so it is clamped rather than trusted.
+   */
+  cachedInputTokens?: number | null;
   /** The catalogue row for the model actually served, or null if there is none. */
   pricing?: MeasuredCostPricing | null;
 }): MeasuredCost {
@@ -126,7 +158,13 @@ export function measureCostUsd(input: {
     Number.isFinite(providerCostUsd) &&
     providerCostUsd > 0
   ) {
-    return { costUsd: roundToStorage(providerCostUsd), source: 'provider' };
+    // The invoice is one number. `null` halves say so rather than guessing.
+    return {
+      costUsd: roundToStorage(providerCostUsd),
+      source: 'provider',
+      inputCostUsd: null,
+      outputCostUsd: null,
+    };
   }
 
   const inputTokens = nonNegativeTokens(input.inputTokens);
@@ -136,7 +174,7 @@ export function measureCostUsd(input: {
   //    tariff, including one we do not know. Errors and refusals land here, and
   //    keeping them out of 'unpriced' is what keeps that marker meaningful.
   if (inputTokens === 0 && outputTokens === 0) {
-    return { costUsd: 0, source: 'zero-usage' };
+    return { costUsd: 0, source: 'zero-usage', inputCostUsd: 0, outputCostUsd: 0 };
   }
 
   // 3. A real tariff. One side may be missing (some providers publish only a
@@ -145,19 +183,41 @@ export function measureCostUsd(input: {
   const inputPerMTok = isUsablePrice(pricing?.inputPerMTok) ? pricing.inputPerMTok : null;
   const outputPerMTok = isUsablePrice(pricing?.outputPerMTok) ? pricing.outputPerMTok : null;
   if (inputPerMTok !== null || outputPerMTok !== null) {
-    const cost =
-      (inputTokens * (inputPerMTok ?? 0) + outputTokens * (outputPerMTok ?? 0)) /
+    // Cached input is a SUBSET of input, so the uncached remainder is what is
+    // left after removing it. Clamped: a provider reporting more cached tokens
+    // than input tokens is a bug on their side, and a negative remainder here
+    // would silently credit the customer.
+    const cachedInputTokens = Math.min(nonNegativeTokens(input.cachedInputTokens), inputTokens);
+    const uncachedInputTokens = inputTokens - cachedInputTokens;
+    // No cache tariff → cached tokens bill at the normal input rate. That is
+    // the conservative direction: it can overstate the cost of a cache hit, and
+    // never understates it.
+    const cachedRate = isUsablePrice(pricing?.cachedInputPerMTok)
+      ? pricing.cachedInputPerMTok
+      : inputPerMTok;
+    const inputCost =
+      (uncachedInputTokens * (inputPerMTok ?? 0) + cachedInputTokens * (cachedRate ?? 0)) /
       TOKENS_PER_PRICE_UNIT;
-    return { costUsd: roundToStorage(cost), source: 'catalog' };
+    const outputCost = (outputTokens * (outputPerMTok ?? 0)) / TOKENS_PER_PRICE_UNIT;
+    // Rounded once, on the total, so the halves cannot sum to a different
+    // number than the figure actually charged.
+    return {
+      costUsd: roundToStorage(inputCost + outputCost),
+      source: 'catalog',
+      inputCostUsd: roundToStorage(inputCost),
+      outputCostUsd: roundToStorage(outputCost),
+    };
   }
 
   // 4. Catalogued free-tier with no numeric tariff — e.g. every groq chat model,
   //    whose list price CONN-1672 suppresses precisely because the free tier is
   //    genuinely $0. That is a known price, not a missing one.
   if (pricing && pricing.tier === 'free') {
-    return { costUsd: 0, source: 'catalog-free' };
+    return { costUsd: 0, source: 'catalog-free', inputCostUsd: 0, outputCostUsd: 0 };
   }
 
   // 5. Tokens were burned at a price nobody knows. Marked, never silently zero.
-  return { costUsd: 0, source: 'unpriced' };
+  // Never computed, so there is no split to report. Null, not zero — the same
+  // distinction `costSource: 'unpriced'` exists to preserve.
+  return { costUsd: 0, source: 'unpriced', inputCostUsd: null, outputCostUsd: null };
 }

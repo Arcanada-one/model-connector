@@ -205,4 +205,125 @@ describe('measureCostUsd', () => {
       expect(measured.costUsd).toBeCloseTo(0.00079, 9);
     });
   });
+
+  // --- CONN-0272: the breakdown behind the total ---------------------------
+
+  describe('the cost breakdown', () => {
+    it('splits the total into input and output, and the halves sum to it', () => {
+      const measured = measureCostUsd({
+        inputTokens: 1_000,
+        outputTokens: 500,
+        pricing: PRICED,
+      });
+
+      // 1000 * 0.59/1e6 = 0.00059 input; 500 * 0.79/1e6 = 0.000395 output.
+      expect(measured.inputCostUsd).toBeCloseTo(0.00059, 9);
+      expect(measured.outputCostUsd).toBeCloseTo(0.000395, 9);
+      // The invariant that makes the split trustworthy: it must reconcile to
+      // the number actually charged, or the breakdown is decorative.
+      expect((measured.inputCostUsd ?? 0) + (measured.outputCostUsd ?? 0)).toBeCloseTo(
+        measured.costUsd,
+        9,
+      );
+    });
+
+    it('does not put the whole bill on one side', () => {
+      // A breakdown that assigned everything to input would satisfy the sum
+      // check above, so pin both halves as independently non-zero.
+      const measured = measureCostUsd({
+        inputTokens: 10_000,
+        outputTokens: 10_000,
+        pricing: PRICED,
+      });
+      expect(measured.inputCostUsd).toBeGreaterThan(0);
+      expect(measured.outputCostUsd).toBeGreaterThan(0);
+      expect(measured.inputCostUsd).not.toBe(measured.outputCostUsd);
+    });
+
+    it('reports null halves for a provider invoice rather than inventing a split', () => {
+      const measured = measureCostUsd({
+        providerCostUsd: 0.25,
+        inputTokens: 1_000,
+        outputTokens: 500,
+        pricing: PRICED,
+      });
+      expect(measured.source).toBe('provider');
+      expect(measured.costUsd).toBe(0.25);
+      // The provider billed one number. Splitting it by our own tariff would
+      // produce two figures that look measured and are not.
+      expect(measured.inputCostUsd).toBeNull();
+      expect(measured.outputCostUsd).toBeNull();
+    });
+
+    it('reports null halves for an unpriced model, not zeros', () => {
+      const measured = measureCostUsd({ inputTokens: 1_000, outputTokens: 500, pricing: null });
+      expect(measured.source).toBe('unpriced');
+      // Zeros here would read as "measured, and it was free" — the exact
+      // ambiguity costSource exists to remove.
+      expect(measured.inputCostUsd).toBeNull();
+      expect(measured.outputCostUsd).toBeNull();
+    });
+  });
+
+  describe('cached input is billed at the cache rate', () => {
+    const CACHED = { inputPerMTok: 1, outputPerMTok: 1, cachedInputPerMTok: 0.1, tier: 'paid' };
+
+    it('charges less when part of the prompt came from cache', () => {
+      const cold = measureCostUsd({ inputTokens: 10_000, outputTokens: 0, pricing: CACHED });
+      const warm = measureCostUsd({
+        inputTokens: 10_000,
+        cachedInputTokens: 10_000,
+        outputTokens: 0,
+        pricing: CACHED,
+      });
+
+      // The whole economic point of caching. A meter that merely CARRIED the
+      // cached count without pricing it would return the same number twice and
+      // fail here.
+      expect(warm.costUsd).toBeLessThan(cold.costUsd);
+      // 10_000 at 0.1/1e6 = 0.001 against 10_000 at 1/1e6 = 0.01. A tenth.
+      expect(warm.costUsd).toBeCloseTo(cold.costUsd / 10, 12);
+    });
+
+    it('treats cached tokens as a subset of input, never as extra tokens', () => {
+      // If cached were added to input instead of carved out of it, this would
+      // cost MORE than the uncached call, not less.
+      const measured = measureCostUsd({
+        inputTokens: 10_000,
+        cachedInputTokens: 4_000,
+        outputTokens: 0,
+        pricing: CACHED,
+      });
+      // Rates are USD per 1M, as in PRICED above.
+      // 6_000 * 1/1e6 = 0.006 uncached; 4_000 * 0.1/1e6 = 0.0004 cached.
+      expect(measured.costUsd).toBeCloseTo(0.0064, 9);
+    });
+
+    it('falls back to the full input rate when no cache tariff is published', () => {
+      // Conservative on purpose: assuming a discount nobody published would
+      // under-bill. Same cost with or without the cached count.
+      const withCache = measureCostUsd({
+        inputTokens: 10_000,
+        cachedInputTokens: 10_000,
+        outputTokens: 0,
+        pricing: PRICED,
+      });
+      const without = measureCostUsd({ inputTokens: 10_000, outputTokens: 0, pricing: PRICED });
+      expect(withCache.costUsd).toBe(without.costUsd);
+    });
+
+    it('clamps a cached count larger than the input count instead of crediting it', () => {
+      // A provider bug must not become a negative charge.
+      const measured = measureCostUsd({
+        inputTokens: 1_000,
+        cachedInputTokens: 999_999,
+        outputTokens: 0,
+        pricing: CACHED,
+      });
+      expect(measured.costUsd).toBeGreaterThanOrEqual(0);
+      // Clamped to inputTokens, so all 1_000 bill at the cache rate:
+      // 1_000 * 0.1/1e6 = 0.0001. Not a credit, and not the 999_999 claimed.
+      expect(measured.costUsd).toBeCloseTo(0.0001, 9);
+    });
+  });
 });

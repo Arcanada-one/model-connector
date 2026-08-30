@@ -179,6 +179,11 @@ export class CodexConnector extends BaseCliConnector {
       model,
       inputTokens,
       outputTokens,
+      // CONN-0272 — also promoted out of `structured` into first-class usage,
+      // so the meter and the request row can see them. Kept in `structured`
+      // too: existing callers read it from there.
+      cachedInputTokens,
+      reasoningOutputTokens,
       costUsd: 0,
       isError: false,
     };

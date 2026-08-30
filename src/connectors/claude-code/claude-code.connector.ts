@@ -161,6 +161,16 @@ export class ClaudeCodeConnector extends BaseCliConnector {
     const inputTokens = json.usage?.input_tokens ?? 0;
     const outputTokens = json.usage?.output_tokens ?? 0;
     const costUsd = json.total_cost_usd ?? 0;
+    // CONN-0272 — `ClaudeUsage` has declared these two since the connector was
+    // written and nothing ever read them. Cache reads are the dominant saving
+    // on a repeated prompt, so dropping them made the saving invisible.
+    //
+    // Only cache READS count here. A cache CREATION is a different event with
+    // its own tariff, and the two are deliberately not summed: `cachedInput`
+    // means "input we did not pay full price for", which a creation is not.
+    // Creation counts are left for a follow-up that prices them explicitly
+    // rather than folded in on an assumption about their rate.
+    const cachedInputTokens = json.usage?.cache_read_input_tokens ?? 0;
 
     const meta: Record<string, unknown> = {
       sessionId: json.session_id,
@@ -198,6 +208,7 @@ export class ClaudeCodeConnector extends BaseCliConnector {
       model,
       inputTokens,
       outputTokens,
+      cachedInputTokens,
       costUsd,
       isError: false,
     };
