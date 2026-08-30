@@ -394,6 +394,56 @@ describe('OrqConnector', () => {
     });
   });
 
+  // --- Pricing (CONN-0271) ---
+
+  describe('provider pricing', () => {
+    // orq quotes USD per 1K tokens. gpt-4o's public list price is $2.50 per 1M
+    // input tokens and the API reports 0.0025; gpt-4o-mini's is $0.15 per 1M and
+    // the API reports 0.00015. Pinning the resulting per-MTok numbers is what
+    // catches a wrong scale factor — a "pricing is not null" assertion would pass
+    // just as happily at 1000x, and a 1000x overcharge bills real money.
+    it('converts per-1K provider prices to per-MTok at the right scale', async () => {
+      mockOk(modelsFixture);
+      await connector.refreshModels();
+      const metas = connector.getCapabilities().modelMeta ?? [];
+
+      const gpt4o = metas.find((m) => m.id === 'gpt-4o');
+      expect(gpt4o?.pricing).toEqual({
+        inputPerMTok: 2.5,
+        outputPerMTok: 10,
+        unit: 'per_1m_tokens',
+      });
+
+      // Second anchor from the same fixture: grok-3 reports 0.003 / 0.015 per 1K,
+      // i.e. $3.00 / $15.00 per 1M. Two models pin the scale; one round number
+      // could match at the wrong scale by luck.
+      const grok = metas.find((m) => m.id === 'grok-3');
+      expect(grok?.pricing).toEqual({
+        inputPerMTok: 3,
+        outputPerMTok: 15,
+        unit: 'per_1m_tokens',
+      });
+    });
+
+    it('emits pricing:null rather than half a price when a side is missing', async () => {
+      mockOk([
+        { model_id: 'half-priced', model_type: 'chat', is_active: true, input_cost: 0.001 },
+        { model_id: 'unpriced', model_type: 'chat', is_active: true },
+      ]);
+      await connector.refreshModels();
+      const metas = connector.getCapabilities().modelMeta ?? [];
+      expect(metas.find((m) => m.id === 'half-priced')?.pricing).toBeNull();
+      expect(metas.find((m) => m.id === 'unpriced')?.pricing).toBeNull();
+    });
+
+    it('keeps models and modelMeta in step so the catalog cannot drift', async () => {
+      mockOk(modelsFixture);
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect((caps.modelMeta ?? []).map((m) => m.id)).toEqual(caps.models);
+    });
+  });
+
   // --- Timeout config ---
 
   describe('configuration', () => {

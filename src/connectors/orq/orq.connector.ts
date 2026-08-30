@@ -8,6 +8,7 @@ import {
   CatalogRefreshResult,
   ConnectorCapabilities,
   ConnectorRequest,
+  ProviderModelMeta,
 } from '../interfaces/connector.interface';
 
 interface OrqChatResponse {
@@ -27,11 +28,32 @@ interface OrqChatResponse {
   };
 }
 
-// /v2/models array entry — partial; only the fields we filter on.
+// /v2/models array entry — partial; the fields we filter on plus the pricing
+// and context the provider publishes for every entry (CONN-0271).
 interface OrqModelEntry {
   model_id: string;
   model_type: string; // 'chat' | 'image' | 'embedding' | 'rerank' | 'tts' | 'stt' | ...
   is_active: boolean;
+  // USD per 1K tokens (NOT per token — see ORQ_PRICE_PER_1K_TO_PER_MTOK).
+  input_cost?: number | null;
+  output_cost?: number | null;
+  metadata?: {
+    context_window?: number | null;
+    max_output_tokens?: number | null;
+  } | null;
+}
+
+// orq quotes prices per 1K tokens. Verified against two models whose list price
+// is public: gpt-4o reports 0.0025 (list $2.50/1M) and gpt-4o-mini reports
+// 0.00015 (list $0.15/1M). Multiplying by 1e3 yields per-1M-token USD, which is
+// the unit `model_catalog.inputPerMTok` stores. Do NOT route these through
+// normalizePerMTokPrice(): that helper assumes a per-TOKEN quote and scales by
+// 1e6, which would overstate every orq model by exactly 1000x.
+const ORQ_PRICE_PER_1K_TO_PER_MTOK = 1_000;
+
+function orqPricePerMTok(raw: unknown): number | null {
+  if (typeof raw !== 'number' || !Number.isFinite(raw) || raw < 0) return null;
+  return Number((raw * ORQ_PRICE_PER_1K_TO_PER_MTOK).toFixed(6));
 }
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
@@ -45,6 +67,9 @@ export class OrqConnector extends BaseApiConnector {
   private readonly logger = new Logger(OrqConnector.name);
   // Starts as seed; replaced by refreshModels() on module init.
   private _dynamicModels: string[] = [...STATIC_SEED_MODELS];
+  // CONN-0271 — per-model metadata (pricing/context) from the same refresh, so
+  // `models` and `modelMeta` cannot drift apart.
+  private _dynamicMetas: ProviderModelMeta[] = [];
 
   protected getBaseUrl(): string {
     return 'https://api.orq.ai/v2';
@@ -169,6 +194,7 @@ export class OrqConnector extends BaseApiConnector {
     }
 
     const ids: string[] = [];
+    const metas: ProviderModelMeta[] = [];
     // CONN-0270 — dedupe by model_id. orq's /models can list the same model_id
     // more than once; a single duplicate makes the downstream snapshot
     // validation (CatalogSnapshotValidationError) reject the ENTIRE orq
@@ -185,6 +211,22 @@ export class OrqConnector extends BaseApiConnector {
         }
         seen.add(entry.model_id);
         ids.push(entry.model_id);
+        // CONN-0271 — the provider publishes a machine price for every entry.
+        // Emitting it is what moves an orq request from costSource='unpriced'
+        // (revenue we never computed) to 'catalog'. A model missing either half
+        // emits pricing:null rather than a half-price we would silently bill on.
+        const inputPerMTok = orqPricePerMTok(entry.input_cost);
+        const outputPerMTok = orqPricePerMTok(entry.output_cost);
+        metas.push({
+          id: entry.model_id,
+          modality: 'chat',
+          pricing:
+            inputPerMTok !== null && outputPerMTok !== null
+              ? { inputPerMTok, outputPerMTok, unit: 'per_1m_tokens' }
+              : null,
+          contextWindow: entry.metadata?.context_window ?? null,
+          maxOutputTokens: entry.metadata?.max_output_tokens ?? null,
+        });
       }
     }
     if (duplicates > 0) {
@@ -197,8 +239,12 @@ export class OrqConnector extends BaseApiConnector {
     }
 
     this._dynamicModels = ids;
+    this._dynamicMetas = metas;
+    const priced = metas.filter((m) => m.pricing !== null).length;
     const observedAt = new Date();
-    this.logger.log(`orq model refresh: ${ids.length} chat models discovered`);
+    this.logger.log(
+      `orq model refresh: ${ids.length} chat models discovered (${priced} with provider pricing)`,
+    );
     return { status: 'success', source: 'provider-api', observedAt };
   }
 
@@ -209,6 +255,7 @@ export class OrqConnector extends BaseApiConnector {
       // Seed at boot (~3 models); replaced by ~421 after refreshModels().
       models: this._dynamicModels,
       // No freeModels — orq is a paid gateway with no per-call free tier.
+      modelMeta: this._dynamicMetas.length > 0 ? this._dynamicMetas : undefined,
       supportsStreaming: false,
       supportsJsonSchema: true,
       supportsTools: true,
