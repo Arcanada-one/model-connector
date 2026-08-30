@@ -219,12 +219,37 @@ describe('measureCostUsd', () => {
       // 1000 * 0.59/1e6 = 0.00059 input; 500 * 0.79/1e6 = 0.000395 output.
       expect(measured.inputCostUsd).toBeCloseTo(0.00059, 9);
       expect(measured.outputCostUsd).toBeCloseTo(0.000395, 9);
-      // The invariant that makes the split trustworthy: it must reconcile to
-      // the number actually charged, or the breakdown is decorative.
-      expect((measured.inputCostUsd ?? 0) + (measured.outputCostUsd ?? 0)).toBeCloseTo(
-        measured.costUsd,
-        9,
-      );
+      // The invariant that makes the split trustworthy: it reconciles to the
+      // number actually charged, to within the 1e-6 the storage precision
+      // allows (see the rounding test below). Without this the breakdown is
+      // decorative.
+      const halves = (measured.inputCostUsd ?? 0) + (measured.outputCostUsd ?? 0);
+      expect(Math.abs(measured.costUsd - halves)).toBeLessThanOrEqual(0.000001);
+    });
+
+    it('keeps each half correctly rounded even when they sum 1e-6 off the total', () => {
+      // A real production row (deepseek-v4-flash at 0.14/0.28 per 1M):
+      // 938 in -> 0.00013132 and 255 out -> 0.0000714 both round DOWN, while
+      // the exact total 0.00020272 rounds UP. The halves therefore sum to
+      // 0.000202 against a charge of 0.000203.
+      //
+      // This pins that as intended. The alternative — nudging a half so the
+      // columns add up — would store a number that is not the price of those
+      // tokens, i.e. falsify a measurement to satisfy an identity.
+      const measured = measureCostUsd({
+        inputTokens: 938,
+        outputTokens: 255,
+        pricing: { inputPerMTok: 0.14, outputPerMTok: 0.28, tier: 'paid' },
+      });
+
+      expect(measured.costUsd).toBeCloseTo(0.000203, 9);
+      expect(measured.inputCostUsd).toBeCloseTo(0.000131, 9);
+      expect(measured.outputCostUsd).toBeCloseTo(0.000071, 9);
+
+      // The charge is computed from the UNROUNDED halves, so it never inherits
+      // the split's rounding error.
+      const halves = (measured.inputCostUsd ?? 0) + (measured.outputCostUsd ?? 0);
+      expect(Math.abs(measured.costUsd - halves)).toBeLessThanOrEqual(0.000001);
     });
 
     it('does not put the whole bill on one side', () => {

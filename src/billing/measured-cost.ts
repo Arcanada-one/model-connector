@@ -199,8 +199,19 @@ export function measureCostUsd(input: {
       (uncachedInputTokens * (inputPerMTok ?? 0) + cachedInputTokens * (cachedRate ?? 0)) /
       TOKENS_PER_PRICE_UNIT;
     const outputCost = (outputTokens * (outputPerMTok ?? 0)) / TOKENS_PER_PRICE_UNIT;
-    // Rounded once, on the total, so the halves cannot sum to a different
-    // number than the figure actually charged.
+    // The TOTAL is computed from the unrounded halves, so the charge never
+    // inherits a rounding error from the split.
+    //
+    // The two halves are each rounded to the six decimals their column stores,
+    // which means they can sum to 1e-6 LESS (or more) than `costUsd` when the
+    // total rounds one way and both halves round the other. Observed in prod:
+    // 0.00013132 -> 0.000131 and 0.0000714 -> 0.000071 (both down) against a
+    // total 0.00020272 -> 0.000203 (up).
+    //
+    // That is accepted, not a defect to paper over. Forcing the halves to add
+    // up would require storing a half that is not the correctly-rounded price
+    // of its own tokens — falsifying a measurement to satisfy an arithmetic
+    // identity. Reconciliation queries must therefore allow a 1e-6 tolerance.
     return {
       costUsd: roundToStorage(inputCost + outputCost),
       source: 'catalog',
