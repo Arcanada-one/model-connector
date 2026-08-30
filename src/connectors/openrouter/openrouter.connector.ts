@@ -24,6 +24,16 @@ interface OpenRouterResponse {
     completion_tokens: number;
     total_tokens: number;
     total_cost?: number;
+    // CONN-0274 — the OpenAI-compatible usage detail blocks, carried for the
+    // same reason as orq (CONN-0273): both are SUBSETS of the totals above, and
+    // dropping them leaves `Request.cachedInputTokens` / `reasoningOutputTokens`
+    // NULL on every openrouter row.
+    prompt_tokens_details?: {
+      cached_tokens?: number | null;
+    } | null;
+    completion_tokens_details?: {
+      reasoning_tokens?: number | null;
+    } | null;
   };
 }
 
@@ -240,6 +250,11 @@ export class OpenRouterConnector extends BaseApiConnector {
       model: json.model || request.model || DEFAULT_MODEL,
       inputTokens: json.usage?.prompt_tokens ?? 0,
       outputTokens: json.usage?.completion_tokens ?? 0,
+      // CONN-0274 — `undefined` when the provider omits the block, which stays
+      // distinct from a reported 0 all the way to the column. An absent block
+      // therefore leaves the row exactly as it is today: this cannot regress.
+      cachedInputTokens: json.usage?.prompt_tokens_details?.cached_tokens ?? undefined,
+      reasoningOutputTokens: json.usage?.completion_tokens_details?.reasoning_tokens ?? undefined,
       costUsd: json.usage?.total_cost ?? 0,
       isError: false,
     };

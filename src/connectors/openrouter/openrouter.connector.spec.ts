@@ -71,6 +71,68 @@ describe('OpenRouterConnector', () => {
     });
   }
 
+  // --- Usage detail (CONN-0274) ---
+
+  describe('cache and reasoning counts', () => {
+    it('carries cached prompt tokens and reasoning output tokens', async () => {
+      mockOk({
+        ...chatResponse,
+        usage: {
+          prompt_tokens: 900,
+          completion_tokens: 100,
+          total_tokens: 1000,
+          prompt_tokens_details: { cached_tokens: 750 },
+          completion_tokens_details: { reasoning_tokens: 80 },
+        },
+      });
+
+      const res = await connector.execute({ prompt: 'hello' });
+
+      expect(res.usage.cachedInputTokens).toBe(750);
+      expect(res.usage.reasoningOutputTokens).toBe(80);
+      // Subsets of the totals, never additions — otherwise the prompt would be
+      // counted twice.
+      expect(res.usage.cachedInputTokens as number).toBeLessThanOrEqual(res.usage.inputTokens);
+      expect(res.usage.reasoningOutputTokens as number).toBeLessThanOrEqual(res.usage.outputTokens);
+    });
+
+    it('keeps a reported zero distinct from an unreported count', async () => {
+      mockOk({
+        ...chatResponse,
+        usage: {
+          prompt_tokens: 10,
+          completion_tokens: 8,
+          total_tokens: 18,
+          prompt_tokens_details: { cached_tokens: 0 },
+          completion_tokens_details: { reasoning_tokens: 4 },
+        },
+      });
+
+      const res = await connector.execute({ prompt: 'hello' });
+
+      // 0 means the cache did not fire; collapsing it to undefined would make a
+      // measured miss indistinguishable from a silent provider.
+      expect(res.usage.cachedInputTokens).toBe(0);
+      expect(res.usage.reasoningOutputTokens).toBe(4);
+    });
+
+    it('leaves the counts undefined when the provider omits the blocks', async () => {
+      // This is the safety property. The live shape could not be confirmed from
+      // here (no OPENROUTER_API_KEY in the container — callers supply a
+      // per-request override), so the change has to be correct whether or not
+      // the blocks arrive. Absent block -> undefined -> the column keeps the
+      // exact value it holds today.
+      mockOk(chatResponse);
+
+      const res = await connector.execute({ prompt: 'hello' });
+
+      expect(res.usage.cachedInputTokens).toBeUndefined();
+      expect(res.usage.reasoningOutputTokens).toBeUndefined();
+      expect(res.usage.inputTokens).toBe(10);
+      expect(res.usage.outputTokens).toBe(8);
+    });
+  });
+
   // --- URL building ---
 
   describe('buildRequestUrl', () => {
