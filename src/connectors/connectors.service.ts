@@ -1085,7 +1085,13 @@ export class ConnectorsService {
     const metered = await this.meterCost(connectorName, unmetered);
     const response: ConnectorResponse = {
       ...unmetered,
-      usage: { ...unmetered.usage, costUsd: metered.costUsd },
+      usage: {
+        ...unmetered.usage,
+        costUsd: metered.costUsd,
+        // CONN-0272 — the halves the meter computed on the way to the total.
+        inputCostUsd: metered.inputCostUsd,
+        outputCostUsd: metered.outputCostUsd,
+      },
     };
 
     // Metrics recording (per-model)
@@ -1211,6 +1217,10 @@ export class ConnectorsService {
       providerCostUsd: response.usage.costUsd,
       inputTokens: response.usage.inputTokens,
       outputTokens: response.usage.outputTokens,
+      // CONN-0272 — cached input bills at the cache rate when the catalogue
+      // carries one, so the meter has to see it rather than charge every
+      // prompt token at full price.
+      cachedInputTokens: response.usage.cachedInputTokens,
       pricing,
     });
 
@@ -1326,6 +1336,13 @@ export class ConnectorsService {
             outputTokens: response.usage.outputTokens,
             totalTokens: response.usage.totalTokens,
             costUsd: response.usage.costUsd,
+            // CONN-0272 — the breakdown behind `costUsd`. All nullable: NULL
+            // means "not reported / not computed", which is a different fact
+            // from 0 and must not be written as one.
+            cachedInputTokens: response.usage.cachedInputTokens ?? null,
+            reasoningOutputTokens: response.usage.reasoningOutputTokens ?? null,
+            inputCostUsd: response.usage.inputCostUsd ?? null,
+            outputCostUsd: response.usage.outputCostUsd ?? null,
             latencyMs: response.latencyMs,
             status: response.status,
             errorType: response.error?.type,

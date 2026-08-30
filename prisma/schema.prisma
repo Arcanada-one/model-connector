@@ -26,6 +26,31 @@ model Request {
   // know their provenance, and back-filling them with a guess would invent
   // evidence. NULL means "predates the meter".
   costSource   String?
+
+  // CONN-0272 — the breakdown behind `costUsd`.
+  //
+  // `costUsd` alone cannot answer the two questions that decide where the money
+  // goes: how much of the bill is prompt rather than completion, and whether
+  // prompt caching is doing anything. Both numbers were already being computed
+  // or received and then discarded — the meter added its two halves together
+  // and dropped them, and two connectors parsed the provider's cache counts
+  // into a blob nothing reads.
+  //
+  // All four are nullable ON PURPOSE, and NULL is not 0:
+  //   NULL = never reported (provider silent) or never computed (unpriced, or
+  //          a provider invoice that arrives as a single number).
+  //   0    = measured, and it was zero — e.g. a cache that did not fire.
+  // Collapsing those would make "caching is off" indistinguishable from "we
+  // have no idea", which is the same mistake `costSource` exists to prevent.
+  /// Input tokens served from the provider's cache. A SUBSET of `inputTokens`.
+  cachedInputTokens     Int?
+  /// Output tokens spent on reasoning. A SUBSET of `outputTokens`.
+  reasoningOutputTokens Int?
+  /// `costUsd` attributable to input, and to output. Sum to `costUsd` when both
+  /// are present; NULL together when the provider billed one opaque number.
+  inputCostUsd          Decimal? @db.Decimal(10, 6)
+  outputCostUsd         Decimal? @db.Decimal(10, 6)
+
   latencyMs    Int
   status       String // 'success', 'error', 'timeout', 'rate_limited'
   errorType    String?

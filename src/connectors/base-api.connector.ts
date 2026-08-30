@@ -31,6 +31,13 @@ export interface ParsedApiOutput {
    * that would be a second pricing source, drifting from the first.
    */
   costUsd: number;
+  /**
+   * Cache and reasoning counts, when the provider reports them (CONN-0272).
+   * Both are SUBSETS of the corresponding total, matching how providers report
+   * them. Undefined means the provider said nothing; 0 means it reported none.
+   */
+  cachedInputTokens?: number;
+  reasoningOutputTokens?: number;
   isError: boolean;
   errorMessage?: string;
 }
@@ -436,6 +443,11 @@ export abstract class BaseApiConnector implements IConnector {
           outputTokens: parsed.outputTokens,
           totalTokens: parsed.inputTokens + parsed.outputTokens,
           costUsd: parsed.costUsd,
+          // CONN-0272 — forwarded only when the provider reported them.
+          // `undefined` (provider is silent) and `0` (provider reported a miss)
+          // are different facts and are kept different all the way to the row.
+          cachedInputTokens: parsed.cachedInputTokens,
+          reasoningOutputTokens: parsed.reasoningOutputTokens,
         },
         latencyMs: Date.now() - start,
         queueWaitMs,
