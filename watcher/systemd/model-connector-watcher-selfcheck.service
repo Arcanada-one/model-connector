@@ -1,0 +1,7 @@
+[Unit]
+Description=CONN-0230 watcher health self-check (regression alert to Ops Bot)
+After=network-online.target
+[Service]
+Type=oneshot
+User=root
+ExecStart=/opt/model-connector-watcher/tools/health-selfcheck.sh

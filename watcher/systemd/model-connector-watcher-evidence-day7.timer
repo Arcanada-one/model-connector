@@ -1,0 +1,10 @@
+[Unit]
+Description=CONN-0230 day-7 shadow evidence timer (one-shot, 2026-06-29)
+
+[Timer]
+OnCalendar=2026-06-29 09:00:00
+Persistent=true
+RemainAfterElapse=no
+
+[Install]
+WantedBy=timers.target

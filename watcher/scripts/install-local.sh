@@ -57,5 +57,21 @@ if ! ( cd "$release_dir" && node -e "require('pino');require('zod');require('yam
   exit 4
 fi
 
+# CONN-0230 timers (self-check, day-7 evidence) execute scripts from
+# /opt/model-connector-watcher/tools/. Those four files were placed by hand when
+# the watcher was rolled out, so none of them lived in a repository and the
+# running copy could not be diffed against a reviewed source -- which is how a
+# health check kept a never-clearing alarm for two months without anyone being
+# able to read it. Install them from the tree instead.
+tools_src="$(cd "$(dirname "${BASH_SOURCE[0]}")/../deploy" && pwd)"
+install -d -m 0755 /opt/model-connector-watcher/tools
+for t in health-selfcheck.sh evidence-day7-check.sh evidence-analyzer.js; do
+  if [[ ! -f "$tools_src/$t" ]]; then
+    echo "missing $tools_src/$t — the tools the timers execute are part of the tree, not the host" >&2
+    exit 5
+  fi
+  install -m 0755 -- "$tools_src/$t" "/opt/model-connector-watcher/tools/$t"
+done
+
 echo "Installed self-contained release at $release_dir (current -> $release_dir)."
 echo "Service enable/start and token provisioning remain operator-gated."

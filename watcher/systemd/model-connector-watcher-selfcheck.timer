@@ -1,0 +1,8 @@
+[Unit]
+Description=CONN-0230 watcher health self-check timer (every 6h)
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=6h
+Persistent=true
+[Install]
+WantedBy=timers.target

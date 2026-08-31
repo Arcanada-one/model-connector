@@ -37,8 +37,10 @@ curl -sf https://connector.arcanada.ai/health/ready | jq .status
 ```bash
 ssh dev@65.109.56.79
 cd "/home/dev/arcanada/Projects/Model Connector/code/watcher"
-git branch
-# Confirm: feat/conn-0227-watcher
+git branch --show-current
+# Confirm: main. The watcher landed on main in d2d131c (PR #66); the original
+# feat/conn-0227-watcher branch was merged and deleted, so an instruction to
+# confirm it can no longer be followed.
 
 pnpm build
 ls -la dist/src/main.js dist/src/deadman-cli.js

@@ -1,0 +1,8 @@
+[Unit]
+Description=CONN-0230 day-7 shadow evidence analysis + Ops Bot report
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/opt/model-connector-watcher/tools/evidence-day7-check.sh
