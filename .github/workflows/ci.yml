@@ -31,6 +31,27 @@ jobs:
           bash -n deploy/arcanada-compose-broker.sh
           bash -n deploy/arcanada-compose-broker.test.sh
           bash deploy/arcanada-compose-broker.test.sh
+      # INFRA-0462 — watcher/test/*.bats existed from the day the watcher landed
+      # and no step ever ran them. Specs nothing invokes are the same shape as
+      # the defect this PR fixes: a check that cannot fail. shellcheck runs over
+      # the deploy scripts here for the same reason -- they are shipped code that
+      # runs as root on a timer, and nothing was reading them.
+      #
+      # Both tools are present system-wide on the ci-general pool (verified in a
+      # non-login shell as each runner user, which is how a step actually sees
+      # PATH). A missing tool fails the step loudly rather than skipping: a
+      # fail-soft skip here would hide exactly the class of defect below.
+      - name: Watcher deploy scripts and specs
+        run: |
+          command -v shellcheck >/dev/null || { echo "shellcheck missing on this runner"; exit 1; }
+          command -v bats >/dev/null || { echo "bats missing on this runner"; exit 1; }
+          shellcheck -S warning watcher/deploy/*.sh watcher/scripts/*.sh
+          # Named, not `bats watcher/test/`: classification.bats needs a built
+          # watcher/dist that no CI step produces, so sweeping the directory
+          # would wire in a step that is red on arrival -- and a step that is
+          # always red is a step everybody learns to skip. Tracked as its own
+          # task (INFRA-0471) rather than silenced with a skip here.
+          bats watcher/test/health-selfcheck.bats
 
       - uses: pnpm/action-setup@v6
 
