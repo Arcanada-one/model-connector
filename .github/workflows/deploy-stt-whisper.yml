@@ -39,7 +39,7 @@ jobs:
       # Tier 2 baseline; runner on the same host reaches it via Tailscale IP.
       WHISPER_HEALTH_URL: http://100.121.155.54:8400/health
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # INFRA-0121 mandate: pre-deploy preflight against target host (arcana-prod).
       # SHA-bridge per CLAUDE.md § 8 — INFRA-0122 PR #8 head until merge tag v1.x.y lands.
