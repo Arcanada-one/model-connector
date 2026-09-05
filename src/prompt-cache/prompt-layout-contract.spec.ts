@@ -12,6 +12,7 @@ import {
   loadVendoredPromptLayoutContract,
   resolveContractModel,
 } from './prompt-layout-contract';
+import { PROMPT_LAYOUT_V1_TEXT } from './contract/prompt-layout.v1.embedded';
 
 const bytes = readFileSync(PROMPT_LAYOUT_CONTRACT_PATH);
 const good = JSON.parse(bytes.toString('utf8')) as Record<string, unknown>;
@@ -30,6 +31,11 @@ describe('prompt-layout contract loader (AUP-CACHE-006)', () => {
     const contract = loadVendoredPromptLayoutContract();
     expect(contract.digest).toBe(`sha256:${PROMPT_LAYOUT_CONTRACT_SHA256}`);
     expect(createHash('sha256').update(bytes).digest('hex')).toBe(PROMPT_LAYOUT_CONTRACT_SHA256);
+    // The embedded (runtime) text is byte-identical to the reviewable .json copy.
+    expect(PROMPT_LAYOUT_V1_TEXT).toBe(bytes.toString('utf8'));
+    expect(loadPromptLayoutContract(Buffer.from(PROMPT_LAYOUT_V1_TEXT, 'utf8')).digest).toBe(
+      contract.digest,
+    );
     expect(contract.schema).toBe('PromptLayoutContract/v1');
     expect(contract.id).toBe('prompt-layout.v1');
     expect(Object.keys(contract.models)).toHaveLength(6);

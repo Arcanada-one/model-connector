@@ -17,8 +17,8 @@
 // updates the digest in the same commit, and the receipt records both.
 
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { PROMPT_LAYOUT_V1_TEXT } from './contract/prompt-layout.v1.embedded';
 
 /** The schema this loader is written against. A different schema is refused. */
 export const PROMPT_LAYOUT_CONTRACT_SCHEMA = 'PromptLayoutContract/v1';
@@ -26,6 +26,7 @@ export const PROMPT_LAYOUT_CONTRACT_ID = 'prompt-layout.v1';
 /** sha256 of the vendored bytes (= the program's contract file at import time). */
 export const PROMPT_LAYOUT_CONTRACT_SHA256 =
   '678dfa2e9e6c0493a51b432a6be09edabc06fa15e4f423c518f1c1e629c6e06a';
+/** The reviewable .json copy (source tree); the runtime reads the embedded text, the spec proves both are byte-identical. */
 export const PROMPT_LAYOUT_CONTRACT_PATH = join(__dirname, 'contract', 'prompt-layout.v1.json');
 
 export type ContractSeverity = 'error' | 'refusal' | 'warning' | 'undetermined';
@@ -272,9 +273,15 @@ export function loadPromptLayoutContract(
 
 let vendored: PromptLayoutContract | undefined;
 
-/** The vendored contract, read once from disk and validated against the pinned digest. */
+/**
+ * The vendored contract, validated once against the pinned digest. The bytes
+ * come from the generated embedded module (byte-identical to the .json file,
+ * asserted in the spec) so the loader does not depend on where the build
+ * writes assets — the Docker image lays dist out as dist/src/, the local build
+ * as dist/, and an asset copied relative to one of them is missing in the other.
+ */
 export function loadVendoredPromptLayoutContract(): PromptLayoutContract {
-  if (!vendored) vendored = loadPromptLayoutContract(readFileSync(PROMPT_LAYOUT_CONTRACT_PATH));
+  if (!vendored) vendored = loadPromptLayoutContract(Buffer.from(PROMPT_LAYOUT_V1_TEXT, 'utf8'));
   return vendored;
 }
 
