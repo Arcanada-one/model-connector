@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Prompt-cache policy at the gateway (AUP-CACHE-006 `enforce0`)** — Model Connector
+  evaluates every cache-claiming Anthropic request against the Arcanada Prompt Layout
+  Contract v1, carried as a vendored, digest-pinned copy whose loader refuses a malformed
+  copy at boot. `PROMPT_CACHE_POLICY_MODE` = `off` | `observe` (default: mark + typed
+  event, refuse nothing) | `enforce` (a contract violation is a typed `policy_violation`,
+  never a silent rewrite); switchable at runtime with a reversible
+  `PolicyModeSwitchReceipt/v1` (`POST /admin/prompt-cache/policy/mode`). Rules: tool /
+  system / model / L3 change inside a session without an explicit `session_epoch`, secret
+  or tenant markers before the last breakpoint, a prefix below the model minimum when
+  caching is claimed, tenant-scoped cache identity (cross-tenant prefix, foreign session
+  id), append-only history. New: raw Messages API passthrough (`extra.messages_api`,
+  allow-listed keys, unknown keys refused) — the first way to place a `cache_control`
+  breakpoint through CONN — and `POST /v1/prompt-cache/prewarm` (`max_tokens: 0` through
+  the same choke point). Decisions ride on the response (`promptCachePolicy`) only for
+  cache-claiming requests; legacy responses are byte-identical. See
+  `docs/reference/prompt-cache-policy.md`.
+
 ### Fixed
 
 - **The ledger now survives real money (ARAS-0058)** — six findings on the billing path,

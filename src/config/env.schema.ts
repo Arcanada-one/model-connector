@@ -38,6 +38,12 @@ export const envSchema = z
     // runtime guard already short-circuits non-openrouter connectors.
     MC_MULTI_MODAL_ENABLED: envBool.default(true),
 
+    // AUP-CACHE-006 — prompt-cache policy mode at boot: `off` (evaluator never
+    // runs), `observe` (evaluate + mark + emit, refuse nothing — the default),
+    // `enforce` (refuse contract violations). Switchable at runtime with a
+    // receipt via POST /admin/prompt-cache/policy/mode.
+    PROMPT_CACHE_POLICY_MODE: z.enum(['off', 'observe', 'enforce']).default('observe'),
+
     // ARAS-0064 billing. Ships DARK: the ledger records spend from the moment
     // this lands, but nothing is REFUSED until an operator turns enforcement
     // on. Switching a live connector to hard-fail on balance in the same

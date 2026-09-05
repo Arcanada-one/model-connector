@@ -1,9 +1,20 @@
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
 import {
   ConnectorCapabilities,
   ConnectorRequest,
+  ConnectorResponse,
   ContentBlock,
+  classifyErrorAction,
 } from '../interfaces/connector.interface';
+import {
+  MessagesApiValidationError,
+  readMessagesApi,
+  readPromptCacheFields,
+} from '../../prompt-cache/messages-api';
+import { getPromptCacheTenant } from '../../prompt-cache/prompt-cache.context';
+import { PromptCachePolicyService } from '../../prompt-cache/prompt-cache-policy.service';
 
 interface AnthropicTextBlock {
   type: 'text';
@@ -28,8 +39,20 @@ const DEFAULT_MODEL = 'claude-sonnet-4-5';
 const DEFAULT_MAX_TOKENS = 4096;
 const STATIC_MODELS = ['claude-opus-4-1', 'claude-sonnet-4-5', 'claude-haiku-4-5'];
 
+@Injectable()
 export class AnthropicConnector extends BaseApiConnector {
   readonly name = 'anthropic';
+
+  // AUP-CACHE-006 — the prompt-cache policy is optional so manual spec
+  // constructions (`new AnthropicConnector()`) keep working unchanged; under
+  // Nest DI the PromptCacheModule provides it.
+  constructor(
+    @Optional()
+    @Inject(PromptCachePolicyService)
+    private readonly promptCachePolicy?: PromptCachePolicyService,
+  ) {
+    super();
+  }
 
   protected getBaseUrl(): string {
     return process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com/v1';
@@ -73,6 +96,19 @@ export class AnthropicConnector extends BaseApiConnector {
   }
 
   protected buildRequestBody(request: ConnectorRequest): unknown {
+    // AUP-CACHE-006 — raw Messages API passthrough (`extra.messages_api`):
+    // the only way a caller can place cache_control breakpoints through CONN.
+    // Allow-listed keys are copied verbatim; an unknown key is refused
+    // (MessagesApiValidationError → validation_error), never dropped.
+    const messagesApi = readMessagesApi(request.extra);
+    if (messagesApi !== null) {
+      return {
+        model: request.model || DEFAULT_MODEL,
+        max_tokens: (request.extra?.max_tokens as number | undefined) ?? DEFAULT_MAX_TOKENS,
+        ...messagesApi,
+      };
+    }
+
     const content = Array.isArray(request.prompt)
       ? request.prompt.map((block) => this.mapContentBlock(block))
       : String(request.prompt);
@@ -88,6 +124,78 @@ export class AnthropicConnector extends BaseApiConnector {
     if (request.extra?.tools != null) body.tools = request.extra.tools;
     if (request.extra?.tool_choice != null) body.tool_choice = request.extra.tool_choice;
     return body;
+  }
+
+  /**
+   * AUP-CACHE-006 — policy gate in front of the base execute path.
+   *
+   * The body is built exactly as it will be sent and handed to the policy with
+   * the routing context (tenant = the calling API key, from
+   * ConnectorsService.execute(); session identity from `extra.prompt_cache`).
+   * `refuse` returns a typed `policy_violation` error carrying the decision —
+   * non-retryable, so no failover hop repeats it. `mark`/`pass` continue into
+   * the unchanged base path and the decision rides on the response
+   * (`promptCachePolicy`, only for cache-claiming requests: a legacy request
+   * keeps its byte-identical shape). The body is never modified.
+   */
+  async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
+    const policy = this.promptCachePolicy;
+    let body: unknown;
+    let fields;
+    try {
+      fields = readPromptCacheFields(request.extra);
+      body = this.buildRequestBody(request);
+    } catch (err) {
+      if (err instanceof MessagesApiValidationError) {
+        return this.refusal(request, 'validation_error', err.message);
+      }
+      // Any other build error (e.g. a remote image URL) keeps its existing
+      // classification on the base path.
+      return super.execute(request);
+    }
+    if (!policy || !policy.isActive()) return super.execute(request);
+
+    const decision = policy.evaluate(body, {
+      tenantId: getPromptCacheTenant(),
+      sessionId: fields.session_id,
+      sessionEpoch: fields.session_epoch,
+      prefixHashClaimed: fields.prefix_hash,
+    });
+    if (decision === null) return super.execute(request);
+    if (decision.action === 'refuse') {
+      const codes = decision.findings
+        .filter((f) => f.severity === 'error' || f.severity === 'refusal')
+        .map((f) => `${f.code}@${f.layer}`);
+      return this.refusal(
+        request,
+        'policy_violation',
+        `Prompt-cache policy (${decision.contract.id}, enforce) refused the request: ${codes.join(', ')}. ` +
+          'The gateway does not rewrite requests; fix the prefix or advance session_epoch explicitly.',
+        decision,
+      );
+    }
+    const response = await super.execute(request);
+    if (decision.caching_claimed) response.promptCachePolicy = decision;
+    return response;
+  }
+
+  private refusal(
+    request: ConnectorRequest,
+    type: 'validation_error' | 'policy_violation',
+    message: string,
+    details?: unknown,
+  ): ConnectorResponse {
+    return {
+      id: randomUUID(),
+      connector: this.name,
+      model: request.model || 'unknown',
+      result: '',
+      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+      latencyMs: 0,
+      queueWaitMs: 0,
+      status: 'error',
+      error: { type, message, details, ...classifyErrorAction(type) },
+    };
   }
 
   protected parseResponse(json: unknown, request: ConnectorRequest): ParsedApiOutput {

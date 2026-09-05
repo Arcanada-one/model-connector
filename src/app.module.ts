@@ -12,6 +12,8 @@ import { AdminModule } from './admin/admin.module';
 import { SpeechModule } from './speech/speech.module';
 import { StatsModule } from './stats/stats.module';
 import { OpenAiCompatModule } from './openai-compat/openai-compat.module';
+import { PromptCacheModule } from './prompt-cache/prompt-cache.module';
+import { PromptCachePrewarmModule } from './prompt-cache/prompt-cache-prewarm.module';
 import { getConfig } from './config/env.schema';
 
 @Module({
@@ -37,6 +39,9 @@ import { getConfig } from './config/env.schema';
     SpeechModule,
     StatsModule,
     OpenAiCompatModule,
+    // AUP-CACHE-006 — prompt-cache policy (admin surface) + pre-warm endpoint.
+    PromptCacheModule,
+    PromptCachePrewarmModule,
   ],
 })
 export class AppModule {}
