@@ -64,6 +64,7 @@ import {
 } from '../policy/policy.service';
 import type { ApiKeyPolicy } from '../policy/policy.schema';
 import { providerKeyContext } from '../policy/provider-key.context';
+import { promptCacheContext } from '../prompt-cache/prompt-cache.context';
 import {
   finalizeFirstDispatchObservationV0,
   reserveFirstDispatchObservationV0,
@@ -1029,11 +1030,13 @@ export class ConnectorsService {
     };
 
     try {
-      if (providerKeyOverride) {
-        guardReport = await providerKeyContext.run(providerKeyOverride, runAttempts);
-      } else {
-        guardReport = await runAttempts();
-      }
+      // AUP-CACHE-006 — the prompt-cache policy learns the tenant (= the
+      // calling API key) from this routing context, never from the request.
+      const dispatch = () =>
+        providerKeyOverride
+          ? providerKeyContext.run(providerKeyOverride, runAttempts)
+          : runAttempts();
+      guardReport = await promptCacheContext.run({ tenantId: apiKeyId }, dispatch);
 
       let response = lastResponse!;
       if (guardReport) {

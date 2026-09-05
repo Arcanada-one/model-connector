@@ -85,6 +85,12 @@ export interface ConnectorResponse {
   // Null/undefined preserves byte-identity for legacy callers (V-AC-3).
   repair_report?: import('../output-guard/types').OutputGuardReport;
   firstDispatchObservation?: import('../first-dispatch-observation').FirstDispatchObservationV0;
+  // AUP-CACHE-006 — the prompt-cache policy decision for a cache-claiming
+  // request (observe: marked findings ride along; enforce: only a decision
+  // that let the request through gets here — a refusal is `error.details`).
+  // Absent for requests that claim no caching, so legacy responses keep their
+  // byte-identical shape.
+  promptCachePolicy?: import('../../prompt-cache/prompt-cache-policy').PromptCachePolicyDecision;
 }
 
 const ERROR_ACTION_MAP: Record<string, { retryable: boolean; recommendation: ErrorAction }> = {
