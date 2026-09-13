@@ -38,6 +38,16 @@ export interface ParsedApiOutput {
    */
   cachedInputTokens?: number;
   reasoningOutputTokens?: number;
+  /**
+   * AUP-CACHE-003 / DEC-AUP-0028 — prompt-cache write tokens and their TTL
+   * breakdown, the provider `usage` object verbatim, and the third verdict
+   * `usageMissing` (provider returned no usage at all). See
+   * `ConnectorResponse.usage` for the semantics; forwarded untouched.
+   */
+  cacheCreationInputTokens?: number;
+  cacheCreation?: { ephemeral5mInputTokens?: number; ephemeral1hInputTokens?: number };
+  providerUsage?: Record<string, unknown>;
+  usageMissing?: true;
   isError: boolean;
   errorMessage?: string;
 }
@@ -448,6 +458,15 @@ export abstract class BaseApiConnector implements IConnector {
           // are different facts and are kept different all the way to the row.
           cachedInputTokens: parsed.cachedInputTokens,
           reasoningOutputTokens: parsed.reasoningOutputTokens,
+          // AUP-CACHE-003 / DEC-AUP-0028 — cache writes, TTL breakdown, the
+          // verbatim provider usage and the third verdict. Spread only when
+          // present so connectors that do not report them leave no key behind.
+          ...(parsed.cacheCreationInputTokens !== undefined
+            ? { cacheCreationInputTokens: parsed.cacheCreationInputTokens }
+            : {}),
+          ...(parsed.cacheCreation !== undefined ? { cacheCreation: parsed.cacheCreation } : {}),
+          ...(parsed.providerUsage !== undefined ? { providerUsage: parsed.providerUsage } : {}),
+          ...(parsed.usageMissing ? { usageMissing: true as const } : {}),
         },
         latencyMs: Date.now() - start,
         queueWaitMs,

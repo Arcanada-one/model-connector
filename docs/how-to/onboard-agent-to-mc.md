@@ -2,7 +2,7 @@
 
 Operator runbook for putting a new agent or service behind the Model Connector
 so it holds **only** an MC access token — never a provider API key. This is the
-end-to-end procedure; the policy *shape* is documented in the README
+end-to-end procedure; the policy _shape_ is documented in the README
 (§ Per-key access policy), the deploy pipeline in `deploy-runbook.md`.
 
 > Mandate: agents hold only an MC access token; provider keys (OpenRouter,
@@ -20,12 +20,12 @@ end-to-end procedure; the policy *shape* is documented in the README
 
 Pick the narrowest policy that does not break the consumer:
 
-| Consumer kind | Policy |
-|---|---|
-| Agent that only needs free models | `{"policyVersion":1,"models":{"mode":"free-only"}}` — **omit `providers`** so any free route works (OpenRouter *and* the free rungs of other gateways). Adding `"providers":["openrouter"]` restricts it to OpenRouter and will block a model the agent legitimately reaches through another connector. |
-| Agent needing its own OpenRouter key + free-only | add `"providers":["openrouter"]` and `"providerKeys":{"openrouter":"<ENV_VAR_NAME>"}` (see step 3). |
-| Consumer that legitimately needs specific paid models | `"models":{"mode":"list","list":["<exact model ids>"]}` — scope to the models it actually uses, derived from its request history, not `mode:"all"`. |
-| User-facing / billed product (e.g. Verdicus) | Out of scope for free-only. Give an explicit `list` or leave unrestricted **by deliberate decision**, recorded — not by default. |
+| Consumer kind                                         | Policy                                                                                                                                                                                                                                                                                                  |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent that only needs free models                     | `{"policyVersion":1,"models":{"mode":"free-only"}}` — **omit `providers`** so any free route works (OpenRouter _and_ the free rungs of other gateways). Adding `"providers":["openrouter"]` restricts it to OpenRouter and will block a model the agent legitimately reaches through another connector. |
+| Agent needing its own OpenRouter key + free-only      | add `"providers":["openrouter"]` and `"providerKeys":{"openrouter":"<ENV_VAR_NAME>"}` (see step 3).                                                                                                                                                                                                     |
+| Consumer that legitimately needs specific paid models | `"models":{"mode":"list","list":["<exact model ids>"]}` — scope to the models it actually uses, derived from its request history, not `mode:"all"`.                                                                                                                                                     |
+| User-facing / billed product (e.g. Verdicus)          | Out of scope for free-only. Give an explicit `list` or leave unrestricted **by deliberate decision**, recorded — not by default.                                                                                                                                                                        |
 
 **`free-only` reads the tier from the model catalog** (`model_catalog`, real
 tariffs), not the `:free` id suffix. A model whose catalog tier is `paid` or
@@ -91,6 +91,16 @@ MC's process env at boot — never on disk, never in a commit.
      token_ttl=20m token_max_ttl=40m
    ```
 
+**Shared provider slots (DEC-AUP-0028, AUP-CACHE-003).** A connector whose
+key is a single shared env var (today `ANTHROPIC_API_KEY` for `anthropic`) is
+listed in `OPTIONAL_SECRETS` of the same script — path
+`arcanada/shared/tokens/anthropic-model-connector`, field `api_key`. An ABSENT
+optional secret (Vault 404) emits nothing and logs one line naming the env var;
+the connector then fails each request upstream (`status: "error"`), never by
+misrouting. Any other Vault failure on an optional path is fatal exactly like
+`SECRETS`. Sourcing is boot-time: after the secret is written, MC picks it up on
+the next deploy (a merged sha to `main`). The value never appears in `.env`.
+
 At boot the entrypoint runs `vault-provider-keys.mjs`: on partial config or an
 unreadable secret it aborts with **exit 78** (a silently missing per-agent key
 would route the agent through the shared key — forbidden). A missing env var
@@ -140,7 +150,7 @@ that the consumer's token, env, and deploy path are wired.
 
 ## 6. Read-only showcase keys (CONN-1674)
 
-Not every consumer is an *agent that executes*. A **showcase key** backs a
+Not every consumer is an _agent that executes_. A **showcase key** backs a
 PUBLIC read-only surface — the arcanada.ai ecosystem page renders the full model
 catalog by fetching `GET /connectors/catalog` (no `?free=true` — it asks for
 **everything**) with the `arcanada-landing-catalog` key. Such a key never calls
@@ -159,7 +169,7 @@ providers to 33 / 3**, and nothing alarmed — an operator caught it by eye
   env (CSV). `PATCH /admin/keys/:id/policy` then **rejects** (400) any narrowing
   policy on a listed key. This stops the common path (an admin API call).
 - **Runtime alarm.** `getCatalog` warns (`CONN-1674 showcase catalog narrowed:
-  …`) whenever a showcase key's policy still trims more than
+…`) whenever a showcase key's policy still trims more than
   `SHOWCASE_CATALOG_NARROW_ALARM_PCT` (default 0.5) of the visible catalog. This
   is the layer that catches a narrowing applied **out of band** — e.g. a direct
   DB edit, which is how CONN-1669 actually landed and which the write-time guard
@@ -169,13 +179,13 @@ providers to 33 / 3**, and nothing alarmed — an operator caught it by eye
 ### Consumer-key registry (purpose → expected visibility)
 
 Keep this list current when onboarding a consumer, so a future policy change can
-be checked against what each key is *for* before it ships:
+be checked against what each key is _for_ before it ships:
 
-| Key | Purpose | Policy | Expected visibility |
-|---|---|---|---|
-| `arcanada-landing-catalog` | **Read-only showcase** — public ecosystem catalog page (arcanada.ai). Never executes. | unrestricted (`{"policyVersion":1}`), in `SHOWCASE_KEY_IDS` | **Full catalog** (all providers, all tiers). Any narrowing is a defect. |
-| `Email Agent` | Email Agent free-model pool; own OpenRouter key | `providers:["openrouter","groq"]`, `models.mode:"free-only"`, `providerKeys.openrouter` | Free models of openrouter + groq (gemini deliberately excluded) |
-| Verdicus (user-facing) | Billed product | Out of scope for free-only — explicit `list` or deliberately unrestricted, **recorded** | Per its recorded policy |
+| Key                        | Purpose                                                                               | Policy                                                                                  | Expected visibility                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `arcanada-landing-catalog` | **Read-only showcase** — public ecosystem catalog page (arcanada.ai). Never executes. | unrestricted (`{"policyVersion":1}`), in `SHOWCASE_KEY_IDS`                             | **Full catalog** (all providers, all tiers). Any narrowing is a defect. |
+| `Email Agent`              | Email Agent free-model pool; own OpenRouter key                                       | `providers:["openrouter","groq"]`, `models.mode:"free-only"`, `providerKeys.openrouter` | Free models of openrouter + groq (gemini deliberately excluded)         |
+| Verdicus (user-facing)     | Billed product                                                                        | Out of scope for free-only — explicit `list` or deliberately unrestricted, **recorded** | Per its recorded policy                                                 |
 
 When MC adds a free provider and an agent should use it, PATCH that agent's
 policy to add the provider — the catalog read does **not** auto-expand across the

@@ -68,6 +68,29 @@ export interface ConnectorResponse {
      */
     reasoningOutputTokens?: number;
     /**
+     * AUP-CACHE-003 / DEC-AUP-0028 — prompt-cache WRITE tokens, when the
+     * provider reports them (Anthropic `cache_creation_input_tokens`). NOT a
+     * subset of `cachedInputTokens`: a cache write is billed at 1.25× / 2× the
+     * base input rate, a cache read at 0.1× (0.025× on Fable/Mythos 5.1), so
+     * folding writes into reads would misprice both. Included in `inputTokens`
+     * (full input = uncached tail + writes + reads). Undefined = not reported.
+     */
+    cacheCreationInputTokens?: number;
+    /** TTL breakdown of `cacheCreationInputTokens` when the provider reports it. */
+    cacheCreation?: { ephemeral5mInputTokens?: number; ephemeral1hInputTokens?: number };
+    /**
+     * The provider's `usage` object copied VERBATIM (AUP-CACHE-003: "CONN never
+     * fills a missing field"). The typed fields above are a derived view; this
+     * is the record. Present only for connectors that opt in (anthropic).
+     */
+    providerUsage?: Record<string, unknown>;
+    /**
+     * The third verdict: the provider returned no `usage` at all. Set to true
+     * (never to false, never with zeros standing in for the missing counts) so a
+     * reader can distinguish "measured 0" from "not measured".
+     */
+    usageMissing?: true;
+    /**
      * `costUsd` split by what was billed for. Null when the split is unknown —
      * a provider invoice is a single number, and a fabricated split would be
      * indistinguishable from a measured one.
