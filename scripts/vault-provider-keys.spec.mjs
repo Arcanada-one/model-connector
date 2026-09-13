@@ -175,10 +175,37 @@ describe('OPTIONAL_SECRETS (DEC-AUP-0028 R2)', () => {
     expect(emit).toHaveBeenCalledWith("export ANTHROPIC_API_KEY='anthropic-test-value'");
   });
 
-  it('an optional path that fails for any reason but 404 is still fatal (403)', async () => {
+  it('an optional path the AppRole policy does not cover (403) is absent, not fatal', async () => {
+    // Measured 2026-09-13: prod Vault answered 403 for the unprovisioned optional
+    // path and the 404-only rule crash-looped the whole service (exit 78).
     const emit = vi.fn();
+    const warn = vi.fn();
     const fetchImpl = makeFetch({
       reads: [...strictReads, [OPTIONAL_SECRETS[0][0], errResp(403)]],
+    });
+    const n = await sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows, warn });
+    expect(n).toBe(SECRETS.length);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('HTTP 403');
+  });
+
+  it('an optional path that fails for any reason but 403/404 is still fatal (500)', async () => {
+    const emit = vi.fn();
+    const fetchImpl = makeFetch({
+      reads: [...strictReads, [OPTIONAL_SECRETS[0][0], errResp(500)]],
+    });
+    await expect(
+      sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows }),
+    ).rejects.toThrow(/HTTP 500/);
+  });
+
+  it('a strict path returning 403 is still fatal (the optional rule never leaks into SECRETS)', async () => {
+    const emit = vi.fn();
+    const fetchImpl = makeFetch({
+      reads: [
+        [SECRETS[0][0], errResp(403)],
+        [SECRETS[1][0], okResp(keyBody('x'))],
+      ],
     });
     await expect(
       sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows }),

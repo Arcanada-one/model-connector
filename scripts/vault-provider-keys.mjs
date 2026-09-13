@@ -23,9 +23,10 @@ export const SECRETS = [
 ];
 
 // DEC-AUP-0028 R2 (AUP-CACHE-003 / A2-P0-2-PRE): the OPTIONAL tier. A path
-// listed here that Vault reports as ABSENT (HTTP 404) emits nothing and one
-// stderr line naming the env var; every other failure (login, 403, 5xx, a
-// malformed field, a quote in the value) is still fatal exactly like SECRETS.
+// listed here that Vault reports as ABSENT — HTTP 404 (no such path) or HTTP 403
+// (the AppRole policy does not cover the path yet) — emits nothing and one
+// stderr line naming the env var; every other failure (login, 5xx, a malformed
+// field, a quote in the value) is still fatal exactly like SECRETS.
 // Why a second tier: the strict list fails closed because a missing PER-AGENT
 // key would silently route that agent through the shared key (CONN-1665). The
 // entries below ARE the shared slots — their absence surfaces per request as an
@@ -90,9 +91,14 @@ export async function sourceProviderKeys({ env, fetchImpl, emit, fail, warn = ()
         headers: { 'X-Vault-Token': token },
         signal: AbortSignal.timeout(10_000),
       });
-      if (r.status === 404 && optional) {
-        // DEC-AUP-0028 R2 — absent optional secret: emit nothing, say so once.
-        warn(`optional ${envName} absent in Vault (${path} HTTP 404); env var left unset`);
+      if ((r.status === 404 || r.status === 403) && optional) {
+        // DEC-AUP-0028 R2 (amended after the 2026-09-13 deploy of 260c909 crash-looped
+        // prod with exit 78): an optional secret is ABSENT both when the path does not
+        // exist (404) and when the AppRole policy does not cover it (403) — Vault KV v2
+        // answers 403 for any path outside the token's policy, which is exactly the
+        // state before the operator provisions the shared slot. Emit nothing, say so
+        // once. Every other status (login failure, 5xx, malformed field) stays fatal.
+        warn(`optional ${envName} absent in Vault (${path} HTTP ${r.status}); env var left unset`);
         continue;
       }
       if (!r.ok) return fail(`read ${path} HTTP ${r.status}`);
