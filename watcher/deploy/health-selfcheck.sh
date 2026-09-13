@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # CONN-0230 watcher health self-check. Alerts Ops Bot only on regression.
 set -uo pipefail
-ENVFILE=/etc/model-connector-watcher/watcher.env
+# Overridable like SELFCHECK_LOG/SELFCHECK_STATE so a sandboxed run (bats on a
+# runner that also hosts a real watcher install) never sources the host env file.
+ENVFILE="${SELFCHECK_ENVFILE:-/etc/model-connector-watcher/watcher.env}"
 STATE=/var/lib/model-connector-watcher/state.json
 AUDIT=/var/lib/model-connector-watcher/audit.jsonl
 # Overridable only so the specs can observe the verdict without writing under
@@ -93,7 +95,7 @@ if [[ -f "$ENVFILE" ]]; then
   . "$ENVFILE"
   set +a
   curl -s -o /dev/null -w "opsbot=%{http_code}\n" --max-time 12 -X POST https://ops.arcanada.ai/events \
-    -H "authorization: Bearer ${OPSBOT_TOKEN}" -H "content-type: application/json" \
+    -H "authorization: Bearer ${OPSBOT_TOKEN:-}" -H "content-type: application/json" \
     -d "{\"category\":\"warning\",\"agent\":\"model-connector-watcher\",\"title\":\"CONN-0230 watcher health regression\",\"body\":$(printf '%s' "$msg" | python3 -c 'import sys,json;print(json.dumps(sys.stdin.read()))'),\"dedup_key\":\"conn-0230-health-regression\"}" \
     >> "$LOG" 2>&1
 fi
