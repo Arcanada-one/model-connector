@@ -6,6 +6,9 @@ interface ClaudeUsage {
   output_tokens: number;
   cache_creation_input_tokens: number;
   cache_read_input_tokens: number;
+  /** TTL breakdown of `cache_creation_input_tokens` (Claude Code >= 2.1). */
+  cache_creation?: { ephemeral_5m_input_tokens?: number; ephemeral_1h_input_tokens?: number };
+  [extra: string]: unknown;
 }
 
 interface ClaudeModelUsage {
@@ -157,20 +160,45 @@ export class ClaudeCodeConnector extends BaseCliConnector {
       };
     }
 
-    const model = Object.keys(json.modelUsage)[0] || 'claude-code';
-    const inputTokens = json.usage?.input_tokens ?? 0;
-    const outputTokens = json.usage?.output_tokens ?? 0;
+    const model = Object.keys(json.modelUsage ?? {})[0] || 'claude-code';
     const costUsd = json.total_cost_usd ?? 0;
-    // CONN-0272 — `ClaudeUsage` has declared these two since the connector was
-    // written and nothing ever read them. Cache reads are the dominant saving
-    // on a repeated prompt, so dropping them made the saving invisible.
-    //
-    // Only cache READS count here. A cache CREATION is a different event with
-    // its own tariff, and the two are deliberately not summed: `cachedInput`
-    // means "input we did not pay full price for", which a creation is not.
-    // Creation counts are left for a follow-up that prices them explicitly
-    // rather than folded in on an assumption about their rate.
-    const cachedInputTokens = json.usage?.cache_read_input_tokens ?? 0;
+    // AUP-CACHE-003 / DEC-AUP-0028 R3 (A3: the CLI lane) — the CLI's `usage`
+    // is the Anthropic Messages usage object: `input_tokens` is the UNCACHED
+    // tail, not the whole prompt. Reading it as the total made
+    // `cachedInputTokens` (a declared subset of `inputTokens`) larger than
+    // `inputTokens` on every cache hit. Full input = tail + cache writes +
+    // cache reads; reads stay the only thing `cachedInputTokens` means; writes
+    // ride separately because they carry their own tariff (1.25x / 2x, never
+    // the read rate); the raw object is copied verbatim as the record; no
+    // `usage` at all is reported as `usageMissing: true`, never as zeros.
+    const usage = json.usage;
+    const usageMissing = usage === undefined || usage === null;
+    const tail = usage?.input_tokens ?? 0;
+    const read = usage?.cache_read_input_tokens;
+    const write = usage?.cache_creation_input_tokens;
+    const inputTokens = usageMissing ? 0 : tail + (write ?? 0) + (read ?? 0);
+    const outputTokens = usage?.output_tokens ?? 0;
+    const cachedInputTokens = usageMissing ? undefined : (read ?? 0);
+    const ttl = usage?.cache_creation;
+    const cacheCreation =
+      ttl &&
+      (ttl.ephemeral_5m_input_tokens !== undefined || ttl.ephemeral_1h_input_tokens !== undefined)
+        ? {
+            ...(ttl.ephemeral_5m_input_tokens !== undefined
+              ? { ephemeral5mInputTokens: ttl.ephemeral_5m_input_tokens }
+              : {}),
+            ...(ttl.ephemeral_1h_input_tokens !== undefined
+              ? { ephemeral1hInputTokens: ttl.ephemeral_1h_input_tokens }
+              : {}),
+          }
+        : undefined;
+    const passthrough = usageMissing
+      ? { usageMissing: true as const }
+      : {
+          ...(write !== undefined ? { cacheCreationInputTokens: write } : {}),
+          ...(cacheCreation !== undefined ? { cacheCreation } : {}),
+          providerUsage: { ...usage } as Record<string, unknown>,
+        };
 
     const meta: Record<string, unknown> = {
       sessionId: json.session_id,
@@ -190,6 +218,8 @@ export class ClaudeCodeConnector extends BaseCliConnector {
         model,
         inputTokens,
         outputTokens,
+        cachedInputTokens,
+        ...passthrough,
         costUsd,
         isError: true,
         errorType: ERROR_SUBTYPE_MAP[errorJson.subtype] || 'execution_error',
@@ -209,6 +239,7 @@ export class ClaudeCodeConnector extends BaseCliConnector {
       inputTokens,
       outputTokens,
       cachedInputTokens,
+      ...passthrough,
       costUsd,
       isError: false,
     };
@@ -241,6 +272,12 @@ export class ClaudeCodeConnector extends BaseCliConnector {
       name: 'claude-code',
       type: 'cli',
       models: [
+        // Claude 5 line — measured answering through `claude -p` on 2026-09-13
+        // (A2-P0-2-RES); the 4.x ids stay for callers that still name them.
+        'claude-fable-5-1',
+        'claude-opus-5',
+        'claude-sonnet-5',
+        'claude-haiku-4-5-20251001',
         'claude-sonnet-4-6',
         'claude-opus-4-6',
         'claude-haiku-4-5',

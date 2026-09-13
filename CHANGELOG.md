@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`claude-code` connector: honest cache-usage passthrough and full input count
+  (AUP-CACHE-003, DEC-AUP-0028 R3 / A3 — A2-P0-2-RES).** The CLI's `--output-format json`
+  `usage` is the Anthropic Messages usage object, whose `input_tokens` is the *uncached
+  tail*; the connector read it as the whole prompt, so on every cache hit
+  `cachedInputTokens` (a declared subset of `inputTokens`) was larger than `inputTokens`.
+  `inputTokens` is now tail + `cache_creation_input_tokens` + `cache_read_input_tokens`;
+  reads stay in `cachedInputTokens`; writes ride in `cacheCreationInputTokens` with the
+  `cacheCreation` TTL breakdown; the raw object is copied verbatim into
+  `usage.providerUsage`; a result with no `usage` at all reports `usageMissing: true`
+  instead of zeros. `BaseCliConnector` forwards the four fields exactly like
+  `BaseApiConnector` already did for the API lane. Capabilities list the measured
+  Claude 5 ids (`claude-fable-5-1`, `claude-opus-5`, `claude-sonnet-5`,
+  `claude-haiku-4-5-20251001`).
+- **`HOST` bind address (A2-P0-2-RES).** `app.listen` had `0.0.0.0` hard-coded; a bare-host
+  dev instance (the subscription lane on arcana-devs) needs loopback only. New optional env
+  `HOST`, default `0.0.0.0` (the container behaviour is unchanged).
+
 - **The ledger now survives real money (ARAS-0058)** — six findings on the billing path,
   every one of which was invisible while `costUsd` was still zero and every one of which
   becomes a way to lose money the moment it is not.
