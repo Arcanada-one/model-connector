@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `BaseApiConnector` already did for the API lane. Capabilities list the measured
   Claude 5 ids (`claude-fable-5-1`, `claude-opus-5`, `claude-sonnet-5`,
   `claude-haiku-4-5-20251001`).
+- **`claude-code` connector: the served model is the requested one, not the first key of
+  `modelUsage` (A2-P0-2-RES).** The CLI runs a small Haiku side-call inside a turn and lists
+  it first in `modelUsage`; `Object.keys(...)[0]` attributed a `claude-fable-5-1` request —
+  and its whole ledger row — to Haiku (measured 2026-09-13). The requested model wins when
+  present; otherwise the entry that consumed the most tokens; the first key only as a last
+  resort.
 - **`HOST` bind address (A2-P0-2-RES).** `app.listen` had `0.0.0.0` hard-coded; a bare-host
   dev instance (the subscription lane on arcana-devs) needs loopback only. New optional env
   `HOST`, default `0.0.0.0` (the container behaviour is unchanged).

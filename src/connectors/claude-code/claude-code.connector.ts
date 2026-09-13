@@ -61,6 +61,42 @@ const ERROR_SUBTYPE_MAP: Record<string, string> = {
   error_during_execution: 'execution_error',
 };
 
+/**
+ * A2-P0-2-RES — which model served the request. The CLI's `modelUsage` map is
+ * keyed by every model that ran inside the turn, and a Haiku side-call (a
+ * small internal request the CLI makes on its own) can precede the requested
+ * model in key order. `Object.keys(...)[0]` therefore attributed a
+ * `claude-fable-5-1` request — and its whole ledger row — to Haiku
+ * (measured on 2026-09-13: keys `['claude-haiku-4-5-20251001',
+ * 'claude-fable-5-1']`, 897/11 tokens vs 2+10027+10835/4). The requested
+ * model wins when it appears in the map; otherwise the entry that consumed
+ * the most tokens (input + cache reads + cache writes + output); the first key
+ * only as a last resort. `auto` is not a model id and never matches.
+ */
+export function pickServedModel(
+  modelUsage: Record<string, ClaudeModelUsage> | undefined,
+  requested: string | undefined,
+): string {
+  const entries = Object.entries(modelUsage ?? {});
+  if (entries.length === 0) return 'claude-code';
+  if (requested && requested !== 'auto' && modelUsage && requested in modelUsage) return requested;
+  let best = entries[0];
+  let bestTokens = -1;
+  for (const entry of entries) {
+    const u = entry[1] ?? ({} as Partial<ClaudeModelUsage>);
+    const tokens =
+      (u.inputTokens ?? 0) +
+      (u.cacheReadInputTokens ?? 0) +
+      (u.cacheCreationInputTokens ?? 0) +
+      (u.outputTokens ?? 0);
+    if (tokens > bestTokens) {
+      best = entry;
+      bestTokens = tokens;
+    }
+  }
+  return best[0];
+}
+
 export class ClaudeCodeConnector extends BaseCliConnector {
   readonly name = 'claude-code';
 
@@ -130,7 +166,11 @@ export class ClaudeCodeConnector extends BaseCliConnector {
     return args;
   }
 
-  protected parseOutput(stdout: string, stderr: string): ParsedCliOutput {
+  protected parseOutput(
+    stdout: string,
+    stderr: string,
+    request?: ConnectorRequest,
+  ): ParsedCliOutput {
     const trimmed = stdout.trim();
 
     if (!trimmed) {
@@ -160,7 +200,7 @@ export class ClaudeCodeConnector extends BaseCliConnector {
       };
     }
 
-    const model = Object.keys(json.modelUsage ?? {})[0] || 'claude-code';
+    const model = pickServedModel(json.modelUsage, request?.model);
     const costUsd = json.total_cost_usd ?? 0;
     // AUP-CACHE-003 / DEC-AUP-0028 R3 (A3: the CLI lane) — the CLI's `usage`
     // is the Anthropic Messages usage object: `input_tokens` is the UNCACHED

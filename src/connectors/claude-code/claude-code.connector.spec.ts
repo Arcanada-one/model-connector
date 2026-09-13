@@ -9,8 +9,8 @@ class TestClaudeCodeConnector extends ClaudeCodeConnector {
     return this.buildArgs(request);
   }
 
-  public testParseOutput(stdout: string, stderr: string) {
-    return this.parseOutput(stdout, stderr);
+  public testParseOutput(stdout: string, stderr: string, request?: ConnectorRequest) {
+    return this.parseOutput(stdout, stderr, request);
   }
 
   public testClassifyError(msg: string, code: number) {
@@ -399,6 +399,81 @@ describe('ClaudeCodeConnector', () => {
       expect(result.usage.usageMissing).toBe(true);
       expect(result.usage.providerUsage).toBeUndefined();
       expect(result.usage.cachedInputTokens).toBeUndefined();
+    });
+  });
+
+  // --- A2-P0-2-RES: model attribution when the CLI ran a side-call ---
+  describe('served-model attribution (A2-P0-2-RES)', () => {
+    const withSideCall = () => {
+      const j = JSON.parse(successFixture);
+      j.usage = {
+        input_tokens: 2,
+        output_tokens: 4,
+        cache_creation_input_tokens: 10835,
+        cache_read_input_tokens: 10027,
+      };
+      // Measured 2026-09-13: the Haiku side-call precedes the requested model in key order.
+      j.modelUsage = {
+        'claude-haiku-4-5-20251001': {
+          inputTokens: 897,
+          outputTokens: 11,
+          cacheReadInputTokens: 0,
+          cacheCreationInputTokens: 0,
+          costUSD: 0.001,
+          contextWindow: 200000,
+          maxOutputTokens: 8192,
+        },
+        'claude-fable-5-1': {
+          inputTokens: 2,
+          outputTokens: 4,
+          cacheReadInputTokens: 10027,
+          cacheCreationInputTokens: 10835,
+          costUSD: 0.22,
+          contextWindow: 200000,
+          maxOutputTokens: 32000,
+        },
+      };
+      return JSON.stringify(j);
+    };
+
+    it('attributes the row to the requested model when it appears in modelUsage', () => {
+      const parsed = connector.testParseOutput(withSideCall(), '', {
+        prompt: 'ping',
+        model: 'claude-fable-5-1',
+      });
+      expect(parsed.model).toBe('claude-fable-5-1');
+    });
+
+    it('falls back to the model that consumed the most tokens when no model was requested', () => {
+      const parsed = connector.testParseOutput(withSideCall(), '');
+      expect(parsed.model).toBe('claude-fable-5-1');
+    });
+
+    it('never matches the pseudo-model "auto"', () => {
+      const parsed = connector.testParseOutput(withSideCall(), '', {
+        prompt: 'ping',
+        model: 'auto',
+      });
+      expect(parsed.model).toBe('claude-fable-5-1');
+    });
+
+    it('keeps the single-model behaviour unchanged', () => {
+      const parsed = connector.testParseOutput(successFixture, '', {
+        prompt: 'x',
+        model: 'sonnet',
+      });
+      expect(parsed.model).toBe('claude-sonnet-4-6');
+    });
+
+    it('carries the requested model through execute() into the response and the ledger model field', async () => {
+      const c = new TestClaudeCodeConnector();
+      c.setSemaphore(1);
+      c.mockSpawnProcess(async () => ({ stdout: withSideCall(), stderr: '', exitCode: 0 }));
+      const result = await c.execute({ prompt: 'ping', model: 'claude-fable-5-1' });
+      expect(result.status).toBe('success');
+      expect(result.model).toBe('claude-fable-5-1');
+      expect(result.usage.inputTokens).toBe(2 + 10835 + 10027);
+      expect(result.usage.cachedInputTokens).toBe(10027);
     });
   });
 
