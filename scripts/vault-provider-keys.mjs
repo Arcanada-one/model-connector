@@ -22,6 +22,21 @@ export const SECRETS = [
   ['arcanada/data/shared/tokens/openrouter-agents-free', 'OPENROUTER_API_KEY_AGENTS_FREE'],
 ];
 
+// DEC-AUP-0028 R2 (AUP-CACHE-003 / A2-P0-2-PRE): the OPTIONAL tier. A path
+// listed here that Vault reports as ABSENT (HTTP 404) emits nothing and one
+// stderr line naming the env var; every other failure (login, 403, 5xx, a
+// malformed field, a quote in the value) is still fatal exactly like SECRETS.
+// Why a second tier: the strict list fails closed because a missing PER-AGENT
+// key would silently route that agent through the shared key (CONN-1665). The
+// entries below ARE the shared slots — their absence surfaces per request as an
+// upstream authentication error, never as misrouting — and listing them in the
+// strict tier before the secret exists would crash-loop the whole service for
+// every tenant on the next deploy (entrypoint exits 78 before exec).
+//   arcanada/shared/tokens/anthropic-model-connector  field api_key
+export const OPTIONAL_SECRETS = [
+  ['arcanada/data/shared/tokens/anthropic-model-connector', 'ANTHROPIC_API_KEY'],
+];
+
 /**
  * Source per-agent provider keys from Vault. Pure of process globals — all
  * side-effecting dependencies are injected so this is unit-testable and the
@@ -32,9 +47,10 @@ export const SECRETS = [
  * @param {Function} deps.fetchImpl  fetch(url, opts) => Response
  * @param {Function} deps.emit       (line) => void — receives one export line
  * @param {Function} deps.fail       (msg)  => never — MUST NOT return (throws/exits)
+ * @param {Function} [deps.warn]     (msg)  => void — diagnostics for an ABSENT optional secret (stderr in prod)
  * @returns {Promise<number>} count of keys sourced (0 when Vault sourcing is off)
  */
-export async function sourceProviderKeys({ env, fetchImpl, emit, fail }) {
+export async function sourceProviderKeys({ env, fetchImpl, emit, fail, warn = () => {} }) {
   const roleId = env.MC_VAULT_ROLE_ID;
   const secretId = env.MC_VAULT_SECRET_ID;
   const addr = env.VAULT_ADDR;
@@ -63,13 +79,22 @@ export async function sourceProviderKeys({ env, fetchImpl, emit, fail }) {
   if (!token) return fail('approle login returned no client_token');
 
   let count = 0;
-  for (const [path, envName] of SECRETS) {
+  const entries = [
+    ...SECRETS.map(([path, envName]) => [path, envName, false]),
+    ...OPTIONAL_SECRETS.map(([path, envName]) => [path, envName, true]),
+  ];
+  for (const [path, envName, optional] of entries) {
     let value;
     try {
       const r = await fetchImpl(`${base}/v1/${path}`, {
         headers: { 'X-Vault-Token': token },
         signal: AbortSignal.timeout(10_000),
       });
+      if (r.status === 404 && optional) {
+        // DEC-AUP-0028 R2 — absent optional secret: emit nothing, say so once.
+        warn(`optional ${envName} absent in Vault (${path} HTTP 404); env var left unset`);
+        continue;
+      }
       if (!r.ok) return fail(`read ${path} HTTP ${r.status}`);
       const body = await r.json();
       value = body?.data?.data?.api_key;
@@ -103,5 +128,6 @@ if (isMain) {
     const [, envName] = /^export (\w+)='(.*)'$/.exec(line) ?? [];
     console.error(`[vault-provider-keys] loaded ${envName} (sourced from Vault)`);
   };
-  await sourceProviderKeys({ env: process.env, fetchImpl: fetch, emit, fail });
+  const warn = (msg) => console.error(`[vault-provider-keys] ${msg}`);
+  await sourceProviderKeys({ env: process.env, fetchImpl: fetch, emit, fail, warn });
 }
