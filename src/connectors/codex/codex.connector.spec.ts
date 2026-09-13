@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, afterEach, afterAll, vi } from 'vitest';
 import {
   chmodSync,
   existsSync,
@@ -197,8 +197,7 @@ describe('CodexConnector', () => {
         const privateTmp = mkdtempSync(join(tmpdir(), 'mcci0-'));
         const poisoned = join(privateTmp, 'codex-schemas');
         mkdirSync(poisoned, { mode: 0o500 });
-        const prevTmpdir = process.env.TMPDIR;
-        process.env.TMPDIR = privateTmp;
+        vi.stubEnv('TMPDIR', privateTmp);
         const fresh = new TestCodexConnector();
         try {
           expect(tmpdir()).toBe(privateTmp);
@@ -218,8 +217,7 @@ describe('CodexConnector', () => {
           fresh.onModuleDestroy();
           expect(existsSync(dirname(path))).toBe(false);
         } finally {
-          if (prevTmpdir === undefined) delete process.env.TMPDIR;
-          else process.env.TMPDIR = prevTmpdir;
+          vi.unstubAllEnvs();
           fresh.onModuleDestroy();
           chmodSync(poisoned, 0o700);
           rmSync(privateTmp, { recursive: true, force: true });
@@ -319,8 +317,10 @@ describe('CodexConnector', () => {
       expect(parsed.isError).toBe(false);
       expect(parsed.inputTokens).toBe(13417);
       expect(parsed.outputTokens).toBe(5);
-      expect(parsed.structured?.threadId).toBe('019e112b-f00b-7f62-9a64-6cf3f8604984');
-      expect(parsed.structured?.cachedInputTokens).toBe(12160);
+      expect(parsed.structured).toMatchObject({
+        threadId: '019e112b-f00b-7f62-9a64-6cf3f8604984',
+        cachedInputTokens: 12160,
+      });
     });
   });
 
