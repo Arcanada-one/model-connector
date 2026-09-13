@@ -17,6 +17,11 @@ const envBool = z.union([z.boolean(), z.string()]).transform(parseEnvBool);
 export const envSchema = z
   .object({
     PORT: z.coerce.number().default(3900),
+    // A2-P0-2-RES / DEC-AUP-0028-A3 — bind address. Default keeps the
+    // container behaviour (all interfaces behind docker's 127.0.0.1:3900
+    // port map); a bare-host dev instance sets 127.0.0.1 so the listener
+    // never leaves loopback.
+    HOST: z.string().min(1).default('0.0.0.0'),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
     DATABASE_URL: z.string().url(),
