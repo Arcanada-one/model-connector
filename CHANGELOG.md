@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`codex` connector: schema tempfiles no longer depend on a fixed, world-shared
+  `<tmpdir>/codex-schemas` directory (MCCI-0).** The directory was created by whichever
+  uid ran first and kept forever; on a host where another user owns it (the `ci-general`
+  runner pool, a shared dev box) every later `--output-schema` write failed with `EACCES`,
+  which turned `CI & Deploy` on `main` red and held back deploys. Each connector instance
+  now owns a private `mkdtemp` directory (`<tmpdir>/codex-schemas-<random>/`, mode 0700,
+  `TMPDIR` honoured), created on first use; the schema file of a request is removed as
+  soon as the codex process has finished, and the directory is removed with the module. A
+  spec reproduces the foreign-owned, non-writable directory and proves it no longer breaks
+  schema injection.
 - **`claude-code` connector: honest cache-usage passthrough and full input count
   (AUP-CACHE-003, DEC-AUP-0028 R3 / A3 — A2-P0-2-RES).** The CLI's `--output-format json`
   `usage` is the Anthropic Messages usage object, whose `input_tokens` is the *uncached

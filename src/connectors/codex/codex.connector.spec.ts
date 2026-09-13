@@ -1,8 +1,18 @@
-import { describe, it, expect, afterEach } from 'vitest';
-import { readFileSync, rmSync, existsSync } from 'fs';
+import { describe, it, expect, afterEach, afterAll, vi } from 'vitest';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join, sep } from 'path';
 import { CodexConnector } from './codex.connector';
+import { SpawnResult } from '../base-cli.connector';
 import { CircuitBreaker } from '../../core/resilience/circuit-breaker';
 import { ConnectorRequest } from '../interfaces/connector.interface';
 
@@ -22,6 +32,10 @@ class TestCodexConnector extends CodexConnector {
 
   public testClassifyError(msg: string, code: number) {
     return this.classifyError(msg, code);
+  }
+
+  public mockSpawnProcess(fn: (binary: string, args: string[]) => Promise<SpawnResult>) {
+    this.spawnProcess = fn as typeof this.spawnProcess;
   }
 }
 
@@ -60,6 +74,10 @@ const stderrNotLoggedIn = ['Reading additional input from stdin...', 'Not logged
 
 describe('CodexConnector', () => {
   const connector = new TestCodexConnector();
+
+  afterAll(() => {
+    connector.onModuleDestroy();
+  });
 
   describe('buildArgs', () => {
     it('should build args without --model when caller omits it (ChatGPT-account default)', () => {
@@ -104,7 +122,7 @@ describe('CodexConnector', () => {
     });
 
     describe('schema injection (CONN-0062)', () => {
-      const schemaDir = join(tmpdir(), 'codex-schemas');
+      const schemaDirPrefix = join(tmpdir(), 'codex-schemas-');
       const writtenPaths: string[] = [];
 
       afterEach(() => {
@@ -126,7 +144,7 @@ describe('CodexConnector', () => {
         const idx = args.indexOf('--output-schema');
         expect(idx).toBeGreaterThan(-1);
         const path = args[idx + 1];
-        expect(path).toMatch(/codex-schemas[\\/].+\.json$/);
+        expect(path).toMatch(/codex-schemas-[^\\/]+[\\/][^\\/]+\.json$/);
         expect(existsSync(path)).toBe(true);
         writtenPaths.push(path);
       });
@@ -151,14 +169,82 @@ describe('CodexConnector', () => {
         expect(written.required).toEqual(['id']);
       });
 
-      it('should place tempfile inside <tmpdir>/codex-schemas/', () => {
+      it('MCCI-0: should place tempfile inside a private <tmpdir>/codex-schemas-*/ directory, never a fixed shared path', () => {
         const args = connector.testBuildArgs({
           prompt: 'p',
           jsonSchema: { type: 'object', properties: { x: { type: 'number' } } },
         });
         const path = args[args.indexOf('--output-schema') + 1];
         writtenPaths.push(path);
-        expect(path.startsWith(schemaDir)).toBe(true);
+        const dir = dirname(path);
+        expect(dir.startsWith(schemaDirPrefix)).toBe(true);
+        expect(dir).not.toBe(join(tmpdir(), 'codex-schemas'));
+        // mkdtemp: private to this uid
+        expect(statSync(dir).mode & 0o777).toBe(0o700);
+        // one instance, one directory
+        const again = connector.testBuildArgs({
+          prompt: 'p',
+          jsonSchema: { type: 'object', properties: { y: { type: 'number' } } },
+        });
+        const path2 = again[again.indexOf('--output-schema') + 1];
+        writtenPaths.push(path2);
+        expect(dirname(path2)).toBe(dir);
+      });
+
+      it('MCCI-0: a pre-existing, non-writable <tmpdir>/codex-schemas (foreign-owned on a shared runner) does not break schema injection', () => {
+        // Reproduces the ci-general runner: `/tmp/codex-schemas` exists, owned by
+        // another uid, mode 0700 -> every open() inside it is EACCES.
+        const privateTmp = mkdtempSync(join(tmpdir(), 'mcci0-'));
+        const poisoned = join(privateTmp, 'codex-schemas');
+        mkdirSync(poisoned, { mode: 0o500 });
+        vi.stubEnv('TMPDIR', privateTmp);
+        const fresh = new TestCodexConnector();
+        try {
+          expect(tmpdir()).toBe(privateTmp);
+          // Fixture self-check: the poisoned directory really refuses writes
+          // (it would not for root; the runners are service users).
+          expect(() => writeFileSync(join(poisoned, 'probe.json'), '{}')).toThrow(/EACCES/);
+          const args = fresh.testBuildArgs({
+            prompt: 'p',
+            jsonSchema: { type: 'object', properties: { x: { type: 'string' } } },
+          });
+          const path = args[args.indexOf('--output-schema') + 1];
+          expect(existsSync(path)).toBe(true);
+          expect(path.startsWith(poisoned + sep)).toBe(false);
+          expect(path.startsWith(privateTmp + sep)).toBe(true);
+          expect(JSON.parse(readFileSync(path, 'utf8'))).toMatchObject({ type: 'object' });
+          // the directory goes with the module
+          fresh.onModuleDestroy();
+          expect(existsSync(dirname(path))).toBe(false);
+        } finally {
+          vi.unstubAllEnvs();
+          fresh.onModuleDestroy();
+          chmodSync(poisoned, 0o700);
+          rmSync(privateTmp, { recursive: true, force: true });
+        }
+      });
+
+      it('MCCI-0: removes the schema tempfile once the codex process has finished', async () => {
+        const fresh = new TestCodexConnector();
+        let seenPath = '';
+        let existedDuringRun = false;
+        fresh.mockSpawnProcess(async (_binary, args) => {
+          seenPath = args[args.indexOf('--output-schema') + 1];
+          existedDuringRun = existsSync(seenPath);
+          return { stdout: successJsonl, stderr: '', exitCode: 0 };
+        });
+        try {
+          const res = await fresh.execute({
+            prompt: 'extract',
+            jsonSchema: { type: 'object', properties: { name: { type: 'string' } } },
+          });
+          expect(res.status).toBe('success');
+          expect(seenPath).not.toBe('');
+          expect(existedDuringRun).toBe(true);
+          expect(existsSync(seenPath)).toBe(false);
+        } finally {
+          fresh.onModuleDestroy();
+        }
       });
 
       it('should place schema flag before the prompt', () => {
@@ -231,8 +317,10 @@ describe('CodexConnector', () => {
       expect(parsed.isError).toBe(false);
       expect(parsed.inputTokens).toBe(13417);
       expect(parsed.outputTokens).toBe(5);
-      expect(parsed.structured?.threadId).toBe('019e112b-f00b-7f62-9a64-6cf3f8604984');
-      expect(parsed.structured?.cachedInputTokens).toBe(12160);
+      expect(parsed.structured).toMatchObject({
+        threadId: '019e112b-f00b-7f62-9a64-6cf3f8604984',
+        cachedInputTokens: 12160,
+      });
     });
   });
 
