@@ -7,6 +7,8 @@ const fixture = (name: string) =>
   JSON.parse(
     readFileSync(resolve(__dirname, '../../../test/fixtures/connectors', name), 'utf8'),
   ) as unknown;
+// Same fixture as a plain object, for tests that spread or destructure it.
+const fixtureObj = (name: string) => fixture(name) as Record<string, unknown>;
 
 class TestAnthropicConnector extends AnthropicConnector {
   body(request: Parameters<AnthropicConnector['execute']>[0]) {
@@ -175,7 +177,7 @@ describe('AnthropicConnector', () => {
     it('maps full input = tail + writes + reads, reads to cachedInputTokens, writes separately', () => {
       const connector = new TestAnthropicConnector();
       const parsed = connector.parse(
-        { ...fixture('anthropic-message.json'), usage: officialUsage },
+        { ...fixtureObj('anthropic-message.json'), usage: officialUsage },
         { prompt: 'Hello' },
       );
       expect(parsed.inputTokens).toBe(21 + 60 + 1240);
@@ -195,7 +197,7 @@ describe('AnthropicConnector', () => {
       const connector = new TestAnthropicConnector();
       const usage = { ...officialUsage, server_tool_use: { web_search_requests: 1 } };
       const parsed = connector.parse(
-        { ...fixture('anthropic-message.json'), usage },
+        { ...fixtureObj('anthropic-message.json'), usage },
         { prompt: 'Hello' },
       );
       expect(parsed.providerUsage).toEqual(usage);
@@ -206,7 +208,7 @@ describe('AnthropicConnector', () => {
       const connector = new TestAnthropicConnector();
       const parsed = connector.parse(
         {
-          ...fixture('anthropic-message.json'),
+          ...fixtureObj('anthropic-message.json'),
           usage: {
             input_tokens: 8,
             output_tokens: 3,
@@ -235,10 +237,7 @@ describe('AnthropicConnector', () => {
 
     it('a reply with no usage at all is the third verdict usageMissing, never zero-filled counts', () => {
       const connector = new TestAnthropicConnector();
-      const { usage: _dropped, ...noUsage } = fixture('anthropic-message.json') as Record<
-        string,
-        unknown
-      >;
+      const { usage: _dropped, ...noUsage } = fixtureObj('anthropic-message.json');
       const parsed = connector.parse(noUsage, { prompt: 'Hello' });
       expect(parsed.usageMissing).toBe(true);
       expect(parsed.cachedInputTokens).toBeUndefined();
@@ -250,7 +249,7 @@ describe('AnthropicConnector', () => {
     it('forwards the cache fields, the verbatim usage and usageMissing through execute()', async () => {
       vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
         new Response(
-          JSON.stringify({ ...fixture('anthropic-message.json'), usage: officialUsage }),
+          JSON.stringify({ ...fixtureObj('anthropic-message.json'), usage: officialUsage }),
           {
             status: 200,
             headers: { 'content-type': 'application/json' },
@@ -265,10 +264,7 @@ describe('AnthropicConnector', () => {
       expect(ok.usage.providerUsage).toEqual(officialUsage);
       expect(ok.usage.usageMissing).toBeUndefined();
 
-      const { usage: _dropped, ...noUsage } = fixture('anthropic-message.json') as Record<
-        string,
-        unknown
-      >;
+      const { usage: _dropped, ...noUsage } = fixtureObj('anthropic-message.json');
       vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
         new Response(JSON.stringify(noUsage), {
           status: 200,
