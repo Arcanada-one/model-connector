@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { sourceProviderKeys, SECRETS } from './vault-provider-keys.mjs';
+import { sourceProviderKeys, SECRETS, OPTIONAL_SECRETS } from './vault-provider-keys.mjs';
 
 // CONN-1666: this script runs at container boot and sources per-agent OpenRouter
 // keys from Vault into process env (never disk). It is fail-closed: a partial
@@ -51,6 +51,8 @@ describe('sourceProviderKeys (CONN-1666)', () => {
       reads: [
         [SECRETS[0][0], okResp(keyBody('sk-or-email-agent'))],
         [SECRETS[1][0], okResp(keyBody('sk-or-agents-free'))],
+        // DEC-AUP-0028 R2 — the optional tier is absent here and must not count.
+        ...OPTIONAL_SECRETS.map(([p]) => [p, errResp(404)]),
       ],
     });
     const n = await sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows });
@@ -125,5 +127,101 @@ describe('sourceProviderKeys (CONN-1666)', () => {
         fail: failThrows,
       }),
     ).rejects.toThrow(/no client_token/);
+  });
+});
+
+// DEC-AUP-0028 R2 — the OPTIONAL tier (shared provider slots). Absent (404) →
+// nothing emitted, one warn; every other failure stays fatal like SECRETS.
+describe('OPTIONAL_SECRETS (DEC-AUP-0028 R2)', () => {
+  const activeEnv = {
+    MC_VAULT_ROLE_ID: 'role-1',
+    MC_VAULT_SECRET_ID: 'secret-1',
+    VAULT_ADDR: 'http://vault.test:8200',
+  };
+  const strictReads = [
+    [SECRETS[0][0], okResp(keyBody('sk-or-email-agent'))],
+    [SECRETS[1][0], okResp(keyBody('sk-or-agents-free'))],
+  ];
+
+  it('lists the shared anthropic slot by its documented Vault path and env var NAME', () => {
+    expect(OPTIONAL_SECRETS).toContainEqual([
+      'arcanada/data/shared/tokens/anthropic-model-connector',
+      'ANTHROPIC_API_KEY',
+    ]);
+  });
+
+  it('an absent optional path (404) emits nothing for it, warns once, and the boot continues', async () => {
+    const emit = vi.fn();
+    const warn = vi.fn();
+    const fetchImpl = makeFetch({
+      reads: [...strictReads, ...OPTIONAL_SECRETS.map(([p]) => [p, errResp(404)])],
+    });
+    const n = await sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows, warn });
+    expect(n).toBe(SECRETS.length);
+    expect(emit).toHaveBeenCalledTimes(SECRETS.length);
+    expect(emit.mock.calls.flat().join('\n')).not.toContain('ANTHROPIC_API_KEY');
+    expect(warn).toHaveBeenCalledTimes(OPTIONAL_SECRETS.length);
+    expect(warn.mock.calls[0][0]).toContain('ANTHROPIC_API_KEY');
+    expect(warn.mock.calls[0][0]).not.toContain('sk-');
+  });
+
+  it('a present optional secret is exported under its env var name', async () => {
+    const emit = vi.fn();
+    const fetchImpl = makeFetch({
+      reads: [...strictReads, [OPTIONAL_SECRETS[0][0], okResp(keyBody('anthropic-test-value'))]],
+    });
+    const n = await sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows });
+    expect(n).toBe(SECRETS.length + 1);
+    expect(emit).toHaveBeenCalledWith("export ANTHROPIC_API_KEY='anthropic-test-value'");
+  });
+
+  it('an optional path the AppRole policy does not cover (403) is absent, not fatal', async () => {
+    // Measured 2026-09-13: prod Vault answered 403 for the unprovisioned optional
+    // path and the 404-only rule crash-looped the whole service (exit 78).
+    const emit = vi.fn();
+    const warn = vi.fn();
+    const fetchImpl = makeFetch({
+      reads: [...strictReads, [OPTIONAL_SECRETS[0][0], errResp(403)]],
+    });
+    const n = await sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows, warn });
+    expect(n).toBe(SECRETS.length);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('HTTP 403');
+  });
+
+  it('an optional path that fails for any reason but 403/404 is still fatal (500)', async () => {
+    const emit = vi.fn();
+    const fetchImpl = makeFetch({
+      reads: [...strictReads, [OPTIONAL_SECRETS[0][0], errResp(500)]],
+    });
+    await expect(
+      sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows }),
+    ).rejects.toThrow(/HTTP 500/);
+  });
+
+  it('a strict path returning 403 is still fatal (the optional rule never leaks into SECRETS)', async () => {
+    const emit = vi.fn();
+    const fetchImpl = makeFetch({
+      reads: [
+        [SECRETS[0][0], errResp(403)],
+        [SECRETS[1][0], okResp(keyBody('x'))],
+      ],
+    });
+    await expect(
+      sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows }),
+    ).rejects.toThrow(/HTTP 403/);
+  });
+
+  it('a strict path returning 404 is still fatal (the optional rule never leaks into SECRETS)', async () => {
+    const emit = vi.fn();
+    const fetchImpl = makeFetch({
+      reads: [
+        [SECRETS[0][0], errResp(404)],
+        [SECRETS[1][0], okResp(keyBody('x'))],
+      ],
+    });
+    await expect(
+      sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows }),
+    ).rejects.toThrow(/HTTP 404/);
   });
 });

@@ -30,8 +30,8 @@ async function bootstrap() {
     },
   });
 
-  await app.listen(config.PORT, '0.0.0.0');
-  logger.log(`Model Connector running on port ${config.PORT}`);
+  await app.listen(config.PORT, config.HOST);
+  logger.log(`Model Connector running on ${config.HOST}:${config.PORT}`);
 }
 
 bootstrap();

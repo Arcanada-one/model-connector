@@ -93,6 +93,17 @@ export interface ParsedCliOutput {
    */
   cachedInputTokens?: number;
   reasoningOutputTokens?: number;
+  /**
+   * AUP-CACHE-003 / DEC-AUP-0028 R3 (A3 extends it to the CLI lane) — the
+   * same honest passthrough {@link ParsedApiOutput} carries: cache WRITE
+   * tokens separately from reads, the TTL breakdown, the provider's `usage`
+   * object verbatim, and `usageMissing` when the CLI reported no usage at
+   * all (never zeros standing in for "not reported").
+   */
+  cacheCreationInputTokens?: number;
+  cacheCreation?: { ephemeral5mInputTokens?: number; ephemeral1hInputTokens?: number };
+  providerUsage?: Record<string, unknown>;
+  usageMissing?: true;
   isError: boolean;
   errorType?: string;
   errorMessage?: string;
@@ -283,6 +294,14 @@ export abstract class BaseCliConnector implements IConnector {
           // are different facts and are kept different all the way to the row.
           cachedInputTokens: parsed.cachedInputTokens,
           reasoningOutputTokens: parsed.reasoningOutputTokens,
+          // DEC-AUP-0028 R3/A3 — forwarded only when the CLI reported them;
+          // same shape and same rule as BaseApiConnector.
+          ...(parsed.cacheCreationInputTokens !== undefined
+            ? { cacheCreationInputTokens: parsed.cacheCreationInputTokens }
+            : {}),
+          ...(parsed.cacheCreation !== undefined ? { cacheCreation: parsed.cacheCreation } : {}),
+          ...(parsed.providerUsage !== undefined ? { providerUsage: parsed.providerUsage } : {}),
+          ...(parsed.usageMissing ? { usageMissing: true as const } : {}),
         },
         latencyMs,
         queueWaitMs,

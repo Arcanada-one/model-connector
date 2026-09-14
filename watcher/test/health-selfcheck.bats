@@ -20,6 +20,11 @@ setup() {
   mkdir -p "$STUBS"
 
   export SELFCHECK_STATE="$WORK/selfcheck-state"
+  # Point the env file at a path that does not exist: on a runner that also
+  # hosts a real watcher install /etc/model-connector-watcher/watcher.env is
+  # present, the alarm branch sourced it and `set -u` aborted on the missing
+  # token -- four alarm tests went red on main (run 34772709409, 2026-09-13).
+  export SELFCHECK_ENVFILE="$WORK/absent-watcher.env"
   export SELFCHECK_UNIT="fixture-watcher.service"
   export SELFCHECK_LOG="$WORK/selfcheck.log"
   export PATH="$STUBS:$PATH"

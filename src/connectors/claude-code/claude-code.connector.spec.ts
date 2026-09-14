@@ -9,8 +9,8 @@ class TestClaudeCodeConnector extends ClaudeCodeConnector {
     return this.buildArgs(request);
   }
 
-  public testParseOutput(stdout: string, stderr: string) {
-    return this.parseOutput(stdout, stderr);
+  public testParseOutput(stdout: string, stderr: string, request?: ConnectorRequest) {
+    return this.parseOutput(stdout, stderr, request);
   }
 
   public testClassifyError(msg: string, code: number) {
@@ -234,7 +234,9 @@ describe('ClaudeCodeConnector', () => {
       const parsed = connector.testParseOutput(successFixture, '');
       expect(parsed.text).toBe('hello');
       expect(parsed.isError).toBe(false);
-      expect(parsed.inputTokens).toBe(3);
+      // DEC-AUP-0028 R3 — full input = uncached tail (3) + cache writes
+      // (26921) + cache reads (0); the tail alone was the old, wrong reading.
+      expect(parsed.inputTokens).toBe(26924);
       expect(parsed.outputTokens).toBe(4);
       expect(parsed.costUsd).toBeCloseTo(0.101, 2);
       expect(parsed.model).toBe('claude-sonnet-4-6');
@@ -252,7 +254,9 @@ describe('ClaudeCodeConnector', () => {
       expect(parsed.isError).toBe(true);
       expect(parsed.errorMessage).toContain('maximum number of turns');
       expect(parsed.errorType).toBe('max_turns_exceeded');
-      expect(parsed.inputTokens).toBe(3);
+      // full input = tail 3 + cache writes 26930 + reads 0 (DEC-AUP-0028 R3)
+      expect(parsed.inputTokens).toBe(26933);
+      expect(parsed.cacheCreationInputTokens).toBe(26930);
       expect(parsed.outputTokens).toBe(111);
       expect(parsed.costUsd).toBeCloseTo(0.103, 2);
       expect(parsed.text).toBe('');
@@ -301,6 +305,178 @@ describe('ClaudeCodeConnector', () => {
 
   // --- classifyError tests (T16-T20) ---
 
+  // --- DEC-AUP-0028 R3 / A3: honest cache-usage passthrough on the CLI lane ---
+  describe('cache usage passthrough (AUP-CACHE-003 / DEC-AUP-0028 A3)', () => {
+    it('copies the CLI usage object verbatim and carries writes separately from reads', () => {
+      const parsed = connector.testParseOutput(successFixture, '');
+      expect(parsed.cachedInputTokens).toBe(0);
+      expect(parsed.cacheCreationInputTokens).toBe(26921);
+      expect(parsed.cacheCreation).toEqual({
+        ephemeral5mInputTokens: 26921,
+        ephemeral1hInputTokens: 0,
+      });
+      expect(parsed.providerUsage).toMatchObject({
+        input_tokens: 3,
+        output_tokens: 4,
+        cache_creation_input_tokens: 26921,
+        cache_read_input_tokens: 0,
+        cache_creation: { ephemeral_1h_input_tokens: 0, ephemeral_5m_input_tokens: 26921 },
+      });
+      expect(parsed.usageMissing).toBeUndefined();
+    });
+
+    it('keeps cachedInputTokens a subset of inputTokens on a cache hit (never clamps)', () => {
+      const hit = JSON.parse(successFixture);
+      hit.usage = {
+        input_tokens: 10,
+        output_tokens: 208,
+        cache_creation_input_tokens: 9632,
+        cache_read_input_tokens: 13607,
+        cache_creation: { ephemeral_1h_input_tokens: 9632, ephemeral_5m_input_tokens: 0 },
+      };
+      const parsed = connector.testParseOutput(JSON.stringify(hit), '');
+      expect(parsed.inputTokens).toBe(10 + 9632 + 13607);
+      expect(parsed.cachedInputTokens).toBe(13607);
+      expect(parsed.cacheCreationInputTokens).toBe(9632);
+      expect(parsed.cachedInputTokens!).toBeLessThanOrEqual(parsed.inputTokens);
+      expect(parsed.cacheCreation).toEqual({
+        ephemeral5mInputTokens: 0,
+        ephemeral1hInputTokens: 9632,
+      });
+    });
+
+    it('reports usageMissing: true (not zeros) when the CLI returned no usage', () => {
+      const noUsage = JSON.parse(successFixture);
+      delete noUsage.usage;
+      const parsed = connector.testParseOutput(JSON.stringify(noUsage), '');
+      expect(parsed.isError).toBe(false);
+      expect(parsed.usageMissing).toBe(true);
+      expect(parsed.inputTokens).toBe(0);
+      expect(parsed.outputTokens).toBe(0);
+      expect(parsed.cachedInputTokens).toBeUndefined();
+      expect(parsed.cacheCreationInputTokens).toBeUndefined();
+      expect(parsed.providerUsage).toBeUndefined();
+    });
+
+    it('reads a miss (cache_read_input_tokens: 0) as 0, not as "not reported"', () => {
+      const parsed = connector.testParseOutput(successFixture, '');
+      expect(parsed.cachedInputTokens).toBe(0);
+      expect(parsed.usageMissing).toBeUndefined();
+    });
+
+    it('forwards the passthrough fields through execute() into the response usage', async () => {
+      const c = new TestClaudeCodeConnector();
+      c.setSemaphore(1);
+      c.mockSpawnProcess(async () => ({ stdout: successFixture, stderr: '', exitCode: 0 }));
+      const result = await c.execute({ prompt: 'ping', model: 'claude-fable-5-1' });
+      expect(result.status).toBe('success');
+      expect(result.usage.inputTokens).toBe(26924);
+      expect(result.usage.cachedInputTokens).toBe(0);
+      expect(result.usage.cacheCreationInputTokens).toBe(26921);
+      expect(result.usage.cacheCreation).toEqual({
+        ephemeral5mInputTokens: 26921,
+        ephemeral1hInputTokens: 0,
+      });
+      expect(result.usage.providerUsage).toMatchObject({
+        cache_read_input_tokens: 0,
+        cache_creation_input_tokens: 26921,
+      });
+      expect(result.usage.usageMissing).toBeUndefined();
+    });
+
+    it('forwards usageMissing through execute() when the CLI reported no usage', async () => {
+      const noUsage = JSON.parse(successFixture);
+      delete noUsage.usage;
+      const c = new TestClaudeCodeConnector();
+      c.setSemaphore(1);
+      c.mockSpawnProcess(async () => ({
+        stdout: JSON.stringify(noUsage),
+        stderr: '',
+        exitCode: 0,
+      }));
+      const result = await c.execute({ prompt: 'ping', model: 'claude-fable-5-1' });
+      expect(result.status).toBe('success');
+      expect(result.usage.usageMissing).toBe(true);
+      expect(result.usage.providerUsage).toBeUndefined();
+      expect(result.usage.cachedInputTokens).toBeUndefined();
+    });
+  });
+
+  // --- A2-P0-2-RES: model attribution when the CLI ran a side-call ---
+  describe('served-model attribution (A2-P0-2-RES)', () => {
+    const withSideCall = () => {
+      const j = JSON.parse(successFixture);
+      j.usage = {
+        input_tokens: 2,
+        output_tokens: 4,
+        cache_creation_input_tokens: 10835,
+        cache_read_input_tokens: 10027,
+      };
+      // Measured 2026-09-13: the Haiku side-call precedes the requested model in key order.
+      j.modelUsage = {
+        'claude-haiku-4-5-20251001': {
+          inputTokens: 897,
+          outputTokens: 11,
+          cacheReadInputTokens: 0,
+          cacheCreationInputTokens: 0,
+          costUSD: 0.001,
+          contextWindow: 200000,
+          maxOutputTokens: 8192,
+        },
+        'claude-fable-5-1': {
+          inputTokens: 2,
+          outputTokens: 4,
+          cacheReadInputTokens: 10027,
+          cacheCreationInputTokens: 10835,
+          costUSD: 0.22,
+          contextWindow: 200000,
+          maxOutputTokens: 32000,
+        },
+      };
+      return JSON.stringify(j);
+    };
+
+    it('attributes the row to the requested model when it appears in modelUsage', () => {
+      const parsed = connector.testParseOutput(withSideCall(), '', {
+        prompt: 'ping',
+        model: 'claude-fable-5-1',
+      });
+      expect(parsed.model).toBe('claude-fable-5-1');
+    });
+
+    it('falls back to the model that consumed the most tokens when no model was requested', () => {
+      const parsed = connector.testParseOutput(withSideCall(), '');
+      expect(parsed.model).toBe('claude-fable-5-1');
+    });
+
+    it('never matches the pseudo-model "auto"', () => {
+      const parsed = connector.testParseOutput(withSideCall(), '', {
+        prompt: 'ping',
+        model: 'auto',
+      });
+      expect(parsed.model).toBe('claude-fable-5-1');
+    });
+
+    it('keeps the single-model behaviour unchanged', () => {
+      const parsed = connector.testParseOutput(successFixture, '', {
+        prompt: 'x',
+        model: 'sonnet',
+      });
+      expect(parsed.model).toBe('claude-sonnet-4-6');
+    });
+
+    it('carries the requested model through execute() into the response and the ledger model field', async () => {
+      const c = new TestClaudeCodeConnector();
+      c.setSemaphore(1);
+      c.mockSpawnProcess(async () => ({ stdout: withSideCall(), stderr: '', exitCode: 0 }));
+      const result = await c.execute({ prompt: 'ping', model: 'claude-fable-5-1' });
+      expect(result.status).toBe('success');
+      expect(result.model).toBe('claude-fable-5-1');
+      expect(result.usage.inputTokens).toBe(2 + 10835 + 10027);
+      expect(result.usage.cachedInputTokens).toBe(10027);
+    });
+  });
+
   describe('classifyError', () => {
     it('should classify billing_error', () => {
       expect(connector.testClassifyError('billing_error: account suspended', 1)).toBe(
@@ -338,6 +514,8 @@ describe('ClaudeCodeConnector', () => {
       expect(caps.supportsStreaming).toBe(false);
       expect(caps.models).toContain('claude-sonnet-4-6');
       expect(caps.models).toContain('claude-opus-4-6');
+      expect(caps.models).toContain('claude-fable-5-1');
+      expect(caps.models).toContain('claude-haiku-4-5-20251001');
       expect(caps.maxTimeout).toBeGreaterThan(0);
     });
   });

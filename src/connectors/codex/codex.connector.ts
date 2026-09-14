@@ -1,9 +1,14 @@
-import { mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
+import { OnModuleDestroy } from '@nestjs/common';
 import { BaseCliConnector, ParsedCliOutput } from '../base-cli.connector';
-import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
+import {
+  ConnectorCapabilities,
+  ConnectorRequest,
+  ConnectorResponse,
+} from '../interfaces/connector.interface';
 import { normalizeSchema } from './schema-normalizer';
 
 interface CodexEvent {
@@ -29,10 +34,40 @@ interface CodexEvent {
 // asked. Report `request.model` when known, else this placeholder — never a
 // hardcoded model id that may not match what actually ran.
 const ACCOUNT_DEFAULT_MODEL = 'codex-account-default';
-const SCHEMA_TMP_DIR = join(tmpdir(), 'codex-schemas');
+// MCCI-0: the schema tempfiles used to go to a FIXED, world-shared
+// `<tmpdir>/codex-schemas`, owned by whichever uid created it first. On a host
+// where another user owns that directory (the ci-general runner pool, a shared
+// dev box) every later writer gets EACCES: `mkdirSync({ recursive: true })` on
+// an existing foreign directory is silent, the `open` is not. Each connector
+// instance now owns a private `mkdtemp` directory (0700, under `os.tmpdir()`,
+// so TMPDIR is honoured), created on first use; one file per request, removed
+// once the codex process has finished; the directory goes with the module.
+const SCHEMA_TMP_PREFIX = 'codex-schemas-';
 
-export class CodexConnector extends BaseCliConnector {
+export class CodexConnector extends BaseCliConnector implements OnModuleDestroy {
   readonly name = 'codex';
+
+  private schemaDir?: string;
+  private readonly schemaFiles = new WeakMap<ConnectorRequest, string>();
+
+  async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
+    try {
+      return await super.execute(request);
+    } finally {
+      this.discardTempSchema(request);
+    }
+  }
+
+  onModuleDestroy(): void {
+    const dir = this.schemaDir;
+    this.schemaDir = undefined;
+    if (!dir) return;
+    try {
+      rmSync(dir, { recursive: true, force: true });
+    } catch {
+      // best effort: a vanished tmp directory is not an error
+    }
+  }
 
   protected getBinaryPath(): string {
     return process.env.CODEX_BINARY_PATH || 'codex';
@@ -65,6 +100,7 @@ export class CodexConnector extends BaseCliConnector {
     }
     if (request.jsonSchema) {
       const schemaPath = this.writeTempSchema(request.jsonSchema);
+      this.schemaFiles.set(request, schemaPath);
       args.push('--output-schema', schemaPath);
     }
     args.push(prompt);
@@ -73,10 +109,28 @@ export class CodexConnector extends BaseCliConnector {
 
   protected writeTempSchema(schema: Record<string, unknown>): string {
     const normalized = normalizeSchema(schema);
-    mkdirSync(SCHEMA_TMP_DIR, { recursive: true, mode: 0o700 });
-    const path = join(SCHEMA_TMP_DIR, `${randomUUID()}.json`);
+    const path = join(this.getSchemaDir(), `${randomUUID()}.json`);
     writeFileSync(path, JSON.stringify(normalized), { mode: 0o600 });
     return path;
+  }
+
+  /** Private per-instance schema directory; re-created if a tmp cleaner removed it. */
+  protected getSchemaDir(): string {
+    if (!this.schemaDir || !existsSync(this.schemaDir)) {
+      this.schemaDir = mkdtempSync(join(tmpdir(), SCHEMA_TMP_PREFIX));
+    }
+    return this.schemaDir;
+  }
+
+  protected discardTempSchema(request: ConnectorRequest): void {
+    const path = this.schemaFiles.get(request);
+    if (!path) return;
+    this.schemaFiles.delete(request);
+    try {
+      rmSync(path, { force: true });
+    } catch {
+      // best effort: the file only ever lives in our own 0700 directory
+    }
   }
 
   protected parseOutput(
