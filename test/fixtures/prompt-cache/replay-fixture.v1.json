@@ -1,0 +1,201 @@
+{
+ "schema": "ReplayFixture/v1",
+ "id": "replay-fixture.v1",
+ "portion_id": "AUP-CACHE-004:replay0",
+ "contract": "prompt-layout.v1",
+ "generator": "tools/prompt-cache/replay_loop.py make_fixture() (deterministic; --write-fixture regenerates byte-identically)",
+ "preregistered": {
+  "positive": {
+   "hit_rate_min_steps_2_to_10": 0.9,
+   "cost_ratio_max_steps_2_to_10": 0.15,
+   "cost_ratio_definition": "input-side cost per step / uncached input cost of the same step, prices.v1.json multipliers (output tokens identical in both and excluded)"
+  },
+  "negative_control": {
+   "injection": "a fresh timestamp line appended to L1 on every step",
+   "hit_rate_max": 0.4,
+   "verdict": "RED"
+  },
+  "cadence_seconds_between_steps": 2,
+  "cadence_note": "a real agent loop sends the next request seconds after a tool result; inside the 5m TTL of L3/L4",
+  "invalid_test": "estimated prefix below 600 tokens (or below the model minimum) = INVALID_TEST, not a product failure",
+  "frozen_before_run": true
+ },
+ "base_request": {
+  "model": "claude-fable-5-1",
+  "max_tokens": 64,
+  "output_config": {
+   "effort": "low"
+  },
+  "tools": [
+   {
+    "name": "muneral_attach_evidence",
+    "description": "Attach an evidence reference (receipt path or URL) to the current Muneral work item. Never changes status.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "work_item": {
+       "type": "string"
+      },
+      "evidence_ref": {
+       "type": "string"
+      },
+      "note": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "work_item",
+      "evidence_ref"
+     ]
+    }
+   },
+   {
+    "name": "muneral_get_work_item",
+    "description": "Read the current Muneral work item (title, description, status, dependencies, evidence).",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "work_item": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "work_item"
+     ]
+    }
+   },
+   {
+    "name": "publish_post",
+    "description": "[deferred stub — load via tool_search before use] Publish a post through Publisher (the only outward path). Requires an approved draft id.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "draft_id": {
+       "type": "string"
+      },
+      "channel": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "draft_id",
+      "channel"
+     ]
+    }
+   },
+   {
+    "name": "read_file",
+    "description": "Read a UTF-8 text file from the repository checkout and return its content with line numbers.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "path": {
+       "type": "string"
+      },
+      "offset": {
+       "type": "integer"
+      },
+      "limit": {
+       "type": "integer"
+      }
+     },
+     "required": [
+      "path"
+     ]
+    }
+   },
+   {
+    "name": "run_command",
+    "description": "Run a shell command in the repository checkout with a timeout; returns exit code, stdout and stderr (truncated).",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "command": {
+       "type": "string"
+      },
+      "timeout_s": {
+       "type": "integer"
+      }
+     },
+     "required": [
+      "command"
+     ]
+    }
+   },
+   {
+    "name": "tool_search",
+    "description": "Search the deferred tool registry by name or description and load a stub's full definition into the session.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "query": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "query"
+     ]
+    }
+   },
+   {
+    "name": "write_receipt",
+    "description": "[deferred stub — load via tool_search before use] Write a ReadinessReceipt/v1 JSON under receipts/ and return its path and digest.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "portion_id": {
+       "type": "string"
+      },
+      "body_json": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "portion_id",
+      "body_json"
+     ]
+    }
+   }
+  ],
+  "system": [
+   {
+    "type": "text",
+    "text": "You are arcana-runtime, an execution agent of the Arcanada Universal Program.\nWay of working: every claim carries a receipt; a value that was not measured is reported as not_measured, never as zero or as pass; PAUSED_SAFE with a reason beats guessing; conflicts between sources are recorded and held, never resolved by a silent default; historical done is asserted, never verified until re-validated.\nTool policy: the tool registry is fixed for the whole session; a tool marked as a deferred stub is loaded through tool_search before its first use and is never removed; state is carried through tool results, never through a changed tool set. Never place dates, counters, identifiers, environment values or secrets anywhere but in the message tail.\nOutput format: reply to each tool result with an acknowledgement of at most five words, then wait for the next tool result. Do not call tools in this replay; the results are supplied to you.\nRefusals: if a request would publish outward, write outside receipts/, or touch another operator's session, decline with the code REFUSED_BY_MANDATE and explain in one sentence.",
+    "cache_control": {
+     "type": "ephemeral",
+     "ttl": "1h"
+    }
+   },
+   {
+    "type": "text",
+    "text": "Project knowledge pack (release pinned by content digest in L3):\n- Program of record: Arcanada-one/arcanada-universal-program on GitHub main; decisions in governance/decisions/ are binding; receipts under receipts/ are dated, machine-readable and never edited after the fact — a correction is a new receipt that cites the old one.\n- Work items: Muneral is the system of record for tasks, statuses, dependencies and transitions; the Markdown datarim/ files of the workspace are a read-only historical source being imported; task state is never written into them.\n- Publishing: Publishing to social networks or external sites goes only through Publisher; a draft needs an approved draft id; the channel is named explicitly; nothing is posted from a replay.\n- Host roles: The control host plans, reviews, dispatches and merges; long-running execution runs on the execution host in detached sessions; the operator's own sessions, worktrees and CI runners are untouchable unless a task names them.\n- Git discipline: Commit as the preconfigured identity; rebase before push; scan for secrets before every push; one commit per card with explicit paths; no destructive git operations; server code changes only through pull requests.\n- Prompt layout: Requests are layered tools, static system, project knowledge, session metadata, messages; only the messages tail changes between steps; the stable prefix is byte-identical across the session and is checked against the request bytes, never against a description.\n- Verification: A change is admitted when its impact set is listed and every affected entity is re-verified with the verifier for its edge type; the verdict per entity is verified, failed or not_measured; an empty impact set is a prediction to explain.\n- Cost: Cost per task is computed from usage fields with a dated price table; a missing usage field is usage_missing, a missing price is price_missing; a hit-rate drop is an incident, not a price change.\n- Skills index: skills: receipt-writer (ReadinessReceipt/v1 shape), muneral-client (read work items, attach evidence), repo-navigator (read files, run read-only commands), publisher-draft (prepare drafts only). Skill bodies are loaded on demand as tool results.\n- Mandates index: mandates: no-silent-totalization, held-conflicts, receipts-for-claims, publisher-only-outward, secrets-never-in-prefix, tool-set-fixed-per-session, append-only-history.",
+    "cache_control": {
+     "type": "ephemeral",
+     "ttl": "1h"
+    }
+   },
+   {
+    "type": "text",
+    "text": "contract: prompt-layout.v1\nagent: arcana-runtime\nagent_class: api-agent-conn\nagent_version: 0.1.0\nwork_item: 3f0e5b2c-5d9e-4c0e-9f21-6b4b9a5b1a11\nttl_profile: 1h/1h/5m/5m",
+    "cache_control": {
+     "type": "ephemeral"
+    }
+   }
+  ]
+ },
+ "sentinel_in_l4": "mun_sk_SENTINEL_NOT_A_KEY_REPLAY_L4_00000000",
+ "first_user_text": "Replay session start. You will receive ten tool results, one per step. Acknowledge each in at most five words. Context value present only in this tail (must never reach the cached prefix): mun_sk_SENTINEL_NOT_A_KEY_REPLAY_L4_00000000",
+ "tool_results": [
+  "<tool_result name=\"read_file\" step=\"1\">receipts/prompt-cache/example-01.json: {\"schema\": \"ReadinessReceipt/v1\", \"verdict\": \"PASS\", \"portion\": \"AUP-DEMO-001:p0\", \"assertions\": 4}</tool_result>",
+  "<tool_result name=\"read_file\" step=\"2\">receipts/prompt-cache/example-02.json: {\"schema\": \"ReadinessReceipt/v1\", \"verdict\": \"PASS\", \"portion\": \"AUP-DEMO-002:p0\", \"assertions\": 5}</tool_result>",
+  "<tool_result name=\"read_file\" step=\"3\">receipts/prompt-cache/example-03.json: {\"schema\": \"ReadinessReceipt/v1\", \"verdict\": \"PAUSED_SAFE\", \"portion\": \"AUP-DEMO-003:p0\", \"assertions\": 6}</tool_result>",
+  "<tool_result name=\"read_file\" step=\"4\">receipts/prompt-cache/example-04.json: {\"schema\": \"ReadinessReceipt/v1\", \"verdict\": \"PASS\", \"portion\": \"AUP-DEMO-004:p0\", \"assertions\": 7}</tool_result>",
+  "<tool_result name=\"read_file\" step=\"5\">receipts/prompt-cache/example-05.json: {\"schema\": \"ReadinessReceipt/v1\", \"verdict\": \"PASS\", \"portion\": \"AUP-DEMO-005:p0\", \"assertions\": 8}</tool_result>",
+  "<tool_result name=\"read_file\" step=\"6\">receipts/prompt-cache/example-06.json: {\"schema\": \"ReadinessReceipt/v1\", \"verdict\": \"PAUSED_SAFE\", \"portion\": \"AUP-DEMO-006:p0\", \"assertions\": 9}</tool_result>",
+  "<tool_result name=\"read_file\" step=\"7\">receipts/prompt-cache/example-07.json: {\"schema\": \"ReadinessReceipt/v1\", \"verdict\": \"PASS\", \"portion\": \"AUP-DEMO-007:p0\", \"assertions\": 10}</tool_result>",
+  "<tool_result name=\"read_file\" step=\"8\">receipts/prompt-cache/example-08.json: {\"schema\": \"ReadinessReceipt/v1\", \"verdict\": \"PASS\", \"portion\": \"AUP-DEMO-008:p0\", \"assertions\": 11}</tool_result>",
+  "<tool_result name=\"read_file\" step=\"9\">receipts/prompt-cache/example-09.json: {\"schema\": \"ReadinessReceipt/v1\", \"verdict\": \"PAUSED_SAFE\", \"portion\": \"AUP-DEMO-009:p0\", \"assertions\": 12}</tool_result>",
+  "<tool_result name=\"read_file\" step=\"10\">receipts/prompt-cache/example-10.json: {\"schema\": \"ReadinessReceipt/v1\", \"verdict\": \"PASS\", \"portion\": \"AUP-DEMO-010:p0\", \"assertions\": 13}</tool_result>"
+ ],
+ "dry_assistant_ack": "Acknowledged, awaiting next."
+}
