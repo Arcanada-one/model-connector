@@ -3,7 +3,6 @@
 // 100 % of cases in enforce/observe), tenant-scoped identity, pre-warm, and
 // the latency budget (positive fixtures add < 20 ms p95).
 
-import { writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   ActiveMode,
@@ -535,8 +534,6 @@ describe('latency budget (positive fixtures add < 20 ms p95)', () => {
     };
     // Written to stdout so the receipt can quote the measured numbers verbatim.
     console.log(`PROMPT_CACHE_POLICY_LATENCY ${JSON.stringify(report)}`);
-    const out = process.env.PROMPT_CACHE_LATENCY_OUT;
-    if (out) writeFileSync(out, `${JSON.stringify(report, null, 1)}\n`);
     expect(report.positive.p95_ms).toBeLessThan(20);
   });
 });
