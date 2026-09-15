@@ -46,12 +46,32 @@ readonly NODE=/usr/bin/node
 # ---------------------------------------------------------------------------
 # Service table. Edit here, re-install, never parameterise.
 # ---------------------------------------------------------------------------
+#
+# SEC-0063 (2026-08-18): the copy of this script on arcana-agents carries a
+# DIFFERENT service table, and that is deliberate — not drift to reconcile. A
+# service belongs in the table of the host whose containers and volumes it
+# actually has. Registering a service on a host it does not run on would let a
+# deploy landing there build a SECOND, EMPTY stack and report success.
+#
+# Related trap: the runners arcana-prod-replacement / arcana-prod-ci-replacement
+# live on arcana-agents but still advertise the label "arcana-prod" from an old
+# outage stand-in, so a job targeting that label may land on either machine.
+# This host also advertises "arcana-prod-host", which resolves to exactly one
+# machine; deploys that must be deterministic should target that.
 declare -rA REPOS=(
   [model-connector]='https://github.com/Arcanada-one/model-connector.git'
   [muneral]='https://github.com/Arcanada-one/muneral.git'
   [opsbot]='https://github.com/Arcanada-one/opsbot.git'
   [transcribator-api]='https://github.com/Arcanada-one/transcribator-api.git'
   [legal-arcana]='https://github.com/Arcanada-one/legal-arcana.git'
+  # SEC-0063: the INFRA-0376 consumer inventory classified this service
+  # `migrate-broker` on 2026-07-30 and the conversion was then missed when
+  # that task closed. Its deploy has failed at `permission denied ...
+  # /var/run/docker.sock` on every push to main since the group was retired
+  # — loudly, which is why nothing silently rotted. The repository is
+  # PUBLIC, so it deliberately gets no AUTH row: cmd_sync would then demand
+  # a credential on stdin and die on the empty read.
+  [arcanada-assistant]='https://github.com/Arcanada-one/arcanada-assistant.git'
 )
 declare -rA COMPOSE=(
   [model-connector]='deploy/stt-whisper/docker-compose.yml'
@@ -59,6 +79,7 @@ declare -rA COMPOSE=(
   [opsbot]='docker-compose.prod.yml'
   [transcribator-api]='docker-compose.prod.yml'
   [legal-arcana]='docker-compose.yml'
+  [arcanada-assistant]='docker-compose.yml'
 )
 # Private repositories whose fetch needs a credential on stdin.
 declare -rA AUTH=(
@@ -74,6 +95,15 @@ declare -rA PROJECT=(
   [opsbot]='opsbot'
   [transcribator-api]='transcribator-api'
   [legal-arcana]='legal-arcana'
+  # Pinned to the name the ALREADY-RUNNING stack carries
+  # (com.docker.compose.project=arcanada-assistant). Compose namespaces a
+  # named volume as <project>_<volume>, so a project name that did not match
+  # would not adopt arcanada-assistant_postgres-data — it would create an
+  # empty volume beside it, start a second stack that fights for the same
+  # published ports, and serve an empty database. The basename of the broker
+  # checkout happens to derive the same name; this pin is here so that
+  # coincidence is not what the database depends on.
+  [arcanada-assistant]='arcanada-assistant'
 )
 # Root-owned environment file. A bare name resolves under ENV_ROOT; an absolute
 # path is used as given, so a service whose env is already root-owned somewhere
@@ -84,6 +114,7 @@ declare -rA ENVFILE=(
   [opsbot]='opsbot.env'
   [transcribator-api]='/opt/transcribator/.env'
   [legal-arcana]='legal-arcana.env'
+  [arcanada-assistant]='arcanada-assistant.env'
 )
 # A release script inside the checkout that already encapsulates the whole
 # deploy. Running it as root is the same trust boundary the broker already
@@ -119,9 +150,13 @@ declare -rA VERIFY=(
 # Single container to inspect for freshness / smoke checks.
 declare -rA CONTAINER=(
   [opsbot]='opsbot'
+  [arcanada-assistant]='arcanada-assistant-assistant-1'
 )
 declare -rA MAXAGE=(
   [opsbot]='300'
+  # The assistant image builds a pnpm workspace and takes longer than opsbot;
+  # 600s still fails a deploy that recreated nothing.
+  [arcanada-assistant]='600'
 )
 # Fixed argv for the module-load smoke check. Compiled in, so the word
 # splitting below is on a constant, not on caller input.
@@ -329,10 +364,33 @@ cmd_verify() {
   [[ -f "$script" && ! -L "$script" ]] || die 'verify script missing or not a regular file'
   expected="$(cmd_image_id "$svc")"
   compose_env "$svc"
+  # INFRA-0378: the verify script defaults its failure dump to a FIXED
+  # name under /tmp, so each run destroyed the previous run's evidence and
+  # a reboot destroyed all of it. The 2026-08-12 transcribator rollback --
+  # which left production on stale code for a week -- was already
+  # undiagnosable when found. Give every invocation its own root-owned
+  # file that outlives the incident.
+  mkdir -p /var/log/arcanada-deploy && chmod 750 /var/log/arcanada-deploy
+  local failure_log
+  failure_log="/var/log/arcanada-deploy/verify-${svc}-$(date -u +%Y%m%dT%H%M%SZ).log"
+  # INFRA-0379: hand the verify script the Ops Bot key so its FATAL branch
+  # can actually raise the alarm. sudo strips the CI environment (the
+  # sudoers grant carries no SETENV, deliberately) and compose_env exports
+  # only BUILD_SHA, so before this the notifier printed "OPSBOT_API_KEY not
+  # set — skipping" and the deploy reported success while production ran
+  # rolled-back code. Read from the ROOT-OWNED env file, which the runner
+  # account cannot read; never exported to compose or written to the
+  # checkout.
+  local opsbot_key=''
+  if [[ -n "${ENVFILE[$svc]+set}" && -r "${ENVFILE[$svc]}" ]]; then
+    opsbot_key="$(sed -n 's/^OPSBOT_API_KEY=//p' "${ENVFILE[$svc]}" | head -n1)"
+  fi
   ( cd "$dir"
     EXPECTED_IMAGE_SHA="$expected" \
     GITHUB_SHA="$(head_sha "$svc")" \
     COMPOSE_FILE="${COMPOSE[$svc]}" \
+    VERIFY_FAILURE_LOG="$failure_log" \
+    OPSBOT_API_KEY="$opsbot_key" \
     bash "$script" )
 }
 
