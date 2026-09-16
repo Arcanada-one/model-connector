@@ -1,4 +1,4 @@
-name: Deploy STT Whisper (arcana-prod)
+name: Deploy STT Whisper
 
 on:
   push:
@@ -29,26 +29,33 @@ jobs:
   deploy:
     needs: network-exposure-lint
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, Linux, arcana-prod]
+    # INFRA-0417: host-unique label instead of the shared `arcana-prod`, which
+    # several runners on different machines advertise — a deploy landing on the
+    # wrong one would start a second, empty whisper stack and report success.
+    runs-on: [self-hosted, linux, arcana-prd-host]
     concurrency:
       group: deploy-stt-whisper
       cancel-in-progress: false
     env:
       COMPOSE_FILE: deploy/stt-whisper/docker-compose.yml
-      # Whisper binds to arcana-prod Tailscale interface (100.121.155.54:8400) per
-      # Tier 2 baseline; runner on the same host reaches it via Tailscale IP.
-      WHISPER_HEALTH_URL: http://100.121.155.54:8400/health
+      # INFRA-0417: the health probe used to name the tailnet IP of one machine
+      # (100.121.155.54 = arcana-prod, being decommissioned). The check runs ON
+      # the deploy host, so loopback is both correct and host-independent — the
+      # published port is the same 8400 whichever interface it is bound to.
+      WHISPER_HEALTH_URL: http://127.0.0.1:8400/health
     steps:
       - uses: actions/checkout@v4
 
-      # INFRA-0121 mandate: pre-deploy preflight against target host (arcana-prod).
+      # INFRA-0121 mandate: pre-deploy preflight against the target host.
       # SHA-bridge per CLAUDE.md § 8 — INFRA-0122 PR #8 head until merge tag v1.x.y lands.
       - name: Preflight check
         uses: Arcanada-one/datarim/.github/actions/preflight-check@fff25210a90204db04962dc2de63fe255a084ec3 # v1 SHA-bridge (INFRA-0122 PR #8 head)
         with:
-          target-host: arcana-prod
+          # A logical name for metric keys and Ops Bot metadata, not a
+          # connection target: the checks run locally on the runner.
+          target-host: arcana-prd
           service-name: stt-whisper
-          # STT model needs ~3.25 GiB at peak; arcana-prod 64 GiB RAM, headroom ample.
+          # STT model needs ~3.25 GiB at peak; the host has ample headroom.
           min-free-disk-gb: '5'
           disk-warn-percent: '80'
           disk-fail-percent: '90'
@@ -65,13 +72,13 @@ jobs:
       # `pull` invocation became trailing arguments to `sync`, and the broker
       # correctly rejected it as `sync takes exactly one sha`.
       - name: Sync broker checkout to this commit
-        run: sudo -n /usr/local/sbin/arcanada-compose-broker model-connector sync "$GITHUB_SHA"
+        run: sudo -n /usr/local/sbin/arcanada-compose-broker stt-whisper sync "$GITHUB_SHA"
 
       - name: Pull pinned image
-        run: sudo -n /usr/local/sbin/arcanada-compose-broker model-connector pull
+        run: sudo -n /usr/local/sbin/arcanada-compose-broker stt-whisper pull
 
       - name: Bring up stack
-        run: sudo -n /usr/local/sbin/arcanada-compose-broker model-connector up
+        run: sudo -n /usr/local/sbin/arcanada-compose-broker stt-whisper up
 
       - name: Wait for healthy
         run: |
@@ -83,7 +90,7 @@ jobs:
             sleep 5
           done
           echo "Health check failed after 150s"
-          sudo -n /usr/local/sbin/arcanada-compose-broker model-connector logs 100
+          sudo -n /usr/local/sbin/arcanada-compose-broker stt-whisper logs 100
           exit 1
 
       - name: Post-deploy health body assertion
@@ -96,7 +103,7 @@ jobs:
           fi
 
       - name: Status snapshot
-        run: sudo -n /usr/local/sbin/arcanada-compose-broker model-connector ps
+        run: sudo -n /usr/local/sbin/arcanada-compose-broker stt-whisper ps
 
       - name: Notify Ops Bot on failure
         if: failure()
@@ -112,7 +119,10 @@ jobs:
             -H 'Content-Type: application/json' \
             -d "$(jq -nc \
               --arg service stt-whisper \
-              --arg host arcana-prod \
+              `# INFRA-0417: read the host from the machine rather than hard-coding` \
+              `# it. A literal here survives a move and then reports the failure` \
+              `# against a machine that no longer runs the service.` \
+              --arg host "$(hostname -s)" \
               --arg run "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-              '{category:"fatal", agent:"deploy-stt-whisper", service:$service, host:$host, body:"deploy-stt-whisper failed", meta:{run_url:$run}, dedup_key:"deploy-stt-whisper-arcana-prod-failed"}')" \
+              '{category:"fatal", agent:"deploy-stt-whisper", service:$service, host:$host, body:"deploy-stt-whisper failed", meta:{run_url:$run}, dedup_key:("deploy-stt-whisper-" + $host + "-failed")}')" \
             || echo "Ops Bot notify failed (continuing — deploy already failed)"

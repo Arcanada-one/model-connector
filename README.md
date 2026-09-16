@@ -381,7 +381,7 @@ body and the request is dispatched to the provider — and charged — **exactly
 every repeat returns the stored response.
 
 ```bash
-curl -X POST http://100.121.155.54:3900/execute \
+curl -X POST http://100.90.7.20:3900/execute \
   -H 'Authorization: Bearer <MODEL_CONNECTOR_API_KEY>' \
   -H 'Idempotency-Key: 5c8f1e7a-order-4821-retry' \
   -H 'Content-Type: application/json' \
@@ -452,7 +452,7 @@ VALUES (
 **Шаг 4. Использовать** в `.env` вашего проекта:
 
 ```env
-MC_URL=http://100.121.155.54:3900
+MC_URL=http://100.90.7.20:3900
 MC_API_KEY=<MODEL_CONNECTOR_API_KEY>
 ```
 
@@ -657,7 +657,7 @@ pnpm db:push      # Push schema to database
 
 | Параметр | Из интернета | Из Tailscale (серверы экосистемы) |
 |----------|-------------|----------------------------------|
-| **URL** | `https://connector.arcanada.one` | `http://100.121.155.54:3900` |
+| **URL** | `https://connector.arcanada.one` | `http://100.90.7.20:3900` |
 | **Протокол** | HTTPS (Cloudflare → nginx → :3900) | HTTP напрямую (без прокси) |
 | **Auth** | `Authorization: Bearer <API_KEY>` | `Authorization: Bearer <API_KEY>` |
 | **Таймаут Cloudflare** | ~100s (HTTP 524 при превышении) | нет ограничения |
@@ -695,7 +695,7 @@ curl -X POST https://connector.arcanada.one/connectors/openrouter/execute \
   }'
 
 # С сервера экосистемы (Tailscale, без Cloudflare):
-curl -X POST http://100.121.155.54:3900/connectors/openrouter/execute \
+curl -X POST http://100.90.7.20:3900/connectors/openrouter/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Hello", "model": "meta-llama/llama-4-maverick"}'
@@ -705,7 +705,7 @@ curl -X POST http://100.121.155.54:3900/connectors/openrouter/execute \
 
 ```typescript
 // .env: MC_API_KEY=your-key
-// С сервера экосистемы используйте http://100.121.155.54:3900
+// С сервера экосистемы используйте http://100.90.7.20:3900
 const MC_URL = process.env.MC_URL || 'https://connector.arcanada.one';
 const MC_KEY = process.env.MC_API_KEY;
 
@@ -735,7 +735,7 @@ async function askLLM(prompt: string, model?: string): Promise<string> {
 ```python
 import os, httpx
 
-# С сервера экосистемы используйте http://100.121.155.54:3900
+# С сервера экосистемы используйте http://100.90.7.20:3900
 MC_URL = os.environ.get("MC_URL", "https://connector.arcanada.one")
 MC_KEY = os.environ["MC_API_KEY"]
 

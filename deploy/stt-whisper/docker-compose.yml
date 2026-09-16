@@ -1,25 +1,38 @@
 # Self-hosted faster-whisper-server stack for Model Connector STT Phase 2.
-# Runs on arcana-prod (Tailscale 100.121.155.54) — STT is an application service,
-# placed on the application/services host per the canonical server-role model.
-# Reached by Model Connector via LOCAL_WHISPER_BASE_URL=http://arcana-prod:8400
-# inside the tailnet (model-connector runs on the same host → loopback-fast).
+# STT is an application service, placed on the application/services host per the
+# canonical server-role model. Reached by Model Connector via
+# LOCAL_WHISPER_BASE_URL=http://<that host>:8400 inside the tailnet.
+#
+# INFRA-0417: the bind address used to be the literal tailnet IP of arcana-prod
+# (100.121.155.54). That is a property of ONE MACHINE written into a file that
+# describes a SERVICE, so the stack could not be moved without editing the
+# repository — and the machine it named is being decommissioned. SEC-0063 is
+# the same rule stated for deploy targets: a host is selected by a runner label
+# or an operator-set variable, never by an address in config.
+#
+# STT_BIND_IP is deliberately given NO DEFAULT. A default of 127.0.0.1 looks
+# safe and is not: Compose would fold the bind to loopback, the stack would come
+# up healthy, every local probe would pass, and the only thing that breaks is
+# the mesh consumer — which is invisible from this host. That exact failure
+# already cost an outage on Ops Bot during this migration. Unset now fails the
+# deploy loudly instead.
 #
 # Image pinned by digest after Phase 0 fixture capture (2026-05-16).
 # Model: Systran/faster-distil-whisper-large-v3 (INT8 CT2, RTF ~1.05× on 4vCPU).
 #
 # x-exposure-tier: 2
-# x-exposure-justification: Tailscale-only reachability. Docker binds the
-#   port on arcana-prod's Tailscale interface IP (100.121.155.54:8400) — the
-#   public eth0 has no listening socket on 8400, so the host's INPUT-policy=DROP
-#   default plus the docker-proxy bind together keep the surface tailnet-only.
-#   Consumers reach the port via tailnet hostname `arcana-prod` → 100.121.155.54.
+# x-exposure-justification: Tailscale-only reachability. Docker binds the port
+#   on the host's Tailscale interface IP (${STT_BIND_IP}:8400) — the public eth0
+#   has no listening socket on 8400, so the host's INPUT-policy=DROP default plus
+#   the docker-proxy bind together keep the surface tailnet-only. Consumers reach
+#   the port via the tailnet hostname of whichever host runs this stack.
 services:
   whisper:
     image: fedirz/faster-whisper-server@sha256:760e5e43d427dc6cfbbc4731934b908b7de9c7e6d5309c6a1f0c8c923a5b6030
     container_name: stt-whisper
     restart: unless-stopped
     ports:
-      - "100.121.155.54:8400:8000"
+      - "${STT_BIND_IP:?STT_BIND_IP must be set to this host's tailnet IP}:8400:8000"
     environment:
       WHISPER__MODEL: Systran/faster-distil-whisper-large-v3
       WHISPER__USE_LOCAL_FILES_ONLY: "false"
