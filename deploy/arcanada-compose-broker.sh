@@ -83,6 +83,11 @@ declare -rA REPOS=(
   # The STT helper ships from the model-connector repository but is a stack of
   # its own — see the COMPOSE table.
   [stt-whisper]='https://github.com/Arcanada-one/model-connector.git'
+  # INFRA-0417: langfuse's own deploy.sh refuses to run without a broker row
+  # — it checks that the runner is NOT in the docker group and tells the
+  # caller to register here instead. The stack moved to arcana-prd with its
+  # 3.5 GB of ClickHouse volumes, so it needs the row to deploy at all.
+  [langfuse-deploy]='https://github.com/Arcanada-one/langfuse-deploy.git'
 )
 declare -rA COMPOSE=(
   # INFRA-0417: model-connector's OWN stack, not the whisper side-stack. The
@@ -98,6 +103,7 @@ declare -rA COMPOSE=(
   [legal-arcana]='docker-compose.yml'
   [arcanada-assistant]='docker-compose.yml'
   [verdicus]='docker-compose.prod.yml'
+  [langfuse-deploy]='docker-compose.yml'
 )
 # Private repositories whose fetch needs a credential on stdin.
 declare -rA AUTH=(
@@ -105,6 +111,7 @@ declare -rA AUTH=(
   [transcribator-api]='github-token'
   [legal-arcana]='github-token'
   [verdicus]='github-token'
+  [langfuse-deploy]='github-token'
 )
 # Pin the compose project name. Unset means Compose derives it from the
 # checkout directory, which is what the whisper stack has always done —
@@ -135,6 +142,10 @@ declare -rA PROJECT=(
   # them. model-connector's volumes hold 864 MB of provider auth state.
   [model-connector]='model-connector'
   [stt-whisper]='stt-whisper'
+  # The running stack carries com.docker.compose.project=langfuse-deploy and
+  # owns named volumes under that prefix (clickhouse-data is 2.6 GB). A
+  # derived name would create empty volumes beside them.
+  [langfuse-deploy]='langfuse-deploy'
 )
 # Root-owned environment file. A bare name resolves under ENV_ROOT; an absolute
 # path is used as given, so a service whose env is already root-owned somewhere
@@ -147,6 +158,8 @@ declare -rA ENVFILE=(
   [legal-arcana]='legal-arcana.env'
   [arcanada-assistant]='arcanada-assistant.env'
   [verdicus]='verdicus.env'
+  # Operator-maintained, already root-owned where it lives.
+  [langfuse-deploy]='/etc/langfuse-deploy/.env'
   [model-connector]='model-connector.env'
   # INFRA-0417: the stt-whisper stack had no managed environment at all — its
   # bind address was a literal machine IP written into the compose file. The
