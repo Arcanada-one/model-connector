@@ -178,4 +178,54 @@ grep -Fq 'IMAGE_TAG=<unset>' \
   exit 1
 }
 
+# INFRA-0417 — the environment must land BESIDE the compose file.
+#
+# `docker compose -f <file>` resolves `.env` relative to that file. For a
+# service whose compose sits in a subdirectory, an `.env` installed in the root
+# of the checkout is simply never read — the stack comes up with whatever the
+# image bakes in, and every `${VAR}` interpolates to empty. That failure is
+# silent: the container starts, and only a consumer notices.
+#
+# model-connector is the case that has a subdirectory compose file, so it is
+# what this asserts.
+mc_checkout="${state_root}/stt-whisper"
+mkdir -p "${mc_checkout}/deploy/stt-whisper"
+git -C "$mc_checkout" init -q
+git -C "$mc_checkout" -c user.email=t@example.invalid -c user.name=t \
+  commit -q --allow-empty -m 'fixture head'
+printf '%s\n' 'services: {}' >"${mc_checkout}/deploy/stt-whisper/docker-compose.yml"
+printf '%s\n' 'STT_BIND_IP=203.0.113.9' >"${env_root}/stt-whisper.env"
+
+# install_env runs from `sync`, so the placement is asserted by calling the
+# function directly against the fixture rather than by driving a full sync,
+# which would need a reachable remote.
+check_env_placement() {
+  local name="$1" svc="$2" expected="$3" unexpected="$4"
+  rm -f -- "$expected" "$unexpected"
+  # shellcheck disable=SC1090
+  ( set -euo pipefail
+    # Source the broker with a no-op main so its tables and functions are
+    # available without executing a command.
+    eval "$(sed 's/^main "\$@"$/:/' "$broker")"
+    install_env "$svc"
+  )
+  if [ ! -f "$expected" ]; then
+    echo "FAIL: ${name}: env not installed at ${expected}" >&2
+    exit 1
+  fi
+  if [ -e "$unexpected" ]; then
+    echo "FAIL: ${name}: env also landed at ${unexpected}" >&2
+    exit 1
+  fi
+  echo "PASS: ${name}"
+}
+
+check_env_placement env_installed_beside_subdirectory_compose stt-whisper \
+  "${mc_checkout}/deploy/stt-whisper/.env" "${mc_checkout}/.env"
+grep -Fq 'STT_BIND_IP=203.0.113.9' "${mc_checkout}/deploy/stt-whisper/.env"
+
+# A root-level compose file must keep landing exactly where it always did.
+check_env_placement env_still_at_root_for_root_level_compose verdicus \
+  "${state_root}/verdicus/.env" "${state_root}/verdicus/deploy/.env"
+
 echo 'All aggregate readback broker cases passed.'

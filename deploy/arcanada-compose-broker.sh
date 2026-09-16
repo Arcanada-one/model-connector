@@ -80,9 +80,18 @@ declare -rA REPOS=(
   # is what actually fixes that; moving it to another machine only relocates a
   # deploy that does not work.
   [verdicus]='https://github.com/Arcanada-one/verdicus.git'
+  # The STT helper ships from the model-connector repository but is a stack of
+  # its own — see the COMPOSE table.
+  [stt-whisper]='https://github.com/Arcanada-one/model-connector.git'
 )
 declare -rA COMPOSE=(
-  [model-connector]='deploy/stt-whisper/docker-compose.yml'
+  # INFRA-0417: model-connector's OWN stack, not the whisper side-stack. The
+  # two were conflated: this row pointed at deploy/stt-whisper, so the broker
+  # could bring up the STT helper but never the connector itself. They are
+  # separate stacks with separate environments and separate lifecycles, so
+  # stt-whisper is now its own service row below.
+  [model-connector]='docker-compose.yml'
+  [stt-whisper]='deploy/stt-whisper/docker-compose.yml'
   [muneral]='docker-compose.prod.yml'
   [opsbot]='docker-compose.prod.yml'
   [transcribator-api]='docker-compose.prod.yml'
@@ -121,6 +130,11 @@ declare -rA PROJECT=(
   # beside it, and both would fight for 127.0.0.1:3301 — one of them losing
   # silently. Pinned, so the identity does not depend on a directory name.
   [verdicus]='verdicus-api'
+  # Pinned to the names the ALREADY-RUNNING stacks carry, so a move adopts the
+  # existing containers and named volumes instead of starting empty ones beside
+  # them. model-connector's volumes hold 864 MB of provider auth state.
+  [model-connector]='model-connector'
+  [stt-whisper]='stt-whisper'
 )
 # Root-owned environment file. A bare name resolves under ENV_ROOT; an absolute
 # path is used as given, so a service whose env is already root-owned somewhere
@@ -133,6 +147,11 @@ declare -rA ENVFILE=(
   [legal-arcana]='legal-arcana.env'
   [arcanada-assistant]='arcanada-assistant.env'
   [verdicus]='verdicus.env'
+  [model-connector]='model-connector.env'
+  # INFRA-0417: the stt-whisper stack had no managed environment at all — its
+  # bind address was a literal machine IP written into the compose file. The
+  # address is now ${STT_BIND_IP}, which has to come from somewhere root-owned.
+  [stt-whisper]='stt-whisper.env'
 )
 # A release script inside the checkout that already encapsulates the whole
 # deploy. Running it as root is the same trust boundary the broker already
@@ -142,6 +161,12 @@ declare -rA ENVFILE=(
 # environment it runs with.
 declare -rA SCRIPT=(
   [legal-arcana]='deploy/deploy.sh'
+  # INFRA-0417: model-connector's deploy was a 40-line inline script inside an
+  # `appleboy/ssh-action` step, targeting a host named by a SECRET. That is the
+  # opposite of SEC-0063 — the target is invisible in the workflow, cannot be
+  # reviewed, and cannot be moved without editing a secret. The script is now a
+  # reviewable file in the repository and the host is chosen by a runner label.
+  [model-connector]='deploy/deploy.sh'
 )
 # Schema-migration recipe run before `up`.
 declare -rA MIGRATE=(
@@ -274,12 +299,22 @@ set_root_env_path() {
   ROOT_ENV_PATH="$src"
 }
 
+# The environment is installed BESIDE THE COMPOSE FILE, not in the root of the
+# checkout. `docker compose -f <file>` resolves `.env` relative to that file, so
+# for a service whose compose lives in a subdirectory the root copy would simply
+# never be read: the stack would come up with whatever the image bakes in, and
+# any `${VAR}` in the compose file would interpolate to empty.
+#
+# Every service that predates this used a compose file at the root, where the
+# two locations coincide — so this is a no-op for them, and the reason the gap
+# went unnoticed until a subdirectory stack (stt-whisper) needed a variable.
 install_env() {
-  local svc="$1" dir
+  local svc="$1" dir compose_file
   [[ -n "${ENVFILE[$svc]+set}" ]] || return 0
   dir="$(checkout_dir "$svc")"
+  compose_file="$dir/${COMPOSE[$svc]}"
   set_root_env_path "$svc"
-  install -m 0600 -o root -g root "$ROOT_ENV_PATH" "$dir/.env"
+  install -m 0600 -o root -g root "$ROOT_ENV_PATH" "$(dirname -- "$compose_file")/.env"
 }
 
 # A credential for a private fetch arrives on stdin, is validated, and is
