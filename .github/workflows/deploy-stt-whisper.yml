@@ -40,9 +40,15 @@ jobs:
       COMPOSE_FILE: deploy/stt-whisper/docker-compose.yml
       # INFRA-0417: the health probe used to name the tailnet IP of one machine
       # (100.121.155.54 = arcana-prod, being decommissioned). The check runs ON
-      # the deploy host, so loopback is both correct and host-independent — the
-      # published port is the same 8400 whichever interface it is bound to.
-      WHISPER_HEALTH_URL: http://127.0.0.1:8400/health
+      # the deploy host, so loopback is host-independent.
+      #
+      # The port is read from the same root-owned env file the stack itself
+      # uses, rather than repeated here: arcana-prd already publishes another
+      # service on 8400, so the stack moved to a different port there, and a
+      # second literal would have gone on probing a port nothing serves — a
+      # deploy that fails with the service perfectly healthy, or worse, one
+      # that passes against somebody else's endpoint.
+      # (no port literal here: it is read from the running stack, below)
     steps:
       - uses: actions/checkout@v4
 
@@ -79,6 +85,31 @@ jobs:
 
       - name: Bring up stack
         run: sudo -n /usr/local/sbin/arcanada-compose-broker stt-whisper up
+
+      - name: Resolve the port the stack actually published
+        run: |
+          set -euo pipefail
+          # Read it from the running stack rather than repeating a literal.
+          # `ps` reports the published mapping the broker's own compose
+          # invocation produced, so the probe cannot drift from the deploy:
+          # a port taken from the workflow could go on checking 8400 while the
+          # stack moved, which fails a deploy whose service is perfectly
+          # healthy — or passes against whatever else now answers there.
+          # The ADDRESS matters as much as the port. This stack publishes on
+          # the host's tailnet interface only — deliberately, it is the Tier 2
+          # exposure baseline — so 127.0.0.1 is not merely a different route to
+          # the same socket, it is a socket that does not exist. Probing it
+          # would fail a deploy whose service is healthy, which is exactly what
+          # happened when this was first written against loopback.
+          mapping="$(sudo -n /usr/local/sbin/arcanada-compose-broker \
+            stt-whisper ps 2>/dev/null |
+            grep -oE '[0-9.]+:[0-9]+->8000/tcp' | head -1)"
+          published="${mapping%%->*}"
+          [[ "${published}" =~ ^[0-9.]+:[0-9]{1,5}$ ]] || {
+            echo "could not determine the published whisper endpoint" >&2
+            exit 1
+          }
+          echo "WHISPER_HEALTH_URL=http://${published}/health" >> "$GITHUB_ENV"
 
       - name: Wait for healthy
         run: |

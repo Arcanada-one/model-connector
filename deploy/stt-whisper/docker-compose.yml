@@ -10,6 +10,14 @@
 # the same rule stated for deploy targets: a host is selected by a runner label
 # or an operator-set variable, never by an address in config.
 #
+# STT_BIND_PORT keeps its historical 8400 as a default, because the port is not
+# a property of the machine in the way the address is — but it IS overridable,
+# which 8400 hard-coded was not. Consolidating three hosts onto one found that
+# out the hard way: arcana-prd already publishes obs-loki on <tailnet ip>:8400,
+# so this stack could not start there at all. Two services that never shared a
+# machine can collide the moment they do, and a literal port in a compose file
+# gives the receiving host no way to resolve it without editing this repository.
+#
 # STT_BIND_IP is deliberately given NO DEFAULT. A default of 127.0.0.1 looks
 # safe and is not: Compose would fold the bind to loopback, the stack would come
 # up healthy, every local probe would pass, and the only thing that breaks is
@@ -32,7 +40,7 @@ services:
     container_name: stt-whisper
     restart: unless-stopped
     ports:
-      - "${STT_BIND_IP:?STT_BIND_IP must be set to this host's tailnet IP}:8400:8000"
+      - "${STT_BIND_IP:?STT_BIND_IP must be set to this host's tailnet IP}:${STT_BIND_PORT:-8400}:8000"
     environment:
       WHISPER__MODEL: Systran/faster-distil-whisper-large-v3
       WHISPER__USE_LOCAL_FILES_ONLY: "false"
