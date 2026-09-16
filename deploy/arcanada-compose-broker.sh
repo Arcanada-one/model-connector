@@ -153,6 +153,13 @@ declare -rA MIGRATE=(
 declare -rA BUILDSHA=(
   [transcribator-api]='yes'
 )
+# Services whose compose file interpolates IMAGE_TAG to select a PRE-BUILT
+# image from a registry. The broker supplies it from its own checkout HEAD, so
+# the deployed image is pinned to the commit that triggered the deploy rather
+# than to a floating `latest`.
+declare -rA IMAGETAG=(
+  [verdicus]='yes'
+)
 # Locally built image name for tag rotation and digest resolution.
 declare -rA IMAGE=(
   [transcribator-api]='transcribator-api'
@@ -232,14 +239,25 @@ set_compose_argv() {
   fi
 }
 
-# BUILD_SHA is exported here and nowhere else, from the checkout the broker
-# controls, so a caller cannot label an image with a commit it is not built
-# from.
+# BUILD_SHA and IMAGE_TAG are exported here and nowhere else, from the checkout
+# the broker controls, so a caller cannot label an image with a commit it is
+# not built from, nor point a deploy at an image it did not produce.
+#
+# The two are not the same case. BUILD_SHA labels an image this host BUILDS;
+# IMAGE_TAG selects a pre-built image this host PULLS. For a pulled image the
+# tag is the entire identity of what gets deployed — leaving it unset would
+# resolve `${IMAGE_TAG:-latest}` to a floating tag, and the deploy would no
+# longer be pinned to the commit that triggered it.
 compose_env() {
   local svc="$1"
-  [[ -n "${BUILDSHA[$svc]+set}" ]] || return 0
-  BUILD_SHA="$(head_sha "$svc")"
-  export BUILD_SHA
+  if [[ -n "${BUILDSHA[$svc]+set}" ]]; then
+    BUILD_SHA="$(head_sha "$svc")"
+    export BUILD_SHA
+  fi
+  if [[ -n "${IMAGETAG[$svc]+set}" ]]; then
+    IMAGE_TAG="$(head_sha "$svc")"
+    export IMAGE_TAG
+  fi
 }
 
 require_checkout() {

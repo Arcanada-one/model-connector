@@ -125,4 +125,57 @@ grep -Fq 'implausible registry username' \
 expect_fail registry_login_requires_a_username verdicus registry-login
 expect_fail registry_logout_takes_no_arguments verdicus registry-logout extra
 
+# INFRA-0417 — IMAGE_TAG must come from the broker's OWN checkout.
+#
+# verdicus pulls a pre-built image whose tag IS the entire identity of what
+# gets deployed. `${IMAGE_TAG:-latest}` in the compose file means an unset
+# variable does not fail — it silently resolves to a floating tag, and the
+# deploy stops being pinned to the commit that triggered it. That is a bug that
+# reports success, so it needs a test that reads the value rather than the exit
+# code.
+verdicus_checkout="${state_root}/verdicus"
+mkdir -p "$verdicus_checkout"
+git -C "$verdicus_checkout" init -q
+git -C "$verdicus_checkout" -c user.email=t@example.invalid -c user.name=t \
+  commit -q --allow-empty -m 'fixture head'
+verdicus_head="$(git -C "$verdicus_checkout" rev-parse HEAD)"
+printf '%s\n' 'IMAGE_TAG_FIXTURE=1' >"${env_root}/verdicus.env"
+printf '%s\n' 'services: {}' >"${verdicus_checkout}/docker-compose.prod.yml"
+
+# muneral is exercised for the negative case below and needs a compose file of
+# its own for the same reason.
+printf '%s\n' 'services: {}' >"${state_root}/muneral/docker-compose.prod.yml"
+
+fake_docker="${bin_root}/docker"
+cat >"$fake_docker" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+# Report the variable the broker exported, so the test asserts the VALUE and
+# not merely that the command was reached.
+printf 'FAKE_DOCKER IMAGE_TAG=%s ARGV=%s\n' "${IMAGE_TAG:-<unset>}" "$*"
+SH
+chmod 0755 "$fake_docker"
+sed -i -e "s#^readonly DOCKER=.*#readonly DOCKER='${fake_docker}'#" "$broker"
+
+expect_pass image_tag_pinned_to_checkout_head verdicus pull
+grep -Fq "IMAGE_TAG=${verdicus_head}" \
+  "${fixture_dir}/image_tag_pinned_to_checkout_head.out" || {
+  echo "FAIL: IMAGE_TAG was not pinned to the checkout HEAD" >&2
+  cat "${fixture_dir}/image_tag_pinned_to_checkout_head.out" >&2
+  exit 1
+}
+grep -Fqv 'IMAGE_TAG=<unset>' \
+  "${fixture_dir}/image_tag_pinned_to_checkout_head.out"
+
+# A service NOT in IMAGETAG must not have the variable exported at all —
+# otherwise the pin would leak across services and a compose file that happens
+# to reference IMAGE_TAG would silently pick up a foreign commit.
+expect_pass image_tag_absent_for_other_services muneral pull
+grep -Fq 'IMAGE_TAG=<unset>' \
+  "${fixture_dir}/image_tag_absent_for_other_services.out" || {
+  echo "FAIL: IMAGE_TAG leaked into a service that does not declare it" >&2
+  cat "${fixture_dir}/image_tag_absent_for_other_services.out" >&2
+  exit 1
+}
+
 echo 'All aggregate readback broker cases passed.'
