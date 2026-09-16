@@ -44,7 +44,7 @@ jobs:
       # published port is the same 8400 whichever interface it is bound to.
       WHISPER_HEALTH_URL: http://127.0.0.1:8400/health
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # INFRA-0121 mandate: pre-deploy preflight against the target host.
       # SHA-bridge per CLAUDE.md § 8 — INFRA-0122 PR #8 head until merge tag v1.x.y lands.
