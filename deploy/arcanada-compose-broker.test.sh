@@ -88,4 +88,94 @@ sed -i "s/== '${owner}'/== 'definitely-not-${owner}'/g" "$broker"
 expect_fail non_root_owned_environment_rejected muneral aggregate-readback
 mv "${broker}.owner-check" "$broker"
 
+# INFRA-0417 — the ephemeral registry credential (`registry-login`) is a host
+# capability, not a per-service one: once established, root's docker config is
+# authenticated for anything that pulls. The service argument is therefore the
+# only thing keeping "may be deployed by the broker" from silently also meaning
+# "may place a credential on the host", so it is worth a test of its own.
+#
+# muneral is in the deploy allowlist and NOT in REGISTRY_AUTH, so it stands in
+# for every service that must be refused. These cases assert the refusal, not
+# the login itself: a passing login would need a real registry and a real
+# token, which no unit test should have.
+expect_fail registry_login_refused_for_unlisted_service \
+  muneral registry-login Arcanada
+expect_fail registry_logout_refused_for_unlisted_service \
+  muneral registry-logout
+grep -Fq 'may not establish a registry credential' \
+  "${fixture_dir}/registry_login_refused_for_unlisted_service.out"
+grep -Fq 'may not clear a registry credential' \
+  "${fixture_dir}/registry_logout_refused_for_unlisted_service.out"
+
+# A service outside the deploy allowlist entirely must be rejected earlier
+# still, by validate_service, before the registry table is ever consulted.
+expect_fail registry_login_refused_for_unknown_service \
+  not-a-service registry-login Arcanada
+
+# The username is interpolated into a `docker login` argv, so it must not be
+# able to smuggle a flag. `verdicus` IS in REGISTRY_AUTH, which is what makes
+# this case reach the username check rather than stopping at the table.
+expect_fail registry_login_rejects_flag_username \
+  verdicus registry-login --insecure
+grep -Fq 'implausible registry username' \
+  "${fixture_dir}/registry_login_rejects_flag_username.out"
+
+# Arity is part of the contract: a missing username must not fall through to a
+# login with an empty user, and an extra argument must not be ignored.
+expect_fail registry_login_requires_a_username verdicus registry-login
+expect_fail registry_logout_takes_no_arguments verdicus registry-logout extra
+
+# INFRA-0417 — IMAGE_TAG must come from the broker's OWN checkout.
+#
+# verdicus pulls a pre-built image whose tag IS the entire identity of what
+# gets deployed. `${IMAGE_TAG:-latest}` in the compose file means an unset
+# variable does not fail — it silently resolves to a floating tag, and the
+# deploy stops being pinned to the commit that triggered it. That is a bug that
+# reports success, so it needs a test that reads the value rather than the exit
+# code.
+verdicus_checkout="${state_root}/verdicus"
+mkdir -p "$verdicus_checkout"
+git -C "$verdicus_checkout" init -q
+git -C "$verdicus_checkout" -c user.email=t@example.invalid -c user.name=t \
+  commit -q --allow-empty -m 'fixture head'
+verdicus_head="$(git -C "$verdicus_checkout" rev-parse HEAD)"
+printf '%s\n' 'IMAGE_TAG_FIXTURE=1' >"${env_root}/verdicus.env"
+printf '%s\n' 'services: {}' >"${verdicus_checkout}/docker-compose.prod.yml"
+
+# muneral is exercised for the negative case below and needs a compose file of
+# its own for the same reason.
+printf '%s\n' 'services: {}' >"${state_root}/muneral/docker-compose.prod.yml"
+
+fake_docker="${bin_root}/docker"
+cat >"$fake_docker" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+# Report the variable the broker exported, so the test asserts the VALUE and
+# not merely that the command was reached.
+printf 'FAKE_DOCKER IMAGE_TAG=%s ARGV=%s\n' "${IMAGE_TAG:-<unset>}" "$*"
+SH
+chmod 0755 "$fake_docker"
+sed -i -e "s#^readonly DOCKER=.*#readonly DOCKER='${fake_docker}'#" "$broker"
+
+expect_pass image_tag_pinned_to_checkout_head verdicus pull
+grep -Fq "IMAGE_TAG=${verdicus_head}" \
+  "${fixture_dir}/image_tag_pinned_to_checkout_head.out" || {
+  echo "FAIL: IMAGE_TAG was not pinned to the checkout HEAD" >&2
+  cat "${fixture_dir}/image_tag_pinned_to_checkout_head.out" >&2
+  exit 1
+}
+grep -Fqv 'IMAGE_TAG=<unset>' \
+  "${fixture_dir}/image_tag_pinned_to_checkout_head.out"
+
+# A service NOT in IMAGETAG must not have the variable exported at all —
+# otherwise the pin would leak across services and a compose file that happens
+# to reference IMAGE_TAG would silently pick up a foreign commit.
+expect_pass image_tag_absent_for_other_services muneral pull
+grep -Fq 'IMAGE_TAG=<unset>' \
+  "${fixture_dir}/image_tag_absent_for_other_services.out" || {
+  echo "FAIL: IMAGE_TAG leaked into a service that does not declare it" >&2
+  cat "${fixture_dir}/image_tag_absent_for_other_services.out" >&2
+  exit 1
+}
+
 echo 'All aggregate readback broker cases passed.'
