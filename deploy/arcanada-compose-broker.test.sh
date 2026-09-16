@@ -88,4 +88,41 @@ sed -i "s/== '${owner}'/== 'definitely-not-${owner}'/g" "$broker"
 expect_fail non_root_owned_environment_rejected muneral aggregate-readback
 mv "${broker}.owner-check" "$broker"
 
+# INFRA-0417 — the ephemeral registry credential (`registry-login`) is a host
+# capability, not a per-service one: once established, root's docker config is
+# authenticated for anything that pulls. The service argument is therefore the
+# only thing keeping "may be deployed by the broker" from silently also meaning
+# "may place a credential on the host", so it is worth a test of its own.
+#
+# muneral is in the deploy allowlist and NOT in REGISTRY_AUTH, so it stands in
+# for every service that must be refused. These cases assert the refusal, not
+# the login itself: a passing login would need a real registry and a real
+# token, which no unit test should have.
+expect_fail registry_login_refused_for_unlisted_service \
+  muneral registry-login Arcanada
+expect_fail registry_logout_refused_for_unlisted_service \
+  muneral registry-logout
+grep -Fq 'may not establish a registry credential' \
+  "${fixture_dir}/registry_login_refused_for_unlisted_service.out"
+grep -Fq 'may not clear a registry credential' \
+  "${fixture_dir}/registry_logout_refused_for_unlisted_service.out"
+
+# A service outside the deploy allowlist entirely must be rejected earlier
+# still, by validate_service, before the registry table is ever consulted.
+expect_fail registry_login_refused_for_unknown_service \
+  not-a-service registry-login Arcanada
+
+# The username is interpolated into a `docker login` argv, so it must not be
+# able to smuggle a flag. `verdicus` IS in REGISTRY_AUTH, which is what makes
+# this case reach the username check rather than stopping at the table.
+expect_fail registry_login_rejects_flag_username \
+  verdicus registry-login --insecure
+grep -Fq 'implausible registry username' \
+  "${fixture_dir}/registry_login_rejects_flag_username.out"
+
+# Arity is part of the contract: a missing username must not fall through to a
+# login with an empty user, and an extra argument must not be ignored.
+expect_fail registry_login_requires_a_username verdicus registry-login
+expect_fail registry_logout_takes_no_arguments verdicus registry-logout extra
+
 echo 'All aggregate readback broker cases passed.'

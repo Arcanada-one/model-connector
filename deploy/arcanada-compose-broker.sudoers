@@ -3,3 +3,14 @@
 # allowlist and the sha must already be reachable from origin/main. Widening this
 # line, or adding a second entry, re-opens the escalation this exists to close.
 ci-runner ALL=(root) NOPASSWD: /usr/local/sbin/arcanada-compose-broker
+# INFRA-0417: on arcana-prd the deploy runner is a SEPARATE account. That host
+# carries six runners under one `ci-runner`, two of which (arcana-prd-general,
+# arcana-prd-db) advertise the `docker` label and accept jobs with `services:`
+# — so that account must keep the docker group, while a deploy runner must not
+# have it. The split mirrors how arcana-prod solved the same collision.
+#
+# This line already existed on the host and NOT in git, which is the exact
+# failure the previous commit to this file had to repair. Returning it here
+# means a reinstall from the repository no longer silently removes the only
+# account that can deploy on that machine.
+ci-runner-deploy ALL=(root) NOPASSWD: /usr/local/sbin/arcanada-compose-broker

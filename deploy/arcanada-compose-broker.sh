@@ -72,6 +72,14 @@ declare -rA REPOS=(
   # PUBLIC, so it deliberately gets no AUTH row: cmd_sync would then demand
   # a credential on stdin and die on the empty read.
   [arcanada-assistant]='https://github.com/Arcanada-one/arcanada-assistant.git'
+  # INFRA-0417: verdicus-api deployed by having the RUNNER hold the docker
+  # group and run `docker compose` itself. SEC-0028 retired that group on
+  # 2026-08-12 and the deploy has failed on every push to main since, with
+  # `permission denied ... /var/run/docker.sock` — the container has been
+  # serving a 12 August image while main moved on. Converting it to the broker
+  # is what actually fixes that; moving it to another machine only relocates a
+  # deploy that does not work.
+  [verdicus]='https://github.com/Arcanada-one/verdicus.git'
 )
 declare -rA COMPOSE=(
   [model-connector]='deploy/stt-whisper/docker-compose.yml'
@@ -80,12 +88,14 @@ declare -rA COMPOSE=(
   [transcribator-api]='docker-compose.prod.yml'
   [legal-arcana]='docker-compose.yml'
   [arcanada-assistant]='docker-compose.yml'
+  [verdicus]='docker-compose.prod.yml'
 )
 # Private repositories whose fetch needs a credential on stdin.
 declare -rA AUTH=(
   [opsbot]='github-token'
   [transcribator-api]='github-token'
   [legal-arcana]='github-token'
+  [verdicus]='github-token'
 )
 # Pin the compose project name. Unset means Compose derives it from the
 # checkout directory, which is what the whisper stack has always done —
@@ -104,6 +114,13 @@ declare -rA PROJECT=(
   # checkout happens to derive the same name; this pin is here so that
   # coincidence is not what the database depends on.
   [arcanada-assistant]='arcanada-assistant'
+  # The running stack carries com.docker.compose.project=verdicus-api, but the
+  # broker's checkout directory is named after the REPOSITORY (`verdicus`), so
+  # the derived name would differ by those four characters. Compose would then
+  # treat the existing container as none of its business, start a second one
+  # beside it, and both would fight for 127.0.0.1:3301 — one of them losing
+  # silently. Pinned, so the identity does not depend on a directory name.
+  [verdicus]='verdicus-api'
 )
 # Root-owned environment file. A bare name resolves under ENV_ROOT; an absolute
 # path is used as given, so a service whose env is already root-owned somewhere
@@ -115,6 +132,7 @@ declare -rA ENVFILE=(
   [transcribator-api]='/opt/transcribator/.env'
   [legal-arcana]='legal-arcana.env'
   [arcanada-assistant]='arcanada-assistant.env'
+  [verdicus]='verdicus.env'
 )
 # A release script inside the checkout that already encapsulates the whole
 # deploy. Running it as root is the same trust boundary the broker already
@@ -434,6 +452,61 @@ cmd_promote() {
 
 cmd_prune() { "$DOCKER" image prune --filter 'until=336h' -f; }
 
+# INFRA-0417 — an EPHEMERAL registry credential for services whose release
+# image lives in a private GHCR package.
+#
+# Why this is needed at all: `cmd_pull` runs as root, and root's docker config
+# on both arcana-prod and arcana-prd holds no registry auth (verified: `auths`
+# is empty on each). A service whose image is public pulls fine; a private one
+# fails with `unauthorized`. Until now the only service in this table pulling a
+# private image got away with it because the image already happened to be on
+# the host from an earlier build — a coincidence, not a mechanism, and one that
+# does not survive a move to another machine.
+#
+# Why not a stored credential: a long-lived token in /root/.docker is exactly
+# how auth-arcana's registry access was lost once already (INFRA-0434) — it
+# expired, nothing re-established it, and production deploys became silently
+# impossible for a month. So the workflow calls `registry-login` immediately
+# before the pull with its per-run GITHUB_TOKEN and `registry-logout` after.
+# Nothing durable is stored, so there is nothing left to expire.
+#
+# Narrow on purpose, following the reviewed auth-arcana-ghcr-login helper: the
+# registry is compiled in, the token is read from stdin ONLY (never argv, where
+# /proc/<pid>/cmdline would expose it), the username is pattern-checked so it
+# cannot smuggle flags into `docker login`, and nothing is echoed.
+#
+# The login it establishes is a property of the HOST's docker config, not of
+# the named service, so the service argument would otherwise be decoration. It
+# is not: only services declared here may reach these two verbs, so adding a
+# service to the deploy allowlist does not silently also grant it the ability
+# to place a registry credential on the host.
+readonly REGISTRY='ghcr.io'
+declare -rA REGISTRY_AUTH=(
+  [verdicus]='yes'
+)
+
+cmd_registry_login() {
+  local svc="$1" user="$2" token=''
+  [[ -n "${REGISTRY_AUTH[$svc]+set}" ]] ||
+    die "service may not establish a registry credential: $svc"
+  [[ "$user" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,38}$ ]] ||
+    die 'implausible registry username'
+  read -r -t 10 token </dev/stdin || true
+  [[ -n "$token" ]] || die 'registry login needs a credential on stdin'
+  [[ "$token" =~ ^[A-Za-z0-9_.-]{20,512}$ ]] || die 'malformed registry credential'
+  printf '%s' "$token" |
+    "$DOCKER" login "$REGISTRY" -u "$user" --password-stdin >/dev/null
+  printf 'registry-login: authenticated to %s\n' "$REGISTRY"
+}
+
+cmd_registry_logout() {
+  local svc="$1"
+  [[ -n "${REGISTRY_AUTH[$svc]+set}" ]] ||
+    die "service may not clear a registry credential: $svc"
+  "$DOCKER" logout "$REGISTRY" >/dev/null 2>&1 || true
+  printf 'registry-logout: cleared %s\n' "$REGISTRY"
+}
+
 cmd_run_deploy() {
   local svc="$1" dir script
   [[ -n "${SCRIPT[$svc]+set}" ]] || die "service has no deploy script: $svc"
@@ -507,7 +580,7 @@ cmd_aggregate_readback() {
   )
 }
 
-usage='usage: <service> {sync <sha>|pull|build|up|ps|logs [n]|migrate|tag-rotate|tag-release|image-id|verify|rollback|promote|prune|freshness|smoke|env-get <KEY>|aggregate-readback|run-deploy}'
+usage='usage: <service> {sync <sha>|pull|build|up|ps|logs [n]|migrate|tag-rotate|tag-release|image-id|verify|rollback|promote|prune|freshness|smoke|env-get <KEY>|aggregate-readback|run-deploy|registry-login <user>|registry-logout}'
 
 main() {
   [[ $# -ge 2 ]] || die "$usage"
@@ -536,6 +609,14 @@ main() {
                   cmd_aggregate_readback "$svc"
                   ;;
     run-deploy)   [[ $# -eq 0 ]] || die 'run-deploy takes no arguments'; cmd_run_deploy "$svc" ;;
+    registry-login)
+                  [[ $# -eq 1 ]] || die 'registry-login takes exactly one username'
+                  cmd_registry_login "$svc" "$1"
+                  ;;
+    registry-logout)
+                  [[ $# -eq 0 ]] || die 'registry-logout takes no arguments'
+                  cmd_registry_logout "$svc"
+                  ;;
     *)            die "unknown action: $action" ;;
   esac
 }
