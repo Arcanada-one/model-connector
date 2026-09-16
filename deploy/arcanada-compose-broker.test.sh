@@ -35,6 +35,11 @@ sed -i \
   -e "s#^readonly ENV_ROOT=.*#readonly ENV_ROOT='${env_root}'#" \
   -e "s#^readonly NODE=.*#readonly NODE='${fake_node}'#" \
   -e "s#== 'root'#== '${owner}'#g" \
+  `# install(1) can only set an owner as root, and the CI runner is not root.` \
+  `# The harness already rewrites the root-ownership CHECK above for the same` \
+  `# reason; this rewrites the ownership it ASSIGNS, so the placement cases can` \
+  `# run unprivileged. Mode is left alone — 0600 needs no privilege.` \
+  -e "s#install -m 0600 -o root -g root#install -m 0600 -o ${owner} -g $(id -gn)#" \
   "$broker"
 chmod 0755 "$broker"
 
