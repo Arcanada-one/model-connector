@@ -82,31 +82,31 @@ describe('EmbeddingConnector', () => {
     it('should use /v1/embeddings for dense (default)', async () => {
       mockOk(denseResponse);
       await connector.execute({ prompt: 'test' });
-      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.70.137.104:8300/v1/embeddings');
+      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.90.7.20:8300/v1/embeddings');
     });
 
     it('should use /v1/embeddings/sparse for sparse', async () => {
       mockOk(sparseResponse);
       await connector.execute({ prompt: 'test', extra: { embeddingType: 'sparse' } });
-      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.70.137.104:8300/v1/embeddings/sparse');
+      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.90.7.20:8300/v1/embeddings/sparse');
     });
 
     it('should use /v1/embeddings/colbert for colbert', async () => {
       mockOk(denseResponse);
       await connector.execute({ prompt: 'test', extra: { embeddingType: 'colbert' } });
-      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.70.137.104:8300/v1/embeddings/colbert');
+      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.90.7.20:8300/v1/embeddings/colbert');
     });
 
     it('should use /v1/embeddings/hybrid for hybrid', async () => {
       mockOk(hybridResponse);
       await connector.execute({ prompt: 'test', extra: { embeddingType: 'hybrid' } });
-      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.70.137.104:8300/v1/embeddings/hybrid');
+      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.90.7.20:8300/v1/embeddings/hybrid');
     });
 
     it('should fall back to dense for unknown type', async () => {
       mockOk(denseResponse);
       await connector.execute({ prompt: 'test', extra: { embeddingType: 'invalid' } });
-      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.70.137.104:8300/v1/embeddings');
+      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.90.7.20:8300/v1/embeddings');
     });
   });
 
@@ -203,7 +203,7 @@ describe('EmbeddingConnector', () => {
     it('should use default base URL', async () => {
       mockOk(denseResponse);
       await connector.execute({ prompt: 'test' });
-      expect(fetchSpy.mock.calls[0][0]).toContain('100.70.137.104:8300');
+      expect(fetchSpy.mock.calls[0][0]).toContain('100.90.7.20:8300');
     });
 
     it('should use EMBEDDING_API_URL from env', async () => {
