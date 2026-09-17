@@ -1,5 +1,6 @@
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
 import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
+import { DEFAULT_EMBEDDING_API_URL } from '../../config/env.schema';
 
 interface EmbeddingApiResponse {
   object: string;
@@ -22,7 +23,10 @@ export class EmbeddingConnector extends BaseApiConnector {
   readonly name = 'embedding';
 
   protected getBaseUrl(): string {
-    return process.env.EMBEDDING_API_URL || 'http://100.70.137.104:8300';
+    // SEC-0045: the default comes from env.schema.ts, not a second literal.
+    // Both copies had to be edited when the service moved and only one was, so
+    // this connector went on dialling the decommissioned host.
+    return process.env.EMBEDDING_API_URL || DEFAULT_EMBEDDING_API_URL;
   }
 
   protected getTimeout(): number {

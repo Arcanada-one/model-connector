@@ -14,6 +14,15 @@ export function parseEnvBool(v: boolean | string | undefined): boolean {
 
 const envBool = z.union([z.boolean(), z.string()]).transform(parseEnvBool);
 
+// SEC-0045: single source of truth for this address. It points at OUR OWN
+// infrastructure and therefore moves (arcana-kb -> arcana-prd, INFRA-0417),
+// unlike a vendor endpoint such as api.anthropic.com. It used to be written as
+// a literal both here and in embedding.connector.ts, so the move was applied in
+// neither: the connector kept dialling the decommissioned host every few
+// seconds for days, and those packets left via the public interface once the
+// mesh route was withdrawn -- which is what Hetzner filed abuse 2609 about.
+export const DEFAULT_EMBEDDING_API_URL = 'http://100.90.7.20:8300';
+
 export const envSchema = z
   .object({
     PORT: z.coerce.number().default(3900),
@@ -219,7 +228,7 @@ export const envSchema = z
     CIRCUIT_BREAKER_THRESHOLD: z.coerce.number().min(1).max(50).default(5),
     CIRCUIT_BREAKER_COOLDOWN_MS: z.coerce.number().min(1_000).max(300_000).default(30_000),
 
-    EMBEDDING_API_URL: z.string().url().default('http://100.70.137.104:8300'),
+    EMBEDDING_API_URL: z.string().url().default(DEFAULT_EMBEDDING_API_URL),
     EMBEDDING_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).default(30_000),
 
     // TRANS-0035: Speech proxy to Transcribator API SpeechModule
