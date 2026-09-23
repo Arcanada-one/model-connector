@@ -1,0 +1,311 @@
+
+ RUN  v4.1.8 /home/dev/aup/arc2/wt/A2-210-mc
+
+[32m[Nest] 3118270  - [39m09/23/2026, 2:48:37 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mrefresh-test model refresh: 2 provider models (replaced 2 static)[39m
+[33m[Nest] 3118270  - [39m09/23/2026, 2:48:37 PM [33m   WARN[39m [38;5;3m[ConnectorModelRefresh] [39m[33mrefresh-test model refresh failed: reason=network — keeping 2 static models[39m
+[33m[Nest] 3118270  - [39m09/23/2026, 2:48:37 PM [33m   WARN[39m [38;5;3m[ConnectorModelRefresh] [39m[33mrefresh-test model refresh returned status=503 — keeping 2 in-memory fallback models[39m
+[32m[Nest] 3118270  - [39m09/23/2026, 2:48:37 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mrefresh-test model refresh: 2 provider models (replaced 2 static)[39m
+[33m[Nest] 3118270  - [39m09/23/2026, 2:48:37 PM [33m   WARN[39m [38;5;3m[ConnectorModelRefresh] [39m[33mrefresh-test /models response had no usable ids — keeping 2 static models[39m
+[33m[Nest] 3118270  - [39m09/23/2026, 2:48:37 PM [33m   WARN[39m [38;5;3m[ConnectorModelRefresh] [39m[33mrefresh-test /models response had no usable ids — keeping 2 static models[39m
+[33m[Nest] 3118270  - [39m09/23/2026, 2:48:37 PM [33m   WARN[39m [38;5;3m[ConnectorModelRefresh] [39m[33mrefresh-test model refresh failed: reason=parse — keeping 2 static models[39m
+[32m[Nest] 3118276  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgrok model refresh: 9 provider models (replaced 9 static)[39m
+[32m[Nest] 3118263  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OrqConnector] [39m[32morq model refresh: 6 chat models discovered (6 with provider pricing)[39m
+[32m[Nest] 3118276  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgrok model refresh: 9 provider models (replaced 9 static)[39m
+[32m[Nest] 3118263  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OrqConnector] [39m[32morq model refresh: 6 chat models discovered (6 with provider pricing)[39m
+[32m[Nest] 3118276  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgrok model refresh: 9 provider models (replaced 9 static)[39m
+[32m[Nest] 3118276  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgrok model refresh: 9 provider models (replaced 9 static)[39m
+[32m[Nest] 3118276  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgrok model refresh: 9 provider models (replaced 9 static)[39m
+[32m[Nest] 3118263  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OrqConnector] [39m[32morq model refresh: 6 chat models discovered (6 with provider pricing)[39m
+[32m[Nest] 3118276  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgrok model refresh: 9 provider models (replaced 9 static)[39m
+[32m[Nest] 3118263  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OrqConnector] [39m[32morq model refresh: 6 chat models discovered (6 with provider pricing)[39m
+[33m[Nest] 3118263  - [39m09/23/2026, 2:48:38 PM [33m   WARN[39m [38;5;3m[OrqConnector] [39m[33morq model refresh failed: reason=network — keeping seed list[39m
+[33m[Nest] 3118263  - [39m09/23/2026, 2:48:38 PM [33m   WARN[39m [38;5;3m[OrqConnector] [39m[33morq /models returned 503 — keeping seed list[39m
+[33m[Nest] 3118263  - [39m09/23/2026, 2:48:38 PM [33m   WARN[39m [38;5;3m[OrqConnector] [39m[33morq /models response is not an array — keeping seed list[39m
+[33m[Nest] 3118263  - [39m09/23/2026, 2:48:38 PM [33m   WARN[39m [38;5;3m[OrqConnector] [39m[33morq /models yielded 0 chat+active models — keeping seed list[39m
+[33m[Nest] 3118276  - [39m09/23/2026, 2:48:38 PM [33m   WARN[39m [38;5;3m[ConnectorModelRefresh] [39m[33mgrok model refresh failed: reason=network — keeping 9 static models[39m
+[32m[Nest] 3118263  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OrqConnector] [39m[32morq model refresh: 6 chat models discovered (6 with provider pricing)[39m
+[32m[Nest] 3118263  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OrqConnector] [39m[32morq model refresh: 2 chat models discovered (0 with provider pricing)[39m
+[32m[Nest] 3118263  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OrqConnector] [39m[32morq model refresh: 6 chat models discovered (6 with provider pricing)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[33m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [33m   WARN[39m [38;5;3m[ConnectorModelRefresh] [39m[33mgroq model refresh failed: reason=network — keeping 9 static models[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118291  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mgroq model refresh: 17 provider models (replaced 9 static)[39m
+[32m[Nest] 3118256  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OpenRouterConnector] [39m[32mOpenRouter refresh: 3 models (2 free) — REPLACED static floor[39m
+[32m[Nest] 3118256  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OpenRouterConnector] [39m[32mOpenRouter refresh: 2 models (1 free) — REPLACED static floor[39m
+[33m[Nest] 3118256  - [39m09/23/2026, 2:48:38 PM [33m   WARN[39m [38;5;3m[OpenRouterConnector] [39m[33mOpenRouter refresh failed: reason=network — keeping static paid floor[39m
+[32m[Nest] 3118256  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OpenRouterConnector] [39m[32mOpenRouter refresh: 340 models (26 free) — REPLACED static floor[39m
+[32m[Nest] 3118256  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OpenRouterConnector] [39m[32mOpenRouter refresh: 340 models (26 free) — REPLACED static floor[39m
+[32m[Nest] 3118256  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OpenRouterConnector] [39m[32mOpenRouter refresh: 340 models (26 free) — REPLACED static floor[39m
+[32m[Nest] 3118256  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[OpenRouterConnector] [39m[32mOpenRouter refresh: 340 models (26 free) — REPLACED static floor[39m
+[32m[Nest] 3118375  - [39m09/23/2026, 2:48:38 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mdeepseek model refresh: 2 provider models (replaced 2 static)[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: dynamic (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: static-only (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: dynamic (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mcatalog model refresh failed for dynamic: reason=unexpected[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: metacon (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: metacon (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: metacon (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for metacon/m; 2 tokens recorded as unpriced, not charged[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for metacon/m; 2 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: metacon (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for metacon/m; 2 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for test/model; 3 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for test/model; 3 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mRetry 1/1 for test: json_parse_error[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[33m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for openrouter/free-model; 2 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[33m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for groq/llama; 2 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[33m[Nest] 3118226  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mRetry 1/1 for openrouter: server_error[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118509  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mollama model refresh: 2 provider models (replaced 0 static)[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118575  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mmistral model refresh: 2 provider models (replaced 2 static)[39m
+[33m[Nest] 3118575  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[ConnectorModelRefresh] [39m[33mmistral model refresh failed: reason=network — keeping 2 static models[39m
+[33m[Nest] 3118516  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[SttRouterService] [39m[33mSTT provider groq failed (server_error): boom[39m
+[33m[Nest] 3118516  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[SttRouterService] [39m[33mSTT provider groq failed (server_error): boom[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mARAS-0058 idempotency: replaying stored response for key client-key-1 (api key key-1)[39m
+[33m[Nest] 3118516  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[SttRouterService] [39m[33mSTT provider groq failed (server_error): boom-1[39m
+[33m[Nest] 3118516  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[SttRouterService] [39m[33mSTT provider deepgram failed (server_error): boom-2[39m
+[33m[Nest] 3118516  - [39m09/23/2026, 2:48:39 PM [33m   WARN[39m [38;5;3m[SttRouterService] [39m[33mSTT drift detected for deepgram: metadata.request_id: Too small: expected string to have >=1 characters[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118588  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mtogether model refresh: 1 provider models (replaced 1 static)[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118220  - [39m09/23/2026, 2:48:39 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[33m[Nest] 3118636  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[SttRouterService] [39m[33mSTT request blocked by API key policy — all candidates denied: groq[39m
+[33m[Nest] 3118636  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[SttRouterService] [39m[33mSTT request blocked by API key policy — all candidates denied: groq[39m
+[33m[Nest] 3118636  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[SttRouterService] [39m[33mSTT request blocked by API key policy — all candidates denied: groq[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for test/model; 3 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mRetry 1/1 for test: timeout[39m
+[32m[Nest] 3118684  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mopenmodel model refresh: 34 provider models (replaced 1 static)[39m
+[32m[Nest] 3118684  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mopenmodel model refresh: 34 provider models (replaced 1 static)[39m
+[32m[Nest] 3118684  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mopenmodel model refresh: 34 provider models (replaced 1 static)[39m
+[32m[Nest] 3118684  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mopenmodel model refresh: 34 provider models (replaced 1 static)[39m
+[32m[Nest] 3118684  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mopenmodel model refresh: 34 provider models (replaced 1 static)[39m
+[33m[Nest] 3118684  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorModelRefresh] [39m[33mopenmodel model refresh failed: reason=network — keeping 1 static models[39m
+[33m[Nest] 3118684  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorModelRefresh] [39m[33mopenmodel model refresh returned status=401 — keeping 1 in-memory fallback models[39m
+[32m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[33m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for openrouter/free-model; 2 tokens recorded as unpriced, not charged[39m
+[33m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for groq/llama-3.3-70b-versatile; 1500 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[33m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for openrouter/free-model; 2 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[33m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for groq/llama-3.3-70b-versatile; 1500 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[FailoverRouterService] [39m[32mFailover: 1 candidate(s) for model="auto": groq:llama[39m
+[33m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for groq/llama; 2 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[33m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for groq/llama-3.3-70b-versatile; 1500 tokens recorded as unpriced, not charged[39m
+[33m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 billing: releasing hold intent-under-test in full and charging 0 USD for an UNPRICED request (api key key-1, connector groq, model llama-3.3-70b-versatile, 1500 tokens). The catalogue owes this model a price; until it has one the tokens are served free. Alert on this line.[39m
+[32m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118705  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mollama-cloud model refresh: 2 provider models (replaced 0 static)[39m
+[33m[Nest] 3118705  - [39m09/23/2026, 2:48:40 PM [33m   WARN[39m [38;5;3m[ConnectorModelRefresh] [39m[33mollama-cloud /models response had no usable ids — keeping 0 static models[39m
+[32m[Nest] 3118597  - [39m09/23/2026, 2:48:40 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mcerebras model refresh: 1 provider models (replaced 2 static)[39m
+[32m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CatalogRefreshService] [39m[32mfullRefresh persisted 1 model_catalog rows[39m
+[32m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CatalogRefreshService] [39m[32mfullRefresh persisted 0 model_catalog rows[39m
+[33m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[CatalogRefreshService] [39m[33mcatalog snapshot deferred for groq: reason=missing-observation[39m
+[32m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CatalogRefreshService] [39m[32mfullRefresh persisted 0 model_catalog rows[39m
+[32m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CatalogRefreshService] [39m[32mfullRefresh persisted 2 model_catalog rows[39m
+[32m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CatalogRefreshService] [39m[32mfullRefresh persisted 1 model_catalog rows[39m
+[33m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[CatalogRefreshService] [39m[33mcatalog snapshot deferred for groq: reason=assembly-gap[39m
+[32m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CatalogRefreshService] [39m[32mfullRefresh persisted 0 model_catalog rows[39m
+[33m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[CatalogRefreshService] [39m[33mcatalog snapshot deferred for a: code=CATALOG_SNAPSHOT_CONFLICT[39m
+[32m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CatalogRefreshService] [39m[32mfullRefresh persisted 1 model_catalog rows[39m
+[33m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[CatalogRefreshService] [39m[33mcatalog narrowing alarm: groq assembled 0 rows this cycle but last-known-good held 3 (rows preserved via LKG — investigate: silent narrowing)[39m
+[33m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[CatalogRefreshService] [39m[33mcatalog narrowing alarm: assembled 0 rows this cycle vs last-known-good 3 (>20% shrink across readable providers — investigate)[39m
+[32m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CatalogRefreshService] [39m[32mfullRefresh persisted 0 model_catalog rows[39m
+[33m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[CatalogRefreshService] [39m[33mcatalog narrowing alarm: assembled 2 rows this cycle vs last-known-good 10 (>20% shrink across readable providers — investigate)[39m
+[32m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CatalogRefreshService] [39m[32mfullRefresh persisted 1 model_catalog rows[39m
+[32m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CatalogRefreshService] [39m[32mfullRefresh persisted 1 model_catalog rows[39m
+[32m[Nest] 3118749  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CatalogRefreshService] [39m[32mfullRefresh persisted 0 model_catalog rows[39m
+[32m[Nest] 3118763  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118763  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118763  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118763  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118763  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118763  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118763  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118763  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[33m[Nest] 3118849  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[ImageGenerationService] [39m[33mProvider vertex unprovisioned, trying fallback. Excluded: vertex[39m
+[33m[Nest] 3118849  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[ImageGenerationService] [39m[33mProvider vertex unprovisioned, trying fallback. Excluded: vertex[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for test/model; 3 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: claude-code (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: claude-code (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: claude-code (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: claude-code (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: claude-code (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: claude-code (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: claude-code (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: unhealthy (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openrouter (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: failing-status (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: embedding (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: claude-code (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: openmodel (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: grok (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: grok (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: groq (api)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for test/model; 3 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for test/model; 1 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "rate_limited" on groq:llama-3.3-70b-versatile — advancing to next candidate[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "rate_limited" on groq:llama-3.1-8b-instant — advancing to next candidate[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "rate_limited" on openrouter:meta-llama/llama-4-maverick — advancing to next candidate[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for test/model; 3 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "rate_limited" on openmodel:deepseek-v4-flash — advancing to next candidate[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for test/model; 3 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "server_error" on openmodel:deepseek-v4-flash — advancing to next candidate[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "server_error" on openrouter:meta-llama/llama-4-maverick — advancing to next candidate[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "rate_limited" on openmodel:deepseek-v4-flash — advancing to next candidate[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "rate_limited" on openrouter:meta-llama/llama-4-maverick — advancing to next candidate[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "circuit_open" on openmodel:deepseek-v4-flash — advancing to next candidate[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "circuit_open" on openrouter:meta-llama/llama-4-maverick — advancing to next candidate[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "server_error" on openmodel:deepseek-v4-flash — advancing to next candidate[39m
+[32m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[CascadeRouterService] [39m[32mCascade: "server_error" on openrouter:meta-llama/llama-4-maverick — advancing to next candidate[39m
+[33m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[CascadeRouterService] [39m[33mCascade budget exceeded: $0.1000 >= $0.1[39m
+[33m[Nest] 3118807  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[CascadeRouterService] [39m[33mCascade: abort-class error "auth_error" on openmodel:deepseek-v4-flash[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for test/model; 2 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[ConnectorsService] [39m[32mRegistered connector: test (cli)[39m
+[33m[Nest] 3118214  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mARAS-0058 meter: no catalogue price for test/model; 2 tokens recorded as unpriced, not charged[39m
+[32m[Nest] 3118927  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[SttJobProcessor] [39m[32mProcessing STT async job bull-1 (jobId=0194f2a0-1234-7000-8000-000000000001)[39m
+[32m[Nest] 3118927  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[SttJobProcessor] [39m[32mProcessing STT async job bull-2 (jobId=0194f2a0-1234-7000-8000-000000000001)[39m
+[32m[Nest] 3118927  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[SttJobProcessor] [39m[32mProcessing STT async job bull-3 (jobId=0194f2a0-1234-7000-8000-000000000001)[39m
+[32m[Nest] 3118861  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[FailoverRouterService] [39m[32mFailover: 2 candidate(s) for model="auto": openmodel:deepseek-v4-flash → groq:llama-3.3-70b-versatile[39m
+[33m[Nest] 3118861  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[FailoverRouterService] [39m[33mFailover: openmodel:deepseek-v4-flash failed — advancing[39m
+[32m[Nest] 3118861  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[FailoverRouterService] [39m[32mFailover: 2 candidate(s) for model="auto": openmodel:deepseek-v4-flash → groq:llama-3.3-70b-versatile[39m
+[32m[Nest] 3118861  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[FailoverRouterService] [39m[32mFailover: 2 candidate(s) for model="auto": openmodel:deepseek-v4-flash → groq:llama-3.3-70b-versatile[39m
+[33m[Nest] 3118861  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[FailoverRouterService] [39m[33mFailover: openmodel:deepseek-v4-flash failed — advancing[39m
+[33m[Nest] 3118861  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[FailoverRouterService] [39m[33mFailover: groq:llama-3.3-70b-versatile failed — advancing[39m
+[32m[Nest] 3118861  - [39m09/23/2026, 2:48:41 PM [32m    LOG[39m [38;5;3m[FailoverRouterService] [39m[32mFailover: 2 candidate(s) for model="auto": openmodel:deepseek-v4-flash → groq:llama-3.3-70b-versatile[39m
+[33m[Nest] 3118861  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[FailoverRouterService] [39m[33mFailover: openmodel:deepseek-v4-flash failed — advancing[39m
+[33m[Nest] 3118861  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[FailoverRouterService] [39m[33mFailover: groq:llama-3.3-70b-versatile failed — advancing[39m
+[33m[Nest] 3118890  - [39m09/23/2026, 2:48:41 PM [33m   WARN[39m [38;5;3m[ConnectorsService] [39m[33mCONN-1674 showcase catalog narrowed: key=show-key served 2/10 models (80.0% trimmed > 50% threshold) — a read-only showcase key should see the full catalog; check its policy.[39m
+[32m[Nest] 3118906  - [39m09/23/2026, 2:48:42 PM [32m    LOG[39m [38;5;3m[ImageGenerationModule] [39m[32mIMAGE_CAPABILITIES Zod validation passed[39m
+[32m[Nest] 3118987  - [39m09/23/2026, 2:48:42 PM [32m    LOG[39m [38;5;3m[ConnectorJobProcessor] [39m[32mProcessing job job-1 for connector test[39m
+
+ Test Files  78 passed (78)
+      Tests  1166 passed (1166)
+   Start at  14:48:36
+   Duration  5.78s (transform 13.38s, setup 0ms, import 45.45s, tests 17.54s, environment 13ms)
+
+
+[stderr]
+[33m`esbuild` option is set to false, but `oxc` option was not set to false. `esbuild: false` does not have effect any more. If you want to disable the default transformation, which is now handled by Oxc, please set `oxc: false` instead.[39m
+[31m[Nest] 3118516  - [39m09/23/2026, 2:48:39 PM [31m  ERROR[39m [38;5;3m[SttRouterService] [39m[31mNo STT provider enabled[39m
+[31m[Nest] 3118636  - [39m09/23/2026, 2:48:40 PM [31m  ERROR[39m [38;5;3m[SttRouterService] [39m[31mSTT access policy for key apikey-bad is invalid — failing closed (request denied)[39m
+{"event":"codex_refresh_token_reused","message":"Your refresh token has already been used to generate a new access token. code: refresh_token_reused","ts":"2026-09-23T14:48:40.248Z"}
+{"event":"codex_refresh_token_reused","message":"code: refresh_token_reused","ts":"2026-09-23T14:48:40.249Z"}
+{"event":"codex_refresh_token_reused","message":"code: refresh_token_reused","ts":"2026-09-23T14:48:40.250Z"}
+[31m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [31m  ERROR[39m [38;5;3m[ConnectorsService] [39m[31mProvider key alias for 'openrouter' (env var OPENROUTER_API_KEY_EMAIL_AGENT) is not configured — denying request for key policy-key-1[39m
+[31m[Nest] 3118226  - [39m09/23/2026, 2:48:40 PM [31m  ERROR[39m [38;5;3m[PolicyService] [39m[31mStored policy for key policy-key-1 is invalid: [
+  {
+    "code": "invalid_value",
+    "values": [
+      1
+    ],
+    "path": [
+      "policyVersion"
+    ],
+    "message": "Invalid input: expected 1"
+  }
+][39m
+[31m[Nest] 3118620  - [39m09/23/2026, 2:48:40 PM [31m  ERROR[39m [38;5;3m[ConnectorsService] [39m[31mARAS-0058 meter: catalogue pricing lookup failed for groq/llama-3.3-70b-versatile: catalog unavailable[39m
+[31m[Nest] 3118927  - [39m09/23/2026, 2:48:41 PM [31m  ERROR[39m [38;5;3m[SttJobProcessor] [39m[31mSTT async job bull-2 failed: whisper server 503[39m
+[31m[Nest] 3118906  - [39m09/23/2026, 2:48:42 PM [31m  ERROR[39m [38;5;3m[ImageGenerationModule] [39m[31mIMAGE_CAPABILITIES validation failed — fix capabilities.ts![39m
+[31m[Nest] 3118906  - [39m09/23/2026, 2:48:42 PM [31m  ERROR[39m [38;5;3m[ImageGenerationModule] [39mError: capability validation failed
+    at [90m/home/dev/aup/arc2/wt/A2-210-mc/[39msrc/connectors/image-generation/image-generation.module.spec.ts:23:13
+    at validateCapabilities [90m(file:///home/dev/aup/arc2/wt/A2-210-mc/[39mnode_modules/[4m.pnpm[24m/@vitest+spy@4.1.8/node_modules/[4m@vitest/spy[24m/dist/index.js:332:34[90m)[39m
+    at ImageGenerationModule.onApplicationBootstrap [90m(/home/dev/aup/arc2/wt/A2-210-mc/[39msrc/connectors/image-generation/image-generation.module.ts:33:7[90m)[39m
+    at [90m/home/dev/aup/arc2/wt/A2-210-mc/[39msrc/connectors/image-generation/image-generation.module.spec.ts:26:25
+    at Proxy.assertThrows [90m(file:///home/dev/aup/arc2/wt/A2-210-mc/[39mnode_modules/[4m.pnpm[24m/chai@6.2.2/node_modules/[4mchai[24m/index.js:2798:5[90m)[39m
+    at Proxy.methodWrapper [90m(file:///home/dev/aup/arc2/wt/A2-210-mc/[39mnode_modules/[4m.pnpm[24m/chai@6.2.2/node_modules/[4mchai[24m/index.js:1700:25[90m)[39m
+    at Proxy.<anonymous> [90m(file:///home/dev/aup/arc2/wt/A2-210-mc/[39mnode_modules/[4m.pnpm[24m/@vitest+expect@4.1.8/node_modules/[4m@vitest/expect[24m/dist/index.js:1216:12[90m)[39m
+    at Proxy.overwritingMethodWrapper [90m(file:///home/dev/aup/arc2/wt/A2-210-mc/[39mnode_modules/[4m.pnpm[24m/chai@6.2.2/node_modules/[4mchai[24m/index.js:1750:33[90m)[39m
+    at Proxy.<anonymous> [90m(file:///home/dev/aup/arc2/wt/A2-210-mc/[39mnode_modules/[4m.pnpm[24m/@vitest+expect@4.1.8/node_modules/[4m@vitest/expect[24m/dist/index.js:1552:16[90m)[39m
+    at Proxy.<anonymous> [90m(file:///home/dev/aup/arc2/wt/A2-210-mc/[39mnode_modules/[4m.pnpm[24m/@vitest+expect@4.1.8/node_modules/[4m@vitest/expect[24m/dist/index.js:1156:15[90m)[39m

@@ -1,0 +1,17 @@
+CHANGELOG.md: verified — 23 reference(s) resolve at head
+README.md: verified — 18 reference(s) resolve at head
+docs/architecture.md: verified — 8 reference(s) resolve at head
+docs/capability-matrix.md: verified — 1 reference(s) resolve at head
+docs/connectors/claude-code.md: verified — 2 reference(s) resolve at head
+docs/connectors/codex.md: verified — 2 reference(s) resolve at head
+docs/connectors/cursor.md: verified — 2 reference(s) resolve at head
+docs/connectors/embedding.md: verified — 2 reference(s) resolve at head
+docs/connectors/gemini.md: verified — 2 reference(s) resolve at head
+docs/connectors/grok.md: verified — 4 reference(s) resolve at head
+docs/connectors/groq.md: verified — 3 reference(s) resolve at head
+docs/connectors/openrouter.md: verified — 2 reference(s) resolve at head
+docs/connectors/orq.md: verified — 3 reference(s) resolve at head
+docs/how-to/stt-multi-provider-demo.md: verified — 1 reference(s) resolve at head
+docs/how-to/use-stt-endpoint.md: verified — 2 reference(s) resolve at head
+receipts/graph/a2-210-verifier-output/README.md: verified — 0 reference(s) resolve at head
+templates/api-connector-scaffold/README.md: verified — 6 reference(s) resolve at head

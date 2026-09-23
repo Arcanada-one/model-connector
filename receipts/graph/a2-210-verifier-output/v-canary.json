@@ -1,0 +1,151 @@
+{
+ "sources": [],
+ "verdicts": {
+  "code_unit:src/admin/circuit-breaker.controller.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/admin/watcher-repair.controller.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/connector-budget-and-retry-after.spec.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/connectors.controller.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/openai/openai.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/health/health.controller.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/openai-compat/openai-compat.controller.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/speech/speech.controller.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/speech/stt/assemblyai-stt.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /connectors": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /connectors/:name/status": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /connectors/catalog": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /connectors/image/capabilities": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /health": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /health/connectors": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /health/metrics": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /health/ready": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /v1/models": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:POST /admin/circuit-breaker/reset": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:POST /connectors/:name/execute": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:POST /execute": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:POST /images/generate": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:POST /internal/watcher/circuit-breaker/reset": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:POST /v1/chat/completions": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:POST /v1/prompt-cache/prewarm": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:POST /v1/speech/stt": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:POST /v1/speech/tts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:POST /v1/speech/vad": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ]
+ }
+}
+
+not_measured code_unit:src/admin/circuit-breaker.controller.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/admin/watcher-repair.controller.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/connector-budget-and-retry-after.spec.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/connectors.controller.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/openai/openai.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/health/health.controller.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/openai-compat/openai-compat.controller.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/speech/speech.controller.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/speech/stt/assemblyai-stt.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /connectors  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /connectors/:name/status  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /connectors/catalog  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /connectors/image/capabilities  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /health  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /health/connectors  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /health/metrics  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /health/ready  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /v1/models  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:POST /admin/circuit-breaker/reset  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:POST /connectors/:name/execute  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:POST /execute  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:POST /images/generate  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:POST /internal/watcher/circuit-breaker/reset  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:POST /v1/chat/completions  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:POST /v1/prompt-cache/prewarm  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:POST /v1/speech/stt  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:POST /v1/speech/tts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:POST /v1/speech/vad  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
