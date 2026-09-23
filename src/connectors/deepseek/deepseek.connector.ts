@@ -1,5 +1,9 @@
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
-import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
+import {
+  ConnectorCapabilities,
+  ConnectorRequest,
+  ProviderModelMeta,
+} from '../interfaces/connector.interface';
 
 interface DeepSeekChatResponse {
   model?: string;
@@ -17,6 +21,50 @@ interface DeepSeekChatResponse {
 
 const DEFAULT_MODEL = 'deepseek-chat';
 const STATIC_MODELS = ['deepseek-chat', 'deepseek-reasoner'];
+
+/**
+ * A2-201 — hand-curated list price per model, USD per 1M tokens, from
+ * https://api-docs.deepseek.com/quick_start/pricing (fetched 2026-09-23; cross-checked
+ * against three independent third-party trackers the same day, e.g.
+ * https://benchlm.ai/deepseek/api-pricing "DeepSeek API Pricing (September 2026):
+ * $0.30-$1.20 per 1M Tokens"). DeepSeek prices vary by time of day — off-peak
+ * (01:00-04:00 and 06:00-10:00 UTC, Mon-Fri) is HALF the peak rate. This catalogue has
+ * one number per model, not a schedule, so PEAK is used deliberately: the same
+ * conservative direction `measured-cost.ts` already takes for an unknown cache rate
+ * ("can overstate the cost of a cache hit, and never understate it") — the caller-facing
+ * risk this exists to close is a spend cap that never trips, not one that trips a few
+ * cents early. `cachedInputPerMTok` (the cache-HIT price, ~1/50 of cache-miss) has no
+ * catalogue column yet (see `MeasuredCostPricing.cachedInputPerMTok` in
+ * `src/billing/measured-cost.ts`) — same gap Anthropic's list price already documents —
+ * so it is left out here rather than invented; cached tokens bill at the miss rate below,
+ * which is again the overstating direction. Recorded as `cache_rates: not_measured` in
+ * the admission receipt.
+ *
+ * Keyed by the id DeepSeek's own API echoes back on `response.model` — `deepseek-flash`
+ * and `deepseek-v4-pro` — which is what `meterCost()` (connectors.service.ts) looks up,
+ * regardless of which alias the caller requested. `deepseek-chat` / `deepseek-reasoner`
+ * (this connector's own `STATIC_MODELS`/`DEFAULT_MODEL`, above) are NOT priced here: the
+ * same research found the DeepSeek docs no longer mention either string and a changelog
+ * entry dated 2026-04-24 saying both "will be discontinued ... (2026-07-24)". That is a
+ * conflicting signal against this connector's own `STATIC_MODELS` still listing them
+ * (last touched by #136, merged 2026-09-23) and was not re-checked against a live,
+ * authenticated DeepSeek call in this change — flagged in the A2-201 report as a
+ * follow-up, not resolved by a silent default here.
+ */
+export const DEEPSEEK_LIST_PRICES_USD_PER_MTOK: Readonly<
+  Record<string, { inputPerMTok: number; outputPerMTok: number }>
+> = {
+  'deepseek-flash': { inputPerMTok: 0.3, outputPerMTok: 1.2 },
+  'deepseek-v4-pro': { inputPerMTok: 1.32, outputPerMTok: 3.96 },
+};
+const PRICE_UNIT = 'USD/1M tokens';
+
+/** Attach the curated list price to a model meta; unknown ids keep `pricing: null`. */
+function withListPrice(meta: ProviderModelMeta): ProviderModelMeta {
+  const price = DEEPSEEK_LIST_PRICES_USD_PER_MTOK[meta.id];
+  if (!price) return { ...meta, pricing: meta.pricing ?? null };
+  return { ...meta, pricing: { ...price, unit: PRICE_UNIT } };
+}
 
 /**
  * Native adapter for the official DeepSeek OpenAI-compatible API.
@@ -39,6 +87,23 @@ export class DeepSeekConnector extends BaseApiConnector {
 
   protected getStaticModels(): string[] {
     return STATIC_MODELS;
+  }
+
+  /** A2-201 — the offline/CI floor carries the curated list price, same as anthropic. */
+  protected getStaticModelMetas(): ProviderModelMeta[] {
+    return STATIC_MODELS.map((id) => withListPrice({ id }));
+  }
+
+  /**
+   * A2-201 — DeepSeek's live `/models` listing carries no prices (ids only, see
+   * `__fixtures__/models.json`), so without this override a successful refresh would
+   * REPLACE the curated floor with an unpriced list and `measureCostUsd` would fall to
+   * `'unpriced'` for every DeepSeek request — the exact bug this change closes. Merge:
+   * live ids keep the curated price when one exists; unknown live ids stay unpriced
+   * (null), never invented.
+   */
+  protected extractModels(json: unknown): ProviderModelMeta[] {
+    return super.extractModels(json).map(withListPrice);
   }
 
   protected getModelsUrl(): string {
@@ -79,10 +144,7 @@ export class DeepSeekConnector extends BaseApiConnector {
     return body;
   }
 
-  protected parseResponse(
-    json: DeepSeekChatResponse,
-    request: ConnectorRequest,
-  ): ParsedApiOutput {
+  protected parseResponse(json: DeepSeekChatResponse, request: ConnectorRequest): ParsedApiOutput {
     const message = json.choices?.[0]?.message;
     if (!message) {
       return {
