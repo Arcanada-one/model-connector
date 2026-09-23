@@ -2,6 +2,7 @@ import { Semaphore, QueueTimeoutError } from '../../connectors/base-cli.connecto
 import { CircuitBreakerManager } from '../../core/resilience/circuit-breaker-manager';
 import { CircuitOpenError } from '../../core/resilience/circuit-breaker';
 import { getConfig } from '../../config/env.schema';
+import { isTimeoutAbort } from '../../core/utils/abort';
 import { SttProviderError, type SttProviderErrorType } from './stt-pilot.errors';
 import type {
   ISttConnector,
@@ -196,7 +197,10 @@ export abstract class BaseSttConnector implements ISttConnector {
       if (err instanceof SttProviderError) {
         throw err;
       }
-      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      // A2-210 — AbortSignal.timeout() aborts with name 'TimeoutError'; this
+      // asked for 'AbortError', so STT provider timeouts were filed as
+      // `network_error`. Same defect as base-api.connector.ts, same fix.
+      const isAbort = isTimeoutAbort(err);
       const message = err instanceof Error ? err.message : String(err);
       const errType: SttProviderErrorType = isAbort
         ? 'timeout'

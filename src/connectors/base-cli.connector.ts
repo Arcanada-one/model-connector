@@ -13,6 +13,7 @@ import {
   classifyErrorAction,
   retryAfterFields,
 } from './interfaces/connector.interface';
+import { resolveAttemptBudget } from './attempt-budget';
 import { getConfig } from '../config/env.schema';
 import { CircuitOpenError } from '../core/resilience/circuit-breaker';
 import { CircuitBreakerManager } from '../core/resilience/circuit-breaker-manager';
@@ -21,6 +22,29 @@ export class QueueTimeoutError extends Error {
   constructor(public readonly timeoutMs: number) {
     super(`Queue wait timeout after ${timeoutMs}ms`);
     this.name = 'QueueTimeoutError';
+  }
+}
+
+/**
+ * A2-210 — the CLI half of "a timeout is reported as something else".
+ *
+ * `spawnProcess` handed `timeout` to `child_process.spawn` and then rejected
+ * with `Process timeout after Nms` from the `error` handler, on
+ * `err.code === 'ETIMEDOUT'`. Node does not do that. Measured on v24.20.0:
+ *
+ *   spawn('sleep', ['30'], { timeout: 300 })
+ *     -> no 'error' event; 'close' with code=null, signal='SIGTERM'
+ *
+ * So the timeout RESOLVED as an ordinary failed run (`exitCode: 1`, empty
+ * stderr), `classifyError('')` called it `execution_error`, and the catch block
+ * in `execute` — including #139's rule about whose budget expired — was never
+ * entered at all. The kill is performed here instead, where the reason for it
+ * is known, and reported as itself.
+ */
+export class ProcessTimeoutError extends Error {
+  constructor(public readonly timeoutMs: number) {
+    super(`Process timeout after ${timeoutMs}ms`);
+    this.name = 'ProcessTimeoutError';
   }
 }
 
@@ -159,6 +183,15 @@ export abstract class BaseCliConnector implements IConnector {
     }
   }
 
+  /** A2-210 — see BaseApiConnector.advertisedMaxTimeout(). */
+  protected advertisedMaxTimeout(): number | undefined {
+    try {
+      return this.getCapabilities().maxTimeout;
+    } catch {
+      return undefined;
+    }
+  }
+
   protected get cbManager(): CircuitBreakerManager {
     if (!this._cbManager) {
       try {
@@ -275,10 +308,13 @@ export abstract class BaseCliConnector implements IConnector {
     // A2-207 — same knob, same precedence as BaseApiConnector.getTimeout():
     // request.timeout > CONNECTOR_TIMEOUT_MS > 120 000. The literal that stood
     // here read no configuration at all.
-    const connectorBudgetMs = this.getTimeout();
-    const timeout = request.timeout ?? connectorBudgetMs;
-    const callerBudgetIsShorter =
-      request.timeout !== undefined && request.timeout < connectorBudgetMs;
+    // A2-210 — and the advertised `maxTimeout` ceiling over both, shared with
+    // the API lane so the two cannot drift. See resolveAttemptBudget.
+    const { timeoutMs: timeout, callerBudgetIsShorter } = resolveAttemptBudget(
+      request.timeout,
+      this.getTimeout(),
+      this.advertisedMaxTimeout(),
+    );
     const start = Date.now();
 
     // CWD isolation: spawn from temp dir to prevent CLI workspace scanning
@@ -347,7 +383,11 @@ export abstract class BaseCliConnector implements IConnector {
     } catch (err) {
       const latencyMs = Date.now() - start;
       const message = err instanceof Error ? err.message : String(err);
-      const errorType = message.includes('timeout') ? 'timeout' : 'spawn_error';
+      // A2-210 — a typed error, not a substring of a message we do not own.
+      // The substring test is kept as a fallback for connectors that override
+      // `spawnProcess` and reject with their own worded timeout.
+      const isTimeout = err instanceof ProcessTimeoutError || message.includes('timeout');
+      const errorType = isTimeout ? 'timeout' : 'spawn_error';
       const action = classifyErrorAction(errorType);
       // A2-207 — a caller whose own, shorter budget expired is not evidence
       // about this CLI's health; see BaseApiConnector.execute for the rule and
@@ -363,7 +403,7 @@ export abstract class BaseCliConnector implements IConnector {
         usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
         latencyMs,
         queueWaitMs,
-        status: message.includes('timeout') ? 'timeout' : 'error',
+        status: isTimeout ? 'timeout' : 'error',
         error: { type: errorType, message, ...action },
       };
     } finally {
@@ -409,15 +449,25 @@ export abstract class BaseCliConnector implements IConnector {
     cwd?: string,
   ): Promise<SpawnResult> {
     return new Promise((resolve, reject) => {
+      // A2-210 — the deadline is enforced here rather than by spawn's `timeout`
+      // option, so that the kill is DISTINGUISHABLE from any other death of the
+      // child. Both kill the same way (SIGTERM, spawn's own default), but
+      // spawn's option leaves behind a plain `close` that is indistinguishable
+      // from a crash — see {@link ProcessTimeoutError}.
       const proc = spawn(binary, args, {
         env: { ...process.env, ...env },
         stdio: ['ignore', 'pipe', 'pipe'],
-        timeout,
         ...(cwd && { cwd }),
       });
 
       let stdout = '';
       let stderr = '';
+      let timedOut = false;
+
+      const deadline = setTimeout(() => {
+        timedOut = true;
+        proc.kill('SIGTERM');
+      }, timeout);
 
       proc.stdout.on('data', (chunk: Buffer) => {
         stdout += chunk.toString();
@@ -427,12 +477,18 @@ export abstract class BaseCliConnector implements IConnector {
       });
 
       proc.on('close', (code) => {
+        clearTimeout(deadline);
+        if (timedOut) {
+          reject(new ProcessTimeoutError(timeout));
+          return;
+        }
         resolve({ stdout, stderr, exitCode: code ?? 1 });
       });
 
       proc.on('error', (err) => {
+        clearTimeout(deadline);
         if ((err as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
-          reject(new Error(`Process timeout after ${timeout}ms`));
+          reject(new ProcessTimeoutError(timeout));
         } else {
           reject(err);
         }

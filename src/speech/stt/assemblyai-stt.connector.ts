@@ -3,6 +3,7 @@ import { Semaphore, QueueTimeoutError } from '../../connectors/base-cli.connecto
 import { CircuitBreakerManager } from '../../core/resilience/circuit-breaker-manager';
 import { CircuitOpenError } from '../../core/resilience/circuit-breaker';
 import { getConfig } from '../../config/env.schema';
+import { isTimeoutAbort } from '../../core/utils/abort';
 import { SttProviderError, type SttProviderErrorType } from './stt-pilot.errors';
 import type {
   ISttConnector,
@@ -310,7 +311,9 @@ export class AssemblyAiSttConnector implements ISttConnector {
     try {
       res = await fetch(url, { ...init, signal: AbortSignal.timeout(remaining) });
     } catch (err) {
-      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      // A2-210 — see base-stt.connector.ts; `AbortSignal.timeout()` above
+      // aborts with 'TimeoutError', never 'AbortError'.
+      const isAbort = isTimeoutAbort(err);
       const errType: SttProviderErrorType = isAbort ? 'timeout' : 'network_error';
       cb.recordFailure(errType);
       const msg = err instanceof Error ? err.message : String(err);
