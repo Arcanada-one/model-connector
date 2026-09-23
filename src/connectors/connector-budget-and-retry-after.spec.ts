@@ -68,8 +68,16 @@ class BudgetConnector extends BaseApiConnector {
 const budgetOf = (c: BaseApiConnector): number =>
   (c as unknown as { getTimeout: () => number }).getTimeout();
 
-const abortError = () =>
-  new DOMException('The operation was aborted due to timeout', 'AbortError');
+/**
+ * A2-210 — this fake used to say `'AbortError'`, which `AbortSignal.timeout()`
+ * never produces; the name Node actually throws is `'TimeoutError'`. Section 3
+ * below therefore passed green against a branch production could not reach, and
+ * the rule it guards never fired for a single real request. Corrected here to
+ * what Node does, and proven against a real hanging socket rather than a
+ * hand-built exception in `timeout-classification.spec.ts`.
+ */
+const providerTimeout = () =>
+  new DOMException('The operation was aborted due to timeout', 'TimeoutError');
 
 describe('A2-207 — the attempt budget, the retry-after unit and what feeds the breaker', () => {
   let fetchSpy: ReturnType<typeof vi.fn>;
@@ -172,7 +180,7 @@ describe('A2-207 — the attempt budget, the retry-after unit and what feeds the
     it('does not open the breaker when the caller’s shorter budget runs out', async () => {
       validateEnv({ ...BASE_ENV, CONNECTOR_TIMEOUT_MS: '300000' });
       const connector = new BudgetConnector();
-      fetchSpy.mockRejectedValue(abortError());
+      fetchSpy.mockRejectedValue(providerTimeout());
 
       // Six consecutive caller-budget timeouts — one more than the default
       // threshold of 5, i.e. exactly the 3 client attempts x 2 server attempts
@@ -199,7 +207,7 @@ describe('A2-207 — the attempt budget, the retry-after unit and what feeds the
     it('still opens the breaker when the connector’s OWN budget runs out', async () => {
       validateEnv({ ...BASE_ENV, CONNECTOR_TIMEOUT_MS: '300000' });
       const connector = new BudgetConnector();
-      fetchSpy.mockRejectedValue(abortError());
+      fetchSpy.mockRejectedValue(providerTimeout());
 
       for (let i = 0; i < 5; i++) {
         const res = await connector.execute({ prompt: 'hi', model: 'budget-model' });
@@ -213,7 +221,7 @@ describe('A2-207 — the attempt budget, the retry-after unit and what feeds the
     it('a caller budget at or above the connector budget still feeds the breaker', async () => {
       validateEnv({ ...BASE_ENV, CONNECTOR_TIMEOUT_MS: '30000' });
       const connector = new BudgetConnector();
-      fetchSpy.mockRejectedValue(abortError());
+      fetchSpy.mockRejectedValue(providerTimeout());
 
       for (let i = 0; i < 5; i++) {
         const res = await connector.execute({

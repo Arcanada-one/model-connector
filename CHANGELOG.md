@@ -9,6 +9,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A provider timeout was reported as a network error, and the breaker status lied after
+  cooldown (A2-210).** Three defects, all of them things the service said about itself that
+  were not true:
+  1. **Timeouts were not called timeouts.** `BaseApiConnector` counted a failure as a timeout
+     only for a `DOMException` named `AbortError`; `AbortSignal.timeout()` — the only thing
+     that aborts an outbound request — aborts with name `TimeoutError`. The branch was
+     unreachable, so every provider timeout surfaced as `network_error` carrying the message
+     "The operation was aborted due to timeout" inside a network-error envelope. That cost
+     A2-205 and A2-206 two investigation cards. `BaseCliConnector` had the same defect by a
+     different mechanism: `child_process.spawn`'s `timeout` option kills the child and emits
+     `close`, never `error` with `ETIMEDOUT`, so `spawnProcess` RESOLVED on a timeout and the
+     whole catch block was skipped — a CLI timeout was reported as `execution_error`. Both
+     lanes now report `type: timeout` / `status: timeout`; the check lives once in
+     `isTimeoutAbort()` (`src/core/utils/abort.ts`) and the CLI kill is performed by the
+     connector, where the reason for it is known (`ProcessTimeoutError`). The same wrong
+     predicate is fixed in `openai` moderations and in the two STT connectors.
+     **A2-207's (#139) rule that a caller's own shorter budget must not feed the shared
+     per-model breaker keys on `errorType === 'timeout'`, so it had never fired for a single
+     real request on either lane.** It does now, and its tests were asserting against a
+     hand-built `AbortError` that Node does not produce.
+  2. **`getState()` reported a stuck breaker.** It returned the stored state, and the
+     `open -> half_open` transition happened only inside `check()`, so an idle model stayed
+     `open` for as long as no traffic arrived — measured on `deepseek-flash` with `nextRetryAt`
+     997 s in the past while the very next real request succeeded first try (A2-206). It now
+     reports the EFFECTIVE state, without mutating (a monitor must not spend the half_open
+     probe), and drops `nextRetryAt` once there is nothing left to wait for. Two readers were
+     believing it: `GET /connectors/:name/status`, and `ConnectorsService`, which marks a model
+     unavailable in the catalog while its breaker reads `open`.
+  3. **`getCapabilities().maxTimeout` was decoration.** Seventeen connectors declared it, the
+     catalog published it, no code path read it (A2-206), and #139 did not change that. It is
+     now the per-connector ceiling over both the caller's `timeout` and the connector's own
+     configured budget, resolved once for both transports in `resolveAttemptBudget()`
+     (`src/connectors/attempt-budget.ts`). Behaviour change: a caller who asks for more than a
+     connector advertises now gets the advertised figure instead of the DTO's 600 000 ceiling
+     — e.g. `embedding` (60 000). A connector advertising nothing usable imposes no ceiling.
+
 - **The DeepSeek connector advertised two model ids the provider no longer serves, and a
   substitution was invisible (A2-209).** `STATIC_MODELS`/`DEFAULT_MODEL` still listed
   `deepseek-chat` and `deepseek-reasoner`, retired by DeepSeek on 2026-07-24. Measured

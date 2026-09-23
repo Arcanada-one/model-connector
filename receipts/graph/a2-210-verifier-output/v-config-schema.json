@@ -1,0 +1,768 @@
+{
+ "declared_sources": [
+  ".env.example",
+  "docker-compose.codex.yml",
+  "docker-compose.yml"
+ ],
+ "declared_count": 119,
+ "new": [],
+ "frozen": [
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+   "detail": "reads STT_PROVIDER_GROQ_ENABLED, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "STT_PROVIDER_GROQ_ENABLED",
+   "fingerprint": "sha256:36b0eea32d3dd890c4d6e907114848c0ccdea25674256e75044003dc958100fb",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/catalog.repository.ts",
+   "detail": "reads CATALOG_TX_MAXWAIT_MS, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "CATALOG_TX_MAXWAIT_MS",
+   "fingerprint": "sha256:0d16ae8415998647ca0a4b9796fdc096d8670eb1b459767a8c7474001a4a2c56",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/catalog.repository.ts",
+   "detail": "reads CATALOG_TX_TIMEOUT_MS, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "CATALOG_TX_TIMEOUT_MS",
+   "fingerprint": "sha256:2cc3358f7cebb91d2a4591d99d10d23de06371e3f7da383e4cc632ec894af84d",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/cerebras/cerebras.connector.spec.ts",
+   "detail": "reads CEREBRAS_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "CEREBRAS_API_KEY",
+   "fingerprint": "sha256:5134b3d3f4d1fceecc80067ad9b7245d8abb0e80fa9b1f95b58cbb5c96a2bf61",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/cerebras/cerebras.connector.ts",
+   "detail": "reads CEREBRAS_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "CEREBRAS_API_KEY",
+   "fingerprint": "sha256:442281cb9fd9967ab5b550f01bb112cfd95c5262f48192c5a657b0524ac65908",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/claude-code/claude-code.connector.ts",
+   "detail": "reads CLAUDE_BINARY_PATH, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "CLAUDE_BINARY_PATH",
+   "fingerprint": "sha256:7d15b547e910fbbbddfe9ea28fb332b8921239949f6dbca297be587d38b6bce7",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/cursor/cursor.connector.ts",
+   "detail": "reads CURSOR_BINARY_PATH, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "CURSOR_BINARY_PATH",
+   "fingerprint": "sha256:884b9660f6eb8bd8704e4e6b48c87937fbd693fbaa77d9389fad0ab0fdffb4b6",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+   "detail": "reads DEEPSEEK_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "DEEPSEEK_API_KEY",
+   "fingerprint": "sha256:85d8a203e08969c497f7ec0a10682c09c6a1eb08b82d81ace1e2dc40022cb9dc",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+   "detail": "reads DEEPSEEK_BASE_URL, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "DEEPSEEK_BASE_URL",
+   "fingerprint": "sha256:4221e29498fffeb78d2e3a6993ee2e0889835ec3972def5ab12b1b65e54f8a1d",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+   "detail": "reads DEEPSEEK_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "DEEPSEEK_API_KEY",
+   "fingerprint": "sha256:eb6e2cfcb0e822d9cf991ea05b5e8ac5365f86c5d984670ad842fffc060c4304",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+   "detail": "reads DEEPSEEK_BASE_URL, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "DEEPSEEK_BASE_URL",
+   "fingerprint": "sha256:d8bb5a059d8c775c04a4cde0731677cbcbb1b64472eeffe8077df5b2846baccd",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.spec.ts",
+   "detail": "reads GEMINI_API_BASE_URL, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GEMINI_API_BASE_URL",
+   "fingerprint": "sha256:90bf3da3705f04e5baa57c405597907262e905383723dcde8d293069ba429f87",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.spec.ts",
+   "detail": "reads GEMINI_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GEMINI_API_KEY",
+   "fingerprint": "sha256:84af09308b5f9cd9e7936e799761ccc513f4dd39e068e1b9123c949cba17cd0d",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
+   "detail": "reads GEMINI_API_BASE_URL, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GEMINI_API_BASE_URL",
+   "fingerprint": "sha256:09a16e5465c2046ea3412c46dfbc4e8c1343d0edb8a639215636ae1934c2b40c",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
+   "detail": "reads GEMINI_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GEMINI_API_KEY",
+   "fingerprint": "sha256:0940bb7acb269c38b05e64041a90a1a6b222c6e1c7592205c1f34955fff32f15",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/gemini/gemini.connector.ts",
+   "detail": "reads GEMINI_BINARY_PATH, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GEMINI_BINARY_PATH",
+   "fingerprint": "sha256:cde8c3833ef347b36a23d42191c49e70351591b6a212f5741cbd628aae10b846",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/grok/grok.connector.spec.ts",
+   "detail": "reads GROK_TIMEOUT_MS, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GROK_TIMEOUT_MS",
+   "fingerprint": "sha256:cf800bb6783b2d73be9d05d6cc5adc370da4402fb9040838c79a0cbffe737a58",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/grok/grok.connector.spec.ts",
+   "detail": "reads XAI_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "XAI_API_KEY",
+   "fingerprint": "sha256:b9b1bab133b006e875156a7e0c4682d5e1a226ea6641dde2be6f24dec15f870d",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/grok/grok.connector.ts",
+   "detail": "reads XAI_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "XAI_API_KEY",
+   "fingerprint": "sha256:0228e43d79c12afedc2ee8fc9ee53512b044436573ef593f2cea1a621d5ef88b",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/groq/groq.connector.spec.ts",
+   "detail": "reads GROQ_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GROQ_API_KEY",
+   "fingerprint": "sha256:3d589b559d42f85f3729a1dc205f494e5d027331d50b0992f969d632ae687a51",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/groq/groq.connector.spec.ts",
+   "detail": "reads GROQ_FREE_MODELS, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GROQ_FREE_MODELS",
+   "fingerprint": "sha256:93b671dcc288bf2f879cdf859574c34d682d8ccafbc9d0059b992898feada42e",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/groq/groq.connector.spec.ts",
+   "detail": "reads GROQ_TIMEOUT_MS, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GROQ_TIMEOUT_MS",
+   "fingerprint": "sha256:c2658389ad69d57b7f59a8264300f5e4a8f7fcea12d6127c31385e03315038a7",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/groq/groq.connector.ts",
+   "detail": "reads GROQ_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GROQ_API_KEY",
+   "fingerprint": "sha256:2faa03eb967ed974262e12d304e12b7c8375b3255a9ef0402de852d4b669c72f",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/groq/groq.connector.ts",
+   "detail": "reads GROQ_FREE_MODELS, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GROQ_FREE_MODELS",
+   "fingerprint": "sha256:d86f470ab12748f0c39f98ea6fc95ff6af3241c4736cd1c48c3c9f87e6654335",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/huggingface/huggingface.connector.spec.ts",
+   "detail": "reads HF_TOKEN, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "HF_TOKEN",
+   "fingerprint": "sha256:543d7dda040c381e174f06581fb28b96d90f030b0c41c8a040eaf83a9342f039",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/huggingface/huggingface.connector.ts",
+   "detail": "reads HF_TOKEN, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "HF_TOKEN",
+   "fingerprint": "sha256:88ad4cd9ad2e7588e349c5b95bc6a25928d78e41dfe3c1ac5752c64c6e39269a",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/fal-ai/fal-ai.connector.integration.spec.ts",
+   "detail": "reads FAL_AI_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "FAL_AI_API_KEY",
+   "fingerprint": "sha256:bfd775804c5eb8d23f5e2a570ad89244f6af13996bcd105bf0f5714e9793c41d",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/fal-ai/fal-ai.connector.integration.spec.ts",
+   "detail": "reads FAL_AI_INTEGRATION, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "FAL_AI_INTEGRATION",
+   "fingerprint": "sha256:5ef526174c03797406bbf1719851f4cd6ab1f73aab60a5617d2161ae49ecdaf1",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/fal-ai/fal-ai.connector.integration.spec.ts",
+   "detail": "reads RUN_INTEGRATION, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "RUN_INTEGRATION",
+   "fingerprint": "sha256:6ab3d117b557d3ee925280d2421fb8990440f9bf48facecf846362e1b0e1afcc",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "detail": "reads INTEGRATION_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "INTEGRATION_API_KEY",
+   "fingerprint": "sha256:5af74247fdc092cfcb2fc61197f433090693a6c63ff0b8bb835d39e0e667d96f",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "detail": "reads RUN_INTEGRATION, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "RUN_INTEGRATION",
+   "fingerprint": "sha256:fd0abd4a5440b6bc5a9d92458246726b4b0188f5705439b20d87f15b76e10a5b",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/image-router.fallback.integration.spec.ts",
+   "detail": "reads RUN_INTEGRATION, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "RUN_INTEGRATION",
+   "fingerprint": "sha256:a84fdc3b3df9e44bc1d6a8d16c512aacd3becfcc859849d12f45d61da289c3fa",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/image-router.fallback.integration.spec.ts",
+   "detail": "reads VERTEX_SERVICE_ACCOUNT_JSON, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "VERTEX_SERVICE_ACCOUNT_JSON",
+   "fingerprint": "sha256:b9a2fe749eec8eb59fd9dd9e93505af9ad8f750b1a1706e64fe3ba3ed15d5733",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/openai-images/openai-images.connector.integration.spec.ts",
+   "detail": "reads OPENAI_INTEGRATION, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "OPENAI_INTEGRATION",
+   "fingerprint": "sha256:8f42d9aa57ea286d421bc4dcaae32e7fb5aded51f2682a46c745afc239758b40",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/openai-images/openai-images.connector.integration.spec.ts",
+   "detail": "reads RUN_INTEGRATION, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "RUN_INTEGRATION",
+   "fingerprint": "sha256:05773e4fe65abffc5cc2d5a484fcdab3ed36d84f278cc0ab89e7a7604bb6783d",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/storage/r2.service.integration.spec.ts",
+   "detail": "reads R2_ACCESS_KEY_ID, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "R2_ACCESS_KEY_ID",
+   "fingerprint": "sha256:602bb63d3b88b2b698445d47b093fc722e9446692ddcaa5ccb68df1d99c31819",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/storage/r2.service.integration.spec.ts",
+   "detail": "reads R2_ACCOUNT_ID, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "R2_ACCOUNT_ID",
+   "fingerprint": "sha256:077e4e29a7617372c0807040fd2c665d7c7bebb5e79c8591231eed5dace4a29c",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/storage/r2.service.integration.spec.ts",
+   "detail": "reads R2_BUCKET, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "R2_BUCKET",
+   "fingerprint": "sha256:928c57204beda7cc137f1264d7cc6f76908f5ba0181133cbf599cd3066c951dd",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/storage/r2.service.integration.spec.ts",
+   "detail": "reads R2_ENDPOINT, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "R2_ENDPOINT",
+   "fingerprint": "sha256:4ddfbe83019feb7edf801f7098460163f9f338aa92cdda9376e44807ffeca201",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/storage/r2.service.integration.spec.ts",
+   "detail": "reads R2_SECRET_ACCESS_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "R2_SECRET_ACCESS_KEY",
+   "fingerprint": "sha256:cd48e386aa57b6f37948ced504eb10a4ea6b8de8bcaf34e3195440c7d43d8901",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/storage/r2.service.integration.spec.ts",
+   "detail": "reads RUN_INTEGRATION, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "RUN_INTEGRATION",
+   "fingerprint": "sha256:b14e78c0ad3238bf09a5c22aaaddd4b401237b782f575db092fe8ab96db95c53",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts",
+   "detail": "reads RUN_INTEGRATION, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "RUN_INTEGRATION",
+   "fingerprint": "sha256:fe6853284814e5a1df5ea1c3712b1f04c3134efcfa90a6dbc859981484662af8",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts",
+   "detail": "reads VERTEX_LOCATION, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "VERTEX_LOCATION",
+   "fingerprint": "sha256:88bc93683932f5309302741b9a2f29640f397387211c2e3c9b694912116844e1",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts",
+   "detail": "reads VERTEX_PROJECT_ID, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "VERTEX_PROJECT_ID",
+   "fingerprint": "sha256:e100112f4dcf977090426256dcb8e9410666488b42ce2ef4da3b3e4add0cd574",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts",
+   "detail": "reads VERTEX_SERVICE_ACCOUNT_JSON, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "VERTEX_SERVICE_ACCOUNT_JSON",
+   "fingerprint": "sha256:5e6104f35ae0f3e225c81d378214e8cc30eae4e1852304cae9c4bf1e11d07cc7",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/vertex/vertex-image.connector.integration.spec.ts",
+   "detail": "reads RUN_INTEGRATION, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "RUN_INTEGRATION",
+   "fingerprint": "sha256:8d63be3566c11874f1f47c9dd64214eb35a6a82e7f6911205e8386605a97518f",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/vertex/vertex-image.connector.integration.spec.ts",
+   "detail": "reads VERTEX_BILLING_ENABLED, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "VERTEX_BILLING_ENABLED",
+   "fingerprint": "sha256:62f7c628a268ee83477697bfda1387b4c20b55e6f799de8ed48b3638ec280a15",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/vertex/vertex-image.connector.integration.spec.ts",
+   "detail": "reads VERTEX_LOCATION, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "VERTEX_LOCATION",
+   "fingerprint": "sha256:fd972ceb6000c5df828d66a6147cfe04f0000a6fab90c178d194df6d47c765dd",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/vertex/vertex-image.connector.integration.spec.ts",
+   "detail": "reads VERTEX_PROJECT_ID, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "VERTEX_PROJECT_ID",
+   "fingerprint": "sha256:cb54d7afd74b747346e51664aa7ef6e0fb8213bdfdc055eee429e68c7452553c",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/image-generation/vertex/vertex-image.connector.integration.spec.ts",
+   "detail": "reads VERTEX_SERVICE_ACCOUNT_JSON, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "VERTEX_SERVICE_ACCOUNT_JSON",
+   "fingerprint": "sha256:97e6088320fb369c556d64d82392e4a09d574be729648d10390a30e2f2eb56db",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/jina-ai/jina-ai.connector.spec.ts",
+   "detail": "reads JINA_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "JINA_API_KEY",
+   "fingerprint": "sha256:05ca364e0f8b000e82ac1850c84d1c860ae1ed5ffd5f52b46901b1c5908d9648",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/jina-ai/jina-ai.connector.ts",
+   "detail": "reads JINA_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "JINA_API_KEY",
+   "fingerprint": "sha256:5dd312e91538bfc8b33c990daeb70a70f5ea0c8710e2f1f4a36890a08d1c9094",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/mistral/mistral.connector.spec.ts",
+   "detail": "reads MISTRAL_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "MISTRAL_API_KEY",
+   "fingerprint": "sha256:b055afb7f164eb9371b60b0acdf9378995317cbd1e87afafa102a0ff95f6f0c6",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/mistral/mistral.connector.ts",
+   "detail": "reads MISTRAL_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "MISTRAL_API_KEY",
+   "fingerprint": "sha256:843d29ff86b4b057160d046a9c6dcf38fa3f2af51459d24d155e940842e0cab7",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/modal/modal.connector.ts",
+   "detail": "reads MODAL_ENDPOINT_AUTH_MODE, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "MODAL_ENDPOINT_AUTH_MODE",
+   "fingerprint": "sha256:810b2dee6b205040a13097cbfdcca1bab224315649713ec832be237351847cb2",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/modal/modal.connector.ts",
+   "detail": "reads MODAL_ENDPOINT_MODEL, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "MODAL_ENDPOINT_MODEL",
+   "fingerprint": "sha256:0d5ff95632603f13fce112fcfc1157d769a39d19f1bb04deaf92c6cfcc6fa0f1",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/modal/modal.connector.ts",
+   "detail": "reads MODAL_ENDPOINT_TIMEOUT_MS, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "MODAL_ENDPOINT_TIMEOUT_MS",
+   "fingerprint": "sha256:6a21f468ab7da82023cb7d4311047396b922e70de3efd39ea47b2c4473ebfdf3",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/modal/modal.connector.ts",
+   "detail": "reads MODAL_ENDPOINT_URL, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "MODAL_ENDPOINT_URL",
+   "fingerprint": "sha256:120ae97dd111424b35b1e9ba4742468c8036fe8d66287ae5038d114970e60570",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/modal/modal.connector.ts",
+   "detail": "reads MODAL_PROXY_TOKEN_ID, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "MODAL_PROXY_TOKEN_ID",
+   "fingerprint": "sha256:5f12f25d5f7d398dea70554f78f6578608e294b11ef89a798d8d58129b40099e",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/modal/modal.connector.ts",
+   "detail": "reads MODAL_PROXY_TOKEN_SECRET, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "MODAL_PROXY_TOKEN_SECRET",
+   "fingerprint": "sha256:266deebb4e054d96d03f6fcf9dd42266d41e585c773a40d26c05edf33e970322",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/modal/modal.module.ts",
+   "detail": "reads MODAL_ENDPOINT_URL, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "MODAL_ENDPOINT_URL",
+   "fingerprint": "sha256:cc9e3a4b9668f3daf977012d7b429ad049ec1e5a19f3682f0f4554c632aa809e",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.connector.spec.ts",
+   "detail": "reads OLLAMA_CLOUD_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "OLLAMA_CLOUD_API_KEY",
+   "fingerprint": "sha256:d3e30891d36e674aee5d38ea0ef8922768bc2d6e837488ee03c0ed0b10749e80",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.connector.ts",
+   "detail": "reads OLLAMA_CLOUD_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "OLLAMA_CLOUD_API_KEY",
+   "fingerprint": "sha256:8bf068d0702c5ce1ae41b0e0c15634cf755e66792f743a3029ea41584049782d",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/openrouter/openrouter.connector.spec.ts",
+   "detail": "reads OPENROUTER_TIMEOUT_MS, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "OPENROUTER_TIMEOUT_MS",
+   "fingerprint": "sha256:5d07bcf22dec82891f69a6363db4512bae165813c150a35fb5cf90fe5536eb14",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/orq/orq.connector.spec.ts",
+   "detail": "reads ORQ_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "ORQ_API_KEY",
+   "fingerprint": "sha256:dfb8da5456a20285631855c1175927ae824a9e2721a64c5993d43b049f89e02e",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/orq/orq.connector.spec.ts",
+   "detail": "reads ORQ_TIMEOUT_MS, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "ORQ_TIMEOUT_MS",
+   "fingerprint": "sha256:4224346d2fdeae5a11042fa9e4c66a0c8381a806a42996f247d1a900438cdf11",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/orq/orq.connector.ts",
+   "detail": "reads ORQ_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "ORQ_API_KEY",
+   "fingerprint": "sha256:35991c28b3cf20070807731394a0b69bb75577741647d0176e44de6bc7cc24af",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/pinecone-inference/pinecone-inference.connector.spec.ts",
+   "detail": "reads PINECONE_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "PINECONE_API_KEY",
+   "fingerprint": "sha256:6b8a91d9e28fdc06ce00d91b4063bfb715d900cc5dbdfcdb4758b709b78acd4e",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/pinecone-inference/pinecone-inference.connector.ts",
+   "detail": "reads PINECONE_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "PINECONE_API_KEY",
+   "fingerprint": "sha256:eee66d0e1ee88aa2c0a37bf3cacbb50a88a8683ff4e65d9741022b025cec28db",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/voyage-ai/voyage-ai.connector.spec.ts",
+   "detail": "reads VOYAGE_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "VOYAGE_API_KEY",
+   "fingerprint": "sha256:952484fcbed04ebbd387af3600c4b2df0b98af5890b7d580ccdd0fe7e9b539ac",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/connectors/voyage-ai/voyage-ai.connector.ts",
+   "detail": "reads VOYAGE_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "VOYAGE_API_KEY",
+   "fingerprint": "sha256:ca5e921d4d2480becae5dfb9dda1b0950fa4d88fc00e119b77cf494fe6d7478e",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/speech/stt/assemblyai-stt.connector.ts",
+   "detail": "reads STT_ASSEMBLYAI_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "STT_ASSEMBLYAI_API_KEY",
+   "fingerprint": "sha256:42432d14a3048faf18b1c855045ae8fad13bebd567f36a26e9559474e8bc5409",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/speech/stt/deepgram-stt.connector.ts",
+   "detail": "reads STT_DEEPGRAM_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "STT_DEEPGRAM_API_KEY",
+   "fingerprint": "sha256:26fb192fe3932cb7625321b452860a93149c5c7b7cbad1048c09b9ce8130dae8",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/speech/stt/groq-stt.connector.spec.ts",
+   "detail": "reads GROQ_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GROQ_API_KEY",
+   "fingerprint": "sha256:c347bea7a5c2cd618d93b6ba5fde45c94812a0feaee3d40b05d4bb1f9e2cde42",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/speech/stt/groq-stt.connector.spec.ts",
+   "detail": "reads STT_GROQ_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "STT_GROQ_API_KEY",
+   "fingerprint": "sha256:d4316fdfe3bc3f91c93c80352b35ac41ad70a56e4e5dbd105675cf93aef1739c",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/speech/stt/groq-stt.connector.ts",
+   "detail": "reads GROQ_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "GROQ_API_KEY",
+   "fingerprint": "sha256:306ae9cc64eda7587ce95271a5451ae442d06555db0fec8b90072351c083fe8a",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/speech/stt/groq-stt.connector.ts",
+   "detail": "reads STT_GROQ_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "STT_GROQ_API_KEY",
+   "fingerprint": "sha256:40309cd84a176bf2698ec265db783a9e9d7a0a9af9e023bdb0d01789a728ebbc",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/speech/stt/local-whisper-stt.connector.spec.ts",
+   "detail": "reads LOCAL_WHISPER_BASE_URL, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "LOCAL_WHISPER_BASE_URL",
+   "fingerprint": "sha256:2a0dc627f9aa9de1eb938e2a5ccd15ef51d96fff4938f95b151bc16d5745ce39",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/speech/stt/local-whisper-stt.connector.ts",
+   "detail": "reads LOCAL_WHISPER_BASE_URL, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "LOCAL_WHISPER_BASE_URL",
+   "fingerprint": "sha256:47841a68c3497d2dd185d2617c1e303498f61a0b793b8fb3278c8cea7416b2a9",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/speech/stt/openai-stt.connector.ts",
+   "detail": "reads STT_OPENAI_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "STT_OPENAI_API_KEY",
+   "fingerprint": "sha256:88c9d0a2dd32f5a3e45e265d5f52b385194c7c51f4c314345bb992c00e8143f2",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:src/speech/transcribator.proxy.spec.ts",
+   "detail": "reads STT_GROQ_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "STT_GROQ_API_KEY",
+   "fingerprint": "sha256:29487e00c6d41ae3b19f35e43c5149ef0a5511a88e8ffee1bd4f3fea5e2d7603",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:test/seed-integration-apikey.cjs",
+   "detail": "reads INTEGRATION_API_KEY, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "INTEGRATION_API_KEY",
+   "fingerprint": "sha256:dfd92b2386d1c4ef9dd2b691e80066bac41cb641879491952b9ccf3ea4c902d8",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:watcher/src/main.ts",
+   "detail": "reads NOTIFY_SOCKET, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "NOTIFY_SOCKET",
+   "fingerprint": "sha256:c1a70fb14eadb09f4177e9b95a93ac4a1f34a4b53e8aa487b99add59642bf875",
+   "status": "frozen"
+  },
+  {
+   "verifier": "config_schema",
+   "rule": "UNDECLARED_CONFIG_KEY",
+   "entity": "code_unit:watcher/test/state-audit.spec.ts",
+   "detail": "reads VITEST_POOL_ID, declared in none of .env.example, docker-compose.codex.yml, docker-compose.yml",
+   "key": "VITEST_POOL_ID",
+   "fingerprint": "sha256:63cdcf31ba1bc29e0a22b3fc074feb142c03c3e98599f9686ec8104f438992f3",
+   "status": "frozen"
+  }
+ ],
+ "vendored_not_attributed": []
+}
