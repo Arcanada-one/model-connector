@@ -162,12 +162,35 @@ class FirstDispatchObservationV0(BaseModel):
     receipt_digest_sha256: str = Field(alias="receiptDigestSha256")
 
 
+class ModelSubstitution(BaseModel):
+    """A2-209 — the provider served the request under a different model id.
+
+    Providers keep retired ids alive as aliases (DeepSeek serves ``deepseek-chat``,
+    ``deepseek-reasoner`` and ``deepseek-v4-flash`` as ``deepseek-flash``), so such a
+    request succeeds and nothing else reports that the model changed under the caller.
+    """
+
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    #: The model id the caller asked for.
+    requested: str
+    #: The model id the provider actually served it with.
+    served: str
+
+
 class ExecuteResponse(BaseModel):
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: str
     connector: str
+    #: The model that SERVED the request; see :attr:`model_substituted`.
     model: str
+    #: Present only when the provider served a model other than the one requested.
+    #: ``None`` when no model was requested, when the served id matches, or when
+    #: the provider reported none.
+    model_substituted: ModelSubstitution | None = Field(
+        default=None, alias="modelSubstituted"
+    )
     result: str
     structured: Any | None = None
     usage: ExecuteUsage

@@ -49,6 +49,13 @@ export interface ParsedApiOutput {
   cacheCreation?: { ephemeral5mInputTokens?: number; ephemeral1hInputTokens?: number };
   providerUsage?: Record<string, unknown>;
   usageMissing?: true;
+  /**
+   * A2-209 — the provider served a different model id than the caller asked
+   * for, per the provider's OWN echo. Forwarded verbatim to
+   * {@link ConnectorResponse.modelSubstituted}; see that field for why this is
+   * a measurement rather than a lookup. Opt-in per connector (deepseek).
+   */
+  modelSubstituted?: { requested: string; served: string };
   isError: boolean;
   errorMessage?: string;
 }
@@ -517,6 +524,11 @@ export abstract class BaseApiConnector implements IConnector {
           ...(parsed.providerUsage !== undefined ? { providerUsage: parsed.providerUsage } : {}),
           ...(parsed.usageMissing ? { usageMissing: true as const } : {}),
         },
+        // A2-209 — spread only when the connector measured a substitution, so a
+        // response that involved none keeps its previous shape exactly.
+        ...(parsed.modelSubstituted !== undefined
+          ? { modelSubstituted: parsed.modelSubstituted }
+          : {}),
         latencyMs: Date.now() - start,
         queueWaitMs,
         status: parsed.isError ? 'error' : 'success',

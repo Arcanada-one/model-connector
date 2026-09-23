@@ -19,6 +19,7 @@ from .models import (
     FirstDispatchMeasurementV0,
     FirstDispatchObservationUsageV0,
     FirstDispatchObservationV0,
+    ModelSubstitution,
     RepairReport,
 )
 
@@ -35,6 +36,7 @@ __all__ = [
     "FirstDispatchMeasurementV0",
     "FirstDispatchObservationUsageV0",
     "FirstDispatchObservationV0",
+    "ModelSubstitution",
     "GuardExhaustedError",
     "NetworkError",
     "RepairReport",

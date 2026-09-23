@@ -63,6 +63,41 @@ def test_success_201() -> None:
         assert got.status == "success"
 
 
+# A2-209 — a retired model id is served under another name (DeepSeek answers
+# `deepseek-reasoner` with `deepseek-flash`). The call succeeds, so this field is the
+# only signal a caller gets; an SDK that dropped it would leave the substitution as
+# invisible as it was before the server started reporting it.
+def test_model_substitution_is_surfaced_on_success() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = _success_body()
+        body["connector"] = "deepseek"
+        body["model"] = "deepseek-flash"
+        body["modelSubstituted"] = {
+            "requested": "deepseek-reasoner",
+            "served": "deepseek-flash",
+        }
+        return httpx.Response(201, json=body)
+
+    with _make_client(handler) as client:
+        got = client.execute(
+            ExecuteRequest(connector="deepseek", prompt="ping", model="deepseek-reasoner")
+        )
+        assert got.status == "success"
+        assert got.model == "deepseek-flash"
+        assert got.model_substituted is not None
+        assert got.model_substituted.requested == "deepseek-reasoner"
+        assert got.model_substituted.served == "deepseek-flash"
+
+
+def test_model_substitution_absent_when_server_reports_none() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(201, json=_success_body())
+
+    with _make_client(handler) as client:
+        got = client.execute(ExecuteRequest(connector="openrouter", prompt="ping"))
+        assert got.model_substituted is None
+
+
 def test_first_dispatch_measurement_and_observation_round_trip() -> None:
     measurement = FirstDispatchMeasurementV0(
         version="first-dispatch-measurement/v0",

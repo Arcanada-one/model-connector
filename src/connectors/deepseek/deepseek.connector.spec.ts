@@ -1,7 +1,11 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEEPSEEK_LIST_PRICES_USD_PER_MTOK, DeepSeekConnector } from './deepseek.connector';
+import {
+  DEEPSEEK_LIST_PRICES_USD_PER_MTOK,
+  DeepSeekConnector,
+  RETIRED_MODEL_ALIASES,
+} from './deepseek.connector';
 
 const chatFixture = JSON.parse(
   readFileSync(resolve(__dirname, '__fixtures__/chat-success.json'), 'utf8'),
@@ -124,7 +128,14 @@ describe('DeepSeekConnector', () => {
     expect(response.structured).toEqual({ reasoning_content: 'Synthetic reasoning fixture.' });
   });
 
-  it('omits unsupported sampling and logprob parameters for deepseek-reasoner', async () => {
+  // A2-209 — this test used to assert the OPPOSITE for `deepseek-reasoner`: that
+  // temperature/top_p/presence_penalty/frequency_penalty were stripped. That rule was
+  // written for a separate reasoning model that rejected them, and it was measured
+  // stale against the live API on 2026-09-23 — the same four parameters on
+  // `deepseek-reasoner` returned HTTP 200. Dropping a caller's sampling parameters for
+  // one hard-coded (and retired) id is a silent behaviour change; forwarding them lets
+  // the provider be the one that refuses.
+  it('forwards sampling parameters for every model, including the retired reasoner alias', async () => {
     mockJson(chatFixture);
     await connector.execute({
       prompt: 'hello',
@@ -140,13 +151,15 @@ describe('DeepSeekConnector', () => {
       },
     });
     const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
-    expect(body).not.toHaveProperty('temperature');
-    expect(body).not.toHaveProperty('top_p');
-    expect(body).not.toHaveProperty('presence_penalty');
-    expect(body).not.toHaveProperty('frequency_penalty');
+    expect(body.temperature).toBe(0.2);
+    expect(body.top_p).toBe(0.8);
+    expect(body.presence_penalty).toBe(1);
+    expect(body.frequency_penalty).toBe(1);
+    expect(body.max_tokens).toBe(100);
+    // Still only the allow-listed keys reach the wire: `logprobs`/`top_logprobs` were
+    // never forwarded by this connector and are not forwarded now.
     expect(body).not.toHaveProperty('logprobs');
     expect(body).not.toHaveProperty('top_logprobs');
-    expect(body.max_tokens).toBe(100);
   });
 
   it('refreshes /models with Bearer auth and preserves /v1 compatibility', async () => {
@@ -156,7 +169,7 @@ describe('DeepSeekConnector', () => {
     await connector.refreshModels();
     expect(fetchSpy.mock.calls[0][0]).toBe('https://api.deepseek.com/v1/models');
     expect(fetchSpy.mock.calls[0][1].headers.Authorization).toBe('Bearer deepseek_test_sentinel');
-    expect(connector.getCapabilities().models).toEqual(['deepseek-chat', 'deepseek-reasoner']);
+    expect(connector.getCapabilities().models).toEqual(['deepseek-flash', 'deepseek-v4-pro']);
   });
 
   it.each([
@@ -189,6 +202,84 @@ describe('DeepSeekConnector', () => {
   // `pricing` entry, so the catalogue held null tariffs and `measureCostUsd` fell to
   // `'unpriced'` regardless of measured usage tokens. Fails before the price map +
   // getStaticModelMetas/extractModels overrides exist; passes after.
+  // A2-209 — measured against the live DeepSeek API with the operator key on
+  // 2026-09-23. `GET /models` returns exactly deepseek-flash + deepseek-v4-pro, and an
+  // unknown id is refused with "The supported API model names are deepseek-flash,
+  // deepseek-v4-pro, but you passed ...". The three ids below are NOT in that listing
+  // yet all return HTTP 200 with `"model": "deepseek-flash"` — so a request for a
+  // retired id succeeded and nothing ever said it had been moved.
+  describe('retired model ids (A2-209)', () => {
+    it('defaults to a model the provider actually serves, not a retired alias', async () => {
+      mockJson(chatFixture);
+      await connector.execute({ prompt: 'hello' });
+      const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
+      expect(body.model).toBe('deepseek-flash');
+      expect(Object.keys(RETIRED_MODEL_ALIASES)).not.toContain(body.model);
+    });
+
+    it('advertises only the served ids', () => {
+      expect(connector.getCapabilities().models).toEqual(['deepseek-flash', 'deepseek-v4-pro']);
+    });
+
+    it.each(Object.keys(RETIRED_MODEL_ALIASES))(
+      'passes the retired id %s through verbatim rather than rewriting it locally',
+      async (retired) => {
+        mockJson(chatFixture);
+        await connector.execute({ prompt: 'hello', model: retired });
+        // The aliases are not equivalent to one another — deepseek-chat is the only
+        // route to NON-reasoning flash, measured — so resolving them here would
+        // silently change what the caller gets. The provider owns that resolution.
+        expect(JSON.parse(fetchSpy.mock.calls[0][1].body).model).toBe(retired);
+      },
+    );
+
+    it.each(Object.keys(RETIRED_MODEL_ALIASES))(
+      'surfaces the substitution when the provider serves %s under another id',
+      async (retired) => {
+        mockJson(chatFixture);
+        const response = await connector.execute({ prompt: 'hello', model: retired });
+        // Not an error: the request succeeded, and the caller keeps its answer.
+        expect(response.status).toBe('success');
+        expect(response.result).toBe('Synthetic final answer.');
+        // ...but the move is now visible, with BOTH ids legible.
+        expect(response.modelSubstituted).toEqual({
+          requested: retired,
+          served: 'deepseek-flash',
+        });
+        // `model` keeps meaning "what served it" — unchanged for existing readers.
+        expect(response.model).toBe('deepseek-flash');
+      },
+    );
+
+    it('claims no substitution when the served id is the requested one', async () => {
+      mockJson(chatFixture);
+      const response = await connector.execute({ prompt: 'hello', model: 'deepseek-flash' });
+      expect(response.modelSubstituted).toBeUndefined();
+    });
+
+    it('claims no substitution when the caller named no model', async () => {
+      mockJson(chatFixture);
+      const response = await connector.execute({ prompt: 'hello' });
+      // The connector's own DEFAULT_MODEL is not a caller's request, so there is
+      // nothing for a substitution to be measured against.
+      expect(response.modelSubstituted).toBeUndefined();
+    });
+
+    it('claims no substitution when the provider echoes no model at all', async () => {
+      const { model: _model, ...noModel } = chatFixture;
+      mockJson(noModel);
+      const response = await connector.execute({ prompt: 'hello', model: 'deepseek-reasoner' });
+      // Silence is the third verdict: absent, not a guessed `{requested, served}`.
+      expect(response.modelSubstituted).toBeUndefined();
+    });
+
+    it('treats a case-only difference as no substitution', async () => {
+      mockJson({ ...chatFixture, model: 'DeepSeek-Flash' });
+      const response = await connector.execute({ prompt: 'hello', model: 'deepseek-flash' });
+      expect(response.modelSubstituted).toBeUndefined();
+    });
+  });
+
   describe('curated list prices (A2-201)', () => {
     it('a live /models listing attaches the curated price to the ids DeepSeek actually serves', () => {
       const test = new TestDeepSeekConnector();
@@ -211,16 +302,25 @@ describe('DeepSeekConnector', () => {
       expect(metas.find((m) => m.id === 'deepseek-experimental')?.pricing).toBeNull();
     });
 
-    it('the static/offline floor carries pricing.null for every currently-declared static id', () => {
-      // STATIC_MODELS ('deepseek-chat', 'deepseek-reasoner') predate the DeepSeek
-      // rename this fix researched and are deliberately NOT in the price map (see the
-      // code comment on DEEPSEEK_LIST_PRICES_USD_PER_MTOK) — this asserts that absence
-      // stays an honest `null`, not a fabricated number, rather than asserting a price.
+    // A2-209 — this test used to assert that the offline floor was made of two ids the
+    // provider does not serve and that BOTH were unpriced. That was an accurate record
+    // of a broken state: the CI/offline floor advertised `deepseek-chat` and
+    // `deepseek-reasoner` (retired 2026-07-24) and omitted `deepseek-v4-pro`, the one
+    // priced model reachable without a live refresh. Now the floor is the served list,
+    // so every static id carries a price.
+    it('the static/offline floor is the served ids, each carrying its curated price', () => {
       const test = new TestDeepSeekConnector();
       const metas = test.staticMetas();
-      expect(metas.map((m) => m.id)).toEqual(['deepseek-chat', 'deepseek-reasoner']);
+      expect(metas.map((m) => m.id)).toEqual(['deepseek-flash', 'deepseek-v4-pro']);
       for (const meta of metas) {
-        expect(meta.pricing).toBeNull();
+        expect(meta.pricing).toEqual({
+          ...DEEPSEEK_LIST_PRICES_USD_PER_MTOK[meta.id],
+          unit: 'USD/1M tokens',
+        });
+      }
+      // No retired id survives in the advertised floor.
+      for (const retired of Object.keys(RETIRED_MODEL_ALIASES)) {
+        expect(metas.map((m) => m.id)).not.toContain(retired);
       }
     });
   });

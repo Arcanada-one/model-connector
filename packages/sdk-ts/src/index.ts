@@ -14,6 +14,7 @@ export type {
   ExecuteStatus,
   ExecuteUsage,
   RepairReport,
+  ModelSubstitution,
   OutputGuardPass,
   OutputFormat,
   ResponseFormat,

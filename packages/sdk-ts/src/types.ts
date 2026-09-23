@@ -130,10 +130,31 @@ export interface FirstDispatchObservationV0 {
   receiptDigestSha256: string;
 }
 
+/**
+ * A2-209 — the provider served the request under a different model id than the
+ * one requested, and reported so itself. See `ExecuteResponse.modelSubstituted`.
+ */
+export interface ModelSubstitution {
+  /** The model id the caller asked for. */
+  requested: string;
+  /** The model id the provider actually served it with. */
+  served: string;
+}
+
 export interface ExecuteResponse {
   id: string;
   connector: string;
+  /** The model that SERVED the request — see {@link ExecuteResponse.modelSubstituted}. */
   model: string;
+  /**
+   * A2-209 — present only when the provider served a different model than the
+   * one requested. Providers keep retired ids alive as aliases (DeepSeek serves
+   * `deepseek-chat` / `deepseek-reasoner` / `deepseek-v4-flash` as
+   * `deepseek-flash`), so such a request succeeds and nothing else reports that
+   * the model changed under the caller. Absent when no model was requested,
+   * when the served id matches, or when the provider reported none.
+   */
+  modelSubstituted?: ModelSubstitution;
   result: string;
   structured?: unknown;
   usage: ExecuteUsage;

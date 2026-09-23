@@ -1,7 +1,27 @@
 {
   "object": "list",
   "data": [
-    { "id": "deepseek-chat", "object": "model", "owned_by": "deepseek" },
-    { "id": "deepseek-reasoner", "object": "model", "owned_by": "deepseek" }
+    {
+      "id": "deepseek-flash",
+      "object": "model",
+      "owned_by": "deepseek",
+      "name": "DeepSeek-V4.1-Flash",
+      "context_window": 1048576,
+      "max_output_tokens": 393216,
+      "input_modalities": ["text", "image"],
+      "output_modalities": ["text"],
+      "effort": { "supported_levels": ["low", "high", "max"], "default_level": "high" }
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "object": "model",
+      "owned_by": "deepseek",
+      "name": "DeepSeek-V4-Pro",
+      "context_window": 1048576,
+      "max_output_tokens": 393216,
+      "input_modalities": ["text"],
+      "output_modalities": ["text"],
+      "effort": { "supported_levels": ["low", "high", "max"], "default_level": "high" }
+    }
   ]
 }

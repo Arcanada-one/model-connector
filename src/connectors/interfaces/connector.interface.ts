@@ -73,7 +73,36 @@ export function retryAfterFields(delayMs: number): {
 export interface ConnectorResponse {
   id: string;
   connector: string;
+  /**
+   * The model the request was actually SERVED by, as the provider echoed it
+   * back — not necessarily the id the caller asked for. See
+   * {@link modelSubstituted}.
+   */
   model: string;
+  /**
+   * A2-209 — the provider served this request under a different model id than
+   * the caller requested, and said so itself.
+   *
+   * Providers keep retired ids alive as aliases. DeepSeek is the measured case
+   * (2026-09-23, live API): `GET /models` lists exactly `deepseek-flash` and
+   * `deepseek-v4-pro`, yet `deepseek-chat`, `deepseek-reasoner` and
+   * `deepseek-v4-flash` all still return 200 with `"model": "deepseek-flash"`.
+   * Requests did not fail, so nothing anywhere reported that a substitution had
+   * happened — `model` simply carried the served id and the requested one was
+   * lost. A caller pinning an id for reproducibility could not tell it had
+   * stopped getting that model.
+   *
+   * This is a MEASUREMENT, not a prediction: it is emitted only when the
+   * provider's own echoed `model` differs from `request.model`, never from a
+   * local alias table that could drift from the provider's. A provider that
+   * echoes no model at all yields no claim either way (field absent) rather
+   * than a guessed one.
+   *
+   * Absent when the caller named no model, when the served id matches the
+   * requested one, or when the provider echoed nothing — so responses that
+   * involved no substitution keep their previous shape byte-for-byte.
+   */
+  modelSubstituted?: { requested: string; served: string };
   result: string;
   structured?: unknown;
   usage: {

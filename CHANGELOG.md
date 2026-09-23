@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The DeepSeek connector advertised two model ids the provider no longer serves, and a
+  substitution was invisible (A2-209).** `STATIC_MODELS`/`DEFAULT_MODEL` still listed
+  `deepseek-chat` and `deepseek-reasoner`, retired by DeepSeek on 2026-07-24. Measured
+  against the live API on 2026-09-23: `GET /models` returns exactly `deepseek-flash` and
+  `deepseek-v4-pro`, and an unknown id is refused with `validation_error`. Three
+  consequences, all now closed:
+  1. The offline/CI floor advertised two unserved ids and omitted `deepseek-v4-pro` — the
+     one priced model reachable without a live refresh. The advertised list and the
+     priced list (A2-201) are now the same two served ids, resolving the conflicting
+     signal A2-201 recorded and could not settle without a live call.
+  2. Requests for a retired id *succeeded* — DeepSeek serves all of `deepseek-chat`,
+     `deepseek-reasoner` and `deepseek-v4-flash` as `deepseek-flash` — so nothing failed
+     and nothing reported that the model had changed under the caller. Responses now
+     carry `modelSubstituted: { requested, served }` whenever the provider's own echoed
+     `model` differs from the requested id, surfaced through both SDKs. It is emitted
+     from the provider's echo, never from a local alias table, so it is a measurement
+     and cannot drift from what the provider actually did; it is absent when the caller
+     named no model, when the ids match, or when the provider echoed nothing.
+  3. Sampling parameters (`temperature`, `top_p`, `presence_penalty`, `frequency_penalty`)
+     were silently dropped whenever the model was `deepseek-reasoner`, a rule written for
+     a separate reasoning model that rejected them. Measured stale — the same parameters
+     now return HTTP 200 on that alias — so they are forwarded for every model.
+
+  Retired ids are passed through **verbatim** rather than resolved locally: measured, the
+  three are not equivalent (`deepseek-chat` is the only route to non-reasoning flash), so
+  rewriting them here would silently turn a caller's non-reasoning request into a billed
+  reasoning one. The provider keeps that job; this connector adds visibility.
+
+  **Behaviour change:** the connector default moves from `deepseek-chat` (reasoning off)
+  to `deepseek-flash` (reasoning on). A caller that names no model will now spend
+  reasoning tokens, billed at the output rate, that it did not spend before. Taken
+  deliberately rather than leaving the default pinned to an id the provider already
+  discontinued once and honours only as an undocumented alias.
+
 - **The timeout knob did nothing, and `retryAfter` was in the wrong unit for two of our own
   clients (A2-207).** Three defects on one path:
   1. `CONNECTOR_TIMEOUT_MS` was declared in `env.schema.ts`, documented in README, checked by
