@@ -1,5 +1,6 @@
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
 import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
+import { isTimeoutAbort } from '../../core/utils/abort';
 
 interface OpenAiResponse {
   id?: string;
@@ -192,7 +193,10 @@ export class OpenAiConnector extends BaseApiConnector {
         results: parsed.results,
       };
     } catch (error) {
-      const aborted = error instanceof DOMException && error.name === 'AbortError';
+      // A2-210 — the moderations deadline is `AbortSignal.timeout()` too, so
+      // this branch could never fire and a moderation timeout was reported as
+      // `network_error`.
+      const aborted = isTimeoutAbort(error);
       return this.moderationError(
         aborted ? 'timeout' : 'network_error',
         requestedModel,

@@ -13,7 +13,9 @@ import {
   retryAfterFields,
 } from './interfaces/connector.interface';
 import { Semaphore, QueueTimeoutError } from './base-cli.connector';
+import { resolveAttemptBudget } from './attempt-budget';
 import { getConfig } from '../config/env.schema';
+import { isTimeoutAbort } from '../core/utils/abort';
 import { CircuitOpenError } from '../core/resilience/circuit-breaker';
 import { CircuitBreakerManager } from '../core/resilience/circuit-breaker-manager';
 
@@ -167,6 +169,20 @@ export abstract class BaseApiConnector implements IConnector {
       return getConfig().CONNECTOR_TIMEOUT_MS;
     } catch {
       return 120_000;
+    }
+  }
+
+  /**
+   * A2-210 — the ceiling this connector advertises, read defensively.
+   * `getCapabilities()` is connector-authored and some implementations build it
+   * from live catalog state; a throw here must cost the request its ceiling,
+   * never the request itself.
+   */
+  protected advertisedMaxTimeout(): number | undefined {
+    try {
+      return this.getCapabilities().maxTimeout;
+    } catch {
+      return undefined;
     }
   }
 
@@ -443,13 +459,16 @@ export abstract class BaseApiConnector implements IConnector {
     }
 
     const queueWaitMs = Date.now() - queueStart;
-    const connectorBudgetMs = this.getTimeout();
-    const timeout = request.timeout ?? connectorBudgetMs;
     // A2-207 — whose budget is about to run out. A caller that asked for LESS
     // time than this connector would have allowed is not evidence about the
     // provider: see the timeout branch of the catch below.
-    const callerBudgetIsShorter =
-      request.timeout !== undefined && request.timeout < connectorBudgetMs;
+    // A2-210 — and `getCapabilities().maxTimeout` is the ceiling over both, at
+    // last read by something. See resolveAttemptBudget.
+    const { timeoutMs: timeout, callerBudgetIsShorter } = resolveAttemptBudget(
+      request.timeout,
+      this.getTimeout(),
+      this.advertisedMaxTimeout(),
+    );
     const start = Date.now();
 
     this.activeJobs++;
@@ -537,7 +556,14 @@ export abstract class BaseApiConnector implements IConnector {
       return base;
     } catch (err) {
       const latencyMs = Date.now() - start;
-      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      // A2-210 — `AbortSignal.timeout()` (the only thing that aborts the fetch
+      // above) rejects with a DOMException named 'TimeoutError'. This asked for
+      // 'AbortError', so the branch was unreachable and EVERY provider timeout
+      // left here as `network_error` carrying the message "The operation was
+      // aborted due to timeout" — a network-error envelope around a deadline we
+      // set ourselves. It cost A2-205/A2-206 two investigation cards, and it
+      // silently disabled #139's rule below, which keys on `'timeout'`.
+      const isAbort = isTimeoutAbort(err);
       const message = err instanceof Error ? err.message : String(err);
       const errorType = isAbort
         ? 'timeout'

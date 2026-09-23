@@ -24,11 +24,26 @@ export class CircuitBreaker {
     private readonly connectorName: string = 'unknown',
   ) {}
 
+  /** True once the cooldown that followed the last failure has elapsed. */
+  private cooldownElapsed(): boolean {
+    return Date.now() > this.lastFailureTime + this.cooldownMs;
+  }
+
+  /**
+   * A2-210 — the state the NEXT call would meet, which is not always the state
+   * we stored. `open` decays into `half_open` by the passage of time alone; the
+   * stored field only learns that when {@link check} runs. See {@link getState}.
+   */
+  private effectiveState(): CircuitState {
+    if (this.state === 'open' && this.cooldownElapsed()) return 'half_open';
+    return this.state;
+  }
+
   check(): void {
     if (this.state === 'closed') return;
 
     if (this.state === 'open') {
-      if (Date.now() > this.lastFailureTime + this.cooldownMs) {
+      if (this.cooldownElapsed()) {
         this.state = 'half_open';
         return;
       }
@@ -60,24 +75,49 @@ export class CircuitBreaker {
     }
   }
 
+  /**
+   * A2-210 — reports the EFFECTIVE state: what the next call would actually
+   * meet, not what the last call happened to leave behind.
+   *
+   * This used to return the stored field, and `open -> half_open` was performed
+   * only inside {@link check}. On an idle model nobody calls `check`, so the
+   * breaker was reported `open` for as long as no traffic arrived. Measured on
+   * the live service (A2-206): `deepseek-flash` reported
+   * `{state: 'open', consecutiveFailures: 5, nextRetryAt: <997 s in the past>}`
+   * and the very next real request succeeded on the first attempt.
+   *
+   * Two readers believed it: `GET /connectors/:name/status` (a stuck breaker on
+   * a healthy model) and `ConnectorsService`, which marks a model unavailable
+   * in the catalog while `circuitBreakers[model].state === 'open'` — so an idle
+   * model stayed unavailable past its own cooldown.
+   *
+   * The read stays a READ: it does not perform the transition. `check()` is
+   * still the only writer, because a monitor polling this endpoint must not
+   * spend the half_open probe that the next real request is entitled to.
+   *
+   * `nextRetryAt` follows the same truth: once the cooldown has elapsed there
+   * is nothing left to wait for, so the field is omitted rather than pointing
+   * into the past.
+   */
   getState(): {
     state: CircuitState;
     consecutiveFailures: number;
     nextRetryAt?: number;
     lastErrorType: string | null;
   } {
+    const state = this.effectiveState();
     const result: {
       state: CircuitState;
       consecutiveFailures: number;
       nextRetryAt?: number;
       lastErrorType: string | null;
     } = {
-      state: this.state,
+      state,
       consecutiveFailures: this.consecutiveFailures,
       lastErrorType: this.lastErrorType,
     };
 
-    if (this.state === 'open') {
+    if (state === 'open') {
       result.nextRetryAt = this.lastFailureTime + this.cooldownMs;
     }
 
