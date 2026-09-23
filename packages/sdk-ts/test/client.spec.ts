@@ -62,6 +62,53 @@ describe('Client', () => {
     expect(got).toEqual(expected);
   });
 
+  // A2-209 — a retired model id is served under another name (DeepSeek answers
+  // `deepseek-reasoner` with `deepseek-flash`). The call succeeds, so the only
+  // signal a caller gets is this field; an SDK that dropped it would leave the
+  // substitution exactly as invisible as it was before the server reported it.
+  it('surfaces a model substitution on the success envelope', async () => {
+    const expected: ExecuteResponse = {
+      id: 'run_2',
+      connector: 'deepseek',
+      model: 'deepseek-flash',
+      modelSubstituted: { requested: 'deepseek-reasoner', served: 'deepseek-flash' },
+      result: 'pong',
+      usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, costUsd: 0.0001 },
+      latencyMs: 412,
+      status: 'success',
+    };
+    const client = new Client({
+      apiKey: API_KEY,
+      baseUrl: BASE_URL,
+      fetch: makeFetch(() => jsonResponse(201, expected)),
+    });
+    const got = await client.execute({ ...baseRequest, model: 'deepseek-reasoner' });
+    expect(got.modelSubstituted).toEqual({
+      requested: 'deepseek-reasoner',
+      served: 'deepseek-flash',
+    });
+    expect(got.model).toBe('deepseek-flash');
+  });
+
+  it('leaves modelSubstituted undefined when the server reports no substitution', async () => {
+    const expected: ExecuteResponse = {
+      id: 'run_3',
+      connector: 'deepseek',
+      model: 'deepseek-flash',
+      result: 'pong',
+      usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, costUsd: 0.0001 },
+      latencyMs: 412,
+      status: 'success',
+    };
+    const client = new Client({
+      apiKey: API_KEY,
+      baseUrl: BASE_URL,
+      fetch: makeFetch(() => jsonResponse(201, expected)),
+    });
+    const got = await client.execute({ ...baseRequest, model: 'deepseek-flash' });
+    expect(got.modelSubstituted).toBeUndefined();
+  });
+
   it('serializes first-dispatch measurement and parses the persisted observation receipt', async () => {
     let postedBody: unknown;
     const observation: FirstDispatchObservationV0 = {

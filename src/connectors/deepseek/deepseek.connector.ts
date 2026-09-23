@@ -19,8 +19,80 @@ interface DeepSeekChatResponse {
   };
 }
 
-const DEFAULT_MODEL = 'deepseek-chat';
-const STATIC_MODELS = ['deepseek-chat', 'deepseek-reasoner'];
+/**
+ * A2-209 — the ids DeepSeek actually serves, measured against the live API with the
+ * operator key on 2026-09-23: `GET https://api.deepseek.com/models` returns exactly
+ * `deepseek-flash` (DeepSeek-V4.1-Flash) and `deepseek-v4-pro` (DeepSeek-V4-Pro), and an
+ * unknown id is refused with `"The supported API model names are deepseek-flash,
+ * deepseek-v4-pro, but you passed ..."`. These are the same two ids the price map below
+ * is keyed on, so the advertised catalogue and the priced catalogue are now one list.
+ *
+ * This replaces `['deepseek-chat', 'deepseek-reasoner']`, which DeepSeek's changelog
+ * discontinued on 2026-07-24 (found by A2-201) and which `/models` has not listed since.
+ * Advertising them cost us `deepseek-v4-pro`: the offline/CI floor listed two ids the
+ * provider does not serve and omitted the one priced model a caller could actually reach
+ * without a live refresh.
+ */
+const STATIC_MODELS = ['deepseek-flash', 'deepseek-v4-pro'];
+
+/**
+ * A2-209 — was `deepseek-chat`, a retired id. Kept deliberately as the FLASH model
+ * rather than `deepseek-v4-pro`: flash is the cheaper of the two (see the price map),
+ * which is the direction a default should err.
+ *
+ * BEHAVIOUR CHANGE, stated rather than buried — measured on the live API 2026-09-23 with
+ * the identical prompt `"What is 17*23? Answer with the number only."` and
+ * `max_tokens: 200`:
+ *
+ *   requested            served            reasoning_tokens   reasoning_content
+ *   deepseek-chat        deepseek-flash    (absent)           no
+ *   deepseek-flash       deepseek-flash    19                 yes
+ *
+ * So the old default was reasoning-OFF and the new one is reasoning-ON. A caller that
+ * names no model will now spend reasoning tokens (billed at the OUTPUT rate) it did not
+ * spend before. That is a real cost delta and the reason this line is not a silent
+ * rename. It is taken anyway because the alternative is keeping a default pinned to an
+ * id the provider already discontinued once and now honours only as an undocumented
+ * alias — a default that fails closed the day that alias is withdrawn.
+ *
+ * Note for anyone restoring non-reasoning behaviour: `deepseek-flash` cannot be made
+ * non-reasoning through `effort` — the live listing advertises `supported_levels:
+ * ['low','high','max']` with no "off". The `deepseek-chat` alias is, as measured above,
+ * the only route to non-reasoning flash, which is why {@link RETIRED_MODEL_ALIASES}
+ * documents it instead of this connector rewriting it away.
+ */
+const DEFAULT_MODEL = 'deepseek-flash';
+
+/**
+ * A2-209 — retired / undocumented ids that DeepSeek still accepts, and what each was
+ * measured to do. DOCUMENTATION ONLY: nothing in this connector routes on this table.
+ *
+ * Requests naming these ids are passed through to the provider VERBATIM. Rewriting them
+ * locally to the served id was considered and rejected, because the aliases are not
+ * equivalent to each other — measured 2026-09-23, same prompt and `max_tokens` as above:
+ *
+ *   requested            served            reasoning_tokens   reasoning_content
+ *   deepseek-chat        deepseek-flash    (absent)           no
+ *   deepseek-reasoner    deepseek-flash    17                 yes
+ *   deepseek-v4-flash    deepseek-flash    18                 yes
+ *
+ * All three collapse onto one served id while carrying three different effort settings
+ * that `response.model` cannot express. Mapping `deepseek-chat` → `deepseek-flash`
+ * ourselves would silently turn a caller's non-reasoning request into a reasoning one and
+ * bill them for it; the provider's own alias resolution preserves the distinction, so the
+ * provider keeps that job. What this connector adds is visibility, not routing — see
+ * `modelSubstituted` in {@link parseResponse}.
+ *
+ * `deepseek-v4-flash` is listed because it is what the fleet actually sends: every
+ * automatic `coworker` profile pins it (`~/.claude`-adjacent `~/.config/coworker/
+ * profiles.yaml`, and `documentation/infrastructure/Coworker.md` in the workspace). It is
+ * not in `/models` either, so it is on exactly the same footing as the other two.
+ */
+export const RETIRED_MODEL_ALIASES: Readonly<Record<string, string>> = {
+  'deepseek-chat': 'deepseek-flash',
+  'deepseek-reasoner': 'deepseek-flash',
+  'deepseek-v4-flash': 'deepseek-flash',
+};
 
 /**
  * A2-201 — hand-curated list price per model, USD per 1M tokens, from
@@ -42,14 +114,16 @@ const STATIC_MODELS = ['deepseek-chat', 'deepseek-reasoner'];
  *
  * Keyed by the id DeepSeek's own API echoes back on `response.model` — `deepseek-flash`
  * and `deepseek-v4-pro` — which is what `meterCost()` (connectors.service.ts) looks up,
- * regardless of which alias the caller requested. `deepseek-chat` / `deepseek-reasoner`
- * (this connector's own `STATIC_MODELS`/`DEFAULT_MODEL`, above) are NOT priced here: the
- * same research found the DeepSeek docs no longer mention either string and a changelog
- * entry dated 2026-04-24 saying both "will be discontinued ... (2026-07-24)". That is a
- * conflicting signal against this connector's own `STATIC_MODELS` still listing them
- * (last touched by #136, merged 2026-09-23) and was not re-checked against a live,
- * authenticated DeepSeek call in this change — flagged in the A2-201 report as a
- * follow-up, not resolved by a silent default here.
+ * regardless of which alias the caller requested.
+ *
+ * A2-209 — the conflict A2-201 recorded here and could not resolve (this map priced
+ * `deepseek-flash`/`deepseek-v4-pro` while `STATIC_MODELS` advertised `deepseek-chat`/
+ * `deepseek-reasoner`) is now RESOLVED in this map's favour, by the live, authenticated
+ * `GET /models` call A2-201 said was still owed: the provider serves exactly these two
+ * ids, and `STATIC_MODELS` above has been corrected to match. The retired ids remain
+ * unpriced here on purpose — they are aliases, and metering keys on the SERVED id the
+ * provider echoes back, which is always one of the two below. See
+ * {@link RETIRED_MODEL_ALIASES}.
  */
 export const DEEPSEEK_LIST_PRICES_USD_PER_MTOK: Readonly<
   Record<string, { inputPerMTok: number; outputPerMTok: number }>
@@ -58,6 +132,31 @@ export const DEEPSEEK_LIST_PRICES_USD_PER_MTOK: Readonly<
   'deepseek-v4-pro': { inputPerMTok: 1.32, outputPerMTok: 3.96 },
 };
 const PRICE_UNIT = 'USD/1M tokens';
+
+/**
+ * A2-209 — report a model substitution when, and only when, the provider itself
+ * reported one.
+ *
+ * DeepSeek answers a request for a retired id with HTTP 200 and
+ * `"model": "deepseek-flash"`. Nothing failed, so nothing surfaced: the response's
+ * `model` field carried the served id and the requested one was discarded, leaving a
+ * caller that pinned `deepseek-reasoner` for reproducibility unable to tell it had been
+ * moved. Both ids are kept here so the fact is legible without a lookup table.
+ *
+ * Deliberately silent in three cases, each of which would otherwise produce a claim
+ * nobody measured: the caller named no model (there is nothing to substitute FOR — the
+ * connector's own DEFAULT_MODEL is not a caller's request), the provider echoed no model
+ * at all, or the ids match. Comparison is case-insensitive because a case-only difference
+ * is not a substitution any caller needs to act on.
+ */
+function modelSubstitution(
+  requested: string | undefined,
+  served: string | undefined,
+): { modelSubstituted?: { requested: string; served: string } } {
+  if (!requested || !served) return {};
+  if (requested.toLowerCase() === served.toLowerCase()) return {};
+  return { modelSubstituted: { requested, served } };
+}
 
 /** Attach the curated list price to a model meta; unknown ids keep `pricing: null`. */
 function withListPrice(meta: ProviderModelMeta): ProviderModelMeta {
@@ -136,10 +235,21 @@ export class DeepSeekConnector extends BaseApiConnector {
     };
     const extra = request.extra ?? {};
     if (extra.max_tokens != null) body.max_tokens = extra.max_tokens;
-    if ((request.model || DEFAULT_MODEL) !== 'deepseek-reasoner') {
-      for (const key of ['temperature', 'top_p', 'presence_penalty', 'frequency_penalty']) {
-        if (extra[key] != null) body[key] = extra[key];
-      }
+    // A2-209 — these four were suppressed whenever the model was `deepseek-reasoner`,
+    // a rule written when that id named a separate reasoning model that rejected them.
+    // The id is retired and the rule was measured stale: on 2026-09-23 a live request
+    // with `model: 'deepseek-reasoner'` plus temperature/top_p/presence_penalty/
+    // frequency_penalty returned HTTP 200 (served by deepseek-flash, reasoning intact),
+    // as did the same parameters on `deepseek-flash` and `deepseek-v4-pro` directly.
+    // Keeping the branch meant a caller's sampling parameters were dropped on the floor
+    // for one string, silently — and the branch was about to go dead anyway once
+    // DEFAULT_MODEL stopped being a retired id.
+    //
+    // not_measured: whether DeepSeek HONOURS these on an aliased request or merely
+    // accepts them. Forwarding is still the better failure: the provider gets what the
+    // caller asked for and can say no, instead of this connector deciding for it.
+    for (const key of ['temperature', 'top_p', 'presence_penalty', 'frequency_penalty']) {
+      if (extra[key] != null) body[key] = extra[key];
     }
     return body;
   }
@@ -197,6 +307,7 @@ export class DeepSeekConnector extends BaseApiConnector {
         ...cacheCounts,
       },
       model: json.model || request.model || DEFAULT_MODEL,
+      ...modelSubstitution(request.model, json.model),
       inputTokens: usage?.prompt_tokens ?? 0,
       outputTokens: usage?.completion_tokens ?? 0,
       costUsd: 0,

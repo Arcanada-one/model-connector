@@ -1,0 +1,220 @@
+A2-209 — v-type-check-tsconfig A/B, base vs head
+Command (same clone, same command, both sides):
+  npx tsc --noEmit -p tsconfig.json 2>&1 | grep -E 'error TS'
+
+base  main   70cee53469b08aef8ea147ffbc2c58e96b71f0d2   errors: 147
+head  branch 45eb3e9eb05cff70a383d7b9debfb8aeec3b6679   errors: 147
+
+Compared structurally by (file,line,col,code) — tsc renders union members in a
+non-deterministic order, so 22 raw text lines differ while the diagnostics do not:
+  base keys: 147   head keys: 147   difference: 0 lines
+  => zero type errors added, zero removed by this change.
+
+None of the 147 is in a file this change touches. Files changed (main..HEAD):
+  CHANGELOG.md
+  docs/connectors/deepseek.md
+  packages/sdk-python/arcanada_model_connector/__init__.py
+  packages/sdk-python/arcanada_model_connector/models.py
+  packages/sdk-python/tests/test_client.py
+  packages/sdk-ts/src/index.ts
+  packages/sdk-ts/src/types.ts
+  packages/sdk-ts/test/client.spec.ts
+  src/connectors/base-api.connector.ts
+  src/connectors/deepseek/__fixtures__/chat-success.json
+  src/connectors/deepseek/__fixtures__/models.json
+  src/connectors/deepseek/deepseek.connector.spec.ts
+  src/connectors/deepseek/deepseek.connector.ts
+  src/connectors/interfaces/connector.interface.ts
+
+Intersection of changed files with files carrying a type error: (empty)
+
+===== distinct files carrying the 147 pre-existing errors =====
+     30 src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts
+     16 src/config/env.schema.image.spec.ts
+     13 src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts
+     10 src/connectors/image-generation/fixture-replay.spec.ts
+      8 src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.spec.ts
+      7 src/connectors/connectors.controller.spec.ts
+      6 src/openai-compat/openai-compat.models-policy.spec.ts
+      4 src/speech/speech.service.spec.ts
+      4 src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.spec.ts
+      4 src/connectors/image-generation/image-generation.service.spec.ts
+      3 src/speech/dto/tts-request.dto.spec.ts
+      3 src/openai-compat/openai-compat.failover.integration.spec.ts
+      3 src/connectors/meta-llama-guard/meta-llama-guard-runtime.connector.spec.ts
+      3 src/connectors/hume-evi/hume-evi.connector.spec.ts
+      2 src/speech/stt/stt-pilot.integration.spec.ts
+      2 src/speech/speech-metrics.service.spec.ts
+      2 src/health/health.controller.spec.ts
+      2 src/connectors/luma/luma-dream-machine.connector.spec.ts
+      2 src/connectors/embedding/vertex/vertex-ai-embeddings.connector.spec.ts
+      2 src/connectors/connectors.service.spec.ts
+      2 src/billing/credit-gate.spec.ts
+      1 src/speech/speech.controller.spec.ts
+      1 src/queue/connector-job.processor.spec.ts
+      1 src/metrics/metrics.service.spec.ts
+      1 src/connectors/stability-ai/stability-ai.connector.spec.ts
+      1 src/connectors/runway/runway.connector.spec.ts
+      1 src/connectors/output-guard/output-guard.middleware.spec.ts
+      1 src/connectors/oracle-oci-generative-ai/oracle-oci-generative-ai.connector.spec.ts
+      1 src/connectors/openai/openai.connector.spec.ts
+      1 src/connectors/image-generation/jobs/image-job.processor.spec.ts
+      1 src/connectors/image-generation/base-image.connector.spec.ts
+      1 src/connectors/gemini-api/gemini-api.module.spec.ts
+      1 src/connectors/connectors.service.showcase-alarm.spec.ts
+      1 src/connectors/connectors.service.metering.spec.ts
+      1 src/connectors/catalog-mapper.spec.ts
+      1 src/connectors/cascade/cascade-no-egress.spec.ts
+      1 src/connectors/black-forest-labs/black-forest-labs.connector.spec.ts
+      1 src/connectors/base-cli.connector.spec.ts
+      1 src/connectors/base-api.connector.spec.ts
+      1 src/admin/watcher-repair.guard.spec.ts
+
+===== full diagnostics at head =====
+src/admin/watcher-repair.guard.spec.ts(31,59): error TS2345: Argument of type '{ 'x-watcher-repair-token'?: undefined; 'x-admin-token'?: undefined; } | { 'x-watcher-repair-token': string; 'x-admin-token'?: undefined; } | { 'x-admin-token': string; 'x-watcher-repair-token'?: undefined; }' is not assignable to parameter of type 'Record<string, string>'.
+src/billing/credit-gate.spec.ts(441,24): error TS2352: Conversion of type 'undefined' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/billing/credit-gate.spec.ts(441,56): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/config/env.schema.image.spec.ts(1,27): error TS2307: Cannot find module './src/config/env.schema' or its corresponding type declarations.
+src/config/env.schema.image.spec.ts(13,5): error TS2304: Cannot find name 'expect'.
+src/config/env.schema.image.spec.ts(14,5): error TS2304: Cannot find name 'expect'.
+src/config/env.schema.image.spec.ts(15,5): error TS2304: Cannot find name 'expect'.
+src/config/env.schema.image.spec.ts(16,5): error TS2304: Cannot find name 'expect'.
+src/config/env.schema.image.spec.ts(18,5): error TS2304: Cannot find name 'expect'.
+src/config/env.schema.image.spec.ts(19,5): error TS2304: Cannot find name 'expect'.
+src/config/env.schema.image.spec.ts(21,5): error TS2304: Cannot find name 'expect'.
+src/config/env.schema.image.spec.ts(23,5): error TS2304: Cannot find name 'expect'.
+src/config/env.schema.image.spec.ts(26,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/config/env.schema.image.spec.ts(3,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/config/env.schema.image.spec.ts(4,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/config/env.schema.image.spec.ts(46,5): error TS2304: Cannot find name 'expect'.
+src/config/env.schema.image.spec.ts(49,5): error TS2304: Cannot find name 'expect'.
+src/config/env.schema.image.spec.ts(50,5): error TS2304: Cannot find name 'expect'.
+src/config/env.schema.image.spec.ts(9,5): error TS2304: Cannot find name 'expect'.
+src/connectors/base-api.connector.spec.ts(46,12): error TS2416: Property 'name' in type 'AsyncHeaderTestConnector' is not assignable to the same property in base type 'TestApiConnector'.
+src/connectors/base-cli.connector.spec.ts(13,13): error TS2322: Type 'string | ContentBlock[]' is not assignable to type 'string'.
+src/connectors/black-forest-labs/black-forest-labs.connector.spec.ts(35,37): error TS2322: Type 'Mock<(request: BflTransportRequest) => Promise<unknown>>' is not assignable to type '<T>(request: BflTransportRequest) => Promise<T>'.
+src/connectors/cascade/cascade-no-egress.spec.ts(27,41): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', or 'nodenext'.
+src/connectors/catalog-mapper.spec.ts(21,5): error TS2353: Object literal may only specify known properties, and 'routable' does not exist in type '{ connector: string; model: string; modality: "chat" | "embedding" | "image_generation" | "speech_to_text" | "text_to_speech" | "video" | "moderation" | "rerank"; tags: string[]; free: boolean; ... 13 more ...; freshness?: "unknown" | ... 3 more ... | undefined; }'.
+src/connectors/connectors.controller.spec.ts(121,9): error TS2345: Argument of type '{ apiKey: { id: string; }; }' is not assignable to parameter of type 'AuthenticatedRequest'.
+src/connectors/connectors.controller.spec.ts(146,11): error TS2345: Argument of type '{ apiKey: { id: string; }; }' is not assignable to parameter of type 'AuthenticatedRequest'.
+src/connectors/connectors.controller.spec.ts(165,11): error TS2345: Argument of type '{ apiKey: { id: string; }; }' is not assignable to parameter of type 'AuthenticatedRequest'.
+src/connectors/connectors.controller.spec.ts(183,11): error TS2345: Argument of type '{ apiKey: { id: string; }; }' is not assignable to parameter of type 'AuthenticatedRequest'.
+src/connectors/connectors.controller.spec.ts(19,7): error TS2739: Type '{ connector: string; model: string; modality: "chat"; tags: string[]; free: true; cheap: true; priceMultiplier: number; rateLimits: null; capabilities: { supportsStreaming: false; supportsJsonSchema: true; supportsTools: false; }; routing: { ...; }; available: true; }' is missing the following properties from type '{ connector: string; model: string; modality: "embedding" | "chat" | "image_generation" | "speech_to_text" | "text_to_speech" | "video" | "moderation" | "rerank"; tags: string[]; free: boolean; ... 13 more ...; freshness?: "unknown" | ... 3 more ... | undefined; }': pricing, contextWindow, maxOutputTokens
+src/connectors/connectors.controller.spec.ts(84,94): error TS2345: Argument of type '{ apiKey: { id: string; }; }' is not assignable to parameter of type 'AuthenticatedRequest'.
+src/connectors/connectors.controller.spec.ts(94,7): error TS2345: Argument of type '{ apiKey: { id: string; }; }' is not assignable to parameter of type 'AuthenticatedRequest'.
+src/connectors/connectors.service.metering.spec.ts(137,7): error TS2322: Type 'Mock<Procedure | Constructable>' is not assignable to type '((connector: string, model: string) => Promise<CatalogPricingRow | null>) | undefined'.
+src/connectors/connectors.service.showcase-alarm.spec.ts(45,5): error TS2353: Object literal may only specify known properties, and 'routable' does not exist in type '{ connector: string; model: string; modality: "embedding" | "chat" | "image_generation" | "speech_to_text" | "text_to_speech" | "video" | "moderation" | "rerank"; tags: string[]; free: boolean; ... 13 more ...; freshness?: "unknown" | ... 3 more ... | undefined; }'.
+src/connectors/connectors.service.spec.ts(1092,9): error TS2353: Object literal may only specify known properties, and 'routable' does not exist in type '{ connector: string; model: string; modality: "embedding" | "chat" | "image_generation" | "speech_to_text" | "text_to_speech" | "video" | "moderation" | "rerank"; tags: string[]; free: boolean; ... 13 more ...; freshness?: "unknown" | ... 3 more ... | undefined; }'.
+src/connectors/connectors.service.spec.ts(74,9): error TS2741: Property 'resetCircuitBreaker' is missing in type '{ name: string; type: "cli"; execute: Mock<Procedure>; getStatus: Mock<Procedure>; getCapabilities: Mock<Procedure>; }' but required in type 'IConnector'.
+src/connectors/embedding/vertex/vertex-ai-embeddings.connector.spec.ts(119,29): error TS2322: Type '"text-embedding-undocumented"' is not assignable to type '"gemini-embedding-001" | "text-embedding-005" | "text-multilingual-embedding-002"'.
+src/connectors/embedding/vertex/vertex-ai-embeddings.connector.spec.ts(38,7): error TS2322: Type 'Mock<Procedure | Constructable>' is not assignable to type '() => Promise<string>'.
+src/connectors/gemini-api/gemini-api.module.spec.ts(8,58): error TS2554: Expected 1 arguments, but got 0.
+src/connectors/hume-evi/hume-evi.connector.spec.ts(128,43): error TS2345: Argument of type '{}' is not assignable to parameter of type 'HumeAuth'.
+src/connectors/hume-evi/hume-evi.connector.spec.ts(130,32): error TS2345: Argument of type '{ apiKey: string; accessToken: string; }' is not assignable to parameter of type 'HumeAuth'.
+src/connectors/hume-evi/hume-evi.connector.spec.ts(133,32): error TS2345: Argument of type '{ apiKey: string; accessToken: string; }' is not assignable to parameter of type 'HumeAuth'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(192,41): error TS2345: Argument of type '{ baseUrl: string; apiVersion: string; bearerToken: string; timeoutMs: number; transport: Mock<Procedure>; }' is not assignable to parameter of type 'IbmWatsonxAiConfiguration'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(204,38): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(238,12): error TS2532: Object is possibly 'undefined'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(238,38): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(343,38): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(366,12): error TS2532: Object is possibly 'undefined'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(366,38): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(46,5): error TS2322: Type 'Mock<() => Promise<unknown>>' is not assignable to type 'IbmWatsonxAiTransport'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(480,12): error TS2532: Object is possibly 'undefined'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(480,38): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(630,7): error TS2322: Type 'Mock<() => Promise<unknown>>' is not assignable to type 'IbmWatsonxAiTransport'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(638,20): error TS2532: Object is possibly 'undefined'.
+src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts(638,46): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.spec.ts(163,40): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.spec.ts(176,38): error TS2493: Tuple type '[]' of length '0' has no element at index '1'.
+src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.spec.ts(176,42): error TS2339: Property 'headers' does not exist on type 'never'.
+src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.spec.ts(179,38): error TS2493: Tuple type '[]' of length '0' has no element at index '1'.
+src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.spec.ts(179,42): error TS2339: Property 'headers' does not exist on type 'never'.
+src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.spec.ts(242,52): error TS2493: Tuple type '[]' of length '0' has no element at index '1'.
+src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.spec.ts(242,56): error TS2339: Property 'headers' does not exist on type 'never'.
+src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.spec.ts(50,38): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/image-generation/base-image.connector.spec.ts(23,7): error TS2739: Type '{ chosenProvider: "vertex"; chosenModel: string; fallbackUsed: false; reason: string; }' is missing the following properties from type 'RoutingDecision': candidate, costUsd
+src/connectors/image-generation/fixture-replay.spec.ts(137,33): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'JsonBodyType'.
+src/connectors/image-generation/fixture-replay.spec.ts(169,33): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'JsonBodyType'.
+src/connectors/image-generation/fixture-replay.spec.ts(194,33): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'JsonBodyType'.
+src/connectors/image-generation/fixture-replay.spec.ts(219,33): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'JsonBodyType'.
+src/connectors/image-generation/fixture-replay.spec.ts(253,27): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'JsonBodyType'.
+src/connectors/image-generation/fixture-replay.spec.ts(295,27): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'JsonBodyType'.
+src/connectors/image-generation/fixture-replay.spec.ts(326,89): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'JsonBodyType'.
+src/connectors/image-generation/fixture-replay.spec.ts(333,12): error TS18048: 'result.urls' is possibly 'undefined'.
+src/connectors/image-generation/fixture-replay.spec.ts(361,27): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'JsonBodyType'.
+src/connectors/image-generation/fixture-replay.spec.ts(373,27): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'JsonBodyType'.
+src/connectors/image-generation/image-generation.service.spec.ts(130,10): error TS2339: Property 'mockRejectedValueOnce' does not exist on type 'never'.
+src/connectors/image-generation/image-generation.service.spec.ts(175,52): error TS2339: Property 'mockResolvedValue' does not exist on type 'never'.
+src/connectors/image-generation/image-generation.service.spec.ts(228,52): error TS2339: Property 'mockResolvedValue' does not exist on type 'never'.
+src/connectors/image-generation/image-generation.service.spec.ts(70,52): error TS2339: Property 'mockRejectedValue' does not exist on type 'never'.
+src/connectors/image-generation/jobs/image-job.processor.spec.ts(73,7): error TS2739: Type '{ chosenProvider: "vertex"; chosenModel: string; fallbackUsed: false; reason: string; }' is missing the following properties from type 'RoutingDecision': candidate, costUsd
+src/connectors/luma/luma-dream-machine.connector.spec.ts(14,66): error TS2322: Type 'Mock<(<T>(request: LumaHttpRequest) => Promise<T>)>' is not assignable to type '<T>(request: LumaHttpRequest) => Promise<T>'.
+src/connectors/luma/luma-dream-machine.connector.spec.ts(170,57): error TS2322: Type 'Mock<(<T>(request: LumaHttpRequest) => Promise<T>)>' is not assignable to type '<T>(request: LumaHttpRequest) => Promise<T>'.
+src/connectors/meta-llama-guard/meta-llama-guard-runtime.connector.spec.ts(139,22): error TS2352: Conversion of type 'undefined' to type '{ messages: { content: { text: string; }[]; }[]; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/connectors/meta-llama-guard/meta-llama-guard-runtime.connector.spec.ts(139,47): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/meta-llama-guard/meta-llama-guard-runtime.connector.spec.ts(172,37): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(109,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(120,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(124,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(129,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(140,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(141,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(144,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(148,50): error TS7006: Parameter 'status' implicitly has an 'any' type.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(148,58): error TS7006: Parameter 'body' implicitly has an 'any' type.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(148,64): error TS7006: Parameter 'expectedType' implicitly has an 'any' type.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(152,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(155,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(162,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(163,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(171,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(175,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(176,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(183,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(199,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(200,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(201,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(38,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(39,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(40,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(51,7): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(55,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(58,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(70,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(80,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts(99,5): error TS2304: Cannot find name 'expect'.
+src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.spec.ts(216,20): error TS2352: Conversion of type 'undefined' to type 'NvidiaSafetyNimTransportRequest' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.spec.ts(216,41): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.spec.ts(234,18): error TS2352: Conversion of type 'undefined' to type 'NvidiaSafetyNimTransportRequest' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.spec.ts(234,39): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/connectors/openai/openai.connector.spec.ts(93,10): error TS2790: The operand of a 'delete' operator must be optional.
+src/connectors/oracle-oci-generative-ai/oracle-oci-generative-ai.connector.spec.ts(491,58): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', or 'nodenext'.
+src/connectors/output-guard/output-guard.middleware.spec.ts(120,21): error TS2352: Conversion of type 'ConnectorRequest' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/connectors/runway/runway.connector.spec.ts(111,70): error TS1360: Type '{ readonly id: "task-id"; readonly status: "PENDING"; readonly createdAt: "2026-07-11T00:00:00Z"; } | { readonly id: "task-id"; readonly status: "THROTTLED"; readonly createdAt: "2026-07-11T00:00:00Z"; } | { ...; } | { ...; } | { ...; } | { ...; }' does not satisfy the expected type 'RunwayTask'.
+src/connectors/stability-ai/stability-ai.connector.spec.ts(27,45): error TS2322: Type 'Mock<(request: StabilityAiTransportRequest) => Promise<unknown>>' is not assignable to type '<T>(request: StabilityAiTransportRequest) => Promise<T>'.
+src/health/health.controller.spec.ts(77,12): error TS2532: Object is possibly 'undefined'.
+src/health/health.controller.spec.ts(99,12): error TS2532: Object is possibly 'undefined'.
+src/metrics/metrics.service.spec.ts(206,3): error TS2304: Cannot find name 'afterEach'.
+src/openai-compat/openai-compat.failover.integration.spec.ts(125,34): error TS2554: Expected 3 arguments, but got 2.
+src/openai-compat/openai-compat.failover.integration.spec.ts(148,34): error TS2554: Expected 3 arguments, but got 2.
+src/openai-compat/openai-compat.failover.integration.spec.ts(163,29): error TS2554: Expected 3 arguments, but got 2.
+src/openai-compat/openai-compat.models-policy.spec.ts(184,51): error TS2345: Argument of type '{}' is not assignable to parameter of type '{ free: boolean; cheap: boolean; capability?: "supportsJsonSchema" | "supportsTools" | "supportsStreaming" | undefined; modality?: "embedding" | "chat" | "image_generation" | "speech_to_text" | ... 4 more ... | undefined; connector?: string | undefined; tag?: string | undefined; group?: string | undefined; }'.
+src/openai-compat/openai-compat.models-policy.spec.ts(186,51): error TS2345: Argument of type '{}' is not assignable to parameter of type '{ free: boolean; cheap: boolean; capability?: "supportsJsonSchema" | "supportsTools" | "supportsStreaming" | undefined; modality?: "embedding" | "chat" | "image_generation" | "speech_to_text" | ... 4 more ... | undefined; connector?: string | undefined; tag?: string | undefined; group?: string | undefined; }'.
+src/openai-compat/openai-compat.models-policy.spec.ts(195,42): error TS2345: Argument of type '{}' is not assignable to parameter of type '{ free: boolean; cheap: boolean; capability?: "supportsJsonSchema" | "supportsTools" | "supportsStreaming" | undefined; modality?: "embedding" | "chat" | "image_generation" | "speech_to_text" | ... 4 more ... | undefined; connector?: string | undefined; tag?: string | undefined; group?: string | undefined; }'.
+src/openai-compat/openai-compat.models-policy.spec.ts(205,42): error TS2345: Argument of type '{}' is not assignable to parameter of type '{ free: boolean; cheap: boolean; capability?: "supportsJsonSchema" | "supportsTools" | "supportsStreaming" | undefined; modality?: "embedding" | "chat" | "image_generation" | "speech_to_text" | ... 4 more ... | undefined; connector?: string | undefined; tag?: string | undefined; group?: string | undefined; }'.
+src/openai-compat/openai-compat.models-policy.spec.ts(214,42): error TS2345: Argument of type '{}' is not assignable to parameter of type '{ free: boolean; cheap: boolean; capability?: "supportsJsonSchema" | "supportsTools" | "supportsStreaming" | undefined; modality?: "embedding" | "chat" | "image_generation" | "speech_to_text" | ... 4 more ... | undefined; connector?: string | undefined; tag?: string | undefined; group?: string | undefined; }'.
+src/openai-compat/openai-compat.models-policy.spec.ts(56,3): error TS2322: Type '{ id: string; connector: string; model: string; modality: string; status: "online"; lastChecked: Date; supportsStreaming: false; supportsJsonSchema: false; supportsTools: false; inputPerMTok: null; ... 17 more ...; freshness: "fresh"; }' is not assignable to type 'ModelCatalogRow'.
+src/queue/connector-job.processor.spec.ts(30,11): error TS2741: Property 'resetCircuitBreaker' is missing in type '{ name: string; type: "cli"; execute: Mock<Procedure>; getStatus: Mock<Procedure>; getCapabilities: Mock<Procedure>; }' but required in type 'IConnector'.
+src/speech/dto/tts-request.dto.spec.ts(13,19): error TS2339: Property 'speaker' does not exist on type '{ text: string; speaker: "xenia" | "aidar" | "baya" | "kseniya" | "eugene"; sample_rate: 8000 | 24000 | 48000; speed: number; } | { provider: "together"; model: "canopylabs/orpheus-3b-0.1-ft"; text: string; voice: "tara" | ... 6 more ... | "zoe"; } | { ...; }'.
+src/speech/dto/tts-request.dto.spec.ts(14,19): error TS2339: Property 'sample_rate' does not exist on type '{ text: string; speaker: "xenia" | "aidar" | "baya" | "kseniya" | "eugene"; sample_rate: 8000 | 24000 | 48000; speed: number; } | { provider: "together"; model: "canopylabs/orpheus-3b-0.1-ft"; text: string; voice: "tara" | ... 6 more ... | "zoe"; } | { ...; }'.
+src/speech/dto/tts-request.dto.spec.ts(15,19): error TS2339: Property 'speed' does not exist on type '{ text: string; speaker: "xenia" | "aidar" | "baya" | "kseniya" | "eugene"; sample_rate: 8000 | 24000 | 48000; speed: number; } | { provider: "together"; model: "canopylabs/orpheus-3b-0.1-ft"; text: string; voice: "tara" | ... 6 more ... | "zoe"; } | { ...; }'.
+src/speech/speech.controller.spec.ts(103,16): error TS2339: Property 'metricName' does not exist on type 'MetricValue<string>'.
+src/speech/speech-metrics.service.spec.ts(25,14): error TS2339: Property 'metricName' does not exist on type 'MetricValue<string>'.
+src/speech/speech-metrics.service.spec.ts(39,16): error TS2339: Property 'metricName' does not exist on type 'MetricValue<string>'.
+src/speech/speech.service.spec.ts(305,37): error TS2345: Argument of type '{ provider: "deepgram"; model: string; text: string; }' is not assignable to parameter of type '{ provider: "deepgram"; model: "aura-asteria-en" | "aura-luna-en" | "aura-stella-en"; text: string; } | { provider: "together"; model: "canopylabs/orpheus-3b-0.1-ft"; text: string; voice: "tara" | ... 6 more ... | "zoe"; } | { ...; } | { ...; }'.
+src/speech/speech.service.spec.ts(312,37): error TS2345: Argument of type '{ provider: "deepgram"; model: string; text: string; }' is not assignable to parameter of type '{ provider: "deepgram"; model: "aura-asteria-en" | "aura-luna-en" | "aura-stella-en"; text: string; } | { provider: "together"; model: "canopylabs/orpheus-3b-0.1-ft"; text: string; voice: "tara" | ... 6 more ... | "zoe"; } | { ...; } | { ...; }'.
+src/speech/speech.service.spec.ts(319,37): error TS2345: Argument of type '{ provider: "deepgram"; model: string; text: string; }' is not assignable to parameter of type '{ provider: "deepgram"; model: "aura-asteria-en" | "aura-luna-en" | "aura-stella-en"; text: string; } | { provider: "together"; model: "canopylabs/orpheus-3b-0.1-ft"; text: string; voice: "tara" | ... 6 more ... | "zoe"; } | { ...; } | { ...; }'.
+src/speech/speech.service.spec.ts(331,37): error TS2345: Argument of type '{ provider: "deepgram"; model: string; text: string; }' is not assignable to parameter of type '{ provider: "deepgram"; model: "aura-asteria-en" | "aura-luna-en" | "aura-stella-en"; text: string; } | { provider: "together"; model: "canopylabs/orpheus-3b-0.1-ft"; text: string; voice: "tara" | ... 6 more ... | "zoe"; } | { ...; } | { ...; }'.
+src/speech/stt/stt-pilot.integration.spec.ts(101,14): error TS2554: Expected 8 arguments, but got 6.
+src/speech/stt/stt-pilot.integration.spec.ts(110,15): error TS2769: No overload matches this call.
