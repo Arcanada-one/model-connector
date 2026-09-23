@@ -1,0 +1,4 @@
+route:GET /health: verified — served at head, prefix None consistent (route excluded from the prefix), controller registered
+route:GET /health/connectors: verified — served at head, prefix None consistent (route excluded from the prefix), controller registered
+route:GET /health/metrics: verified — served at head, prefix None consistent (route excluded from the prefix), controller registered
+route:GET /health/ready: verified — served at head, prefix None consistent (route excluded from the prefix), controller registered

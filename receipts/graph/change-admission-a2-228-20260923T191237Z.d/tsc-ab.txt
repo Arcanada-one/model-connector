@@ -1,0 +1,22 @@
+A2-228 — the `refused` verdict in this receipt, measured on both sides.
+
+`v-type-check-tsconfig` fails the deployable unit with "147 error(s) in 40 file(s)" and fails
+src/health/health.controller.spec.ts with two TS2532. Both are PRE-EXISTING and neither is
+introduced here. Measured on arcana-devs 2026-09-23 with the same node_modules on both sides:
+
+  base 9e73861 (origin/main)          head c8a058f
+  ------------------------------      ------------------------------
+  147 errors total                    147 errors total
+  health.controller.spec.ts(77,12)    health.controller.spec.ts(87,12)   TS2532
+  health.controller.spec.ts(99,12)    health.controller.spec.ts(109,12)  TS2532
+
+Both lines are `expect(result.connectors[0].circuitBreaker.lastErrorType)` — code this change does
+not touch. They move by exactly 10 lines, the length of the `it('names the build it was made
+from…')` block inserted above them. The per-file error set is unchanged.
+
+Commands:
+  npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'          -> 147 on each side
+  npx tsc --noEmit -p tsconfig.json 2>&1 | grep health.controller.spec -> the four lines above
+
+A2-223 recorded the same 147/147 condition on the previous merge. It is a standing repository
+condition, not a verdict on this change, and it is written down here rather than exempted away.

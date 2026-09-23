@@ -1,0 +1,1476 @@
+{
+ "admission": {
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "verdict": "refused"
+ },
+ "captured_at_utc": "2026-09-23T19:12:37Z",
+ "change_set": {
+  "base": "9e73861772ffbc88bca3eea51debe11692e2339b",
+  "files": [
+   {
+    "kind": "config",
+    "path": "Dockerfile",
+    "status": "M",
+    "uncovered": true
+   },
+   {
+    "kind": "other",
+    "path": "deploy/deploy.sh",
+    "status": "M",
+    "uncovered": true
+   },
+   {
+    "kind": "config",
+    "path": "docker-compose.yml",
+    "status": "M",
+    "uncovered": true
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:src/health/build-info.spec.ts",
+    "node_ids": [
+     "code_unit:src/health/build-info.spec.ts"
+    ],
+    "path": "src/health/build-info.spec.ts",
+    "status": "A"
+   },
+   {
+    "kind": "code",
+    "node_id": "code_unit:src/health/build-info.ts",
+    "node_ids": [
+     "code_unit:src/health/build-info.ts"
+    ],
+    "path": "src/health/build-info.ts",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:src/health/health.controller.spec.ts",
+    "node_ids": [
+     "code_unit:src/health/health.controller.spec.ts"
+    ],
+    "path": "src/health/health.controller.spec.ts",
+    "status": "M"
+   },
+   {
+    "kind": "route",
+    "node_id": "code_unit:src/health/health.controller.ts",
+    "node_ids": [
+     "code_unit:src/health/health.controller.ts",
+     "route:GET /health",
+     "route:GET /health/connectors",
+     "route:GET /health/metrics",
+     "route:GET /health/ready"
+    ],
+    "path": "src/health/health.controller.ts",
+    "status": "M"
+   }
+  ],
+  "head": "c8a058f1ec7aa39a106eb014a730d641db52f642",
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "exemptions": [],
+ "graph": {
+  "builder_version": "1.0.1",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:f0944ee7b2759a5f64ff52aca6af8682a2f0cf19428d7b1a0c36f00a47c503bb",
+  "path": "/home/dev/aup/scratch/a2228/change-admission-a2-228-mc-20260923T191237Z.d/graph-9e73861772ff.json",
+  "source_commit": "9e73861772ffbc88bca3eea51debe11692e2339b"
+ },
+ "head_graph": {
+  "builder_version": "1.0.1",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:44c840b8f2c5909bd1e7f4ce371d06b729aa9d1bccdeeb972923330b48721748",
+  "path": "/home/dev/aup/scratch/a2228/change-admission-a2-228-mc-20260923T191237Z.d/graph-head-c8a058f1ec7a.json",
+  "source_commit": "c8a058f1ec7aa39a106eb014a730d641db52f642",
+  "staleness": {
+   "checked_at_utc": "2026-09-23T19:12:43Z",
+   "checked_nodes": 740,
+   "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+   "mismatched_nodes": [],
+   "verdict": "fresh"
+  }
+ },
+ "host": "arcana-devs",
+ "impact_set": {
+  "deterministic_core": [
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "code_unit:src/app.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/health/health.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/app.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/app.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/health/health.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/health/health.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:src/health/health.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/health/health.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.controller.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/health/health.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/health/health.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/main.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/health/health.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/main.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/main.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/main.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/main.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/main.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:test/app.e2e-spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/health/health.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:test/app.e2e-spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:test/app.e2e-spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:test/app.e2e-spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:test/app.e2e-spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:test/app.e2e-spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "deployable_unit:.",
+    "node_type": "deployable_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:src/health/health.controller.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:.",
+      "via": "containment"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "deployable_unit:.",
+      "node_type": "deployable_unit",
+      "path": [
+       {
+        "edge_type": "deploys_to",
+        "from": "code_unit:src/health/health.controller.spec.ts",
+        "provenance": "deterministic",
+        "to": "deployable_unit:.",
+        "via": "containment"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "deployable_unit:.",
+      "node_type": "deployable_unit",
+      "path": [
+       {
+        "edge_type": "deploys_to",
+        "from": "code_unit:src/health/build-info.spec.ts",
+        "provenance": "deterministic",
+        "to": "deployable_unit:.",
+        "via": "containment"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+     }
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:README.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:README.md",
+      "provenance": "deterministic",
+      "to": "route:GET /health",
+      "via": "explicit-route"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "document:README.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "documents",
+        "from": "document:README.md",
+        "provenance": "deterministic",
+        "to": "route:GET /health",
+        "via": "explicit-route"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "document:README.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "documents",
+        "from": "document:README.md",
+        "provenance": "deterministic",
+        "to": "route:GET /health",
+        "via": "explicit-route"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     }
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/health/health.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.spec.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.spec.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.spec.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.spec.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.spec.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.spec.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/health/health.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.spec.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/health/health.controller.spec.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   }
+  ],
+  "edge_types": "all",
+  "global_fallback": {
+   "triggered": false
+  },
+  "inferred_tail": [],
+  "max_depth": 3,
+  "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+  "total": 13
+ },
+ "notes": [
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.0.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "profile: (auto-detected); baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none"
+ ],
+ "producer": {
+  "tool": "tools/graph/verify.py",
+  "version": "1.0.1"
+ },
+ "receipt_id": "car-verify-20260923T191237Z-c8a058f1",
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/home/dev/aup/arc2/wt/A2-228-mc"
+ },
+ "revision_selection": {
+  "base": [
+   "code_unit:src/app.module.ts",
+   "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+   "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "code_unit:src/health/health.controller.spec.ts",
+   "code_unit:src/health/health.controller.ts",
+   "code_unit:src/health/health.module.ts",
+   "code_unit:src/main.ts",
+   "code_unit:test/app.e2e-spec.ts",
+   "deployable_unit:.",
+   "document:README.md",
+   "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "route:GET /health",
+   "route:GET /health/connectors",
+   "route:GET /health/metrics",
+   "route:GET /health/ready"
+  ],
+  "head": [
+   "code_unit:src/app.module.ts",
+   "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+   "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "code_unit:src/health/build-info.spec.ts",
+   "code_unit:src/health/build-info.ts",
+   "code_unit:src/health/health.controller.spec.ts",
+   "code_unit:src/health/health.controller.ts",
+   "code_unit:src/health/health.module.ts",
+   "code_unit:src/main.ts",
+   "code_unit:test/app.e2e-spec.ts",
+   "deployable_unit:.",
+   "document:README.md",
+   "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "route:GET /health",
+   "route:GET /health/connectors",
+   "route:GET /health/metrics",
+   "route:GET /health/ready"
+  ],
+  "schema": "RevisionImpactSelection/v1",
+  "unmeasured_head_files": []
+ },
+ "schema": "ChangeAdmissionReceipt/v1",
+ "staleness": {
+  "checked_at_utc": "2026-09-23T19:12:43Z",
+  "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+  "mismatched_nodes": [],
+  "verdict": "fresh"
+ },
+ "tree": {
+  "commit": "c8a058f1ec7aa39a106eb014a730d641db52f642",
+  "dirty": false
+ },
+ "verdicts": [
+  {
+   "entity": "code_unit:src/app.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/app.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/cascade/cascade.module.di.spec.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/health/build-info.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/health/build-info.spec.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/health/build-info.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/health/build-info.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/health/health.controller.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: TS2532 L87: Object is possibly 'undefined'.; TS2532 L109: Object is possibly 'undefined'.",
+   "verdict": "failed",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/health/health.controller.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/health/health.controller.ts; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/health/health.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/health/health.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/main.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/main.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:test/app.e2e-spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json does not include test/app.e2e-spec.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "deployable_unit:.",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in 40 file(s)",
+   "verdict": "failed",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "document:README.md",
+   "reason": "v-doc-reference: 19 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "verdict": "not_measured"
+  },
+  {
+   "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "verdict": "not_measured"
+  },
+  {
+   "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "verdict": "not_measured"
+  },
+  {
+   "entity": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "verdict": "not_measured"
+  },
+  {
+   "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "verdict": "not_measured"
+  },
+  {
+   "entity": "route:GET /health",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/health/health.controller.ts; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "route:GET /health/connectors",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/health/health.controller.ts; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "route:GET /health/metrics",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/health/health.controller.ts; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "route:GET /health/ready",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/health/health.controller.ts; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig"
+   ]
+  }
+ ],
+ "verifiers": [
+  {
+   "command": "/home/dev/aup/arc2/wt/A2-228-mc/node_modules/.bin/tsc -p /home/dev/aup/arc2/wt/A2-228-mc/tsconfig.json --noEmit --incremental false --listFiles",
+   "duration_s": 7.02,
+   "entities": [
+    "code_unit:src/app.module.ts",
+    "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+    "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+    "code_unit:src/health/build-info.spec.ts",
+    "code_unit:src/health/build-info.ts",
+    "code_unit:src/health/health.controller.spec.ts",
+    "code_unit:src/health/health.controller.ts",
+    "code_unit:src/health/health.module.ts",
+    "code_unit:src/main.ts",
+    "code_unit:test/app.e2e-spec.ts",
+    "deployable_unit:.",
+    "route:GET /health",
+    "route:GET /health/connectors",
+    "route:GET /health/metrics",
+    "route:GET /health/ready"
+   ],
+   "exit_code": 2,
+   "id": "v-type-check-tsconfig",
+   "kind": "type_check",
+   "output_ref": "/home/dev/aup/scratch/a2228/change-admission-a2-228-mc-20260923T191237Z.d/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-09-23T19:12:50Z",
+   "summary": "tsconfig.json: exit 2, 147 error(s), 2697 files listed"
+  },
+  {
+   "command": "tools/graph/contract_diff.py.run_diff(base=9e73861772ff, head=c8a058f1ec7a, graph=head graph)",
+   "duration_s": 4.41,
+   "entities": [
+    "code_unit:src/health/health.controller.ts",
+    "route:GET /health",
+    "route:GET /health/connectors",
+    "route:GET /health/metrics",
+    "route:GET /health/ready"
+   ],
+   "exit_code": 1,
+   "id": "v-contract-diff",
+   "kind": "contract_diff",
+   "output_ref": "/home/dev/aup/scratch/a2228/change-admission-a2-228-mc-20260923T191237Z.d/v-contract-diff.json",
+   "started_at_utc": "2026-09-23T19:12:57Z",
+   "summary": "157→157 contracts, breaking 0, edges {'failed': 8, 'verified': 210}"
+  },
+  {
+   "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
+   "duration_s": 0.01,
+   "entities": [
+    "route:GET /health",
+    "route:GET /health/connectors",
+    "route:GET /health/metrics",
+    "route:GET /health/ready"
+   ],
+   "exit_code": 0,
+   "id": "v-route-config",
+   "kind": "config_schema",
+   "output_ref": "/home/dev/aup/scratch/a2228/change-admission-a2-228-mc-20260923T191237Z.d/v-route-config.txt",
+   "started_at_utc": "2026-09-23T19:13:01Z",
+   "summary": "4 route(s), 0 failed"
+  },
+  {
+   "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+   "duration_s": 0.16,
+   "entities": [
+    "code_unit:src/app.module.ts",
+    "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+    "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+    "code_unit:src/health/build-info.spec.ts",
+    "code_unit:src/health/build-info.ts",
+    "code_unit:src/health/health.controller.spec.ts",
+    "code_unit:src/health/health.controller.ts",
+    "code_unit:src/health/health.module.ts",
+    "code_unit:src/main.ts",
+    "code_unit:test/app.e2e-spec.ts",
+    "deployable_unit:."
+   ],
+   "exit_code": 0,
+   "id": "v-fitness",
+   "kind": "fitness_rules",
+   "output_ref": "/home/dev/aup/scratch/a2228/change-admission-a2-228-mc-20260923T191237Z.d/v-fitness.json",
+   "started_at_utc": "2026-09-23T19:13:01Z",
+   "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+  },
+  {
+   "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+   "duration_s": 0.0,
+   "entities": [
+    "document:README.md"
+   ],
+   "exit_code": 0,
+   "id": "v-doc-reference",
+   "kind": "doc_reference",
+   "output_ref": "/home/dev/aup/scratch/a2228/change-admission-a2-228-mc-20260923T191237Z.d/v-doc-reference.txt",
+   "started_at_utc": "2026-09-23T19:13:02Z",
+   "summary": "1 document(s), 0 failed"
+  },
+  {
+   "command": "tools/graph/deploy_gate.py canary --plan <plan> --phase pre|post (results supplied with --canary)",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:src/health/health.controller.ts",
+    "route:GET /health",
+    "route:GET /health/connectors",
+    "route:GET /health/metrics",
+    "route:GET /health/ready"
+   ],
+   "exit_code": 0,
+   "id": "v-canary",
+   "kind": "canary",
+   "output_ref": "/home/dev/aup/scratch/a2228/change-admission-a2-228-mc-20260923T191237Z.d/v-canary.json",
+   "started_at_utc": "2026-09-23T19:13:02Z",
+   "summary": "0 canary result(s); 0 verified / 0 failed / 5 not_measured of 5 entities"
+  }
+ ],
+ "verify": {
+  "events": [],
+  "required_by_entity": {
+   "code_unit:src/app.module.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/connectors/cascade/cascade.module.di.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/health/build-info.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/health/build-info.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/health/health.controller.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/health/health.controller.ts": [
+    "canary",
+    "contract_diff",
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/health/health.module.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/main.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:test/app.e2e-spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "deployable_unit:.": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "document:README.md": [
+    "doc_reference"
+   ],
+   "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json": [],
+   "route:GET /health": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:GET /health/connectors": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:GET /health/metrics": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:GET /health/ready": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ]
+  },
+  "seconds": {
+   "prepare": 4.62,
+   "total": 24.44,
+   "verifiers": 11.6
+  }
+ },
+ "work_item": "A2-228"
+}

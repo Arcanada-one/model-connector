@@ -1,0 +1,31 @@
+{
+ "sources": [],
+ "verdicts": {
+  "code_unit:src/health/health.controller.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /health": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /health/connectors": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /health/metrics": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "route:GET /health/ready": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ]
+ }
+}
+
+not_measured code_unit:src/health/health.controller.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /health  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /health/connectors  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /health/metrics  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured route:GET /health/ready  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
