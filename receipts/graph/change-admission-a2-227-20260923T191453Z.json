@@ -1,0 +1,545 @@
+{
+ "admission": {
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "verdict": "paused_safe"
+ },
+ "captured_at_utc": "2026-09-23T19:14:41Z",
+ "change_set": {
+  "base": "9e73861772ffbc88bca3eea51debe11692e2339b",
+  "files": [
+   {
+    "kind": "config",
+    "node_id": "code_unit:.github/workflows/ci.yml",
+    "node_ids": [
+     "code_unit:.github/workflows/ci.yml"
+    ],
+    "path": ".github/workflows/ci.yml",
+    "status": "M"
+   },
+   {
+    "kind": "config",
+    "node_id": "code_unit:.github/workflows/publish-sdks.yml",
+    "node_ids": [
+     "code_unit:.github/workflows/publish-sdks.yml"
+    ],
+    "path": ".github/workflows/publish-sdks.yml",
+    "status": "M"
+   }
+  ],
+  "head": "2dfc0e5a9a6bf867b5b1ee3aaaf5edba85ce9c8d",
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "exemptions": [],
+ "graph": {
+  "builder_version": "1.0.1",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:f0944ee7b2759a5f64ff52aca6af8682a2f0cf19428d7b1a0c36f00a47c503bb",
+  "path": "/tmp/a2227/receipts/model-connector.d/graph-9e73861772ff.json",
+  "source_commit": "9e73861772ffbc88bca3eea51debe11692e2339b"
+ },
+ "head_graph": {
+  "builder_version": "1.0.1",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:63438ca0808a88aea5a1bd09928480c825de30cee701631dcc8f206609af8275",
+  "path": "/tmp/a2227/receipts/model-connector.d/graph-head-2dfc0e5a9a6b.json",
+  "source_commit": "2dfc0e5a9a6bf867b5b1ee3aaaf5edba85ce9c8d",
+  "staleness": {
+   "checked_at_utc": "2026-09-23T19:14:47Z",
+   "checked_nodes": 738,
+   "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+   "mismatched_nodes": [],
+   "verdict": "fresh"
+  }
+ },
+ "host": "arcana-devs",
+ "impact_set": {
+  "deterministic_core": [
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "deployable_unit:.",
+    "node_type": "deployable_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "provenance": "deterministic",
+      "to": "deployable_unit:.",
+      "via": "containment"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "deployable_unit:.",
+      "node_type": "deployable_unit",
+      "path": [
+       {
+        "edge_type": "deploys_to",
+        "from": "code_unit:.github/workflows/ci.yml",
+        "provenance": "deterministic",
+        "to": "deployable_unit:.",
+        "via": "containment"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "deployable_unit:.",
+      "node_type": "deployable_unit",
+      "path": [
+       {
+        "edge_type": "deploys_to",
+        "from": "code_unit:.github/workflows/ci.yml",
+        "provenance": "deterministic",
+        "to": "deployable_unit:.",
+        "via": "containment"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+     }
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:CHANGELOG.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:CHANGELOG.md",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/publish-sdks.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "document:CHANGELOG.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "documents",
+        "from": "document:CHANGELOG.md",
+        "provenance": "deterministic",
+        "to": "code_unit:.github/workflows/publish-sdks.yml",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "document:CHANGELOG.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "documents",
+        "from": "document:CHANGELOG.md",
+        "provenance": "deterministic",
+        "to": "code_unit:.github/workflows/publish-sdks.yml",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     }
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:SECURITY.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:SECURITY.md",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "document:SECURITY.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "documents",
+        "from": "document:SECURITY.md",
+        "provenance": "deterministic",
+        "to": "code_unit:.github/workflows/ci.yml",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "document:SECURITY.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "documents",
+        "from": "document:SECURITY.md",
+        "provenance": "deterministic",
+        "to": "code_unit:.github/workflows/ci.yml",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     }
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:docs/how-to/deploy-runbook.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/deploy-runbook.md",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "document:docs/how-to/deploy-runbook.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "documents",
+        "from": "document:docs/how-to/deploy-runbook.md",
+        "provenance": "deterministic",
+        "to": "code_unit:.github/workflows/ci.yml",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "document:docs/how-to/deploy-runbook.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "documents",
+        "from": "document:docs/how-to/deploy-runbook.md",
+        "provenance": "deterministic",
+        "to": "code_unit:.github/workflows/ci.yml",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     }
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:.github/workflows/ci.yml",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:.github/workflows/ci.yml",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   }
+  ],
+  "edge_types": "all",
+  "global_fallback": {
+   "triggered": false
+  },
+  "inferred_tail": [],
+  "max_depth": 3,
+  "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+  "total": 5
+ },
+ "notes": [
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.0.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "profile: (auto-detected); baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none"
+ ],
+ "producer": {
+  "tool": "tools/graph/verify.py",
+  "version": "1.0.1"
+ },
+ "receipt_id": "car-verify-20260923T191441Z-2dfc0e5a",
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/tmp/a2227/repos/model-connector"
+ },
+ "revision_selection": {
+  "base": [
+   "code_unit:.github/workflows/ci.yml",
+   "code_unit:.github/workflows/publish-sdks.yml",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:SECURITY.md",
+   "document:docs/how-to/deploy-runbook.md",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json"
+  ],
+  "head": [
+   "code_unit:.github/workflows/ci.yml",
+   "code_unit:.github/workflows/publish-sdks.yml",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:SECURITY.md",
+   "document:docs/how-to/deploy-runbook.md",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json"
+  ],
+  "schema": "RevisionImpactSelection/v1",
+  "unmeasured_head_files": []
+ },
+ "schema": "ChangeAdmissionReceipt/v1",
+ "staleness": {
+  "checked_at_utc": "2026-09-23T19:14:47Z",
+  "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+  "mismatched_nodes": [],
+  "verdict": "fresh"
+ },
+ "tree": {
+  "commit": "2dfc0e5a9a6bf867b5b1ee3aaaf5edba85ce9c8d",
+  "dirty": false
+ },
+ "verdicts": [
+  {
+   "entity": "code_unit:.github/workflows/ci.yml",
+   "reason": "v-workflow-config-b803fcb7f17ed923: bounded workflow configuration shape valid; expressions, shell, actions and hosted execution NOT_MEASURED; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-workflow-config-b803fcb7f17ed923"
+   ]
+  },
+  {
+   "entity": "code_unit:.github/workflows/publish-sdks.yml",
+   "reason": "v-workflow-config-506797d1671524f2: workflow configuration not measured: job-level `environment` outside this bounded checker",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-workflow-config-506797d1671524f2"
+   ]
+  },
+  {
+   "entity": "deployable_unit:.",
+   "reason": "v-type-check-tsconfig: tsc unavailable on this host",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "document:CHANGELOG.md",
+   "reason": "v-doc-reference: 23 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:SECURITY.md",
+   "reason": "v-doc-reference: 0 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:docs/how-to/deploy-runbook.md",
+   "reason": "v-doc-reference: 0 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "verdict": "not_measured"
+  }
+ ],
+ "verifiers": [
+  {
+   "command": "tsc -p /tmp/a2227/repos/model-connector/tsconfig.json (tsc not found)",
+   "duration_s": 0.0,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "exit_code": 127,
+   "id": "v-type-check-tsconfig",
+   "kind": "type_check",
+   "output_ref": "/tmp/a2227/receipts/model-connector.d/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-09-23T19:14:53Z",
+   "summary": "not_measured: tsc unavailable"
+  },
+  {
+   "command": "workflow_config.validate exact head bytes",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:.github/workflows/ci.yml"
+   ],
+   "exit_code": 0,
+   "id": "v-workflow-config-b803fcb7f17ed923",
+   "kind": "config_schema",
+   "output_ref": "/tmp/a2227/receipts/model-connector.d/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-09-23T19:14:53Z",
+   "summary": "bounded workflow configuration shape valid; expressions, shell, actions and hosted execution NOT_MEASURED"
+  },
+  {
+   "command": "workflow_config.validate exact head bytes",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:.github/workflows/publish-sdks.yml"
+   ],
+   "exit_code": 1,
+   "id": "v-workflow-config-506797d1671524f2",
+   "kind": "config_schema",
+   "output_ref": "/tmp/a2227/receipts/model-connector.d/v-workflow-config-506797d1671524f2.txt",
+   "started_at_utc": "2026-09-23T19:14:53Z",
+   "summary": "workflow configuration not measured: job-level `environment` outside this bounded checker"
+  },
+  {
+   "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+   "duration_s": 0.15,
+   "entities": [
+    "code_unit:.github/workflows/ci.yml",
+    "code_unit:.github/workflows/publish-sdks.yml",
+    "deployable_unit:."
+   ],
+   "exit_code": 0,
+   "id": "v-fitness",
+   "kind": "fitness_rules",
+   "output_ref": "/tmp/a2227/receipts/model-connector.d/v-fitness.json",
+   "started_at_utc": "2026-09-23T19:14:53Z",
+   "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+  },
+  {
+   "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+   "duration_s": 0.0,
+   "entities": [
+    "document:CHANGELOG.md",
+    "document:SECURITY.md",
+    "document:docs/how-to/deploy-runbook.md"
+   ],
+   "exit_code": 0,
+   "id": "v-doc-reference",
+   "kind": "doc_reference",
+   "output_ref": "/tmp/a2227/receipts/model-connector.d/v-doc-reference.txt",
+   "started_at_utc": "2026-09-23T19:14:53Z",
+   "summary": "3 document(s), 0 failed"
+  }
+ ],
+ "verify": {
+  "events": [],
+  "required_by_entity": {
+   "code_unit:.github/workflows/ci.yml": [
+    "config_schema",
+    "fitness_rules"
+   ],
+   "code_unit:.github/workflows/publish-sdks.yml": [
+    "config_schema",
+    "fitness_rules"
+   ],
+   "deployable_unit:.": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "document:CHANGELOG.md": [
+    "doc_reference"
+   ],
+   "document:SECURITY.md": [
+    "doc_reference"
+   ],
+   "document:docs/how-to/deploy-runbook.md": [
+    "doc_reference"
+   ],
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": []
+  },
+  "seconds": {
+   "prepare": 4.4,
+   "total": 12.7,
+   "verifiers": 0.15
+  }
+ }
+}
