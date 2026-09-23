@@ -16,6 +16,12 @@ RUN npx prisma generate && pnpm build
 FROM base AS production
 ENV NODE_ENV=production
 
+# A2-228: the commit this image was built from, so /health can name it. Supplied by
+# docker-compose.yml from deploy/deploy.sh; empty in any build that does not pass it, which
+# /health reports as no build rather than as an old one.
+ARG MC_BUILD_SHA=
+ENV MC_BUILD_SHA=$MC_BUILD_SHA
+
 # Install CLI tools for connectors (glibc required — hence node:22-slim, not alpine)
 RUN npm install -g @anthropic-ai/claude-code @google/gemini-cli
 

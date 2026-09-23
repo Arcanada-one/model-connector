@@ -3,6 +3,7 @@ import { Public } from '../auth/public.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { MetricsService } from '../metrics/metrics.service';
 import { ConnectorsService } from '../connectors/connectors.service';
+import { buildInfo } from './build-info';
 
 @Controller('health')
 export class HealthController {
@@ -15,7 +16,10 @@ export class HealthController {
   @Get()
   @Public()
   health() {
-    return { status: 'ok', timestamp: new Date().toISOString() };
+    // A2-228: `build` names the commit this process was built from. Measurements taken through
+    // this service record it, so a number can never again be attributed to the wrong binary —
+    // see src/health/build-info.ts for why `sha: null` is not_measured rather than a pass.
+    return { status: 'ok', timestamp: new Date().toISOString(), build: buildInfo() };
   }
 
   @Get('ready')

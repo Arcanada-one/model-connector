@@ -45,6 +45,13 @@ COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.codex.yml)
 
 # CONN-0208: clean up orphan containers before recreate (race condition);
 # named volumes are preserved.
+# A2-228: bake the deployed commit into the image so /health can name it. Read from the
+# broker's own checkout, which is the thing being deployed. A checkout that cannot answer
+# leaves this empty, and /health then reports no build rather than a wrong one.
+MC_BUILD_SHA="$(git rev-parse HEAD 2>/dev/null || true)"
+export MC_BUILD_SHA
+echo "[deploy] building MC_BUILD_SHA=${MC_BUILD_SHA:-(unknown)}"
+
 "${COMPOSE[@]}" down --remove-orphans || true
 "${COMPOSE[@]}" up -d --build
 
