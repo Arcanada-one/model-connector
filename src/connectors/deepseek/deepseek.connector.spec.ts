@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DeepSeekConnector } from './deepseek.connector';
+import { DEEPSEEK_LIST_PRICES_USD_PER_MTOK, DeepSeekConnector } from './deepseek.connector';
 
 const chatFixture = JSON.parse(
   readFileSync(resolve(__dirname, '__fixtures__/chat-success.json'), 'utf8'),
@@ -9,6 +9,15 @@ const chatFixture = JSON.parse(
 const modelsFixture = JSON.parse(
   readFileSync(resolve(__dirname, '__fixtures__/models.json'), 'utf8'),
 );
+
+class TestDeepSeekConnector extends DeepSeekConnector {
+  staticMetas() {
+    return this.getStaticModelMetas();
+  }
+  liveMetas(json: unknown) {
+    return this.extractModels(json);
+  }
+}
 
 describe('DeepSeekConnector', () => {
   let connector: DeepSeekConnector;
@@ -173,6 +182,46 @@ describe('DeepSeekConnector', () => {
       supportsStreaming: false,
       supportsJsonSchema: false,
       supportsTools: false,
+    });
+  });
+
+  // A2-201 — costUsd was always 0 for DeepSeek because no modelMeta ever carried a
+  // `pricing` entry, so the catalogue held null tariffs and `measureCostUsd` fell to
+  // `'unpriced'` regardless of measured usage tokens. Fails before the price map +
+  // getStaticModelMetas/extractModels overrides exist; passes after.
+  describe('curated list prices (A2-201)', () => {
+    it('a live /models listing attaches the curated price to the ids DeepSeek actually serves', () => {
+      const test = new TestDeepSeekConnector();
+      const metas = test.liveMetas({
+        data: [
+          { id: 'deepseek-flash' },
+          { id: 'deepseek-v4-pro' },
+          { id: 'deepseek-experimental' },
+        ],
+      });
+      expect(metas.find((m) => m.id === 'deepseek-flash')?.pricing).toEqual({
+        ...DEEPSEEK_LIST_PRICES_USD_PER_MTOK['deepseek-flash'],
+        unit: 'USD/1M tokens',
+      });
+      expect(metas.find((m) => m.id === 'deepseek-v4-pro')?.pricing).toEqual({
+        ...DEEPSEEK_LIST_PRICES_USD_PER_MTOK['deepseek-v4-pro'],
+        unit: 'USD/1M tokens',
+      });
+      // Unknown ids stay unpriced (null) — never invented.
+      expect(metas.find((m) => m.id === 'deepseek-experimental')?.pricing).toBeNull();
+    });
+
+    it('the static/offline floor carries pricing.null for every currently-declared static id', () => {
+      // STATIC_MODELS ('deepseek-chat', 'deepseek-reasoner') predate the DeepSeek
+      // rename this fix researched and are deliberately NOT in the price map (see the
+      // code comment on DEEPSEEK_LIST_PRICES_USD_PER_MTOK) — this asserts that absence
+      // stays an honest `null`, not a fabricated number, rather than asserting a price.
+      const test = new TestDeepSeekConnector();
+      const metas = test.staticMetas();
+      expect(metas.map((m) => m.id)).toEqual(['deepseek-chat', 'deepseek-reasoner']);
+      for (const meta of metas) {
+        expect(meta.pricing).toBeNull();
+      }
     });
   });
 });

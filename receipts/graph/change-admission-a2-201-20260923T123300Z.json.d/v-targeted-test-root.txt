@@ -1,0 +1,14 @@
+
+ RUN  v4.1.8 /home/dev/aup/arc2/wt/A2-201/model-connector
+
+[32m[Nest] 936782  - [39m09/23/2026, 12:34:08 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mdeepseek model refresh: 2 provider models (replaced 2 static)[39m
+[32m[Nest] 936776  - [39m09/23/2026, 12:34:09 PM [32m    LOG[39m [38;5;3m[ConnectorModelRefresh] [39m[32mcerebras model refresh: 1 provider models (replaced 2 static)[39m
+
+ Test Files  7 passed (7)
+      Tests  42 passed (42)
+   Start at  12:34:08
+   Duration  2.30s (transform 5.66s, setup 0ms, import 9.47s, tests 1.90s, environment 1ms)
+
+
+[stderr]
+[33m`esbuild` option is set to false, but `oxc` option was not set to false. `esbuild: false` does not have effect any more. If you want to disable the default transformation, which is now handled by Oxc, please set `oxc: false` instead.[39m

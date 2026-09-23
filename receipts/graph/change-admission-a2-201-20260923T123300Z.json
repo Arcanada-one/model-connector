@@ -1,0 +1,4488 @@
+{
+ "admission": {
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4) | A2-201: one exemption attached (deployable_unit:., pre-existing tsc baseline, scoped + evidenced + dated above); the 38 not_measured entities (canary/config-schema/fitness-dashboard verifiers not wired to this offline run) are left as not_measured, not exempted -- an honest paused_safe, not a claimed admission this worker has no standing to assert for the whole deployable unit.",
+  "verdict": "paused_safe"
+ },
+ "captured_at_utc": "2026-09-23T12:33:46Z",
+ "change_set": {
+  "base": "f4d2a528403c097f95d4c8ddafdcd84bd050a339",
+  "files": [
+   {
+    "kind": "test",
+    "node_id": "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+    "node_ids": [
+     "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts"
+    ],
+    "path": "src/connectors/deepseek/deepseek.connector.spec.ts",
+    "status": "M"
+   },
+   {
+    "kind": "code",
+    "node_id": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+    "node_ids": [
+     "code_unit:src/connectors/deepseek/deepseek.connector.ts"
+    ],
+    "path": "src/connectors/deepseek/deepseek.connector.ts",
+    "status": "M"
+   }
+  ],
+  "head": "016e0cceb5ca6b8ef927f4584a39ebb0feba08eb",
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "exemptions": [
+  {
+   "entity": "deployable_unit:.",
+   "reason": "v-type-check-tsconfig reports 147 pre-existing TS errors in 40 files under tsconfig.json, none of them src/connectors/deepseek/deepseek.connector.ts or deepseek.connector.spec.ts (the only files this change touches). Measured identical (147, same error set) on the base commit f4d2a52 BEFORE this change and on the head commit 016e0cc AFTER it (git stash push/pop A/B comparison, same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`) -- zero errors added or removed by this diff. Same baseline already recorded with an exemption in receipts/mc/change-admission-mcci0-20260913T200251Z.json (147 errors, expired 2026-09-20, not yet renewed or fixed as of this receipt's date -- flagged as a follow-up in the A2-201 report, not resolved here).",
+   "owner": "A2-201 executor (claude-sonnet-5, arcana-devs) / Model Connector owner",
+   "expires_at_utc": "2026-09-30T00:00:00Z",
+   "evidence": "receipts/mc/change-admission-a2-201-20260923T123300Z.json.d/v-type-check-tsconfig.txt (2912 lines, 147 `error TS` matches on both f4d2a52 and 016e0cc)"
+  }
+ ],
+ "graph": {
+  "builder_version": "1.0.1",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:8f928a2d24080702fb4f59982001e11da907548a8c5e871780a269d65e8aa135",
+  "path": "/tmp/a2-201-verifier-out2/graph-f4d2a528403c.json",
+  "source_commit": "f4d2a528403c097f95d4c8ddafdcd84bd050a339"
+ },
+ "head_graph": {
+  "builder_version": "1.0.1",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:25eb840942182dd62b78622a705b6ed6a7e71b1b46f67ed2e2aa1a291ab0881f",
+  "path": "/tmp/a2-201-verifier-out2/graph-head-016e0cceb5ca.json",
+  "source_commit": "016e0cceb5ca6b8ef927f4584a39ebb0feba08eb",
+  "staleness": {
+   "checked_at_utc": "2026-09-23T12:33:52Z",
+   "checked_nodes": 723,
+   "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+   "mismatched_nodes": [],
+   "verdict": "fresh"
+  }
+ },
+ "host": "arcana-devs",
+ "impact_set": {
+  "deterministic_core": [
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/admin/admin.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/admin/admin.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/admin/admin.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/admin/admin.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/app.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/app.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/app.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/cascade/cascade.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cascade/cascade.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cascade/cascade.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/codex/codex.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/codex/codex.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/codex/codex.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/codex/codex.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/codex/codex.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/codex/codex.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/cohere/cohere.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/cohere/cohere.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cohere/cohere.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cohere/cohere.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cohere/cohere.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cohere/cohere.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "code_unit:src/connectors/connectors.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/connectors/connectors.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/connectors/connectors.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/cursor/cursor.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/cursor/cursor.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cursor/cursor.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cursor/cursor.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/cursor/cursor.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cursor/cursor.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/embedding/embedding.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/embedding/embedding.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/embedding/embedding.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/embedding/embedding.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/embedding/embedding.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/embedding/embedding.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/gemini/gemini.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/gemini/gemini.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/gemini/gemini.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/gemini/gemini.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/gemini/gemini.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/gemini/gemini.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/grok/grok.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/grok/grok.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/grok/grok.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/grok/grok.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/grok/grok.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/grok/grok.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/groq/groq.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/groq/groq.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/groq/groq.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/groq/groq.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/groq/groq.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/groq/groq.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/mistral/mistral.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/mistral/mistral.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/mistral/mistral.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/mistral/mistral.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/mistral/mistral.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/mistral/mistral.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/modal/modal.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/modal/modal.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/modal/modal.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/modal/modal.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/modal/modal.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/modal/modal.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/ollama/ollama.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/ollama/ollama.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/ollama/ollama.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/ollama/ollama.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/ollama/ollama.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/ollama/ollama.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/openai/openai.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/openai/openai.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/openai/openai.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/openai/openai.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/openai/openai.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/openai/openai.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/orq/orq.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/orq/orq.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/orq/orq.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/orq/orq.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/orq/orq.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/orq/orq.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/together/together.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/together/together.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/together/together.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/together/together.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/together/together.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/together/together.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/health/health.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/health/health.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/health/health.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/health/health.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/health/health.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/openai-compat/openai-compat.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/openai-compat/openai-compat.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/openai-compat/openai-compat.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/openai-compat/openai-compat.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/openai-compat/openai-compat.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/openai-compat/openai-compat.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "deployable_unit:.",
+    "node_type": "deployable_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:.",
+      "via": "containment"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "deployable_unit:.",
+      "node_type": "deployable_unit",
+      "path": [
+       {
+        "edge_type": "deploys_to",
+        "from": "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+        "provenance": "deterministic",
+        "to": "deployable_unit:.",
+        "via": "containment"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "deployable_unit:.",
+      "node_type": "deployable_unit",
+      "path": [
+       {
+        "edge_type": "deploys_to",
+        "from": "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+        "provenance": "deterministic",
+        "to": "deployable_unit:.",
+        "via": "containment"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+     }
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "document:templates/api-connector-scaffold/README.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:templates/api-connector-scaffold/README.md",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/connectors.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "document:templates/api-connector-scaffold/README.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "documents",
+        "from": "document:templates/api-connector-scaffold/README.md",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "document:templates/api-connector-scaffold/README.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "documents",
+        "from": "document:templates/api-connector-scaffold/README.md",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/connectors.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     }
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   }
+  ],
+  "edge_types": "all",
+  "global_fallback": {
+   "triggered": false
+  },
+  "inferred_tail": [],
+  "max_depth": 3,
+  "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+  "total": 38
+ },
+ "notes": [
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.0.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "profile: (auto-detected); baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: ['targeted_test']; disabled: none"
+ ],
+ "producer": {
+  "tool": "tools/graph/verify.py",
+  "version": "1.0.1"
+ },
+ "receipt_id": "car-verify-20260923T123346Z-016e0cce",
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/home/dev/aup/arc2/wt/A2-201/model-connector"
+ },
+ "revision_selection": {
+  "base": [
+   "code_unit:src/admin/admin.module.ts",
+   "code_unit:src/app.module.ts",
+   "code_unit:src/connectors/anthropic/anthropic.module.ts",
+   "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+   "code_unit:src/connectors/bedrock/bedrock.module.ts",
+   "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+   "code_unit:src/connectors/cascade/cascade.module.ts",
+   "code_unit:src/connectors/cerebras/cerebras.module.ts",
+   "code_unit:src/connectors/claude-code/claude-code.module.ts",
+   "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+   "code_unit:src/connectors/codex/codex.module.ts",
+   "code_unit:src/connectors/cohere/cohere.module.ts",
+   "code_unit:src/connectors/connectors.module.ts",
+   "code_unit:src/connectors/cursor/cursor.module.ts",
+   "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+   "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+   "code_unit:src/connectors/deepseek/deepseek.module.ts",
+   "code_unit:src/connectors/embedding/embedding.module.ts",
+   "code_unit:src/connectors/fireworks/fireworks.module.ts",
+   "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+   "code_unit:src/connectors/gemini/gemini.module.ts",
+   "code_unit:src/connectors/grok/grok.module.ts",
+   "code_unit:src/connectors/groq/groq.module.ts",
+   "code_unit:src/connectors/huggingface/huggingface.module.ts",
+   "code_unit:src/connectors/mistral/mistral.module.ts",
+   "code_unit:src/connectors/modal/modal.module.ts",
+   "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+   "code_unit:src/connectors/ollama/ollama.module.ts",
+   "code_unit:src/connectors/openai/openai.module.ts",
+   "code_unit:src/connectors/openmodel/openmodel.module.ts",
+   "code_unit:src/connectors/openrouter/openrouter.module.ts",
+   "code_unit:src/connectors/orq/orq.module.ts",
+   "code_unit:src/connectors/perplexity/perplexity.module.ts",
+   "code_unit:src/connectors/together/together.module.ts",
+   "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+   "code_unit:src/health/health.module.ts",
+   "code_unit:src/openai-compat/openai-compat.module.ts",
+   "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+   "deployable_unit:.",
+   "document:templates/api-connector-scaffold/README.md"
+  ],
+  "head": [
+   "code_unit:src/admin/admin.module.ts",
+   "code_unit:src/app.module.ts",
+   "code_unit:src/connectors/anthropic/anthropic.module.ts",
+   "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+   "code_unit:src/connectors/bedrock/bedrock.module.ts",
+   "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+   "code_unit:src/connectors/cascade/cascade.module.ts",
+   "code_unit:src/connectors/cerebras/cerebras.module.ts",
+   "code_unit:src/connectors/claude-code/claude-code.module.ts",
+   "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+   "code_unit:src/connectors/codex/codex.module.ts",
+   "code_unit:src/connectors/cohere/cohere.module.ts",
+   "code_unit:src/connectors/connectors.module.ts",
+   "code_unit:src/connectors/cursor/cursor.module.ts",
+   "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+   "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+   "code_unit:src/connectors/deepseek/deepseek.module.ts",
+   "code_unit:src/connectors/embedding/embedding.module.ts",
+   "code_unit:src/connectors/fireworks/fireworks.module.ts",
+   "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+   "code_unit:src/connectors/gemini/gemini.module.ts",
+   "code_unit:src/connectors/grok/grok.module.ts",
+   "code_unit:src/connectors/groq/groq.module.ts",
+   "code_unit:src/connectors/huggingface/huggingface.module.ts",
+   "code_unit:src/connectors/mistral/mistral.module.ts",
+   "code_unit:src/connectors/modal/modal.module.ts",
+   "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+   "code_unit:src/connectors/ollama/ollama.module.ts",
+   "code_unit:src/connectors/openai/openai.module.ts",
+   "code_unit:src/connectors/openmodel/openmodel.module.ts",
+   "code_unit:src/connectors/openrouter/openrouter.module.ts",
+   "code_unit:src/connectors/orq/orq.module.ts",
+   "code_unit:src/connectors/perplexity/perplexity.module.ts",
+   "code_unit:src/connectors/together/together.module.ts",
+   "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+   "code_unit:src/health/health.module.ts",
+   "code_unit:src/openai-compat/openai-compat.module.ts",
+   "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+   "deployable_unit:.",
+   "document:templates/api-connector-scaffold/README.md"
+  ],
+  "schema": "RevisionImpactSelection/v1",
+  "unmeasured_head_files": []
+ },
+ "schema": "ChangeAdmissionReceipt/v1",
+ "staleness": {
+  "checked_at_utc": "2026-09-23T12:33:52Z",
+  "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+  "mismatched_nodes": [],
+  "verdict": "fresh"
+ },
+ "tree": {
+  "commit": "016e0cceb5ca6b8ef927f4584a39ebb0feba08eb",
+  "dirty": false
+ },
+ "verdicts": [
+  {
+   "entity": "code_unit:src/admin/admin.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/admin/admin.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/app.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/app.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-targeted-test-root",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/anthropic/anthropic.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/azure-openai/azure-openai.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/bedrock/bedrock.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-targeted-test-root",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/bedrock/nova-media/nova-media.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-targeted-test-root",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/cascade/cascade.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/cerebras/cerebras.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-targeted-test-root",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/claude-code/claude-code.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/codex/codex.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/codex/codex.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/cohere/cohere.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/cohere/cohere.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/connectors.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/connectors.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/cursor/cursor.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/cursor/cursor.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/deepseek/deepseek.connector.spec.ts; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-config-schema",
+    "v-fitness",
+    "v-targeted-test-root",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/deepseek/deepseek.connector.ts; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-config-schema",
+    "v-fitness",
+    "v-targeted-test-root",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/deepseek/deepseek.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/embedding/embedding.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/embedding/embedding.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/fireworks/fireworks.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-targeted-test-root",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/gemini-api/gemini-api.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-targeted-test-root",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/gemini/gemini.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/gemini/gemini.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/grok/grok.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/grok/grok.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/groq/groq.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/groq/groq.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/huggingface/huggingface.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/mistral/mistral.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/mistral/mistral.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/modal/modal.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/modal/modal.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/ollama-cloud/ollama-cloud.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/ollama/ollama.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/ollama/ollama.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/openai/openai.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/openai/openai.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/openmodel/openmodel.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/openrouter/openrouter.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/orq/orq.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/orq/orq.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/perplexity/perplexity.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/together/together.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/together/together.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/vertex-generative/vertex-generative.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/health/health.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/health/health.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/openai-compat/openai-compat.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/openai-compat/openai-compat.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+   "reason": "required verifier targeted_test produced no verdict for this entity; v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/prompt-cache/prompt-cache-prewarm.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "deployable_unit:.",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in 40 file(s)",
+   "verdict": "failed",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "document:templates/api-connector-scaffold/README.md",
+   "reason": "v-doc-reference: 6 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  }
+ ],
+ "verifiers": [
+  {
+   "command": "/home/dev/aup/arc2/wt/A2-201/model-connector/node_modules/.bin/tsc -p /home/dev/aup/arc2/wt/A2-201/model-connector/tsconfig.json --noEmit --incremental false --listFiles",
+   "duration_s": 7.79,
+   "entities": [
+    "code_unit:src/admin/admin.module.ts",
+    "code_unit:src/app.module.ts",
+    "code_unit:src/connectors/anthropic/anthropic.module.ts",
+    "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+    "code_unit:src/connectors/bedrock/bedrock.module.ts",
+    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+    "code_unit:src/connectors/cascade/cascade.module.ts",
+    "code_unit:src/connectors/cerebras/cerebras.module.ts",
+    "code_unit:src/connectors/claude-code/claude-code.module.ts",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+    "code_unit:src/connectors/codex/codex.module.ts",
+    "code_unit:src/connectors/cohere/cohere.module.ts",
+    "code_unit:src/connectors/connectors.module.ts",
+    "code_unit:src/connectors/cursor/cursor.module.ts",
+    "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+    "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+    "code_unit:src/connectors/deepseek/deepseek.module.ts",
+    "code_unit:src/connectors/embedding/embedding.module.ts",
+    "code_unit:src/connectors/fireworks/fireworks.module.ts",
+    "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+    "code_unit:src/connectors/gemini/gemini.module.ts",
+    "code_unit:src/connectors/grok/grok.module.ts",
+    "code_unit:src/connectors/groq/groq.module.ts",
+    "code_unit:src/connectors/huggingface/huggingface.module.ts",
+    "code_unit:src/connectors/mistral/mistral.module.ts",
+    "code_unit:src/connectors/modal/modal.module.ts",
+    "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+    "code_unit:src/connectors/ollama/ollama.module.ts",
+    "code_unit:src/connectors/openai/openai.module.ts",
+    "code_unit:src/connectors/openmodel/openmodel.module.ts",
+    "code_unit:src/connectors/openrouter/openrouter.module.ts",
+    "code_unit:src/connectors/orq/orq.module.ts",
+    "code_unit:src/connectors/perplexity/perplexity.module.ts",
+    "code_unit:src/connectors/together/together.module.ts",
+    "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+    "code_unit:src/health/health.module.ts",
+    "code_unit:src/openai-compat/openai-compat.module.ts",
+    "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+    "deployable_unit:."
+   ],
+   "exit_code": 2,
+   "id": "v-type-check-tsconfig",
+   "kind": "type_check",
+   "output_ref": "/tmp/a2-201-verifier-out2/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-09-23T12:33:59Z",
+   "summary": "tsconfig.json: exit 2, 147 error(s), 2688 files listed"
+  },
+  {
+   "command": "verify.py config_schema: keys read at head ⊆ declared keys",
+   "duration_s": 0.02,
+   "entities": [
+    "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+    "code_unit:src/connectors/deepseek/deepseek.connector.ts"
+   ],
+   "exit_code": 0,
+   "id": "v-config-schema",
+   "kind": "config_schema",
+   "output_ref": "/tmp/a2-201-verifier-out2/v-config-schema.json",
+   "started_at_utc": "2026-09-23T12:34:07Z",
+   "summary": "3 source(s), 0 new / 93 frozen undeclared reads, 0 failed"
+  },
+  {
+   "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+   "duration_s": 0.15,
+   "entities": [
+    "code_unit:src/admin/admin.module.ts",
+    "code_unit:src/app.module.ts",
+    "code_unit:src/connectors/anthropic/anthropic.module.ts",
+    "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+    "code_unit:src/connectors/bedrock/bedrock.module.ts",
+    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+    "code_unit:src/connectors/cascade/cascade.module.ts",
+    "code_unit:src/connectors/cerebras/cerebras.module.ts",
+    "code_unit:src/connectors/claude-code/claude-code.module.ts",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+    "code_unit:src/connectors/codex/codex.module.ts",
+    "code_unit:src/connectors/cohere/cohere.module.ts",
+    "code_unit:src/connectors/connectors.module.ts",
+    "code_unit:src/connectors/cursor/cursor.module.ts",
+    "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+    "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+    "code_unit:src/connectors/deepseek/deepseek.module.ts",
+    "code_unit:src/connectors/embedding/embedding.module.ts",
+    "code_unit:src/connectors/fireworks/fireworks.module.ts",
+    "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+    "code_unit:src/connectors/gemini/gemini.module.ts",
+    "code_unit:src/connectors/grok/grok.module.ts",
+    "code_unit:src/connectors/groq/groq.module.ts",
+    "code_unit:src/connectors/huggingface/huggingface.module.ts",
+    "code_unit:src/connectors/mistral/mistral.module.ts",
+    "code_unit:src/connectors/modal/modal.module.ts",
+    "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+    "code_unit:src/connectors/ollama/ollama.module.ts",
+    "code_unit:src/connectors/openai/openai.module.ts",
+    "code_unit:src/connectors/openmodel/openmodel.module.ts",
+    "code_unit:src/connectors/openrouter/openrouter.module.ts",
+    "code_unit:src/connectors/orq/orq.module.ts",
+    "code_unit:src/connectors/perplexity/perplexity.module.ts",
+    "code_unit:src/connectors/together/together.module.ts",
+    "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+    "code_unit:src/health/health.module.ts",
+    "code_unit:src/openai-compat/openai-compat.module.ts",
+    "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+    "deployable_unit:."
+   ],
+   "exit_code": 0,
+   "id": "v-fitness",
+   "kind": "fitness_rules",
+   "output_ref": "/tmp/a2-201-verifier-out2/v-fitness.json",
+   "started_at_utc": "2026-09-23T12:34:07Z",
+   "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+  },
+  {
+   "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+   "duration_s": 0.0,
+   "entities": [
+    "document:templates/api-connector-scaffold/README.md"
+   ],
+   "exit_code": 0,
+   "id": "v-doc-reference",
+   "kind": "doc_reference",
+   "output_ref": "/tmp/a2-201-verifier-out2/v-doc-reference.txt",
+   "started_at_utc": "2026-09-23T12:34:07Z",
+   "summary": "1 document(s), 0 failed"
+  },
+  {
+   "command": "tools/graph/deploy_gate.py canary --plan <plan> --phase pre|post (results supplied with --canary)",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+    "code_unit:src/connectors/deepseek/deepseek.connector.ts"
+   ],
+   "exit_code": 0,
+   "id": "v-canary",
+   "kind": "canary",
+   "output_ref": "/tmp/a2-201-verifier-out2/v-canary.json",
+   "started_at_utc": "2026-09-23T12:34:07Z",
+   "summary": "0 canary result(s); 0 verified / 0 failed / 2 not_measured of 2 entities"
+  },
+  {
+   "command": "/home/dev/aup/arc2/wt/A2-201/model-connector/node_modules/.bin/vitest run src/connectors/bedrock/bedrock.module.spec.ts src/connectors/bedrock/nova-media/nova-media.module.spec.ts src/connectors/cascade/cascade.module.di.spec.ts src/connectors/cerebras/cerebras.connector.spec.ts src/connectors/deepseek/deepseek.connector.spec.ts src/connectors/fireworks/fireworks.connector.spec.ts src/connectors/gemini-api/gemini-api.module.spec.ts src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "duration_s": 2.63,
+   "entities": [
+    "code_unit:src/app.module.ts",
+    "code_unit:src/connectors/bedrock/bedrock.module.spec.ts",
+    "code_unit:src/connectors/bedrock/bedrock.module.ts",
+    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.spec.ts",
+    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+    "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+    "code_unit:src/connectors/cerebras/cerebras.connector.spec.ts",
+    "code_unit:src/connectors/cerebras/cerebras.module.ts",
+    "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+    "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+    "code_unit:src/connectors/fireworks/fireworks.connector.spec.ts",
+    "code_unit:src/connectors/fireworks/fireworks.module.ts",
+    "code_unit:src/connectors/gemini-api/gemini-api.module.spec.ts",
+    "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+    "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts"
+   ],
+   "exit_code": 0,
+   "id": "v-targeted-test-root",
+   "kind": "targeted_test",
+   "output_ref": "/tmp/a2-201-verifier-out2/v-targeted-test-root.txt",
+   "started_at_utc": "2026-09-23T12:34:07Z",
+   "summary": "8 spec(s), exit 0, 0 failed"
+  }
+ ],
+ "verify": {
+  "events": [],
+  "required_by_entity": {
+   "code_unit:src/admin/admin.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/app.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/anthropic/anthropic.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/azure-openai/azure-openai.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/bedrock/bedrock.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/cascade/cascade.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/cerebras/cerebras.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/claude-code/claude-code.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/codex/codex.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/cohere/cohere.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/connectors.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/cursor/cursor.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts": [
+    "canary",
+    "config_schema",
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/deepseek/deepseek.connector.ts": [
+    "canary",
+    "config_schema",
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/deepseek/deepseek.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/embedding/embedding.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/fireworks/fireworks.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/gemini-api/gemini-api.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/gemini/gemini.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/grok/grok.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/groq/groq.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/huggingface/huggingface.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/mistral/mistral.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/modal/modal.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/ollama/ollama.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/openai/openai.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/openmodel/openmodel.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/openrouter/openrouter.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/orq/orq.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/perplexity/perplexity.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/together/together.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/health/health.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/openai-compat/openai-compat.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts": [
+    "fitness_rules",
+    "targeted_test",
+    "type_check"
+   ],
+   "deployable_unit:.": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "document:templates/api-connector-scaffold/README.md": [
+    "doc_reference"
+   ]
+  },
+  "seconds": {
+   "prepare": 4.81,
+   "total": 23.66,
+   "verifiers": 10.59
+  }
+ },
+ "work_item": "A2-201"
+}
