@@ -1,9 +1,9 @@
 {
  "admission": {
-  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4) | A2-207: exemptions attached for the 22 entities whose only missing verdict is the repository-wide tsc baseline (A/B measured 147 = 147, scoped to files this change does not touch). The remaining 9 entities stay not_measured and are NOT exempted: the verify profile has no targeted_test verifier for packages/sdk-ts or packages/sdk-python, and packages/sdk-ts/tsconfig.json excludes its own test file. Both suites were run by hand, red before and green after (receipts/graph/a2-207-verifier-output/sdk-suites-by-hand.txt: 16/16 vitest, 18/18 pytest) -- evidence for a reader, not a verifier verdict, so the receipt pauses rather than claiming an admission this worker has no standing to assert.",
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4) | A2-207: exemptions attached for the 22 entities whose only missing verdict is the repository-wide tsc baseline (A/B measured 147 = 147, scoped to files this change does not touch). The remaining 10 stay not_measured and are NOT exempted: the graph verify profile has no targeted_test verifier bound to packages/sdk-ts or packages/sdk-python, and packages/sdk-ts/tsconfig.json excludes its own test file. Those suites are NOT unverified -- .github/workflows/publish-sdks.yml runs both on a pull request and both concluded success on 45d759d (TypeScript job 107207135699, Python job 107207135282), and both were run by hand red-before/green-after (receipts/graph/a2-207-verifier-output/sdk-suites.txt). A green job over a whole package is evidence, not a per-entity verifier verdict, so the receipt records it and pauses rather than claiming an admission this worker has no standing to assert. (An earlier version of this receipt said CI runs no SDK suite on a pull request; that was wrong and is corrected here.)",
   "verdict": "paused_safe"
  },
- "captured_at_utc": "2026-09-23T13:39:14Z",
+ "captured_at_utc": "2026-09-23T13:44:51Z",
  "change_set": {
   "base": "1672fed0b5810a6fedb89c35e69e500fb729dbb9",
   "files": [
@@ -155,7 +155,7 @@
    {
     "kind": "doc",
     "new": true,
-    "path": "receipts/graph/a2-207-verifier-output/sdk-suites-by-hand.txt",
+    "path": "receipts/graph/a2-207-verifier-output/sdk-suites.txt",
     "status": "A"
    },
    {
@@ -216,6 +216,15 @@
     "kind": "doc",
     "new": true,
     "path": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig.txt",
+    "status": "A"
+   },
+   {
+    "kind": "receipt",
+    "node_id": "receipt:receipts/graph/change-admission-a2-207-20260923T134001Z.json",
+    "node_ids": [
+     "receipt:receipts/graph/change-admission-a2-207-20260923T134001Z.json"
+    ],
+    "path": "receipts/graph/change-admission-a2-207-20260923T134001Z.json",
     "status": "A"
    },
    {
@@ -429,7 +438,7 @@
     "status": "M"
    }
   ],
-  "head": "0b6cb268c6d066612950f2dedd448eccc03e6d7e",
+  "head": "c38b5ea78e058771bde20f4dcff55cc22105a829",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -439,172 +448,172 @@
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/azure-openai/azure-openai.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/base-api.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/base-cli.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/cerebras/cerebras.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/cohere/cohere.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/connector-budget-and-retry-after.spec.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/embedding/embedding.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/fireworks/fireworks.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/grok/grok.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/groq/groq.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/huggingface/huggingface.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/interfaces/connector.interface.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/mistral/mistral.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/openmodel/openmodel.connector.spec.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/openmodel/openmodel.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/openrouter/openrouter.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/orq/orq.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/perplexity/perplexity.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   },
   {
    "entity": "code_unit:src/connectors/together/together.connector.ts",
    "evidence": "receipts/graph/a2-207-verifier-output/v-type-check-tsconfig-ab.txt",
    "expires_at_utc": "2026-09-30T00:00:00Z",
    "owner": "A2-207 executor (claude-opus-5, arcana-devs) / Model Connector owner",
-   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- with the same command in the same clone: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt does not resolve it and does not extend its life beyond that date."
+   "reason": "v-type-check-tsconfig cannot return a per-entity verdict because tsconfig.json carries 147 PRE-EXISTING TS errors, every one of them in a *.spec.ts file and none of them in any file this change touches. Measured identical on both sides of the diff -- 147 at base 1672fed, 147 at head -- same clone, same command: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'`. Zero errors added, zero removed. `pnpm build` (nest build / TSC) reports 0 issues because tsconfig excludes specs from the build, which is why this baseline is invisible outside the verifier. Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json (same 147, exemption expiring 2026-09-30, still unfixed); this receipt neither resolves it nor extends its life beyond that date."
   }
  ],
  "graph": {
   "builder_version": "1.0.1",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:d0fe6299cd2377d0f6c13cb9e61a788ace7dc25dc2ec217a20e7407b96003649",
-  "path": "/tmp/a2207-verify3/car-draft.d/graph-1672fed0b581.json",
+  "path": "/tmp/a2207-verify4/car-draft.d/graph-1672fed0b581.json",
   "source_commit": "1672fed0b5810a6fedb89c35e69e500fb729dbb9"
  },
  "head_graph": {
   "builder_version": "1.0.1",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:b273872d79d9a1d7fe4f4472d29543ceb5bc1df772368ded27b53ad1a0f18e8d",
-  "path": "/tmp/a2207-verify3/car-draft.d/graph-head-0b6cb268c6d0.json",
-  "source_commit": "0b6cb268c6d066612950f2dedd448eccc03e6d7e",
+  "graph_digest": "sha256:b5b158be00668a151f859f77f9b299110d7e9c8565832cd4748f1e5c6148c367",
+  "path": "/tmp/a2207-verify4/car-draft.d/graph-head-c38b5ea78e05.json",
+  "source_commit": "c38b5ea78e058771bde20f4dcff55cc22105a829",
   "staleness": {
-   "checked_at_utc": "2026-09-23T13:39:19Z",
-   "checked_nodes": 726,
+   "checked_at_utc": "2026-09-23T13:44:57Z",
+   "checked_nodes": 727,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -54491,7 +54500,7 @@
   "tool": "tools/graph/verify.py",
   "version": "1.0.1"
  },
- "receipt_id": "car-verify-20260923T133914Z-0b6cb268",
+ "receipt_id": "car-verify-20260923T134451Z-c38b5ea7",
  "repo": {
   "name": "Arcanada-one/model-connector",
   "path": "/home/dev/aup/arc2/wt/A2-207-mc"
@@ -54589,20 +54598,21 @@
    "document:docs/sdk-typescript.md",
    "document:packages/sdk-python/README.md",
    "document:packages/sdk-ts/README.md",
-   "document:receipts/graph/a2-207-verifier-output/README.md"
+   "document:receipts/graph/a2-207-verifier-output/README.md",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134001Z.json"
   ],
   "schema": "RevisionImpactSelection/v1",
   "unmeasured_head_files": []
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-09-23T13:39:19Z",
+  "checked_at_utc": "2026-09-23T13:44:56Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
  },
  "tree": {
-  "commit": "0b6cb268c6d066612950f2dedd448eccc03e6d7e",
+  "commit": "c38b5ea78e058771bde20f4dcff55cc22105a829",
   "dirty": false
  },
  "verdicts": [
@@ -55066,12 +55076,17 @@
    "verifier_ids": [
     "v-doc-reference"
    ]
+  },
+  {
+   "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134001Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "verdict": "not_measured"
   }
  ],
  "verifiers": [
   {
    "command": "/home/dev/aup/arc2/wt/A2-207-mc/node_modules/.bin/tsc -p /home/dev/aup/arc2/wt/A2-207-mc/tsconfig.json --noEmit --incremental false --listFiles",
-   "duration_s": 9.95,
+   "duration_s": 7.62,
    "entities": [
     "code_unit:src/connectors/anthropic/anthropic.connector.ts",
     "code_unit:src/connectors/azure-openai/azure-openai.connector.ts",
@@ -55100,13 +55115,13 @@
    "exit_code": 2,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/tmp/a2207-verify3/car-draft.d/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-09-23T13:39:26Z",
+   "output_ref": "/tmp/a2207-verify4/car-draft.d/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-09-23T13:45:03Z",
    "summary": "tsconfig.json: exit 2, 147 error(s), 2689 files listed"
   },
   {
    "command": "/home/dev/aup/arc2/wt/A2-207-mc/node_modules/.bin/tsc -p /home/dev/aup/arc2/wt/A2-207-mc/packages/sdk-ts/tsconfig.json --noEmit --incremental false --listFiles",
-   "duration_s": 0.95,
+   "duration_s": 0.72,
    "entities": [
     "code_unit:packages/sdk-ts/src/client.ts",
     "code_unit:packages/sdk-ts/src/errors.ts",
@@ -55116,13 +55131,13 @@
    "exit_code": 0,
    "id": "v-type-check-packages-sdk-ts-tsconfig",
    "kind": "type_check",
-   "output_ref": "/tmp/a2207-verify3/car-draft.d/v-type-check-packages-sdk-ts-tsconfig.txt",
-   "started_at_utc": "2026-09-23T13:39:36Z",
+   "output_ref": "/tmp/a2207-verify4/car-draft.d/v-type-check-packages-sdk-ts-tsconfig.txt",
+   "started_at_utc": "2026-09-23T13:45:11Z",
    "summary": "packages/sdk-ts/tsconfig.json: exit 0, 0 error(s), 167 files listed"
   },
   {
-   "command": "tools/graph/contract_diff.py.run_diff(base=1672fed0b581, head=0b6cb268c6d0, graph=head graph)",
-   "duration_s": 5.13,
+   "command": "tools/graph/contract_diff.py.run_diff(base=1672fed0b581, head=c38b5ea78e05, graph=head graph)",
+   "duration_s": 4.13,
    "entities": [
     "code_unit:packages/sdk-ts/src/types.ts",
     "code_unit:src/connectors/interfaces/connector.interface.ts",
@@ -55139,13 +55154,13 @@
    "exit_code": 1,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/tmp/a2207-verify3/car-draft.d/v-contract-diff.json",
-   "started_at_utc": "2026-09-23T13:39:37Z",
+   "output_ref": "/tmp/a2207-verify4/car-draft.d/v-contract-diff.json",
+   "started_at_utc": "2026-09-23T13:45:12Z",
    "summary": "155→155 contracts, breaking 0, edges {'failed': 8, 'verified': 206}"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 0.03,
+   "duration_s": 0.02,
    "entities": [
     "code_unit:src/connectors/anthropic/anthropic.connector.ts",
     "code_unit:src/connectors/azure-openai/azure-openai.connector.ts",
@@ -55171,8 +55186,8 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/tmp/a2207-verify3/car-draft.d/v-config-schema.json",
-   "started_at_utc": "2026-09-23T13:39:42Z",
+   "output_ref": "/tmp/a2207-verify4/car-draft.d/v-config-schema.json",
+   "started_at_utc": "2026-09-23T13:45:16Z",
    "summary": "3 source(s), 0 new / 84 frozen undeclared reads, 0 failed"
   },
   {
@@ -55214,8 +55229,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/tmp/a2207-verify3/car-draft.d/v-fitness.json",
-   "started_at_utc": "2026-09-23T13:39:42Z",
+   "output_ref": "/tmp/a2207-verify4/car-draft.d/v-fitness.json",
+   "started_at_utc": "2026-09-23T13:45:16Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -55233,8 +55248,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/tmp/a2207-verify3/car-draft.d/v-doc-reference.txt",
-   "started_at_utc": "2026-09-23T13:39:42Z",
+   "output_ref": "/tmp/a2207-verify4/car-draft.d/v-doc-reference.txt",
+   "started_at_utc": "2026-09-23T13:45:16Z",
    "summary": "7 document(s), 0 failed"
   },
   {
@@ -55265,13 +55280,13 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/tmp/a2207-verify3/car-draft.d/v-canary.json",
-   "started_at_utc": "2026-09-23T13:39:42Z",
+   "output_ref": "/tmp/a2207-verify4/car-draft.d/v-canary.json",
+   "started_at_utc": "2026-09-23T13:45:16Z",
    "summary": "0 canary result(s); 0 verified / 0 failed / 20 not_measured of 20 entities"
   },
   {
    "command": "/home/dev/aup/arc2/wt/A2-207-mc/node_modules/.bin/vitest run src/billing/metering.integration.spec.ts src/connectors/anthropic/anthropic.connector.prompt-cache.spec.ts src/connectors/anthropic/anthropic.connector.spec.ts src/connectors/azure-openai/azure-openai.connector.spec.ts src/connectors/base-api.connector.spec.ts src/connectors/base-cli.connector.spec.ts src/connectors/catalog-refresh.service.spec.ts src/connectors/cerebras/cerebras.connector.spec.ts src/connectors/claude-code/claude-code.connector.spec.ts src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.spec.ts src/connectors/codex/codex.connector.spec.ts src/connectors/cohere/cohere.connector.spec.ts src/connectors/connector-budget-and-retry-after.spec.ts src/connectors/connectors.service.metering.spec.ts src/connectors/connectors.service.policy.spec.ts src/connectors/connectors.service.spec.ts src/connectors/cursor/cursor.connector.spec.ts src/connectors/embedding/embedding.connector.spec.ts src/connectors/failover/failover-router.service.spec.ts src/connectors/failover/failover.candidates.spec.ts src/connectors/failover/failover.chain.spec.ts src/connectors/fireworks/fireworks.connector.spec.ts src/connectors/first-dispatch-observation.spec.ts src/connectors/gemini-api/gemini-api.connector.spec.ts src/connectors/gemini-api/gemini-api.module.spec.ts src/connectors/gemini/gemini.connector.spec.ts src/connectors/grok/grok.connector.spec.ts src/connectors/groq/groq.connector.spec.ts src/connectors/groq/groqcloud-native.extension.spec.ts src/connectors/huggingface/huggingface.connector.spec.ts src/connectors/mistral/mistral.connector.spec.ts src/connectors/multimodal-rejection.spec.ts src/connectors/openmodel/openmodel.connector.spec.ts src/connectors/openrouter/openrouter.connector.spec.ts src/connectors/orq/orq.connector.spec.ts src/connectors/output-guard/output-guard.middleware.spec.ts src/connectors/output-guard/schema-injectors/injectors.spec.ts src/connectors/perplexity/perplexity.connector.spec.ts src/connectors/together/together.connector.spec.ts src/openai-compat/openai-compat.controller.spec.ts src/openai-compat/openai-compat.failover.integration.spec.ts src/openai-compat/openai-compat.models-policy.spec.ts src/openai-compat/openai-translate.spec.ts src/prompt-cache/prompt-cache-prewarm.controller.spec.ts src/queue/connector-job.processor.spec.ts",
-   "duration_s": 5.38,
+   "duration_s": 5.36,
    "entities": [
     "code_unit:src/billing/metering.integration.spec.ts",
     "code_unit:src/connectors/anthropic/anthropic.connector.prompt-cache.spec.ts",
@@ -55342,21 +55357,21 @@
    "exit_code": 0,
    "id": "v-targeted-test-root",
    "kind": "targeted_test",
-   "output_ref": "/tmp/a2207-verify3/car-draft.d/v-targeted-test-root.txt",
-   "started_at_utc": "2026-09-23T13:39:42Z",
+   "output_ref": "/tmp/a2207-verify4/car-draft.d/v-targeted-test-root.txt",
+   "started_at_utc": "2026-09-23T13:45:16Z",
    "summary": "45 spec(s), exit 0, 0 failed"
   },
   {
    "command": "/home/dev/aup/arc2/wt/A2-207-mc/node_modules/.bin/vitest run test/client.spec.ts",
-   "duration_s": 0.83,
+   "duration_s": 0.62,
    "entities": [
     "code_unit:packages/sdk-ts/test/client.spec.ts"
    ],
    "exit_code": 0,
    "id": "v-targeted-test-packages-sdk-ts",
    "kind": "targeted_test",
-   "output_ref": "/tmp/a2207-verify3/car-draft.d/v-targeted-test-packages-sdk-ts.txt",
-   "started_at_utc": "2026-09-23T13:39:48Z",
+   "output_ref": "/tmp/a2207-verify4/car-draft.d/v-targeted-test-packages-sdk-ts.txt",
+   "started_at_utc": "2026-09-23T13:45:21Z",
    "summary": "1 spec(s), exit 0, 0 failed"
   }
  ],
@@ -55601,12 +55616,13 @@
    ],
    "document:receipts/graph/a2-207-verifier-output/README.md": [
     "doc_reference"
-   ]
+   ],
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134001Z.json": []
   },
   "seconds": {
-   "prepare": 4.45,
-   "total": 34.56,
-   "verifiers": 22.44
+   "prepare": 4.46,
+   "total": 30.59,
+   "verifiers": 18.64
   }
  },
  "work_item": "A2-207"
