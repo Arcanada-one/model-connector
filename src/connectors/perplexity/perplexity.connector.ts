@@ -62,10 +62,6 @@ export class PerplexityConnector extends BaseApiConnector {
     return PERPLEXITY_SONAR_MODELS.map((id) => ({ id, modality: 'chat', free: false }));
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.PERPLEXITY_TIMEOUT_MS) || super.getTimeout();
-  }
-
   protected getHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',

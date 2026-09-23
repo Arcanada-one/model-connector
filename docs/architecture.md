@@ -145,7 +145,9 @@ Backoff: `1s, 2s, 4s, 8s` (capped) with jitter. Max attempts: `1 + CONNECTOR_MAX
 
 ### Attempt budget
 
-`request.timeout` > `{NAME}_TIMEOUT_MS` > `CONNECTOR_TIMEOUT_MS` > 120 000 ms, resolved by
+`request.timeout` > `{NAME}_TIMEOUT_MS` > `CONNECTOR_TIMEOUT_MS` > 120 000 ms, where `{NAME}` is the
+connector name upper-cased with `-`→`_` (derived, like `{NAME}_MAX_CONCURRENCY` — not declared per
+connector), resolved by
 `BaseApiConnector.getTimeout()` / `BaseCliConnector.getTimeout()` and handed to `AbortSignal.timeout`.
 Each of the `1 + CONNECTOR_MAX_RETRIES` attempts gets the full budget, so the server-side worst case is
 `CONNECTOR_QUEUE_TIMEOUT_MS + attempts x budget + backoff`. `embedding` is the one deliberate dissent

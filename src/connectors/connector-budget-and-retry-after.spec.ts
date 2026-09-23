@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BaseApiConnector, ParsedApiOutput } from './base-api.connector';
 import { ConnectorCapabilities, ConnectorRequest } from './interfaces/connector.interface';
 import { validateEnv } from '../config/env.schema';
+import { OpenModelConnector } from './openmodel/openmodel.connector';
 
 /**
  * A2-207 — three defects that all live on the attempt-budget path:
@@ -64,14 +65,6 @@ class BudgetConnector extends BaseApiConnector {
   }
 }
 
-/** A connector with its own env knob, in the shape every real connector uses. */
-class OverridingConnector extends BudgetConnector {
-  readonly name = 'overriding-test';
-  protected getTimeout(): number {
-    return Number(process.env.OVERRIDING_TEST_TIMEOUT_MS) || super.getTimeout();
-  }
-}
-
 const budgetOf = (c: BaseApiConnector): number =>
   (c as unknown as { getTimeout: () => number }).getTimeout();
 
@@ -104,16 +97,32 @@ describe('A2-207 — the attempt budget, the retry-after unit and what feeds the
       expect(budgetOf(new BudgetConnector())).toBe(120_000);
     });
 
+    // The per-connector key is DERIVED from the connector name, so this is
+    // exercised against a real connector with a real, declared key rather than
+    // an invented one: `openmodel` -> `OPENMODEL_TIMEOUT_MS` (.env.example).
     it('a per-connector env var still wins over the global figure', () => {
       validateEnv({ ...BASE_ENV, CONNECTOR_TIMEOUT_MS: '300000' });
-      process.env.OVERRIDING_TEST_TIMEOUT_MS = '45000';
-      expect(budgetOf(new OverridingConnector())).toBe(45_000);
+      process.env.OPENMODEL_TIMEOUT_MS = '45000';
+      expect(budgetOf(new OpenModelConnector())).toBe(45_000);
     });
 
-    it('a connector with an env knob and no value set inherits the global figure', () => {
+    it('a connector whose env knob is unset inherits the global figure', () => {
       validateEnv({ ...BASE_ENV, CONNECTOR_TIMEOUT_MS: '300000' });
-      delete process.env.OVERRIDING_TEST_TIMEOUT_MS;
-      expect(budgetOf(new OverridingConnector())).toBe(300_000);
+      delete process.env.OPENMODEL_TIMEOUT_MS;
+      // `openmodel` declares no override of its own any more; the derived key
+      // is simply absent, so the operator figure applies.
+      expect(budgetOf(new OpenModelConnector())).toBe(300_000);
+    });
+
+    it('OLLAMA_TIMEOUT_MS reaches the ollama connector, which never read it', async () => {
+      // .env.example has declared this key since the connector landed and
+      // ollama.connector.ts never wrote a getTimeout() override, so the
+      // operator figure went nowhere. The derived key is what makes it land.
+      validateEnv({ ...BASE_ENV, CONNECTOR_TIMEOUT_MS: '300000' });
+      process.env.OLLAMA_TIMEOUT_MS = '600000';
+      const { OllamaConnector } = await import('./ollama/ollama.connector');
+      expect(budgetOf(new OllamaConnector())).toBe(600_000);
+      delete process.env.OLLAMA_TIMEOUT_MS;
     });
 
     it('the configured budget is what actually reaches the outbound request', async () => {

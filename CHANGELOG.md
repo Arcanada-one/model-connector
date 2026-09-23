@@ -17,11 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
      hard-coded 120 000, so an operator who "raised the timeout" raised nothing and a request
      without its own `timeout` died at 30 s x 2 attempts against a connector advertising
      `maxTimeout: 300_000`. The budget now resolves as
-     `request.timeout` > `{NAME}_TIMEOUT_MS` > `CONNECTOR_TIMEOUT_MS` > 120 000, and the 17
-     per-connector overrides that each repeated `|| 120_000` delegate to it. Behaviour change:
-     connectors with no override (deepseek, ollama, ollama-cloud, vertex-generative, voyage-ai,
-     jina-ai, pinecone-inference) and `openmodel` default to 120 000 instead of 30 000.
-     `embedding` keeps 30 000 deliberately — see the comment on its `getTimeout()`.
+     `request.timeout` > `{NAME}_TIMEOUT_MS` > `CONNECTOR_TIMEOUT_MS` > 120 000, with
+     `{NAME}_TIMEOUT_MS` DERIVED from the connector name exactly as `{NAME}_MAX_CONCURRENCY`
+     already was. The 17 per-connector overrides that each restated `Number(process.env.X) ||
+     120_000` are gone; `embedding` keeps an explicit 30 000 and says why. The duplication was
+     half the defect: `OLLAMA_TIMEOUT_MS` is declared in `.env.example` and `ollama.connector.ts`
+     never wrote an override, so that knob did nothing either — it does now.
+     Behaviour changes: connectors with no override (deepseek, ollama, ollama-cloud,
+     vertex-generative, voyage-ai, jina-ai, pinecone-inference) and `openmodel` default to
+     `CONNECTOR_TIMEOUT_MS` (120 000, or 300 000 where the operator set it) instead of 30 000,
+     and the CLI connectors (claude-code, cursor, gemini, codex) take it instead of a fixed
+     120 000.
   2. `retryAfter` is **milliseconds** — what the breaker paths always computed, what perplexity
      converts its `Retry-After` header into, and what README's error table promises. Both SDK
      READMEs, `docs/sdk-typescript.md` and the ARAS renderer read it as seconds (a measured

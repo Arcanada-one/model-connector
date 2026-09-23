@@ -58,10 +58,6 @@ export class OpenModelConnector extends BaseApiConnector {
     return OPENMODEL_STATIC_MODELS;
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.OPENMODEL_TIMEOUT_MS) || super.getTimeout();
-  }
-
   // Anthropic-compatible protocol: x-api-key header (not Authorization: Bearer).
   protected getHeaders(): Record<string, string> {
     const apiKey = process.env.OPENMODEL_API_KEY || '';

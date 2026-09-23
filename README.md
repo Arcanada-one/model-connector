@@ -638,6 +638,7 @@ pnpm db:push      # Push schema to database
 | `BILLING_INTENT_RETENTION_MS` | no | How long a completed request intent stays replayable under its `Idempotency-Key` (default: 86400000) |
 | `BILLING_RECONCILE_ENABLED` | no | Allow the hourly reconciler to CHARGE for measured spend that never reached the ledger (default: **false**; the sweep that returns abandoned holds always runs) |
 | `CONNECTOR_TIMEOUT_MS` | no | Default per-attempt execution budget, applied when a request names no `timeout` of its own (default: 120000). Precedence: `request.timeout` > `{NAME}_TIMEOUT_MS` > this > 120000. Until A2-207 this value was read by nobody and every connector without its own override used a hard-coded 30 000 |
+| `{NAME}_TIMEOUT_MS` | no | Per-connector budget, e.g. `OPENROUTER_TIMEOUT_MS`, `OLLAMA_TIMEOUT_MS`. The key is derived from the connector name (upper-case, `-`→`_`), like `{NAME}_MAX_CONCURRENCY`, so every connector has one whether or not it is listed here |
 | `CONNECTOR_MAX_CONCURRENCY` | no | Global fallback concurrency limit (default: 4) |
 | `CLAUDE_CODE_MAX_CONCURRENCY` | no | Claude Code CLI concurrent limit (default: 4) |
 | `CURSOR_MAX_CONCURRENCY` | no | Cursor CLI concurrent limit (default: **1** — DO NOT INCREASE) |

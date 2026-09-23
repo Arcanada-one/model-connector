@@ -85,10 +85,6 @@ export class GeminiApiConnector extends BaseApiConnector {
     return (process.env.GEMINI_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, '');
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.GEMINI_API_TIMEOUT_MS) || super.getTimeout();
-  }
-
   protected getHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',

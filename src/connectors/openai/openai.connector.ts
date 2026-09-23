@@ -210,10 +210,6 @@ export class OpenAiConnector extends BaseApiConnector {
     return STATIC_MODELS;
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.OPENAI_TIMEOUT_MS) || super.getTimeout();
-  }
-
   protected getHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',

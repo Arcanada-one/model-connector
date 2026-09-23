@@ -54,10 +54,6 @@ export class TogetherConnector extends BaseApiConnector {
     };
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.TOGETHER_TIMEOUT_MS) || super.getTimeout();
-  }
-
   protected buildRequestUrl(_request: ConnectorRequest): string {
     return `${this.getBaseUrl()}/chat/completions`;
   }

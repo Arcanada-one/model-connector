@@ -148,11 +148,21 @@ export abstract class BaseApiConnector implements IConnector {
    * Precedence, and the one shape every override follows:
    *   request.timeout  >  {NAME}_TIMEOUT_MS  >  CONNECTOR_TIMEOUT_MS  >  120 000
    *
+   * The `{NAME}_TIMEOUT_MS` key is DERIVED from the connector name, exactly as
+   * the `{NAME}_MAX_CONCURRENCY` key already is above, rather than restated in
+   * seventeen overrides that each repeated `|| 120_000`. That duplication was
+   * the second half of the same defect: `OLLAMA_TIMEOUT_MS` is declared in
+   * .env.example and `ollama.connector.ts` never wrote an override, so an
+   * operator setting it got nothing either.
+   *
    * The fallback is used only when the env cannot be validated at all (specs
    * that construct a connector without an environment); it matches the schema
    * default so the two cannot drift.
    */
   protected getTimeout(): number {
+    const envKey = `${this.name.toUpperCase().replace(/-/g, '_')}_TIMEOUT_MS`;
+    const perConnector = Number(process.env[envKey]);
+    if (Number.isFinite(perConnector) && perConnector > 0) return perConnector;
     try {
       return getConfig().CONNECTOR_TIMEOUT_MS;
     } catch {

@@ -23,10 +23,6 @@ export class FireworksConnector extends BaseApiConnector {
     return 'https://api.fireworks.ai/inference/v1';
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.FIREWORKS_TIMEOUT_MS) || super.getTimeout();
-  }
-
   protected getHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',

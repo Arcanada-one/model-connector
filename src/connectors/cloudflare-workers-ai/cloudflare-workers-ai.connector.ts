@@ -40,10 +40,6 @@ export class CloudflareWorkersAiConnector extends BaseApiConnector {
     };
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.CLOUDFLARE_WORKERS_AI_TIMEOUT_MS) || super.getTimeout();
-  }
-
   protected buildRequestUrl(request: ConnectorRequest): string {
     const accountId = process.env.CLOUDFLARE_WORKERS_AI_ACCOUNT_ID || '';
     const model = request.model || DEFAULT_MODEL;

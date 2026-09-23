@@ -149,6 +149,9 @@ export abstract class BaseCliConnector implements IConnector {
 
   /** A2-207 — the per-attempt budget. See BaseApiConnector.getTimeout(). */
   protected getTimeout(): number {
+    const envKey = `${this.name.toUpperCase().replace(/-/g, '_')}_TIMEOUT_MS`;
+    const perConnector = Number(process.env[envKey]);
+    if (Number.isFinite(perConnector) && perConnector > 0) return perConnector;
     try {
       return getConfig().CONNECTOR_TIMEOUT_MS;
     } catch {
