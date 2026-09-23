@@ -30,8 +30,26 @@ export class TogetherConnector extends BaseApiConnector {
     return [DEFAULT_MODEL];
   }
 
+  /**
+   * A2-223 — the offline/CI floor carries the curated list price.
+   *
+   * $1.04 per 1M tokens, input and output alike, from Together's published
+   * pricing page https://www.together.ai/pricing (fetched 2026-09-23). The
+   * published row reads "Llama 3.3 70B"; this connector's id is
+   * `meta-llama/Llama-3.3-70B-Instruct-Turbo`. Mapping the one to the other is
+   * a JUDGEMENT, stated here rather than buried: the page prints no id-level
+   * table, so the row is matched by model family. If Together ever prices the
+   * Turbo endpoint apart from the base one, this number is the wrong one and
+   * this comment is where to start.
+   */
   protected getStaticModelMetas(): ProviderModelMeta[] {
-    return [{ id: DEFAULT_MODEL, modality: 'chat' }];
+    return [
+      {
+        id: DEFAULT_MODEL,
+        modality: 'chat',
+        pricing: { inputPerMTok: 1.04, outputPerMTok: 1.04, unit: 'USD/1M tokens' },
+      },
+    ];
   }
 
   protected extractModels(json: unknown): ProviderModelMeta[] {
@@ -39,11 +57,13 @@ export class TogetherConnector extends BaseApiConnector {
     return json.flatMap((entry) => {
       const model = entry as TogetherModelEntry;
       if (typeof model.id !== 'string' || model.id.length === 0 || model.type !== 'chat') return [];
-      return [{
-        id: model.id,
-        modality: 'chat' as const,
-        contextWindow: typeof model.context_length === 'number' ? model.context_length : null,
-      }];
+      return [
+        {
+          id: model.id,
+          modality: 'chat' as const,
+          contextWindow: typeof model.context_length === 'number' ? model.context_length : null,
+        },
+      ];
     });
   }
 
@@ -59,7 +79,8 @@ export class TogetherConnector extends BaseApiConnector {
   }
 
   protected buildRequestBody(request: ConnectorRequest): unknown {
-    if (typeof request.prompt !== 'string') throw new Error('together connector requires string prompt');
+    if (typeof request.prompt !== 'string')
+      throw new Error('together connector requires string prompt');
     const messages: Array<{ role: string; content: string }> = [];
     if (request.systemPrompt) messages.push({ role: 'system', content: request.systemPrompt });
     messages.push({ role: 'user', content: request.prompt });
@@ -73,8 +94,15 @@ export class TogetherConnector extends BaseApiConnector {
   protected parseResponse(json: TogetherChatResponse, request: ConnectorRequest): ParsedApiOutput {
     const content = json.choices?.[0]?.message?.content;
     if (typeof content !== 'string') {
-      return { text: '', model: json.model || request.model || DEFAULT_MODEL, inputTokens: 0,
-        outputTokens: 0, costUsd: 0, isError: true, errorMessage: 'No message content in response' };
+      return {
+        text: '',
+        model: json.model || request.model || DEFAULT_MODEL,
+        inputTokens: 0,
+        outputTokens: 0,
+        costUsd: 0,
+        isError: true,
+        errorMessage: 'No message content in response',
+      };
     }
     return {
       text: content,

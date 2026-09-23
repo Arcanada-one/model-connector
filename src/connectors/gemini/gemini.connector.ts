@@ -38,6 +38,17 @@ const DEFAULT_MODEL = 'gemini-2.5-flash';
 export class GeminiConnector extends BaseCliConnector {
   readonly name = 'gemini';
 
+  /**
+   * A2-223 — a SUBSCRIPTION lane: the `gemini` CLI authenticates with the operator's Google account
+   * and draws on that account's allowance rather than a metered API key.
+   *
+   * Declared so `measureCostUsd` returns `costSource: 'subscription'` and
+   * `usage.notionalCostUsd` instead of calling that figure a provider invoice.
+   * `costUsd` itself is unchanged by the declaration — this names the money, it
+   * does not move it.
+   */
+  readonly billingLane = 'subscription' as const;
+
   protected getBinaryPath(): string {
     return process.env.GEMINI_BINARY_PATH || 'gemini';
   }

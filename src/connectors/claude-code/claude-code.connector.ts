@@ -100,6 +100,21 @@ export function pickServedModel(
 export class ClaudeCodeConnector extends BaseCliConnector {
   readonly name = 'claude-code';
 
+  /**
+   * A2-223 — a SUBSCRIPTION lane: `claude -p --output-format json` runs under the operator's Claude
+   * subscription on this host; `total_cost_usd` in its reply is the API list
+   * price of the same tokens, not an invoice. Measured 2026-09-23: 307 rows on
+   * one host recorded $120.363277 of `costSource: 'provider'` charges this way
+   * in ten days, and every one of them was written off as `uncollectible` once
+   * the key's balance hit zero.
+   *
+   * Declared so `measureCostUsd` returns `costSource: 'subscription'` and
+   * `usage.notionalCostUsd` instead of calling that figure a provider invoice.
+   * `costUsd` itself is unchanged by the declaration — this names the money, it
+   * does not move it.
+   */
+  readonly billingLane = 'subscription' as const;
+
   protected getBinaryPath(): string {
     return process.env.CLAUDE_BINARY_PATH || 'claude';
   }

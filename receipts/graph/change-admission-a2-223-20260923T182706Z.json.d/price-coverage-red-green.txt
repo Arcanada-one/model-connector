@@ -1,0 +1,96 @@
+=== A2-223 red->green: the price-coverage ratchet against the BASE commit's connectors ===
+base = f155299e7f664a20aeffa13c9a826722215938af (A2-210: a timeout is called a timeout, and the breaker stops lying after cooldown (#142))
+
+Method: restore every CONNECTOR file this change touched to its base-commit content, keep the
+new spec + rule, run the spec. The check must be RED on the code as it was.
+
+
+ RUN  v4.1.8 /home/dev/aup/arc2/wt/A2-223-mc
+
+ ❯ src/billing/price-coverage.spec.ts (17 tests | 2 failed) 14ms
+     × every CLI connector declares its billing lane 5ms
+     × every routable paid model has a price, a free flag, a seat, or a dated waiver 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/billing/price-coverage.spec.ts > the routing table itself > every CLI connector declares its billing lane
+AssertionError: cursor must declare billingLane: expected undefined to be 'subscription' // Object.is equality
+
+- Expected:
+"subscription"
+
++ Received:
+undefined
+
+ ❯ src/billing/price-coverage.spec.ts:262:63
+    260|     for (const name of cliConnectors) {
+    261|       const sample = all.find((e) => e.connector === name)!;
+    262|       expect(sample.lane, `${name} must declare billingLane`).toBe('su…
+       |                                                               ^
+    263|     }
+    264|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/billing/price-coverage.spec.ts > the routing table itself > every routable paid model has a price, a free flag, a seat, or a dated waiver
+AssertionError: Price coverage over the routing table (83 models):
+{"priced":8,"free":9,"subscription":0,"waived":30,"missing":36,"not_measured":0}
+MISSING  cursor/auto — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  cursor/composer-2-fast — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  cursor/claude-4.6-opus-high — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  cursor/claude-4.6-sonnet-medium — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  cursor/gpt-5.4-medium — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  cursor/gemini-3.1-pro — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  claude-code/claude-fable-5-1 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  claude-code/claude-opus-5 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  claude-code/claude-sonnet-5 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  claude-code/claude-haiku-4-5-20251001 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  claude-code/claude-sonnet-4-6 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  claude-code/claude-opus-4-6 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  claude-code/claude-haiku-4-5 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  claude-code/sonnet — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  claude-code/opus — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  claude-code/haiku — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  gemini/gemini-2.5-flash — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  gemini/gemini-3-flash-preview — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  gemini/gemini-2.5-flash-lite — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  codex/o4-mini — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  codex/o3 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  codex/codex-mini-latest — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  grok/grok-4.3 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  grok/grok-4.20-0309-reasoning — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  grok/grok-4.20-0309-non-reasoning — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  grok/grok-4.20-multi-agent-0309 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  grok/grok-build-0.1 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  openai/gpt-4.1-mini — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  openai/gpt-4.1 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  openai/gpt-4.1-nano — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  mistral/mistral-large-latest — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  together/meta-llama/Llama-3.3-70B-Instruct-Turbo — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  perplexity/sonar — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  perplexity/sonar-pro — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  perplexity/sonar-reasoning-pro — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
+MISSING  perplexity/sonar-deep-research — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.: expected 'MISSING  cursor/auto — routable on a …' to be '' // Object.is equality
+
+- Expected
++ Received
+
++ MISSING  cursor/auto — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  cursor/composer-2-fast — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  cursor/claude-4.6-opus-high — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  cursor/claude-4.6-sonnet-medium — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  cursor/gpt-5.4-medium — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  cursor/gemini-3.1-pro — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  claude-code/claude-fable-5-1 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  claude-code/claude-opus-5 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  claude-code/claude-sonnet-5 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  claude-code/claude-haiku-4-5-20251001 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  claude-code/claude-sonnet-4-6 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  claude-code/claude-opus-4-6 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  claude-code/claude-haiku-4-5 — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  claude-code/sonnet — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  claude-code/opus — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  claude-code/haiku — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  gemini/gemini-2.5-flash — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  gemini/gemini-3-flash-preview — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.
++ MISSING  gemini/gemini-2.5-flash-lite — routable on a paid lane with no tariff and no waiver. Every call settles costUsd 0.000000 / costSource 'unpriced'. Add a price to the connector's list-price map, or add a dated waiver to PRICE_COVERAGE_WAIVERS saying why there is none.

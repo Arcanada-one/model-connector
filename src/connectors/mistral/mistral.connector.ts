@@ -12,8 +12,38 @@ interface MistralResponse {
 }
 
 const DEFAULT_MODEL = 'mistral-small-latest';
+
+/**
+ * A2-223 — hand-curated list price, USD per 1M tokens, from Mistral's published
+ * pricing page https://mistral.ai/pricing (fetched 2026-09-23): Mistral Large
+ * "$0.5 /M tokens" input, "$1.5 /M tokens" output.
+ *
+ * `mistral-small-latest` is ABSENT on purpose. That page recommends Mistral
+ * Small "for cost-sensitive projects" and does not print its rate, pointing at
+ * the models overview instead; no figure for it was fetched on 2026-09-23, so
+ * none is written here. It is carried in `PRICE_COVERAGE_WAIVERS`
+ * (src/billing/price-coverage.ts) with that reason and an expiry, which is the
+ * difference between a gap somebody owns and a gap nobody can see — and it is
+ * this connector's DEFAULT_MODEL, so the waiver is the more uncomfortable of
+ * the two entries and the more important one to leave visible.
+ */
+export const MISTRAL_LIST_PRICES_USD_PER_MTOK: Readonly<
+  Record<string, { inputPerMTok: number; outputPerMTok: number }>
+> = {
+  'mistral-large-latest': { inputPerMTok: 0.5, outputPerMTok: 1.5 },
+};
+const MISTRAL_PRICE_UNIT = 'USD/1M tokens';
+
 const STATIC_MODELS: ProviderModelMeta[] = [
-  { id: 'mistral-large-latest', modality: 'chat', free: false },
+  {
+    id: 'mistral-large-latest',
+    modality: 'chat',
+    free: false,
+    pricing: {
+      ...MISTRAL_LIST_PRICES_USD_PER_MTOK['mistral-large-latest'],
+      unit: MISTRAL_PRICE_UNIT,
+    },
+  },
   { id: DEFAULT_MODEL, modality: 'chat', free: false },
 ];
 

@@ -1,0 +1,18 @@
+CAUGHT     M1 costSource is dropped from the response again (the original defect)
+CAUGHT     M2 the subscription lane is metered as an api lane (lane ignored)
+CAUGHT     M3 an undeclared lane defaults to subscription instead of api (stops real charges)
+CAUGHT     M4 the ledger stops naming the subscription lane
+CAUGHT     M5 a subscription lane reports 0 instead of null when it measured nothing
+CAUGHT     M6 a subscription lane falls through to the catalogue tariff
+CAUGHT     M7 zero-usage is relabelled by the lane (a failed CLI call reads as a subscription call)
+CAUGHT     M8 an expired waiver keeps excusing (the expiry becomes a comment)
+CAUGHT     M9 a waiver outranks a real price (a stale waiver can no longer be spotted)
+CAUGHT     M10 a null/empty tariff counts as a price (the exact shape every unpriced row has)
+CAUGHT     M11 a wildcard waiver leaks across connectors
+CAUGHT     M12 grok's live refresh drops the curated price again (the deepseek/anthropic failure mode)
+CAUGHT     M13 openai's live refresh drops the curated price
+CAUGHT     M14 openai's offline floor ships unpriced again
+CAUGHT     M15 perplexity's offline floor ships unpriced again
+CAUGHT     M16 deepseek loses its price map again (the row A2-221 measured at $0)
+
+16/16 caught

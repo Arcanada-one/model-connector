@@ -1,0 +1,9 @@
+=== A2-223: the two v-contract-diff failures are PRE-EXISTING, measured at the BASE commit f155299 ===
+(verify.py over a scratch worktree at f155299; neither file is touched by this change)
+
+  failed       code_unit:src/admin/circuit-breaker.controller.ts: v-contract-diff: contract:src/admin/dto.ts#ResetCircuitBreakerSchema: consumer reads key `data` that the provider does not declare; consumer
+  failed       code_unit:src/connectors/connectors.controller.ts: v-contract-diff: contract:src/connectors/dto/catalog.dto.ts#CatalogFiltersSchema: consumer reads key `data` that the provider does not decla
+
+=== the same two entities in THIS change's receipt (head db78763) ===
+  failed code_unit:src/admin/circuit-breaker.controller.ts | v-contract-diff: contract:src/admin/dto.ts#ResetCircuitBreakerSchema: consumer reads key `data` that the provider does not declare; consumer reads key `success`
+  failed code_unit:src/connectors/connectors.controller.ts | v-contract-diff: contract:src/connectors/dto/catalog.dto.ts#CatalogFiltersSchema: consumer reads key `data` that the provider does not declare; consumer reads k

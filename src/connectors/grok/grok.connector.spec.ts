@@ -398,6 +398,51 @@ describe('GrokConnector', () => {
       expect(caps.freeModels).toEqual([]);
     });
 
+    /**
+     * A2-223 — the failure mode A2-201 found on deepseek and DEC-AUP-0028 R4
+     * found on anthropic, caught here before it happened a third time: xAI's
+     * /v1/models returns ids only, so a refresh that REPLACED the floor would
+     * drop the curated price and every grok request would settle
+     * `costSource: 'unpriced'` at $0.000000 — visible only as a successful,
+     * free-looking call.
+     */
+    it('keeps the curated price after a successful live refresh', async () => {
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(metaFor(caps, 'grok-4.3')?.pricing).toEqual({
+        inputPerMTok: 1.25,
+        outputPerMTok: 2.5,
+        unit: 'USD/1M tokens',
+      });
+      expect(metaFor(caps, 'grok-build-0.1')?.pricing).toEqual({
+        inputPerMTok: 1.0,
+        outputPerMTok: 2.0,
+        unit: 'USD/1M tokens',
+      });
+    });
+
+    it('leaves an id it has no published price for unpriced, never invented', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ data: [{ id: 'grok-does-not-exist-9' }] }),
+      });
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(metaFor(caps, 'grok-does-not-exist-9')?.pricing).toBeNull();
+    });
+
+    it('does not price the image/video models per token', async () => {
+      // They are billed per image and per second; a per-MTok row would be a
+      // category error, and the gap is carried in PRICE_COVERAGE_WAIVERS.
+      mockModelsOk();
+      await connector.refreshModels();
+      const caps = connector.getCapabilities();
+      expect(metaFor(caps, 'grok-imagine-image')?.pricing).toBeNull();
+      expect(metaFor(caps, 'grok-imagine-video')?.pricing).toBeNull();
+    });
+
     it('falls back to the static real-9 list when the API call fails (offline/CI)', async () => {
       fetchSpy.mockRejectedValueOnce(new Error('network down'));
       await expect(connector.refreshModels()).resolves.not.toThrow();

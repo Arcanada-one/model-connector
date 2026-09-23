@@ -27,10 +27,7 @@ type Category = (typeof CATEGORY_KEYS)[number];
 type ModerationInput =
   | string
   | string[]
-  | Array<
-      | { type: 'text'; text: string }
-      | { type: 'image_url'; image_url: { url: string } }
-    >;
+  | Array<{ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }>;
 
 interface ModerateRequest {
   input: ModerationInput;
@@ -67,11 +64,25 @@ interface ConnectorResponse {
   error?: { message: string };
 }
 
+// A2-223 — the shape the price assertions below read. `getCapabilities()` was
+// typed `Record<string, unknown>`, under which `modelMeta` is `{}` and every
+// `.find()` on it is a type error; naming the two fields the spec actually
+// touches keeps it honest without widening to `any`.
+interface OpenAiModelMeta {
+  id: string;
+  pricing?: { inputPerMTok: number; outputPerMTok: number; unit: string } | null;
+}
+
+interface OpenAiCapabilities extends Record<string, unknown> {
+  models: string[];
+  modelMeta?: OpenAiModelMeta[];
+}
+
 interface OpenAiConnectorInstance {
   execute(request: Record<string, unknown>): Promise<ConnectorResponse>;
   moderate(request: ModerateRequest): Promise<ModerateResult>;
   refreshModels(): Promise<void>;
-  getCapabilities(): Record<string, unknown>;
+  getCapabilities(): OpenAiCapabilities;
 }
 
 interface OpenAiModuleShape {
@@ -215,6 +226,52 @@ describe('OpenAiConnector Moderations extension', () => {
       expect(fetchMock.mock.calls[1][0]).toBe('https://api.openai.com/v1/models');
       expect(connector.getCapabilities().models).toEqual(['gpt-4.1-mini', 'gpt-4.1']);
     });
+
+    /**
+     * A2-223 — the failure mode A2-201 found on deepseek and DEC-AUP-0028 R4
+     * found on anthropic. OpenAI's /v1/models returns ids only, so a refresh
+     * that REPLACED the floor would drop the curated price and every openai
+     * request would settle `costSource: 'unpriced'` at $0.000000 — a
+     * successful, free-looking call and an unbilled one.
+     */
+    it('keeps the curated list price across a live model refresh', async () => {
+      const { OpenAiConnector } = await loadModule();
+      const connector = new OpenAiConnector();
+
+      // The offline/CI floor is priced...
+      const floor = connector.getCapabilities().modelMeta ?? [];
+      expect(floor.find((m) => m.id === 'gpt-4.1')?.pricing).toEqual({
+        inputPerMTok: 2.0,
+        outputPerMTok: 8.0,
+        unit: 'USD/1M tokens',
+      });
+
+      // ...and a successful refresh does not un-price it.
+      const models = structuredClone(MODELS_FIXTURE);
+      delete (models as { _fixture_provenance?: string })._fixture_provenance;
+      fetchMock.mockResolvedValueOnce(jsonResponse(models));
+      await connector.refreshModels();
+      const refreshed = connector.getCapabilities().modelMeta ?? [];
+      expect(refreshed.find((m) => m.id === 'gpt-4.1')?.pricing).toEqual({
+        inputPerMTok: 2.0,
+        outputPerMTok: 8.0,
+        unit: 'USD/1M tokens',
+      });
+      expect(refreshed.find((m) => m.id === 'gpt-4.1-mini')?.pricing).toEqual({
+        inputPerMTok: 0.4,
+        outputPerMTok: 1.6,
+        unit: 'USD/1M tokens',
+      });
+    });
+
+    it('leaves a live id it has no published price for unpriced, never invented', async () => {
+      const { OpenAiConnector } = await loadModule();
+      const connector = new OpenAiConnector();
+      fetchMock.mockResolvedValueOnce(jsonResponse({ data: [{ id: 'gpt-does-not-exist-9' }] }));
+      await connector.refreshModels();
+      const refreshed = connector.getCapabilities().modelMeta ?? [];
+      expect(refreshed.find((m) => m.id === 'gpt-does-not-exist-9')?.pricing).toBeNull();
+    });
   });
 
   describe('request and model allowlist', () => {
@@ -311,7 +368,7 @@ describe('OpenAiConnector Moderations extension', () => {
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it.each(['text-moderation-latest', 'text-moderation-007', 'unknown-model']) (
+    it.each(['text-moderation-latest', 'text-moderation-007', 'unknown-model'])(
       'rejects legacy or unknown model %s before transport',
       async (model) => {
         const { OpenAiConnector } = await loadModule();
@@ -335,7 +392,12 @@ describe('OpenAiConnector Moderations extension', () => {
       const tooMany = Array.from({ length: 2_049 }, () => 'text');
       const over20Mb = `data:image/png;base64,${'A'.repeat(27_962_032)}`;
 
-      for (const input of [cyclic, [deep], tooMany, [{ type: 'image_url', image_url: { url: over20Mb } }]]) {
+      for (const input of [
+        cyclic,
+        [deep],
+        tooMany,
+        [{ type: 'image_url', image_url: { url: over20Mb } }],
+      ]) {
         const result = await connector.moderate({ input: input as ModerationInput });
         expect(result.error?.type).toBe('validation_error');
       }
@@ -386,29 +448,63 @@ describe('OpenAiConnector Moderations extension', () => {
     });
 
     it.each([
-      ['flagged disagreement', (raw: Record<string, unknown>) => {
-        ((raw.results as Array<Record<string, unknown>>)[0]).flagged = false;
-      }],
-      ['missing category', (raw: Record<string, unknown>) => {
-        delete (((raw.results as Array<Record<string, unknown>>)[0]).categories as Record<string, unknown>).hate;
-      }],
-      ['out-of-range score', (raw: Record<string, unknown>) => {
-        ((((raw.results as Array<Record<string, unknown>>)[0]).category_scores as Record<string, unknown>)).violence = 2;
-      }],
-      ['unknown input type', (raw: Record<string, unknown>) => {
-        ((((raw.results as Array<Record<string, unknown>>)[0]).category_applied_input_types as Record<string, unknown>)).violence = ['video'];
-      }],
-      ['duplicate input type', (raw: Record<string, unknown>) => {
-        ((((raw.results as Array<Record<string, unknown>>)[0]).category_applied_input_types as Record<string, unknown>)).violence = ['text', 'text'];
-      }],
-      ['disallowed response model', (raw: Record<string, unknown>) => {
-        raw.model = 'legacy-model';
-      }],
-      ['hostile prototype key', (raw: Record<string, unknown>) => {
-        ((raw.results as Array<Record<string, unknown>>)[0]).categories = JSON.parse(
-          '{"__proto__":{"polluted":true}}',
-        ) as Record<string, unknown>;
-      }],
+      [
+        'flagged disagreement',
+        (raw: Record<string, unknown>) => {
+          (raw.results as Array<Record<string, unknown>>)[0].flagged = false;
+        },
+      ],
+      [
+        'missing category',
+        (raw: Record<string, unknown>) => {
+          delete (
+            (raw.results as Array<Record<string, unknown>>)[0].categories as Record<string, unknown>
+          ).hate;
+        },
+      ],
+      [
+        'out-of-range score',
+        (raw: Record<string, unknown>) => {
+          (
+            (raw.results as Array<Record<string, unknown>>)[0].category_scores as Record<
+              string,
+              unknown
+            >
+          ).violence = 2;
+        },
+      ],
+      [
+        'unknown input type',
+        (raw: Record<string, unknown>) => {
+          (
+            (raw.results as Array<Record<string, unknown>>)[0]
+              .category_applied_input_types as Record<string, unknown>
+          ).violence = ['video'];
+        },
+      ],
+      [
+        'duplicate input type',
+        (raw: Record<string, unknown>) => {
+          (
+            (raw.results as Array<Record<string, unknown>>)[0]
+              .category_applied_input_types as Record<string, unknown>
+          ).violence = ['text', 'text'];
+        },
+      ],
+      [
+        'disallowed response model',
+        (raw: Record<string, unknown>) => {
+          raw.model = 'legacy-model';
+        },
+      ],
+      [
+        'hostile prototype key',
+        (raw: Record<string, unknown>) => {
+          (raw.results as Array<Record<string, unknown>>)[0].categories = JSON.parse(
+            '{"__proto__":{"polluted":true}}',
+          ) as Record<string, unknown>;
+        },
+      ],
     ] as const)('fails closed on malformed response: %s', async (_name, mutate) => {
       const { OpenAiConnector } = await loadModule();
       const raw = providerBody('openai-moderations-success.synthetic.json');
@@ -448,7 +544,9 @@ describe('OpenAiConnector Moderations extension', () => {
     it('normalizes abort as timeout and ordinary rejection as a redacted network error', async () => {
       const { OpenAiConnector } = await loadModule();
       const connector = new OpenAiConnector();
-      fetchMock.mockRejectedValueOnce(new DOMException(`aborted ${SYNTHETIC_API_KEY}`, 'AbortError'));
+      fetchMock.mockRejectedValueOnce(
+        new DOMException(`aborted ${SYNTHETIC_API_KEY}`, 'AbortError'),
+      );
       const timeout = await connector.moderate({ input: 'text', timeout: 1 });
       expect(timeout).toMatchObject({
         status: 'timeout',

@@ -42,6 +42,48 @@ const GROK_STATIC_MODEL_METAS: ProviderModelMeta[] = [
   { id: 'grok-imagine-video-1.5', modality: 'video' },
 ];
 
+/**
+ * A2-223 — hand-curated list price per text model, USD per 1M tokens, from
+ * xAI's published model table https://docs.x.ai/docs/models (fetched
+ * 2026-09-23).
+ *
+ * xAI prices each model TWICE: a standard rate below a 200k-token context and a
+ * higher extended rate at or above it (grok-4.3: $1.25/$2.50 standard,
+ * $2.50/$5.00 extended). The catalogue row holds one number per model, not a
+ * function of request size, so the STANDARD rate is used — and that is the one
+ * direction of error this file must own: a request over 200k tokens is billed
+ * at half its real rate. It is taken because the alternative, pricing every
+ * short request at the extended rate, overstates the common case by 2x, and
+ * because the extended tier is reachable only by a caller who already knows
+ * they are sending 200k tokens. Recorded as `context_tier: not_measured` rather
+ * than hidden: closing it needs a second tariff column
+ * (`MeasuredCostPricing`), which is the same gap
+ * `cachedInputPerMTok` already documents.
+ *
+ * The four `grok-imagine-*` entries are deliberately absent: they are image and
+ * video models billed per image/second, not per token, and a per-MTok row for
+ * them would be a category error rather than a missing number. They are carried
+ * in `PRICE_COVERAGE_WAIVERS` (src/billing/price-coverage.ts) so the gap is
+ * listed rather than silent.
+ */
+export const GROK_LIST_PRICES_USD_PER_MTOK: Readonly<
+  Record<string, { inputPerMTok: number; outputPerMTok: number }>
+> = {
+  'grok-4.3': { inputPerMTok: 1.25, outputPerMTok: 2.5 },
+  'grok-4.20-0309-reasoning': { inputPerMTok: 1.25, outputPerMTok: 2.5 },
+  'grok-4.20-0309-non-reasoning': { inputPerMTok: 1.25, outputPerMTok: 2.5 },
+  'grok-4.20-multi-agent-0309': { inputPerMTok: 1.25, outputPerMTok: 2.5 },
+  'grok-build-0.1': { inputPerMTok: 1.0, outputPerMTok: 2.0 },
+};
+const PRICE_UNIT = 'USD/1M tokens';
+
+/** Attach the curated list price to a model meta; unknown ids keep `pricing: null`. */
+function withListPrice(meta: ProviderModelMeta): ProviderModelMeta {
+  const price = GROK_LIST_PRICES_USD_PER_MTOK[meta.id];
+  if (!price) return { ...meta, pricing: meta.pricing ?? null };
+  return { ...meta, pricing: { ...price, unit: PRICE_UNIT } };
+}
+
 export class GrokConnector extends BaseApiConnector {
   readonly name = 'grok';
 
@@ -58,8 +100,9 @@ export class GrokConnector extends BaseApiConnector {
     return GROK_STATIC_MODEL_METAS.map((m) => m.id);
   }
 
+  /** A2-223 — the offline/CI floor carries the curated list price. */
   protected getStaticModelMetas(): ProviderModelMeta[] {
-    return GROK_STATIC_MODEL_METAS;
+    return GROK_STATIC_MODEL_METAS.map(withListPrice);
   }
 
   /**
@@ -75,7 +118,12 @@ export class GrokConnector extends BaseApiConnector {
     for (const entry of data) {
       const id = (entry as { id?: unknown })?.id;
       if (typeof id !== 'string' || id.length === 0) continue;
-      out.push({ id, modality: this.classifyGrokModality(id), free: false });
+      // A2-223 — the live listing exposes no machine price (see the docstring
+      // above), so a refresh used to REPLACE the floor with an unpriced list
+      // and the meter fell to `costSource: 'unpriced'` for every grok request.
+      // Merge: live ids keep the curated price when one exists; unknown live
+      // ids stay unpriced (null), never invented.
+      out.push(withListPrice({ id, modality: this.classifyGrokModality(id), free: false }));
     }
     return out;
   }
