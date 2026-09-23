@@ -53,7 +53,13 @@ jobs:
           # task (INFRA-0471) rather than silenced with a skip here.
           bats watcher/test/health-selfcheck.bats
 
+      # `dest` is pinned per job on purpose. Several runners on a host share
+      # one OS user, so the action default `~/setup-pnpm` is ONE directory that
+      # concurrent jobs install pnpm into simultaneously and corrupt (A2-227).
+      # `runner.temp` is per runner and per job. Do not drop this.
       - uses: pnpm/action-setup@v6
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm
 
       - uses: actions/setup-node@v7
         with:
