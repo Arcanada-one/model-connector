@@ -1,5 +1,9 @@
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
-import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
+import {
+  ConnectorCapabilities,
+  ConnectorRequest,
+  ProviderModelMeta,
+} from '../interfaces/connector.interface';
 import { isTimeoutAbort } from '../../core/utils/abort';
 
 interface OpenAiResponse {
@@ -87,6 +91,37 @@ export type OpenAiModerationOperationResult =
 
 const DEFAULT_MODEL = 'gpt-4.1-mini';
 const STATIC_MODELS = ['gpt-4.1-mini', 'gpt-4.1', 'gpt-4.1-nano'];
+
+/**
+ * A2-223 — hand-curated list price per model, USD per 1M tokens, from OpenAI's
+ * published pricing page https://developers.openai.com/api/docs/pricing
+ * (fetched 2026-09-23; `platform.openai.com/docs/pricing` 301-redirects there).
+ * Standard processing tier — the tier this connector's requests run on; Batch
+ * and Fast mode are priced differently and neither is reachable from here.
+ *
+ * `cachedInputPerMTok` is published for all three ($0.50 / $0.10 / $0.025) and
+ * is deliberately NOT carried: `MeasuredCostPricing.cachedInputPerMTok` exists
+ * but no catalogue COLUMN does, so the value would be dropped on the way to the
+ * DB, and this connector reports no `cachedInputTokens` for the meter to apply
+ * it to. Cached tokens therefore bill at the full input rate, which overstates
+ * a cache hit and never understates it — the same direction anthropic and
+ * deepseek already take, and the same gap they already document.
+ */
+export const OPENAI_LIST_PRICES_USD_PER_MTOK: Readonly<
+  Record<string, { inputPerMTok: number; outputPerMTok: number }>
+> = {
+  'gpt-4.1': { inputPerMTok: 2.0, outputPerMTok: 8.0 },
+  'gpt-4.1-mini': { inputPerMTok: 0.4, outputPerMTok: 1.6 },
+  'gpt-4.1-nano': { inputPerMTok: 0.1, outputPerMTok: 0.4 },
+};
+const OPENAI_PRICE_UNIT = 'USD/1M tokens';
+
+/** Attach the curated list price to a model meta; unknown ids keep `pricing: null`. */
+function withOpenAiListPrice(meta: ProviderModelMeta): ProviderModelMeta {
+  const price = OPENAI_LIST_PRICES_USD_PER_MTOK[meta.id];
+  if (!price) return { ...meta, pricing: meta.pricing ?? null };
+  return { ...meta, pricing: { ...price, unit: OPENAI_PRICE_UNIT } };
+}
 const MODERATIONS_ENDPOINT = 'https://api.openai.com/v1/moderations';
 const DEFAULT_MODERATION_MODEL = 'omni-moderation-latest';
 const ALLOWED_MODERATION_MODELS = new Set([DEFAULT_MODERATION_MODEL, 'omni-moderation-2024-09-26']);
@@ -212,6 +247,22 @@ export class OpenAiConnector extends BaseApiConnector {
 
   protected getStaticModels(): string[] {
     return STATIC_MODELS;
+  }
+
+  /** A2-223 — the offline/CI floor carries the curated list price. */
+  protected getStaticModelMetas(): ProviderModelMeta[] {
+    return STATIC_MODELS.map((id) => withOpenAiListPrice({ id }));
+  }
+
+  /**
+   * A2-223 — OpenAI's `/v1/models` listing carries ids only, so without this a
+   * successful refresh would REPLACE the priced floor with an unpriced list and
+   * every openai request would settle `costSource: 'unpriced'` at $0. Merge:
+   * live ids keep the curated price when one exists; unknown live ids stay
+   * unpriced (null), never invented.
+   */
+  protected extractModels(json: unknown): ProviderModelMeta[] {
+    return super.extractModels(json).map(withOpenAiListPrice);
   }
 
   protected getHeaders(): Record<string, string> {

@@ -15,6 +15,17 @@ interface CursorJsonResult {
 export class CursorConnector extends BaseCliConnector {
   readonly name = 'cursor';
 
+  /**
+   * A2-223 — a SUBSCRIPTION lane: `cursor-agent` runs under the operator's Cursor plan; its usage
+   * is drawn from that plan's allowance, not invoiced per token.
+   *
+   * Declared so `measureCostUsd` returns `costSource: 'subscription'` and
+   * `usage.notionalCostUsd` instead of calling that figure a provider invoice.
+   * `costUsd` itself is unchanged by the declaration — this names the money, it
+   * does not move it.
+   */
+  readonly billingLane = 'subscription' as const;
+
   protected getBinaryPath(): string {
     return process.env.CURSOR_BINARY_PATH || 'cursor-agent';
   }

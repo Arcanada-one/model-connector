@@ -32,6 +32,7 @@ import { estimateCostUsd, promptCharLength } from '../billing/cost-estimate';
 import { mintServerIntentKey, intentPayloadFingerprint } from '../billing/intent';
 import {
   measureCostUsd,
+  type BillingLane,
   type CostSource,
   type MeasuredCost,
   type MeasuredCostPricing,
@@ -1094,6 +1095,16 @@ export class ConnectorsService {
         // CONN-0272 — the halves the meter computed on the way to the total.
         inputCostUsd: metered.inputCostUsd,
         outputCostUsd: metered.outputCostUsd,
+        // A2-223 — and WHERE the total came from. The same value that has gone
+        // into `Request.costSource` since ARAS-0058, now also answered to the
+        // caller, so `costUsd: 0` stops being four different facts wearing one
+        // number. Additive: nothing above changes.
+        costSource: metered.source,
+        // Present only on a subscription lane; `undefined` everywhere else
+        // keeps every other response byte-identical to before this field.
+        ...(metered.notionalCostUsd !== undefined
+          ? { notionalCostUsd: metered.notionalCostUsd }
+          : {}),
       },
     };
 
@@ -1225,6 +1236,10 @@ export class ConnectorsService {
       // prompt token at full price.
       cachedInputTokens: response.usage.cachedInputTokens,
       pricing,
+      // A2-223 — the connector's own declaration of how it is paid for. Read
+      // from the registry rather than inferred from `type`, and absent means
+      // `'api'`, which is what every lane was already metered as.
+      lane: this.billingLaneOf(connectorName),
     });
 
     if (metered.source === 'unpriced') {
@@ -1236,6 +1251,18 @@ export class ConnectorsService {
       );
     }
     return metered;
+  }
+
+  /**
+   * A2-223 — the billing lane a registered connector declares.
+   *
+   * Defaults to `'api'` for an unregistered name as well as for a connector
+   * that declares nothing: the meter must never treat an unknown lane as
+   * subscription, because that direction stops a real charge, whereas the
+   * `'api'` default is what the code did before lanes existed.
+   */
+  private billingLaneOf(connectorName: string): BillingLane {
+    return this.connectors.get(connectorName)?.billingLane ?? 'api';
   }
 
   /**
@@ -1274,7 +1301,14 @@ export class ConnectorsService {
    * behind; `unpriced` describes one we do not.
    */
   private static settleReason(costSource: CostSource | null): string {
-    return costSource === 'unpriced' ? 'model-request:unpriced' : 'model-request';
+    if (costSource === 'unpriced') return 'model-request:unpriced';
+    // A2-223 — a subscription lane's amount is notional, so the ledger row has
+    // to say so on its own for the same reason `:unpriced` does: the ledger is
+    // the audit surface and cannot rely on a join against `Request`, which has
+    // a different retention policy. Measured on one host over ten days: 307
+    // such rows, $120.363277, all of it eventually `uncollectible`.
+    if (costSource === 'subscription') return 'model-request:subscription';
+    return 'model-request';
   }
 
   /**

@@ -157,6 +157,35 @@ export interface ConnectorResponse {
      */
     inputCostUsd?: number | null;
     outputCostUsd?: number | null;
+    /**
+     * A2-223 — WHERE `costUsd` came from, in the response and not only in the
+     * usage log.
+     *
+     * `costUsd: 0` is ambiguous four ways — a free model, a request that
+     * consumed nothing, a model whose price we never knew, and a lane where no
+     * cash changes hands — and a client had no way to tell them apart. The
+     * column `Request.costSource` has carried the distinction since ARAS-0058
+     * (`connectors.service.ts`, `persistAndSettle`), but it was written to the
+     * database and dropped from the reply, so a caller building a budget
+     * receipt on `usage.costUsd` read a hard `0` and could only guess at it
+     * from `inputCostUsd === null`. Measured 2026-09-23: 41 deepseek-flash
+     * rows on one host settled at `$0.000000 / 'unpriced'` and every receipt
+     * built on them said the calls were free; they were not ($0.501443 at
+     * DeepSeek's published peak list price).
+     *
+     * ADDITIVE. Every existing field keeps its value and its meaning; a client
+     * that does not read this key sees the response it saw before.
+     *
+     * @see import('../../billing/measured-cost').CostSource for the values.
+     */
+    costSource?: import('../../billing/measured-cost').CostSource;
+    /**
+     * A2-223 — present only when `costSource === 'subscription'`: what the
+     * lane's tokens would have cost at API list price, for a lane where that
+     * is not a bill anybody received. Null there means the CLI reported no
+     * figure at all. See {@link import('../../billing/measured-cost').CostSource}.
+     */
+    notionalCostUsd?: number | null;
   };
   latencyMs: number;
   queueWaitMs?: number;
@@ -307,6 +336,19 @@ export type CatalogRefreshResult =
 export interface IConnector {
   readonly name: string;
   readonly type: 'cli' | 'api';
+  /**
+   * A2-223 — how this connector is paid for; see
+   * {@link import('../../billing/measured-cost').BillingLane}.
+   *
+   * Optional, and an absent value means `'api'` — the assumption every
+   * connector was already metered under. Declared explicitly (rather than
+   * derived from `type === 'cli'`) because the two are not the same question:
+   * a CLI could front a metered API key, and an HTTP connector could front a
+   * seat. `price-coverage.spec.ts` requires every `type: 'cli'` connector to
+   * answer the question one way or the other, so a new CLI lane cannot inherit
+   * the default by omission.
+   */
+  readonly billingLane?: import('../../billing/measured-cost').BillingLane;
 
   execute(request: ConnectorRequest): Promise<ConnectorResponse>;
   getStatus(): Promise<ConnectorStatus>;

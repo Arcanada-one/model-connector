@@ -351,4 +351,119 @@ describe('measureCostUsd', () => {
       expect(measured.costUsd).toBeCloseTo(0.0001, 9);
     });
   });
+  /**
+   * A2-223 — a subscription lane is not a meter.
+   *
+   * `claude -p --output-format json` reports `total_cost_usd`: the API list
+   * price of tokens that a flat-rate plan has already paid for. Recorded as
+   * `'provider'` that read as an invoice, and one host booked $120.363277 of it
+   * in ten days against keys that owed nothing.
+   */
+  describe('a subscription lane', () => {
+    it("names the lane instead of calling the CLI's figure a provider invoice", () => {
+      const measured = measureCostUsd({
+        providerCostUsd: 1.4849,
+        inputTokens: 68_876,
+        outputTokens: 120,
+        lane: 'subscription',
+      });
+      expect(measured.source).toBe('subscription');
+      // The figure is preserved, not deleted: this change makes the money
+      // legible, it does not move a balance. `notionalCostUsd` is what says the
+      // number is not cash.
+      expect(measured.costUsd).toBeCloseTo(1.4849, 9);
+      expect(measured.notionalCostUsd).toBeCloseTo(1.4849, 9);
+      // No split is claimed for a number nobody itemised.
+      expect(measured.inputCostUsd).toBeNull();
+      expect(measured.outputCostUsd).toBeNull();
+    });
+
+    it('reports null — not zero — when the lane reported no figure at all', () => {
+      const measured = measureCostUsd({
+        inputTokens: 5_000,
+        outputTokens: 500,
+        lane: 'subscription',
+      });
+      expect(measured.source).toBe('subscription');
+      expect(measured.costUsd).toBe(0);
+      // The third verdict. `0` here would claim the CLI measured a free call.
+      expect(measured.notionalCostUsd).toBeNull();
+    });
+
+    it('never reads as unpriced, even with tokens and no catalogue row', () => {
+      // The 'unpriced' marker means "a model we owe a price"; a seat-funded
+      // lane owes none, and letting it land there would swamp the one query
+      // that finds real revenue leaks.
+      const measured = measureCostUsd({
+        inputTokens: 5_000,
+        outputTokens: 500,
+        pricing: null,
+        lane: 'subscription',
+      });
+      expect(measured.source).not.toBe('unpriced');
+    });
+
+    it('never reads as catalog, even when a tariff for the same model exists', () => {
+      // `claude-sonnet-5` is priced through the anthropic connector. The same
+      // id through the claude-code CLI is a seat, and billing it at anthropic's
+      // tariff would charge cash for a call nobody was invoiced for.
+      const measured = measureCostUsd({
+        inputTokens: 1_000_000,
+        outputTokens: 0,
+        pricing: { inputPerMTok: 3, outputPerMTok: 15 },
+        lane: 'subscription',
+      });
+      expect(measured.source).toBe('subscription');
+      expect(measured.costUsd).toBe(0);
+    });
+
+    it('still reports zero-usage when the lane consumed nothing', () => {
+      // A CLI that failed before spending anything is a different fact from a
+      // subscription call, and the lane must not relabel it.
+      const measured = measureCostUsd({ inputTokens: 0, outputTokens: 0, lane: 'subscription' });
+      expect(measured.source).toBe('zero-usage');
+    });
+
+    it("leaves an api lane's verdicts exactly as they were", () => {
+      // The regression guard for the branch reorder: an omitted lane and an
+      // explicit 'api' must both produce the pre-A2-223 answer.
+      for (const lane of [undefined, 'api' as const]) {
+        expect(
+          measureCostUsd({ providerCostUsd: 2, inputTokens: 1, outputTokens: 1, lane }).source,
+        ).toBe('provider');
+        expect(measureCostUsd({ inputTokens: 0, outputTokens: 0, lane }).source).toBe('zero-usage');
+        expect(
+          measureCostUsd({ inputTokens: 10, outputTokens: 10, pricing: null, lane }).source,
+        ).toBe('unpriced');
+        expect(
+          measureCostUsd({
+            inputTokens: 1_000_000,
+            outputTokens: 0,
+            pricing: { inputPerMTok: 3, outputPerMTok: 15 },
+            lane,
+          }),
+        ).toMatchObject({ source: 'catalog', costUsd: 3 });
+        expect(
+          measureCostUsd({
+            inputTokens: 10,
+            outputTokens: 10,
+            pricing: { inputPerMTok: null, outputPerMTok: null, tier: 'free' },
+            lane,
+          }).source,
+        ).toBe('catalog-free');
+      }
+    });
+
+    it('leaves notionalCostUsd undefined on every non-subscription verdict', () => {
+      // Additive means absent, not null: a reader that sees the key at all must
+      // be looking at a subscription row.
+      expect(
+        measureCostUsd({ providerCostUsd: 2, inputTokens: 1, outputTokens: 1 }).notionalCostUsd,
+      ).toBeUndefined();
+      expect(measureCostUsd({ inputTokens: 0, outputTokens: 0 }).notionalCostUsd).toBeUndefined();
+      expect(
+        measureCostUsd({ inputTokens: 10, outputTokens: 10, pricing: null }).notionalCostUsd,
+      ).toBeUndefined();
+    });
+  });
 });

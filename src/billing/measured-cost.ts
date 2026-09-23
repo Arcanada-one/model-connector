@@ -40,7 +40,45 @@ export type CostSource =
   /** Nothing was consumed (error, refusal, or a connector reporting no usage). */
   | 'zero-usage'
   /** Tokens were consumed and NO price was known. See the note below. */
-  | 'unpriced';
+  | 'unpriced'
+  /**
+   * A2-223 — the call ran on a SUBSCRIPTION lane (a locally authenticated CLI
+   * covered by a seat/plan: claude-code, codex, cursor, gemini), so no cash
+   * changed hands per token and none of the sources above can describe it.
+   *
+   * The number such a lane reports is NOTIONAL: `claude -p --output-format
+   * json` returns `total_cost_usd`, the API list price of the same tokens, for
+   * a session that a flat-rate plan has already paid for. Recording that as
+   * `'provider'` said "the provider invoiced us this" about money nobody was
+   * invoiced for — and $120.15 of such charges were measured on one host in ten
+   * days (2026-09-13..2026-09-23, 307 rows, every one of them written off as
+   * `uncollectible` once the key's balance ran out).
+   *
+   * `costUsd` deliberately keeps the notional figure so no balance moves on the
+   * strength of this change alone; {@link MeasuredCost.notionalCostUsd} names it
+   * for what it is and this source makes it filterable:
+   *
+   *     SELECT sum("costUsd") FROM "Request" WHERE "costSource" = 'subscription';
+   *
+   * is the amount of a ledger that is not cash. Whether such a lane should debit
+   * a cash balance at all is a billing-policy decision, recorded as a follow-up
+   * rather than taken here by a change whose job was to make it visible.
+   */
+  | 'subscription';
+
+/**
+ * A2-223 — how a connector is paid for, declared by the connector itself.
+ *
+ * `'api'` — metered per token against an account we are invoiced for; the
+ * catalogue tariff is real money. `'subscription'` — a seat/plan already paid
+ * for, where per-token arithmetic produces a notional figure and not a bill.
+ *
+ * This is a property of the LANE, not of the model: `claude-sonnet-5` is
+ * `'api'` through the anthropic connector and `'subscription'` through the
+ * claude-code CLI, and the same tokens are worth cash on one and nothing on the
+ * other.
+ */
+export type BillingLane = 'api' | 'subscription';
 
 /** The pricing fields of a `model_catalog` row. */
 export interface MeasuredCostPricing {
@@ -76,6 +114,16 @@ export interface MeasuredCost {
    */
   inputCostUsd: number | null;
   outputCostUsd: number | null;
+  /**
+   * A2-223 — a figure that is NOT cash: what a subscription lane's tokens would
+   * have cost at API list price. Present only for `source: 'subscription'`, and
+   * null there when the lane reported no figure at all.
+   *
+   * Kept separate from `costUsd` on purpose. A reader that sums `costUsd` gets
+   * today's number (nothing about any balance changes with this field landing);
+   * a reader that wants cash subtracts the rows this field is set on.
+   */
+  notionalCostUsd?: number | null;
 }
 
 /** Catalogue tariffs are USD per 1M tokens (`priceUnit` = 'USD/1M tokens'). */
@@ -149,35 +197,71 @@ export function measureCostUsd(input: {
   cachedInputTokens?: number | null;
   /** The catalogue row for the model actually served, or null if there is none. */
   pricing?: MeasuredCostPricing | null;
+  /**
+   * A2-223 — how this connector is paid for (see {@link BillingLane}).
+   *
+   * Optional and defaulting to `'api'`, which is what every caller before this
+   * field existed meant: an omitted lane produces byte-identical output to the
+   * previous implementation.
+   */
+  lane?: BillingLane;
 }): MeasuredCost {
   const { providerCostUsd, pricing } = input;
 
-  // 1. A provider invoice beats any tariff we hold a copy of.
-  if (
-    typeof providerCostUsd === 'number' &&
-    Number.isFinite(providerCostUsd) &&
-    providerCostUsd > 0
-  ) {
+  const providerReported =
+    typeof providerCostUsd === 'number' && Number.isFinite(providerCostUsd) && providerCostUsd > 0
+      ? providerCostUsd
+      : null;
+  const inputTokens = nonNegativeTokens(input.inputTokens);
+  const outputTokens = nonNegativeTokens(input.outputTokens);
+  const nothingConsumed = providerReported === null && inputTokens === 0 && outputTokens === 0;
+
+  // 1. Nothing was consumed, so nothing is owed — and that is true at every
+  //    tariff, including one we do not know, and on every lane. Errors and
+  //    refusals land here, and keeping them out of 'unpriced' is what keeps
+  //    that marker meaningful.
+  //
+  //    A2-223 moved this ahead of the provider branch below. That is not a
+  //    behaviour change: the branch only fires when the provider reported no
+  //    figure, which is exactly when the provider branch would not have fired
+  //    either. It is ahead of the subscription branch so that a CLI that failed
+  //    without consuming anything still reads 'zero-usage' rather than being
+  //    relabelled by its lane.
+  if (nothingConsumed) {
+    return { costUsd: 0, source: 'zero-usage', inputCostUsd: 0, outputCostUsd: 0 };
+  }
+
+  // 2. A2-223 — a subscription lane. The seat is already paid for, so there is
+  //    no per-token cash cost to compute and no catalogue tariff that would
+  //    mean anything if there were: the figure the CLI reports is the API list
+  //    price of tokens nobody was invoiced for.
+  //
+  //    `costUsd` keeps that figure — this change makes the money legible, it
+  //    does not move anybody's balance — and `notionalCostUsd` says out loud
+  //    what kind of number it is. `null` there means the lane reported nothing,
+  //    which is not the same as reporting zero.
+  if (input.lane === 'subscription') {
+    return {
+      costUsd: providerReported === null ? 0 : roundToStorage(providerReported),
+      source: 'subscription',
+      inputCostUsd: null,
+      outputCostUsd: null,
+      notionalCostUsd: providerReported === null ? null : roundToStorage(providerReported),
+    };
+  }
+
+  // 3. A provider invoice beats any tariff we hold a copy of.
+  if (providerReported !== null) {
     // The invoice is one number. `null` halves say so rather than guessing.
     return {
-      costUsd: roundToStorage(providerCostUsd),
+      costUsd: roundToStorage(providerReported),
       source: 'provider',
       inputCostUsd: null,
       outputCostUsd: null,
     };
   }
 
-  const inputTokens = nonNegativeTokens(input.inputTokens);
-  const outputTokens = nonNegativeTokens(input.outputTokens);
-
-  // 2. Nothing was consumed, so nothing is owed — and that is true at every
-  //    tariff, including one we do not know. Errors and refusals land here, and
-  //    keeping them out of 'unpriced' is what keeps that marker meaningful.
-  if (inputTokens === 0 && outputTokens === 0) {
-    return { costUsd: 0, source: 'zero-usage', inputCostUsd: 0, outputCostUsd: 0 };
-  }
-
-  // 3. A real tariff. One side may be missing (some providers publish only a
+  // 4. A real tariff. One side may be missing (some providers publish only a
   //    prompt price); the missing side contributes nothing rather than voiding
   //    the whole calculation, which would throw away a cost we do know.
   const inputPerMTok = isUsablePrice(pricing?.inputPerMTok) ? pricing.inputPerMTok : null;
@@ -220,14 +304,14 @@ export function measureCostUsd(input: {
     };
   }
 
-  // 4. Catalogued free-tier with no numeric tariff — e.g. every groq chat model,
+  // 5. Catalogued free-tier with no numeric tariff — e.g. every groq chat model,
   //    whose list price CONN-1672 suppresses precisely because the free tier is
   //    genuinely $0. That is a known price, not a missing one.
   if (pricing && pricing.tier === 'free') {
     return { costUsd: 0, source: 'catalog-free', inputCostUsd: 0, outputCostUsd: 0 };
   }
 
-  // 5. Tokens were burned at a price nobody knows. Marked, never silently zero.
+  // 6. Tokens were burned at a price nobody knows. Marked, never silently zero.
   // Never computed, so there is no split to report. Null, not zero — the same
   // distinction `costSource: 'unpriced'` exists to preserve.
   return { costUsd: 0, source: 'unpriced', inputCostUsd: null, outputCostUsd: null };

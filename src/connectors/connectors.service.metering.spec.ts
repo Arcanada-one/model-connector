@@ -44,6 +44,49 @@ const GROQ_FREE_ROW: CatalogPricingRow = {
   tier: 'free',
 };
 
+/**
+ * A2-223 — a claude-code-shaped connector: a CLI on a SUBSCRIPTION lane that
+ * reports a `total_cost_usd` figure of its own. The numbers are A2-214's real
+ * measurement (one call, 68 876 input tokens, $1.4849 reported).
+ */
+function claudeCodeShapedConnector(
+  usage: { inputTokens: number; outputTokens: number; costUsd?: number },
+  // 'undeclared' rather than `undefined`: a default parameter treats an
+  // explicit `undefined` as absent, which would quietly make the "declares no
+  // lane" test assert the opposite of what it says.
+  lane: 'api' | 'subscription' | 'undeclared' = 'subscription',
+): IConnector {
+  return {
+    name: 'claude-code',
+    type: 'cli',
+    billingLane: lane === 'undeclared' ? undefined : lane,
+    execute: vi.fn().mockResolvedValue({
+      id: 'resp-cli-1',
+      connector: 'claude-code',
+      model: 'claude-fable-5-1',
+      result: 'ok',
+      usage: {
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        totalTokens: usage.inputTokens + usage.outputTokens,
+        costUsd: usage.costUsd ?? 0,
+      },
+      latencyMs: 42,
+      status: 'success',
+    }),
+    getStatus: vi.fn(),
+    getCapabilities: vi.fn().mockReturnValue({
+      name: 'claude-code',
+      type: 'cli',
+      models: ['claude-fable-5-1'],
+      supportsStreaming: false,
+      supportsJsonSchema: true,
+      supportsTools: true,
+      maxTimeout: 300_000,
+    }),
+  } as unknown as IConnector;
+}
+
 /** A groq-shaped connector: reports token counts, reports no cost. */
 function groqShapedConnector(usage: {
   inputTokens: number;
@@ -319,6 +362,109 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
     // The hold is settled, never abandoned: releasing instead would leave the
     // intent key unburned and the request replayable against a fresh charge.
     expect(mockBilling.releaseIntent).not.toHaveBeenCalled();
+  });
+
+  /**
+   * A2-223 — the provenance the caller could not see.
+   *
+   * `Request.costSource` has carried it since ARAS-0058, but the reply dropped
+   * it, so a client reading `usage.costUsd` saw a bare `0` and could not tell a
+   * free model from a model we never priced. 41 deepseek-flash rows were
+   * measured settling that way on one host.
+   */
+  describe('A2-223 — costSource in the response', () => {
+    it('answers the caller WHERE the cost came from, not only the database', async () => {
+      findPricing = vi.fn().mockResolvedValue(GROQ_PAID_ROW);
+      const service = buildService(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
+
+      const response = await service.execute('groq', { prompt: 'hello' }, 'key-1');
+
+      expect(response.usage.costSource).toBe('catalog');
+      // and it agrees with the column, which is the point of putting it in both
+      expect(created[0].costSource).toBe('catalog');
+    });
+
+    it('distinguishes $0-because-unpriced from $0-because-free in the RESPONSE', async () => {
+      findPricing = vi.fn().mockResolvedValue(null);
+      const unpriced = await buildService(
+        groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }),
+      ).execute('groq', { prompt: 'hello' }, 'key-1');
+
+      findPricing = vi.fn().mockResolvedValue(GROQ_FREE_ROW);
+      const free = await buildService(
+        groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }),
+      ).execute('groq', { prompt: 'hello' }, 'key-1');
+
+      // Identical money, different facts — and before this field a client had
+      // no way to tell them apart.
+      expect(unpriced.usage.costUsd).toBe(0);
+      expect(free.usage.costUsd).toBe(0);
+      expect(unpriced.usage.costSource).toBe('unpriced');
+      expect(free.usage.costSource).toBe('catalog-free');
+    });
+
+    it('leaves every pre-existing usage field untouched (additive)', async () => {
+      findPricing = vi.fn().mockResolvedValue(GROQ_PAID_ROW);
+      const service = buildService(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
+
+      const response = await service.execute('groq', { prompt: 'hello' }, 'key-1');
+
+      expect(response.usage.inputTokens).toBe(1_000);
+      expect(response.usage.outputTokens).toBe(500);
+      expect(response.usage.totalTokens).toBe(1_500);
+      expect(response.usage.costUsd).toBeCloseTo(0.000985, 9);
+      // and the field that only a subscription lane carries stays absent here
+      expect('notionalCostUsd' in response.usage).toBe(false);
+    });
+  });
+
+  describe('A2-223 — a subscription lane is named, not invoiced', () => {
+    it("does not call the CLI's list-price figure a provider invoice", async () => {
+      const service = buildService(
+        claudeCodeShapedConnector({ inputTokens: 68_876, outputTokens: 120, costUsd: 1.4849 }),
+      );
+
+      const response = await service.execute('claude-code', { prompt: 'hi' }, 'key-1');
+
+      expect(response.usage.costSource).toBe('subscription');
+      expect(response.usage.notionalCostUsd).toBeCloseTo(1.4849, 9);
+      expect(created[0].costSource).toBe('subscription');
+      // The ledger carries the distinction itself: it is the audit surface and
+      // cannot rely on a join against a table with a different retention.
+      expect(settled[0].reason).toBe('model-request:subscription');
+    });
+
+    it('books the SAME amount as before — this change names the money, it does not move it', async () => {
+      // Deliberate and load-bearing. Zeroing a subscription lane's charge would
+      // also remove the only thing currently limiting CLI usage per key, which
+      // is a billing-policy decision and not this change's to take. What the
+      // measurement showed (307 rows, $120.363277, all of it uncollectible) is
+      // recorded for that decision, not acted on here.
+      const service = buildService(
+        claudeCodeShapedConnector({ inputTokens: 68_876, outputTokens: 120, costUsd: 1.4849 }),
+      );
+
+      await service.execute('claude-code', { prompt: 'hi' }, 'key-1');
+
+      expect(Number(created[0].costUsd)).toBeCloseTo(1.4849, 9);
+      expect(Number(settled[0].amountUsd)).toBeCloseTo(1.4849, 9);
+    });
+
+    it('falls back to the api lane for a connector that declares none', async () => {
+      // The default must never be 'subscription': that direction silently stops
+      // a real charge. An undeclared lane keeps the pre-A2-223 verdict.
+      const service = buildService(
+        claudeCodeShapedConnector(
+          { inputTokens: 68_876, outputTokens: 120, costUsd: 1.4849 },
+          'undeclared',
+        ),
+      );
+
+      const response = await service.execute('claude-code', { prompt: 'hi' }, 'key-1');
+
+      expect(response.usage.costSource).toBe('provider');
+      expect(settled[0].reason).toBe('model-request');
+    });
   });
 
   it('writes the request row and the charge in a single transaction', async () => {

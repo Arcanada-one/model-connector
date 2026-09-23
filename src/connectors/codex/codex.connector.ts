@@ -47,6 +47,17 @@ const SCHEMA_TMP_PREFIX = 'codex-schemas-';
 export class CodexConnector extends BaseCliConnector implements OnModuleDestroy {
   readonly name = 'codex';
 
+  /**
+   * A2-223 — a SUBSCRIPTION lane: the `codex` CLI authenticates against the operator's ChatGPT
+   * plan, so its tokens are covered by a seat and not billed per call.
+   *
+   * Declared so `measureCostUsd` returns `costSource: 'subscription'` and
+   * `usage.notionalCostUsd` instead of calling that figure a provider invoice.
+   * `costUsd` itself is unchanged by the declaration — this names the money, it
+   * does not move it.
+   */
+  readonly billingLane = 'subscription' as const;
+
   private schemaDir?: string;
   private readonly schemaFiles = new WeakMap<ConnectorRequest, string>();
 

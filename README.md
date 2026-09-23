@@ -273,7 +273,9 @@ curl -X POST https://connector.arcanada.one/execute \
     "inputTokens": 5181,
     "outputTokens": 12,
     "totalTokens": 5193,
-    "costUsd": 0
+    "costUsd": 0,
+    "costSource": "subscription",
+    "notionalCostUsd": null
   },
   "latencyMs": 2400,
   "queueWaitMs": 5,
@@ -290,6 +292,35 @@ curl -X POST https://connector.arcanada.one/execute \
 - `queueWaitMs` — time spent waiting in concurrency queue (ms)
 - `attempt` — current attempt number (1-based)
 - `maxAttempts` — total attempts allowed (1 + CONNECTOR_MAX_RETRIES)
+
+#### `usage.costSource` — where `costUsd` came from (additive, A2-223)
+
+`costUsd: 0` is four different facts wearing one number, and a client had no way
+to tell them apart. `usage.costSource` answers it. The field is **additive**:
+every other field keeps its value and its meaning, and a client that ignores
+this key sees exactly the response it saw before.
+
+| `costSource` | What `costUsd` means | Is it cash? |
+|---|---|---|
+| `provider` | The provider invoiced this amount. Authoritative; never overwritten. | yes |
+| `catalog` | Computed from the catalogue tariff × the measured tokens. | yes |
+| `catalog-free` | The model is catalogued free-tier. `0` is the **price**. | yes ($0) |
+| `zero-usage` | Nothing was consumed — an error, a refusal, or a connector reporting no usage. | yes ($0) |
+| `unpriced` | Tokens **were** consumed and no price was known. `0` is an **absence**, not a price. | **no — this is an unbilled call** |
+| `subscription` | The lane is a seat (the `claude-code` / `codex` / `cursor` / `gemini` CLIs), not a meter. | **no — see below** |
+
+Treat `unpriced` as a defect report, not a discount: it means the catalogue owes
+that model a price and the call was served for nothing. The models currently in
+that state are enumerated, with reasons and expiry dates, in
+`src/billing/price-coverage.ts`, and `price-coverage.spec.ts` turns the build red
+when a routable paid model joins the list without one.
+
+On a `subscription` row the reply also carries `usage.notionalCostUsd`: what the
+tokens would have cost at API list price, for a call a flat-rate plan had already
+paid for. `null` there means the CLI reported no figure at all — which is not the
+same as reporting zero. `costUsd` on such a row is **currently still that notional
+figure**, so a spend report that wants cash must subtract the `subscription` rows
+rather than trusting the sum.
 
 **Output-guard response field (v0.2.0):**
 

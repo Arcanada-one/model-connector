@@ -99,9 +99,18 @@ export const RETIRED_MODEL_ALIASES: Readonly<Record<string, string>> = {
  * https://api-docs.deepseek.com/quick_start/pricing (fetched 2026-09-23; cross-checked
  * against three independent third-party trackers the same day, e.g.
  * https://benchlm.ai/deepseek/api-pricing "DeepSeek API Pricing (September 2026):
- * $0.30-$1.20 per 1M Tokens"). DeepSeek prices vary by time of day — off-peak
- * (01:00-04:00 and 06:00-10:00 UTC, Mon-Fri) is HALF the peak rate. This catalogue has
- * one number per model, not a schedule, so PEAK is used deliberately: the same
+ * $0.30-$1.20 per 1M Tokens"). DeepSeek prices vary by time of day — off-peak is HALF
+ * the peak rate.
+ *
+ * A2-223 — the line above used to name 01:00-04:00 and 06:00-10:00 UTC Mon-Fri as the
+ * OFF-peak window. Re-read on 2026-09-23 at the same URL, those hours are the PEAK
+ * window ("Peak hours are 01:00 - 04:00 and 06:00 - 10:00 UTC, Monday through Friday,
+ * excluding Chinese public holidays"), and off-peak is everything else. The numbers
+ * below were already the peak (higher) ones and do not change; only the sentence that
+ * explained them was inverted, which matters because it is what a future reader would
+ * use to decide whether the catalogue is over- or under-charging.
+ *
+ * This catalogue has one number per model, not a schedule, so PEAK is used deliberately: the same
  * conservative direction `measured-cost.ts` already takes for an unknown cache rate
  * ("can overstate the cost of a cache hit, and never understate it") — the caller-facing
  * risk this exists to close is a spend cap that never trips, not one that trips a few

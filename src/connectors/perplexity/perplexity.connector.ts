@@ -20,6 +20,32 @@ interface PerplexityResponse {
   [key: string]: unknown;
 }
 
+/**
+ * A2-223 — hand-curated list price per model, USD per 1M tokens, from
+ * Perplexity's published pricing page
+ * https://docs.perplexity.ai/getting-started/pricing (fetched 2026-09-23).
+ *
+ * Token prices only, and that is an UNDERSTATEMENT this file owns rather than
+ * hides: Sonar bills per-request search fees on top of tokens (by search
+ * context size), and `sonar-deep-research` additionally bills citation tokens
+ * ($2/1M), reasoning tokens ($3/1M) and search queries ($5/1K). None of those
+ * are token counts this connector receives, and none has a catalogue column, so
+ * a request's real cost is HIGHER than the figure computed from this table —
+ * the opposite of the conservative direction every other price map here takes.
+ * It is still a large improvement on `costSource: 'unpriced'`, which charged
+ * $0.000000, and it is recorded as `search_and_citation_fees: not_measured`
+ * rather than rounded away.
+ */
+export const PERPLEXITY_LIST_PRICES_USD_PER_MTOK: Readonly<
+  Record<string, { inputPerMTok: number; outputPerMTok: number }>
+> = {
+  sonar: { inputPerMTok: 1.0, outputPerMTok: 1.0 },
+  'sonar-pro': { inputPerMTok: 3.0, outputPerMTok: 15.0 },
+  'sonar-reasoning-pro': { inputPerMTok: 2.0, outputPerMTok: 8.0 },
+  'sonar-deep-research': { inputPerMTok: 2.0, outputPerMTok: 8.0 },
+};
+const PERPLEXITY_PRICE_UNIT = 'USD/1M tokens';
+
 const DOCUMENTED_OPTIONS = new Set([
   'max_tokens',
   'stream',
@@ -58,8 +84,17 @@ export class PerplexityConnector extends BaseApiConnector {
     return [...PERPLEXITY_SONAR_MODELS];
   }
 
+  /** A2-223 — the offline/CI floor carries the curated list price. */
   protected getStaticModelMetas(): ProviderModelMeta[] {
-    return PERPLEXITY_SONAR_MODELS.map((id) => ({ id, modality: 'chat', free: false }));
+    return PERPLEXITY_SONAR_MODELS.map((id) => {
+      const price = PERPLEXITY_LIST_PRICES_USD_PER_MTOK[id];
+      return {
+        id,
+        modality: 'chat' as const,
+        free: false,
+        pricing: price ? { ...price, unit: PERPLEXITY_PRICE_UNIT } : null,
+      };
+    });
   }
 
   protected getHeaders(): Record<string, string> {
