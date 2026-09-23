@@ -29,8 +29,18 @@ export class EmbeddingConnector extends BaseApiConnector {
     return process.env.EMBEDDING_API_URL || DEFAULT_EMBEDDING_API_URL;
   }
 
+  /**
+   * A2-207 — the one connector that deliberately does NOT fall back to the
+   * global `CONNECTOR_TIMEOUT_MS`. Every other connector now takes it from
+   * `BaseApiConnector.getTimeout()`; this one talks to our own embedding
+   * service over the mesh, advertises `maxTimeout: 60_000` below, and sits on
+   * Scrutator's indexing path, where a hang should surface in seconds rather
+   * than hold a slot for two minutes. `EMBEDDING_TIMEOUT_MS` (declared in
+   * .env.example at 30000) still overrides, through the base's derived key.
+   */
   protected getTimeout(): number {
-    return Number(process.env.EMBEDDING_TIMEOUT_MS) || 30_000;
+    const configured = Number(process.env.EMBEDDING_TIMEOUT_MS);
+    return Number.isFinite(configured) && configured > 0 ? configured : 30_000;
   }
 
   protected buildRequestUrl(request: ConnectorRequest): string {

@@ -134,10 +134,6 @@ export class AnthropicConnector extends BaseApiConnector {
     return super.extractModels(json).map((meta) => withListPrice(meta));
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.ANTHROPIC_TIMEOUT_MS) || 120_000;
-  }
-
   protected get supportsContentBlocks(): boolean {
     return true;
   }

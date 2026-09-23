@@ -125,10 +125,6 @@ export class CohereConnector extends BaseApiConnector {
     return (process.env.COHERE_BASE_URL || 'https://api.cohere.com').replace(/\/$/, '');
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.COHERE_TIMEOUT_MS) || 120_000;
-  }
-
   protected getHeaders(): Record<string, string> {
     const apiKey = this.apiKeyContext.getStore() ?? process.env.COHERE_API_KEY ?? '';
     return {

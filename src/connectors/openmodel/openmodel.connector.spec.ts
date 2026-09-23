@@ -110,9 +110,14 @@ describe('OpenModelConnector', () => {
     expect(timeout).toBe(45_000);
   });
 
-  it('defaults timeout to 30000', () => {
+  // A2-207 — was `defaults timeout to 30000`. That 30 000 was not a decision
+  // about OpenModel: it was a copy of the old hard-coded literal in
+  // BaseApiConnector, written when every connector without an override got 30 s
+  // and `CONNECTOR_TIMEOUT_MS` was read by nobody. The connector now inherits
+  // the operator's figure; `OPENMODEL_TIMEOUT_MS` above is still its own knob.
+  it('defaults timeout to the configured CONNECTOR_TIMEOUT_MS', () => {
     const timeout = (connector as unknown as { getTimeout: () => number }).getTimeout();
-    expect(timeout).toBe(30_000);
+    expect(timeout).toBe(120_000);
   });
 
   describe('buildRequestBody', () => {

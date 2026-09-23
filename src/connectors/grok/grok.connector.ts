@@ -86,10 +86,6 @@ export class GrokConnector extends BaseApiConnector {
     return 'chat';
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.GROK_TIMEOUT_MS) || 120_000;
-  }
-
   protected getHeaders(): Record<string, string> {
     const apiKey = process.env.XAI_API_KEY || '';
     return {

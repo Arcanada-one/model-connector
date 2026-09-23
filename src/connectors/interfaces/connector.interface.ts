@@ -33,10 +33,41 @@ export type ErrorAction = 'retry' | 'abort' | 'wait' | 'reauth';
 export interface ConnectorError {
   type: string;
   message: string;
+  /**
+   * A2-207 — MILLISECONDS. This is what the field has always carried (the
+   * breaker paths compute `nextRetryAt - Date.now()`, and perplexity converts
+   * its `Retry-After` header seconds with `* 1_000`), and what README's error
+   * table promises. It was NOT what two of our own clients read: both SDK
+   * READMEs and the ARAS renderer printed it as seconds, so a 30 s cooldown
+   * came out as "retry after 15681s".
+   *
+   * The unit of a published field is not changed under its readers, so the
+   * figure stays in ms and {@link retryAfterSeconds} is the field a
+   * seconds-shaped client should read.
+   */
   retryAfter?: number;
+  /**
+   * A2-207 — the same delay in SECONDS, rounded up, emitted whenever
+   * `retryAfter` is. A client that sleeps for this many seconds always waits
+   * at least as long as the server asked, never less.
+   */
+  retryAfterSeconds?: number;
   retryable: boolean;
   recommendation: ErrorAction;
   details?: unknown;
+}
+
+/**
+ * A2-207 — the only place a retry delay becomes wire fields. Producers hold the
+ * delay in ms (the unit every internal computation uses) and call this, so the
+ * two fields cannot drift apart or be emitted one without the other.
+ */
+export function retryAfterFields(delayMs: number): {
+  retryAfter: number;
+  retryAfterSeconds: number;
+} {
+  const ms = Math.max(0, Math.round(delayMs));
+  return { retryAfter: ms, retryAfterSeconds: Math.ceil(ms / 1000) };
 }
 
 export interface ConnectorResponse {

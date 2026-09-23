@@ -68,7 +68,8 @@ try {
     console.error('guard exhausted:', err.envelope?.message);
   } else if (err instanceof ConnectorError) {
     console.error(`HTTP ${err.status}: ${err.envelope?.type}`);
-    if (err.retryAfter) console.error(`retry after ${err.retryAfter}s`);
+    // retryAfter is milliseconds; retryAfterSeconds is the same delay in seconds.
+    if (err.retryAfter) console.error(`retry after ${err.retryAfterSeconds}s`);
   } else if (err instanceof TimeoutError) {
     console.error('timed out');
   }

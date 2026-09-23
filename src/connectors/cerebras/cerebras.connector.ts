@@ -31,10 +31,6 @@ export class CerebrasConnector extends BaseApiConnector {
     };
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.CEREBRAS_TIMEOUT_MS) || 120_000;
-  }
-
   protected buildRequestUrl(_request: ConnectorRequest): string {
     return `${this.getBaseUrl()}/chat/completions`;
   }

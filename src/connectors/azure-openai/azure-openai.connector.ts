@@ -35,10 +35,6 @@ export class AzureOpenAiConnector extends BaseApiConnector {
     return (this.options.endpoint || process.env.AZURE_OPENAI_ENDPOINT || '').replace(/\/$/, '');
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.AZURE_OPENAI_TIMEOUT_MS) || 120_000;
-  }
-
   protected get supportsContentBlocks(): boolean {
     return true;
   }

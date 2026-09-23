@@ -145,10 +145,6 @@ export class GroqConnector extends BaseApiConnector {
     return 'chat';
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.GROQ_TIMEOUT_MS) || 120_000;
-  }
-
   protected getHeaders(): Record<string, string> {
     const apiKey = process.env.GROQ_API_KEY || '';
     return {

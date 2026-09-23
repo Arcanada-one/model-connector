@@ -1,0 +1,106 @@
+{
+ "sources": [],
+ "verdicts": {
+  "code_unit:src/connectors/anthropic/anthropic.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/azure-openai/azure-openai.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/cerebras/cerebras.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/cohere/cohere.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/connector-budget-and-retry-after.spec.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/embedding/embedding.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/fireworks/fireworks.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/grok/grok.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/groq/groq.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/huggingface/huggingface.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/mistral/mistral.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/openai/openai.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/openmodel/openmodel.connector.spec.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/openmodel/openmodel.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/openrouter/openrouter.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/orq/orq.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/perplexity/perplexity.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ],
+  "code_unit:src/connectors/together/together.connector.ts": [
+   "not_measured",
+   "INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+  ]
+ }
+}
+
+not_measured code_unit:src/connectors/anthropic/anthropic.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/azure-openai/azure-openai.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/cerebras/cerebras.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/cohere/cohere.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/connector-budget-and-retry-after.spec.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/embedding/embedding.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/fireworks/fireworks.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/gemini-api/gemini-api.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/grok/grok.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/groq/groq.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/huggingface/huggingface.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/mistral/mistral.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/openai/openai.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/openmodel/openmodel.connector.spec.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/openmodel/openmodel.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/openrouter/openrouter.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/orq/orq.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/perplexity/perplexity.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)
+not_measured code_unit:src/connectors/together/together.connector.ts  INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)

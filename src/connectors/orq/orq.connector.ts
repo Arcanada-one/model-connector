@@ -85,10 +85,6 @@ export class OrqConnector extends BaseApiConnector {
     return 'https://api.orq.ai/v2';
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.ORQ_TIMEOUT_MS) || 120_000;
-  }
-
   protected getHeaders(): Record<string, string> {
     const apiKey = process.env.ORQ_API_KEY || '';
     return {

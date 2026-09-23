@@ -15,7 +15,6 @@ export class HuggingFaceConnector extends BaseApiConnector {
 
   protected getBaseUrl(): string { return 'https://router.huggingface.co/v1'; }
   protected getStaticModels(): string[] { return [DEFAULT_MODEL]; }
-  protected getTimeout(): number { return Number(process.env.HUGGINGFACE_TIMEOUT_MS) || 120_000; }
 
   protected getHeaders(): Record<string, string> {
     return { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.HF_TOKEN || ''}` };

@@ -47,7 +47,9 @@ class ConnectorError(Exception):
         super().__init__(_redact_str(message))
         self.status = status
         self.envelope = envelope
+        #: A2-207 - MILLISECONDS; ``retry_after_seconds`` is the seconds twin.
         self.retry_after = envelope.retry_after if envelope else None
+        self.retry_after_seconds = envelope.retry_after_seconds if envelope else None
         # The receipt is a correlation value, not an authorization decision.
         # Keep it separate from generic cause redaction so its signed semantic
         # fields (including authorization="NOT_AUTHORIZED") remain lossless.

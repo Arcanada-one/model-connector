@@ -135,17 +135,30 @@ function extractError(body: unknown, res: Response): ExecuteErrorEnvelope | unde
     message?: unknown;
   };
   if (typeof candidate?.type !== 'string') return undefined;
-  const retryAfterHeader = res.headers.get('retry-after');
+  // A2-207 — two sources, two units, one field. The MC envelope reports
+  // `retryAfter` in MILLISECONDS; the HTTP `Retry-After` header is in SECONDS
+  // (RFC 9110). The header value used to be copied across unconverted, so a
+  // 429 that asked for 10 s arrived as `retryAfter: 10` and a caller who slept
+  // on it retried after 10 ms — hammering the limit it was told to back off
+  // from. Everything is normalised to milliseconds here, once.
+  const headerSeconds = Number(res.headers.get('retry-after'));
   const retryAfter =
     typeof candidate.retryAfter === 'number'
       ? candidate.retryAfter
-      : retryAfterHeader
-        ? Number(retryAfterHeader)
+      : Number.isFinite(headerSeconds) && headerSeconds > 0
+        ? headerSeconds * 1000
+        : undefined;
+  const retryAfterSeconds =
+    typeof candidate.retryAfterSeconds === 'number'
+      ? candidate.retryAfterSeconds
+      : retryAfter !== undefined
+        ? Math.ceil(retryAfter / 1000)
         : undefined;
   return {
     type: candidate.type,
     message: typeof candidate.message === 'string' ? candidate.message : `HTTP ${res.status}`,
     retryAfter,
+    retryAfterSeconds,
     retryable: candidate.retryable ?? false,
     recommendation: (candidate.recommendation as ExecuteErrorEnvelope['recommendation']) ?? 'abort',
   };

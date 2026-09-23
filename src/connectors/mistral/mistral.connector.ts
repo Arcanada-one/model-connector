@@ -29,9 +29,6 @@ export class MistralConnector extends BaseApiConnector {
   protected getStaticModelMetas(): ProviderModelMeta[] {
     return STATIC_MODELS;
   }
-  protected getTimeout(): number {
-    return Number(process.env.MISTRAL_TIMEOUT_MS) || 120_000;
-  }
   protected getHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',

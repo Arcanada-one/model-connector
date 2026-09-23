@@ -120,6 +120,14 @@ Triggers:
 - Threshold: `CIRCUIT_BREAKER_THRESHOLD` consecutive errors (default 5) → open
 - Cooldown: `CIRCUIT_BREAKER_COOLDOWN_MS` (default 30s)
 - **Instant open:** `auth_error`, `binary_not_found` (no point retrying immediately)
+- **Not counted (A2-207):** a `timeout` where the CALLER's own `request.timeout` was shorter than the
+  connector budget (`{NAME}_TIMEOUT_MS` / `CONNECTOR_TIMEOUT_MS`). The caller still gets `status: timeout`;
+  the attempt is scored neither failure nor success, so a short client budget cannot take a healthy route
+  out of service for every other caller. Any other error under a short budget counts normally.
+
+`circuit_open` reports `retryAfter` in **milliseconds** and `retryAfterSeconds` in whole seconds
+(rounded up). Both come from `retryAfterFields()` in `connector.interface.ts` — never build one without
+the other.
 
 Reset via admin API: `POST /admin/circuit-breaker/reset`.
 
@@ -134,6 +142,16 @@ In `ConnectorsService`, NOT in connectors themselves. Only retries error types i
 - `execution_error`
 
 Backoff: `1s, 2s, 4s, 8s` (capped) with jitter. Max attempts: `1 + CONNECTOR_MAX_RETRIES` (default 2).
+
+### Attempt budget
+
+`request.timeout` > `{NAME}_TIMEOUT_MS` > `CONNECTOR_TIMEOUT_MS` > 120 000 ms, where `{NAME}` is the
+connector name upper-cased with `-`→`_` (derived, like `{NAME}_MAX_CONCURRENCY` — not declared per
+connector), resolved by
+`BaseApiConnector.getTimeout()` / `BaseCliConnector.getTimeout()` and handed to `AbortSignal.timeout`.
+Each of the `1 + CONNECTOR_MAX_RETRIES` attempts gets the full budget, so the server-side worst case is
+`CONNECTOR_QUEUE_TIMEOUT_MS + attempts x budget + backoff`. `embedding` is the one deliberate dissent
+(30 s, its own mesh service on the indexing path).
 
 ## Error Classification
 

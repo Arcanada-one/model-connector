@@ -75,8 +75,9 @@ except GuardExhaustedError as exc:
     print("guard exhausted:", exc.envelope.message)
 except ConnectorError as exc:
     print(f"HTTP {exc.status}: {exc.envelope.type if exc.envelope else 'unknown'}")
+    # retry_after is milliseconds; retry_after_seconds is the same delay in seconds.
     if exc.retry_after:
-        print(f"retry after {exc.retry_after}s")
+        print(f"retry after {exc.retry_after_seconds}s")
 except TimeoutError as exc:
     print("timed out after", exc.timeout, "seconds")
 ```

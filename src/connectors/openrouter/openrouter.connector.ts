@@ -179,10 +179,6 @@ export class OpenRouterConnector extends BaseApiConnector {
     return 'https://openrouter.ai/api';
   }
 
-  protected getTimeout(): number {
-    return Number(process.env.OPENROUTER_TIMEOUT_MS) || 120_000;
-  }
-
   protected getHeaders(): Record<string, string> {
     // CONN-1665 — per-key policy override: when the caller's key policy names
     // a dedicated env key for openrouter, ConnectorsService.execute wraps the

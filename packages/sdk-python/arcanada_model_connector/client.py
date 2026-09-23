@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 import httpx
@@ -80,23 +81,40 @@ def _extract_envelope(
     if not isinstance(candidate, dict) or not isinstance(candidate.get("type"), str):
         return None
     payload = dict(candidate)
+    # A2-207 - `retry_after` here is the HTTP `Retry-After` header, i.e. SECONDS
+    # (RFC 9110), while the envelope field is MILLISECONDS. The header used to be
+    # written into `retryAfter` unconverted, so a 429 asking for 10 s arrived as
+    # `retry_after == 10.0` beside server figures like 15681, and the README told
+    # readers to print it with an "s" suffix. Convert once, here.
     if (
         retry_after is not None
         and "retryAfter" not in payload
         and "retry_after" not in payload
     ):
-        payload["retryAfter"] = retry_after
-    return ExecuteErrorEnvelope.model_validate(payload)
+        payload["retryAfter"] = retry_after * 1000
+    envelope = ExecuteErrorEnvelope.model_validate(payload)
+    if envelope.retry_after is not None and envelope.retry_after_seconds is None:
+        # An older server sends only the millisecond field; derive the seconds
+        # twin so callers can read one field regardless of server version.
+        envelope.retry_after_seconds = math.ceil(envelope.retry_after / 1000)
+    return envelope
 
 
 def _retry_after_seconds(response: httpx.Response) -> float | None:
+    """The HTTP ``Retry-After`` header, in SECONDS as the RFC defines it.
+
+    A2-207 - the name says the unit on purpose: the only caller converts it to
+    the envelope's milliseconds. A non-positive value carries no information a
+    caller can act on, so it is reported as absent rather than as "retry now".
+    """
     header = response.headers.get("retry-after")
     if header is None:
         return None
     try:
-        return float(header)
+        seconds = float(header)
     except ValueError:
         return None
+    return seconds if seconds > 0 else None
 
 
 def _decode(response: httpx.Response) -> Any:

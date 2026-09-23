@@ -1,0 +1,47 @@
+A2-207 — A/B of the repository-wide tsc baseline (evidence for the exemption in receipts/graph/change-admission-a2-207-20260923T133733Z.json)
+
+$ npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'
+head  arc2/a2-207-connector-timeout-retryafter (f4012cb): 147
+base  main (1672fed):                                 147
+
+Files carrying those errors (all *.spec.ts; none touched by this change):
+     30 src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts
+     16 src/config/env.schema.image.spec.ts
+     13 src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.spec.ts
+     10 src/connectors/image-generation/fixture-replay.spec.ts
+      8 src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.spec.ts
+      7 src/connectors/connectors.controller.spec.ts
+      6 src/openai-compat/openai-compat.models-policy.spec.ts
+      4 src/speech/speech.service.spec.ts
+      4 src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.spec.ts
+      4 src/connectors/image-generation/image-generation.service.spec.ts
+      3 src/speech/dto/tts-request.dto.spec.ts
+      3 src/openai-compat/openai-compat.failover.integration.spec.ts
+      3 src/connectors/meta-llama-guard/meta-llama-guard-runtime.connector.spec.ts
+      3 src/connectors/hume-evi/hume-evi.connector.spec.ts
+      2 src/speech/stt/stt-pilot.integration.spec.ts
+      2 src/speech/speech-metrics.service.spec.ts
+      2 src/health/health.controller.spec.ts
+      2 src/connectors/luma/luma-dream-machine.connector.spec.ts
+      2 src/connectors/embedding/vertex/vertex-ai-embeddings.connector.spec.ts
+      2 src/connectors/connectors.service.spec.ts
+      2 src/billing/credit-gate.spec.ts
+      1 src/speech/speech.controller.spec.ts
+      1 src/queue/connector-job.processor.spec.ts
+      1 src/metrics/metrics.service.spec.ts
+      1 src/connectors/stability-ai/stability-ai.connector.spec.ts
+      1 src/connectors/runway/runway.connector.spec.ts
+      1 src/connectors/output-guard/output-guard.middleware.spec.ts
+      1 src/connectors/oracle-oci-generative-ai/oracle-oci-generative-ai.connector.spec.ts
+      1 src/connectors/openai/openai.connector.spec.ts
+      1 src/connectors/image-generation/jobs/image-job.processor.spec.ts
+      1 src/connectors/image-generation/base-image.connector.spec.ts
+      1 src/connectors/gemini-api/gemini-api.module.spec.ts
+      1 src/connectors/connectors.service.showcase-alarm.spec.ts
+      1 src/connectors/connectors.service.metering.spec.ts
+      1 src/connectors/catalog-mapper.spec.ts
+      1 src/connectors/cascade/cascade-no-egress.spec.ts
+      1 src/connectors/black-forest-labs/black-forest-labs.connector.spec.ts
+      1 src/connectors/base-cli.connector.spec.ts
+      1 src/connectors/base-api.connector.spec.ts
+      1 src/admin/watcher-repair.guard.spec.ts
