@@ -35,6 +35,16 @@ describe('HealthController', () => {
     expect(result.timestamp).toBeDefined();
   });
 
+  // A2-228: without this, a client measuring through the service cannot tell which build answered
+  // it — which is how A2-221 recorded 36 calls against a month-old binary and said only which
+  // address it had called.
+  it('names the build it was made from, or says it cannot', () => {
+    const result = controller.health();
+    expect(result.build).toBeDefined();
+    expect(result.build).toHaveProperty('sha');
+    expect(result.build).toHaveProperty('source');
+  });
+
   it('should return ready when DB is available', async () => {
     mockPrisma.$queryRaw.mockResolvedValue([{ 1: 1 }]);
     const result = await controller.ready();

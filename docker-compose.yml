@@ -1,6 +1,12 @@
 services:
   model-connector:
-    build: .
+    build:
+      context: .
+      args:
+        # A2-228: NOT a runtime variable and so deliberately not in `.env.example` — it is a
+        # BUILD argument, set by deploy/deploy.sh from the commit being deployed and baked into
+        # the image. Empty here means the image cannot name its build, which /health reports.
+        MC_BUILD_SHA: ${MC_BUILD_SHA:-}
     restart: unless-stopped
     ports:
       - "127.0.0.1:3900:3900"

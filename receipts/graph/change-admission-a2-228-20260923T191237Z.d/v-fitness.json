@@ -1,0 +1,319 @@
+{
+ "rules": {
+  "FR-01": {
+   "name": "no-transport-to-persistence",
+   "rule": "a transport-layer unit (*.controller.ts, *.gateway.ts, *.resolver.ts) must not import a persistence unit (prisma.service*, @prisma/client, *.repository.ts, typeorm)",
+   "severity": "failed",
+   "source": "imports edges of the head graph + the head import statements"
+  },
+  "FR-02": {
+   "name": "no-import-cycles",
+   "rule": "no strongly connected component of size > 1 over value imports (import type / export type excluded) among code units of one deployable",
+   "severity": "failed",
+   "source": "head sources (AST-lite import scan)"
+  },
+  "FR-03": {
+   "name": "module-boundary",
+   "rule": "a unit under src/<a>/ may import from src/<b>/ (a ≠ b) only through the module's exported surface: never another module's *.controller.ts / *.gateway.ts / *.processor.ts",
+   "severity": "failed",
+   "source": "imports edges of the head graph"
+  },
+  "FR-04": {
+   "name": "reuse-marker-resolves",
+   "rule": "a `reuse: @arcanada/<pkg>` marker must name a package declared as a dependency of the containing deployable or present as a workspace package (packages/*), or be registered in the exemption registry",
+   "severity": "failed",
+   "source": "reuse-marker imports edges of the head graph + package.json files at head"
+  },
+  "FR-05": {
+   "name": "deployable-boundary",
+   "rule": "a unit of deployable A must not import a unit of deployable B unless B is a shared package (kind library / shared_package)",
+   "severity": "failed",
+   "source": "imports + deploys_to edges of the head graph"
+  }
+ },
+ "baseline": "(auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline)",
+ "baseline_status": "valid",
+ "new": [],
+ "frozen": [
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-01",
+   "entity": "code_unit:src/connectors/image-generation/jobs/image-job.controller.ts",
+   "detail": "transport unit imports persistence unit src/prisma/prisma.service.ts",
+   "fingerprint": "sha256:3d0619affc9a3fe9744b59c2c4298c3cf5e3f4c9c586232e38758291d7a4d345",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-01",
+   "entity": "code_unit:src/health/health.controller.ts",
+   "detail": "transport unit imports persistence unit src/prisma/prisma.service.ts",
+   "fingerprint": "sha256:e6177ded8e77cb04073d457c959fc0aff7dfd09e8800b899e11fa345c6801a02",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-01",
+   "entity": "code_unit:src/speech/stt/stt-async.controller.ts",
+   "detail": "transport unit imports persistence unit src/prisma/prisma.service.ts",
+   "fingerprint": "sha256:b23796ec0f6c43108250e9d631e2c7affc9ca775bb9152e5d4b2a25372eb2184",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:827b5477d5eb0a92a09dabb4552caab037bd48a8756dd02d3e222820f9766db4",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:d12d5783f9f4726088a75edcdc586e39e0b76db00e3e4fd989444dc90e165ed4",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:6c0a787104774fdc7115af08b6b4f4c04c2ac02373ee17b1ee9fad69f35cd198",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:a10d9984f151140217f26321bfdffc23fbfb26fedfc15325706002941bcabf45",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:d390fef13049fa3357d308c9746c66f6cb519ddc831e764588e15793216c485c",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:9d9ec555a65d1c1534d5b85369825bd357142e540a8e7c5e88a49fdda31adfc9",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:44097bedb02cbfd58b637f065f4a1f439b278e7b7719d409f940b78a60a85ae3",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:2e36f8da9f774a2337eabd4641459d47ab6ec4337227f26566032725436cacb9",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/codex/codex.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:2e1afb0c96ac43dfcdd4e2bba97764ef3d85249049536e434cd82ca98085b00e",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/cohere/cohere.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:5d9f1d26b0bfe929b5678bc1fa3107297f6f9c8d23332ef4db69359f04c64a4c",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/connectors.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:09689b799345f753e44b186d62e5adfad441b73b164c3afbecec8a8ca656a4b5",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/cursor/cursor.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:56ed98d9a9c8ebfc721344a2db02c02cab69b664d4d73e82451fce2d895ca1cb",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:a7dddcae0d07b62be831928ae6ac4f84634ce97d7c6a265ab8fafecc1faeb4c0",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/embedding/embedding.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:12eff5e2f8155ece83f444ccd3745dd19012c4f8b75334d1fd3fd223f0b8d812",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:fecd8f621f0985ab44627eca12b1695abe4c108e2dd2472bbed9636b1bf62d1e",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:6ff020d87f2a2aacced8ba69598e9fbb2887935a877f4880c1cc0566faac2bc7",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/gemini/gemini.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:d79fa0b9ee4dbc62365680a84cd5176394ee65728fb4d43a0742d47fcd73a2a4",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/grok/grok.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:8b037d33c64fb12577c39826cdff661e201832d467e51e8a504154c9125ee212",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/groq/groq.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:06fbac27e0fad88e8da8ac6619a164c319460313cda836b1d1d44f82460edfe1",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:dcfaa883a2b835498b62efa8a4a97132c9507f37176d0f7c311ac4847797f0bb",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/mistral/mistral.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:c49573d2ea72459341505fd7614291c2aff412dff9e0d6c64b8f467f50030237",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/modal/modal.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:e27642a8dd04a5f2dcaf44e29abb447346c59da59fc3f5a07e7356fcae3258ff",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:9cf62df1c60766ecbf872e70a10f3f8047942d86821c5d33ba285f0523bf2583",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/ollama/ollama.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:32033ef6c462dab4b6a0ecb3769aed7bd2902616076e9104752af7c521e058ec",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/openai/openai.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:ac3ed53b669f32e99b2693c2be4c6802559dbcff6cbad272e95e4333be87646e",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:25a43f76cce4e1480c65fc0d9853c68c15a3997e2c028c06f2b33629240fb596",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:3c0afc0a1233b91e7a600c400e6940cf6b4685b85f0fe1a68a3c1261b9632750",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/orq/orq.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:723cf184f1381d1c711dcac9a3a942a7d696e7e2a60769c87c62b42f66804a4c",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:15afff920c89a27bfd314d86a2a6744f887aeca1a52a7ae8dccf625099e9f4c7",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/together/together.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:2c54ee020d22c651b6831353b27e599ffb0fd68ba744d3487f6cde568edfbc04",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-02",
+   "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+   "detail": "import cycle: src/connectors/anthropic/anthropic.module.ts → src/connectors/azure-openai/azure-openai.module.ts → src/connectors/bedrock/bedrock.module.ts → src/connectors/bedrock/nova-media/nova-media.module.ts → src/connectors/cascade/cascade.module.ts → src/connectors/cerebras/cerebras.module.ts → src/connectors/claude-code/claude-code.module.ts → src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts → src/connectors/codex/codex.module.ts → src/connectors/cohere/cohere.module.ts → src/connectors/connectors.module.ts → src/connectors/cursor/cursor.module.ts → src/connectors/deepseek/deepseek.module.ts → src/connectors/embedding/embedding.module.ts → src/connectors/fireworks/fireworks.module.ts → src/connectors/gemini-api/gemini-api.module.ts → src/connectors/gemini/gemini.module.ts → src/connectors/grok/grok.module.ts → src/connectors/groq/groq.module.ts → src/connectors/huggingface/huggingface.module.ts → src/connectors/mistral/mistral.module.ts → src/connectors/modal/modal.module.ts → src/connectors/ollama-cloud/ollama-cloud.module.ts → src/connectors/ollama/ollama.module.ts → src/connectors/openai/openai.module.ts → src/connectors/openmodel/openmodel.module.ts → src/connectors/openrouter/openrouter.module.ts → src/connectors/orq/orq.module.ts → src/connectors/perplexity/perplexity.module.ts → src/connectors/together/together.module.ts → src/connectors/vertex-generative/vertex-generative.module.ts → src/connectors/anthropic/anthropic.module.ts",
+   "fingerprint": "sha256:11b524ec37afb2960d251f5a51f7ed7faa87fcc2330009e9636e96e31ff2af5f",
+   "status": "frozen"
+  },
+  {
+   "verifier": "fitness_rules",
+   "rule": "FR-03",
+   "entity": "code_unit:src/connectors/connectors.service.ts",
+   "detail": "module connectors imports src/queue/connector-job.processor.ts of module queue (controller / gateway / processor are not a module's exported surface)",
+   "fingerprint": "sha256:16d1ed192645f810e99ebf1194c2d94fbd28e6d469a8107a5754c60871e28c2b",
+   "status": "frozen"
+  }
+ ]
+}
