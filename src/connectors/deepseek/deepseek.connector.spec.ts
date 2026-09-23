@@ -63,6 +63,58 @@ describe('DeepSeekConnector', () => {
     });
   });
 
+  // A2-104 — measured on prod 2026-09-23: DeepSeek reported
+  // prompt_cache_hit_tokens/prompt_cache_miss_tokens and MC returned them under
+  // `structured`, but `usage.cachedInputTokens` — the field this codebase defines for
+  // exactly this fact, and that orq/openrouter/anthropic all fill — was undefined. Every
+  // consumer of the normalised usage therefore read "the provider said nothing about
+  // caching" for a provider that had just said it. See ConnectorResponse.usage.
+  it('normalises prompt_cache_hit_tokens onto usage.cachedInputTokens and keeps the provider usage verbatim', async () => {
+    mockJson(chatFixture);
+    const response = await connector.execute({ prompt: 'hello' });
+    expect(response.usage.cachedInputTokens).toBe(7);
+    expect(response.usage.providerUsage).toEqual({
+      prompt_tokens: 12,
+      completion_tokens: 8,
+      total_tokens: 20,
+      prompt_cache_hit_tokens: 7,
+      prompt_cache_miss_tokens: 5,
+    });
+  });
+
+  it('reports no cache write counter for DeepSeek rather than a zero that reads as a measurement', async () => {
+    mockJson(chatFixture);
+    const response = await connector.execute({ prompt: 'hello' });
+    // DeepSeek has no cache-WRITE field: a miss token is billed at the miss rate and IS
+    // the write. Emitting cacheCreationInputTokens: 0 would be indistinguishable from
+    // "measured zero writes" on a provider that does report them.
+    expect(response.usage.cacheCreationInputTokens).toBeUndefined();
+    expect(response.usage.cacheCreation).toBeUndefined();
+  });
+
+  it('leaves cachedInputTokens undefined when DeepSeek omits the cache counters (silent is not zero)', async () => {
+    mockJson({
+      ...chatFixture,
+      usage: { prompt_tokens: 12, completion_tokens: 8, total_tokens: 20 },
+    });
+    const response = await connector.execute({ prompt: 'hello' });
+    expect(response.usage.cachedInputTokens).toBeUndefined();
+    expect(response.usage.inputTokens).toBe(12);
+    // reasoning_content is still passed through; what must NOT appear is an invented
+    // `usage` block with zeros where DeepSeek reported nothing.
+    expect(response.structured).toEqual({ reasoning_content: 'Synthetic reasoning fixture.' });
+  });
+
+  it('marks a reply with no usage block as usageMissing instead of inventing zeros', async () => {
+    const { usage: _usage, ...noUsage } = chatFixture;
+    mockJson(noUsage);
+    const response = await connector.execute({ prompt: 'hello' });
+    expect(response.usage.usageMissing).toBe(true);
+    expect(response.usage.cachedInputTokens).toBeUndefined();
+    expect(response.usage.providerUsage).toBeUndefined();
+    expect(response.structured).toEqual({ reasoning_content: 'Synthetic reasoning fixture.' });
+  });
+
   it('omits unsupported sampling and logprob parameters for deepseek-reasoner', async () => {
     mockJson(chatFixture);
     await connector.execute({

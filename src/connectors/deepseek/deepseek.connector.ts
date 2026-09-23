@@ -96,21 +96,55 @@ export class DeepSeekConnector extends BaseApiConnector {
       };
     }
     const usage = json.usage;
+    // AUP-CACHE-003 / A2-104 — DeepSeek reports prompt-cache use as
+    // `prompt_cache_hit_tokens` / `prompt_cache_miss_tokens`, which together are the
+    // request's prompt tokens (https://api-docs.deepseek.com/guides/kv_cache). The hit
+    // count is this codebase's `cachedInputTokens`: input tokens the provider served
+    // from its cache, a SUBSET of inputTokens. Leaving it undefined while the counts sat
+    // in `structured` made every consumer of the normalised usage read "the provider is
+    // silent about caching" for a provider that had just reported a hit.
+    //
+    // There is deliberately NO `cacheCreationInputTokens` here: DeepSeek has no separate
+    // cache-WRITE counter — a miss token is billed at the miss rate and is itself the
+    // write — and a 0 would be indistinguishable from a measured zero on a provider that
+    // does report writes.
+    const cachedInputTokens =
+      typeof usage?.prompt_cache_hit_tokens === 'number'
+        ? usage.prompt_cache_hit_tokens
+        : undefined;
+    const cacheCounts =
+      usage != null &&
+      (typeof usage.prompt_cache_hit_tokens === 'number' ||
+        typeof usage.prompt_cache_miss_tokens === 'number')
+        ? {
+            usage: {
+              prompt_cache_hit_tokens: usage.prompt_cache_hit_tokens,
+              prompt_cache_miss_tokens: usage.prompt_cache_miss_tokens,
+            },
+          }
+        : {};
     return {
       text: message.content || '',
       structured: {
         ...(message.reasoning_content != null
           ? { reasoning_content: message.reasoning_content }
           : {}),
-        usage: {
-          prompt_cache_hit_tokens: usage?.prompt_cache_hit_tokens ?? 0,
-          prompt_cache_miss_tokens: usage?.prompt_cache_miss_tokens ?? 0,
-        },
+        // The counts are echoed only when DeepSeek actually sent them. The previous
+        // `?? 0` filled a field the provider had left empty, which is the one thing
+        // AUP-CACHE-003 says a connector must never do.
+        ...cacheCounts,
       },
       model: json.model || request.model || DEFAULT_MODEL,
       inputTokens: usage?.prompt_tokens ?? 0,
       outputTokens: usage?.completion_tokens ?? 0,
       costUsd: 0,
+      ...(cachedInputTokens !== undefined ? { cachedInputTokens } : {}),
+      // The provider's usage object verbatim: the typed fields above are a derived view,
+      // this is the record.
+      ...(usage != null ? { providerUsage: { ...usage } } : {}),
+      // The third verdict: DeepSeek returned no usage at all, so the zeros above are
+      // absences and must be readable as such rather than as measured zeros.
+      ...(usage == null ? { usageMissing: true as const } : {}),
       isError: false,
     };
   }
