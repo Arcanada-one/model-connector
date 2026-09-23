@@ -1,0 +1,37 @@
+A2-210 — v-type-check-tsconfig A/B measurement
+==============================================
+
+The repository-wide `tsc --noEmit -p tsconfig.json` carries a PRE-EXISTING error
+baseline. It is the reason v-type-check-tsconfig cannot return a per-entity
+verdict for most of the impact set, and the reason 18 spec files + the
+deployable unit come back `failed`.
+
+Command, identical on both sides, same clone, same node_modules, same
+`prisma generate` output:
+
+    npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c 'error TS'
+
+  base 70cee53469b08aef8ea147ffbc2c58e96b71f0d2 : 147 errors in 40 files
+  head 0ca3262                                  : 147 errors in 40 files
+
+Zero added, zero removed. The <file>(line,col): TS<code> location set is
+BYTE-IDENTICAL between the two sides:
+
+    diff <(grep 'error TS' base.txt | sed 's/: error TS.*//' | sort) \
+         <(grep 'error TS' head.txt | sed 's/: error TS.*//' | sort)
+    -> no output
+
+Not one of the 147 is in a file this change touches. Checked per changed path:
+
+    git diff --name-only <base>..HEAD | while read f; do grep -F "$f(" head.txt; done
+    -> no output
+
+Every one of the 147 is in a `*.spec.ts`. `pnpm build` (nest build) reports 0
+issues because tsconfig.json excludes specs from the build, and no CI job
+type-checks the specs — which is why this baseline is invisible to everything
+except this verifier.
+
+Carried forward from receipts/graph/change-admission-a2-201-20260923T123300Z.json
+(same 147, exemption owner and expiry 2026-09-30) and re-measured by
+change-admission-a2-207-20260923T134542Z.json. This receipt neither resolves it
+nor extends its life beyond that date.

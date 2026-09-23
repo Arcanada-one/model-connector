@@ -1,0 +1,41 @@
+A2-210 — v-contract-diff A/B measurement
+========================================
+
+Two entities in the impact set come back `failed` from v-contract-diff:
+
+    code_unit:src/admin/circuit-breaker.controller.ts
+      -> contract:src/admin/dto.ts#ResetCircuitBreakerSchema
+    code_unit:src/connectors/connectors.controller.ts
+      -> contract:src/connectors/dto/catalog.dto.ts#CatalogFiltersSchema
+
+Both are consumer-superset findings ("consumer reads key `data` / `success` /
+`error` that the provider does not declare") — the response-envelope keys the
+controllers add around the DTO. Neither is produced by this change.
+
+Measured by running the verifier on the BASE alone, an empty range in which this
+change does not exist:
+
+    python3 tools/graph/contract_diff.py --repo <repo> \
+        --base 70cee53469b08aef8ea147ffbc2c58e96b71f0d2 \
+        --head 70cee53469b08aef8ea147ffbc2c58e96b71f0d2 --json
+
+  base  edge_verdicts: {"failed": 8, "verified": 207}
+  head  edge_verdicts: {"failed": 8, "verified": 206}
+
+The FAILED edge set is identical on both sides — 8 edges, same (from, to) pairs,
+same findings, none of them added, none removed by this change:
+
+    code_unit:src/admin/admin.controller.ts          -> #CreateKeySchema
+    code_unit:src/admin/admin.controller.ts          -> #SetKeyPolicySchema
+    code_unit:src/admin/circuit-breaker.controller.ts-> #ResetCircuitBreakerSchema
+    code_unit:src/connectors/connectors.controller.ts-> #CatalogFiltersSchema
+    code_unit:src/connectors/dto/catalog.dto.spec.ts -> #CatalogFiltersSchema
+    code_unit:src/connectors/dto/catalog.dto.spec.ts -> #CatalogModelEntrySchema
+    code_unit:src/connectors/dto/catalog.dto.spec.ts -> #CatalogResponseSchema
+    code_unit:src/connectors/dto/execute.dto.spec.ts -> #imageGenerateRequestSchema
+
+Raw base-side output: contract-diff-base-ab.json (in this directory).
+Raw head-side output: v-contract-diff.json (in this directory).
+
+NOT resolved here, and no expiry is extended: this is an A/B statement that the
+change did not cause it, not a claim that it is harmless.

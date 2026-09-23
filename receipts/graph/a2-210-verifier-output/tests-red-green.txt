@@ -1,0 +1,93 @@
+A2-210 — red on main / green on the branch, per defect
+======================================================
+
+Same clone, same node_modules. "main" = 70cee53469b0 checked out into a separate
+worktree (/tmp/mc-main-baseline) with the branch's spec files copied in; the
+SOURCE is main's, the tests are the branch's.
+
+--- 1+3. timeout classification and the maxTimeout ceiling ------------------
+  npx vitest run src/connectors/timeout-classification.spec.ts
+
+  on main : Tests 10 failed | 2 passed (12)
+      A2-210 §1 reports type `timeout` ... not `network_error`
+          AssertionError: expected 'network_error' to be 'timeout'
+      A2-210 §1 the connector's OWN expired budget is a timeout too
+          AssertionError: expected 'network_error' to be 'timeout'
+      A2-210 §2 a caller's own shorter budget ... does not open the shared breaker
+          AssertionError: expected 'network_error' to be 'timeout'
+      A2-210 §2 the connector's own expired budget still opens the breaker
+          AssertionError: expected 'network_error' to be 'timeout'
+      A2-210 §3 reports type `timeout` ... not `execution_error`
+          AssertionError: expected 'execution_error' to be 'timeout'
+      A2-210 §3 a caller's own shorter budget ... does not open the shared breaker
+          AssertionError: expected 'execution_error' to be 'timeout'
+      A2-210 §3 the connector's own expired budget still opens the breaker
+          AssertionError: expected 'execution_error' to be 'timeout'
+      A2-210 §4 clamps a caller budget above what the connector advertises (API)  [10001ms timeout]
+      A2-210 §4 clamps a caller budget above what the connector advertises (CLI)  [10002ms timeout]
+      A2-210 §4 the ceiling caps the connector's own configured budget as well    [10001ms timeout]
+
+  The 2 that pass on main are the ones that assert what already holds:
+  §0 (AbortSignal.timeout aborts with TimeoutError, never AbortError — the fact
+  the defect was built on) and §4's "a caller budget below the ceiling is left
+  alone".
+
+  on branch: Tests 12 passed (12)
+
+--- 2. the breaker's effective state ----------------------------------------
+  npx vitest run src/core/resilience/circuit-breaker-effective-state.spec.ts
+
+  on main : Tests 5 failed | 5 passed (10)
+      reports `half_open` once the cooldown has elapsed, without any call
+          expected 'open' to be 'half_open'
+      drops nextRetryAt once the cooldown has elapsed
+      agrees with check(): the state it reports is the one the next call gets
+      perModel and aggregate both stop claiming `open` after the cooldown
+          expected 'open' to be 'half_open'
+      resetModel reports the state the operator was actually looking at
+          previousState: expected 'half_open', received 'open'
+
+  on branch: Tests 10 passed (10)
+
+--- the A2-207 (#139) spec, with its fake corrected -------------------------
+  The rule "a caller's own shorter budget must not feed the breaker" was tested
+  with `new DOMException(msg, 'AbortError')`, which AbortSignal.timeout() never
+  produces. Corrected to 'TimeoutError' — what Node throws — in
+  connector-budget-and-retry-after.spec.ts:
+
+  npx vitest run src/connectors/connector-budget-and-retry-after.spec.ts
+  (branch's spec file, main's source)
+
+  on main : Tests 3 failed | 8 passed (11)
+      does not open the breaker when the caller's shorter budget runs out
+          expected 'error' to be 'timeout'
+      still opens the breaker when the connector's OWN budget runs out
+          expected 'network_error' to be 'timeout'
+      a caller budget at or above the connector budget still feeds the breaker
+          expected 'network_error' to be 'timeout'
+
+  on branch: Tests 11 passed (11)
+
+--- whole suite -------------------------------------------------------------
+  npx vitest run
+  on branch: Test Files 216 passed (216) | Tests 3203 passed (3203), rc 0
+  on main  : Tests 3173 passed; 2 files failed to LOAD in the baseline worktree
+             ("Cannot find package 'yaml' imported from watcher/src/config.ts")
+             — an artefact of the symlinked node_modules in /tmp/mc-main-baseline,
+             not a failure of main. Those two files pass in the real clone.
+             3173 + 8 (the two watcher files) + 22 (this change's new tests) = 3203.
+
+  npx eslint "src/**/*.ts" : rc 0, no output, on both sides.
+
+--- the probes behind the two defects ---------------------------------------
+  Measured on this host, Node v24.20.0, against a local non-answering HTTP
+  server and a local `sleep` — no production service was contacted.
+
+  fetch(hangingServer, {signal: AbortSignal.timeout(100)})
+    -> DOMException  name 'TimeoutError'
+                     message 'The operation was aborted due to timeout'
+       (err instanceof DOMException && err.name === 'AbortError')  ->  false
+
+  spawn('sleep', ['5'], {stdio:[...], timeout: 300})
+    -> no 'error' event; 'close' with code=null, signal='SIGTERM'
+       so the ETIMEDOUT branch in spawnProcess was dead code.

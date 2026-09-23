@@ -1,0 +1,5641 @@
+{
+ "schema": "ContractDiff/v1",
+ "tool": "tools/graph/contract_diff.py",
+ "tool_version": "1.0.0",
+ "repo": "Arcanada-one/model-connector",
+ "base": {
+  "commit": "70cee53469b08aef8ea147ffbc2c58e96b71f0d2",
+  "rev": "70cee53469b08aef8ea147ffbc2c58e96b71f0d2",
+  "tree": "git-objects"
+ },
+ "head": {
+  "commit": "0ca32625f160dc02c7ca506f7b57f7eb105c66d5",
+  "rev": "0ca32625f160dc02c7ca506f7b57f7eb105c66d5",
+  "tree": "git-objects",
+  "dirty": false
+ },
+ "graph": {
+  "source_commit": "0ca32625f160dc02c7ca506f7b57f7eb105c66d5",
+  "graph_digest": "sha256:964ae25b6667018a5dfbf75c2891290ace698a923d3688a6155b8e9681f3b41e"
+ },
+ "edge_source": "graph",
+ "contracts": {
+  "contract:packages/sdk-ts/src/types.ts#ErrorAction": {
+   "kind": "type_alias_union",
+   "path": "packages/sdk-ts/src/types.ts",
+   "symbol": "ErrorAction",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:8155a64eb796d4ed04292c7cf19c2c39fed1a480e3391acb99e2d6b36486c699",
+   "decl_hash_head": "sha256:8155a64eb796d4ed04292c7cf19c2c39fed1a480e3391acb99e2d6b36486c699",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:packages/sdk-ts/src/types.ts#ErrorType": {
+   "kind": "type_alias_union",
+   "path": "packages/sdk-ts/src/types.ts",
+   "symbol": "ErrorType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:c85d585a629c94c69510ef1a2b3a7cb87cc10c92d6cf7f995a1fb4e82e7a0346",
+   "decl_hash_head": "sha256:c85d585a629c94c69510ef1a2b3a7cb87cc10c92d6cf7f995a1fb4e82e7a0346",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:packages/sdk-ts/src/types.ts#ExecuteStatus": {
+   "kind": "type_alias_union",
+   "path": "packages/sdk-ts/src/types.ts",
+   "symbol": "ExecuteStatus",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:c3895a4b8f48e604dba9b5b4028fa9a5b0c4a6fc9c70108a109e1b4c3996a362",
+   "decl_hash_head": "sha256:c3895a4b8f48e604dba9b5b4028fa9a5b0c4a6fc9c70108a109e1b4c3996a362",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:packages/sdk-ts/src/types.ts#OutputFormat": {
+   "kind": "type_alias_union",
+   "path": "packages/sdk-ts/src/types.ts",
+   "symbol": "OutputFormat",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:80c362efc7c6d6702817b073dc4fc4fe721d62ae67f3a3d6244ceaf0ceeb4ce0",
+   "decl_hash_head": "sha256:80c362efc7c6d6702817b073dc4fc4fe721d62ae67f3a3d6244ceaf0ceeb4ce0",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:packages/sdk-ts/src/types.ts#OutputGuardPass": {
+   "kind": "type_alias_union",
+   "path": "packages/sdk-ts/src/types.ts",
+   "symbol": "OutputGuardPass",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:c0adfe7b993406fbde0a0d3b534844406f74ecf055ffe34268b0868595aa58be",
+   "decl_hash_head": "sha256:c0adfe7b993406fbde0a0d3b534844406f74ecf055ffe34268b0868595aa58be",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/admin/dto.ts#CreateKeySchema": {
+   "kind": "zod",
+   "path": "src/admin/dto.ts",
+   "symbol": "CreateKeySchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:90e6862fea4250ebcf9ce6e7b57cebde658a49190615b4ecb5ce7435a05e1e74",
+   "decl_hash_head": "sha256:90e6862fea4250ebcf9ce6e7b57cebde658a49190615b4ecb5ce7435a05e1e74",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/admin/dto.ts#ResetCircuitBreakerSchema": {
+   "kind": "zod",
+   "path": "src/admin/dto.ts",
+   "symbol": "ResetCircuitBreakerSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:1d1f8b69682c1734091c9a1f6cb6274aa1f0812d8d798ec4ca4279b70555a2d8",
+   "decl_hash_head": "sha256:1d1f8b69682c1734091c9a1f6cb6274aa1f0812d8d798ec4ca4279b70555a2d8",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/admin/dto.ts#SetKeyPolicySchema": {
+   "kind": "zod",
+   "path": "src/admin/dto.ts",
+   "symbol": "SetKeyPolicySchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:b4e7b36e7ac3956075a2d101043f3c042f59f9e1703cd2813974d42bb5abcea9",
+   "decl_hash_head": "sha256:b4e7b36e7ac3956075a2d101043f3c042f59f9e1703cd2813974d42bb5abcea9",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/billing/billing.service.ts#LedgerEntryType": {
+   "kind": "type_alias_union",
+   "path": "src/billing/billing.service.ts",
+   "symbol": "LedgerEntryType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:6afe28bfbf11b0e95429e7358fd94192d13d1b4a2c85fffd86fb773b13add8f8",
+   "decl_hash_head": "sha256:6afe28bfbf11b0e95429e7358fd94192d13d1b4a2c85fffd86fb773b13add8f8",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/billing/credits.controller.ts#CreditSchema": {
+   "kind": "zod",
+   "path": "src/billing/credits.controller.ts",
+   "symbol": "CreditSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:02b827ad2188ac73a0267c87a79a83424409982dbe11bb6170063b32828e3e7e",
+   "decl_hash_head": "sha256:02b827ad2188ac73a0267c87a79a83424409982dbe11bb6170063b32828e3e7e",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/billing/credits.controller.ts#GiftSchema": {
+   "kind": "zod",
+   "path": "src/billing/credits.controller.ts",
+   "symbol": "GiftSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:a82dd8a3307fec199482083ee457ba7e10d5173f01c6a751179655cf17f83941",
+   "decl_hash_head": "sha256:a82dd8a3307fec199482083ee457ba7e10d5173f01c6a751179655cf17f83941",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/billing/credits.controller.ts#ReconcileSchema": {
+   "kind": "zod",
+   "path": "src/billing/credits.controller.ts",
+   "symbol": "ReconcileSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:e0392ffb454895cc37c370cf057a841f37c00eade43cdfbdeb0b7432467878e0",
+   "decl_hash_head": "sha256:e0392ffb454895cc37c370cf057a841f37c00eade43cdfbdeb0b7432467878e0",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/billing/measured-cost.ts#CostSource": {
+   "kind": "type_alias_union",
+   "path": "src/billing/measured-cost.ts",
+   "symbol": "CostSource",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:b015d54bafb244c912099a5a36a4f9ae18cfa9ab9ecd5abe6b2220227b35663f",
+   "decl_hash_head": "sha256:b015d54bafb244c912099a5a36a4f9ae18cfa9ab9ecd5abe6b2220227b35663f",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/billing/payments.controller.ts#PaymentSchema": {
+   "kind": "zod",
+   "path": "src/billing/payments.controller.ts",
+   "symbol": "PaymentSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:90d8101d9bd122992e405c610b40b637cfc2a1b3ebc4b395a1bd4f3deff18903",
+   "decl_hash_head": "sha256:90d8101d9bd122992e405c610b40b637cfc2a1b3ebc4b395a1bd4f3deff18903",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/billing/payments.controller.ts#ReverseSchema": {
+   "kind": "zod",
+   "path": "src/billing/payments.controller.ts",
+   "symbol": "ReverseSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:16c574112033a9efaaba299398bca7e3dcb62479a1dbdab753ae93617bb0faaf",
+   "decl_hash_head": "sha256:16c574112033a9efaaba299398bca7e3dcb62479a1dbdab753ae93617bb0faaf",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/config/env.schema.ts#envBool": {
+   "kind": "zod",
+   "path": "src/config/env.schema.ts",
+   "symbol": "envBool",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:279014695ac66f73f7d480662635414d06fcb5310c0645748d50bb8f4eec6b51",
+   "decl_hash_head": "sha256:279014695ac66f73f7d480662635414d06fcb5310c0645748d50bb8f4eec6b51",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/ai21-native/contract.ts#Ai21NativeFailureCode": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/ai21-native/contract.ts",
+   "symbol": "Ai21NativeFailureCode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:7c2f35f3eaf9bcf1078ac49df27ffebea1776d7af307f5a8517a1cfa75058e82",
+   "decl_hash_head": "sha256:7c2f35f3eaf9bcf1078ac49df27ffebea1776d7af307f5a8517a1cfa75058e82",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/connectors/aws-speech/endpoints.ts#AwsPartitionId": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/aws-speech/endpoints.ts",
+   "symbol": "AwsPartitionId",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:f3926e392d36c1fe00d0e68e05357c27aae3ef4c525138c69019897b1dc5b4c3",
+   "decl_hash_head": "sha256:f3926e392d36c1fe00d0e68e05357c27aae3ef4c525138c69019897b1dc5b4c3",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/schemas.ts#describeVoicesRequestSchema": {
+   "kind": "zod",
+   "path": "src/connectors/aws-speech/schemas.ts",
+   "symbol": "describeVoicesRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:92e30325c861b8f7ba21c95c73d43e4adba3d5681584fc0c4c29491892386847",
+   "decl_hash_head": "sha256:92e30325c861b8f7ba21c95c73d43e4adba3d5681584fc0c4c29491892386847",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/schemas.ts#getLexiconRequestSchema": {
+   "kind": "zod",
+   "path": "src/connectors/aws-speech/schemas.ts",
+   "symbol": "getLexiconRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:54e62799ea4bfcafdbd80c6e05aebd62eb0a3f5fa69f7c2fe5c41c403a5ebc5d",
+   "decl_hash_head": "sha256:54e62799ea4bfcafdbd80c6e05aebd62eb0a3f5fa69f7c2fe5c41c403a5ebc5d",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/schemas.ts#listLexiconsRequestSchema": {
+   "kind": "zod",
+   "path": "src/connectors/aws-speech/schemas.ts",
+   "symbol": "listLexiconsRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:5eba7115908658c4ce63b2a6153caaceda5785bec0f371c6b2911eb3a4c60350",
+   "decl_hash_head": "sha256:5eba7115908658c4ce63b2a6153caaceda5785bec0f371c6b2911eb3a4c60350",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/schemas.ts#pollyEngineSchema": {
+   "kind": "zod",
+   "path": "src/connectors/aws-speech/schemas.ts",
+   "symbol": "pollyEngineSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:a57f20426cd75bf506d97944f21e675df4056d3bd9cf958247c5ab270a796da5",
+   "decl_hash_head": "sha256:a57f20426cd75bf506d97944f21e675df4056d3bd9cf958247c5ab270a796da5",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/schemas.ts#pollyOutputFormatSchema": {
+   "kind": "zod",
+   "path": "src/connectors/aws-speech/schemas.ts",
+   "symbol": "pollyOutputFormatSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:0b290ae80985017e5c19442a293bc0b5cdb4273cdd0de8f217b7d7054670a55e",
+   "decl_hash_head": "sha256:0b290ae80985017e5c19442a293bc0b5cdb4273cdd0de8f217b7d7054670a55e",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/schemas.ts#speechMarkSchema": {
+   "kind": "zod",
+   "path": "src/connectors/aws-speech/schemas.ts",
+   "symbol": "speechMarkSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:f7a00f5b8f55e42e327f7b3e34d86859f6599f1760f5d67131607fde921dc169",
+   "decl_hash_head": "sha256:f7a00f5b8f55e42e327f7b3e34d86859f6599f1760f5d67131607fde921dc169",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/schemas.ts#speechSynthesisTaskIdRequestSchema": {
+   "kind": "zod",
+   "path": "src/connectors/aws-speech/schemas.ts",
+   "symbol": "speechSynthesisTaskIdRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:b700e4f946e290e3e0542d579294c3629741a0acd620e1f5f3c86b5ab6e8d04c",
+   "decl_hash_head": "sha256:b700e4f946e290e3e0542d579294c3629741a0acd620e1f5f3c86b5ab6e8d04c",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/schemas.ts#speechSynthesisTaskListRequestSchema": {
+   "kind": "zod",
+   "path": "src/connectors/aws-speech/schemas.ts",
+   "symbol": "speechSynthesisTaskListRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:4bcb946be2ce18eaf403a828037911684c2c486818244b5fad57c6357c1aedc7",
+   "decl_hash_head": "sha256:4bcb946be2ce18eaf403a828037911684c2c486818244b5fad57c6357c1aedc7",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/schemas.ts#transcribeStreamEventSchema": {
+   "kind": "zod",
+   "path": "src/connectors/aws-speech/schemas.ts",
+   "symbol": "transcribeStreamEventSchema",
+   "status": "unchanged",
+   "direction": "output",
+   "decl_hash_base": "sha256:b54c28ec744d97ff343ab78943904966ffc556c6e16c39714be212e9b03d3207",
+   "decl_hash_head": "sha256:b54c28ec744d97ff343ab78943904966ffc556c6e16c39714be212e9b03d3207",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/schemas.ts#transcriptionJobListRequestSchema": {
+   "kind": "zod",
+   "path": "src/connectors/aws-speech/schemas.ts",
+   "symbol": "transcriptionJobListRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:cff8d7c97a8abdfc6736bb626b0e8e9bac3772f2725a4dad955d8b9ee829ebb5",
+   "decl_hash_head": "sha256:cff8d7c97a8abdfc6736bb626b0e8e9bac3772f2725a4dad955d8b9ee829ebb5",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/schemas.ts#transcriptionJobNameRequestSchema": {
+   "kind": "zod",
+   "path": "src/connectors/aws-speech/schemas.ts",
+   "symbol": "transcriptionJobNameRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:3a483b52dbe47c1f9f6b3e6a4cefaca5285306273cbd307bf5a261be5c3e71d6",
+   "decl_hash_head": "sha256:3a483b52dbe47c1f9f6b3e6a4cefaca5285306273cbd307bf5a261be5c3e71d6",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/aws-speech/transports.ts#AwsSpeechService": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/aws-speech/transports.ts",
+   "symbol": "AwsSpeechService",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:955dc1b136e904b6d7e857090105fbcaff1d4d6b42b842b758e73b74a3fdef51",
+   "decl_hash_head": "sha256:955dc1b136e904b6d7e857090105fbcaff1d4d6b42b842b758e73b74a3fdef51",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/azure-ai-content-safety/azure-ai-content-safety.connector.ts#ImageOutputType": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/azure-ai-content-safety/azure-ai-content-safety.connector.ts",
+   "symbol": "ImageOutputType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:9ed4b8d1d413cfe38fc2d6528b4764afb0237667c729fe654b5d95b7c608994e",
+   "decl_hash_head": "sha256:9ed4b8d1d413cfe38fc2d6528b4764afb0237667c729fe654b5d95b7c608994e",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/azure-ai-content-safety/azure-ai-content-safety.connector.ts#TextOutputType": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/azure-ai-content-safety/azure-ai-content-safety.connector.ts",
+   "symbol": "TextOutputType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:4e7c0cfd37cf6e088de763d3f479744103feab9a1a0af17c06c59c0b7c5f7806",
+   "decl_hash_head": "sha256:4e7c0cfd37cf6e088de763d3f479744103feab9a1a0af17c06c59c0b7c5f7806",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/azure-speech/types.ts#AzureSpeechStreamingAudioContentType": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/azure-speech/types.ts",
+   "symbol": "AzureSpeechStreamingAudioContentType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:d429281784f9d5b161adc6ff25bf70e30df8bfb2c05e7fdeb7c8b08d38d9fbe2",
+   "decl_hash_head": "sha256:d429281784f9d5b161adc6ff25bf70e30df8bfb2c05e7fdeb7c8b08d38d9fbe2",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/baseten-deployment/contract.ts#BasetenDeploymentFailureCode": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/baseten-deployment/contract.ts",
+   "symbol": "BasetenDeploymentFailureCode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:be6e6847926f010425f129927e0c08a93824deebf2373e95c7eb8ad9251fcf12",
+   "decl_hash_head": "sha256:be6e6847926f010425f129927e0c08a93824deebf2373e95c7eb8ad9251fcf12",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/connectors/bedrock-guardrails/types.ts#BedrockGuardrailsErrorCode": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/bedrock-guardrails/types.ts",
+   "symbol": "BedrockGuardrailsErrorCode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:a06b29b42435a36df1e88edcc229c1196ac34a83e1a3b0185bef0ce368a2ba1e",
+   "decl_hash_head": "sha256:a06b29b42435a36df1e88edcc229c1196ac34a83e1a3b0185bef0ce368a2ba1e",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/connectors/bedrock-guardrails/types.ts#GuardrailStatus": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/bedrock-guardrails/types.ts",
+   "symbol": "GuardrailStatus",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:1ae0ce455524f501c91b06d9ba575e3360ed95bcb2fb54a7f67ae2d1f29ba1e2",
+   "decl_hash_head": "sha256:1ae0ce455524f501c91b06d9ba575e3360ed95bcb2fb54a7f67ae2d1f29ba1e2",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#AwsPartition": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/bedrock/nova-media/nova-media.types.ts",
+   "symbol": "AwsPartition",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:b7276343be60e787e8e3b1a12f32a4f58366508a851cf396090d4639ef55d729",
+   "decl_hash_head": "sha256:b7276343be60e787e8e3b1a12f32a4f58366508a851cf396090d4639ef55d729",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#CanvasGarmentClass": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/bedrock/nova-media/nova-media.types.ts",
+   "symbol": "CanvasGarmentClass",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:c2c9f295c7c56201d24928a4c5ce34790e88c8c2545212a265e470948ca98ade",
+   "decl_hash_head": "sha256:c2c9f295c7c56201d24928a4c5ce34790e88c8c2545212a265e470948ca98ade",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#CanvasMaskShape": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/bedrock/nova-media/nova-media.types.ts",
+   "symbol": "CanvasMaskShape",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:2c82780513544951542fbee65ec7b1b0a3060c9684b4d2b46bb0ac969136ada6",
+   "decl_hash_head": "sha256:2c82780513544951542fbee65ec7b1b0a3060c9684b4d2b46bb0ac969136ada6",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#CanvasMaskToggle": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/bedrock/nova-media/nova-media.types.ts",
+   "symbol": "CanvasMaskToggle",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:4b5dcd8c59b3526d0cd50764fa120c9ea6b933713564e60e33c4417370c12667",
+   "decl_hash_head": "sha256:4b5dcd8c59b3526d0cd50764fa120c9ea6b933713564e60e33c4417370c12667",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#CanvasStyle": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/bedrock/nova-media/nova-media.types.ts",
+   "symbol": "CanvasStyle",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:dd4eb9058c4ca5847e902d851ffda9bf06d516ae24c7bb4e7b869c531ef7ee3a",
+   "decl_hash_head": "sha256:dd4eb9058c4ca5847e902d851ffda9bf06d516ae24c7bb4e7b869c531ef7ee3a",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#ReelInvocationStatus": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/bedrock/nova-media/nova-media.types.ts",
+   "symbol": "ReelInvocationStatus",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:4c0e7fbcf69de23ad39a45d07744790ee81466eb86d485b81e37a4f08a8e8aec",
+   "decl_hash_head": "sha256:4c0e7fbcf69de23ad39a45d07744790ee81466eb86d485b81e37a4f08a8e8aec",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#ReelOutputFailureType": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/bedrock/nova-media/nova-media.types.ts",
+   "symbol": "ReelOutputFailureType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:f81cab10c258e6012a360e12efa2114e2bc51bba1d213f4b0cafbd6cb3947e3e",
+   "decl_hash_head": "sha256:f81cab10c258e6012a360e12efa2114e2bc51bba1d213f4b0cafbd6cb3947e3e",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#ReelOutputStatus": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/bedrock/nova-media/nova-media.types.ts",
+   "symbol": "ReelOutputStatus",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:81374a60bcad413615f00770c6b415309c6c7b9bbf5bc7f2fba16a67afca5ed2",
+   "decl_hash_head": "sha256:81374a60bcad413615f00770c6b415309c6c7b9bbf5bc7f2fba16a67afca5ed2",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/catalog.repository.ts#CatalogFreshness": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/catalog.repository.ts",
+   "symbol": "CatalogFreshness",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:45ec1a92c248215896f6c07f584a3d482904cd7b058722afc95a755cf13b7f34",
+   "decl_hash_head": "sha256:45ec1a92c248215896f6c07f584a3d482904cd7b058722afc95a755cf13b7f34",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/catalog.repository.ts#CatalogSource": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/catalog.repository.ts",
+   "symbol": "CatalogSource",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:aa2fc8146c143dd1b3dc8a61d072d90590ffdda837a3ce7709ccf565455664fb",
+   "decl_hash_head": "sha256:aa2fc8146c143dd1b3dc8a61d072d90590ffdda837a3ce7709ccf565455664fb",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/databricks-mosaic-ai-model-serving/databricks-mosaic-ai-model-serving.connector.ts#DatabricksMosaicAiCloud": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/databricks-mosaic-ai-model-serving/databricks-mosaic-ai-model-serving.connector.ts",
+   "symbol": "DatabricksMosaicAiCloud",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:15da2325fe3b2baf14087392aecfda4b3bf8fc8cb65a2ab5a20143ae3e823d88",
+   "decl_hash_head": "sha256:15da2325fe3b2baf14087392aecfda4b3bf8fc8cb65a2ab5a20143ae3e823d88",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/databricks-mosaic-ai-model-serving/databricks-mosaic-ai-model-serving.connector.ts#DatabricksMosaicAiModelServingErrorCode": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/databricks-mosaic-ai-model-serving/databricks-mosaic-ai-model-serving.connector.ts",
+   "symbol": "DatabricksMosaicAiModelServingErrorCode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:39443608862c5e2ac120a1235eb89b7bb8acd97badc08eaafb1df4bacb807264",
+   "decl_hash_head": "sha256:39443608862c5e2ac120a1235eb89b7bb8acd97badc08eaafb1df4bacb807264",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/connectors/deepgram-voice-agent/deepgram-voice-agent.client.ts#DeepgramVoiceAgentState": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/deepgram-voice-agent/deepgram-voice-agent.client.ts",
+   "symbol": "DeepgramVoiceAgentState",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:09444f003cf82a42853a0fd69247e1d49b8cdd39faf7b2ee8123a8ff4e3f5bcf",
+   "decl_hash_head": "sha256:09444f003cf82a42853a0fd69247e1d49b8cdd39faf7b2ee8123a8ff4e3f5bcf",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/dto/catalog.dto.ts#CatalogFiltersSchema": {
+   "kind": "zod",
+   "path": "src/connectors/dto/catalog.dto.ts",
+   "symbol": "CatalogFiltersSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:9e29b59f0b537a687dbcf2d64b2612924ed8dea88b8e1165b0c6363bd1f685db",
+   "decl_hash_head": "sha256:9e29b59f0b537a687dbcf2d64b2612924ed8dea88b8e1165b0c6363bd1f685db",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/dto/catalog.dto.ts#CatalogModelEntrySchema": {
+   "kind": "zod",
+   "path": "src/connectors/dto/catalog.dto.ts",
+   "symbol": "CatalogModelEntrySchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:13f489fa591371d1a67567352dd0e7a05c3d7d56e76f590e7a96f3db7c496543",
+   "decl_hash_head": "sha256:13f489fa591371d1a67567352dd0e7a05c3d7d56e76f590e7a96f3db7c496543",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/dto/catalog.dto.ts#CatalogResponseSchema": {
+   "kind": "zod",
+   "path": "src/connectors/dto/catalog.dto.ts",
+   "symbol": "CatalogResponseSchema",
+   "status": "unchanged",
+   "direction": "output",
+   "decl_hash_base": "sha256:d8117bbfab4f4d8aa16a8db8e68cb084f5abc21fd3254aead272aff940676653",
+   "decl_hash_head": "sha256:d8117bbfab4f4d8aa16a8db8e68cb084f5abc21fd3254aead272aff940676653",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/dto/catalog.dto.ts#ModelModalitySchema": {
+   "kind": "zod",
+   "path": "src/connectors/dto/catalog.dto.ts",
+   "symbol": "ModelModalitySchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:3e372d9a24ddc919130cbad43e14ec54055f8e30b7cc8190697ccdb4d82950ac",
+   "decl_hash_head": "sha256:3e372d9a24ddc919130cbad43e14ec54055f8e30b7cc8190697ccdb4d82950ac",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/dto/catalog.dto.ts#ModelPricingSchema": {
+   "kind": "zod",
+   "path": "src/connectors/dto/catalog.dto.ts",
+   "symbol": "ModelPricingSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:5fa4fde5e3dfdc38e08991532db24aeab8e0dd59e31c909abcb1e3e5bc57607d",
+   "decl_hash_head": "sha256:5fa4fde5e3dfdc38e08991532db24aeab8e0dd59e31c909abcb1e3e5bc57607d",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/dto/execute.dto.ts#ContentBlockSchema": {
+   "kind": "zod",
+   "path": "src/connectors/dto/execute.dto.ts",
+   "symbol": "ContentBlockSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:ef952bb0794d64cf63d6d29a53827b99b06bd370a1a64f89cdff130384608214",
+   "decl_hash_head": "sha256:ef952bb0794d64cf63d6d29a53827b99b06bd370a1a64f89cdff130384608214",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/dto/execute.dto.ts#imageGenerateRequestSchema": {
+   "kind": "zod",
+   "path": "src/connectors/dto/execute.dto.ts",
+   "symbol": "imageGenerateRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:3b10ea242414a29e66400013c937bf1df8f5760cd4954427799a1255cf14d187",
+   "decl_hash_head": "sha256:3b10ea242414a29e66400013c937bf1df8f5760cd4954427799a1255cf14d187",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/embedding/vertex/vertex-ai-embeddings.connector.ts#VertexAiEmbeddingTaskType": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/embedding/vertex/vertex-ai-embeddings.connector.ts",
+   "symbol": "VertexAiEmbeddingTaskType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:dac16a58415a6389504394b1e0f3f0d0944446d2256b017bfc1060e8a4b85e70",
+   "decl_hash_head": "sha256:dac16a58415a6389504394b1e0f3f0d0944446d2256b017bfc1060e8a4b85e70",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/embedding/vertex/vertex-ai-embeddings.connector.ts#VertexAiEmbeddingsErrorKind": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/embedding/vertex/vertex-ai-embeddings.connector.ts",
+   "symbol": "VertexAiEmbeddingsErrorKind",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:0b5cdf6f0b41b9886d83a0acceae972aa5b0dd8d4eba19daa7ad3e21210c3f0d",
+   "decl_hash_head": "sha256:0b5cdf6f0b41b9886d83a0acceae972aa5b0dd8d4eba19daa7ad3e21210c3f0d",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/connectors/failover/failover.chain.ts#FailoverOutcome": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/failover/failover.chain.ts",
+   "symbol": "FailoverOutcome",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:ebc296cd0323659fdf5a749a3c8cf6ab494aaeef6573c9475cade9dfc72147c8",
+   "decl_hash_head": "sha256:ebc296cd0323659fdf5a749a3c8cf6ab494aaeef6573c9475cade9dfc72147c8",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/google-cloud-speech/google-cloud-speech.capabilities.ts#GoogleSpeechProtocol": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/google-cloud-speech/google-cloud-speech.capabilities.ts",
+   "symbol": "GoogleSpeechProtocol",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:11b20a222a16b98640a0e28f1a46618da624742284a15dfcf0038fada068914b",
+   "decl_hash_head": "sha256:11b20a222a16b98640a0e28f1a46618da624742284a15dfcf0038fada068914b",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/google-cloud-speech/google-cloud-speech.capabilities.ts#GoogleSpeechReleaseStage": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/google-cloud-speech/google-cloud-speech.capabilities.ts",
+   "symbol": "GoogleSpeechReleaseStage",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:c1de9c44adceb9bed56608c3647e4757c4caf5dc0c60c5ecd64b3bc256a84709",
+   "decl_hash_head": "sha256:c1de9c44adceb9bed56608c3647e4757c4caf5dc0c60c5ecd64b3bc256a84709",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/google-cloud-speech/google-cloud-speech.schemas.ts#jsonObjectSchema": {
+   "kind": "zod",
+   "path": "src/connectors/google-cloud-speech/google-cloud-speech.schemas.ts",
+   "symbol": "jsonObjectSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:bc3584e216b9f0af1785e05528c3611ea8990198deaec25e5dfd0f6c395aeee9",
+   "decl_hash_head": "sha256:bc3584e216b9f0af1785e05528c3611ea8990198deaec25e5dfd0f6c395aeee9",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/google-cloud-speech/google-cloud-speech.types.ts#GoogleSpeechOperationApi": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/google-cloud-speech/google-cloud-speech.types.ts",
+   "symbol": "GoogleSpeechOperationApi",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:2e65f1b0518a9b74d63bd81566175efd42b2a25d4bf706918e78856d5863f748",
+   "decl_hash_head": "sha256:2e65f1b0518a9b74d63bd81566175efd42b2a25d4bf706918e78856d5863f748",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/google-cloud-speech/google-cloud-speech.types.ts#StreamingAudioEncoding": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/google-cloud-speech/google-cloud-speech.types.ts",
+   "symbol": "StreamingAudioEncoding",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:b499f82bc979c7b2a9c7ba7e9d987ad3450b013b7dd002b1e205de1e4d11ed46",
+   "decl_hash_head": "sha256:b499f82bc979c7b2a9c7ba7e9d987ad3450b013b7dd002b1e205de1e4d11ed46",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/google-cloud-speech/google-cloud-speech.types.ts#UnaryAudioEncoding": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/google-cloud-speech/google-cloud-speech.types.ts",
+   "symbol": "UnaryAudioEncoding",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:e337c9b6cdd62257fe467e86c6b11706c0d880a63936c15420c60375a0271834",
+   "decl_hash_head": "sha256:e337c9b6cdd62257fe467e86c6b11706c0d880a63936c15420c60375a0271834",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/google-perspective/types.ts#GooglePerspectiveErrorCategory": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/google-perspective/types.ts",
+   "symbol": "GooglePerspectiveErrorCategory",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:6764103a97df647405f3a4c961515d771e3488c9707e2ed8001daf359ac50dd7",
+   "decl_hash_head": "sha256:6764103a97df647405f3a4c961515d771e3488c9707e2ed8001daf359ac50dd7",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.ts#IbmWatsonxAiErrorCode": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.ts",
+   "symbol": "IbmWatsonxAiErrorCode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:569ff4e5730cb58a6dfb163bd7e6a7d1c67e93dabe90ee6bf8fa0558fcc417df",
+   "decl_hash_head": "sha256:569ff4e5730cb58a6dfb163bd7e6a7d1c67e93dabe90ee6bf8fa0558fcc417df",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts#AdobeFireflyJobStatus": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts",
+   "symbol": "AdobeFireflyJobStatus",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:936662f45c7a13d1250efa5b74d8692acca7b1e119fbe83c8c03b885c297bdaa",
+   "decl_hash_head": "sha256:936662f45c7a13d1250efa5b74d8692acca7b1e119fbe83c8c03b885c297bdaa",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts#AdobeFireflyMediaType": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts",
+   "symbol": "AdobeFireflyMediaType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:c273df28e9d4fd9f0b388eb4a10a4b30876e236225487b12bc7311b23626be8a",
+   "decl_hash_head": "sha256:c273df28e9d4fd9f0b388eb4a10a4b30876e236225487b12bc7311b23626be8a",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts#AdobeFireflyModel": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts",
+   "symbol": "AdobeFireflyModel",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:f75171027e89ccdbdd0a665d493160eb08057263dfca27523036777417f106d8",
+   "decl_hash_head": "sha256:f75171027e89ccdbdd0a665d493160eb08057263dfca27523036777417f106d8",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts#AdobeFireflyOperation": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts",
+   "symbol": "AdobeFireflyOperation",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:1503b405312ca3c717576aeb7e085350c661e56526d0755e82b4df847bf4040d",
+   "decl_hash_head": "sha256:1503b405312ca3c717576aeb7e085350c661e56526d0755e82b4df847bf4040d",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/capabilities.ts#capabilityEntrySchema": {
+   "kind": "zod",
+   "path": "src/connectors/image-generation/capabilities.ts",
+   "symbol": "capabilityEntrySchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:b3bb1ab3850accb2e80193f68b4642e5af332a91a7850ed40e7893956b2cda27",
+   "decl_hash_head": "sha256:b3bb1ab3850accb2e80193f68b4642e5af332a91a7850ed40e7893956b2cda27",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/capabilities.ts#imageCapabilitiesSchema": {
+   "kind": "zod",
+   "path": "src/connectors/image-generation/capabilities.ts",
+   "symbol": "imageCapabilitiesSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:3090e532b23522a2fa6630695bf85c8b795de13e0512f986bfeb14d61a589b6c",
+   "decl_hash_head": "sha256:3090e532b23522a2fa6630695bf85c8b795de13e0512f986bfeb14d61a589b6c",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramMagicPrompt": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/ideogram/ideogram.types.ts",
+   "symbol": "IdeogramMagicPrompt",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:4705a20f5490779e31c3e7c3b63192f69472a94a4294aeda47ee3911ac16b059",
+   "decl_hash_head": "sha256:4705a20f5490779e31c3e7c3b63192f69472a94a4294aeda47ee3911ac16b059",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramPalettePreset": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/ideogram/ideogram.types.ts",
+   "symbol": "IdeogramPalettePreset",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:168004d86cea8ec60c89d7a12a17e491427526bebe082d6748b6a41f2a726a6e",
+   "decl_hash_head": "sha256:168004d86cea8ec60c89d7a12a17e491427526bebe082d6748b6a41f2a726a6e",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramRenderingSpeed": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/ideogram/ideogram.types.ts",
+   "symbol": "IdeogramRenderingSpeed",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:919112f6ea394ea662d0697f49a74f1d2502af8faca80af5ab003612079b25f4",
+   "decl_hash_head": "sha256:919112f6ea394ea662d0697f49a74f1d2502af8faca80af5ab003612079b25f4",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramStyleType": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/ideogram/ideogram.types.ts",
+   "symbol": "IdeogramStyleType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:147cabef98bbbc0210256eb62bf64b0de6dd58e98174e0153e0d78d73ec707d3",
+   "decl_hash_head": "sha256:147cabef98bbbc0210256eb62bf64b0de6dd58e98174e0153e0d78d73ec707d3",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramUpscaleFactor": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/ideogram/ideogram.types.ts",
+   "symbol": "IdeogramUpscaleFactor",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:7b391c1d5b02555754f36e145cc031e524a51e13e072217b3ba81ae9b8131f05",
+   "decl_hash_head": "sha256:7b391c1d5b02555754f36e145cc031e524a51e13e072217b3ba81ae9b8131f05",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramV3AspectRatio": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/ideogram/ideogram.types.ts",
+   "symbol": "IdeogramV3AspectRatio",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:9c988faa8bcc52ede8c7d5e39df4e49e7d92686a8412c70fc10d49dca6cb0693",
+   "decl_hash_head": "sha256:9c988faa8bcc52ede8c7d5e39df4e49e7d92686a8412c70fc10d49dca6cb0693",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramV3Resolution": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/ideogram/ideogram.types.ts",
+   "symbol": "IdeogramV3Resolution",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:7411cb40845520936ab9f3d1cf585c6ada0df8a1c350e527d5a7d44cd3003135",
+   "decl_hash_head": "sha256:7411cb40845520936ab9f3d1cf585c6ada0df8a1c350e527d5a7d44cd3003135",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramV3StylePreset": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/ideogram/ideogram.types.ts",
+   "symbol": "IdeogramV3StylePreset",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:fbad9bb727b19d6790272fe493f99431a7d03c8994fc23c4dd10abcf5c33f3e5",
+   "decl_hash_head": "sha256:fbad9bb727b19d6790272fe493f99431a7d03c8994fc23c4dd10abcf5c33f3e5",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramV4Resolution": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/ideogram/ideogram.types.ts",
+   "symbol": "IdeogramV4Resolution",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:42fab5dc28a892424b1c12ef9760fa7fdd244473cb540f4172c6453bfda421ec",
+   "decl_hash_head": "sha256:42fab5dc28a892424b1c12ef9760fa7fdd244473cb540f4172c6453bfda421ec",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoGenerationStatus": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts",
+   "symbol": "LeonardoGenerationStatus",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:8b1c5f978b784428a839510c89494960da76a06e89af1c34411340b24a1a9436",
+   "decl_hash_head": "sha256:8b1c5f978b784428a839510c89494960da76a06e89af1c34411340b24a1a9436",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoHttpMethod": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts",
+   "symbol": "LeonardoHttpMethod",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:e94eba116c5461f7ed14b2a1d5b729a439f59ead36be685d79d533ec77e66e45",
+   "decl_hash_head": "sha256:e94eba116c5461f7ed14b2a1d5b729a439f59ead36be685d79d533ec77e66e45",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoInitImageExtension": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts",
+   "symbol": "LeonardoInitImageExtension",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:cded90cd2d336af0cb66d3f6efda5501d0cee6bbb02d9f1456e2fda60203c3a5",
+   "decl_hash_head": "sha256:cded90cd2d336af0cb66d3f6efda5501d0cee6bbb02d9f1456e2fda60203c3a5",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoPresetStyle": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts",
+   "symbol": "LeonardoPresetStyle",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:df4653ea20dd231626dd6b11407081635a363a1b8b14e463fee8e059ad559db3",
+   "decl_hash_head": "sha256:df4653ea20dd231626dd6b11407081635a363a1b8b14e463fee8e059ad559db3",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoVariationType": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts",
+   "symbol": "LeonardoVariationType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:5cead92a314e42298996377931838c6853981f55485a04d34de3bf156bd6b019",
+   "decl_hash_head": "sha256:5cead92a314e42298996377931838c6853981f55485a04d34de3bf156bd6b019",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftBilling": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftBilling",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:c6bb86e96e8c4110937b1fa5f34a78209a572bd2de9cb784c9a79e872c4ed67a",
+   "decl_hash_head": "sha256:c6bb86e96e8c4110937b1fa5f34a78209a572bd2de9cb784c9a79e872c4ed67a",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftCreativity": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftCreativity",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:7ec60f71ac63df172c61018a8e013fb6cd46d6f61ba2bd6051046a690d9cd347",
+   "decl_hash_head": "sha256:7ec60f71ac63df172c61018a8e013fb6cd46d6f61ba2bd6051046a690d9cd347",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftEditModel": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftEditModel",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:5fa8023bcc0b317afef4d93c25168ca04a5cca4f29929dfa999c97d0678c125a",
+   "decl_hash_head": "sha256:5fa8023bcc0b317afef4d93c25168ca04a5cca4f29929dfa999c97d0678c125a",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftExploreModel": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftExploreModel",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:2a73b664875e2c6a834b9f0280fa5dee81ab94e3ef228ee83acf78a005edceda",
+   "decl_hash_head": "sha256:2a73b664875e2c6a834b9f0280fa5dee81ab94e3ef228ee83acf78a005edceda",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftImageFormat": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftImageFormat",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:2b08a0b1a2abff8d3b5595ba3636d77077e63d2bc43269747340973d89473400",
+   "decl_hash_head": "sha256:2b08a0b1a2abff8d3b5595ba3636d77077e63d2bc43269747340973d89473400",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftImageSize": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftImageSize",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:d18aef4f8c2a8ac299550f4313ed30904dbe2b9cedeaae5d4f4a9a5ab4fef085",
+   "decl_hash_head": "sha256:d18aef4f8c2a8ac299550f4313ed30904dbe2b9cedeaae5d4f4a9a5ab4fef085",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftImageStyle": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftImageStyle",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:7b2d55f961b2245c20bd62ce0223ae9362a1a7b34e452891c58b00bcd57babb3",
+   "decl_hash_head": "sha256:7b2d55f961b2245c20bd62ce0223ae9362a1a7b34e452891c58b00bcd57babb3",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftImageSubStyle": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftImageSubStyle",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:bef1ec28b3b95fb91a7b1d5d24ec7b9173dab780f7ca6281728308a28994989b",
+   "decl_hash_head": "sha256:bef1ec28b3b95fb91a7b1d5d24ec7b9173dab780f7ca6281728308a28994989b",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftMixPolicy": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftMixPolicy",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:d393f824870d7dd72dc77da12bad5d602816b0de7a371a09fb84789ba421d908",
+   "decl_hash_head": "sha256:d393f824870d7dd72dc77da12bad5d602816b0de7a371a09fb84789ba421d908",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftRasterModel": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftRasterModel",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:fae7645adc289edad7718bf0fdec9d38d32c7293fe97c81449f7d917facde41f",
+   "decl_hash_head": "sha256:fae7645adc289edad7718bf0fdec9d38d32c7293fe97c81449f7d917facde41f",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftResponseFormat": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftResponseFormat",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:dceab1f69c6f8fbf91e873fb1aa7695a0ebde4942654052074045b9f0c3123a4",
+   "decl_hash_head": "sha256:dceab1f69c6f8fbf91e873fb1aa7695a0ebde4942654052074045b9f0c3123a4",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftShapeStacking": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftShapeStacking",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:6d45f34259cffb34cc8f090d6687c2d6aa36838d718083bbc18ad880aa40ab09",
+   "decl_hash_head": "sha256:6d45f34259cffb34cc8f090d6687c2d6aa36838d718083bbc18ad880aa40ab09",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftToggle": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftToggle",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:3aa921aa060e239aa543433954adcf8e5ba5b46c491caf4464d55b46e3dac886",
+   "decl_hash_head": "sha256:3aa921aa060e239aa543433954adcf8e5ba5b46c491caf4464d55b46e3dac886",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftUpscaleMode": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftUpscaleMode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:559aab13da662772512f748a228b4a2472e824ad088721231894c34e0d9da6c9",
+   "decl_hash_head": "sha256:559aab13da662772512f748a228b4a2472e824ad088721231894c34e0d9da6c9",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftVectorModel": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/recraft/recraft.types.ts",
+   "symbol": "RecraftVectorModel",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:4101ded8eca1bf3795a80fc2a64b067355ede6cc7f6524aea4b11646fe23715d",
+   "decl_hash_head": "sha256:4101ded8eca1bf3795a80fc2a64b067355ede6cc7f6524aea4b11646fe23715d",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/types.ts#ModelId": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/image-generation/types.ts",
+   "symbol": "ModelId",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:bec3cf3c139ff1bc1762ddfb423377c859c3dee8fde1bfc51434f4b30b5dccfe",
+   "decl_hash_head": "sha256:bec3cf3c139ff1bc1762ddfb423377c859c3dee8fde1bfc51434f4b30b5dccfe",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/types.ts#ProviderIdEnum": {
+   "kind": "zod",
+   "path": "src/connectors/image-generation/types.ts",
+   "symbol": "ProviderIdEnum",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:46ffa00b9e21ae9fac4b799bd182f42e9bb44b101bacc581033187b2dbe8b2d6",
+   "decl_hash_head": "sha256:46ffa00b9e21ae9fac4b799bd182f42e9bb44b101bacc581033187b2dbe8b2d6",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/types.ts#TierEnum": {
+   "kind": "zod",
+   "path": "src/connectors/image-generation/types.ts",
+   "symbol": "TierEnum",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:16462040ab178854de2c004b1eba112b4c9fe19f06ac458e1407744864b75cf1",
+   "decl_hash_head": "sha256:16462040ab178854de2c004b1eba112b4c9fe19f06ac458e1407744864b75cf1",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/image-generation/types.ts#imageGenerationRequestSchema": {
+   "kind": "zod",
+   "path": "src/connectors/image-generation/types.ts",
+   "symbol": "imageGenerationRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:5be46b9d2c1ae1e40d637cbae81cb12ea27a2f72400dc23d52d972067d539d83",
+   "decl_hash_head": "sha256:5be46b9d2c1ae1e40d637cbae81cb12ea27a2f72400dc23d52d972067d539d83",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/interfaces/connector.interface.ts#ErrorAction": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/interfaces/connector.interface.ts",
+   "symbol": "ErrorAction",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:8155a64eb796d4ed04292c7cf19c2c39fed1a480e3391acb99e2d6b36486c699",
+   "decl_hash_head": "sha256:8155a64eb796d4ed04292c7cf19c2c39fed1a480e3391acb99e2d6b36486c699",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/luma/luma-dream-machine.connector.ts#LumaAspectRatio": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/luma/luma-dream-machine.connector.ts",
+   "symbol": "LumaAspectRatio",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:5c70b5119d82dfce8917cee8da9c563309fd7d0e2f049af123fa8f871058094e",
+   "decl_hash_head": "sha256:5c70b5119d82dfce8917cee8da9c563309fd7d0e2f049af123fa8f871058094e",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/luma/luma-dream-machine.connector.ts#LumaHttpMethod": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/luma/luma-dream-machine.connector.ts",
+   "symbol": "LumaHttpMethod",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:4ad2ce73436af79afff7a964ee45e382a043fa8102c3c1706473f1b4fb1e8721",
+   "decl_hash_head": "sha256:4ad2ce73436af79afff7a964ee45e382a043fa8102c3c1706473f1b4fb1e8721",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/luma/luma-dream-machine.connector.ts#LumaImageModel": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/luma/luma-dream-machine.connector.ts",
+   "symbol": "LumaImageModel",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:6a0271a6cb375e43162c40f82099846f8b0b808459879f32c0028fcfc6b0357f",
+   "decl_hash_head": "sha256:6a0271a6cb375e43162c40f82099846f8b0b808459879f32c0028fcfc6b0357f",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/luma/luma-dream-machine.connector.ts#LumaVideoModel": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/luma/luma-dream-machine.connector.ts",
+   "symbol": "LumaVideoModel",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:cd44493506de55dc0827f7a5c105d1d5f2450ce57dbdce8e55b4e155aa4a66d2",
+   "decl_hash_head": "sha256:cd44493506de55dc0827f7a5c105d1d5f2450ce57dbdce8e55b4e155aa4a66d2",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/meta-llama-guard/types.ts#MetaLlamaGuardClassificationTarget": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/meta-llama-guard/types.ts",
+   "symbol": "MetaLlamaGuardClassificationTarget",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:cb98844be72dd70553683bc8f77f1a11e619b1f1166c0dcc0f79ca0f6a613964",
+   "decl_hash_head": "sha256:cb98844be72dd70553683bc8f77f1a11e619b1f1166c0dcc0f79ca0f6a613964",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/meta-llama-guard/types.ts#MetaLlamaGuardErrorCode": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/meta-llama-guard/types.ts",
+   "symbol": "MetaLlamaGuardErrorCode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:9cea771341dae46e8a007eea500935350cc7673a69800b9a7239475eab871563",
+   "decl_hash_head": "sha256:9cea771341dae46e8a007eea500935350cc7673a69800b9a7239475eab871563",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/connectors/meta-llama-guard/types.ts#MetaLlamaGuardVerdict": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/meta-llama-guard/types.ts",
+   "symbol": "MetaLlamaGuardVerdict",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:2acb0aebda97d659196694637a96fade40a85514f0f610b7f268c2184312ba55",
+   "decl_hash_head": "sha256:2acb0aebda97d659196694637a96fade40a85514f0f610b7f268c2184312ba55",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts#NvidiaSafetyImageMediaType": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts",
+   "symbol": "NvidiaSafetyImageMediaType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:f50bd97e98628e730c7f65be87e36ebeeee2369729cedbf9af0f5882f12facfa",
+   "decl_hash_head": "sha256:f50bd97e98628e730c7f65be87e36ebeeee2369729cedbf9af0f5882f12facfa",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts#NvidiaSafetyNimErrorCode": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts",
+   "symbol": "NvidiaSafetyNimErrorCode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:aef5787288a321213e5f0526ce43e95aa658a1d472cbdb0c9818913260182184",
+   "decl_hash_head": "sha256:aef5787288a321213e5f0526ce43e95aa658a1d472cbdb0c9818913260182184",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts#NvidiaSafetyVerdict": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts",
+   "symbol": "NvidiaSafetyVerdict",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:c32d147ecaec5313b7593fc59b7e5df56c270fc1076bccf4018efb35a5bdac0c",
+   "decl_hash_head": "sha256:c32d147ecaec5313b7593fc59b7e5df56c270fc1076bccf4018efb35a5bdac0c",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationErrorType": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/openai/openai.connector.ts",
+   "symbol": "OpenAiModerationErrorType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:658ebf71160f67831693be8615ecc2878128efb3013440c78c53c8049f8a2374",
+   "decl_hash_head": "sha256:658ebf71160f67831693be8615ecc2878128efb3013440c78c53c8049f8a2374",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationInputType": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/openai/openai.connector.ts",
+   "symbol": "OpenAiModerationInputType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:51dbdf8b039d28137167d72d987880a9ef4f90667376c76f471563f3fbc4c743",
+   "decl_hash_head": "sha256:51dbdf8b039d28137167d72d987880a9ef4f90667376c76f471563f3fbc4c743",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/oracle-oci-generative-ai/oracle-oci-generative-ai.connector.ts#OracleOciGenerativeAiErrorCode": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/oracle-oci-generative-ai/oracle-oci-generative-ai.connector.ts",
+   "symbol": "OracleOciGenerativeAiErrorCode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:f16d67a2bd47168ac214e1a4485c02f9f9323857e442854befd448ff0ad06ef5",
+   "decl_hash_head": "sha256:f16d67a2bd47168ac214e1a4485c02f9f9323857e442854befd448ff0ad06ef5",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/connectors/output-guard/types.ts#OutputGuardPass": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/output-guard/types.ts",
+   "symbol": "OutputGuardPass",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:c0adfe7b993406fbde0a0d3b534844406f74ecf055ffe34268b0868595aa58be",
+   "decl_hash_head": "sha256:c0adfe7b993406fbde0a0d3b534844406f74ecf055ffe34268b0868595aa58be",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/runway/runway.types.ts#RunwayOperation": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/runway/runway.types.ts",
+   "symbol": "RunwayOperation",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:4cacdb31a0cab69edcf9b4ea2049eacad6d499fe56235e38e97db3cf643c76ef",
+   "decl_hash_head": "sha256:4cacdb31a0cab69edcf9b4ea2049eacad6d499fe56235e38e97db3cf643c76ef",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/connectors/stability-ai/stability-ai.connector.ts#StabilityAiAccept": {
+   "kind": "type_alias_union",
+   "path": "src/connectors/stability-ai/stability-ai.connector.ts",
+   "symbol": "StabilityAiAccept",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:5584a2cc78830e9842110903d4fa67613a48d6b48873d5c1058897e7bc7e4b44",
+   "decl_hash_head": "sha256:5584a2cc78830e9842110903d4fa67613a48d6b48873d5c1058897e7bc7e4b44",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/core/resilience/circuit-breaker.ts#CircuitState": {
+   "kind": "type_alias_union",
+   "path": "src/core/resilience/circuit-breaker.ts",
+   "symbol": "CircuitState",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:ee7a04774f2ebe520b491749b8f71bcd90faba0114b5e0136a54ad4788e5468d",
+   "decl_hash_head": "sha256:ee7a04774f2ebe520b491749b8f71bcd90faba0114b5e0136a54ad4788e5468d",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/openai-compat/dto/openai-chat.dto.ts#contentPartSchema": {
+   "kind": "zod",
+   "path": "src/openai-compat/dto/openai-chat.dto.ts",
+   "symbol": "contentPartSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:704dc12426da2336840db0904e1ce688e728a58ea6171cbd1857679eae932579",
+   "decl_hash_head": "sha256:704dc12426da2336840db0904e1ce688e728a58ea6171cbd1857679eae932579",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/policy/policy.service.ts#ModelTier": {
+   "kind": "type_alias_union",
+   "path": "src/policy/policy.service.ts",
+   "symbol": "ModelTier",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:e0a5b415bb6eab42f49e55c4acce3243e9f4e9953d9237981ea7c974f8cce02e",
+   "decl_hash_head": "sha256:e0a5b415bb6eab42f49e55c4acce3243e9f4e9953d9237981ea7c974f8cce02e",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/prompt-cache/prompt-cache-policy.ts#FindingLayer": {
+   "kind": "type_alias_union",
+   "path": "src/prompt-cache/prompt-cache-policy.ts",
+   "symbol": "FindingLayer",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:d0c51582ef55ee95556de0292951beccff69a6fa56d93ee5a101c1fcb00bfdb8",
+   "decl_hash_head": "sha256:d0c51582ef55ee95556de0292951beccff69a6fa56d93ee5a101c1fcb00bfdb8",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/prompt-cache/prompt-cache-policy.ts#FindingScope": {
+   "kind": "type_alias_union",
+   "path": "src/prompt-cache/prompt-cache-policy.ts",
+   "symbol": "FindingScope",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:bef9d38306a183c31b64ecbdf1bbdebc118297094fe8a345b1d48bd4eedbf027",
+   "decl_hash_head": "sha256:bef9d38306a183c31b64ecbdf1bbdebc118297094fe8a345b1d48bd4eedbf027",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/prompt-cache/prompt-cache-policy.ts#PolicyAction": {
+   "kind": "type_alias_union",
+   "path": "src/prompt-cache/prompt-cache-policy.ts",
+   "symbol": "PolicyAction",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:f80234b6c03f65e65b2e3f7937136f01a7323be6afbfd0e39b553a820cf44e58",
+   "decl_hash_head": "sha256:f80234b6c03f65e65b2e3f7937136f01a7323be6afbfd0e39b553a820cf44e58",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/prompt-cache/prompt-cache-policy.ts#PolicyMode": {
+   "kind": "type_alias_union",
+   "path": "src/prompt-cache/prompt-cache-policy.ts",
+   "symbol": "PolicyMode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:53c35ee149c99fc8f435efc9ee93314cb825ea6c081e6a2c2e67465f2247587a",
+   "decl_hash_head": "sha256:53c35ee149c99fc8f435efc9ee93314cb825ea6c081e6a2c2e67465f2247587a",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/prompt-cache/prompt-cache-policy.ts#PolicyVerdict": {
+   "kind": "type_alias_union",
+   "path": "src/prompt-cache/prompt-cache-policy.ts",
+   "symbol": "PolicyVerdict",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:5d665cc561fe6371124a00ec52540fd4a0ccb48d519b7f8c795024a0bcf50bf3",
+   "decl_hash_head": "sha256:5d665cc561fe6371124a00ec52540fd4a0ccb48d519b7f8c795024a0bcf50bf3",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/prompt-cache/prompt-layout-contract.ts#ContractScope": {
+   "kind": "type_alias_union",
+   "path": "src/prompt-cache/prompt-layout-contract.ts",
+   "symbol": "ContractScope",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:0cb49edfd785d6faa5a28974e271c7cb71d4f99b791dd7294d0748cafd24b980",
+   "decl_hash_head": "sha256:0cb49edfd785d6faa5a28974e271c7cb71d4f99b791dd7294d0748cafd24b980",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/prompt-cache/prompt-layout-contract.ts#ContractSeverity": {
+   "kind": "type_alias_union",
+   "path": "src/prompt-cache/prompt-layout-contract.ts",
+   "symbol": "ContractSeverity",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:b4d51efc3a5dd796206d85e3f76dc31508c17ce76568cee69d9f83fe617d1262",
+   "decl_hash_head": "sha256:b4d51efc3a5dd796206d85e3f76dc31508c17ce76568cee69d9f83fe617d1262",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/speech/dto/speech-response.dto.ts#SpeechErrorCode": {
+   "kind": "type_alias_union",
+   "path": "src/speech/dto/speech-response.dto.ts",
+   "symbol": "SpeechErrorCode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:19f0d5e23b1ba6e8d237970cfb113e1c99dac508decb1a65025f012823baaa20",
+   "decl_hash_head": "sha256:19f0d5e23b1ba6e8d237970cfb113e1c99dac508decb1a65025f012823baaa20",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/speech/dto/stt-response.dto.ts#SttProvider": {
+   "kind": "type_alias_union",
+   "path": "src/speech/dto/stt-response.dto.ts",
+   "symbol": "SttProvider",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:1604d733e8ed007053c5983f0c1f9542c90dfda91f31994d292220fae6d71741",
+   "decl_hash_head": "sha256:1604d733e8ed007053c5983f0c1f9542c90dfda91f31994d292220fae6d71741",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/speech/dto/tts-request.dto.ts#togetherTtsRequestSchema": {
+   "kind": "zod",
+   "path": "src/speech/dto/tts-request.dto.ts",
+   "symbol": "togetherTtsRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:7846eb7859fb0c0b75f75abe98e456b33f988ffd5918bb587a53cc7c00628e96",
+   "decl_hash_head": "sha256:7846eb7859fb0c0b75f75abe98e456b33f988ffd5918bb587a53cc7c00628e96",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/speech/dto/tts-request.dto.ts#ttsRequestSchema": {
+   "kind": "zod",
+   "path": "src/speech/dto/tts-request.dto.ts",
+   "symbol": "ttsRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:89e586c4fef98f249f1adce5d945124fddeedb0890c5da989ea7f31c8a32cbf9",
+   "decl_hash_head": "sha256:89e586c4fef98f249f1adce5d945124fddeedb0890c5da989ea7f31c8a32cbf9",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/speech/speech-metrics.service.ts#SpeechEndpoint": {
+   "kind": "type_alias_union",
+   "path": "src/speech/speech-metrics.service.ts",
+   "symbol": "SpeechEndpoint",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:22c857ed22934311050901972633dabf056a8f7657551ae793e4b57de445e5c5",
+   "decl_hash_head": "sha256:22c857ed22934311050901972633dabf056a8f7657551ae793e4b57de445e5c5",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/speech/speech-metrics.service.ts#StatusClass": {
+   "kind": "type_alias_union",
+   "path": "src/speech/speech-metrics.service.ts",
+   "symbol": "StatusClass",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:a7a388409630ca3ca58862c27b2870022481cf5908397d08686dd06bf4073735",
+   "decl_hash_head": "sha256:a7a388409630ca3ca58862c27b2870022481cf5908397d08686dd06bf4073735",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/speech/stt/stt-pilot.errors.ts#SttProviderErrorType": {
+   "kind": "type_alias_union",
+   "path": "src/speech/stt/stt-pilot.errors.ts",
+   "symbol": "SttProviderErrorType",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:e9c66fc5d6400f43880b78d54e121f44f60b96a6ac17f6883c7a38d96a4d453d",
+   "decl_hash_head": "sha256:e9c66fc5d6400f43880b78d54e121f44f60b96a6ac17f6883c7a38d96a4d453d",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/speech/transcribator.proxy.ts#SpeechEndpoint": {
+   "kind": "type_alias_union",
+   "path": "src/speech/transcribator.proxy.ts",
+   "symbol": "SpeechEndpoint",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:0b93d410d75a6e81e80fa0b11b0b473ec023a9b21802789acf624d97ae526d8a",
+   "decl_hash_head": "sha256:0b93d410d75a6e81e80fa0b11b0b473ec023a9b21802789acf624d97ae526d8a",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/speech/tts/cartesia/schemas.ts#ttsRequestSchema": {
+   "kind": "zod",
+   "path": "src/speech/tts/cartesia/schemas.ts",
+   "symbol": "ttsRequestSchema",
+   "status": "unchanged",
+   "direction": "input",
+   "decl_hash_base": "sha256:c6e62d549d3ece02ecbd12f4d5e01238b90e86b2705a6b9074744dd832c204a6",
+   "decl_hash_head": "sha256:c6e62d549d3ece02ecbd12f4d5e01238b90e86b2705a6b9074744dd832c204a6",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:src/speech/tts/deepgram-tts.connector.ts#DeepgramTtsErrorCode": {
+   "kind": "type_alias_union",
+   "path": "src/speech/tts/deepgram-tts.connector.ts",
+   "symbol": "DeepgramTtsErrorCode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:0561cf182eeee55c4ead253e650ac6710280b9a961c536d51396bdf5f339f461",
+   "decl_hash_head": "sha256:0561cf182eeee55c4ead253e650ac6710280b9a961c536d51396bdf5f339f461",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:src/speech/tts/together-tts.connector.ts#TogetherTtsErrorCode": {
+   "kind": "type_alias_union",
+   "path": "src/speech/tts/together-tts.connector.ts",
+   "symbol": "TogetherTtsErrorCode",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:477364b46b2d68a251846a0788c782f04d443ca544c79e83bc19a95d08af2240",
+   "decl_hash_head": "sha256:477364b46b2d68a251846a0788c782f04d443ca544c79e83bc19a95d08af2240",
+   "changes": [],
+   "error_code": true
+  },
+  "contract:watcher/src/catalog/openrouter.adapter.ts#modelSchema": {
+   "kind": "zod",
+   "path": "watcher/src/catalog/openrouter.adapter.ts",
+   "symbol": "modelSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:6a72bd5dbabc6b77f8fa982b3167d305e606c10b9383783f4a028fe226578a7a",
+   "decl_hash_head": "sha256:6a72bd5dbabc6b77f8fa982b3167d305e606c10b9383783f4a028fe226578a7a",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:watcher/src/catalog/openrouter.adapter.ts#numericString": {
+   "kind": "zod",
+   "path": "watcher/src/catalog/openrouter.adapter.ts",
+   "symbol": "numericString",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:c5e1c490f7d8d26db91481609b81792f9a25fb27dd1db21510bf8fca8f1b98f8",
+   "decl_hash_head": "sha256:c5e1c490f7d8d26db91481609b81792f9a25fb27dd1db21510bf8fca8f1b98f8",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:watcher/src/catalog/openrouter.adapter.ts#responseSchema": {
+   "kind": "zod",
+   "path": "watcher/src/catalog/openrouter.adapter.ts",
+   "symbol": "responseSchema",
+   "status": "unchanged",
+   "direction": "output",
+   "decl_hash_base": "sha256:7770132e7dc99fb3ee57aef860c8a673a6c39ed0ce8b086c52fc1b6c8c8b2a19",
+   "decl_hash_head": "sha256:7770132e7dc99fb3ee57aef860c8a673a6c39ed0ce8b086c52fc1b6c8c8b2a19",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:watcher/src/config.ts#catalog": {
+   "kind": "zod",
+   "path": "watcher/src/config.ts",
+   "symbol": "catalog",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:d7d7e07c1e1838ec9990c1d3aa8906df46ef1355132bd231e1818225098c2042",
+   "decl_hash_head": "sha256:d7d7e07c1e1838ec9990c1d3aa8906df46ef1355132bd231e1818225098c2042",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:watcher/src/config.ts#errorRate": {
+   "kind": "zod",
+   "path": "watcher/src/config.ts",
+   "symbol": "errorRate",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:9cae0465924b770c0e704ea7718e861a80a79914e96a3f587e457e2469943769",
+   "decl_hash_head": "sha256:9cae0465924b770c0e704ea7718e861a80a79914e96a3f587e457e2469943769",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:watcher/src/config.ts#latency": {
+   "kind": "zod",
+   "path": "watcher/src/config.ts",
+   "symbol": "latency",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:27b824dbbf541f61b6a6f12fd8e4b561f99149be792b6dd007e8a15b15cd9b31",
+   "decl_hash_head": "sha256:27b824dbbf541f61b6a6f12fd8e4b561f99149be792b6dd007e8a15b15cd9b31",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:watcher/src/config.ts#observation": {
+   "kind": "zod",
+   "path": "watcher/src/config.ts",
+   "symbol": "observation",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:e3721b0724adb4a0abad166c753e27a3a62184f1f0985c6301853e3677df7d30",
+   "decl_hash_head": "sha256:e3721b0724adb4a0abad166c753e27a3a62184f1f0985c6301853e3677df7d30",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:watcher/src/config.ts#positiveInt": {
+   "kind": "zod",
+   "path": "watcher/src/config.ts",
+   "symbol": "positiveInt",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:68b473c5637133a49206ecef8c87bcf0f086d446ede3387e6127eb30ae86a77c",
+   "decl_hash_head": "sha256:68b473c5637133a49206ecef8c87bcf0f086d446ede3387e6127eb30ae86a77c",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:watcher/src/config.ts#recovery": {
+   "kind": "zod",
+   "path": "watcher/src/config.ts",
+   "symbol": "recovery",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:15790569adffeb2b010bec3ed9f80ee6b68331addbb118e9f6bf149e90e80762",
+   "decl_hash_head": "sha256:15790569adffeb2b010bec3ed9f80ee6b68331addbb118e9f6bf149e90e80762",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:watcher/src/config.ts#watcherConfigSchema": {
+   "kind": "zod",
+   "path": "watcher/src/config.ts",
+   "symbol": "watcherConfigSchema",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:a900ce4b6d58d6dd7e2f7fa167cb285eac0735aafc524706283377533073791d",
+   "decl_hash_head": "sha256:a900ce4b6d58d6dd7e2f7fa167cb285eac0735aafc524706283377533073791d",
+   "changes": [],
+   "error_code": false
+  },
+  "contract:watcher/src/types.ts#FailureClass": {
+   "kind": "type_alias_union",
+   "path": "watcher/src/types.ts",
+   "symbol": "FailureClass",
+   "status": "unchanged",
+   "direction": "bidirectional",
+   "decl_hash_base": "sha256:2ef2fde73a2f47d9e7d3b85c981121384058437b68f93b889d46c100bbc49668",
+   "decl_hash_head": "sha256:2ef2fde73a2f47d9e7d3b85c981121384058437b68f93b889d46c100bbc49668",
+   "changes": [],
+   "error_code": false
+  }
+ },
+ "breaking": [],
+ "edges": [
+  {
+   "edge": {
+    "from": "code_unit:packages/sdk-ts/src/index.ts",
+    "to": "contract:packages/sdk-ts/src/types.ts#ErrorAction",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "ErrorAction"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: no literal of the enum used in the consumer (exhaustiveness unknown) — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "no literal of the enum used in the consumer (exhaustiveness unknown)"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:packages/sdk-ts/src/types.ts",
+    "to": "contract:packages/sdk-ts/src/types.ts#ErrorAction",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ErrorAction"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:packages/sdk-ts/src/index.ts",
+    "to": "contract:packages/sdk-ts/src/types.ts#ErrorType",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "ErrorType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: no literal of the enum used in the consumer (exhaustiveness unknown) — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "no literal of the enum used in the consumer (exhaustiveness unknown)"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:packages/sdk-ts/src/types.ts",
+    "to": "contract:packages/sdk-ts/src/types.ts#ErrorType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ErrorType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:packages/sdk-ts/src/index.ts",
+    "to": "contract:packages/sdk-ts/src/types.ts#ExecuteStatus",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "ExecuteStatus"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: no literal of the enum used in the consumer (exhaustiveness unknown) — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "no literal of the enum used in the consumer (exhaustiveness unknown)"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:packages/sdk-ts/src/types.ts",
+    "to": "contract:packages/sdk-ts/src/types.ts#ExecuteStatus",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ExecuteStatus"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:packages/sdk-ts/src/index.ts",
+    "to": "contract:packages/sdk-ts/src/types.ts#OutputFormat",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "OutputFormat"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: no literal of the enum used in the consumer (exhaustiveness unknown) — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "no literal of the enum used in the consumer (exhaustiveness unknown)"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:packages/sdk-ts/src/types.ts",
+    "to": "contract:packages/sdk-ts/src/types.ts#OutputFormat",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "OutputFormat"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:packages/sdk-ts/src/index.ts",
+    "to": "contract:packages/sdk-ts/src/types.ts#OutputGuardPass",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "OutputGuardPass"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: no literal of the enum used in the consumer (exhaustiveness unknown) — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "no literal of the enum used in the consumer (exhaustiveness unknown)"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:packages/sdk-ts/src/types.ts",
+    "to": "contract:packages/sdk-ts/src/types.ts#OutputGuardPass",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "OutputGuardPass"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/admin/admin.controller.ts",
+    "to": "contract:src/admin/dto.ts#CreateKeySchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "CreateKeySchema"
+   },
+   "verdict": "failed",
+   "reasons": [
+    "consumer reads key `data` that the provider does not declare",
+    "consumer reads key `error` that the provider does not declare",
+    "consumer reads key `success` that the provider does not declare"
+   ],
+   "projection": {
+    "bindings": [
+     "result"
+    ],
+    "keys_read": [
+     "data",
+     "error",
+     "success"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/admin/dto.ts",
+    "to": "contract:src/admin/dto.ts#CreateKeySchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CreateKeySchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/admin/circuit-breaker.controller.ts",
+    "to": "contract:src/admin/dto.ts#ResetCircuitBreakerSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "ResetCircuitBreakerSchema"
+   },
+   "verdict": "failed",
+   "reasons": [
+    "consumer reads key `data` that the provider does not declare",
+    "consumer reads key `success` that the provider does not declare"
+   ],
+   "projection": {
+    "bindings": [
+     "parsed"
+    ],
+    "keys_read": [
+     "data",
+     "success"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/admin/dto.ts",
+    "to": "contract:src/admin/dto.ts#ResetCircuitBreakerSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ResetCircuitBreakerSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/admin/admin.controller.ts",
+    "to": "contract:src/admin/dto.ts#SetKeyPolicySchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "SetKeyPolicySchema"
+   },
+   "verdict": "failed",
+   "reasons": [
+    "consumer reads key `data` that the provider does not declare",
+    "consumer reads key `error` that the provider does not declare",
+    "consumer reads key `success` that the provider does not declare"
+   ],
+   "projection": {
+    "bindings": [
+     "result"
+    ],
+    "keys_read": [
+     "data",
+     "error",
+     "success"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/admin/dto.ts",
+    "to": "contract:src/admin/dto.ts#SetKeyPolicySchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "SetKeyPolicySchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/billing/billing.service.ts",
+    "to": "contract:src/billing/billing.service.ts#LedgerEntryType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "LedgerEntryType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/billing/credits.controller.ts",
+    "to": "contract:src/billing/credits.controller.ts#CreditSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CreditSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/billing/credits.controller.ts",
+    "to": "contract:src/billing/credits.controller.ts#GiftSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "GiftSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/billing/credits.controller.ts",
+    "to": "contract:src/billing/credits.controller.ts#ReconcileSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ReconcileSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/connectors.service.ts",
+    "to": "contract:src/billing/measured-cost.ts#CostSource",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "CostSource"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "costSource"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "unpriced"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/billing/measured-cost.ts",
+    "to": "contract:src/billing/measured-cost.ts#CostSource",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CostSource"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/billing/payments.controller.ts",
+    "to": "contract:src/billing/payments.controller.ts#PaymentSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "PaymentSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/billing/payments.controller.ts",
+    "to": "contract:src/billing/payments.controller.ts#ReverseSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ReverseSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/config/env.schema.ts",
+    "to": "contract:src/config/env.schema.ts#envBool",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "envBool"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/ai21-native/contract.ts",
+    "to": "contract:src/connectors/ai21-native/contract.ts#Ai21NativeFailureCode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "Ai21NativeFailureCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/endpoints.ts",
+    "to": "contract:src/connectors/aws-speech/endpoints.ts#AwsPartitionId",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "AwsPartitionId"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/aws-speech.connector.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#describeVoicesRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "describeVoicesRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "value"
+    ],
+    "keys_read": [
+     "engine",
+     "includeAdditionalLanguageCodes",
+     "languageCode",
+     "nextToken"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#describeVoicesRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "describeVoicesRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/aws-speech.connector.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#getLexiconRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "getLexiconRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "value"
+    ],
+    "keys_read": [
+     "lexiconName"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#getLexiconRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "getLexiconRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/aws-speech.connector.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#listLexiconsRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "listLexiconsRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "value"
+    ],
+    "keys_read": [
+     "nextToken"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#listLexiconsRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "listLexiconsRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#pollyEngineSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "pollyEngineSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#pollyOutputFormatSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "pollyOutputFormatSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#speechMarkSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "speechMarkSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/aws-speech.connector.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#speechSynthesisTaskIdRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "speechSynthesisTaskIdRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "value"
+    ],
+    "keys_read": [
+     "taskId"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#speechSynthesisTaskIdRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "speechSynthesisTaskIdRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/aws-speech.connector.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#speechSynthesisTaskListRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "speechSynthesisTaskListRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "value"
+    ],
+    "keys_read": [
+     "maxResults",
+     "nextToken",
+     "status"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.spec.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#speechSynthesisTaskListRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "speechSynthesisTaskListRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: no binding of the contract type found in the consumer — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "no binding of the contract type found in the consumer"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#speechSynthesisTaskListRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "speechSynthesisTaskListRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/aws-speech.connector.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#transcribeStreamEventSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "transcribeStreamEventSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: projection not defined for schema kind union — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [
+     "event"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "projection not defined for schema kind union"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#transcribeStreamEventSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "transcribeStreamEventSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/aws-speech.connector.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#transcriptionJobListRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "transcriptionJobListRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "value"
+    ],
+    "keys_read": [
+     "jobNameContains",
+     "maxResults",
+     "nextToken",
+     "status"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.spec.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#transcriptionJobListRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "transcriptionJobListRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: no binding of the contract type found in the consumer — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "no binding of the contract type found in the consumer"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#transcriptionJobListRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "transcriptionJobListRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/aws-speech.connector.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#transcriptionJobNameRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "transcriptionJobNameRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "value"
+    ],
+    "keys_read": [
+     "transcriptionJobName"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/schemas.ts",
+    "to": "contract:src/connectors/aws-speech/schemas.ts#transcriptionJobNameRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "transcriptionJobNameRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/aws-speech.connector.ts",
+    "to": "contract:src/connectors/aws-speech/transports.ts#AwsSpeechService",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "AwsSpeechService"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "service"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "polly",
+     "transcribe"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/errors.ts",
+    "to": "contract:src/connectors/aws-speech/transports.ts#AwsSpeechService",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "AwsSpeechService"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "service"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "transcribe"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/aws-speech/transports.ts",
+    "to": "contract:src/connectors/aws-speech/transports.ts#AwsSpeechService",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "AwsSpeechService"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/azure-ai-content-safety/azure-ai-content-safety.connector.ts",
+    "to": "contract:src/connectors/azure-ai-content-safety/azure-ai-content-safety.connector.ts#ImageOutputType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ImageOutputType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/azure-ai-content-safety/azure-ai-content-safety.connector.ts",
+    "to": "contract:src/connectors/azure-ai-content-safety/azure-ai-content-safety.connector.ts#TextOutputType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "TextOutputType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/azure-speech/azure-speech.connector.ts",
+    "to": "contract:src/connectors/azure-speech/types.ts#AzureSpeechStreamingAudioContentType",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "AzureSpeechStreamingAudioContentType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: no literal of the enum used in the consumer (exhaustiveness unknown) — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "no literal of the enum used in the consumer (exhaustiveness unknown)"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/azure-speech/types.ts",
+    "to": "contract:src/connectors/azure-speech/types.ts#AzureSpeechStreamingAudioContentType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "AzureSpeechStreamingAudioContentType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/baseten-deployment/contract.ts",
+    "to": "contract:src/connectors/baseten-deployment/contract.ts#BasetenDeploymentFailureCode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "BasetenDeploymentFailureCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock-guardrails/types.ts",
+    "to": "contract:src/connectors/bedrock-guardrails/types.ts#BedrockGuardrailsErrorCode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "BedrockGuardrailsErrorCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock-guardrails/types.ts",
+    "to": "contract:src/connectors/bedrock-guardrails/types.ts#GuardrailStatus",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "GuardrailStatus"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.connector.ts",
+    "to": "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#AwsPartition",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "AwsPartition"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: no literal of the enum used in the consumer (exhaustiveness unknown) — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [
+     "partition"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "no literal of the enum used in the consumer (exhaustiveness unknown)"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.contract.ts",
+    "to": "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#AwsPartition",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "AwsPartition"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "partition"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "aws",
+     "aws-cn",
+     "aws-us-gov"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.types.ts",
+    "to": "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#AwsPartition",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "AwsPartition"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.types.ts",
+    "to": "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#CanvasGarmentClass",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CanvasGarmentClass"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.types.ts",
+    "to": "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#CanvasMaskShape",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CanvasMaskShape"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.types.ts",
+    "to": "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#CanvasMaskToggle",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CanvasMaskToggle"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.types.ts",
+    "to": "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#CanvasStyle",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CanvasStyle"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.types.ts",
+    "to": "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#ReelInvocationStatus",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ReelInvocationStatus"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.types.ts",
+    "to": "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#ReelOutputFailureType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ReelOutputFailureType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/bedrock/nova-media/nova-media.types.ts",
+    "to": "contract:src/connectors/bedrock/nova-media/nova-media.types.ts#ReelOutputStatus",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ReelOutputStatus"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/catalog.repository.ts",
+    "to": "contract:src/connectors/catalog.repository.ts#CatalogFreshness",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CatalogFreshness"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/catalog.repository.ts",
+    "to": "contract:src/connectors/catalog.repository.ts#CatalogSource",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CatalogSource"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/databricks-mosaic-ai-model-serving/databricks-mosaic-ai-model-serving.connector.ts",
+    "to": "contract:src/connectors/databricks-mosaic-ai-model-serving/databricks-mosaic-ai-model-serving.connector.ts#DatabricksMosaicAiCloud",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "DatabricksMosaicAiCloud"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/databricks-mosaic-ai-model-serving/databricks-mosaic-ai-model-serving.connector.ts",
+    "to": "contract:src/connectors/databricks-mosaic-ai-model-serving/databricks-mosaic-ai-model-serving.connector.ts#DatabricksMosaicAiModelServingErrorCode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "DatabricksMosaicAiModelServingErrorCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/deepgram-voice-agent/deepgram-voice-agent.client.ts",
+    "to": "contract:src/connectors/deepgram-voice-agent/deepgram-voice-agent.client.ts#DeepgramVoiceAgentState",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "DeepgramVoiceAgentState"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/connectors.controller.ts",
+    "to": "contract:src/connectors/dto/catalog.dto.ts#CatalogFiltersSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "CatalogFiltersSchema"
+   },
+   "verdict": "failed",
+   "reasons": [
+    "consumer reads key `data` that the provider does not declare",
+    "consumer reads key `error` that the provider does not declare",
+    "consumer reads key `success` that the provider does not declare"
+   ],
+   "projection": {
+    "bindings": [
+     "parsed"
+    ],
+    "keys_read": [
+     "data",
+     "error",
+     "success"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/dto/catalog.dto.spec.ts",
+    "to": "contract:src/connectors/dto/catalog.dto.ts#CatalogFiltersSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "CatalogFiltersSchema"
+   },
+   "verdict": "failed",
+   "reasons": [
+    "consumer reads key `data` that the provider does not declare",
+    "consumer reads key `success` that the provider does not declare"
+   ],
+   "projection": {
+    "bindings": [
+     "result"
+    ],
+    "keys_read": [
+     "data",
+     "success"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/dto/catalog.dto.ts",
+    "to": "contract:src/connectors/dto/catalog.dto.ts#CatalogFiltersSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CatalogFiltersSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/dto/catalog.dto.spec.ts",
+    "to": "contract:src/connectors/dto/catalog.dto.ts#CatalogModelEntrySchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "CatalogModelEntrySchema"
+   },
+   "verdict": "failed",
+   "reasons": [
+    "consumer reads key `data` that the provider does not declare",
+    "consumer reads key `success` that the provider does not declare"
+   ],
+   "projection": {
+    "bindings": [
+     "CatalogModelEntry",
+     "current",
+     "legacy",
+     "parsed",
+     "result"
+    ],
+    "keys_read": [
+     "contentFingerprint",
+     "contextWindow",
+     "data",
+     "maxOutputTokens",
+     "pricing",
+     "snapshotId",
+     "success"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "current forwarded to a call"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/dto/catalog.dto.ts",
+    "to": "contract:src/connectors/dto/catalog.dto.ts#CatalogModelEntrySchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CatalogModelEntrySchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/dto/catalog.dto.spec.ts",
+    "to": "contract:src/connectors/dto/catalog.dto.ts#CatalogResponseSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "CatalogResponseSchema"
+   },
+   "verdict": "failed",
+   "reasons": [
+    "consumer reads key `success` that the provider does not declare"
+   ],
+   "projection": {
+    "bindings": [
+     "result"
+    ],
+    "keys_read": [
+     "success"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/dto/catalog.dto.ts",
+    "to": "contract:src/connectors/dto/catalog.dto.ts#CatalogResponseSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CatalogResponseSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/dto/catalog.dto.ts",
+    "to": "contract:src/connectors/dto/catalog.dto.ts#ModelModalitySchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ModelModalitySchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/dto/catalog.dto.ts",
+    "to": "contract:src/connectors/dto/catalog.dto.ts#ModelPricingSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ModelPricingSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/dto/execute.dto.ts",
+    "to": "contract:src/connectors/dto/execute.dto.ts#ContentBlockSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ContentBlockSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/connectors.controller.ts",
+    "to": "contract:src/connectors/dto/execute.dto.ts#imageGenerateRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "imageGenerateRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: no binding of the contract type found in the consumer — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "no binding of the contract type found in the consumer"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/dto/execute.dto.spec.ts",
+    "to": "contract:src/connectors/dto/execute.dto.ts#imageGenerateRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "imageGenerateRequestSchema"
+   },
+   "verdict": "failed",
+   "reasons": [
+    "consumer reads key `success` that the provider does not declare"
+   ],
+   "projection": {
+    "bindings": [
+     "result"
+    ],
+    "keys_read": [
+     "success"
+    ],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/dto/execute.dto.ts",
+    "to": "contract:src/connectors/dto/execute.dto.ts#imageGenerateRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "imageGenerateRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/embedding/vertex/vertex-ai-embeddings.connector.ts",
+    "to": "contract:src/connectors/embedding/vertex/vertex-ai-embeddings.connector.ts#VertexAiEmbeddingTaskType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "VertexAiEmbeddingTaskType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/embedding/vertex/vertex-ai-embeddings.connector.ts",
+    "to": "contract:src/connectors/embedding/vertex/vertex-ai-embeddings.connector.ts#VertexAiEmbeddingsErrorKind",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "VertexAiEmbeddingsErrorKind"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/failover/failover.chain.ts",
+    "to": "contract:src/connectors/failover/failover.chain.ts#FailoverOutcome",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "FailoverOutcome"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/google-cloud-speech/google-cloud-speech.capabilities.ts",
+    "to": "contract:src/connectors/google-cloud-speech/google-cloud-speech.capabilities.ts#GoogleSpeechProtocol",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "GoogleSpeechProtocol"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/google-cloud-speech/google-cloud-speech.capabilities.ts",
+    "to": "contract:src/connectors/google-cloud-speech/google-cloud-speech.capabilities.ts#GoogleSpeechReleaseStage",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "GoogleSpeechReleaseStage"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/google-cloud-speech/google-cloud-speech.schemas.ts",
+    "to": "contract:src/connectors/google-cloud-speech/google-cloud-speech.schemas.ts#jsonObjectSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "jsonObjectSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/google-cloud-speech/google-cloud-speech.types.ts",
+    "to": "contract:src/connectors/google-cloud-speech/google-cloud-speech.types.ts#GoogleSpeechOperationApi",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "GoogleSpeechOperationApi"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/google-cloud-speech/google-cloud-speech.validation.ts",
+    "to": "contract:src/connectors/google-cloud-speech/google-cloud-speech.types.ts#StreamingAudioEncoding",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "StreamingAudioEncoding"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "allowed"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "ALAW",
+     "MULAW",
+     "OGG_OPUS",
+     "PCM"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/google-cloud-speech/google-cloud-speech.types.ts",
+    "to": "contract:src/connectors/google-cloud-speech/google-cloud-speech.types.ts#StreamingAudioEncoding",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "StreamingAudioEncoding"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/google-cloud-speech/google-cloud-speech.validation.ts",
+    "to": "contract:src/connectors/google-cloud-speech/google-cloud-speech.types.ts#UnaryAudioEncoding",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "UnaryAudioEncoding"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "allowed"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "ALAW",
+     "LINEAR16",
+     "MP3",
+     "MULAW",
+     "OGG_OPUS"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/google-cloud-speech/google-cloud-speech.types.ts",
+    "to": "contract:src/connectors/google-cloud-speech/google-cloud-speech.types.ts#UnaryAudioEncoding",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "UnaryAudioEncoding"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/google-perspective/google-perspective.connector.ts",
+    "to": "contract:src/connectors/google-perspective/types.ts#GooglePerspectiveErrorCategory",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "GooglePerspectiveErrorCategory"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "category"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "lifecycle",
+     "provider",
+     "response",
+     "timeout",
+     "transport",
+     "validation"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/google-perspective/types.ts",
+    "to": "contract:src/connectors/google-perspective/types.ts#GooglePerspectiveErrorCategory",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "GooglePerspectiveErrorCategory"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.ts",
+    "to": "contract:src/connectors/ibm-watsonx-ai/ibm-watsonx-ai.connector.ts#IbmWatsonxAiErrorCode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "IbmWatsonxAiErrorCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts",
+    "to": "contract:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts#AdobeFireflyJobStatus",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "AdobeFireflyJobStatus"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts",
+    "to": "contract:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts#AdobeFireflyMediaType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "AdobeFireflyMediaType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts",
+    "to": "contract:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts#AdobeFireflyModel",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "AdobeFireflyModel"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts",
+    "to": "contract:src/connectors/image-generation/adobe-firefly/adobe-firefly.connector.ts#AdobeFireflyOperation",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "AdobeFireflyOperation"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/capabilities.ts",
+    "to": "contract:src/connectors/image-generation/capabilities.ts#capabilityEntrySchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "capabilityEntrySchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/capabilities.spec.ts",
+    "to": "contract:src/connectors/image-generation/capabilities.ts#imageCapabilitiesSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "imageCapabilitiesSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: projection not defined for schema kind record — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "projection not defined for schema kind record"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/capabilities.ts",
+    "to": "contract:src/connectors/image-generation/capabilities.ts#imageCapabilitiesSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "imageCapabilitiesSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/ideogram/ideogram.types.ts",
+    "to": "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramMagicPrompt",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "IdeogramMagicPrompt"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/ideogram/ideogram.types.ts",
+    "to": "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramPalettePreset",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "IdeogramPalettePreset"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/ideogram/ideogram.types.ts",
+    "to": "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramRenderingSpeed",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "IdeogramRenderingSpeed"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/ideogram/ideogram.types.ts",
+    "to": "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramStyleType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "IdeogramStyleType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/ideogram/ideogram.types.ts",
+    "to": "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramUpscaleFactor",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "IdeogramUpscaleFactor"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/ideogram/ideogram.types.ts",
+    "to": "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramV3AspectRatio",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "IdeogramV3AspectRatio"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/ideogram/ideogram.types.ts",
+    "to": "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramV3Resolution",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "IdeogramV3Resolution"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/ideogram/ideogram.types.ts",
+    "to": "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramV3StylePreset",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "IdeogramV3StylePreset"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/ideogram/ideogram.types.ts",
+    "to": "contract:src/connectors/image-generation/ideogram/ideogram.types.ts#IdeogramV4Resolution",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "IdeogramV4Resolution"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/leonardo-ai/leonardo-ai.client.ts",
+    "to": "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoGenerationStatus",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "LeonardoGenerationStatus"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "COMPLETE",
+     "FAILED",
+     "PENDING"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts",
+    "to": "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoGenerationStatus",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "LeonardoGenerationStatus"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/leonardo-ai/leonardo-ai.client.ts",
+    "to": "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoHttpMethod",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "LeonardoHttpMethod"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "method"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "DELETE",
+     "GET",
+     "POST"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts",
+    "to": "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoHttpMethod",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "LeonardoHttpMethod"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts",
+    "to": "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoInitImageExtension",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "LeonardoInitImageExtension"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/leonardo-ai/leonardo-ai.client.ts",
+    "to": "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoPresetStyle",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "LeonardoPresetStyle"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "ANIME",
+     "BOKEH",
+     "CINEMATIC",
+     "CINEMATIC_CLOSEUP",
+     "CREATIVE",
+     "DYNAMIC",
+     "ENVIRONMENT",
+     "FASHION",
+     "FILM",
+     "FOOD",
+     "GENERAL",
+     "HDR",
+     "ILLUSTRATION",
+     "LEONARDO",
+     "LONG_EXPOSURE",
+     "MACRO",
+     "MINIMALISTIC",
+     "MONOCHROME",
+     "MOODY",
+     "NEUTRAL",
+     "NONE",
+     "PHOTOGRAPHY",
+     "PORTRAIT",
+     "RAYTRACED",
+     "RENDER_3D",
+     "RETRO",
+     "SKETCH_BW",
+     "SKETCH_COLOR",
+     "STOCK_PHOTO",
+     "UNPROCESSED",
+     "VIBRANT"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts",
+    "to": "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoPresetStyle",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "LeonardoPresetStyle"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts",
+    "to": "contract:src/connectors/image-generation/leonardo-ai/leonardo-ai.types.ts#LeonardoVariationType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "LeonardoVariationType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftBilling",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftBilling"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftCreativity",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftCreativity"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftEditModel",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftEditModel"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftExploreModel",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftExploreModel"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftImageFormat",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftImageFormat"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftImageSize",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftImageSize"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftImageStyle",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftImageStyle"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.client.spec.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftImageSubStyle",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "RecraftImageSubStyle"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "substyle"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "hand_drawn"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftImageSubStyle",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftImageSubStyle"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftMixPolicy",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftMixPolicy"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftRasterModel",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftRasterModel"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftResponseFormat",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftResponseFormat"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftShapeStacking",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftShapeStacking"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftToggle",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftToggle"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftUpscaleMode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftUpscaleMode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/recraft/recraft.types.ts",
+    "to": "contract:src/connectors/image-generation/recraft/recraft.types.ts#RecraftVectorModel",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RecraftVectorModel"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/capabilities.ts",
+    "to": "contract:src/connectors/image-generation/types.ts#ModelId",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "ModelId"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "fal-ai:flux-pro/v1.1",
+     "fal-ai:flux/dev",
+     "openai:gpt-image-1-high",
+     "openai:gpt-image-1-low",
+     "openai:gpt-image-1-medium",
+     "replicate:flux-pro",
+     "vertex:imagen-4",
+     "vertex:imagen-4-fast",
+     "vertex:imagen-4-ultra",
+     "vertex:nano-banana"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/pricing.ts",
+    "to": "contract:src/connectors/image-generation/types.ts#ModelId",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "ModelId"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "fal-ai:flux-pro/v1.1",
+     "fal-ai:flux/dev",
+     "openai:gpt-image-1-high",
+     "openai:gpt-image-1-low",
+     "openai:gpt-image-1-medium",
+     "replicate:flux-pro",
+     "vertex:imagen-4",
+     "vertex:imagen-4-fast",
+     "vertex:imagen-4-ultra",
+     "vertex:nano-banana"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/types.ts",
+    "to": "contract:src/connectors/image-generation/types.ts#ModelId",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ModelId"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/types.ts",
+    "to": "contract:src/connectors/image-generation/types.ts#ProviderIdEnum",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ProviderIdEnum"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/types.ts",
+    "to": "contract:src/connectors/image-generation/types.ts#TierEnum",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "TierEnum"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/image-generation/types.ts",
+    "to": "contract:src/connectors/image-generation/types.ts#imageGenerationRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "imageGenerationRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/interfaces/connector.interface.ts",
+    "to": "contract:src/connectors/interfaces/connector.interface.ts#ErrorAction",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ErrorAction"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/luma/luma-dream-machine.connector.ts",
+    "to": "contract:src/connectors/luma/luma-dream-machine.connector.ts#LumaAspectRatio",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "LumaAspectRatio"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/luma/luma-dream-machine.connector.ts",
+    "to": "contract:src/connectors/luma/luma-dream-machine.connector.ts#LumaHttpMethod",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "LumaHttpMethod"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/luma/luma-dream-machine.connector.ts",
+    "to": "contract:src/connectors/luma/luma-dream-machine.connector.ts#LumaImageModel",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "LumaImageModel"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/luma/luma-dream-machine.connector.ts",
+    "to": "contract:src/connectors/luma/luma-dream-machine.connector.ts#LumaVideoModel",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "LumaVideoModel"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/meta-llama-guard/meta-llama-guard-runtime.connector.ts",
+    "to": "contract:src/connectors/meta-llama-guard/types.ts#MetaLlamaGuardClassificationTarget",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "MetaLlamaGuardClassificationTarget"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "target"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "prompt",
+     "response"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/meta-llama-guard/types.ts",
+    "to": "contract:src/connectors/meta-llama-guard/types.ts#MetaLlamaGuardClassificationTarget",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "MetaLlamaGuardClassificationTarget"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/meta-llama-guard/meta-llama-guard-runtime.connector.ts",
+    "to": "contract:src/connectors/meta-llama-guard/types.ts#MetaLlamaGuardErrorCode",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "MetaLlamaGuardErrorCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "code"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "invalid_configuration",
+     "invalid_generation",
+     "invalid_request",
+     "runtime_failure",
+     "runtime_timeout"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/meta-llama-guard/types.ts",
+    "to": "contract:src/connectors/meta-llama-guard/types.ts#MetaLlamaGuardErrorCode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "MetaLlamaGuardErrorCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/meta-llama-guard/types.ts",
+    "to": "contract:src/connectors/meta-llama-guard/types.ts#MetaLlamaGuardVerdict",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "MetaLlamaGuardVerdict"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts",
+    "to": "contract:src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts#NvidiaSafetyImageMediaType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "NvidiaSafetyImageMediaType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts",
+    "to": "contract:src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts#NvidiaSafetyNimErrorCode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "NvidiaSafetyNimErrorCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts",
+    "to": "contract:src/connectors/nvidia-safety-nim/nvidia-safety-nim.connector.ts#NvidiaSafetyVerdict",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "NvidiaSafetyVerdict"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/openai/openai.connector.ts",
+    "to": "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationErrorType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "OpenAiModerationErrorType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/openai/openai.connector.ts",
+    "to": "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationInputType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "OpenAiModerationInputType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/oracle-oci-generative-ai/oracle-oci-generative-ai.connector.ts",
+    "to": "contract:src/connectors/oracle-oci-generative-ai/oracle-oci-generative-ai.connector.ts#OracleOciGenerativeAiErrorCode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "OracleOciGenerativeAiErrorCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/output-guard/output-guard.middleware.ts",
+    "to": "contract:src/connectors/output-guard/types.ts#OutputGuardPass",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "OutputGuardPass"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "pass"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "failed",
+     "guarded",
+     "native"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/metrics/metrics.service.ts",
+    "to": "contract:src/connectors/output-guard/types.ts#OutputGuardPass",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "OutputGuardPass"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "pass"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "failed",
+     "guarded"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/output-guard/types.ts",
+    "to": "contract:src/connectors/output-guard/types.ts#OutputGuardPass",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "OutputGuardPass"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/runway/runway.connector.ts",
+    "to": "contract:src/connectors/runway/runway.types.ts#RunwayOperation",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "RunwayOperation"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "operation"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "character_performance",
+     "image_to_video",
+     "image_upscale",
+     "sound_effect",
+     "speech_to_speech",
+     "text_to_image",
+     "text_to_speech",
+     "text_to_video",
+     "video_to_video",
+     "video_upscale",
+     "voice_dubbing",
+     "voice_isolation"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/runway/runway.types.ts",
+    "to": "contract:src/connectors/runway/runway.types.ts#RunwayOperation",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "RunwayOperation"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/connectors/stability-ai/stability-ai.connector.ts",
+    "to": "contract:src/connectors/stability-ai/stability-ai.connector.ts#StabilityAiAccept",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "StabilityAiAccept"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/core/resilience/circuit-breaker-manager.ts",
+    "to": "contract:src/core/resilience/circuit-breaker.ts#CircuitState",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "CircuitState"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "previousState",
+     "state",
+     "worstState"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "closed",
+     "half_open",
+     "open"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/core/resilience/circuit-breaker.ts",
+    "to": "contract:src/core/resilience/circuit-breaker.ts#CircuitState",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "CircuitState"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/openai-compat/dto/openai-chat.dto.ts",
+    "to": "contract:src/openai-compat/dto/openai-chat.dto.ts#contentPartSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "contentPartSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/policy/policy.service.ts",
+    "to": "contract:src/policy/policy.service.ts#ModelTier",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ModelTier"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/prompt-cache/prompt-cache-policy.ts",
+    "to": "contract:src/prompt-cache/prompt-cache-policy.ts#FindingLayer",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "FindingLayer"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/prompt-cache/prompt-cache-policy.ts",
+    "to": "contract:src/prompt-cache/prompt-cache-policy.ts#FindingScope",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "FindingScope"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/prompt-cache/prompt-cache-policy.ts",
+    "to": "contract:src/prompt-cache/prompt-cache-policy.ts#PolicyAction",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "PolicyAction"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/prompt-cache/prompt-cache-policy.service.ts",
+    "to": "contract:src/prompt-cache/prompt-cache-policy.ts#PolicyMode",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "PolicyMode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "bootMode",
+     "boot_mode",
+     "from",
+     "mode",
+     "next",
+     "to"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "observe",
+     "off"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/prompt-cache/prompt-cache-policy.ts",
+    "to": "contract:src/prompt-cache/prompt-cache-policy.ts#PolicyMode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "PolicyMode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/prompt-cache/prompt-cache-policy.ts",
+    "to": "contract:src/prompt-cache/prompt-cache-policy.ts#PolicyVerdict",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "PolicyVerdict"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/prompt-cache/prompt-layout-contract.ts",
+    "to": "contract:src/prompt-cache/prompt-layout-contract.ts#ContractScope",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ContractScope"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/prompt-cache/prompt-cache-policy.ts",
+    "to": "contract:src/prompt-cache/prompt-layout-contract.ts#ContractSeverity",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "ContractSeverity"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "severity",
+     "worst"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "error",
+     "refusal",
+     "undetermined",
+     "warning"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/prompt-cache/prompt-layout-contract.ts",
+    "to": "contract:src/prompt-cache/prompt-layout-contract.ts#ContractSeverity",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ContractSeverity"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/dto/speech-response.dto.ts",
+    "to": "contract:src/speech/dto/speech-response.dto.ts#SpeechErrorCode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "SpeechErrorCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/stt/stt-router.service.ts",
+    "to": "contract:src/speech/dto/stt-response.dto.ts#SttProvider",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "SttProvider"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "assemblyai",
+     "deepgram",
+     "groq",
+     "openai"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/dto/stt-response.dto.ts",
+    "to": "contract:src/speech/dto/stt-response.dto.ts#SttProvider",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "SttProvider"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/dto/tts-request.dto.ts",
+    "to": "contract:src/speech/dto/tts-request.dto.ts#togetherTtsRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "togetherTtsRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/dto/tts-request.dto.spec.ts",
+    "to": "contract:src/speech/dto/tts-request.dto.ts#ttsRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "ttsRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: projection not defined for schema kind union — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [
+     "parsed"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "projection not defined for schema kind union"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/speech.controller.ts",
+    "to": "contract:src/speech/dto/tts-request.dto.ts#ttsRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "ttsRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: projection not defined for schema kind union — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "projection not defined for schema kind union"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/dto/tts-request.dto.ts",
+    "to": "contract:src/speech/dto/tts-request.dto.ts#ttsRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ttsRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/speech.controller.ts",
+    "to": "contract:src/speech/speech-metrics.service.ts#SpeechEndpoint",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "SpeechEndpoint"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "endpoint"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "stt",
+     "tts",
+     "vad"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/speech-metrics.service.ts",
+    "to": "contract:src/speech/speech-metrics.service.ts#SpeechEndpoint",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "SpeechEndpoint"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/speech-metrics.service.ts",
+    "to": "contract:src/speech/speech-metrics.service.ts#StatusClass",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "StatusClass"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/stt/assemblyai-stt.connector.ts",
+    "to": "contract:src/speech/stt/stt-pilot.errors.ts#SttProviderErrorType",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "SttProviderErrorType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "errType"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "auth_failed",
+     "http_error",
+     "network_error",
+     "parse_error",
+     "rate_limited",
+     "server_error",
+     "timeout"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/stt/base-stt.connector.ts",
+    "to": "contract:src/speech/stt/stt-pilot.errors.ts#SttProviderErrorType",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "SttProviderErrorType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "errType"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "auth_failed",
+     "http_error",
+     "network_error",
+     "parse_error",
+     "rate_limited",
+     "server_error",
+     "timeout"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/stt/stt-pilot.errors.ts",
+    "to": "contract:src/speech/stt/stt-pilot.errors.ts#SttProviderErrorType",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "SttProviderErrorType"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/speech.service.ts",
+    "to": "contract:src/speech/transcribator.proxy.ts#SpeechEndpoint",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "SpeechEndpoint"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "endpoint"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "tts",
+     "vad"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/transcribator.proxy.ts",
+    "to": "contract:src/speech/transcribator.proxy.ts#SpeechEndpoint",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "SpeechEndpoint"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/tts/cartesia/cartesia-client.ts",
+    "to": "contract:src/speech/tts/cartesia/schemas.ts#ttsRequestSchema",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "ttsRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider (usage not fully narrowable: body forwarded to a call — nothing changed to break it)"
+   ],
+   "projection": {
+    "bindings": [
+     "body"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [],
+    "complete": false,
+    "incomplete_reasons": [
+     "body forwarded to a call"
+    ]
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/tts/cartesia/schemas.ts",
+    "to": "contract:src/speech/tts/cartesia/schemas.ts#ttsRequestSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "ttsRequestSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/speech.service.spec.ts",
+    "to": "contract:src/speech/tts/deepgram-tts.connector.ts#DeepgramTtsErrorCode",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "DeepgramTtsErrorCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "provider_disabled",
+     "upstream_authentication_failed",
+     "upstream_rate_limited",
+     "upstream_timeout",
+     "upstream_unavailable"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/tts/deepgram-tts.connector.ts",
+    "to": "contract:src/speech/tts/deepgram-tts.connector.ts#DeepgramTtsErrorCode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "DeepgramTtsErrorCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:src/speech/tts/together-tts.connector.ts",
+    "to": "contract:src/speech/tts/together-tts.connector.ts#TogetherTtsErrorCode",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "TogetherTtsErrorCode"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/catalog/openrouter.adapter.ts",
+    "to": "contract:watcher/src/catalog/openrouter.adapter.ts#modelSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "modelSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/catalog/openrouter.adapter.ts",
+    "to": "contract:watcher/src/catalog/openrouter.adapter.ts#numericString",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "numericString"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/catalog/openrouter.adapter.ts",
+    "to": "contract:watcher/src/catalog/openrouter.adapter.ts#responseSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "responseSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/config.ts",
+    "to": "contract:watcher/src/config.ts#catalog",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "catalog"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/config.ts",
+    "to": "contract:watcher/src/config.ts#errorRate",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "errorRate"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/config.ts",
+    "to": "contract:watcher/src/config.ts#latency",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "latency"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/config.ts",
+    "to": "contract:watcher/src/config.ts#observation",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "observation"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/config.ts",
+    "to": "contract:watcher/src/config.ts#positiveInt",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "positiveInt"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/config.ts",
+    "to": "contract:watcher/src/config.ts#recovery",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "recovery"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/config.ts",
+    "to": "contract:watcher/src/config.ts#watcherConfigSchema",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "watcherConfigSchema"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/classifier.ts",
+    "to": "contract:watcher/src/types.ts#FailureClass",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "FailureClass"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "failureClass"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "authentication",
+     "billing",
+     "circuit_open",
+     "provider_outage",
+     "rate_or_quota",
+     "unknown"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/recovery-policy.ts",
+    "to": "contract:watcher/src/types.ts#FailureClass",
+    "type": "consumes_contract",
+    "provenance": "deterministic",
+    "via": "import-symbol",
+    "symbol": "FailureClass"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "no breaking change; consumer usage ⊆ provider"
+   ],
+   "projection": {
+    "bindings": [
+     "failureClass"
+    ],
+    "keys_read": [],
+    "keys_sent": [],
+    "literals_sent": 0,
+    "values_used": [
+     "circuit_open",
+     "unknown"
+    ],
+    "complete": true,
+    "incomplete_reasons": []
+   }
+  },
+  {
+   "edge": {
+    "from": "code_unit:watcher/src/types.ts",
+    "to": "contract:watcher/src/types.ts#FailureClass",
+    "type": "implements_contract",
+    "provenance": "deterministic",
+    "via": "declaration",
+    "symbol": "FailureClass"
+   },
+   "verdict": "verified",
+   "reasons": [
+    "provider side: unchanged"
+   ]
+  }
+ ],
+ "limitations": [],
+ "summary": {
+  "contracts_base": 155,
+  "contracts_head": 155,
+  "statuses": {
+   "unchanged": 155
+  },
+  "codes": {},
+  "breaking": 0,
+  "edges": 214,
+  "edge_verdicts": {
+   "failed": 8,
+   "verified": 206
+  }
+ }
+}
