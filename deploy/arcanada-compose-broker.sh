@@ -88,6 +88,23 @@ declare -rA REPOS=(
   # caller to register here instead. The stack moved to arcana-prd with its
   # 3.5 GB of ClickHouse volumes, so it needs the row to deploy at all.
   [langfuse-deploy]='https://github.com/Arcanada-one/langfuse-deploy.git'
+  # A2-102: Argana's grounded-answer path authenticates to Scrutator as the
+  # `muneral-kb-sync` M2M client -- Scrutator's verifier pins three admitted
+  # client ids as Literal types and refuses any other BEFORE it consults
+  # namespace grants, so there is no second identity to use. systemd hands that
+  # secret out of /etc/muneral-kb-sync/ on arcana-prd (root, 0600), and that
+  # directory does not exist on arcana-devs. The service therefore runs on the
+  # host that holds the credential, which is why the row is in THIS host's
+  # table and nowhere else (SEC-0063).
+  #
+  # What argana deliberately does NOT get: no REGISTRY_AUTH row -- its compose
+  # file says `build: .`, so it builds from the checkout and never pulls a
+  # private image, and a deploy row must not silently also grant the ability to
+  # place a registry credential on the host. No SCRIPT row -- the workflow
+  # drives build/up/freshness itself rather than running a script from the
+  # checkout as root. No MIGRATE, IMAGE, VERIFY or SMOKE row: the service has no
+  # schema, no pre-built image and no post-deploy script.
+  [argana]='https://github.com/Arcanada-one/argana.git'
 )
 declare -rA COMPOSE=(
   # INFRA-0417: model-connector's OWN stack, not the whisper side-stack. The
@@ -104,6 +121,7 @@ declare -rA COMPOSE=(
   [arcanada-assistant]='docker-compose.yml'
   [verdicus]='docker-compose.prod.yml'
   [langfuse-deploy]='docker-compose.yml'
+  [argana]='docker-compose.yml'
 )
 # Private repositories whose fetch needs a credential on stdin.
 declare -rA AUTH=(
@@ -112,6 +130,13 @@ declare -rA AUTH=(
   [legal-arcana]='github-token'
   [verdicus]='github-token'
   [langfuse-deploy]='github-token'
+  # Measured 2026-09-23: `gh api repos/Arcanada-one/argana --jq .private` is
+  # `true`. Without this row cmd_sync clones anonymously and dies at
+  # `Repository not found`, which reads like a typo in the URL rather than a
+  # missing credential -- the same shape of error that hid arcanada-assistant's
+  # opposite case, where a PUBLIC repo with an AUTH row would block on an empty
+  # stdin read.
+  [argana]='github-token'
 )
 # Pin the compose project name. Unset means Compose derives it from the
 # checkout directory, which is what the whisper stack has always done —
@@ -146,6 +171,15 @@ declare -rA PROJECT=(
   # owns named volumes under that prefix (clickhouse-data is 2.6 GB). A
   # derived name would create empty volumes beside them.
   [langfuse-deploy]='langfuse-deploy'
+  # Unlike every pin above, this one adopts nothing: Argana has never run as a
+  # container (today it is a bare uvicorn process on arcana-devs), so there is
+  # no existing stack or named volume to match. It is pinned because
+  # CONTAINER[argana] below is `argana-argana-1`, which is
+  # <project>-<service>-1 -- the freshness check inspects a name that only
+  # exists if the project is `argana`. The basename of the broker checkout
+  # derives the same name; the pin is what stops the check from depending on
+  # that coincidence, exactly as for arcanada-assistant.
+  [argana]='argana'
 )
 # Root-owned environment file. A bare name resolves under ENV_ROOT; an absolute
 # path is used as given, so a service whose env is already root-owned somewhere
@@ -165,6 +199,15 @@ declare -rA ENVFILE=(
   # bind address was a literal machine IP written into the compose file. The
   # address is now ${STT_BIND_IP}, which has to come from somewhere root-owned.
   [stt-whisper]='stt-whisper.env'
+  # A2-102: this file is load-bearing twice over. argana's compose file reads it
+  # with `env_file: .env`, AND interpolates its two host bind-mount paths from
+  # it (`${ARGANA_CLIENT_SECRET_HOST_PATH:-...}` for the Scrutator client
+  # secret, `${ARGANA_KC2_HOST_ROOT:-...}` for the pinned KC2 checkout). Because
+  # the broker installs a root-owned file as that `.env`, the runner can neither
+  # set the container's environment nor redirect which host path the client
+  # secret is mounted FROM. A runner-writable env file here would be a runner
+  # that can mount any file it likes into a container it can then read.
+  [argana]='argana.env'
 )
 # A release script inside the checkout that already encapsulates the whole
 # deploy. Running it as root is the same trust boundary the broker already
@@ -214,12 +257,22 @@ declare -rA VERIFY=(
 declare -rA CONTAINER=(
   [opsbot]='opsbot'
   [arcanada-assistant]='arcanada-assistant-assistant-1'
+  # <project>-<service>-1. The service half is `argana`, read from the
+  # `services:` key of argana's own docker-compose.yml on PR #22
+  # (arc2/a2-102-argana-secret-path-and-deploy); it declares no
+  # `container_name`, so Compose derives the name rather than being told it.
+  [argana]='argana-argana-1'
 )
 declare -rA MAXAGE=(
   [opsbot]='300'
   # The assistant image builds a pnpm workspace and takes longer than opsbot;
   # 600s still fails a deploy that recreated nothing.
   [arcanada-assistant]='600'
+  # `up` runs immediately after `build` in argana's deploy workflow, so on a
+  # healthy deploy the container this measures is seconds old -- the allowance
+  # is slack, not a budget. 600 still fails a deploy that recreated nothing,
+  # which is the only thing this check is for.
+  [argana]='600'
 )
 # Fixed argv for the module-load smoke check. Compiled in, so the word
 # splitting below is on a constant, not on caller input.
