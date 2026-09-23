@@ -1,6 +1,6 @@
 # Codex CLI sidecar — CONN-0045 Phase 1 (CONN-0063)
 #
-# Pinned release: rust-v0.130.0 (published 2026-05-08)
+# Pinned release: rust-v0.133.0 (published 2026-05-08)
 # Asset: codex-x86_64-unknown-linux-musl.tar.gz
 # Sigstore bundle: codex-x86_64-unknown-linux-musl.sigstore (Fulcio keyless via GitHub Actions OIDC)
 #
@@ -8,8 +8,8 @@
 # OAuth blob (~/.codex/auth.json) is fetched at runtime from Vault into a tmpfs mount —
 # never baked into image layers.
 
-ARG CODEX_RELEASE_TAG=rust-v0.130.0
-ARG CODEX_VERSION=0.130.0
+ARG CODEX_RELEASE_TAG=rust-v0.133.0
+ARG CODEX_VERSION=0.133.0
 ARG COSIGN_VERSION=2.4.1
 
 # ---------- builder: download + verify Codex binary + cosign ----------

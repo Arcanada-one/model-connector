@@ -195,7 +195,7 @@ describe('CodexConnector', () => {
       expect(parsed.outputTokens).toBe(2);
     });
 
-    it('CONN-0075: should handle codex 0.130.0 item.completed agent_message shape', () => {
+    it('CONN-0075: should handle codex 0.133.0 item.completed agent_message shape', () => {
       const v0130 = [
         '{"type":"thread.started","thread_id":"019e112b-f00b-7f62-9a64-6cf3f8604984"}',
         '{"type":"turn.started"}',

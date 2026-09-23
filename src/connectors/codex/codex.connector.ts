@@ -93,7 +93,7 @@ export class CodexConnector extends BaseCliConnector {
     const threadId = events.find((e) => e.type === 'thread.started')?.thread_id;
     const fatalError = events.find((e) => e.type === 'error');
     const turnFailed = events.find((e) => e.type === 'turn.failed');
-    // CONN-0075: codex 0.130.0 emits `item.completed` with `item.type === 'agent_message'`
+    // CONN-0075: codex 0.133.0 emits `item.completed` with `item.type === 'agent_message'`
     // and the assistant text in `item.text`. The earlier `message.completed` /
     // `message.content` pair was the schema for codex ≤ 0.12x. We accept both
     // shapes so a future codex revert / older deployment doesn't regress.

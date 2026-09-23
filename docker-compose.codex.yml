@@ -13,13 +13,13 @@
 
 services:
   codex-sidecar:
-    image: arcanada/codex-cli:rust-v0.130.0
+    image: arcanada/codex-cli:rust-v0.133.0
     build:
       context: .
       dockerfile: Dockerfile.codex-sidecar
       args:
-        CODEX_RELEASE_TAG: rust-v0.130.0
-        CODEX_VERSION: "0.130.0"
+        CODEX_RELEASE_TAG: rust-v0.133.0
+        CODEX_VERSION: "0.133.0"
     container_name: model-connector-codex-sidecar
     restart: unless-stopped
     init: true
@@ -95,7 +95,7 @@ services:
     volumes:
       - codex-bin:/codex-sidecar/bin:ro
       # CONN-0068 F-10 / CONN-0071 F-12: shared /dev/shm path. Originally `:ro`
-      # for T3 (MC cannot mutate the OAuth blob), but Codex 0.130.0 stores
+      # for T3 (MC cannot mutate the OAuth blob), but Codex 0.133.0 stores
       # embedded app-server session state inside `$CODEX_HOME` alongside
       # auth.json — RO bind blocks codex from writing its state and crashes
       # `/execute` with «Read-only file system (os error 30)» (PROD smoke,
