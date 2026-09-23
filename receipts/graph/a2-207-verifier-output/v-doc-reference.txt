@@ -1,0 +1,6 @@
+CHANGELOG.md: verified — 20 reference(s) resolve at head
+README.md: verified — 18 reference(s) resolve at head
+docs/architecture.md: verified — 5 reference(s) resolve at head
+docs/sdk-typescript.md: verified — 1 reference(s) resolve at head
+packages/sdk-python/README.md: verified — 0 reference(s) resolve at head
+packages/sdk-ts/README.md: verified — 0 reference(s) resolve at head

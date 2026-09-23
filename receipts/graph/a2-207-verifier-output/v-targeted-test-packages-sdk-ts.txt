@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /home/dev/aup/arc2/wt/A2-207-mc/packages/sdk-ts
+
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  13:36:23
+   Duration  241ms (transform 58ms, setup 0ms, import 77ms, tests 50ms, environment 0ms)
+

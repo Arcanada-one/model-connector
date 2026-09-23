@@ -1,0 +1,27 @@
+A2-207 — the two SDK suites, run by hand on arcana-devs, 2026-09-23.
+
+Neither is a verifier verdict: the repository's verify profile has no targeted_test verifier for
+packages/*, and .github/workflows/ci.yml does not run them on a pull request either (publish-sdks.yml
+runs them only on a push to main that touches the package). The corresponding entities are recorded
+not_measured in the receipt, deliberately, rather than exempted into a pass on the strength of this file.
+
+packages/sdk-ts  —  pnpm vitest run
+  RED, before the fix (the two assertions this change introduces):
+    × converts the Retry-After header from seconds to the envelope milliseconds
+        AssertionError: expected ConnectorError: slow down {…} to match object { retryAfter: 10000, … }
+    × keeps the server figure in milliseconds and derives the seconds twin
+        AssertionError: expected ConnectorError: Circuit breaker open for … {…} to match object { retryAfter: 15681, … }
+    Test Files  1 failed (1)   Tests  2 failed | 14 passed (16)
+  GREEN, after:
+    Test Files  1 passed (1)   Tests  16 passed (16)
+
+packages/sdk-python  —  python -m pytest tests/ -q   (venv: pytest, httpx, pydantic, pytest-asyncio)
+  Baseline on main, same venv:                    16 passed
+  RED, before the fix:
+    FAILED tests/test_client.py::test_retry_after_header_is_converted_to_milliseconds
+    FAILED tests/test_client.py::test_server_retry_after_stays_milliseconds_and_gains_a_seconds_twin
+    FAILED tests/test_client.py::test_no_retry_delay_is_reported_when_nothing_carries_one
+        AttributeError: 'ConnectorError' object has no attribute 'retry_after_seconds'
+    3 failed, 15 passed
+  GREEN, after:
+    18 passed
