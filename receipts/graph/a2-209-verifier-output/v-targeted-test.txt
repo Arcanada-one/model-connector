@@ -1,0 +1,88 @@
+A2-209 — targeted tests. Green on branch, and PROVEN able to go red on main.
+=========================================================================
+
+[1] Whole suite, branch HEAD 45eb3e9eb05cff70a383d7b9debfb8aeec3b6679
+    DATABASE_URL=<placeholder> pnpm vitest run
+ Test Files  214 passed (214)
+      Tests  3193 passed (3193)
+   Duration  10.64s (transform 23.70s, setup 0ms, import 76.98s, tests 26.45s, environment 36ms)
+
+[2] DeepSeek connector suite, branch HEAD
+    pnpm vitest run src/connectors/deepseek/
+ Test Files  1 passed (1)
+      Tests  31 passed (31)
+
+[3] eslint
+    pnpm lint
+    rc=0, no findings
+
+[4] RED-ON-MAIN PROOF (rule 7: prove a check can go red before trusting its green)
+
+  Stage A — new spec + new fixtures against main's three source files:
+    git checkout main -- src/connectors/deepseek/deepseek.connector.ts \
+                         src/connectors/base-api.connector.ts \
+                         src/connectors/interfaces/connector.interface.ts
+    pnpm vitest run src/connectors/deepseek/
+  Result: the suite does not even LOAD — main does not export RETIRED_MODEL_ALIASES,
+  so one import error hides every assertion:
+    
+     RUN  v4.1.8 /home/dev/aup/arc2/runs/A2-209/model-connector
+    
+     ❯ src/connectors/deepseek/deepseek.connector.spec.ts (0 test)
+    
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+    
+     FAIL  src/connectors/deepseek/deepseek.connector.spec.ts [ src/connectors/deepseek/deepseek.connector.spec.ts ]
+    TypeError: Cannot convert undefined or null to object
+     ❯ src/connectors/deepseek/deepseek.connector.spec.ts:224:20
+        222|     });
+        223|
+        224|     it.each(Object.keys(RETIRED_MODEL_ALIASES))(
+           |                    ^
+        225|       'passes the retired id %s through verbatim rather than rewriting…
+        226|       async (retired) => {
+    
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+    
+    
+
+  Stage B — that is a weak receipt, so main's BEHAVIOUR was measured instead: the
+  missing export (and only that) was stubbed onto main's connector, nothing else.
+    pnpm vitest run src/connectors/deepseek/
+  Result — 7 targeted failures, each naming a real defect this change closes:
+         × forwards sampling parameters for every model, including the retired reasoner alias 5ms
+           × defaults to a model the provider actually serves, not a retired alias 2ms
+           × advertises only the served ids 2ms
+           × surfaces the substitution when the provider serves deepseek-chat under another id 2ms
+           × surfaces the substitution when the provider serves deepseek-reasoner under another id 1ms
+           × surfaces the substitution when the provider serves deepseek-v4-flash under another id 1ms
+           × the static/offline floor is the served ids, each carrying its curated price 1ms
+    AssertionError: expected undefined to be 0.2 // Object.is equality
+    AssertionError: expected 'deepseek-chat' to be 'deepseek-flash' // Object.is equality
+    AssertionError: expected [ Array(2) ] to deeply equal [ 'deepseek-flash', 'deepseek-v4-pro' ]
+    AssertionError: expected undefined to deeply equal { requested: 'deepseek-chat', …(1) }
+    AssertionError: expected undefined to deeply equal { Object (requested, served) }
+    AssertionError: expected undefined to deeply equal { Object (requested, served) }
+    AssertionError: expected [ Array(2) ] to deeply equal [ 'deepseek-flash', 'deepseek-v4-pro' ]
+     Test Files  1 failed (1)
+          Tests  7 failed | 24 passed (31)
+
+  Note: "passes the retired id X through verbatim" PASSES on main too. That is
+  correct — pass-through is a property this change LOCKS IN, not one it introduces.
+
+[5] SDKs
+  packages/sdk-ts:     pnpm vitest run -> 18 passed;  tsc --noEmit -> clean
+  packages/sdk-python: pytest -q       -> 20 passed
+
+  Red-on-main, measured per SDK:
+    sdk-python: 2 failed, 18 passed
+      FAILED tests/test_client.py::test_model_substitution_is_surfaced_on_success
+      FAILED tests/test_client.py::test_model_substitution_absent_when_server_reports_none
+      AttributeError: 'ExecuteResponse' object has no attribute 'model_substituted'
+    sdk-ts: STAYS GREEN (18 passed) and tsc stays clean.
+      NOT a passing verdict for the TS field -- it is a gap in the harness.
+      packages/sdk-ts/tsconfig.json has "exclude": ["dist","node_modules","test"],
+      so NO test in that package is ever type-checked and no test there can go red
+      on a type-only change. The TS type addition is therefore verified only by
+      tsc over src/ (which compiles) and by the python SDK's equivalent test.
+      Recorded as a tooling defect, not waved through.
