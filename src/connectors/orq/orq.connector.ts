@@ -86,7 +86,7 @@ export class OrqConnector extends BaseApiConnector {
   }
 
   protected getTimeout(): number {
-    return Number(process.env.ORQ_TIMEOUT_MS) || 120_000;
+    return Number(process.env.ORQ_TIMEOUT_MS) || super.getTimeout();
   }
 
   protected getHeaders(): Record<string, string> {

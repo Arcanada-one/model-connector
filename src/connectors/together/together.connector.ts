@@ -55,7 +55,7 @@ export class TogetherConnector extends BaseApiConnector {
   }
 
   protected getTimeout(): number {
-    return Number(process.env.TOGETHER_TIMEOUT_MS) || 120_000;
+    return Number(process.env.TOGETHER_TIMEOUT_MS) || super.getTimeout();
   }
 
   protected buildRequestUrl(_request: ConnectorRequest): string {

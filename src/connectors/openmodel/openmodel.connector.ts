@@ -59,7 +59,7 @@ export class OpenModelConnector extends BaseApiConnector {
   }
 
   protected getTimeout(): number {
-    return Number(process.env.OPENMODEL_TIMEOUT_MS) || 30_000;
+    return Number(process.env.OPENMODEL_TIMEOUT_MS) || super.getTimeout();
   }
 
   // Anthropic-compatible protocol: x-api-key header (not Authorization: Bearer).

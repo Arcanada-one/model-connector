@@ -41,7 +41,7 @@ export class CloudflareWorkersAiConnector extends BaseApiConnector {
   }
 
   protected getTimeout(): number {
-    return Number(process.env.CLOUDFLARE_WORKERS_AI_TIMEOUT_MS) || 120_000;
+    return Number(process.env.CLOUDFLARE_WORKERS_AI_TIMEOUT_MS) || super.getTimeout();
   }
 
   protected buildRequestUrl(request: ConnectorRequest): string {

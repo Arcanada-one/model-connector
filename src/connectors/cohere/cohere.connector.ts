@@ -126,7 +126,7 @@ export class CohereConnector extends BaseApiConnector {
   }
 
   protected getTimeout(): number {
-    return Number(process.env.COHERE_TIMEOUT_MS) || 120_000;
+    return Number(process.env.COHERE_TIMEOUT_MS) || super.getTimeout();
   }
 
   protected getHeaders(): Record<string, string> {

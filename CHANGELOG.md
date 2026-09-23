@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The timeout knob did nothing, and `retryAfter` was in the wrong unit for two of our own
+  clients (A2-207).** Three defects on one path:
+  1. `CONNECTOR_TIMEOUT_MS` was declared in `env.schema.ts`, documented in README, checked by
+     the CI env-parity script and set to 300 000 on dev boxes — and read by no connector.
+     `BaseApiConnector.getTimeout()` returned a hard-coded 30 000 and `BaseCliConnector` a
+     hard-coded 120 000, so an operator who "raised the timeout" raised nothing and a request
+     without its own `timeout` died at 30 s x 2 attempts against a connector advertising
+     `maxTimeout: 300_000`. The budget now resolves as
+     `request.timeout` > `{NAME}_TIMEOUT_MS` > `CONNECTOR_TIMEOUT_MS` > 120 000, and the 17
+     per-connector overrides that each repeated `|| 120_000` delegate to it. Behaviour change:
+     connectors with no override (deepseek, ollama, ollama-cloud, vertex-generative, voyage-ai,
+     jina-ai, pinecone-inference) and `openmodel` default to 120 000 instead of 30 000.
+     `embedding` keeps 30 000 deliberately — see the comment on its `getTimeout()`.
+  2. `retryAfter` is **milliseconds** — what the breaker paths always computed, what perplexity
+     converts its `Retry-After` header into, and what README's error table promises. Both SDK
+     READMEs, `docs/sdk-typescript.md` and the ARAS renderer read it as seconds (a measured
+     `retryAfter: 15681` for a 30 s cooldown; the SDK doc's `* 1000` would have slept 8 hours).
+     The unit of a published field is not changed under its readers: it stays ms, every producer
+     now also emits `retryAfterSeconds` (rounded up) via `retryAfterFields()`, and the docs and
+     both SDKs were corrected. Both SDKs also copied the HTTP `Retry-After` header — seconds per
+     RFC 9110 — into the millisecond field unconverted; they convert now. A header-less 429 on
+     perplexity used to advertise `retryAfter: 0` (`Number(null)` is finite), i.e. "retry
+     immediately"; it now reports no delay.
+  3. A `timeout` no longer counts against the shared per-model circuit breaker when the CALLER's
+     own `request.timeout` was shorter than the connector budget. Measured on the live service:
+     3 client attempts x 2 server attempts = 6 consecutive failures past a threshold of 5, so one
+     caller with a short budget closed a route for every other caller for ~30 s. The caller still
+     gets `status: timeout`; nothing else changed — a timeout on our own budget, a caller budget
+     at or above ours, and every non-timeout failure still open the circuit.
+
 ### Added
 
 - **Prompt-cache policy at the gateway (AUP-CACHE-006 `enforce0`)** — Model Connector

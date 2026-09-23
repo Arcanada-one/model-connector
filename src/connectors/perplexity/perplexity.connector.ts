@@ -63,7 +63,7 @@ export class PerplexityConnector extends BaseApiConnector {
   }
 
   protected getTimeout(): number {
-    return Number(process.env.PERPLEXITY_TIMEOUT_MS) || 120_000;
+    return Number(process.env.PERPLEXITY_TIMEOUT_MS) || super.getTimeout();
   }
 
   protected getHeaders(): Record<string, string> {
@@ -123,11 +123,17 @@ export class PerplexityConnector extends BaseApiConnector {
       return { type: 'validation_error', message: text.slice(0, 500), details };
     }
     if (status === 429) {
+      // A2-207 — `Retry-After` is SECONDS on the wire (RFC 9110) and
+      // milliseconds in our envelope, hence the conversion. The `> 0` guard is
+      // not cosmetic: a MISSING header makes `headers.get()` return null,
+      // `Number(null)` is 0, and 0 is finite — so every header-less 429 used to
+      // advertise `retryAfter: 0`, i.e. "retry immediately", which is the one
+      // answer a rate limit never means.
       const seconds = Number(headers?.get?.('retry-after'));
       return {
         type: 'rate_limited',
         message: text.slice(0, 500),
-        retryAfter: Number.isFinite(seconds) ? seconds * 1_000 : undefined,
+        retryAfter: Number.isFinite(seconds) && seconds > 0 ? seconds * 1_000 : undefined,
       };
     }
     if (status >= 500) return { type: 'server_error', message: text.slice(0, 500) };

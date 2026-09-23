@@ -87,7 +87,7 @@ export class GrokConnector extends BaseApiConnector {
   }
 
   protected getTimeout(): number {
-    return Number(process.env.GROK_TIMEOUT_MS) || 120_000;
+    return Number(process.env.GROK_TIMEOUT_MS) || super.getTimeout();
   }
 
   protected getHeaders(): Record<string, string> {

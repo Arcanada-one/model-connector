@@ -10,6 +10,7 @@ import {
   IConnector,
   ProviderModelMeta,
   classifyErrorAction,
+  retryAfterFields,
 } from './interfaces/connector.interface';
 import { Semaphore, QueueTimeoutError } from './base-cli.connector';
 import { getConfig } from '../config/env.schema';
@@ -56,6 +57,12 @@ export interface ParsedApiOutput {
 export interface ParsedHttpError {
   type: string;
   message: string;
+  /**
+   * A2-207 — MILLISECONDS, like {@link ConnectorError.retryAfter}. A provider's
+   * `Retry-After` header is in seconds (RFC 9110) and must be multiplied here,
+   * as perplexity.connector.ts does. `execute` derives `retryAfterSeconds` from
+   * this figure.
+   */
   retryAfter?: number;
   details?: unknown;
 }
@@ -128,8 +135,29 @@ export abstract class BaseApiConnector implements IConnector {
   protected abstract parseResponse(json: unknown, request: ConnectorRequest): ParsedApiOutput;
   abstract getCapabilities(): ConnectorCapabilities;
 
+  /**
+   * A2-207 — the per-attempt budget handed to `AbortSignal.timeout` below.
+   *
+   * This used to return a hard-coded 30 000 while `CONNECTOR_TIMEOUT_MS` was
+   * declared in env.schema.ts, documented in README, parity-checked by CI and
+   * set to 300 000 on dev boxes — and read by nobody. An operator who "raised
+   * the timeout" raised nothing, and a request that named no `timeout` of its
+   * own died at 30 s no matter what, on a connector advertising
+   * `maxTimeout: 300_000`.
+   *
+   * Precedence, and the one shape every override follows:
+   *   request.timeout  >  {NAME}_TIMEOUT_MS  >  CONNECTOR_TIMEOUT_MS  >  120 000
+   *
+   * The fallback is used only when the env cannot be validated at all (specs
+   * that construct a connector without an environment); it matches the schema
+   * default so the two cannot drift.
+   */
   protected getTimeout(): number {
-    return 30_000;
+    try {
+      return getConfig().CONNECTOR_TIMEOUT_MS;
+    } catch {
+      return 120_000;
+    }
   }
 
   protected getHeaders(): Record<string, string> | Promise<Record<string, string>> {
@@ -374,7 +402,7 @@ export abstract class BaseApiConnector implements IConnector {
           error: {
             type: 'circuit_open',
             message: err.message,
-            retryAfter: Math.max(0, err.nextRetryAt - Date.now()),
+            ...retryAfterFields(err.nextRetryAt - Date.now()),
             ...action,
           },
         };
@@ -405,7 +433,13 @@ export abstract class BaseApiConnector implements IConnector {
     }
 
     const queueWaitMs = Date.now() - queueStart;
-    const timeout = request.timeout ?? this.getTimeout();
+    const connectorBudgetMs = this.getTimeout();
+    const timeout = request.timeout ?? connectorBudgetMs;
+    // A2-207 — whose budget is about to run out. A caller that asked for LESS
+    // time than this connector would have allowed is not evidence about the
+    // provider: see the timeout branch of the catch below.
+    const callerBudgetIsShorter =
+      request.timeout !== undefined && request.timeout < connectorBudgetMs;
     const start = Date.now();
 
     this.activeJobs++;
@@ -425,6 +459,11 @@ export abstract class BaseApiConnector implements IConnector {
         const parsedError = this.parseHttpError(res.status, text, res.headers);
         const errorType = parsedError.type;
         const action = classifyErrorAction(errorType);
+        // A2-207 — connectors report a provider retry delay in ms (see
+        // ParsedHttpError.retryAfter); the seconds twin is derived here so no
+        // connector has to remember to emit it.
+        const retryAfterOut =
+          parsedError.retryAfter !== undefined ? retryAfterFields(parsedError.retryAfter) : {};
         modelCb.recordFailure(errorType);
         return {
           id,
@@ -435,7 +474,7 @@ export abstract class BaseApiConnector implements IConnector {
           latencyMs: Date.now() - start,
           queueWaitMs,
           status: errorType === 'rate_limited' ? 'rate_limited' : 'error',
-          error: { ...parsedError, ...action },
+          error: { ...parsedError, ...retryAfterOut, ...action },
         };
       }
 
@@ -497,7 +536,28 @@ export abstract class BaseApiConnector implements IConnector {
           : 'network_error';
       const action = classifyErrorAction(errorType);
 
-      modelCb.recordFailure(errorType);
+      // A2-207 — the narrowest rule we can defend: a timeout is counted against
+      // the shared per-model breaker UNLESS it was the CALLER's own, shorter
+      // budget that expired. The breaker exists to take a sick route out of
+      // service for everybody; "this client would not wait as long as we would
+      // have" says nothing about the route's health, and the client is the only
+      // one who learns anything from it (it already gets status: timeout).
+      //
+      // Measured on the live service (A2-203): 3 client attempts x 2 server
+      // attempts = 6 consecutive failures past a threshold of 5, so one caller
+      // with a short budget closed `orq:deepseek-v4-pro` for every other caller
+      // for ~30 s.
+      //
+      // It stays narrow deliberately. A caller cannot disable the breaker by
+      // asking for MORE time than we allow (that timeout is ours and still
+      // counts), and it cannot hide any other failure: only `timeout` takes
+      // this branch, so 5xx / auth / parse failures under a short budget open
+      // the breaker exactly as before. The attempt is scored neither failure
+      // nor success — a success here would wipe an unrelated failure streak.
+      const callerTimedOutFirst = errorType === 'timeout' && callerBudgetIsShorter;
+      if (!callerTimedOutFirst) {
+        modelCb.recordFailure(errorType);
+      }
       return {
         id,
         connector: this.name,

@@ -347,7 +347,7 @@ When `status` is not `success`, the `error` object includes:
 
 **`recommendation` values:**
 - `retry` — resend the same request after a short delay
-- `wait` — wait for `retryAfter` ms or the indicated cooldown, then retry
+- `wait` — wait for `retryAfter` **milliseconds** (or `retryAfterSeconds`, the same delay rounded up to whole seconds), then retry
 - `abort` — do not retry; fix the request or configuration
 - `reauth` — re-authenticate the connector (CLI login expired)
 
@@ -356,6 +356,13 @@ When `status` is not `success`, the `error` object includes:
 Each connector has an independent circuit breaker. After `CIRCUIT_BREAKER_THRESHOLD` consecutive errors (default: 5), the connector enters `open` state and rejects requests with `circuit_open` for `CIRCUIT_BREAKER_COOLDOWN_MS` (default: 30s). After cooldown, one probe request is allowed (`half_open`). Success resets the breaker; failure re-opens it.
 
 `auth_error` and `binary_not_found` instantly open the circuit (no threshold wait).
+
+**A caller's own timeout does not count (A2-207).** When a request carries a `timeout` SHORTER than the
+connector's configured budget and that budget expires, the caller gets `status: timeout` as before, but the
+failure is not scored against the shared per-model breaker: "this client would not wait as long as we would
+have" is a fact about the client, not about the route. A timeout on the connector's own budget, a caller
+budget at or above it, and every non-timeout error still open the circuit exactly as before — so one impatient
+caller can no longer close a route for everybody (measured: 3 client attempts x 2 server attempts = 6 > 5).
 
 Check circuit state: `GET /connectors/:name/status` → `circuitBreaker: { state, consecutiveFailures, nextRetryAt }`
 
@@ -630,7 +637,7 @@ pnpm db:push      # Push schema to database
 | `BILLING_HOLD_TTL_MS` | no | How long a reservation survives without its owner returning (default: 1800000) |
 | `BILLING_INTENT_RETENTION_MS` | no | How long a completed request intent stays replayable under its `Idempotency-Key` (default: 86400000) |
 | `BILLING_RECONCILE_ENABLED` | no | Allow the hourly reconciler to CHARGE for measured spend that never reached the ledger (default: **false**; the sweep that returns abandoned holds always runs) |
-| `CONNECTOR_TIMEOUT_MS` | no | Default execution timeout (default: 120000) |
+| `CONNECTOR_TIMEOUT_MS` | no | Default per-attempt execution budget, applied when a request names no `timeout` of its own (default: 120000). Precedence: `request.timeout` > `{NAME}_TIMEOUT_MS` > this > 120000. Until A2-207 this value was read by nobody and every connector without its own override used a hard-coded 30 000 |
 | `CONNECTOR_MAX_CONCURRENCY` | no | Global fallback concurrency limit (default: 4) |
 | `CLAUDE_CODE_MAX_CONCURRENCY` | no | Claude Code CLI concurrent limit (default: 4) |
 | `CURSOR_MAX_CONCURRENCY` | no | Cursor CLI concurrent limit (default: **1** — DO NOT INCREASE) |
@@ -829,7 +836,7 @@ if (res.status >= 400) throw new Error(`MC HTTP ${res.status}`);
 
 // Бизнес-уровень: коннектор выполнился, но модель вернула ошибку
 const data = await res.json();
-if (data.status === 'rate_limited') { /* подождать data.error.retryAfter */ }
+if (data.status === 'rate_limited') { /* подождать data.error.retryAfter МИЛЛИСЕКУНД (или retryAfterSeconds секунд) */ }
 if (data.status === 'timeout')      { /* retry или fallback-коннектор */ }
 if (data.status === 'error')        { /* data.error.type + data.error.message */ }
 ```

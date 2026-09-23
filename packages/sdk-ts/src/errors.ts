@@ -3,7 +3,10 @@ import type { ExecuteErrorEnvelope, FirstDispatchObservationV0 } from './types.j
 export class ConnectorError extends Error {
   public readonly status: number;
   public readonly envelope?: ExecuteErrorEnvelope;
+  /** A2-207 — MILLISECONDS. See {@link ExecuteErrorEnvelope.retryAfter}. */
   public readonly retryAfter?: number;
+  /** A2-207 — the same delay in SECONDS, rounded up. */
+  public readonly retryAfterSeconds?: number;
   /** Unverified correlation receipt, retained outside generic cause redaction. */
   public readonly firstDispatchObservation?: FirstDispatchObservationV0;
 
@@ -18,6 +21,7 @@ export class ConnectorError extends Error {
     this.status = status;
     this.envelope = envelope;
     this.retryAfter = envelope?.retryAfter;
+    this.retryAfterSeconds = envelope?.retryAfterSeconds;
     this.firstDispatchObservation = firstDispatchObservation;
   }
 }

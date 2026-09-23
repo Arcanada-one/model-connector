@@ -83,7 +83,16 @@ export type ErrorType =
 export interface ExecuteErrorEnvelope {
   type: ErrorType | string;
   message: string;
+  /**
+   * How long to wait before retrying, in MILLISECONDS. This is the unit the
+   * server has always sent (an open breaker reports `nextRetryAt - now`), and
+   * the unit this SDK normalises the HTTP `Retry-After` header into. Read
+   * {@link retryAfterSeconds} if seconds are what you want — do not divide or
+   * multiply this field yourself.
+   */
   retryAfter?: number;
+  /** The same delay in SECONDS, rounded up. Present whenever `retryAfter` is. */
+  retryAfterSeconds?: number;
   retryable: boolean;
   recommendation: ErrorAction;
 }

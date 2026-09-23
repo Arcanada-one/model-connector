@@ -286,7 +286,15 @@ def test_401_auth_error() -> None:
         assert exc_info.value.envelope.type == "auth_error"
 
 
-def test_retry_after_header() -> None:
+def test_retry_after_header_is_converted_to_milliseconds() -> None:
+    """A2-207 - `Retry-After` is seconds (RFC 9110), `retryAfter` is milliseconds.
+
+    The header value used to be copied into the envelope field unconverted, so a
+    429 asking for 10 s arrived as `retry_after == 10.0` next to server figures
+    like 15681 - two units in one attribute, and the README told readers to
+    print it with an "s" suffix.
+    """
+
     def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(
             429,
@@ -304,7 +312,52 @@ def test_retry_after_header() -> None:
     with _make_client(handler) as client:
         with pytest.raises(ConnectorError) as exc_info:
             client.execute({"connector": "openrouter", "prompt": "p"})
-        assert exc_info.value.retry_after == 10.0
+        assert exc_info.value.retry_after == 10_000.0
+        assert exc_info.value.retry_after_seconds == 10.0
+
+
+def test_server_retry_after_stays_milliseconds_and_gains_a_seconds_twin() -> None:
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            503,
+            json={
+                "error": {
+                    "type": "circuit_open",
+                    "message": "Circuit breaker open for orq",
+                    "retryAfter": 15681,
+                    "retryAfterSeconds": 16,
+                    "retryable": False,
+                    "recommendation": "wait",
+                }
+            },
+        )
+
+    with _make_client(handler) as client:
+        with pytest.raises(ConnectorError) as exc_info:
+            client.execute({"connector": "openrouter", "prompt": "p"})
+        assert exc_info.value.retry_after == 15681
+        assert exc_info.value.retry_after_seconds == 16
+
+
+def test_no_retry_delay_is_reported_when_nothing_carries_one() -> None:
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            429,
+            json={
+                "error": {
+                    "type": "rate_limited",
+                    "message": "slow down",
+                    "retryable": True,
+                    "recommendation": "wait",
+                }
+            },
+        )
+
+    with _make_client(handler) as client:
+        with pytest.raises(ConnectorError) as exc_info:
+            client.execute({"connector": "openrouter", "prompt": "p"})
+        assert exc_info.value.retry_after is None
+        assert exc_info.value.retry_after_seconds is None
 
 
 def test_timeout_maps_to_timeout_error() -> None:

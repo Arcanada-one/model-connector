@@ -304,7 +304,11 @@ describe('Client', () => {
     });
   });
 
-  it('propagates Retry-After header on 429', async () => {
+  // A2-207 — `retryAfter` is MILLISECONDS, everywhere. The HTTP `Retry-After`
+  // header is seconds (RFC 9110), so the fallback path has to convert: it used
+  // to put the bare `10` into the same field the server fills with a
+  // millisecond figure, and a caller who slept for it waited 10 ms.
+  it('converts the Retry-After header from seconds to the envelope milliseconds', async () => {
     const client = new Client({
       apiKey: API_KEY,
       baseUrl: BASE_URL,
@@ -323,7 +327,53 @@ describe('Client', () => {
         ),
       ),
     });
-    await expect(client.execute(baseRequest)).rejects.toMatchObject({ retryAfter: 10 });
+    await expect(client.execute(baseRequest)).rejects.toMatchObject({
+      retryAfter: 10_000,
+      retryAfterSeconds: 10,
+    });
+  });
+
+  it('keeps the server figure in milliseconds and derives the seconds twin', async () => {
+    const client = new Client({
+      apiKey: API_KEY,
+      baseUrl: BASE_URL,
+      fetch: makeFetch(() =>
+        jsonResponse(503, {
+          error: {
+            type: 'circuit_open',
+            message: 'Circuit breaker open for orq',
+            retryAfter: 15_681,
+            retryable: false,
+            recommendation: 'wait',
+          },
+        }),
+      ),
+    });
+    await expect(client.execute(baseRequest)).rejects.toMatchObject({
+      retryAfter: 15_681,
+      retryAfterSeconds: 16,
+    });
+  });
+
+  it('reports no delay at all when neither the envelope nor the header carries one', async () => {
+    const client = new Client({
+      apiKey: API_KEY,
+      baseUrl: BASE_URL,
+      fetch: makeFetch(() =>
+        jsonResponse(429, {
+          error: {
+            type: 'rate_limited',
+            message: 'slow down',
+            retryable: true,
+            recommendation: 'wait',
+          },
+        }),
+      ),
+    });
+    const err = await client.execute(baseRequest).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ConnectorError);
+    expect((err as ConnectorError).retryAfter).toBeUndefined();
+    expect((err as ConnectorError).retryAfterSeconds).toBeUndefined();
   });
 
   it('classifies 5xx as ConnectorError with retryable envelope', async () => {

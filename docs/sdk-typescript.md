@@ -104,7 +104,9 @@ try {
   } else if (err instanceof ConnectorError) {
     console.error('http', err.status, err.envelope?.type);
     if (err.envelope?.retryable && err.retryAfter) {
-      // wait err.retryAfter seconds before retrying
+      // err.retryAfter is MILLISECONDS; err.retryAfterSeconds is the same
+      // delay in whole seconds, rounded up.
+      await new Promise(r => setTimeout(r, err.retryAfter));
     }
   } else {
     throw err;
@@ -129,8 +131,12 @@ The full set of `envelope.type` values mirrors the server's `classifyErrorAction
 Server enforces per-key and per-connector rate limits. On a 429 the SDK exposes the `Retry-After` value:
 
 ```ts
+// `retryAfter` is MILLISECONDS — both when the server sends it and when the
+// SDK derives it from the `Retry-After` header (seconds on the wire, converted
+// on the way in). Do not scale it: `* 1000` here turned a 30 s cooldown into an
+// 8-hour sleep (A2-207).
 if (err instanceof ConnectorError && err.status === 429 && err.retryAfter) {
-  await new Promise(r => setTimeout(r, err.retryAfter * 1000));
+  await new Promise(r => setTimeout(r, err.retryAfter));
 }
 ```
 

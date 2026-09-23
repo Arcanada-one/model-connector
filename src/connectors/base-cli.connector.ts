@@ -11,6 +11,7 @@ import {
   ConnectorStatus,
   IConnector,
   classifyErrorAction,
+  retryAfterFields,
 } from './interfaces/connector.interface';
 import { getConfig } from '../config/env.schema';
 import { CircuitOpenError } from '../core/resilience/circuit-breaker';
@@ -146,6 +147,15 @@ export abstract class BaseCliConnector implements IConnector {
     }
   }
 
+  /** A2-207 — the per-attempt budget. See BaseApiConnector.getTimeout(). */
+  protected getTimeout(): number {
+    try {
+      return getConfig().CONNECTOR_TIMEOUT_MS;
+    } catch {
+      return 120_000;
+    }
+  }
+
   protected get cbManager(): CircuitBreakerManager {
     if (!this._cbManager) {
       try {
@@ -224,7 +234,7 @@ export abstract class BaseCliConnector implements IConnector {
           error: {
             type: 'circuit_open',
             message: err.message,
-            retryAfter: Math.max(0, err.nextRetryAt - Date.now()),
+            ...retryAfterFields(err.nextRetryAt - Date.now()),
             ...action,
           },
         };
@@ -259,7 +269,13 @@ export abstract class BaseCliConnector implements IConnector {
     }
 
     const queueWaitMs = Date.now() - queueStart;
-    const timeout = request.timeout ?? 120_000;
+    // A2-207 — same knob, same precedence as BaseApiConnector.getTimeout():
+    // request.timeout > CONNECTOR_TIMEOUT_MS > 120 000. The literal that stood
+    // here read no configuration at all.
+    const connectorBudgetMs = this.getTimeout();
+    const timeout = request.timeout ?? connectorBudgetMs;
+    const callerBudgetIsShorter =
+      request.timeout !== undefined && request.timeout < connectorBudgetMs;
     const start = Date.now();
 
     // CWD isolation: spawn from temp dir to prevent CLI workspace scanning
@@ -330,7 +346,12 @@ export abstract class BaseCliConnector implements IConnector {
       const message = err instanceof Error ? err.message : String(err);
       const errorType = message.includes('timeout') ? 'timeout' : 'spawn_error';
       const action = classifyErrorAction(errorType);
-      modelCb.recordFailure(errorType);
+      // A2-207 — a caller whose own, shorter budget expired is not evidence
+      // about this CLI's health; see BaseApiConnector.execute for the rule and
+      // why it is drawn this narrowly.
+      if (!(errorType === 'timeout' && callerBudgetIsShorter)) {
+        modelCb.recordFailure(errorType);
+      }
       return {
         id,
         connector: this.name,

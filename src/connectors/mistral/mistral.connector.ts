@@ -30,7 +30,7 @@ export class MistralConnector extends BaseApiConnector {
     return STATIC_MODELS;
   }
   protected getTimeout(): number {
-    return Number(process.env.MISTRAL_TIMEOUT_MS) || 120_000;
+    return Number(process.env.MISTRAL_TIMEOUT_MS) || super.getTimeout();
   }
   protected getHeaders(): Record<string, string> {
     return {

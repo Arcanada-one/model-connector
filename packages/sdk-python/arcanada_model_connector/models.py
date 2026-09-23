@@ -114,7 +114,14 @@ class ExecuteErrorEnvelope(BaseModel):
     model_config = ConfigDict(extra="allow", populate_by_name=True)
     type: str
     message: str
+    #: A2-207 - MILLISECONDS. The unit the server has always sent (an open
+    #: breaker reports ``nextRetryAt - now``) and the unit this SDK normalises
+    #: the HTTP ``Retry-After`` header into. Read ``retry_after_seconds`` when
+    #: seconds are what you want; never scale this field yourself.
     retry_after: float | None = Field(default=None, alias="retryAfter")
+    #: A2-207 - the same delay in SECONDS, rounded up. Present whenever
+    #: ``retry_after`` is.
+    retry_after_seconds: float | None = Field(default=None, alias="retryAfterSeconds")
     retryable: bool = False
     recommendation: ErrorAction = "abort"
 
