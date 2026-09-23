@@ -15,4 +15,4 @@ the same commits. Same choice as `change-admission-a2-201-*.json.d`, which kept 
 | `v-type-check-packages-sdk-ts-tsconfig.txt` | `tsc` over `packages/sdk-ts` |
 | `v-targeted-test-packages-sdk-ts.txt` | what the profile's sdk-ts test verifier did (see the `not_measured` note in the receipt) |
 | `v-contract-diff.json`, `v-config-schema.json`, `v-fitness.json`, `v-canary.json`, `v-doc-reference.txt` | the remaining matrix verifiers |
-| `sdk-suites-by-hand.txt` | the two SDK suites run by hand, red before / green after — evidence for a reader, not a verifier verdict |
+| `sdk-suites.txt` | the two SDK suites: red before / green after by hand, and their CI conclusions |

@@ -1,9 +1,20 @@
 A2-207 — the two SDK suites, run by hand on arcana-devs, 2026-09-23.
 
-Neither is a verifier verdict: the repository's verify profile has no targeted_test verifier for
-packages/*, and .github/workflows/ci.yml does not run them on a pull request either (publish-sdks.yml
-runs them only on a push to main that touches the package). The corresponding entities are recorded
-not_measured in the receipt, deliberately, rather than exempted into a pass on the strength of this file.
+CORRECTION, written after the first CI run on PR #139. An earlier version of this file, of the receipt
+note and of the PR body claimed CI does not run these suites on a pull request. That was wrong:
+.github/workflows/publish-sdks.yml triggers on `pull_request` for `packages/sdk-ts/**` and
+`packages/sdk-python/**`, and runs `pnpm --filter @arcanada/model-connector-sdk test` and `pytest`.
+Both jobs concluded `success` on commit 45d759d:
+
+  TypeScript — build + test + dry-run   success
+    https://github.com/Arcanada-one/model-connector/actions/runs/35868799774/job/107207135699
+  Python — build + test + twine check   success
+    https://github.com/Arcanada-one/model-connector/actions/runs/35868799774/job/107207135282
+
+What remains true is the narrower statement: the graph VERIFY PROFILE has no targeted_test verifier
+bound to packages/*, so tools/graph/verify.py returns no per-entity verdict for those seven entities and
+they stay not_measured in the receipt. A green CI job over the whole package is good evidence and is not
+the same object as a per-entity verifier verdict; it is recorded here rather than promoted into one.
 
 packages/sdk-ts  —  pnpm vitest run
   RED, before the fix (the two assertions this change introduces):
