@@ -1,0 +1,26 @@
+A2-209 — v-contract-diff NEGATIVE CONTROL: both failures are PRE-EXISTING
+========================================================================
+
+Question: are the two v-contract-diff failures in the A2-209 impact set caused by this change?
+
+Evidence 1 — the code is byte-identical on both sides.
+  git diff --stat main..HEAD -- src/admin/ src/connectors/dto/ src/connectors/connectors.controller.ts
+  => empty. None of the provider contracts or their consumers is touched by A2-209.
+
+Evidence 2 — empirical control on a CLEAN copy of main, A2-209 commit absent.
+  control repo HEAD: 70cee53469b08aef8ea147ffbc2c58e96b71f0d2 (main)
+  branch HEAD:       292800adb9b06509940a08a9a7aeac49d3fce58d
+  python3 tools/graph/verify.py --repo <clean-main> --worktree \
+      --files src/admin/circuit-breaker.controller.ts src/connectors/connectors.controller.ts \
+      --graph auto
+
+  Result — both FAIL identically with no A2-209 change present:
+    FAILED | code_unit:src/admin/circuit-breaker.controller.ts
+      v-contract-diff: contract:src/admin/dto.ts#ResetCircuitBreakerSchema: consumer reads key `data` that the provider does not declare; consumer reads key `success` that the provide
+    FAILED | code_unit:src/connectors/connectors.controller.ts
+      v-contract-diff: contract:src/connectors/dto/catalog.dto.ts#CatalogFiltersSchema: consumer reads key `data` that the provider does not declare; consumer reads key `error` that t
+
+Conclusion: a pre-existing repository finding (the controllers read a { success, data, error }
+response envelope that the Zod provider schema does not declare), surfaced here only because
+graph reachability pulls these controllers into A2-209's impact set. Not introduced, not
+resolved, and not silently dropped — exempted with this control as its evidence.
