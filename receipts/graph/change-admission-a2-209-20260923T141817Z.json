@@ -1,7 +1,8 @@
 {
  "admission": {
+  "recomputed_note": "Recomputed after exemptions were issued: the draft verdict predated them. 0 failed and 2 not_measured entities remain unexempted. The two that remain are the A2-201 and A2-207 ChangeAdmissionReceipts themselves, which the verifier marks 'historical receipt: asserted, never re-verified (I14)'. They are left not_measured on purpose: historical 'done' is asserted, never verified until re-validated, so exempting them would be exactly the silent default the mandate forbids. PAUSED_SAFE with a reason, not a guessed pass.",
   "rule": "admitted requires every verdict = verified; failed without exemption \u21d2 refused; not_measured without exemption \u21d2 paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
-  "verdict": "refused"
+  "verdict": "paused_safe"
  },
  "captured_at_utc": "2026-09-23T14:17:22Z",
  "change_set": {
