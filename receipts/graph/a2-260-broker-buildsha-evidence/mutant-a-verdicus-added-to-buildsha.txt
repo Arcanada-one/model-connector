@@ -1,0 +1,17 @@
+PASS: fixed_muneral_readback
+PASS: caller_argument_rejected
+PASS: other_service_rejected
+PASS: symlinked_helper_rejected
+PASS: missing_root_environment_rejected
+PASS: symlinked_environment_rejected
+PASS: non_root_owned_environment_rejected
+PASS: registry_login_refused_for_unlisted_service
+PASS: registry_logout_refused_for_unlisted_service
+PASS: registry_login_refused_for_unknown_service
+PASS: registry_login_rejects_flag_username
+PASS: registry_login_requires_a_username
+PASS: registry_logout_takes_no_arguments
+PASS: image_tag_pinned_to_checkout_head
+PASS: build_sha_pinned_to_checkout_head_for_muneral
+FAIL: BUILD_SHA leaked into a service that does not declare it
+FAKE_DOCKER IMAGE_TAG=c044ee9c03ab80f111139a888dc8942d16365d3f BUILD_SHA=c044ee9c03ab80f111139a888dc8942d16365d3f ARGV=compose -p verdicus-api -f /tmp/tmp.gJLe7GDB6p/state/verdicus/docker-compose.prod.yml pull

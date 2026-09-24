@@ -1,0 +1,26 @@
+PASS: fixed_muneral_readback
+PASS: caller_argument_rejected
+PASS: other_service_rejected
+PASS: symlinked_helper_rejected
+PASS: missing_root_environment_rejected
+PASS: symlinked_environment_rejected
+PASS: non_root_owned_environment_rejected
+PASS: registry_login_refused_for_unlisted_service
+PASS: registry_logout_refused_for_unlisted_service
+PASS: registry_login_refused_for_unknown_service
+PASS: registry_login_rejects_flag_username
+PASS: registry_login_requires_a_username
+PASS: registry_logout_takes_no_arguments
+PASS: image_tag_pinned_to_checkout_head
+PASS: build_sha_pinned_to_checkout_head_for_muneral
+PASS: image_tag_absent_for_other_services
+PASS: env_installed_beside_subdirectory_compose
+PASS: env_still_at_root_for_root_level_compose
+PASS: env_installed_beside_argana_root_compose
+PASS: argana_container_name_is_inside_the_pinned_project
+PASS: argana_up_uses_the_pinned_project
+PASS: argana_freshness_inspects_the_derived_container
+PASS: argana_may_not_establish_a_registry_credential
+PASS: argana_has_no_root_deploy_script
+PASS: argana_sync_requires_a_fetch_credential
+All aggregate readback broker cases passed.

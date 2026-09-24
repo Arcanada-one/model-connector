@@ -1,0 +1,22 @@
+# A2-260 — the broker copy installed on arcana-prd vs this repository's main, measured 2026-09-24 on arcana-devs
+
+$ sha256sum deploy/arcanada-compose-broker.sh            # repository, main 7dacdfa
+237444725efb5288b7043b4ab54b890e7d59dc3301069307f34e89d0b513afc2
+
+$ ssh root@100.90.7.20 sha256sum /usr/local/sbin/arcanada-compose-broker   # arcana-prd, installed
+237444725efb5288b7043b4ab54b890e7d59dc3301069307f34e89d0b513afc2
+
+$ diff -u <repo main copy> <installed copy>  ->  no output, byte-identical
+
+$ sha256sum deploy/arcanada-compose-broker.sudoers        # repository
+a9668698e99a2306887687726b978b71b6a26663e49f58d74086f89f00c95508
+$ ssh root@100.90.7.20 sha256sum /etc/sudoers.d/arcanada-compose-broker
+a9668698e99a2306887687726b978b71b6a26663e49f58d74086f89f00c95508
+
+$ ssh root@100.90.7.20 git -C /var/lib/arcanada-deploy/model-connector rev-parse HEAD
+7dacdfa5b192abb4e7da04253b1efd53ab3fe98d
+
+# So: the installed broker is exactly main, the sudoers grant this change does not touch is
+# exactly the repository copy, and the re-install of this branch carries the one table row and
+# nothing else. New file sha256 after this change:
+077a11fe01be1070e0f999d290d61bed93ca7dce7a508ba0b333f55e1492671c  deploy/arcanada-compose-broker.sh
