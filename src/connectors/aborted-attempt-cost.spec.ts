@@ -275,6 +275,7 @@ describe('A2-295 — Model Connector does not re-buy a lost bet', () => {
         supportsTools: false,
         maxTimeout: 300_000,
       }),
+      resetCircuitBreaker: vi.fn().mockReturnValue([]),
     };
   }
 
