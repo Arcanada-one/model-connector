@@ -96,10 +96,29 @@ export type ServiceExecuteRequest = ConnectorRequest & {
   idempotencyKey?: string;
 };
 
-const RETRYABLE_ERRORS = new Set([
+export const RETRYABLE_ERRORS = new Set([
   'json_parse_error',
   'rate_limited',
-  'timeout',
+  // A2-295 — `'timeout'` is NOT here, and its absence is the point.
+  //
+  // It was. One client `/execute` therefore bought up to
+  // `CONNECTOR_MAX_RETRIES + 1` provider calls, each re-sending the whole
+  // prompt under the SAME per-attempt budget the caller had already proved
+  // insufficient, and each reported with `usage: 0` (`base-api.connector.ts`,
+  // fixed by the same change). Reproduced on a local test double: a single
+  // `/execute` with a 99 000-character prompt and `timeout: 5000` handed the
+  // provider 98 750 bytes TWICE and settled the ledger at $0.000000.
+  //
+  // Retrying a timeout is the one retry in this set that is not free to get
+  // wrong. A rate limit heals on its own clock; a 5xx or a parse failure may
+  // have cost tokens but at least might succeed on the same budget. An aborted
+  // attempt has already demonstrated that this prompt does not finish inside
+  // this deadline — the retry is the identical losing bet, and the provider
+  // charges full input tokens for it. Nothing Model Connector controls changes
+  // between the attempts: the deadline is the caller's own `request.timeout`.
+  //
+  // `queue_timeout` is a different fact and was never in this set: the request
+  // never left our queue, so no prompt was sent and no tokens were spent.
   'server_error',
   'execution_error',
   'network_error',
@@ -1235,6 +1254,10 @@ export class ConnectorsService {
       // carries one, so the meter has to see it rather than charge every
       // prompt token at full price.
       cachedInputTokens: response.usage.cachedInputTokens,
+      // A2-295 — an aborted attempt reports input tokens it estimated from the
+      // prompt. The tariff is still the catalogue's, so the arithmetic is
+      // unchanged; only the `costSource` has to say the COUNT was ours.
+      estimatedUsage: response.usage.estimated === true,
       pricing,
       // A2-223 — the connector's own declaration of how it is paid for. Read
       // from the registry rather than inferred from `type`, and absent means
@@ -1308,6 +1331,12 @@ export class ConnectorsService {
     // a different retention policy. Measured on one host over ten days: 307
     // such rows, $120.363277, all of it eventually `uncollectible`.
     if (costSource === 'subscription') return 'model-request:subscription';
+    // A2-295 — an estimated charge has to be findable in the LEDGER, not only
+    // on the request row, for the same reason `:unpriced` does: the ledger is
+    // the audit surface and has a different retention policy. This is the one
+    // reason whose amount was never metered by anybody, so a reconciliation
+    // that wants "charges we stand behind" must be able to exclude it.
+    if (costSource === 'estimated-input') return 'model-request:estimated-input';
     return 'model-request';
   }
 

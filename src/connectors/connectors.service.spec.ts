@@ -377,8 +377,13 @@ describe('ConnectorsService', () => {
           latencyMs: 50,
           status: 'error',
           error: {
-            type: 'timeout',
-            message: 'timed out',
+            // A2-295 — was `'timeout'`, which is no longer retryable at all
+            // (an aborted attempt is paid-for spend, and the retry is the same
+            // losing bet). This test is about the attempt CAP, not about which
+            // classes are retryable, so it now uses a class that still is;
+            // `aborted-attempt-cost.spec.ts` owns the timeout decision.
+            type: 'server_error',
+            message: 'upstream 500',
             retryable: true,
             recommendation: 'retry',
           },

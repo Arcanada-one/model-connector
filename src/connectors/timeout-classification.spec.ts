@@ -232,7 +232,12 @@ describe('A2-210 §1 — an API connector names a timeout a timeout', () => {
 
     expect(res.error?.type).toBe('timeout');
     expect(res.status).toBe('timeout');
-    expect(res.error?.message).toBe('The operation was aborted due to timeout');
+    // A2-295 appended the actionable half (which budget expired, on which model,
+    // and that the attempt was paid for) to this message. A2-210's claim is that
+    // Node's own abort message SURVIVES rather than being swallowed by a
+    // network-error envelope, so it is asserted as a substring, not as the whole
+    // string — the assertion still fails if the message is replaced.
+    expect(res.error?.message).toContain('The operation was aborted due to timeout');
   });
 
   it("the connector's OWN expired budget is a timeout too", async () => {

@@ -151,6 +151,26 @@ export interface ConnectorResponse {
      */
     usageMissing?: true;
     /**
+     * A2-295 — the token counts above are OURS, estimated from the prompt we
+     * sent, because the attempt was aborted before the provider answered and no
+     * `usage` object exists to read.
+     *
+     * The sibling of {@link usageMissing} and the opposite decision. Where the
+     * provider answered but said nothing about usage, Model Connector reports
+     * the silence. Where the provider never answered at all, the tokens are
+     * nonetheless spent — it read the whole prompt — and reporting zero is a
+     * false measurement rather than a missing one. So this path reports a
+     * number and labels it as ours.
+     *
+     * Set to `true` only, never to `false`: a response without the key is one
+     * whose counts came from the provider.
+     *
+     * Input only. Output tokens the provider may have generated before the
+     * socket was cut are reported as 0 — an under-statement we can defend,
+     * against an over-statement we could not.
+     */
+    estimated?: true;
+    /**
      * `costUsd` split by what was billed for. Null when the split is unknown —
      * a provider invoice is a single number, and a fabricated split would be
      * indistinguishable from a measured one.
@@ -207,7 +227,26 @@ export interface ConnectorResponse {
 
 const ERROR_ACTION_MAP: Record<string, { retryable: boolean; recommendation: ErrorAction }> = {
   rate_limited: { retryable: true, recommendation: 'wait' },
-  timeout: { retryable: true, recommendation: 'retry' },
+  // A2-295 — an aborted upstream attempt is NOT a free re-roll.
+  //
+  // It used to read `{ retryable: true, recommendation: 'retry' }`, and every
+  // layer of the stack believed it: Model Connector retried the attempt itself
+  // (`RETRYABLE_ERRORS` in `connectors.service.ts`, removed by the same change)
+  // and the agent clients retried on top. Measured on a local test double
+  // (A2-295): ONE `/execute` handed a 98 750-byte prompt to the provider TWICE,
+  // and every one of those attempts was reported with `usage: 0`.
+  //
+  // The second attempt is the same prompt, to the same model, under the same
+  // per-attempt budget the caller themselves sent — a bet that has already
+  // lost once, and one the provider charges for whether it wins or not. What a
+  // caller can usefully do instead (raise `timeout`, pick a faster model, or
+  // stream) is not one of the four `ErrorAction` values, so the recommendation
+  // is `abort` and `error.message` carries the actionable part.
+  //
+  // Narrow: `queue_timeout` — the request never left Model Connector's own
+  // queue, so nothing was sent and nothing was consumed — is deliberately
+  // unchanged and still `retryable`.
+  timeout: { retryable: false, recommendation: 'abort' },
   server_error: { retryable: true, recommendation: 'retry' },
   json_parse_error: { retryable: true, recommendation: 'retry' },
   execution_error: { retryable: true, recommendation: 'retry' },

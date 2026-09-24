@@ -39,6 +39,30 @@ export type CostSource =
   | 'catalog-free'
   /** Nothing was consumed (error, refusal, or a connector reporting no usage). */
   | 'zero-usage'
+  /**
+   * A2-295 — tokens were consumed by an attempt that was ABORTED before the
+   * provider answered, so the token counts are OURS (estimated from the prompt
+   * we sent) and not the provider's.
+   *
+   * It exists because the alternative on this path was `'zero-usage'` — "nothing
+   * was consumed" — asserted about a request whose entire prompt the provider
+   * had already read and will bill for. Measured on the A2-278 receipt: a run
+   * the provider charged $0.086584 for was recorded by Model Connector as
+   * $0.000000, so no `max_cost_usd` anywhere in the stack could see it.
+   *
+   * Kept separate from `'catalog'` rather than folded into it because the
+   * tariff is the catalogue's and trustworthy while the TOKEN COUNT is an
+   * estimate, and a reconciliation must be able to find every charge that rests
+   * on one:
+   *
+   *     SELECT sum("costUsd") FROM "Request" WHERE "costSource" = 'estimated-input';
+   *
+   * is the amount of the ledger nobody metered. It is an under-statement by
+   * construction — output tokens the provider may have generated before we hung
+   * up are charged at zero, because we cannot count them and guessing upward
+   * would bill a caller for output they never received.
+   */
+  | 'estimated-input'
   /** Tokens were consumed and NO price was known. See the note below. */
   | 'unpriced'
   /**
@@ -205,6 +229,13 @@ export function measureCostUsd(input: {
    * previous implementation.
    */
   lane?: BillingLane;
+  /**
+   * A2-295 — true when `inputTokens` was ESTIMATED from the prompt rather than
+   * reported by the provider (an aborted attempt). Only changes the `source`
+   * the result carries; the arithmetic is identical, because the tariff is the
+   * same tariff and only the token count is ours.
+   */
+  estimatedUsage?: boolean;
 }): MeasuredCost {
   const { providerCostUsd, pricing } = input;
 
@@ -298,7 +329,10 @@ export function measureCostUsd(input: {
     // identity. Reconciliation queries must therefore allow a 1e-6 tolerance.
     return {
       costUsd: roundToStorage(inputCost + outputCost),
-      source: 'catalog',
+      // A2-295 — the tariff came from the catalogue either way; the source says
+      // whether the TOKENS did. An estimated count charged as `'catalog'` would
+      // be indistinguishable from a metered one in every reconciliation query.
+      source: input.estimatedUsage ? 'estimated-input' : 'catalog',
       inputCostUsd: roundToStorage(inputCost),
       outputCostUsd: roundToStorage(outputCost),
     };
