@@ -233,6 +233,19 @@ declare -rA MIGRATE=(
 # from its own checkout HEAD.
 declare -rA BUILDSHA=(
   [transcribator-api]='yes'
+  # A2-260: muneral's docker-compose.prod.yml passes `MUNERAL_BUILD_SHA:
+  # ${BUILD_SHA:-}` as a build arg so /health can name the commit its image was
+  # built from (A2-255). `:-` means an unexported variable does not fail the
+  # build — it resolves to empty, so production answered `build.sha: null` with
+  # a reason. Measured 2026-09-24: `curl https://api.muneral.com/health` →
+  # `"sha":null` while main was 3153927. A row here is the whole fix and it
+  # grants nothing else: BUILDSHA is read in exactly ONE place (compose_env),
+  # gains no verb, no argument, no other environment passthrough, and the value
+  # is still derived from the broker's own checkout HEAD rather than accepted
+  # from the caller. muneral already deploys through this host's table (REPOS,
+  # COMPOSE, PROJECT, ENVFILE, MIGRATE, AGGREGATE_READBACK rows above), so this
+  # admits it to no capability it did not already have.
+  [muneral]='yes'
 )
 # Services whose compose file interpolates IMAGE_TAG to select a PRE-BUILT
 # image from a registry. The broker supplies it from its own checkout HEAD, so

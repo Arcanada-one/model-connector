@@ -1,0 +1,2 @@
+$ curl -s https://api.muneral.com/health      # 2026-09-24, before the row, muneral main 3153927
+{"status":"ok","version":"0.4.6","build":{"sha":null,"source":null,"problem":"MUNERAL_BUILD_SHA is not set, so this process cannot name the commit it was built from. It is baked into the image from the build arg fed by docker-compose.prod.yml; an instance started by hand from a working tree has no value to report. Read this as not_measured, never as a pass."}}

@@ -10,9 +10,18 @@ state_root="${fixture_dir}/state"
 env_root="${fixture_dir}/env"
 bin_root="${fixture_dir}/bin"
 broker="${fixture_dir}/broker"
-mkdir -p "${state_root}/muneral/.git" "${state_root}/muneral/apps/api/scripts" \
-  "${env_root}" "${bin_root}"
+mkdir -p "${state_root}/muneral/apps/api/scripts" "${env_root}" "${bin_root}"
 cp "$subject" "$broker"
+
+# A2-260 — a REAL HEAD, not an empty `.git` directory. muneral is now in the
+# BUILDSHA table, so `compose_env` reads `git rev-parse HEAD` out of this
+# checkout for every compose verb; a fixture that cannot answer would make
+# every muneral case red for a reason that has nothing to do with what it
+# asserts. `require_checkout` still sees the `.git` it looks for.
+git -C "${state_root}/muneral" init -q
+git -C "${state_root}/muneral" -c user.email=t@example.invalid -c user.name=t \
+  commit -q --allow-empty -m 'fixture head'
+muneral_head="$(git -C "${state_root}/muneral" rev-parse HEAD)"
 
 helper="${state_root}/muneral/apps/api/scripts/semantic-aggregate-readback.mjs"
 printf '%s\n' '// fixed reviewed helper fixture' >"$helper"
@@ -169,9 +178,10 @@ fake_docker="${bin_root}/docker"
 cat >"$fake_docker" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
-# Report the variable the broker exported, so the test asserts the VALUE and
+# Report the variables the broker exported, so the tests assert the VALUE and
 # not merely that the command was reached.
-printf 'FAKE_DOCKER IMAGE_TAG=%s ARGV=%s\n' "${IMAGE_TAG:-<unset>}" "$*"
+printf 'FAKE_DOCKER IMAGE_TAG=%s BUILD_SHA=%s ARGV=%s\n' \
+  "${IMAGE_TAG:-<unset>}" "${BUILD_SHA:-<unset>}" "$*"
 SH
 chmod 0755 "$fake_docker"
 sed -i -e "s#^readonly DOCKER=.*#readonly DOCKER='${fake_docker}'#" "$broker"
@@ -186,6 +196,44 @@ grep -Fq "IMAGE_TAG=${verdicus_head}" \
 grep -Fqv 'IMAGE_TAG=<unset>' \
   "${fixture_dir}/image_tag_pinned_to_checkout_head.out"
 
+# ---------------------------------------------------------------------------
+# A2-260 — the muneral BUILDSHA row.
+#
+# muneral's docker-compose.prod.yml passes `MUNERAL_BUILD_SHA: ${BUILD_SHA:-}`
+# as a build arg so /health can name the commit the image was built from
+# (A2-255). `:-` means an unexported variable does not fail the build: it
+# resolves to empty, the image bakes nothing, and production answers
+# `build.sha: null`. That is a gap that reports success, so the assertion has
+# to read the VALUE the broker exported rather than the exit code.
+#
+# `build` is the verb that matters — the arg is consumed at build time — so it
+# is the verb this drives.
+# ---------------------------------------------------------------------------
+expect_pass build_sha_pinned_to_checkout_head_for_muneral muneral build
+grep -Fq "BUILD_SHA=${muneral_head}" \
+  "${fixture_dir}/build_sha_pinned_to_checkout_head_for_muneral.out" || {
+  echo "FAIL: BUILD_SHA was not pinned to muneral's checkout HEAD" >&2
+  cat "${fixture_dir}/build_sha_pinned_to_checkout_head_for_muneral.out" >&2
+  exit 1
+}
+
+# The two tables are separate capabilities and must not leak into each other:
+# muneral BUILDS its image (BUILD_SHA) and must not acquire the pre-built-image
+# pin, while verdicus PULLS one (IMAGE_TAG) and has no build to label. A single
+# `compose_env` serves both, which is exactly why each direction is asserted.
+grep -Fq 'IMAGE_TAG=<unset>' \
+  "${fixture_dir}/build_sha_pinned_to_checkout_head_for_muneral.out" || {
+  echo "FAIL: IMAGE_TAG leaked into muneral, which builds rather than pulls" >&2
+  cat "${fixture_dir}/build_sha_pinned_to_checkout_head_for_muneral.out" >&2
+  exit 1
+}
+grep -Fq 'BUILD_SHA=<unset>' \
+  "${fixture_dir}/image_tag_pinned_to_checkout_head.out" || {
+  echo "FAIL: BUILD_SHA leaked into a service that does not declare it" >&2
+  cat "${fixture_dir}/image_tag_pinned_to_checkout_head.out" >&2
+  exit 1
+}
+
 # A service NOT in IMAGETAG must not have the variable exported at all —
 # otherwise the pin would leak across services and a compose file that happens
 # to reference IMAGE_TAG would silently pick up a foreign commit.
@@ -196,6 +244,7 @@ grep -Fq 'IMAGE_TAG=<unset>' \
   cat "${fixture_dir}/image_tag_absent_for_other_services.out" >&2
   exit 1
 }
+
 
 # INFRA-0417 — the environment must land BESIDE the compose file.
 #
