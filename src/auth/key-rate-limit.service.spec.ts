@@ -278,6 +278,14 @@ describe('abort budget (DEC-AUP-0050 R7 b)', () => {
     const { prisma } = makePrisma({ 'key-a': { rateLimit: 1000 } });
     const svc = new KeyRateLimitService(redis, prisma);
 
+    // The clock is pinned to the start of a 5-minute bucket, because otherwise
+    // this assertion is a coin flip: `secondsToWindowEnd` for the abort window
+    // is only larger than the request window for the first four of every five
+    // minutes. The first draft of this test asserted `> 60` without pinning and
+    // passed on one run and failed on the next at 40 seconds remaining.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-25T00:00:00.000Z'));
+
     for (let i = 0; i < ABORT_BUDGET_THRESHOLD - 1; i++) await svc.recordAbort('key-a');
     expect((await svc.consume('key-a')).outcome).toBe('allowed');
 
@@ -285,10 +293,20 @@ describe('abort budget (DEC-AUP-0050 R7 b)', () => {
     const refused = await svc.consume('key-a');
     expect(refused.outcome).toBe('abort_budget_exhausted');
     expect(refused.abortCount).toBe(ABORT_BUDGET_THRESHOLD);
-    // The client is told to come back when the ABORT window rolls, which is the
-    // longer of the two — not the request window.
-    expect(refused.retryAfterSeconds).toBeGreaterThan(RATE_LIMIT_WINDOW_SECONDS);
-    expect(refused.retryAfterSeconds).toBeLessThanOrEqual(ABORT_BUDGET_WINDOW_SECONDS);
+    // At a bucket boundary the two windows are distinguishable: the client is
+    // told to come back when the ABORT window rolls, not the request window.
+    expect(refused.retryAfterSeconds).toBe(ABORT_BUDGET_WINDOW_SECONDS);
+    expect(refused.retryAfterSeconds).not.toBe(RATE_LIMIT_WINDOW_SECONDS);
+  });
+
+  it('advertises the abort window honestly at any point inside it', () => {
+    // Not a coin flip and not pinned: for every second of the window the value
+    // is inside the window and never the forbidden 0.
+    for (let s = 0; s < ABORT_BUDGET_WINDOW_SECONDS; s++) {
+      const advertised = secondsToWindowEnd(s * 1000, ABORT_BUDGET_WINDOW_SECONDS);
+      expect(advertised).toBeGreaterThanOrEqual(1);
+      expect(advertised).toBeLessThanOrEqual(ABORT_BUDGET_WINDOW_SECONDS);
+    }
   });
 
   it("one key's aborts do not degrade another key", async () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { Controller, Get, INestApplication, Module } from '@nestjs/common';
+import { Controller, Get, Module } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { Test } from '@nestjs/testing';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
@@ -9,7 +9,11 @@ import { AuthService } from './auth.service';
 import { RateLimitGuard } from './rate-limit.guard';
 import { RateLimitExempt } from './rate-limit-exempt.decorator';
 import { AbortBudgetInterceptor } from './abort-budget.interceptor';
-import { KeyRateLimitService } from './key-rate-limit.service';
+import {
+  ABORT_BUDGET_WINDOW_SECONDS,
+  KeyRateLimitService,
+  secondsToWindowEnd,
+} from './key-rate-limit.service';
 import { KEY_RATE_LIMIT_REDIS_CLIENT, IKeyRateLimitRedis } from './key-rate-limit.token';
 import { Public } from './public.decorator';
 import { PrismaService } from '../prisma/prisma.service';
@@ -154,7 +158,7 @@ class ProbeController {
 })
 class ProbeModule {}
 
-let app: INestApplication;
+let app: NestFastifyApplication;
 let redis: FakeRedis;
 let rateLimit: KeyRateLimitService;
 
@@ -312,8 +316,16 @@ describe('the abort budget degrades a key to 429', () => {
     const refused = await get('probe/execute', 'token-a');
     expect(refused.statusCode).toBe(429);
     expect(refused.json().message).toContain('Aborted-attempt budget exhausted');
-    // The abort window is the longer one, so the advertised wait exceeds a minute.
-    expect(Number(refused.headers['retry-after'])).toBeGreaterThan(60);
+    // The advertised wait is the ABORT window's remaining time, computed the
+    // same way the service computes it. Asserting `> 60` here would be a flake:
+    // inside the last minute of a 5-minute bucket the remainder is under 60
+    // legitimately. Which window drives the figure is asserted deterministically
+    // (clock pinned to a bucket boundary) in key-rate-limit.service.spec.ts.
+    const advertised = Number(refused.headers['retry-after']);
+    const expected = secondsToWindowEnd(Date.now(), ABORT_BUDGET_WINDOW_SECONDS);
+    expect(advertised).toBeGreaterThanOrEqual(1);
+    expect(advertised).toBeLessThanOrEqual(ABORT_BUDGET_WINDOW_SECONDS);
+    expect(Math.abs(advertised - expected)).toBeLessThanOrEqual(1);
   });
 
   it('a successful call is not counted as an abort', async () => {
