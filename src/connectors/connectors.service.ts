@@ -96,10 +96,29 @@ export type ServiceExecuteRequest = ConnectorRequest & {
   idempotencyKey?: string;
 };
 
-const RETRYABLE_ERRORS = new Set([
+export const RETRYABLE_ERRORS = new Set([
   'json_parse_error',
   'rate_limited',
-  'timeout',
+  // A2-299 (split out of A2-295) — `'timeout'` is NOT here, and its absence is the point.
+  //
+  // It was. One client `/execute` therefore bought up to
+  // `CONNECTOR_MAX_RETRIES + 1` provider calls, each re-sending the whole
+  // prompt under the SAME per-attempt budget the caller had already proved
+  // insufficient, and each reported with `usage: 0` (`base-api.connector.ts`,
+  // fixed by the same change). Reproduced on a local test double: a single
+  // `/execute` with a 99 000-character prompt and `timeout: 5000` handed the
+  // provider 98 750 bytes TWICE and settled the ledger at $0.000000.
+  //
+  // Retrying a timeout is the one retry in this set that is not free to get
+  // wrong. A rate limit heals on its own clock; a 5xx or a parse failure may
+  // have cost tokens but at least might succeed on the same budget. An aborted
+  // attempt has already demonstrated that this prompt does not finish inside
+  // this deadline — the retry is the identical losing bet, and the provider
+  // charges full input tokens for it. Nothing Model Connector controls changes
+  // between the attempts: the deadline is the caller's own `request.timeout`.
+  //
+  // `queue_timeout` is a different fact and was never in this set: the request
+  // never left our queue, so no prompt was sent and no tokens were spent.
   'server_error',
   'execution_error',
   'network_error',
