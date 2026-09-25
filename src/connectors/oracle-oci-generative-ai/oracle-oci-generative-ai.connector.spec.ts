@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 
 import { describe, expect, it, vi } from 'vitest';
 
@@ -48,9 +48,7 @@ function setup(
 }
 
 async function capturedRequest(
-  invoke: (
-    connector: ReturnType<typeof createOracleOciGenerativeAiConnector>,
-  ) => Promise<unknown>,
+  invoke: (connector: ReturnType<typeof createOracleOciGenerativeAiConnector>) => Promise<unknown>,
 ): Promise<OracleOciTransportRequest> {
   const { connector, transport } = setup();
   await invoke(connector);
@@ -298,9 +296,7 @@ describe('strict records and bounded safe JSON', () => {
     oddPrototype.body = SYNTHETIC_ON_DEMAND_BODY;
 
     for (const value of [accessor, withSymbol, dangerous, oddPrototype]) {
-      await expect(connector.chat(value as never)).rejects.toEqual(
-        expectCode('invalid_request'),
-      );
+      await expect(connector.chat(value as never)).rejects.toEqual(expectCode('invalid_request'));
     }
     expect(transport).not.toHaveBeenCalled();
   });
@@ -313,25 +309,22 @@ describe('strict records and bounded safe JSON', () => {
       deep = { child: deep };
     }
     const wide = Object.fromEntries(
-      Array.from(
-        { length: ORACLE_OCI_GENERATIVE_AI_LIMITS.recordKeys + 1 },
-        (_, index) => [`k${index}`, index],
-      ),
+      Array.from({ length: ORACLE_OCI_GENERATIVE_AI_LIMITS.recordKeys + 1 }, (_, index) => [
+        `k${index}`,
+        index,
+      ]),
     );
     const longString = 'x'.repeat(ORACLE_OCI_GENERATIVE_AI_LIMITS.stringBytes + 1);
     const huge = {
-      chunks: Array.from(
-        { length: ORACLE_OCI_GENERATIVE_AI_LIMITS.arrayItems },
-        () => 'x'.repeat(Math.ceil(ORACLE_OCI_GENERATIVE_AI_LIMITS.totalJsonBytes / 200)),
+      chunks: Array.from({ length: ORACLE_OCI_GENERATIVE_AI_LIMITS.arrayItems }, () =>
+        'x'.repeat(Math.ceil(ORACLE_OCI_GENERATIVE_AI_LIMITS.totalJsonBytes / 200)),
       ),
     };
-    const tooManyNodes = Array.from(
-      { length: ORACLE_OCI_GENERATIVE_AI_LIMITS.arrayItems },
-      () =>
-        Array.from(
-          { length: Math.ceil(ORACLE_OCI_GENERATIVE_AI_LIMITS.visitedNodes / 200) },
-          () => null,
-        ),
+    const tooManyNodes = Array.from({ length: ORACLE_OCI_GENERATIVE_AI_LIMITS.arrayItems }, () =>
+      Array.from(
+        { length: Math.ceil(ORACLE_OCI_GENERATIVE_AI_LIMITS.visitedNodes / 200) },
+        () => null,
+      ),
     );
     const tooLongArray = Array.from(
       { length: ORACLE_OCI_GENERATIVE_AI_LIMITS.arrayItems + 1 },
@@ -487,9 +480,7 @@ describe('transport response, timeout, redaction, and immutability', () => {
 
 describe('static dormant boundary', () => {
   it('contains no network, auth, retry, mutation, compatibility, or registration implementation', () => {
-    const sourcePath = fileURLToPath(
-      new URL('./oracle-oci-generative-ai.connector.ts', import.meta.url),
-    );
+    const sourcePath = resolve(__dirname, './oracle-oci-generative-ai.connector.ts');
     const source = readFileSync(sourcePath, 'utf8');
     for (const forbidden of [
       'fetch(',

@@ -18,7 +18,10 @@ function baseEntry(overrides: Partial<CatalogModelEntry> = {}): CatalogModelEntr
     maxOutputTokens: null,
     capabilities: { supportsStreaming: false, supportsJsonSchema: true, supportsTools: true },
     routing: { connector: 'groq', model: 'llama-3.3-70b-versatile' },
-    routable: true,
+    // No `routable` here: CatalogModelEntry has no such field (CONN-0244 never
+    // added one — see rowToEntry's doc comment and the
+    // `expect(entry).not.toHaveProperty('routable')` assertion below). The
+    // write-path value is passed to entryToRow as the `useEnabled` option.
     available: true,
     ...overrides,
   };

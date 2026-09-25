@@ -77,7 +77,11 @@ describe('RunwayConnector', () => {
     await expect(connector.videoToVideo({ model: 'aleph2' })).resolves.toEqual({ id: 'v2v' });
   });
 
-  it.each([
+  // A2-299 — the fixture rows are typed as the production union itself, so each
+  // literal is checked against `RunwayTask` here. The previous `as const` made
+  // `output` a readonly tuple, which a `RunwaySucceededTask.output: string[]`
+  // cannot accept; widening the production field would have been the wrong fix.
+  it.each<[string, RunwayTask]>([
     ['PENDING', { id: 'task-id', status: 'PENDING', createdAt: '2026-07-11T00:00:00Z' }],
     ['THROTTLED', { id: 'task-id', status: 'THROTTLED', createdAt: '2026-07-11T00:00:00Z' }],
     [
@@ -104,7 +108,7 @@ describe('RunwayConnector', () => {
       },
     ],
     ['CANCELLED', { id: 'task-id', status: 'CANCELLED', createdAt: '2026-07-11T00:00:00Z' }],
-  ] as const)('returns the native %s task variant', async (_status, task) => {
+  ])('returns the native %s task variant', async (_status, task) => {
     const transport = new FakeTransport({ status: 200, data: task });
     const connector = new RunwayConnector(transport, 'test-key');
 

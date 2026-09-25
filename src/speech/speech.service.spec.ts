@@ -11,6 +11,7 @@ import {
   DeepgramTtsError,
   type DeepgramTtsErrorCode,
 } from './tts/deepgram-tts.connector';
+import type { DeepgramTtsRequestDto } from './dto/tts-request.dto';
 
 const deepgramErrorCases: Array<[number, DeepgramTtsErrorCode]> = [
   [503, 'provider_disabled'],
@@ -298,7 +299,11 @@ describe('SpeechService', () => {
       return { svc, deepgram };
     }
 
-    const deepgramReq = { provider: 'deepgram' as const, model: 'aura-asteria-en', text: 'hi' };
+    const deepgramReq: DeepgramTtsRequestDto = {
+      provider: 'deepgram',
+      model: 'aura-asteria-en',
+      text: 'hi',
+    };
 
     it('null apiKeyId → dispatches unchanged (legacy unrestricted baseline)', async () => {
       const { svc, deepgram } = withPolicy({ policy: { ...V1, providers: ['groq'] } });

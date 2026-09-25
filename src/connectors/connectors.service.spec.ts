@@ -99,6 +99,9 @@ describe('ConnectorsService', () => {
       supportsTools: false,
       maxTimeout: 300000,
     }),
+    // IConnector requires resetCircuitBreaker(model?) -> CircuitBreakerResetEntry[];
+    // this mock has no open breakers, so nothing is reset.
+    resetCircuitBreaker: vi.fn().mockReturnValue([]),
   };
 
   // CONN-0232: existing chat-focused tests use an EMPTY static modality catalog
@@ -1089,7 +1092,8 @@ describe('ConnectorsService', () => {
         maxOutputTokens: 32768,
         capabilities: { supportsStreaming: false, supportsJsonSchema: true, supportsTools: true },
         routing: { connector: 'groq', model: 'llama-3.3-70b-versatile' },
-        routable: true,
+        // CatalogModelEntry has no `routable` field (CONN-0244 never added one);
+        // read-only access surfaces as the `access:read-only` tag instead.
         available: true,
         ...overrides,
       };

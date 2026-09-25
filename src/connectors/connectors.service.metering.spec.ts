@@ -16,7 +16,7 @@
  * together or not at all.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { Queue } from 'bullmq';
 
 import { ConnectorsService } from './connectors.service';
@@ -29,6 +29,8 @@ import type { MetricsService } from '../metrics/metrics.service';
 import type { ModalityCatalogService } from './modality-catalog.service';
 
 // Groq's published tariff for llama-3.3-70b-versatile, USD per 1M tokens.
+type FindPricing = NonNullable<CatalogRepositoryLike['findPricing']>;
+
 const GROQ_PAID_ROW: CatalogPricingRow = {
   inputPerMTok: 0.59,
   outputPerMTok: 0.79,
@@ -126,7 +128,10 @@ function groqShapedConnector(usage: {
 describe('ConnectorsService — ARAS-0058 metering', () => {
   const created: Array<Record<string, unknown>> = [];
   const settled: Array<Record<string, unknown>> = [];
-  let findPricing: ReturnType<typeof vi.fn>;
+  // The exact signature `CatalogRepositoryLike.findPricing` declares
+  // (catalog.repository.ts:136) — an untyped `vi.fn()` widens to `Mock<Procedure>`, which the
+  // optional method's type rightly rejects.
+  let findPricing: Mock<FindPricing>;
 
   const mockPrisma: Record<string, unknown> = {
     request: {
@@ -201,14 +206,14 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
     created.length = 0;
     settled.length = 0;
     vi.clearAllMocks();
-    findPricing = vi.fn().mockResolvedValue(null);
+    findPricing = vi.fn<FindPricing>().mockResolvedValue(null);
   });
 
   it('charges real money for a priced model the connector reported as costing nothing', async () => {
     // This is the falsifier in miniature: the connector returns costUsd 0 —
     // exactly what groq.connector.ts has always returned — and the amount that
     // reaches the ledger is nonetheless greater than zero.
-    findPricing = vi.fn().mockResolvedValue(GROQ_PAID_ROW);
+    findPricing = vi.fn<FindPricing>().mockResolvedValue(GROQ_PAID_ROW);
     const service = buildService(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
 
     const response = await service.execute('groq', { prompt: 'hello' }, 'key-1');
@@ -227,7 +232,7 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
   });
 
   it('prices the model the provider actually served, not the one that was asked for', async () => {
-    findPricing = vi.fn().mockResolvedValue(GROQ_PAID_ROW);
+    findPricing = vi.fn<FindPricing>().mockResolvedValue(GROQ_PAID_ROW);
     const service = buildService(groqShapedConnector({ inputTokens: 10, outputTokens: 10 }));
 
     await service.execute('groq', { prompt: 'hi', model: 'an-alias' }, 'key-1');
@@ -236,7 +241,7 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
   });
 
   it('records an unpriced model as unpriced instead of as a zero charge', async () => {
-    findPricing = vi.fn().mockResolvedValue(null);
+    findPricing = vi.fn<FindPricing>().mockResolvedValue(null);
     const service = buildService(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
 
     await service.execute('groq', { prompt: 'hello' }, 'key-1');
@@ -251,7 +256,7 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
   });
 
   it('records a catalogued free-tier model as free, not as unpriced', async () => {
-    findPricing = vi.fn().mockResolvedValue(GROQ_FREE_ROW);
+    findPricing = vi.fn<FindPricing>().mockResolvedValue(GROQ_FREE_ROW);
     const service = buildService(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
 
     await service.execute('groq', { prompt: 'hello' }, 'key-1');
@@ -262,7 +267,7 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
   });
 
   it('does not overwrite a cost the provider reported itself', async () => {
-    findPricing = vi.fn().mockResolvedValue(GROQ_PAID_ROW);
+    findPricing = vi.fn<FindPricing>().mockResolvedValue(GROQ_PAID_ROW);
     const service = buildService(
       groqShapedConnector({ inputTokens: 1_000, outputTokens: 500, costUsd: 0.25 }),
     );
@@ -277,7 +282,7 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
   it('treats a catalogue outage as unpriced rather than as free', async () => {
     // "The database was down" and "this model is free" must not produce the
     // same ledger row.
-    findPricing = vi.fn().mockRejectedValue(new Error('catalog unavailable'));
+    findPricing = vi.fn<FindPricing>().mockRejectedValue(new Error('catalog unavailable'));
     const service = buildService(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
 
     await service.execute('groq', { prompt: 'hello' }, 'key-1');
@@ -329,7 +334,7 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
   // ---------------------------------------------------------------------
 
   it('settles a held intent with the metered amount, not the connector zero', async () => {
-    findPricing = vi.fn().mockResolvedValue(GROQ_PAID_ROW);
+    findPricing = vi.fn<FindPricing>().mockResolvedValue(GROQ_PAID_ROW);
     const service = buildService(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
 
     await service.execute('groq', { prompt: 'hello', idempotencyKey: 'client-key-1' }, 'key-1');
@@ -349,7 +354,7 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
     // `model-request`, that settle would be indistinguishable in the ledger
     // from a genuinely free model, which is precisely the bug this epic
     // exists to remove.
-    findPricing = vi.fn().mockResolvedValue(null);
+    findPricing = vi.fn<FindPricing>().mockResolvedValue(null);
     const service = buildService(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
 
     await service.execute('groq', { prompt: 'hello', idempotencyKey: 'client-key-1' }, 'key-1');
@@ -374,7 +379,7 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
    */
   describe('A2-223 — costSource in the response', () => {
     it('answers the caller WHERE the cost came from, not only the database', async () => {
-      findPricing = vi.fn().mockResolvedValue(GROQ_PAID_ROW);
+      findPricing = vi.fn<FindPricing>().mockResolvedValue(GROQ_PAID_ROW);
       const service = buildService(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
 
       const response = await service.execute('groq', { prompt: 'hello' }, 'key-1');
@@ -385,12 +390,12 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
     });
 
     it('distinguishes $0-because-unpriced from $0-because-free in the RESPONSE', async () => {
-      findPricing = vi.fn().mockResolvedValue(null);
+      findPricing = vi.fn<FindPricing>().mockResolvedValue(null);
       const unpriced = await buildService(
         groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }),
       ).execute('groq', { prompt: 'hello' }, 'key-1');
 
-      findPricing = vi.fn().mockResolvedValue(GROQ_FREE_ROW);
+      findPricing = vi.fn<FindPricing>().mockResolvedValue(GROQ_FREE_ROW);
       const free = await buildService(
         groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }),
       ).execute('groq', { prompt: 'hello' }, 'key-1');
@@ -404,7 +409,7 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
     });
 
     it('leaves every pre-existing usage field untouched (additive)', async () => {
-      findPricing = vi.fn().mockResolvedValue(GROQ_PAID_ROW);
+      findPricing = vi.fn<FindPricing>().mockResolvedValue(GROQ_PAID_ROW);
       const service = buildService(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
 
       const response = await service.execute('groq', { prompt: 'hello' }, 'key-1');
@@ -471,7 +476,7 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
     // The durability fix from #96 must still hold with the meter in front of
     // it: a measured cost that commits without its charge is the divergence
     // the transaction exists to prevent.
-    findPricing = vi.fn().mockResolvedValue(GROQ_PAID_ROW);
+    findPricing = vi.fn<FindPricing>().mockResolvedValue(GROQ_PAID_ROW);
     const service = buildService(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
 
     await service.execute('groq', { prompt: 'hello' }, 'key-1');

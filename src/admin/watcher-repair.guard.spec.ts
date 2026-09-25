@@ -25,12 +25,13 @@ describe('WatcherRepairGuard', () => {
     );
   });
 
-  it.each([{}, { 'x-watcher-repair-token': 'wrong' }, { 'x-admin-token': token }])(
-    'rejects missing, wrong, or broad admin credentials',
-    (headers) => {
-      expect(new WatcherRepairGuard().canActivate(context(headers))).toBe(false);
-    },
-  );
+  it.each<Record<string, string>>([
+    {},
+    { 'x-watcher-repair-token': 'wrong' },
+    { 'x-admin-token': token },
+  ])('rejects missing, wrong, or broad admin credentials', (headers) => {
+    expect(new WatcherRepairGuard().canActivate(context(headers))).toBe(false);
+  });
 
   /**
    * ARAS-0058 (consilium §6.2) — this guard was the THIRD copy of the

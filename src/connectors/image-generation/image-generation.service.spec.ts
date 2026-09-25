@@ -67,7 +67,7 @@ describe('ImageGenerationService', () => {
   describe('handleRequest — ProviderNotProvisionedError fallback', () => {
     it('propagates ProviderNotProvisionedError when all cheap providers unprovisioned', async () => {
       // Override processRequest to simulate vertex being unprovisioned
-      vi.spyOn(service as never, 'processRequest').mockRejectedValue(
+      vi.spyOn(service, 'processRequest').mockRejectedValue(
         new ProviderNotProvisionedError('vertex', 'arcanada/prod/env/model-connector-vertex'),
       );
 
@@ -126,7 +126,7 @@ describe('ImageGenerationService', () => {
     it('falls back to next provider when primary is unprovisioned', async () => {
       // First call (vertex) throws unprovisioned; second (replicate:flux-pro) succeeds
       const mockProcessRequest = vi
-        .spyOn(service as never, 'processRequest')
+        .spyOn(service, 'processRequest')
         .mockRejectedValueOnce(
           new ProviderNotProvisionedError('vertex', 'arcanada/prod/env/model-connector-vertex'),
         )
@@ -172,7 +172,7 @@ describe('ImageGenerationService', () => {
       } as never);
 
       // Override processRequest to succeed immediately after DB create
-      vi.spyOn(service as never, 'processRequest').mockResolvedValue({
+      vi.spyOn(service, 'processRequest').mockResolvedValue({
         requestId: 'gen-routing-test',
         status: 'completed',
         urls: ['https://r2.example.com/img.png'],
@@ -225,7 +225,7 @@ describe('ImageGenerationService', () => {
         .spyOn(prismaMock.imageGeneration, 'update')
         .mockResolvedValue({} as never);
 
-      vi.spyOn(service as never, 'processRequest').mockResolvedValue({
+      vi.spyOn(service, 'processRequest').mockResolvedValue({
         requestId: 'gen-update-test',
         status: 'completed',
         urls: ['https://r2.example.com/img.png'],

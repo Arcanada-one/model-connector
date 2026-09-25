@@ -42,7 +42,10 @@ function entry(connector: string, model: string, free: boolean): CatalogModelEnt
     maxOutputTokens: 4096,
     capabilities: { supportsStreaming: false, supportsJsonSchema: true, supportsTools: false },
     routing: { connector, model },
-    routable: true,
+    // CONN-0244/CONN-0245-EXT — `routable` is NOT a field on CatalogModelEntry
+    // (catalog-mapper.ts:125-131): it is an `entryToRow` OPTION (`useEnabled`,
+    // default true) and is reconstructed on read-back as the `access:read-only`
+    // tag. These entries are routable, which is `entryToRow`'s default.
     available: true,
   };
 }

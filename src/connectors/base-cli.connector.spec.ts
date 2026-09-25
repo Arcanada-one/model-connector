@@ -10,7 +10,10 @@ class TestConnector extends BaseCliConnector {
   }
 
   protected buildArgs(request: ConnectorRequest): string[] {
-    return [request.prompt];
+    // ConnectorRequest.prompt is `string | ContentBlock[]`; CLI connectors go
+    // through the base helper, which is the same path cursor/codex/gemini use
+    // and which narrows to the string prompt CLI binaries accept.
+    return [this.buildPromptWithJsonMode(request)];
   }
 
   protected parseOutput(stdout: string): ParsedCliOutput {

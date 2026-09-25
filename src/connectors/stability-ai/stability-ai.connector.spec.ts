@@ -24,7 +24,14 @@ const endpointCases = [
 function connectorWith(result: unknown) {
   const request = vi.fn<(request: StabilityAiTransportRequest) => Promise<unknown>>();
   request.mockResolvedValue(result);
-  const transport: StabilityAiTransport = { request };
+  // `StabilityAiTransport.request` is declared `<T>(request) => Promise<T>`
+  // (stability-ai.connector.ts:29) — the *caller* picks T, so no concrete function value can
+  // satisfy it directly. The double forwards the spy's fixture under whatever T the connector
+  // asks for: argument types stay fully checked by the spy's own signature, and the fixture's
+  // shape is exactly what each test asserts on the resolved value.
+  const transport: StabilityAiTransport = {
+    request: <T>(req: StabilityAiTransportRequest): Promise<T> => request(req) as Promise<T>,
+  };
   return { connector: new StabilityAiConnector('test-token', transport), request };
 }
 

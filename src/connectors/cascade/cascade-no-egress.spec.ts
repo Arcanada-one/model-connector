@@ -21,10 +21,11 @@
 
 import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+// CommonJS module mode (tsconfig `module: commonjs`) — `__dirname` is the
+// directory of this spec, exactly as the other source-grep specs in this repo
+// resolve it (e.g. src/stats/stats.service.spec.ts, src/di-token-audit.spec.ts).
 const CASCADE_DIR = __dirname;
 
 // Source files only — exclude spec files from the egress check (specs may mock

@@ -3,7 +3,10 @@ import { BaseApiConnector, ParsedApiOutput } from './base-api.connector';
 import { ConnectorCapabilities, ConnectorRequest } from './interfaces/connector.interface';
 
 class TestApiConnector extends BaseApiConnector {
-  readonly name = 'test-api';
+  // Typed as the abstract member's own type (`abstract readonly name: string`,
+  // base-api.connector.ts:81) rather than the literal 'test-api', so subclasses
+  // below may legitimately name themselves.
+  readonly name: string = 'test-api';
 
   protected getBaseUrl(): string {
     return 'http://localhost:9999';

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   DEEPGRAM_TTS_MAX_TEXT_CHARS,
   isDeepgramTtsRequest,
+  isTogetherTtsRequest,
   ttsRequestSchema,
   TTS_MAX_TEXT_CHARS,
 } from './tts-request.dto';
@@ -10,6 +11,7 @@ describe('ttsRequestSchema', () => {
   it('accepts minimal valid request with defaults', () => {
     const parsed = ttsRequestSchema.parse({ text: 'Hello, world.' });
     if (isDeepgramTtsRequest(parsed)) throw new Error('legacy request parsed as Deepgram');
+    if (isTogetherTtsRequest(parsed)) throw new Error('legacy request parsed as Together');
     expect(parsed.speaker).toBe('xenia');
     expect(parsed.sample_rate).toBe(24_000);
     expect(parsed.speed).toBe(1.0);

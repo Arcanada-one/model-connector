@@ -75,6 +75,10 @@ describe('ImageJobProcessor', () => {
         chosenModel: 'vertex:imagen-4',
         fallbackUsed: false,
         reason: 'test',
+        // RoutingDecision (image-generation/types.ts:47-60) requires the
+        // resolved candidate and its estimated per-image cost.
+        candidate: { modelId: 'vertex:imagen-4', providerId: 'vertex', tier: 'mid' },
+        costUsd: 0.04,
       },
     };
     vi.mocked(imageServiceMock.processRequest).mockResolvedValue(mockResult);

@@ -25,6 +25,11 @@ class MockImageConnector extends BaseImageConnector {
         chosenModel: 'vertex:imagen-4',
         fallbackUsed: false,
         reason: 'test',
+        // `RoutingDecision` requires the resolved candidate and its estimated cost
+        // (types.ts:52-59); real connectors fill them the same way, e.g.
+        // vertex-image.connector.ts:146.
+        candidate: { modelId: 'vertex:imagen-4', providerId: 'vertex', tier: 'mid' },
+        costUsd: 0.04,
       },
     };
   }
