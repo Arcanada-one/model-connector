@@ -972,6 +972,20 @@ export class ConnectorsService {
     }
 
     let lastResponse: ConnectorResponse | undefined;
+    // A2-299 §4 — provider-MEASURED usage from attempts the retry loop is about
+    // to throw away. `lastResponse` is a single variable that every attempt
+    // overwrites, and it is the meter's only input, so before this the request
+    // was charged for its final attempt alone. For a timeout that costs nothing
+    // to lose — there are no counts to recover. But `json_parse_error`,
+    // `parse_error` and `structured_output_error` are the opposite case: the
+    // provider answered 200 WITH a usage object and we retried over the body.
+    // Those tokens were generated and the provider bills them.
+    //
+    // Only counts the provider itself reported are accumulated here. Nothing is
+    // estimated and nothing is invented: whether an attempt with no usage object
+    // should be charged an estimate is the separate pricing question in
+    // A2-299 (b), and this change must not pre-empt it.
+    const recovered = { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0, costUsd: 0 };
     let guardReport: OutputGuardReport | null = null;
     let observationFailureStage: FirstDispatchFailureStage = 'connector_or_response_processing';
 
@@ -1020,6 +1034,14 @@ export class ConnectorsService {
         if (!RETRYABLE_ERRORS.has(errorType) || attempt >= attemptsForRequest) {
           break;
         }
+
+        // A2-299 §4 — this attempt is about to be superseded by the next one.
+        // Carry forward what the provider told us it consumed, before the only
+        // reference to it is gone.
+        recovered.inputTokens += response.usage.inputTokens || 0;
+        recovered.outputTokens += response.usage.outputTokens || 0;
+        recovered.cachedInputTokens += response.usage.cachedInputTokens || 0;
+        recovered.costUsd += response.usage.costUsd || 0;
 
         // Retry with exponential backoff + jitter
         const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
@@ -1070,7 +1092,41 @@ export class ConnectorsService {
       throw error;
     }
 
-    const unmetered = lastResponse!;
+    const lastAttempt = lastResponse!;
+
+    // A2-299 §4 — the meter is given the request's TOTAL provider consumption:
+    // the final attempt plus every retried attempt whose usage the loop would
+    // otherwise have discarded. `usage` on a response means "what this request
+    // consumed", which is what the ledger and `max_cost_usd` both need it to
+    // mean; the STATUS and the BODY still come from the final attempt alone.
+    //
+    // When nothing was retried (or the retried attempts reported no usage) this
+    // is `lastAttempt` unchanged — the common path is untouched, and a control
+    // test asserts that.
+    const recoveredAnything =
+      recovered.inputTokens > 0 ||
+      recovered.outputTokens > 0 ||
+      recovered.cachedInputTokens > 0 ||
+      recovered.costUsd > 0;
+    const unmetered: ConnectorResponse = recoveredAnything
+      ? {
+          ...lastAttempt,
+          usage: {
+            ...lastAttempt.usage,
+            inputTokens: lastAttempt.usage.inputTokens + recovered.inputTokens,
+            outputTokens: lastAttempt.usage.outputTokens + recovered.outputTokens,
+            totalTokens:
+              lastAttempt.usage.totalTokens + recovered.inputTokens + recovered.outputTokens,
+            ...(lastAttempt.usage.cachedInputTokens !== undefined || recovered.cachedInputTokens > 0
+              ? {
+                  cachedInputTokens:
+                    (lastAttempt.usage.cachedInputTokens ?? 0) + recovered.cachedInputTokens,
+                }
+              : {}),
+            costUsd: lastAttempt.usage.costUsd + recovered.costUsd,
+          },
+        }
+      : lastAttempt;
 
     // ARAS-0058 — the money meter, at the same single choke point as the access,
     // credit and policy gates above. Placed HERE rather than in each connector
