@@ -322,7 +322,7 @@ describe('PATCH /admin/keys/:id/rate-limit', () => {
     expect(rows.get('key-a')?.rateLimit).toBe(60);
   });
 
-  it.each([
+  it.each<[Record<string, unknown>, string]>([
     [{ rateLimit: 5 }, 'no actor'],
     [{ rateLimit: 0, actor: 'x' }, 'below 1'],
     [{ rateLimit: 10001, actor: 'x' }, 'above 10000'],
