@@ -151,6 +151,26 @@ export interface ConnectorResponse {
      */
     usageMissing?: true;
     /**
+     * A2-295 — the token counts above are OURS, estimated from the prompt we
+     * sent, because the attempt was aborted before the provider answered and no
+     * `usage` object exists to read.
+     *
+     * The sibling of {@link usageMissing} and the opposite decision. Where the
+     * provider answered but said nothing about usage, Model Connector reports
+     * the silence. Where the provider never answered at all, the tokens are
+     * nonetheless spent — it read the whole prompt — and reporting zero is a
+     * false measurement rather than a missing one. So this path reports a
+     * number and labels it as ours.
+     *
+     * Set to `true` only, never to `false`: a response without the key is one
+     * whose counts came from the provider.
+     *
+     * Input only. Output tokens the provider may have generated before the
+     * socket was cut are reported as 0 — an under-statement we can defend,
+     * against an over-statement we could not.
+     */
+    estimated?: true;
+    /**
      * `costUsd` split by what was billed for. Null when the split is unknown —
      * a provider invoice is a single number, and a fabricated split would be
      * indistinguishable from a measured one.
