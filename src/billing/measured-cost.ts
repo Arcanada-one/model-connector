@@ -99,6 +99,43 @@ export type CostSource =
   | 'subscription';
 
 /**
+ * A2-299b / DEC-AUP-0050 R2 — cost sources whose amount may NEVER become a
+ * customer charge, by any path, ever.
+ *
+ * `Request.costUsd` normally answers two questions at once: what the call cost
+ * us, and what the customer owes for it. `'estimated-input-unbilled'` is the
+ * first source that splits them — the amount is real spend and is recorded as
+ * such, but R2 forbids charging it, because the token count is our own heuristic
+ * for an attempt our own timeout aborted.
+ *
+ * That split is invisible to any code reading `costUsd` alone, which is why this
+ * list exists as a shared constant rather than as a condition repeated at each
+ * charging site. There are two such sites — the live settle in
+ * `ConnectorsService.persistAndSettle` and the recovery settle in
+ * `BillingReconcilerService.reconcile` — and the second one was missed: it reads
+ * `Request.costUsd` off the row and charges it, with no knowledge of provenance.
+ * Adding a future unbillable source to this list now reaches both.
+ *
+ * DEC-AUP-0050 R6 is what would move a source OFF this list, and it takes four
+ * cumulative gates. Editing the list is not the way to start charging.
+ */
+export const NEVER_CHARGEABLE_COST_SOURCES: readonly CostSource[] = ['estimated-input-unbilled'];
+
+/**
+ * May the customer be charged for a request recorded with this cost source?
+ *
+ * `null`/unknown answers TRUE deliberately. The rows that carry no `costSource`
+ * are the pre-ARAS-0058 ones, which are ordinary metered spend; answering false
+ * for them would silently stop collecting real revenue, and a recovery job that
+ * quietly charges nothing is as much a defect as one that over-charges.
+ */
+export function isChargeableToCustomer(
+  costSource: CostSource | string | null | undefined,
+): boolean {
+  return !NEVER_CHARGEABLE_COST_SOURCES.includes(costSource as CostSource);
+}
+
+/**
  * A2-223 — how a connector is paid for, declared by the connector itself.
  *
  * `'api'` — metered per token against an account we are invoiced for; the

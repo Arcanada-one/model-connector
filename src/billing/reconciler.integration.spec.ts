@@ -32,6 +32,8 @@ async function plantRequest(opts: {
   costUsd: string;
   ageMs: number;
   settled?: boolean;
+  /** A2-299b — the provenance of `costUsd`; see the R2 test at the end. */
+  costSource?: string;
 }): Promise<string> {
   const created = await prisma.request.create({
     data: {
@@ -46,6 +48,7 @@ async function plantRequest(opts: {
       latencyMs: 5,
       status: 'success',
       apiKeyId: KEY_ID,
+      costSource: opts.costSource,
       createdAt: new Date(Date.now() - opts.ageMs),
     },
   });
@@ -250,5 +253,70 @@ describe('the reconciler', () => {
       where: { apiKeyId: KEY_ID, entryType: 'uncollectible' },
     });
     expect(new Prisma.Decimal(writeOff!.amountUsd).toString()).toBe('0.15');
+  });
+});
+
+/**
+ * A2-299b / DEC-AUP-0050 R2 — against a real Postgres, because the guard has a
+ * half that only a database can execute.
+ *
+ * `findUnsettled` excludes the unbillable cost sources in SQL, so a backlog of
+ * aborted attempts cannot crowd the limited batch out of the real orphans. That
+ * predicate — `costSource <> ALL($1::text[])` — is a claim about Postgres, and
+ * a mocked `$queryRaw` would only echo the string back. The behavioural
+ * invariant it backs up is enforced in `reconcile()` and proved in
+ * `reconciler-unbillable.spec.ts`, which (unlike this file) runs in CI.
+ */
+describe('A2-299b — an unbillable cost source is filtered out in SQL', () => {
+  it('does not return an aborted attempt, and still returns a real orphan', async () => {
+    await fund('10');
+    const aborted = await plantRequest({
+      costUsd: '0.0174',
+      ageMs: 30 * MINUTE,
+      costSource: 'estimated-input-unbilled',
+    });
+    const real = await plantRequest({
+      costUsd: '0.25',
+      ageMs: 30 * MINUTE,
+      costSource: 'catalog',
+    });
+
+    const rows = await reconciler.findUnsettled();
+    const ids = rows.map((r) => r.id);
+
+    expect(ids).toContain(real);
+    expect(ids).not.toContain(aborted);
+    // The column is selected, not just filtered on — `reconcile()` needs it.
+    expect(rows.find((r) => r.id === real)?.costSource).toBe('catalog');
+  });
+
+  it('keeps a legacy NULL costSource row, which is ordinary spend', async () => {
+    await fund('10');
+    const legacy = await plantRequest({ costUsd: '0.10', ageMs: 30 * MINUTE });
+
+    const rows = await reconciler.findUnsettled();
+
+    expect(rows.map((r) => r.id)).toContain(legacy);
+    expect(rows.find((r) => r.id === legacy)?.costSource).toBeNull();
+  });
+
+  it('charges the orphan and leaves the aborted attempt alone, end to end', async () => {
+    await fund('10');
+    await plantRequest({
+      costUsd: '0.0174',
+      ageMs: 30 * MINUTE,
+      costSource: 'estimated-input-unbilled',
+    });
+    await plantRequest({ costUsd: '0.25', ageMs: 30 * MINUTE, costSource: 'catalog' });
+
+    const report = await reconciler.reconcile();
+
+    expect(report.settled).toBe(1);
+    expect(report.totalUsd).toBe('0.25');
+    // Filtered in SQL, so it never even reaches the in-code guard here.
+    expect(report.scanned).toBe(1);
+    expect(report.skippedUnbillable).toBe(0);
+    // The money: 0.25 collected, not 0.2674.
+    expect((await billing.balance(KEY_ID)).toString()).toBe('9.75');
   });
 });

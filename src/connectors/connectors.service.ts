@@ -36,6 +36,7 @@ import {
   type CostSource,
   type MeasuredCost,
   type MeasuredCostPricing,
+  isChargeableToCustomer,
 } from '../billing/measured-cost';
 import type { OutputGuardReport } from './output-guard/types';
 import { OPENMODEL_CATALOGUE } from './openmodel/openmodel.catalogue';
@@ -1420,8 +1421,14 @@ export class ConnectorsService {
         // before this may ever become a charge: a Terms clause in force, a
         // measured error bound for the estimator, a proof-of-upload trigger, and
         // an enforced per-key rate limit. Until then, zero.
-        const customerChargeUsd =
-          costSource === 'estimated-input-unbilled' ? 0 : response.usage.costUsd;
+        //
+        // A2-299b — the test that `costSource` is unbillable now reads the SHARED
+        // list (`NEVER_CHARGEABLE_COST_SOURCES`) rather than naming the source
+        // inline. The inline comparison was correct and was also the reason the
+        // reconciler could disagree with this line: there was no single place that
+        // said "the customer never pays for this", so the second charging path
+        // never learned about the first. One list, both sites.
+        const customerChargeUsd = isChargeableToCustomer(costSource) ? response.usage.costUsd : 0;
 
         if (intent) {
           await this.billing.settleIntentInTx(tx, {

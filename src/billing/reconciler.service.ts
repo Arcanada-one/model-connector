@@ -21,6 +21,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { Prisma } from '@prisma/client';
 
 import { BillingService } from './billing.service';
+import { isChargeableToCustomer, NEVER_CHARGEABLE_COST_SOURCES } from './measured-cost';
 import { PrismaService } from '../prisma/prisma.service';
 import { getConfig } from '../config/env.schema';
 
@@ -30,6 +31,13 @@ export interface UnsettledRequest {
   apiKeyId: string;
   costUsd: Prisma.Decimal;
   createdAt: Date;
+  /**
+   * A2-299b — WHERE `costUsd` came from, so this job can tell spend the customer
+   * owes from spend that is ours. Selected because `costUsd > 0` stopped meaning
+   * "the customer owes this" when DEC-AUP-0050 introduced
+   * `'estimated-input-unbilled'`.
+   */
+  costSource: string | null;
 }
 
 export interface ReconcileReport {
@@ -37,7 +45,16 @@ export interface ReconcileReport {
   settled: number;
   alreadySettled: number;
   failed: number;
+  /**
+   * A2-299b — rows this job refused to charge because their cost is Arcanada's,
+   * not the customer's. Counted rather than silently dropped: a recovery job
+   * that skips money must say how much and why, or "settled: 0" becomes
+   * indistinguishable from "found nothing".
+   */
+  skippedUnbillable: number;
   totalUsd: string;
+  /** The USD in `skippedUnbillable`, i.e. our own cost this job left alone. */
+  unbillableUsd: string;
   dryRun: boolean;
 }
 
@@ -89,14 +106,23 @@ export class BillingReconcilerService {
     const oldest = new Date(now - (opts.maxAgeMs ?? DEFAULT_MAX_AGE_MS));
     const newest = new Date(now - (opts.graceMs ?? DEFAULT_GRACE_MS));
 
+    // A2-299b / DEC-AUP-0050 R2 — the unbillable sources are excluded HERE as
+    // well as in `reconcile()`. Two guards on purpose, and not redundantly:
+    // this one keeps rows that can never be charged out of the limited batch, so
+    // a backlog of aborted attempts cannot crowd out the real orphans this job
+    // exists to settle; the one in `reconcile()` is the invariant, and it is the
+    // one the default test suite can execute (every test in this file's
+    // integration sibling is excluded from `pnpm test`).
+    const unbillable = [...NEVER_CHARGEABLE_COST_SOURCES];
     return this.prisma.$queryRaw<UnsettledRequest[]>`
-      SELECT r."id", r."apiKeyId", r."costUsd", r."createdAt"
+      SELECT r."id", r."apiKeyId", r."costUsd", r."createdAt", r."costSource"
         FROM "Request" r
         LEFT JOIN "credits_ledger" l ON l."request_id" = r."id"
        WHERE r."costUsd" > 0
          AND r."createdAt" >= ${oldest}
          AND r."createdAt" <  ${newest}
          AND l."id" IS NULL
+         AND (r."costSource" IS NULL OR r."costSource" <> ALL(${unbillable}::text[]))
        ORDER BY r."createdAt" ASC
        LIMIT ${limit}
     `;
@@ -123,10 +149,41 @@ export class BillingReconcilerService {
     let settled = 0;
     let alreadySettled = 0;
     let failed = 0;
+    let skippedUnbillable = 0;
     let total = new Prisma.Decimal(0);
+    let unbillable = new Prisma.Decimal(0);
 
     for (const row of orphans) {
       const amount = new Prisma.Decimal(row.costUsd);
+
+      // A2-299b / DEC-AUP-0050 R2 — the invariant, checked on every row this job
+      // is about to charge, and checked in CODE rather than only in the SQL above.
+      //
+      // The defect this closes: `findUnsettled` asks for `Request` rows with
+      // `costUsd > 0` and no ledger entry, and charges `costUsd` to the account.
+      // Until DEC-AUP-0050 that was sound, because `costUsd > 0` meant the
+      // customer had received metered tokens. `'estimated-input-unbilled'` broke
+      // that equivalence: the row records OUR cost for an attempt our own timeout
+      // aborted, deliberately settled at $0 on the live path — and this job would
+      // have re-charged it in full, under the reason `reconciled-request`, on the
+      // first tick after an orphan of that shape appeared. The customer would have
+      // paid for our abort, via a recovery job, with no test anywhere objecting.
+      //
+      // Skipped BEFORE `total`, so `totalUsd` keeps meaning "what this job would
+      // collect" and our own cost is reported separately instead of inflating it.
+      if (!isChargeableToCustomer(row.costSource)) {
+        skippedUnbillable += 1;
+        unbillable = unbillable.plus(amount);
+        this.logger.warn(
+          `A2-299b reconciler: NOT charging ${amount.toString()} USD for request ${row.id} ` +
+            `(api key ${row.apiKeyId}, costSource '${row.costSource}'). This amount is ` +
+            "Arcanada's own cost, not the customer's — DEC-AUP-0050 R2. It has no ledger " +
+            'entry, which means the settle path did not complete; that is worth ' +
+            'investigating, but it is NOT worth charging.',
+        );
+        continue;
+      }
+
       total = total.plus(amount);
       if (dryRun) continue;
       try {
@@ -161,7 +218,9 @@ export class BillingReconcilerService {
       settled,
       alreadySettled,
       failed,
+      skippedUnbillable,
       totalUsd: total.toString(),
+      unbillableUsd: unbillable.toString(),
       dryRun,
     };
   }
@@ -203,10 +262,14 @@ export class BillingReconcilerService {
     if (!this.reconcileEnabled()) return;
     try {
       const report = await this.reconcile();
-      if (report.settled > 0 || report.failed > 0) {
+      if (report.settled > 0 || report.failed > 0 || report.skippedUnbillable > 0) {
         this.logger.warn(
           `ARAS-0058 reconciler: ${report.settled} settled, ${report.alreadySettled} already settled, ` +
-            `${report.failed} failed, ${report.totalUsd} USD scanned`,
+            `${report.failed} failed, ${report.totalUsd} USD scanned` +
+            (report.skippedUnbillable > 0
+              ? `, ${report.skippedUnbillable} left uncharged as our own cost ` +
+                `(${report.unbillableUsd} USD, DEC-AUP-0050 R2)`
+              : ''),
         );
       }
     } catch (err) {
