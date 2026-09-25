@@ -1,0 +1,2452 @@
+{
+ "admission": {
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+  "verdict": "refused"
+ },
+ "captured_at_utc": "2026-09-25T02:39:15Z",
+ "change_set": {
+  "base": "dc0b3adc87ea4905e687774861873f1785a19e14",
+  "files": [
+   {
+    "kind": "test",
+    "node_id": "code_unit:src/auth/abort-budget-signal.spec.ts",
+    "node_ids": [
+     "code_unit:src/auth/abort-budget-signal.spec.ts"
+    ],
+    "path": "src/auth/abort-budget-signal.spec.ts",
+    "status": "A"
+   },
+   {
+    "kind": "code",
+    "node_id": "code_unit:src/auth/abort-budget.interceptor.ts",
+    "node_ids": [
+     "code_unit:src/auth/abort-budget.interceptor.ts"
+    ],
+    "path": "src/auth/abort-budget.interceptor.ts",
+    "status": "A"
+   },
+   {
+    "kind": "code",
+    "node_id": "code_unit:src/auth/auth.module.ts",
+    "node_ids": [
+     "code_unit:src/auth/auth.module.ts"
+    ],
+    "path": "src/auth/auth.module.ts",
+    "status": "M"
+   },
+   {
+    "kind": "code",
+    "node_id": "code_unit:src/auth/key-rate-limit.provider.ts",
+    "node_ids": [
+     "code_unit:src/auth/key-rate-limit.provider.ts"
+    ],
+    "path": "src/auth/key-rate-limit.provider.ts",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:src/auth/key-rate-limit.service.spec.ts",
+    "node_ids": [
+     "code_unit:src/auth/key-rate-limit.service.spec.ts"
+    ],
+    "path": "src/auth/key-rate-limit.service.spec.ts",
+    "status": "A"
+   },
+   {
+    "kind": "code",
+    "node_id": "code_unit:src/auth/key-rate-limit.service.ts",
+    "node_ids": [
+     "code_unit:src/auth/key-rate-limit.service.ts",
+     "contract:src/auth/key-rate-limit.service.ts#RateLimitOutcome"
+    ],
+    "path": "src/auth/key-rate-limit.service.ts",
+    "status": "A"
+   },
+   {
+    "kind": "code",
+    "node_id": "code_unit:src/auth/key-rate-limit.token.ts",
+    "node_ids": [
+     "code_unit:src/auth/key-rate-limit.token.ts"
+    ],
+    "path": "src/auth/key-rate-limit.token.ts",
+    "status": "A"
+   },
+   {
+    "kind": "code",
+    "node_id": "code_unit:src/auth/rate-limit-exempt.decorator.ts",
+    "node_ids": [
+     "code_unit:src/auth/rate-limit-exempt.decorator.ts"
+    ],
+    "path": "src/auth/rate-limit-exempt.decorator.ts",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:src/auth/rate-limit.app.spec.ts",
+    "node_ids": [
+     "code_unit:src/auth/rate-limit.app.spec.ts",
+     "route:GET /probe/abort",
+     "route:GET /probe/execute",
+     "route:GET /probe/health",
+     "route:GET /probe/metrics"
+    ],
+    "path": "src/auth/rate-limit.app.spec.ts",
+    "status": "A"
+   },
+   {
+    "kind": "code",
+    "node_id": "code_unit:src/auth/rate-limit.guard.ts",
+    "node_ids": [
+     "code_unit:src/auth/rate-limit.guard.ts"
+    ],
+    "path": "src/auth/rate-limit.guard.ts",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:src/auth/rate-limit.integration.spec.ts",
+    "node_ids": [
+     "code_unit:src/auth/rate-limit.integration.spec.ts"
+    ],
+    "path": "src/auth/rate-limit.integration.spec.ts",
+    "status": "A"
+   },
+   {
+    "kind": "route",
+    "node_id": "code_unit:src/metrics/metrics.controller.ts",
+    "node_ids": [
+     "code_unit:src/metrics/metrics.controller.ts",
+     "route:GET /metrics"
+    ],
+    "path": "src/metrics/metrics.controller.ts",
+    "status": "M"
+   }
+  ],
+  "head": "0fa6288bd22d05d55a6016ddd608ce2e1a1eadc2",
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "exemptions": [],
+ "graph": {
+  "builder_version": "1.0.1",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:5c42244cdb5f8e0edf48728f1c9965a801aa784acf312c10f64d8f5dbf245b9e",
+  "path": "/tmp/arcana-verify/verifier-out/graph-dc0b3adc87ea.json",
+  "source_commit": "dc0b3adc87ea4905e687774861873f1785a19e14"
+ },
+ "head_graph": {
+  "builder_version": "1.0.1",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:21b87cf24ad853e043b49893228e670fc591e90a5453e4f674645013f68ddc4c",
+  "path": "/tmp/arcana-verify/verifier-out/graph-head-0fa6288bd22d.json",
+  "source_commit": "0fa6288bd22d05d55a6016ddd608ce2e1a1eadc2",
+  "staleness": {
+   "checked_at_utc": "2026-09-25T02:39:21Z",
+   "checked_nodes": 753,
+   "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+   "mismatched_nodes": [],
+   "verdict": "fresh"
+  }
+ },
+ "host": "arcana-devs",
+ "impact_set": {
+  "deterministic_core": [
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:src/admin/admin.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/admin/admin.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/admin/admin.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/admin/admin.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:src/app.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/app.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/app.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/metrics/metrics.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/metrics/metrics.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/cascade/cascade.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/metrics/metrics.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/metrics/metrics.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cascade/cascade.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/metrics/metrics.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cascade/cascade.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/connectors.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/metrics/metrics.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/metrics/metrics.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/cascade/cascade.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/metrics/metrics.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/cascade/cascade.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/connectors.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/metrics/metrics.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cascade/cascade.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/cascade/cascade.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "code_unit:src/connectors/connectors.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/metrics/metrics.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/cascade/cascade.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/connectors.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/connectors/cascade/cascade.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "code_unit:src/main.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/main.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/main.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/main.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/main.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/main.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:src/metrics/metrics.controller.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/metrics/metrics.controller.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/metrics/metrics.controller.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/metrics/metrics.controller.spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/metrics/metrics.controller.spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.controller.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/metrics/metrics.controller.spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/metrics/metrics.controller.spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.controller.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:src/metrics/metrics.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/metrics/metrics.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/metrics/metrics.controller.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/metrics/metrics.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/metrics/metrics.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.controller.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "code_unit:src/metrics/metrics.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/metrics/metrics.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.controller.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "code_unit:src/speech/speech.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/metrics/metrics.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/metrics/metrics.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/metrics/metrics.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/speech/speech.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/metrics/metrics.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/speech/speech.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:src/speech/speech.module.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/metrics/metrics.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.controller.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/speech/speech.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/metrics/metrics.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "code_unit:test/app.e2e-spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:test/app.e2e-spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:test/app.e2e-spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:test/app.e2e-spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "code_unit:test/app.e2e-spec.ts",
+      "node_type": "code_unit",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:test/app.e2e-spec.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "type-check / compile of the importer"
+     }
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "deployable_unit:.",
+    "node_type": "deployable_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:src/auth/auth.module.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:.",
+      "via": "containment"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "deployable_unit:.",
+      "node_type": "deployable_unit",
+      "path": [
+       {
+        "edge_type": "deploys_to",
+        "from": "code_unit:src/auth/auth.module.ts",
+        "provenance": "deterministic",
+        "to": "deployable_unit:.",
+        "via": "containment"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "deployable_unit:.",
+      "node_type": "deployable_unit",
+      "path": [
+       {
+        "edge_type": "deploys_to",
+        "from": "code_unit:src/auth/abort-budget-signal.spec.ts",
+        "provenance": "deterministic",
+        "to": "deployable_unit:.",
+        "via": "containment"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+     }
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:CHANGELOG.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:CHANGELOG.md",
+      "provenance": "deterministic",
+      "to": "route:GET /metrics",
+      "via": "explicit-route"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "document:CHANGELOG.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "documents",
+        "from": "document:CHANGELOG.md",
+        "provenance": "deterministic",
+        "to": "route:GET /metrics",
+        "via": "explicit-route"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "document:CHANGELOG.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "documents",
+        "from": "document:CHANGELOG.md",
+        "provenance": "deterministic",
+        "to": "route:GET /metrics",
+        "via": "explicit-route"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     }
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "document:watcher/deploy/runbook-observability.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/main.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:watcher/deploy/runbook-observability.md",
+      "provenance": "deterministic",
+      "to": "code_unit:src/main.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "document:watcher/deploy/runbook-observability.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/main.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "documents",
+        "from": "document:watcher/deploy/runbook-observability.md",
+        "provenance": "deterministic",
+        "to": "code_unit:src/main.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 3,
+      "entity": "document:watcher/deploy/runbook-observability.md",
+      "node_type": "document",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/main.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "documents",
+        "from": "document:watcher/deploy/runbook-observability.md",
+        "provenance": "deterministic",
+        "to": "code_unit:src/main.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "doc reference check (path/id still resolves)"
+     }
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/admin/admin.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/admin/admin.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/admin/admin.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/admin/admin.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 1,
+      "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/admin/admin.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/admin/admin.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/admin/admin.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/admin/admin.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/admin/admin.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/admin/admin.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/admin/admin.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/admin/admin.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/admin/admin.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/admin/admin.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/admin/admin.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/admin/admin.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/admin/admin.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/auth/auth.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revision_paths": [
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "base",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     },
+     {
+      "boundary": "intra_unit",
+      "depth": 2,
+      "entity": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+      "node_type": "receipt",
+      "path": [
+       {
+        "edge_type": "imports",
+        "from": "code_unit:src/app.module.ts",
+        "provenance": "deterministic",
+        "to": "code_unit:src/auth/auth.module.ts",
+        "via": "relative"
+       },
+       {
+        "edge_type": "verifies",
+        "from": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+        "provenance": "deterministic",
+        "to": "code_unit:src/app.module.ts",
+        "via": "explicit-path"
+       }
+      ],
+      "revision": "head",
+      "section": "deterministic_core",
+      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+     }
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   }
+  ],
+  "edge_types": "all",
+  "global_fallback": {
+   "triggered": false
+  },
+  "inferred_tail": [],
+  "max_depth": 3,
+  "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+  "total": 20
+ },
+ "notes": [
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.0.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "profile: (auto-detected); baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none"
+ ],
+ "producer": {
+  "tool": "tools/graph/verify.py",
+  "version": "1.0.1"
+ },
+ "receipt_id": "car-verify-20260925T023915Z-0fa6288b",
+ "receipt_path": "receipts/graph/a2-301-per-key-rate-limit.json",
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/home/dev/aup/arc2/runs/A2-301/work/mc"
+ },
+ "revision_selection": {
+  "base": [
+   "code_unit:src/admin/admin.module.ts",
+   "code_unit:src/app.module.ts",
+   "code_unit:src/auth/auth.module.ts",
+   "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+   "code_unit:src/connectors/cascade/cascade.module.ts",
+   "code_unit:src/connectors/connectors.module.ts",
+   "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "code_unit:src/main.ts",
+   "code_unit:src/metrics/metrics.controller.spec.ts",
+   "code_unit:src/metrics/metrics.controller.ts",
+   "code_unit:src/metrics/metrics.module.ts",
+   "code_unit:src/speech/speech.module.ts",
+   "code_unit:test/app.e2e-spec.ts",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:watcher/deploy/runbook-observability.md",
+   "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+   "route:GET /metrics"
+  ],
+  "head": [
+   "code_unit:src/admin/admin.module.ts",
+   "code_unit:src/app.module.ts",
+   "code_unit:src/auth/abort-budget-signal.spec.ts",
+   "code_unit:src/auth/abort-budget.interceptor.ts",
+   "code_unit:src/auth/auth.module.ts",
+   "code_unit:src/auth/key-rate-limit.provider.ts",
+   "code_unit:src/auth/key-rate-limit.service.spec.ts",
+   "code_unit:src/auth/key-rate-limit.service.ts",
+   "code_unit:src/auth/key-rate-limit.token.ts",
+   "code_unit:src/auth/rate-limit-exempt.decorator.ts",
+   "code_unit:src/auth/rate-limit.app.spec.ts",
+   "code_unit:src/auth/rate-limit.guard.ts",
+   "code_unit:src/auth/rate-limit.integration.spec.ts",
+   "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+   "code_unit:src/connectors/cascade/cascade.module.ts",
+   "code_unit:src/connectors/connectors.module.ts",
+   "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "code_unit:src/main.ts",
+   "code_unit:src/metrics/metrics.controller.spec.ts",
+   "code_unit:src/metrics/metrics.controller.ts",
+   "code_unit:src/metrics/metrics.module.ts",
+   "code_unit:src/speech/speech.module.ts",
+   "code_unit:test/app.e2e-spec.ts",
+   "contract:src/auth/key-rate-limit.service.ts#RateLimitOutcome",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:watcher/deploy/runbook-observability.md",
+   "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+   "route:GET /metrics",
+   "route:GET /probe/abort",
+   "route:GET /probe/execute",
+   "route:GET /probe/health",
+   "route:GET /probe/metrics"
+  ],
+  "schema": "RevisionImpactSelection/v1",
+  "unmeasured_head_files": []
+ },
+ "schema": "ChangeAdmissionReceipt/v1",
+ "staleness": {
+  "checked_at_utc": "2026-09-25T02:39:21Z",
+  "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+  "mismatched_nodes": [],
+  "verdict": "fresh"
+ },
+ "structural_exclusions": [
+  {
+   "content_hash": {
+    "base": "sha256:64da08fdcac8d512c754fc432b1c61f6466e92367c85d78bee7afe0df1461d1c",
+    "head": "sha256:64da08fdcac8d512c754fc432b1c61f6466e92367c85d78bee7afe0df1461d1c"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf",
+    "head": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:55aa15f55fa943313632f398f2934cfc9fa99c25fcae2cca6cda20e14a00eb9a",
+    "head": "sha256:55aa15f55fa943313632f398f2934cfc9fa99c25fcae2cca6cda20e14a00eb9a"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:a785e919dadd2eb3f961db5468a9c884f6be662e543456ac1beca9fa5303987c",
+    "head": "sha256:a785e919dadd2eb3f961db5468a9c884f6be662e543456ac1beca9fa5303987c"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:b2f2634796fa4f3dd05a4968bf6035f30619441d3e557ee1960ad3aa7838eab4",
+    "head": "sha256:b2f2634796fa4f3dd05a4968bf6035f30619441d3e557ee1960ad3aa7838eab4"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:4d75a0b2ca6c1e2655c607d4536d6f510283336842742fe9197d774528399000",
+    "head": "sha256:4d75a0b2ca6c1e2655c607d4536d6f510283336842742fe9197d774528399000"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  }
+ ],
+ "tree": {
+  "commit": "0fa6288bd22d05d55a6016ddd608ce2e1a1eadc2",
+  "dirty": false
+ },
+ "verdicts": [
+  {
+   "entity": "code_unit:src/admin/admin.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/admin/admin.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/app.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/app.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/auth/abort-budget-signal.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/auth/abort-budget-signal.spec.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/auth/abort-budget.interceptor.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/auth/abort-budget.interceptor.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/auth/auth.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/auth/auth.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/auth/key-rate-limit.provider.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/auth/key-rate-limit.provider.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/auth/key-rate-limit.service.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/auth/key-rate-limit.service.spec.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/auth/key-rate-limit.service.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/auth/key-rate-limit.service.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-contract-diff",
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/auth/key-rate-limit.token.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/auth/key-rate-limit.token.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/auth/rate-limit-exempt.decorator.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/auth/rate-limit-exempt.decorator.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/auth/rate-limit.app.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/auth/rate-limit.app.spec.ts; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/auth/rate-limit.guard.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/auth/rate-limit.guard.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/auth/rate-limit.integration.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/auth/rate-limit.integration.spec.ts; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-config-schema",
+    "v-contract-diff",
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/cascade/cascade.module.di.spec.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/cascade/cascade.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/connectors.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/connectors.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/main.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/main.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/metrics/metrics.controller.spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/metrics/metrics.controller.spec.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/metrics/metrics.controller.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/metrics/metrics.controller.ts; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/metrics/metrics.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/metrics/metrics.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:src/speech/speech.module.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/speech/speech.module.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:test/app.e2e-spec.ts",
+   "reason": "v-type-check-tsconfig: tsconfig.json does not include test/app.e2e-spec.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "contract:src/auth/key-rate-limit.service.ts#RateLimitOutcome",
+   "reason": "v-contract-diff: added: no breaking change (1 change(s))",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-contract-diff"
+   ]
+  },
+  {
+   "entity": "deployable_unit:.",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in 40 file(s)",
+   "verdict": "failed",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "document:CHANGELOG.md",
+   "reason": "v-doc-reference: 23 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:watcher/deploy/runbook-observability.md",
+   "reason": "v-doc-reference: 1 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "route:GET /metrics",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 147 error(s) in other files (src/admin/watcher-repair.guard.spec.ts, src/billing/credit-gate.spec.ts, src/config/env.schema.image.spec.ts); not attributable to src/metrics/metrics.controller.ts; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "route:GET /probe/abort",
+   "reason": "v-route-config: UNREGISTERED_CONTROLLER: src/auth/rate-limit.app.spec.ts is registered in no @Module reachable from the root module (54 modules reachable from src/app.module.ts)",
+   "verdict": "failed",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "route:GET /probe/execute",
+   "reason": "v-route-config: UNREGISTERED_CONTROLLER: src/auth/rate-limit.app.spec.ts is registered in no @Module reachable from the root module (54 modules reachable from src/app.module.ts)",
+   "verdict": "failed",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "route:GET /probe/health",
+   "reason": "v-route-config: UNREGISTERED_CONTROLLER: src/auth/rate-limit.app.spec.ts is registered in no @Module reachable from the root module (54 modules reachable from src/app.module.ts)",
+   "verdict": "failed",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "route:GET /probe/metrics",
+   "reason": "v-route-config: UNREGISTERED_CONTROLLER: src/auth/rate-limit.app.spec.ts is registered in no @Module reachable from the root module (54 modules reachable from src/app.module.ts)",
+   "verdict": "failed",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig"
+   ]
+  }
+ ],
+ "verifiers": [
+  {
+   "command": "./node_modules/.bin/tsc -p /home/dev/aup/arc2/runs/A2-301/work/mc/tsconfig.json --noEmit --incremental false --listFiles",
+   "duration_s": 8.03,
+   "entities": [
+    "code_unit:src/admin/admin.module.ts",
+    "code_unit:src/app.module.ts",
+    "code_unit:src/auth/abort-budget-signal.spec.ts",
+    "code_unit:src/auth/abort-budget.interceptor.ts",
+    "code_unit:src/auth/auth.module.ts",
+    "code_unit:src/auth/key-rate-limit.provider.ts",
+    "code_unit:src/auth/key-rate-limit.service.spec.ts",
+    "code_unit:src/auth/key-rate-limit.service.ts",
+    "code_unit:src/auth/key-rate-limit.token.ts",
+    "code_unit:src/auth/rate-limit-exempt.decorator.ts",
+    "code_unit:src/auth/rate-limit.app.spec.ts",
+    "code_unit:src/auth/rate-limit.guard.ts",
+    "code_unit:src/auth/rate-limit.integration.spec.ts",
+    "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+    "code_unit:src/connectors/cascade/cascade.module.ts",
+    "code_unit:src/connectors/connectors.module.ts",
+    "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+    "code_unit:src/main.ts",
+    "code_unit:src/metrics/metrics.controller.spec.ts",
+    "code_unit:src/metrics/metrics.controller.ts",
+    "code_unit:src/metrics/metrics.module.ts",
+    "code_unit:src/speech/speech.module.ts",
+    "code_unit:test/app.e2e-spec.ts",
+    "deployable_unit:.",
+    "route:GET /metrics",
+    "route:GET /probe/abort",
+    "route:GET /probe/execute",
+    "route:GET /probe/health",
+    "route:GET /probe/metrics"
+   ],
+   "entity_verdicts": {
+    "code_unit:src/admin/admin.module.ts": "not_measured",
+    "code_unit:src/app.module.ts": "not_measured",
+    "code_unit:src/auth/abort-budget-signal.spec.ts": "not_measured",
+    "code_unit:src/auth/abort-budget.interceptor.ts": "not_measured",
+    "code_unit:src/auth/auth.module.ts": "not_measured",
+    "code_unit:src/auth/key-rate-limit.provider.ts": "not_measured",
+    "code_unit:src/auth/key-rate-limit.service.spec.ts": "not_measured",
+    "code_unit:src/auth/key-rate-limit.service.ts": "not_measured",
+    "code_unit:src/auth/key-rate-limit.token.ts": "not_measured",
+    "code_unit:src/auth/rate-limit-exempt.decorator.ts": "not_measured",
+    "code_unit:src/auth/rate-limit.app.spec.ts": "not_measured",
+    "code_unit:src/auth/rate-limit.guard.ts": "not_measured",
+    "code_unit:src/auth/rate-limit.integration.spec.ts": "not_measured",
+    "code_unit:src/connectors/cascade/cascade.module.di.spec.ts": "not_measured",
+    "code_unit:src/connectors/cascade/cascade.module.ts": "not_measured",
+    "code_unit:src/connectors/connectors.module.ts": "not_measured",
+    "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts": "not_measured",
+    "code_unit:src/main.ts": "not_measured",
+    "code_unit:src/metrics/metrics.controller.spec.ts": "not_measured",
+    "code_unit:src/metrics/metrics.controller.ts": "not_measured",
+    "code_unit:src/metrics/metrics.module.ts": "not_measured",
+    "code_unit:src/speech/speech.module.ts": "not_measured",
+    "code_unit:test/app.e2e-spec.ts": "not_measured",
+    "deployable_unit:.": "failed",
+    "route:GET /metrics": "not_measured",
+    "route:GET /probe/abort": "not_measured",
+    "route:GET /probe/execute": "not_measured",
+    "route:GET /probe/health": "not_measured",
+    "route:GET /probe/metrics": "not_measured"
+   },
+   "exit_code": 2,
+   "id": "v-type-check-tsconfig",
+   "kind": "type_check",
+   "output_ref": "/tmp/arcana-verify/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-09-25T02:39:29Z",
+   "summary": "tsconfig.json: exit 2, 147 error(s), 2707 files listed"
+  },
+  {
+   "command": "tools/graph/contract_diff.py.run_diff(base=dc0b3adc87ea, head=0fa6288bd22d, graph=head graph)",
+   "duration_s": 4.93,
+   "entities": [
+    "code_unit:src/auth/key-rate-limit.service.ts",
+    "code_unit:src/auth/rate-limit.app.spec.ts",
+    "code_unit:src/auth/rate-limit.integration.spec.ts",
+    "code_unit:src/metrics/metrics.controller.ts",
+    "contract:src/auth/key-rate-limit.service.ts#RateLimitOutcome",
+    "route:GET /metrics",
+    "route:GET /probe/abort",
+    "route:GET /probe/execute",
+    "route:GET /probe/health",
+    "route:GET /probe/metrics"
+   ],
+   "entity_verdicts": {
+    "code_unit:src/auth/key-rate-limit.service.ts": "verified",
+    "code_unit:src/auth/rate-limit.app.spec.ts": "verified",
+    "code_unit:src/auth/rate-limit.integration.spec.ts": "verified",
+    "code_unit:src/metrics/metrics.controller.ts": "verified",
+    "contract:src/auth/key-rate-limit.service.ts#RateLimitOutcome": "verified",
+    "route:GET /metrics": "verified",
+    "route:GET /probe/abort": "verified",
+    "route:GET /probe/execute": "verified",
+    "route:GET /probe/health": "verified",
+    "route:GET /probe/metrics": "verified"
+   },
+   "exit_code": 1,
+   "id": "v-contract-diff",
+   "kind": "contract_diff",
+   "output_ref": "/tmp/arcana-verify/verifier-out/v-contract-diff.json",
+   "started_at_utc": "2026-09-25T02:39:37Z",
+   "summary": "157→158 contracts, breaking 0, edges {'failed': 8, 'verified': 211}"
+  },
+  {
+   "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
+   "duration_s": 0.01,
+   "entities": [
+    "route:GET /metrics",
+    "route:GET /probe/abort",
+    "route:GET /probe/execute",
+    "route:GET /probe/health",
+    "route:GET /probe/metrics"
+   ],
+   "entity_verdicts": {
+    "route:GET /metrics": "verified",
+    "route:GET /probe/abort": "failed",
+    "route:GET /probe/execute": "failed",
+    "route:GET /probe/health": "failed",
+    "route:GET /probe/metrics": "failed"
+   },
+   "exit_code": 1,
+   "id": "v-route-config",
+   "kind": "config_schema",
+   "output_ref": "/tmp/arcana-verify/verifier-out/v-route-config.txt",
+   "started_at_utc": "2026-09-25T02:39:42Z",
+   "summary": "5 route(s), 4 failed"
+  },
+  {
+   "command": "verify.py config_schema: keys read at head ⊆ declared keys",
+   "duration_s": 0.02,
+   "entities": [
+    "code_unit:src/auth/rate-limit.integration.spec.ts"
+   ],
+   "entity_verdicts": {
+    "code_unit:src/auth/rate-limit.integration.spec.ts": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-config-schema",
+   "kind": "config_schema",
+   "output_ref": "/tmp/arcana-verify/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-09-25T02:39:42Z",
+   "summary": "3 source(s), 0 new / 84 frozen undeclared reads, 0 failed"
+  },
+  {
+   "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+   "duration_s": 0.19,
+   "entities": [
+    "code_unit:src/admin/admin.module.ts",
+    "code_unit:src/app.module.ts",
+    "code_unit:src/auth/abort-budget-signal.spec.ts",
+    "code_unit:src/auth/abort-budget.interceptor.ts",
+    "code_unit:src/auth/auth.module.ts",
+    "code_unit:src/auth/key-rate-limit.provider.ts",
+    "code_unit:src/auth/key-rate-limit.service.spec.ts",
+    "code_unit:src/auth/key-rate-limit.service.ts",
+    "code_unit:src/auth/key-rate-limit.token.ts",
+    "code_unit:src/auth/rate-limit-exempt.decorator.ts",
+    "code_unit:src/auth/rate-limit.app.spec.ts",
+    "code_unit:src/auth/rate-limit.guard.ts",
+    "code_unit:src/auth/rate-limit.integration.spec.ts",
+    "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+    "code_unit:src/connectors/cascade/cascade.module.ts",
+    "code_unit:src/connectors/connectors.module.ts",
+    "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+    "code_unit:src/main.ts",
+    "code_unit:src/metrics/metrics.controller.spec.ts",
+    "code_unit:src/metrics/metrics.controller.ts",
+    "code_unit:src/metrics/metrics.module.ts",
+    "code_unit:src/speech/speech.module.ts",
+    "code_unit:test/app.e2e-spec.ts",
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "code_unit:src/admin/admin.module.ts": "verified",
+    "code_unit:src/app.module.ts": "verified",
+    "code_unit:src/auth/abort-budget-signal.spec.ts": "verified",
+    "code_unit:src/auth/abort-budget.interceptor.ts": "verified",
+    "code_unit:src/auth/auth.module.ts": "verified",
+    "code_unit:src/auth/key-rate-limit.provider.ts": "verified",
+    "code_unit:src/auth/key-rate-limit.service.spec.ts": "verified",
+    "code_unit:src/auth/key-rate-limit.service.ts": "verified",
+    "code_unit:src/auth/key-rate-limit.token.ts": "verified",
+    "code_unit:src/auth/rate-limit-exempt.decorator.ts": "verified",
+    "code_unit:src/auth/rate-limit.app.spec.ts": "verified",
+    "code_unit:src/auth/rate-limit.guard.ts": "verified",
+    "code_unit:src/auth/rate-limit.integration.spec.ts": "verified",
+    "code_unit:src/connectors/cascade/cascade.module.di.spec.ts": "verified",
+    "code_unit:src/connectors/cascade/cascade.module.ts": "verified",
+    "code_unit:src/connectors/connectors.module.ts": "verified",
+    "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts": "verified",
+    "code_unit:src/main.ts": "verified",
+    "code_unit:src/metrics/metrics.controller.spec.ts": "verified",
+    "code_unit:src/metrics/metrics.controller.ts": "verified",
+    "code_unit:src/metrics/metrics.module.ts": "verified",
+    "code_unit:src/speech/speech.module.ts": "verified",
+    "code_unit:test/app.e2e-spec.ts": "verified",
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-fitness",
+   "kind": "fitness_rules",
+   "output_ref": "/tmp/arcana-verify/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-09-25T02:39:42Z",
+   "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+  },
+  {
+   "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+   "duration_s": 0.0,
+   "entities": [
+    "document:CHANGELOG.md",
+    "document:watcher/deploy/runbook-observability.md"
+   ],
+   "entity_verdicts": {
+    "document:CHANGELOG.md": "verified",
+    "document:watcher/deploy/runbook-observability.md": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-doc-reference",
+   "kind": "doc_reference",
+   "output_ref": "/tmp/arcana-verify/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-09-25T02:39:42Z",
+   "summary": "2 document(s), 0 failed"
+  },
+  {
+   "command": "tools/graph/deploy_gate.py canary --plan <plan> --phase pre|post (results supplied with --canary)",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:src/auth/rate-limit.app.spec.ts",
+    "code_unit:src/auth/rate-limit.integration.spec.ts",
+    "code_unit:src/metrics/metrics.controller.ts",
+    "route:GET /metrics",
+    "route:GET /probe/abort",
+    "route:GET /probe/execute",
+    "route:GET /probe/health",
+    "route:GET /probe/metrics"
+   ],
+   "entity_verdicts": {
+    "code_unit:src/auth/rate-limit.app.spec.ts": "not_measured",
+    "code_unit:src/auth/rate-limit.integration.spec.ts": "not_measured",
+    "code_unit:src/metrics/metrics.controller.ts": "not_measured",
+    "route:GET /metrics": "not_measured",
+    "route:GET /probe/abort": "not_measured",
+    "route:GET /probe/execute": "not_measured",
+    "route:GET /probe/health": "not_measured",
+    "route:GET /probe/metrics": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-canary",
+   "kind": "canary",
+   "output_ref": "/tmp/arcana-verify/verifier-out/v-canary.json",
+   "started_at_utc": "2026-09-25T02:39:42Z",
+   "summary": "0 canary result(s); 0 verified / 0 failed / 8 not_measured of 8 entities"
+  }
+ ],
+ "verify": {
+  "events": [
+   {
+    "code": "STRUCTURAL_EXCLUSION",
+    "rule": "DEC-AUP-0034",
+    "text": "6 affected entity(ies) owe no verdict (receipt: 6): unchanged at both revisions and given no verifier by the matrix"
+   }
+  ],
+  "required_by_entity": {
+   "code_unit:src/admin/admin.module.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/app.module.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/auth/abort-budget-signal.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/auth/abort-budget.interceptor.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/auth/auth.module.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/auth/key-rate-limit.provider.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/auth/key-rate-limit.service.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/auth/key-rate-limit.service.ts": [
+    "contract_diff",
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/auth/key-rate-limit.token.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/auth/rate-limit-exempt.decorator.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/auth/rate-limit.app.spec.ts": [
+    "canary",
+    "contract_diff",
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/auth/rate-limit.guard.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/auth/rate-limit.integration.spec.ts": [
+    "canary",
+    "config_schema",
+    "contract_diff",
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/connectors/cascade/cascade.module.di.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/connectors/cascade/cascade.module.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/connectors/connectors.module.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/main.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/metrics/metrics.controller.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/metrics/metrics.controller.ts": [
+    "canary",
+    "contract_diff",
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/metrics/metrics.module.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/speech/speech.module.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:test/app.e2e-spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "contract:src/auth/key-rate-limit.service.ts#RateLimitOutcome": [
+    "contract_diff"
+   ],
+   "deployable_unit:.": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "document:CHANGELOG.md": [
+    "doc_reference"
+   ],
+   "document:watcher/deploy/runbook-observability.md": [
+    "doc_reference"
+   ],
+   "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json": [],
+   "route:GET /metrics": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:GET /probe/abort": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:GET /probe/execute": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:GET /probe/health": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:GET /probe/metrics": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ]
+  },
+  "seconds": {
+   "prepare": 5.26,
+   "total": 27.71,
+   "verifiers": 13.18
+  }
+ },
+ "work_item": "A2-301"
+}
