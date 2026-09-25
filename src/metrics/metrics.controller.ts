@@ -1,9 +1,18 @@
 import { Controller, Get, Res } from '@nestjs/common';
 import { FastifyReply } from 'fastify';
+import { RateLimitExempt } from '../auth/rate-limit-exempt.decorator';
 import { SpeechMetricsService } from '../speech/speech-metrics.service';
 import { MetricsService } from './metrics.service';
 
 @Controller('metrics')
+// A2-301 — the ONLY route exempted from the per-key rate limit, and the reason
+// is the incident this control is for: a scrape budget shared with traffic means
+// observability goes dark exactly when a key starts burning through its limit.
+// Throttling the monitor during the event it is meant to show is backwards. The
+// endpoint exposes no customer data and costs no provider call; the residual
+// risk is a cheap read loop by a valid key holder, bounded by the Redis-cached
+// registry render and visible in the reverse proxy's own logs.
+@RateLimitExempt('Prometheus scrape: observability must not be throttled by a traffic budget')
 export class MetricsController {
   constructor(
     private readonly speechMetrics: SpeechMetricsService,
