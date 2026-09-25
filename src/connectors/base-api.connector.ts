@@ -16,8 +16,36 @@ import { Semaphore, QueueTimeoutError } from './base-cli.connector';
 import { resolveAttemptBudget } from './attempt-budget';
 import { getConfig } from '../config/env.schema';
 import { isTimeoutAbort } from '../core/utils/abort';
+import { estimateInputTokens } from '../billing/cost-estimate';
 import { CircuitOpenError } from '../core/resilience/circuit-breaker';
 import { CircuitBreakerManager } from '../core/resilience/circuit-breaker-manager';
+
+/**
+ * A2-295 — what a caller can actually DO about an aborted attempt.
+ *
+ * The raw message is Node's: "The operation was aborted due to timeout". True,
+ * and useless — it names neither the deadline that expired nor the fact that
+ * the attempt was paid for. `ErrorAction` has four values and none of them is
+ * "ask for more time", so the actionable part has to live in the message.
+ *
+ * A2-278 is the worked example: three re-dispatches of the same 37K-token
+ * prompt under the same 120 s the client itself sent, each one charged by the
+ * provider and each one reported as free.
+ */
+export function abortedAttemptMessage(
+  raw: string,
+  attemptBudgetMs: number,
+  model: string | undefined,
+): string {
+  const target = model ? `\`${model}\`` : 'this model';
+  return (
+    `${raw} — the upstream attempt was aborted after the ${attemptBudgetMs} ms allowed for ` +
+    `ONE attempt on ${target}. The provider received the whole prompt and bills for it, so the ` +
+    'input tokens on this response are an estimate of what it already cost, not zero. Repeating ' +
+    'the request unchanged buys another aborted attempt at the same price: raise `timeout`, ' +
+    'choose a faster model, or shorten the prompt.'
+  );
+}
 
 export interface ParsedApiOutput {
   text: string;
@@ -606,16 +634,50 @@ export abstract class BaseApiConnector implements IConnector {
       if (!callerTimedOutFirst) {
         modelCb.recordFailure(errorType);
       }
+      // A2-295 — an aborted attempt is not a free attempt.
+      //
+      // Every branch of this catch used to return `usage: 0`. For a connection
+      // that never opened (`network_error`) that is true. For an abort it is
+      // not: the `fetch` above completed its request body before we started
+      // waiting, so the provider holds the entire prompt and bills for it
+      // whatever we do with the socket afterwards. Measured on the A2-278
+      // receipt — $0.086584 of real provider spend (37 417 input tokens at the
+      // catalogue's 1.74/MTok) reported by Model Connector as $0.000000, which
+      // is why no `max_cost_usd` in the stack could see it.
+      //
+      // So the abort branch reports the one token count that exists: ours,
+      // computed from the prompt we sent, flagged `estimated` all the way to
+      // the caller and to `Request.costSource = 'estimated-input'`. Input only
+      // — output the provider may have produced before the cut is unknowable
+      // and is charged at zero, which understates the bill rather than
+      // inventing one.
+      //
+      // Deliberately narrow: ONLY `isAbort`. A DNS failure, a refused
+      // connection or a malformed body still reports zero, because on those
+      // paths zero is the measurement.
+      const estimatedInputTokens = isAbort ? estimateInputTokens(request.prompt) : 0;
       return {
         id,
         connector: this.name,
         model: request.model || 'unknown',
         result: '',
-        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+        usage: isAbort
+          ? {
+              inputTokens: estimatedInputTokens,
+              outputTokens: 0,
+              totalTokens: estimatedInputTokens,
+              costUsd: 0,
+              estimated: true as const,
+            }
+          : { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
         latencyMs,
         queueWaitMs,
         status: isAbort ? 'timeout' : 'error',
-        error: { type: errorType, message, ...action },
+        error: {
+          type: errorType,
+          message: isAbort ? abortedAttemptMessage(message, timeout, request.model) : message,
+          ...action,
+        },
       };
     } finally {
       this.activeJobs--;

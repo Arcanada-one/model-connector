@@ -36,6 +36,7 @@ import {
   type CostSource,
   type MeasuredCost,
   type MeasuredCostPricing,
+  isChargeableToCustomer,
 } from '../billing/measured-cost';
 import type { OutputGuardReport } from './output-guard/types';
 import { OPENMODEL_CATALOGUE } from './openmodel/openmodel.catalogue';
@@ -1254,6 +1255,10 @@ export class ConnectorsService {
       // carries one, so the meter has to see it rather than charge every
       // prompt token at full price.
       cachedInputTokens: response.usage.cachedInputTokens,
+      // A2-295 — an aborted attempt reports input tokens it estimated from the
+      // prompt. The tariff is still the catalogue's, so the arithmetic is
+      // unchanged; only the `costSource` has to say the COUNT was ours.
+      estimatedUsage: response.usage.estimated === true,
       pricing,
       // A2-223 — the connector's own declaration of how it is paid for. Read
       // from the registry rather than inferred from `type`, and absent means
@@ -1327,6 +1332,12 @@ export class ConnectorsService {
     // a different retention policy. Measured on one host over ten days: 307
     // such rows, $120.363277, all of it eventually `uncollectible`.
     if (costSource === 'subscription') return 'model-request:subscription';
+    // A2-295 — an estimated charge has to be findable in the LEDGER, not only
+    // on the request row, for the same reason `:unpriced` does: the ledger is
+    // the audit surface and has a different retention policy. This is the one
+    // reason whose amount was never metered by anybody, so a reconciliation
+    // that wants "charges we stand behind" must be able to exclude it.
+    if (costSource === 'estimated-input-unbilled') return 'model-request:estimated-input-unbilled';
     return 'model-request';
   }
 
@@ -1413,10 +1424,35 @@ export class ConnectorsService {
 
         if (!this.billing) return;
 
+        // A2-299 / DEC-AUP-0050 R2+R3 — an aborted attempt's estimated input cost
+        // is recorded (above, on the `Request` row) as ARCANADA'S cost and
+        // charged to the customer at ZERO.
+        //
+        // The consilium's answer to a question PR #147 got the other way round:
+        // the customer received nothing, our own timeout fired, and the number
+        // is a heuristic we cannot show them. Legal found no Terms clause behind
+        // such a charge; billing found that a client's own retry after a timeout
+        // would double-charge the same prompt with no idempotent key tying the
+        // attempts together. So the loss is ours and it is VISIBLE, which is the
+        // part today's `zero-usage` gets wrong — not the party who pays.
+        //
+        // DEC-AUP-0050 R6 lists the four cumulative gates that must ALL be met
+        // before this may ever become a charge: a Terms clause in force, a
+        // measured error bound for the estimator, a proof-of-upload trigger, and
+        // an enforced per-key rate limit. Until then, zero.
+        //
+        // A2-299b — the test that `costSource` is unbillable now reads the SHARED
+        // list (`NEVER_CHARGEABLE_COST_SOURCES`) rather than naming the source
+        // inline. The inline comparison was correct and was also the reason the
+        // reconciler could disagree with this line: there was no single place that
+        // said "the customer never pays for this", so the second charging path
+        // never learned about the first. One list, both sites.
+        const customerChargeUsd = isChargeableToCustomer(costSource) ? response.usage.costUsd : 0;
+
         if (intent) {
           await this.billing.settleIntentInTx(tx, {
             intent,
-            amountUsd: response.usage.costUsd,
+            amountUsd: customerChargeUsd,
             requestId: created.id,
             // Stored so a replay of this intent key returns THIS answer rather
             // than calling the provider again.
@@ -1433,7 +1469,7 @@ export class ConnectorsService {
         // reconciler looks for.
         await this.billing.settleInTx(tx, {
           apiKeyId,
-          amountUsd: response.usage.costUsd,
+          amountUsd: customerChargeUsd,
           idempotencyKey: `request:${created.id}`,
           requestId: created.id,
           reason,

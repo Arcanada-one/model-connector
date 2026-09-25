@@ -106,6 +106,25 @@ export function promptCharLength(prompt: string | ContentBlock[] | undefined): n
 const IMAGE_BLOCK_CHAR_ALLOWANCE = 4_000;
 
 /**
+ * A2-295 — how many input tokens the provider was handed, when only the request
+ * is available to count.
+ *
+ * Used where an attempt was ABORTED mid-flight: the provider read the whole
+ * prompt and will bill for it, but no `usage` object ever came back, so the
+ * only token count in existence is the one we compute from what we sent. Same
+ * `CHARS_PER_TOKEN` ratio as the pre-call estimate above, deliberately: two
+ * ratios would mean the precheck and the charge disagree about the same prompt.
+ *
+ * Unlike {@link estimateCostUsd} this one is NOT pessimistic, and must not be.
+ * The estimate above guards a balance and may overshoot; this one becomes a
+ * charge, and overcharging a caller for tokens nobody counted is the failure to
+ * avoid. It therefore counts input only and never assumes any output.
+ */
+export function estimateInputTokens(prompt: string | ContentBlock[] | undefined): number {
+  return Math.ceil(promptCharLength(prompt) / CHARS_PER_TOKEN);
+}
+
+/**
  * Estimate the USD cost of a request. `pricing` is the catalogue row for the
  * target model, or null/undefined when the model is not in the catalogue.
  */

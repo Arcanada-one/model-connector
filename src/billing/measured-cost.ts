@@ -39,6 +39,38 @@ export type CostSource =
   | 'catalog-free'
   /** Nothing was consumed (error, refusal, or a connector reporting no usage). */
   | 'zero-usage'
+  /**
+   * A2-299 / DEC-AUP-0050 — tokens WERE consumed, by an attempt that was
+   * ABORTED before the provider answered, so the count is OURS (estimated from
+   * the prompt we sent) and the customer is charged NOTHING for it.
+   *
+   * The name carries both facts on purpose. `estimated-` because no provider
+   * reported these tokens; `-unbilled` because the amount is Arcanada's own cost
+   * and never reaches a customer's ledger as a charge.
+   *
+   * It exists because the alternative on this path was `'zero-usage'` —
+   * "nothing was consumed" — asserted about a request whose entire prompt the
+   * provider had already read. Measured (A2-295, local test double, $0 spent):
+   * 98 750 bytes crossed the socket, proven SERVER-side, and Model Connector
+   * recorded $0.000000. The vendor documentation is explicit that a cancelled
+   * NON-STREAMING request is billed in full
+   * (https://openrouter.ai/docs/api_reference/streaming), and `/execute` has no
+   * streaming at all — so the cost is real and the zero was false.
+   *
+   * Kept separate from `'catalog'` because the tariff is the catalogue's and
+   * trustworthy while the TOKEN COUNT is an estimate. This makes the amount
+   * nobody metered findable, which is what an aggregate reconciliation against
+   * a provider invoice needs — per-request reconciliation is impossible, since
+   * an abort leaves us neither a body nor a response id:
+   *
+   *     SELECT sum("costUsd") FROM "Request"
+   *      WHERE "costSource" = 'estimated-input-unbilled';
+   *
+   * Input only. Output tokens the provider may have generated before the socket
+   * was cut are counted as 0 — an under-statement we can defend, against an
+   * over-statement we could not.
+   */
+  | 'estimated-input-unbilled'
   /** Tokens were consumed and NO price was known. See the note below. */
   | 'unpriced'
   /**
@@ -65,6 +97,43 @@ export type CostSource =
    * rather than taken here by a change whose job was to make it visible.
    */
   | 'subscription';
+
+/**
+ * A2-299b / DEC-AUP-0050 R2 — cost sources whose amount may NEVER become a
+ * customer charge, by any path, ever.
+ *
+ * `Request.costUsd` normally answers two questions at once: what the call cost
+ * us, and what the customer owes for it. `'estimated-input-unbilled'` is the
+ * first source that splits them — the amount is real spend and is recorded as
+ * such, but R2 forbids charging it, because the token count is our own heuristic
+ * for an attempt our own timeout aborted.
+ *
+ * That split is invisible to any code reading `costUsd` alone, which is why this
+ * list exists as a shared constant rather than as a condition repeated at each
+ * charging site. There are two such sites — the live settle in
+ * `ConnectorsService.persistAndSettle` and the recovery settle in
+ * `BillingReconcilerService.reconcile` — and the second one was missed: it reads
+ * `Request.costUsd` off the row and charges it, with no knowledge of provenance.
+ * Adding a future unbillable source to this list now reaches both.
+ *
+ * DEC-AUP-0050 R6 is what would move a source OFF this list, and it takes four
+ * cumulative gates. Editing the list is not the way to start charging.
+ */
+export const NEVER_CHARGEABLE_COST_SOURCES: readonly CostSource[] = ['estimated-input-unbilled'];
+
+/**
+ * May the customer be charged for a request recorded with this cost source?
+ *
+ * `null`/unknown answers TRUE deliberately. The rows that carry no `costSource`
+ * are the pre-ARAS-0058 ones, which are ordinary metered spend; answering false
+ * for them would silently stop collecting real revenue, and a recovery job that
+ * quietly charges nothing is as much a defect as one that over-charges.
+ */
+export function isChargeableToCustomer(
+  costSource: CostSource | string | null | undefined,
+): boolean {
+  return !NEVER_CHARGEABLE_COST_SOURCES.includes(costSource as CostSource);
+}
 
 /**
  * A2-223 — how a connector is paid for, declared by the connector itself.
@@ -205,6 +274,13 @@ export function measureCostUsd(input: {
    * previous implementation.
    */
   lane?: BillingLane;
+  /**
+   * A2-295 — true when `inputTokens` was ESTIMATED from the prompt rather than
+   * reported by the provider (an aborted attempt). Only changes the `source`
+   * the result carries; the arithmetic is identical, because the tariff is the
+   * same tariff and only the token count is ours.
+   */
+  estimatedUsage?: boolean;
 }): MeasuredCost {
   const { providerCostUsd, pricing } = input;
 
@@ -298,7 +374,10 @@ export function measureCostUsd(input: {
     // identity. Reconciliation queries must therefore allow a 1e-6 tolerance.
     return {
       costUsd: roundToStorage(inputCost + outputCost),
-      source: 'catalog',
+      // A2-295 — the tariff came from the catalogue either way; the source says
+      // whether the TOKENS did. An estimated count charged as `'catalog'` would
+      // be indistinguishable from a metered one in every reconciliation query.
+      source: input.estimatedUsage ? 'estimated-input-unbilled' : 'catalog',
       inputCostUsd: roundToStorage(inputCost),
       outputCostUsd: roundToStorage(outputCost),
     };
