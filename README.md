@@ -907,6 +907,17 @@ curl https://connector.arcanada.one/admin/keys \
 # Ответ: [{"id": "...", "name": "my-service", "rateLimit": 120, "active": true, "createdAt": "..."}]
 ```
 
+**Прочитать / изменить лимит существующего ключа (A2-319):**
+
+```bash
+curl https://connector.arcanada.one/admin/keys/<id> -H "X-Admin-Token: $ADMIN_TOKEN"
+curl -X PATCH https://connector.arcanada.one/admin/keys/<id>/rate-limit \
+  -H "X-Admin-Token: $ADMIN_TOKEN" -H "Content-Type: application/json" \
+  -d '{"rateLimit": 120, "actor": "<who>", "reason": "<optional>"}'
+```
+
+Подробно, включая пробу, доказывающую достижимость 429: `docs/how-to/per-key-rate-limit.md`.
+
 **Деактивировать ключ:**
 
 ```bash
