@@ -32,7 +32,14 @@ function connectorWith(
 ) {
   const request = vi.fn<(request: BflTransportRequest) => Promise<unknown>>();
   request.mockResolvedValue(result);
-  const transport: BflTransport = { request };
+  // `BflTransport.request` is declared `<T>(request) => Promise<T>`
+  // (black-forest-labs.connector.ts:35) — the *caller* picks T, so no concrete function value
+  // can satisfy it directly. The double forwards the spy's fixture under whatever T the
+  // connector asks for: argument types stay fully checked by the spy's own signature, and the
+  // fixture's shape is exactly what each test asserts on the resolved value.
+  const transport: BflTransport = {
+    request: <T>(req: BflTransportRequest): Promise<T> => request(req) as Promise<T>,
+  };
   return {
     connector: new BlackForestLabsConnector('test-bfl-key', transport, baseUrl),
     request,

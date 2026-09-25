@@ -33,6 +33,9 @@ describe('ConnectorJobProcessor', () => {
       execute: vi.fn().mockResolvedValue(mockResponse),
       getStatus: vi.fn(),
       getCapabilities: vi.fn(),
+      // IConnector requires resetCircuitBreaker(model?) -> CircuitBreakerResetEntry[];
+      // this mock has no open breakers, so nothing is reset.
+      resetCircuitBreaker: vi.fn().mockReturnValue([]),
     };
 
     processor.registerConnector(mockConnector);

@@ -1,0 +1,22 @@
+A2-299 PR-C — proof that the now-green tsc check CAN still go red
+(a verifier that cannot fail is not a verifier — card rule 7)
+
+BASELINE (this branch):                              0 errors
+
+PROBE 1 — a genuine type error introduced in PRODUCTION code:
+  -> 8 errors
+src/connectors/hume-evi/hume-evi.connector.ts(75,11): error TS2322: Type 'URL' is not assignable to type 'number'.
+
+PROBE 2 — a genuine type error introduced in a SPEC file (the class of debt this PR paid off):
+  -> 4 errors
+src/connectors/hume-evi/hume-evi.connector.spec.ts(127,29): error TS2322: Type 'string' is not assignable to type 'number'.
+
+PROBE 3 — the guard's narrowing really is load-bearing (revert assertAuth to a plain void check):
+  -> 3 errors (the spec's two rejected states become inexpressible again)
+
+RESTORED (after re-applying the fix the index-restore of probe 3 had wiped): 0 errors
+
+NOTE on the RESTORED line: the first run of this battery printed 3, not 0. `git checkout -- <file>` restores from
+the INDEX, and the hume-evi fix was not staged yet, so probe 3's restore silently reverted it. Re-applied, staged,
+re-measured: 0. Recorded because this is exactly how a battery reports a false verdict about its own restore, and it
+bit this card three times (PR-A and PR-D too).

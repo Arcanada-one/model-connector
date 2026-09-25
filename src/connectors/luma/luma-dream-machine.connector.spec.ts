@@ -2,16 +2,27 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   LumaDreamMachineConnector,
   type LumaGeneration,
+  type LumaHttpRequest,
   type LumaHttpTransport,
 } from './luma-dream-machine.connector';
 
 describe('LumaDreamMachineConnector', () => {
-  const request = vi.fn<LumaHttpTransport['request']>();
+  // `LumaHttpTransport.request` is generic in its RESULT only
+  // (`request<T>(request: LumaHttpRequest): Promise<T>`,
+  // luma-dream-machine.connector.ts:10-12): the caller names the parsed JSON
+  // shape. A vitest Mock cannot carry a generic signature, so the mock records
+  // the one thing that is actually checked here — the LumaHttpRequest that went
+  // out — and the transport handed to the connector makes the same
+  // caller-names-the-shape step any real JSON transport makes, explicitly.
+  const request = vi.fn<(req: LumaHttpRequest) => Promise<unknown>>();
+  const transport: LumaHttpTransport = {
+    request: <T>(req: LumaHttpRequest): Promise<T> => request(req) as Promise<T>,
+  };
   let connector: LumaDreamMachineConnector;
 
   beforeEach(() => {
     request.mockReset();
-    connector = new LumaDreamMachineConnector('luma-test-key', { request });
+    connector = new LumaDreamMachineConnector('luma-test-key', transport);
   });
 
   it('creates video through the explicit video endpoint with documented fields', async () => {
@@ -167,7 +178,7 @@ describe('LumaDreamMachineConnector', () => {
   });
 
   it('rejects an empty API key before any request', () => {
-    expect(() => new LumaDreamMachineConnector('   ', { request })).toThrow('API key');
+    expect(() => new LumaDreamMachineConnector('   ', transport)).toThrow('API key');
   });
 
   function authHeaders(): Record<string, string> {

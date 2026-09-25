@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HttpException } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
 import { ConnectorsController } from './connectors.controller';
 import { ConnectorsService } from './connectors.service';
 import type { ImageGenerationService } from './image-generation/image-generation.service';
@@ -13,6 +14,19 @@ vi.mock('@nestjs/bullmq', () => ({
   BullModule: { registerQueue: vi.fn() },
 }));
 
+// The controller's `AuthenticatedRequest` (connectors.controller.ts:36-38) is a
+// FastifyRequest carrying an optional `apiKey`. The controller reads exactly one
+// field off it — `req.apiKey?.id` (lines 130, 148, 163, 238) — so the stub
+// declares that field against the real shape and stands in for the rest of
+// Fastify's (never-reached) request surface. Same idiom as
+// image-job.controller.spec.ts:20-22 and stt-async.controller.spec.ts.
+interface AuthenticatedRequestStub extends FastifyRequest {
+  apiKey?: { id: string };
+}
+
+const authenticatedRequest = (apiKeyId: string): AuthenticatedRequestStub =>
+  ({ apiKey: { id: apiKeyId } }) as AuthenticatedRequestStub;
+
 describe('ConnectorsController', () => {
   const mockCatalogResponse: CatalogResponse = {
     models: [
@@ -25,6 +39,11 @@ describe('ConnectorsController', () => {
         cheap: true,
         priceMultiplier: 0,
         rateLimits: null,
+        // CONN-0238 — null is the honest value: openmodel publishes no machine
+        // price source and no context/output limits (catalog.dto.ts:108-118).
+        pricing: null,
+        contextWindow: null,
+        maxOutputTokens: null,
         capabilities: { supportsStreaming: false, supportsJsonSchema: true, supportsTools: false },
         routing: { connector: 'openmodel', model: 'deepseek-v4-flash' },
         available: true,
@@ -80,14 +99,14 @@ describe('ConnectorsController', () => {
   });
 
   it('should execute per-connector', async () => {
-    const req = { apiKey: { id: 'key-1' } };
+    const req = authenticatedRequest('key-1');
     const result = await controller.executePerConnector('test', { prompt: 'hi' }, undefined, req);
     expect(result.status).toBe('success');
     expect(mockService.execute).toHaveBeenCalledWith('test', { prompt: 'hi' }, 'key-1');
   });
 
   it('should execute universal', async () => {
-    const req = { apiKey: { id: 'key-1' } };
+    const req = authenticatedRequest('key-1');
     const result = await controller.executeUniversal(
       { connector: 'test', prompt: 'hi' },
       undefined,
@@ -112,7 +131,7 @@ describe('ConnectorsController', () => {
 
     it('dispatches profile:"low-reasoning" to CascadeRouterService', async () => {
       vi.mocked(mockCascadeService.execute).mockResolvedValue(successResponse);
-      const req = { apiKey: { id: 'key-2' } };
+      const req = authenticatedRequest('key-2');
       const result = await controller.executeUniversal(
         { profile: 'low-reasoning', prompt: 'classify this' } as Parameters<
           typeof controller.executeUniversal
@@ -136,7 +155,7 @@ describe('ConnectorsController', () => {
           { connector: 'openmodel', model: 'deepseek-v4-flash', errorType: 'rate_limited' },
         ]),
       );
-      const req = { apiKey: { id: 'key-2' } };
+      const req = authenticatedRequest('key-2');
       await expect(
         controller.executeUniversal(
           { profile: 'low-reasoning', prompt: 'hi' } as Parameters<
@@ -155,7 +174,7 @@ describe('ConnectorsController', () => {
       vi.mocked(mockCascadeService.execute).mockRejectedValue(
         new CascadeBudgetExceededError(0.17, 0.17),
       );
-      const req = { apiKey: { id: 'key-2' } };
+      const req = authenticatedRequest('key-2');
       await expect(
         controller.executeUniversal(
           { profile: 'low-reasoning', prompt: 'hi' } as Parameters<
@@ -172,7 +191,7 @@ describe('ConnectorsController', () => {
 
     it('re-throws unexpected errors from the cascade without wrapping in HttpException', async () => {
       vi.mocked(mockCascadeService.execute).mockRejectedValue(new Error('unexpected'));
-      const req = { apiKey: { id: 'key-2' } };
+      const req = authenticatedRequest('key-2');
       let caught: unknown;
       try {
         await controller.executeUniversal(

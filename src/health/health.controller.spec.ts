@@ -84,7 +84,11 @@ describe('HealthController', () => {
     const result = await controller.connectorHealth();
     expect(result.status).toBe('ok');
     expect(result.connectors).toHaveLength(2);
-    expect(result.connectors[0].circuitBreaker.lastErrorType).toBeNull();
+    // ConnectorStatus.circuitBreaker is optional, so prove it was reported
+    // before reading through it.
+    const breaker = result.connectors[0].circuitBreaker;
+    expect(breaker).toBeDefined();
+    expect(breaker!.lastErrorType).toBeNull();
   });
 
   it('should return degraded when any connector is unhealthy', async () => {
@@ -106,7 +110,9 @@ describe('HealthController', () => {
 
     const result = await controller.connectorHealth();
     expect(result.status).toBe('degraded');
-    expect(result.connectors[0].circuitBreaker.lastErrorType).toBe('auth_error');
+    const breaker = result.connectors[0].circuitBreaker;
+    expect(breaker).toBeDefined();
+    expect(breaker!.lastErrorType).toBe('auth_error');
   });
 
   it('should handle getStatus failure gracefully', async () => {

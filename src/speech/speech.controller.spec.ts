@@ -12,6 +12,19 @@ import {
   SttUnsupportedMimeError,
 } from './stt/stt-pilot.errors';
 
+/**
+ * prom-client types `registry.getMetricsAsJSON()` points as `MetricValue<string>`
+ * (`value` + `labels` only), yet histogram points additionally carry the
+ * `_count`/`_sum`/`_bucket` discriminator in `metricName` — prom-client's own
+ * `MetricValueWithName` (node_modules/prom-client/index.d.ts:215), which the package
+ * does not export. Widening a point to that shape is a plain assignment, not a cast.
+ */
+type MetricPoint = {
+  value: number;
+  labels: Partial<Record<string, string | number>>;
+  metricName?: string;
+};
+
 function makeReply(): { reply: FastifyReply; sent: Record<string, unknown> } {
   const sent: Record<string, unknown> = { headers: {}, body: null, status: null };
   // Fastify's real `reply.status(s)` mutates `reply.statusCode`; SpeechController
@@ -99,7 +112,8 @@ describe('SpeechController', () => {
   async function histogramCount(endpoint: string): Promise<number> {
     const json = await speechMetrics.getRegistry().getMetricsAsJSON();
     const hist = json.find((m) => m.name === 'mc_speech_proxy_latency_ms');
-    const point = hist?.values.find(
+    const points: MetricPoint[] = hist?.values ?? [];
+    const point = points.find(
       (v) => v.metricName === 'mc_speech_proxy_latency_ms_count' && v.labels.endpoint === endpoint,
     );
     return point ? Number(point.value) : 0;

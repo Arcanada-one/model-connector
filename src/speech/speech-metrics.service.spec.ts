@@ -3,6 +3,20 @@ import { SpeechMetricsService } from './speech-metrics.service';
 
 const BUCKETS = [100, 250, 500, 1000, 2500, 5000, 10000, 30000];
 
+/**
+ * prom-client types `registry.getMetricsAsJSON()` points as `MetricValue<string>`
+ * (`value` + `labels` only), yet histogram/summary points additionally carry the
+ * `_count`/`_sum`/`_bucket` discriminator in `metricName` — prom-client's own
+ * `MetricValueWithName` (node_modules/prom-client/index.d.ts:215), which the package
+ * does not export. Widening a point to that shape is a plain assignment, not a cast:
+ * `metricName` is optional here, so nothing is asserted that the library denies.
+ */
+type MetricPoint = {
+  value: number;
+  labels: Partial<Record<string, string | number>>;
+  metricName?: string;
+};
+
 async function counterValue(
   service: SpeechMetricsService,
   endpoint: string,
@@ -21,7 +35,8 @@ async function histogramCount(service: SpeechMetricsService, endpoint: string): 
   const json = await service.getRegistry().getMetricsAsJSON();
   const hist = json.find((m) => m.name === 'mc_speech_proxy_latency_ms');
   if (!hist) return 0;
-  const point = hist.values.find(
+  const points: MetricPoint[] = hist.values;
+  const point = points.find(
     (v) => v.metricName === 'mc_speech_proxy_latency_ms_count' && v.labels.endpoint === endpoint,
   );
   return point ? Number(point.value) : 0;
@@ -34,7 +49,8 @@ async function histogramBucketUpperBounds(
   const json = await service.getRegistry().getMetricsAsJSON();
   const hist = json.find((m) => m.name === 'mc_speech_proxy_latency_ms');
   if (!hist) return [];
-  return hist.values
+  const points: MetricPoint[] = hist.values;
+  return points
     .filter(
       (v) => v.metricName === 'mc_speech_proxy_latency_ms_bucket' && v.labels.endpoint === endpoint,
     )

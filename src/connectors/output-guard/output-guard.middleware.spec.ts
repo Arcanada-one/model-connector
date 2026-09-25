@@ -10,7 +10,14 @@ import type {
   ConnectorResponse,
   IConnector,
 } from '../interfaces/connector.interface';
+import type { ExecuteRequestDto } from '../dto/execute.dto';
 import { OutputGuardMiddleware, type OutputGuardRuntimeConfig } from './output-guard.middleware';
+
+// The exact shape `wrapExecute` accepts (output-guard.middleware.ts:66-69): a
+// ConnectorRequest plus the two guard-only fields it strips before dispatch.
+// Viewing the recorded request through it is what makes "stripped" observable.
+type GuardedRequest = ConnectorRequest &
+  Partial<Pick<ExecuteRequestDto, 'output_format' | 'schema'>>;
 
 const SCHEMA = {
   type: 'object',
@@ -117,7 +124,7 @@ describe('OutputGuardMiddleware', () => {
       // @ts-expect-error — confirm guard fields are stripped
       stray: 'ignored',
     });
-    const reqSeen = conn.lastRequest() as Record<string, unknown>;
+    const reqSeen: GuardedRequest = conn.lastRequest();
     expect(reqSeen.output_format).toBeUndefined();
     expect(reqSeen.schema).toBeUndefined();
   });

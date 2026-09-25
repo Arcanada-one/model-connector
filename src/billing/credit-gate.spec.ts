@@ -12,6 +12,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { ConnectorRequest } from '../connectors/interfaces/connector.interface';
 import { estimateCostUsd, promptCharLength, UNKNOWN_MODEL_ESTIMATE_USD } from './cost-estimate';
 
 describe('estimateCostUsd', () => {
@@ -170,7 +171,9 @@ describe('credit gate at the dispatch choke point', () => {
     const connector = {
       name: 'groq',
       type: 'api',
-      execute: vi.fn(async () => ({
+      // Typed with the IConnector.execute parameter so `.mock.calls[0][0]` is the
+      // dispatched ConnectorRequest rather than an empty tuple.
+      execute: vi.fn(async (_request: ConnectorRequest) => ({
         id: 'r1',
         connector: 'groq',
         model: 'llama',
@@ -438,7 +441,7 @@ describe('credit gate at the dispatch choke point', () => {
       'key-1',
     );
 
-    const dispatched = connector.execute.mock.calls[0][0] as Record<string, unknown>;
+    const dispatched = connector.execute.mock.calls[0][0];
     // It names the INTENT, not the content. Two requests differing only in this
     // field have to be byte-identical on the wire.
     expect(dispatched).not.toHaveProperty('idempotencyKey');

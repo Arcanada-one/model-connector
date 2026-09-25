@@ -22,10 +22,8 @@ const providerErrorFixture = JSON.parse(
   readFileSync(join(fixturesDir, 'provider-error.synthetic.json'), 'utf8'),
 ) as unknown;
 
-const SUCCESS_FIXTURE_SHA256 =
-  'e103cf8fdc904fcbbe4955298a37d05fe9a97d493042305d2064b7b77c9de3d4';
-const ERROR_FIXTURE_SHA256 =
-  '9cec43cd8310e9db9bbfa9a8bce61a5c4628bc5c3ab605c4fd828d9fc36d372c';
+const SUCCESS_FIXTURE_SHA256 = 'e103cf8fdc904fcbbe4955298a37d05fe9a97d493042305d2064b7b77c9de3d4';
+const ERROR_FIXTURE_SHA256 = '9cec43cd8310e9db9bbfa9a8bce61a5c4628bc5c3ab605c4fd828d9fc36d372c';
 
 const baseConfig = () => ({
   contractVersion: 'nvidia-safety-nim/v1',
@@ -36,7 +34,9 @@ const baseConfig = () => ({
 });
 
 const makeTransport = (implementation: () => Promise<unknown>) => {
-  const send = vi.fn(implementation);
+  // Typed with the production transport signature (nvidia-safety-nim.connector.ts:53-55)
+  // so `send.mock.calls[n][0]` is the NvidiaSafetyNimTransportRequest that was sent.
+  const send = vi.fn<NvidiaSafetyNimTransport['send']>(implementation);
   const transport: NvidiaSafetyNimTransport = { send };
   return { transport, send };
 };
@@ -65,9 +65,7 @@ describe('NvidiaSafetyNimConnector frozen AU-036 boundary', () => {
   it('pins only the exact current model and connector-owned contracts', () => {
     expect(NVIDIA_SAFETY_NIM_MODEL).toBe('nvidia/nemotron-3.5-content-safety');
     expect(NVIDIA_SAFETY_NIM_CONTRACT_VERSION).toBe('nvidia-safety-nim/v1');
-    expect(NVIDIA_SAFETY_NIM_TRANSPORT_VERSION).toBe(
-      'nvidia-safety-nim-transport/v1',
-    );
+    expect(NVIDIA_SAFETY_NIM_TRANSPORT_VERSION).toBe('nvidia-safety-nim-transport/v1');
   });
 
   it('requires exact explicit caller-operated configuration and an injected transport', () => {
@@ -213,7 +211,7 @@ describe('NvidiaSafetyNimConnector frozen AU-036 boundary', () => {
         ...validRequest(),
         image: { mediaType, base64: 'AQID' },
       });
-      const sent = send.mock.calls[0]?.[0] as NvidiaSafetyNimTransportRequest;
+      const sent = send.mock.calls[0][0];
       expect(sent.body.messages[0]?.content).toEqual([
         { type: 'text', text: 'synthetic prompt text' },
         { type: 'image_url', image_url: { url: `data:${mediaType};base64,AQID` } },
@@ -231,7 +229,7 @@ describe('NvidiaSafetyNimConnector frozen AU-036 boundary', () => {
       customPolicy: 'synthetic custom policy',
     });
 
-    const sent = send.mock.calls[0]?.[0] as NvidiaSafetyNimTransportRequest;
+    const sent = send.mock.calls[0][0];
     expect(sent.body.messages).toEqual([
       {
         role: 'user',
@@ -289,9 +287,7 @@ describe('NvidiaSafetyNimConnector frozen AU-036 boundary', () => {
         content: testCase.content,
       }));
       const connector = new NvidiaSafetyNimConnector(baseConfig(), transport);
-      await expect(connector.classify(testCase.request)).resolves.toMatchObject(
-        testCase.expected,
-      );
+      await expect(connector.classify(testCase.request)).resolves.toMatchObject(testCase.expected);
     }
   });
 
@@ -409,9 +405,7 @@ describe('NvidiaSafetyNimConnector frozen AU-036 boundary', () => {
     ).resolves.toMatchObject({ userSafety: 'safe' });
 
     for (const prompt of ['x'.repeat(16_385), '😀'.repeat(16_384)]) {
-      const error = await captureError(
-        connector.classify({ prompt, includeCategories: false }),
-      );
+      const error = await captureError(connector.classify({ prompt, includeCategories: false }));
       expect(error.code).toBe('invalid_request');
     }
     expect(send).toHaveBeenCalledTimes(1);
@@ -506,12 +500,16 @@ describe('NvidiaSafetyNimConnector frozen AU-036 boundary', () => {
       { contractVersion: NVIDIA_SAFETY_NIM_TRANSPORT_VERSION, status: 200 },
       { contractVersion: 'v2', status: 200, content: 'User Safety: safe' },
       { contractVersion: NVIDIA_SAFETY_NIM_TRANSPORT_VERSION, status: 202 },
-      { contractVersion: NVIDIA_SAFETY_NIM_TRANSPORT_VERSION, status: 200.5, content: 'User Safety: safe' },
+      {
+        contractVersion: NVIDIA_SAFETY_NIM_TRANSPORT_VERSION,
+        status: 200.5,
+        content: 'User Safety: safe',
+      },
       { contractVersion: NVIDIA_SAFETY_NIM_TRANSPORT_VERSION, status: 200, content: 1 },
-      { ...successFixture as Record<string, unknown>, extra: true },
+      { ...(successFixture as Record<string, unknown>), extra: true },
       accessor,
       cyclic,
-      { ...successFixture as Record<string, unknown>, [Symbol('hidden')]: true },
+      { ...(successFixture as Record<string, unknown>), [Symbol('hidden')]: true },
       Object.assign(new (class Response {})(), successFixture as object),
       {
         contractVersion: NVIDIA_SAFETY_NIM_TRANSPORT_VERSION,
@@ -543,13 +541,8 @@ describe('NvidiaSafetyNimConnector frozen AU-036 boundary', () => {
 
   it('times out deterministically, calls once, and never retries', async () => {
     vi.useFakeTimers();
-    const { transport, send } = makeTransport(
-      () => new Promise<unknown>(() => undefined),
-    );
-    const connector = new NvidiaSafetyNimConnector(
-      { ...baseConfig(), timeoutMs: 25 },
-      transport,
-    );
+    const { transport, send } = makeTransport(() => new Promise<unknown>(() => undefined));
+    const connector = new NvidiaSafetyNimConnector({ ...baseConfig(), timeoutMs: 25 }, transport);
     const pending = connector.classify(validRequest());
     await vi.advanceTimersByTimeAsync(25);
     const error = await captureError(pending);
@@ -583,10 +576,7 @@ describe('NvidiaSafetyNimConnector frozen AU-036 boundary', () => {
       status: 200,
       content: outputSecret,
     }));
-    const malformedConnector = new NvidiaSafetyNimConnector(
-      baseConfig(),
-      malformed.transport,
-    );
+    const malformedConnector = new NvidiaSafetyNimConnector(baseConfig(), malformed.transport);
     const responseError = await captureError(
       malformedConnector.classify({ prompt: inputSecret, includeCategories: false }),
     );
@@ -616,10 +606,7 @@ describe('NvidiaSafetyNimConnector frozen AU-036 boundary', () => {
   });
 
   it('keeps production free of network, credential, process, and registration behavior', () => {
-    const source = readFileSync(
-      resolve(__dirname, 'nvidia-safety-nim.connector.ts'),
-      'utf8',
-    );
+    const source = readFileSync(resolve(__dirname, 'nvidia-safety-nim.connector.ts'), 'utf8');
     for (const forbidden of [
       /\bfetch\s*\(/,
       /from ['"](?:node:)?(?:http|https|net|tls|dns|child_process|fs)['"]/,

@@ -1,16 +1,25 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import {
   VertexAiEmbeddingsConnector,
   VertexAiEmbeddingsError,
   type VertexAiEmbeddingsAuth,
+  type VertexAiTextEmbeddingRequest,
+  type VertexAiTextEmbeddingResult,
 } from './vertex-ai-embeddings.connector';
 
-const FIXTURE_DIR = resolve(
-  __dirname,
-  '../../../../test/fixtures/embedding/vertex',
-);
+/**
+ * The payload an HTTP client can actually send: `model` at its pre-validation width.
+ * `VertexAiTextEmbeddingRequest.model` is the documented union
+ * (vertex-ai-embeddings.connector.ts:36), and rejecting anything outside it is the runtime
+ * validator's job — which is what the "rejects unsupported text models" test measures.
+ */
+type UnvalidatedTextEmbeddingRequest = Omit<VertexAiTextEmbeddingRequest, 'model'> & {
+  model: string;
+};
+
+const FIXTURE_DIR = resolve(__dirname, '../../../../test/fixtures/embedding/vertex');
 const ACCESS_TOKEN = 'synthetic-task-access-token';
 
 function fixture(name: string): unknown {
@@ -26,12 +35,12 @@ function response(body: unknown, status = 200): Response {
 
 describe('VertexAiEmbeddingsConnector', () => {
   let auth: VertexAiEmbeddingsAuth;
-  let getAccessToken: ReturnType<typeof vi.fn>;
+  let getAccessToken: Mock<() => Promise<string>>;
   let fetchImpl: ReturnType<typeof vi.fn>;
   let connector: VertexAiEmbeddingsConnector;
 
   beforeEach(() => {
-    getAccessToken = vi.fn().mockResolvedValue(ACCESS_TOKEN);
+    getAccessToken = vi.fn<() => Promise<string>>().mockResolvedValue(ACCESS_TOKEN);
     auth = {
       projectIdValue: 'synthetic-project-123',
       locationValue: 'us-central1',
@@ -47,11 +56,7 @@ describe('VertexAiEmbeddingsConnector', () => {
       operation: 'embeddings',
       endpoint: 'regional-publisher-predict',
       discovery: 'documentation-static',
-      textModels: [
-        'gemini-embedding-001',
-        'text-embedding-005',
-        'text-multilingual-embedding-002',
-      ],
+      textModels: ['gemini-embedding-001', 'text-embedding-005', 'text-multilingual-embedding-002'],
       multimodalModels: ['multimodalembedding@001'],
     });
   });
@@ -115,8 +120,17 @@ describe('VertexAiEmbeddingsConnector', () => {
   );
 
   it('rejects unsupported text models before auth or fetch', async () => {
+    // Called through a pre-validation view of the connector: the undocumented id is a value the
+    // type deliberately excludes, so only the runtime gate can reject it. The view is a plain
+    // assignment (no cast) — `embedText` really does accept the wider payload and validate it.
+    const unvalidated: {
+      embedText(request: UnvalidatedTextEmbeddingRequest): Promise<VertexAiTextEmbeddingResult>;
+    } = connector;
     await expect(
-      connector.embedText({ model: 'text-embedding-undocumented', instances: [{ content: 'x' }] }),
+      unvalidated.embedText({
+        model: 'text-embedding-undocumented',
+        instances: [{ content: 'x' }],
+      }),
     ).rejects.toMatchObject({ kind: 'VALIDATION_ERROR' });
     expect(getAccessToken).not.toHaveBeenCalled();
     expect(fetchImpl).not.toHaveBeenCalled();

@@ -6,6 +6,7 @@ import { GroqSttConnector } from './groq-stt.connector';
 import { DeepgramSttConnector } from './deepgram-stt.connector';
 import { AssemblyAiSttConnector } from './assemblyai-stt.connector';
 import { OpenAiSttConnector } from './openai-stt.connector';
+import { LocalWhisperSttConnector } from './local-whisper-stt.connector';
 import { validateEnv } from '../../config/env.schema';
 import {
   SttAllProvidersExhausted,
@@ -13,7 +14,7 @@ import {
   SttBudgetExhaustedError,
   SttUnsupportedMimeError,
 } from './stt-pilot.errors';
-import type { SttConnectorRequest } from './interfaces/stt-connector.interface';
+import type { ISttConnector, SttConnectorRequest } from './interfaces/stt-connector.interface';
 
 // Integration: exercise full SttRouterService → GroqSttConnector → fetch
 // pipeline with MSW mocking api.groq.com. Database + metrics are stubbed
@@ -98,16 +99,21 @@ describe('STT pilot integration (CONN-0102 — router → connector → MSW Groq
     const deepgram = new DeepgramSttConnector();
     const assemblyai = new AssemblyAiSttConnector();
     const openai = new OpenAiSttConnector();
+    const localWhisper = new LocalWhisperSttConnector();
     router = new SttRouterService(
       groq,
       deepgram,
       assemblyai,
       openai,
+      localWhisper,
       prismaStub as never,
       metricsStub as never,
+      // CONN-1671 — this spec does not exercise per-key policy; inject the same
+      // permissive stub the router unit specs use (stt-router.service.spec.ts:55).
+      { getPolicyForKey: async () => null } as never,
     );
     router.setRegistry(
-      new Map([
+      new Map<string, ISttConnector>([
         ['groq', groq],
         ['deepgram', deepgram],
         ['assemblyai', assemblyai],

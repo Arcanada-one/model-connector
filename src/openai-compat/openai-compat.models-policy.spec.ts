@@ -11,6 +11,7 @@ import { OpenAiCompatController } from './openai-compat.controller';
 import { FailoverRouterService } from '../connectors/failover/failover-router.service';
 import type { ApiKeyPolicy } from '../policy/policy.schema';
 import type { ModelCatalogRow } from '../connectors/catalog.repository';
+import type { CatalogFilters } from '../connectors/dto/catalog.dto';
 import {
   IConnector,
   ConnectorRequest,
@@ -82,6 +83,11 @@ function catalogRow(
     observedAt: new Date('2026-08-12T00:00:00Z'),
     source: 'provider-api',
     freshness: 'fresh',
+    // Repository-owned bookkeeping fields of ModelCatalogRow
+    // (catalog.repository.ts:77-80) — a real findAll() row always carries them.
+    absentSince: null,
+    createdAt: new Date('2026-08-01T00:00:00Z'),
+    updatedAt: new Date('2026-08-12T00:00:00Z'),
   };
 }
 
@@ -172,6 +178,12 @@ describe('GET /v1/models per-key policy filter (CONN-1665)', () => {
 });
 
 describe('GET /connectors/catalog per-key policy filter (CONN-1665)', () => {
+  // CatalogFilters is the PARSED query shape: `free`/`cheap` come from
+  // `flagTransform` (catalog.dto.ts:194), which turns an absent query param into
+  // `false`. This is exactly what the controller hands the service for `?`-less
+  // requests — these tests filter on policy, not on query flags.
+  const NO_FILTERS: CatalogFilters = { free: false, cheap: false };
+
   const rows = () => [
     catalogRow('openrouter', 'or-free', 'free'),
     catalogRow('openrouter', 'or-paid', 'paid'),
@@ -181,9 +193,9 @@ describe('GET /connectors/catalog per-key policy filter (CONN-1665)', () => {
 
   it('no apiKeyId / legacy key → unfiltered', async () => {
     const stack = buildStack([], { catalogRows: rows(), policy: null });
-    const unauth = await stack.service.getCatalog({});
+    const unauth = await stack.service.getCatalog(NO_FILTERS);
     expect(unauth.count).toBe(4);
-    const legacy = await stack.service.getCatalog({}, API_KEY_ID);
+    const legacy = await stack.service.getCatalog(NO_FILTERS, API_KEY_ID);
     expect(legacy.count).toBe(4);
   });
 
@@ -192,7 +204,7 @@ describe('GET /connectors/catalog per-key policy filter (CONN-1665)', () => {
       catalogRows: rows(),
       policy: { policyVersion: 1, providers: ['groq'] },
     });
-    const out = await service.getCatalog({}, API_KEY_ID);
+    const out = await service.getCatalog(NO_FILTERS, API_KEY_ID);
     expect(out.models.map((m) => `${m.connector}:${m.model}`)).toEqual(['groq:groq-model']);
     expect(out.count).toBe(1);
   });
@@ -202,7 +214,7 @@ describe('GET /connectors/catalog per-key policy filter (CONN-1665)', () => {
       catalogRows: rows(),
       policy: { policyVersion: 1, models: { mode: 'free-only' } },
     });
-    const out = await service.getCatalog({}, API_KEY_ID);
+    const out = await service.getCatalog(NO_FILTERS, API_KEY_ID);
     expect(out.models.map((m) => m.model).sort()).toEqual(['groq-model', 'or-free']);
   });
 
@@ -211,7 +223,7 @@ describe('GET /connectors/catalog per-key policy filter (CONN-1665)', () => {
       catalogRows: rows(),
       policy: { policyVersion: 1, models: { mode: 'list', list: ['or-paid'] } },
     });
-    const out = await service.getCatalog({}, API_KEY_ID);
+    const out = await service.getCatalog(NO_FILTERS, API_KEY_ID);
     expect(out.models.map((m) => m.model)).toEqual(['or-paid']);
   });
 });

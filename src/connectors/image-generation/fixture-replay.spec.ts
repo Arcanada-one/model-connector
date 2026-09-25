@@ -67,6 +67,24 @@ function loadFixture(name: string): unknown {
   return JSON.parse(readFileSync(resolve(FIXTURE_DIR, name), 'utf8'));
 }
 
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * A fixture destined for `HttpResponse.json()`, which requires msw's
+ * `JsonBodyType` rather than `unknown`. Every provider-response fixture here is
+ * a JSON object, so that is checked rather than asserted: a fixture that is not
+ * one fails loudly instead of being replayed as a body the provider never sends.
+ */
+function fixtureBody(name: string): Record<string, unknown> {
+  const parsed = loadFixture(name);
+  if (!isJsonObject(parsed)) {
+    throw new Error(`fixture ${name} must be a JSON object, got ${typeof parsed}`);
+  }
+  return parsed;
+}
+
 // ─── MSW server ───────────────────────────────────────────────────────────────
 
 const VERTEX_BASE = 'https://us-central1-aiplatform.googleapis.com';
@@ -129,7 +147,7 @@ describe('Vertex AI connector — fixture replay', () => {
   });
 
   it('happy-path: fixture shape matches predictions array', async () => {
-    const fixture = loadFixture('vertex-imagen4-fast-success.json');
+    const fixture = fixtureBody('vertex-imagen4-fast-success.json');
 
     server.use(
       http.post(
@@ -148,7 +166,7 @@ describe('Vertex AI connector — fixture replay', () => {
   });
 
   it('quota-exceeded (429): connector throws with Vertex API error message', async () => {
-    const fixture = loadFixture('vertex-imagen4-fast-quota-exceeded.json');
+    const fixture = fixtureBody('vertex-imagen4-fast-quota-exceeded.json');
     // Fresh connector per error test — avoid CB open state bleeding between tests
     const cbFresh = new CircuitBreakerManager('vertex-fixture-429', 5, 30_000);
     const freshConnector = new VertexImageConnector(
@@ -174,7 +192,7 @@ describe('Vertex AI connector — fixture replay', () => {
   });
 
   it('auth-failure (401): connector throws with Vertex API error message', async () => {
-    const fixture = loadFixture('vertex-auth-error.json');
+    const fixture = fixtureBody('vertex-auth-error.json');
     const cbFresh = new CircuitBreakerManager('vertex-fixture-401', 5, 30_000);
     const freshConnector = new VertexImageConnector(
       'test-project',
@@ -199,7 +217,7 @@ describe('Vertex AI connector — fixture replay', () => {
   });
 
   it('server-error (503): connector throws with Vertex API error message', async () => {
-    const fixture = loadFixture('vertex-server-error.json');
+    const fixture = fixtureBody('vertex-server-error.json');
     const cbFresh = new CircuitBreakerManager('vertex-fixture-503', 5, 30_000);
     const freshConnector = new VertexImageConnector(
       'test-project',
@@ -246,7 +264,7 @@ describe('Replicate FLUX connector — fixture replay', () => {
   });
 
   it('happy-path: fixture shape matches succeeded prediction with output URLs', async () => {
-    const fixture = loadFixture('replicate-flux-pro-success.json');
+    const fixture = fixtureBody('replicate-flux-pro-success.json');
 
     server.use(
       http.post(`${REPLICATE_API}/v1/models/black-forest-labs/flux-pro/predictions`, () =>
@@ -288,7 +306,7 @@ describe('Replicate FLUX connector — fixture replay', () => {
   });
 
   it('unauthorized (401): connector throws on HTTP 401', async () => {
-    const fixture = loadFixture('replicate-unauthorized.json');
+    const fixture = fixtureBody('replicate-unauthorized.json');
 
     server.use(
       http.post(`${REPLICATE_API}/v1/models/black-forest-labs/flux-pro/predictions`, () =>
@@ -321,7 +339,7 @@ describe('OpenAI Images connector — fixture replay', () => {
   });
 
   it('happy-path URL format: fixture shape has data[].url', async () => {
-    const fixture = loadFixture('openai-gpt-image-1-success-url.json');
+    const fixture = fixtureBody('openai-gpt-image-1-success-url.json');
 
     server.use(http.post(`${OPENAI_API}/v1/images/generations`, () => HttpResponse.json(fixture)));
 
@@ -330,7 +348,9 @@ describe('OpenAI Images connector — fixture replay', () => {
     expect(result.status).toBe('completed');
     expect(result.routing.chosenProvider).toBe('openai-images');
     expect(result.costUsd).toBeGreaterThan(0);
-    expect(result.urls.length).toBeGreaterThan(0);
+    // ImageGenerationResult.urls is optional — prove it was returned first.
+    expect(result.urls).toBeDefined();
+    expect(result.urls!.length).toBeGreaterThan(0);
   });
 
   it('b64_json fixture shape has data[].b64_json field (no url)', () => {
@@ -354,7 +374,7 @@ describe('OpenAI Images connector — fixture replay', () => {
   });
 
   it('content-policy-violation: connector throws on HTTP 400', async () => {
-    const fixture = loadFixture('openai-gpt-image-1-error-moderation.json');
+    const fixture = fixtureBody('openai-gpt-image-1-error-moderation.json');
 
     server.use(
       http.post(`${OPENAI_API}/v1/images/generations`, () =>
@@ -366,7 +386,7 @@ describe('OpenAI Images connector — fixture replay', () => {
   });
 
   it('unauthorized (401): connector throws on HTTP 401', async () => {
-    const fixture = loadFixture('openai-unauthorized.json');
+    const fixture = fixtureBody('openai-unauthorized.json');
 
     server.use(
       http.post(`${OPENAI_API}/v1/images/generations`, () =>

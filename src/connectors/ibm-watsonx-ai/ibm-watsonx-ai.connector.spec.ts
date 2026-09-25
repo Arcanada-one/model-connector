@@ -7,6 +7,9 @@ import {
   IBM_WATSONX_AI_LIMITS,
   IbmWatsonxAiError,
   createIbmWatsonxAiConnector,
+  type IbmWatsonxAiConfiguration,
+  type IbmWatsonxAiTransport,
+  type IbmWatsonxAiTransportResponse,
 } from './ibm-watsonx-ai.connector';
 import {
   SYNTHETIC_IMAGE_BYTES,
@@ -36,8 +39,15 @@ function imageResponse(body: unknown = new Uint8Array(SYNTHETIC_IMAGE_BYTES), st
   };
 }
 
-function setup(response: unknown = jsonResponse(), overrides: Record<string, unknown> = {}) {
-  const transport = vi.fn(async () => response);
+function setup(
+  // The transport's declared contract (ibm-watsonx-ai.connector.ts:85-93). Typing the spy with
+  // it is what keeps `transport.mock.calls[0][0]` a real IbmWatsonxAiTransportRequest instead
+  // of an empty tuple. `body` is `unknown` in that contract, so every malformed-body case below
+  // still type-checks — the connector re-validates what the transport hands back.
+  response: IbmWatsonxAiTransportResponse = jsonResponse(),
+  overrides: Record<string, unknown> = {},
+) {
+  const transport = vi.fn<IbmWatsonxAiTransport>(async () => response);
   const connector = createIbmWatsonxAiConnector({
     baseUrl: DALLAS,
     apiVersion: '2024-03-14',
@@ -80,7 +90,11 @@ async function expectLocalError(
     const local = error as IbmWatsonxAiError;
     expect(local.code).toBe(code);
     expect(Object.hasOwn(local, 'cause')).toBe(false);
-    const serialized = JSON.stringify({ message: local.message, code: local.code, status: local.status });
+    const serialized = JSON.stringify({
+      message: local.message,
+      code: local.code,
+      status: local.status,
+    });
     for (const value of forbidden) expect(serialized).not.toContain(value);
     return local;
   }
@@ -174,12 +188,14 @@ describe('configuration boundary', () => {
 
   it('rejects accessors before invoking them', async () => {
     let accessed = false;
-    const config = {
+    // Annotated so the literal keeps its declared types: the rejection under test is a runtime
+    // one (an enumerable accessor), not a type-level one.
+    const config: IbmWatsonxAiConfiguration = {
       baseUrl: DALLAS,
       apiVersion: '2024-03-14',
       bearerToken: 'synthetic-bearer-token',
       timeoutMs: 1_000,
-      transport: vi.fn(),
+      transport: vi.fn<IbmWatsonxAiTransport>(),
     };
     Object.defineProperty(config, 'baseUrl', {
       enumerable: true,
@@ -188,10 +204,7 @@ describe('configuration boundary', () => {
         return DALLAS;
       },
     });
-    await expectLocalError(
-      () => createIbmWatsonxAiConnector(config),
-      'invalid_configuration',
-    );
+    await expectLocalError(() => createIbmWatsonxAiConnector(config), 'invalid_configuration');
     expect(accessed).toBe(false);
   });
 });
@@ -232,9 +245,7 @@ describe('foundation inference request and response', () => {
 
   it('emits space_id instead of project_id', async () => {
     const { connector, transport } = setup();
-    await connector.generateText(
-      textProjectRequest({ scope: { spaceId: SYNTHETIC_SPACE_ID } }),
-    );
+    await connector.generateText(textProjectRequest({ scope: { spaceId: SYNTHETIC_SPACE_ID } }));
     expect(transport.mock.calls[0]?.[0].body).toEqual({
       model_id: SYNTHETIC_MODEL_ID,
       input: 'synthetic prompt',
@@ -251,10 +262,7 @@ describe('foundation inference request and response', () => {
 
   it('rejects image content and binary output on the text operation', async () => {
     const { connector } = setup(imageResponse());
-    await expectLocalError(
-      () => connector.generateText(textProjectRequest()),
-      'invalid_response',
-    );
+    await expectLocalError(() => connector.generateText(textProjectRequest()), 'invalid_response');
   });
 
   it('rejects missing, extra, and malformed text response fields', async () => {
@@ -414,10 +422,7 @@ describe('request validation and hostile values', () => {
       [],
     ]) {
       const { connector, transport } = setup();
-      await expectLocalError(
-        () => connector.generateText(request as never),
-        'invalid_request',
-      );
+      await expectLocalError(() => connector.generateText(request as never), 'invalid_request');
       expect(transport).not.toHaveBeenCalled();
     }
   });
@@ -439,10 +444,7 @@ describe('request validation and hostile values', () => {
       textProjectRequest({ input: 'p'.repeat(32_769) }),
     ]) {
       const current = setup();
-      await expectLocalError(
-        () => current.connector.generateText(request),
-        'invalid_request',
-      );
+      await expectLocalError(() => current.connector.generateText(request), 'invalid_request');
       expect(current.transport).not.toHaveBeenCalled();
     }
   });
@@ -491,10 +493,7 @@ describe('request validation and hostile values', () => {
       },
     });
     const { connector, transport } = setup();
-    await expectLocalError(
-      () => connector.generateText(request),
-      'invalid_request',
-    );
+    await expectLocalError(() => connector.generateText(request), 'invalid_request');
     expect(accessed).toBe(false);
     expect(transport).not.toHaveBeenCalled();
   });
@@ -520,10 +519,7 @@ describe('request validation and hostile values', () => {
     const wide = Object.fromEntries(Array.from({ length: 17 }, (_, index) => [`k${index}`, index]));
     for (const request of [cyclic, symbolRecord, new RequestRecord(), dangerous, deepRoot, wide]) {
       const { connector, transport } = setup();
-      await expectLocalError(
-        () => connector.generateText(request as never),
-        'invalid_request',
-      );
+      await expectLocalError(() => connector.generateText(request as never), 'invalid_request');
       expect(transport).not.toHaveBeenCalled();
     }
   });
@@ -551,29 +547,30 @@ describe('transport boundary, errors, timeout, and redaction', () => {
     await connector.generateText(textProjectRequest());
   });
 
-  it.each([400, 401, 403, 404])('maps documented status %s to one redacted provider error', async (status) => {
-    const detail = 'synthetic provider detail must never escape';
-    const trace = SYNTHETIC_PROVIDER_ERROR.trace;
-    const { connector, transport } = setup(
-      jsonResponse(structuredClone(SYNTHETIC_PROVIDER_ERROR), status),
-    );
-    const error = await expectLocalError(
-      () => connector.generateText(textProjectRequest()),
-      'provider_error',
-      [detail, trace, 'synthetic-bearer-token', 'synthetic prompt'],
-    );
-    expect(error.status).toBe(status);
-    expect(transport).toHaveBeenCalledOnce();
-  });
+  it.each([400, 401, 403, 404])(
+    'maps documented status %s to one redacted provider error',
+    async (status) => {
+      const detail = 'synthetic provider detail must never escape';
+      const trace = SYNTHETIC_PROVIDER_ERROR.trace;
+      const { connector, transport } = setup(
+        jsonResponse(structuredClone(SYNTHETIC_PROVIDER_ERROR), status),
+      );
+      const error = await expectLocalError(
+        () => connector.generateText(textProjectRequest()),
+        'provider_error',
+        [detail, trace, 'synthetic-bearer-token', 'synthetic prompt'],
+      );
+      expect(error.status).toBe(status);
+      expect(transport).toHaveBeenCalledOnce();
+    },
+  );
 
   it('rejects malformed provider errors without leaking the malformed body', async () => {
     const raw = 'malformed-secret-provider-body';
     const { connector } = setup(jsonResponse({ trace: raw, errors: [] }, 400));
-    await expectLocalError(
-      () => connector.generateText(textProjectRequest()),
-      'invalid_response',
-      [raw],
-    );
+    await expectLocalError(() => connector.generateText(textProjectRequest()), 'invalid_response', [
+      raw,
+    ]);
   });
 
   it('rejects extra transport response and header keys', async () => {
@@ -612,16 +609,18 @@ describe('transport boundary, errors, timeout, and redaction', () => {
       timeoutMs: 1_000,
       transport,
     });
-    await expectLocalError(
-      () => connector.generateText(textProjectRequest()),
-      'transport_error',
-      ['transport-secret', 'synthetic-bearer-token', 'synthetic prompt'],
-    );
+    await expectLocalError(() => connector.generateText(textProjectRequest()), 'transport_error', [
+      'transport-secret',
+      'synthetic-bearer-token',
+      'synthetic prompt',
+    ]);
     expect(transport).toHaveBeenCalledOnce();
   });
 
   it('times out once with a fixed error even when transport ignores abort', async () => {
-    const transport = vi.fn(() => new Promise(() => undefined));
+    const transport = vi.fn<IbmWatsonxAiTransport>(
+      () => new Promise<IbmWatsonxAiTransportResponse>(() => undefined),
+    );
     const connector = createIbmWatsonxAiConnector({
       baseUrl: DALLAS,
       apiVersion: '2024-03-14',
@@ -629,13 +628,12 @@ describe('transport boundary, errors, timeout, and redaction', () => {
       timeoutMs: 1,
       transport,
     });
-    await expectLocalError(
-      () => connector.generateText(textProjectRequest()),
-      'timeout',
-      ['synthetic-bearer-token', 'synthetic prompt'],
-    );
+    await expectLocalError(() => connector.generateText(textProjectRequest()), 'timeout', [
+      'synthetic-bearer-token',
+      'synthetic prompt',
+    ]);
     expect(transport).toHaveBeenCalledOnce();
-    const signal = transport.mock.calls[0]?.[0].signal as AbortSignal;
+    const signal = transport.mock.calls[0]?.[0].signal;
     expect(signal.aborted).toBe(true);
   });
 

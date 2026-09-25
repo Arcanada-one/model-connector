@@ -122,7 +122,7 @@ describe('OpenAI-compat failover integration', () => {
     );
     const { controller } = buildStack([deepseek, groq]);
 
-    const out = await controller.chatCompletions(body, req);
+    const out = await controller.chatCompletions(body, undefined, req);
 
     expect(out.object).toBe('chat.completion');
     expect(out.choices[0].message.content).toBe('hi');
@@ -145,7 +145,7 @@ describe('OpenAI-compat failover integration', () => {
     // Register groq FIRST to prove ordering is by free-first policy, not registration order.
     const { controller } = buildStack([groq, deepseek]);
 
-    const out = await controller.chatCompletions(body, req);
+    const out = await controller.chatCompletions(body, undefined, req);
 
     expect(order[0]).toBe('openmodel');
     expect(out.choices[0].message.content).toBe('from-deepseek');
@@ -160,6 +160,8 @@ describe('OpenAI-compat failover integration', () => {
     );
     const { controller } = buildStack([deepseek, groq]);
 
-    await expect(controller.chatCompletions(body, req)).rejects.toMatchObject({ status: 503 });
+    await expect(controller.chatCompletions(body, undefined, req)).rejects.toMatchObject({
+      status: 503,
+    });
   });
 });

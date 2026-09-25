@@ -100,9 +100,11 @@ const loadFixture = (name: string): FixtureEnvelope =>
   JSON.parse(readFileSync(resolve(FIXTURE_ROOT, name), 'utf8')) as FixtureEnvelope;
 
 const providerBody = (name: string): Record<string, unknown> => {
-  const fixture = structuredClone(loadFixture(name));
-  delete fixture._fixture_provenance;
-  return fixture;
+  // `_fixture_provenance` is a REQUIRED field of the envelope (asserted on
+  // below), so it cannot be `delete`d. Omit it by destructuring instead — the
+  // provider never sends it, so the body fed to jsonResponse must not have it.
+  const { _fixture_provenance: _provenance, ...body } = structuredClone(loadFixture(name));
+  return body;
 };
 
 const jsonResponse = (body: unknown, status = 200): Response =>

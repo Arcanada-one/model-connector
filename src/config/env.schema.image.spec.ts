@@ -1,4 +1,4 @@
-import { envSchema } from './src/config/env.schema';
+import { envSchema } from './env.schema';
 
 describe('env.schema — image generation vars smoke', () => {
   it('parses minimal config with all image vars defaulting/optional', () => {

@@ -1,5 +1,6 @@
 import type {
   HumeAuth,
+  HumeAuthInput,
   HumeChatOptions,
   HumeFrame,
   HumeFrameHandlers,
@@ -69,7 +70,7 @@ export class HumeEviConnector {
     );
   }
 
-  buildChatUrl(auth: HumeAuth, options: HumeChatOptions = {}): string {
+  buildChatUrl(auth: HumeAuthInput, options: HumeChatOptions = {}): string {
     this.assertAuth(auth);
     const url = new URL(CHAT_URL);
     if (auth.apiKey !== undefined) url.searchParams.set('api_key', auth.apiKey);
@@ -99,7 +100,7 @@ export class HumeEviConnector {
   }
 
   private async request(
-    auth: HumeAuth,
+    auth: HumeAuthInput,
     method: HumeHttpRequest['method'],
     path: string,
     query?: Record<string, string | number | boolean | undefined>,
@@ -128,7 +129,16 @@ export class HumeEviConnector {
     };
   }
 
-  private assertAuth(auth: HumeAuth): void {
+  /**
+   * A2-299 — an assertion signature, so the guard both CHECKS and NARROWS.
+   *
+   * It takes {@link HumeAuthInput} (either credential, neither, or both) and
+   * narrows to {@link HumeAuth} (exactly one) for the code after it. That is
+   * what it always did at runtime; only the type now says so, which is what
+   * makes the two rejected states expressible by a caller — and therefore
+   * testable without a cast.
+   */
+  private assertAuth(auth: HumeAuthInput): asserts auth is HumeAuth {
     const count =
       Number(typeof auth.apiKey === 'string' && auth.apiKey.length > 0) +
       Number(typeof auth.accessToken === 'string' && auth.accessToken.length > 0);
