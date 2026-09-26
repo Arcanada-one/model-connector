@@ -8,7 +8,11 @@ on:
 
 jobs:
   lint-and-test:
-    runs-on: [self-hosted, Linux, ci-general]
+    # A2-315: pre-deploy gates run on the dedicated `deploy-gate` lane, not on `ci-general`, where
+    # KC2 batteries held all five slots for hours (argana 95 min, muneral 150 min in the queue on
+    # 2026-09-24/25). The lane's runners carry ONLY that label (--no-default-labels): nothing else lands there.
+    # Pull requests keep the shared pool; only the push that deploys takes the lane.
+    runs-on: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && fromJSON('["deploy-gate"]') || fromJSON('["self-hosted","Linux","ci-general"]') }}
     steps:
       - uses: actions/checkout@v4
 
