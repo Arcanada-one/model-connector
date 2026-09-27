@@ -107,7 +107,8 @@
       "brace-expansion@^2.0.0": "^2.1.4",
       "deepmerge-ts": "^8.0.2",
       "browserslist": "^4.28.7",
-      "smol-toml": "^1.7.1"
+      "smol-toml": "^1.7.1",
+      "mysql2": ">=3.23.1 <4"
     }
   }
 }
