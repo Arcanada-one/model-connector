@@ -1,10 +1,19 @@
 FROM node:22-slim AS base
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# A2-435: no `prepare pnpm@latest`. It activated whatever pnpm was newest on the day of the build
+# (12.6.0 on 2026-09-27), used only where no package.json is present; corepack resolves the
+# `packageManager` pin for every pnpm call under /app. The deps stage below checks that pin.
+RUN corepack enable
 WORKDIR /app
 
 FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace-config.json ./
 COPY prisma ./prisma/
+# A2-435: the lock must be installed by the pnpm that wrote it. pnpm 12 no longer reads
+# `pnpm.overrides` from package.json, so a different installer would drop the security floors.
+RUN want="$(node -p "require('./package.json').packageManager.replace(/^pnpm@/, '')")" \
+    && have="$(pnpm --version)" \
+    && echo "pnpm: lock written by ${want}, installing with ${have}" \
+    && test "${have}" = "${want}"
 RUN pnpm install --frozen-lockfile --prod=false
 
 FROM base AS build
