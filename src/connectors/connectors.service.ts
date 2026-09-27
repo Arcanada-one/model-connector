@@ -23,6 +23,7 @@ import {
 import { ConnectorJobData } from '../queue/connector-job.processor';
 import { PrismaService } from '../prisma/prisma.service';
 import { BaseCliConnector } from './base-cli.connector';
+import { BaseApiConnector } from './base-api.connector';
 import { sanitizeJsonResponse, JsonSanitizeError } from '../core/utils/json-sanitizer';
 import { getConfig } from '../config/env.schema';
 import { MetricsService } from '../metrics/metrics.service';
@@ -1169,16 +1170,106 @@ export class ConnectorsService {
     // the SAME transaction as the number itself. Recording the amount and its
     // provenance separately would let them disagree, and the whole point of the
     // column is to be trustworthy about a $0.000000 row.
-    await this.persistAndSettle(
+    // A2-425 — a transient timeout gets ONE retry, and only where a retry is
+    // provably the same request. See `grantsTransientTimeoutRetry` for the
+    // four conditions; when they hold, the envelope says `retry` and the
+    // attempt is recorded but NOT stored for replay, so the repeat under the
+    // same key reaches the provider instead of being answered with this
+    // failure.
+    const retryGranted = ConnectorsService.grantsTransientTimeoutRetry(
+      connector,
+      request,
+      intent,
       response,
+    );
+    const answered = retryGranted
+      ? ConnectorsService.withTransientTimeoutRetry(response)
+      : response;
+
+    await this.persistAndSettle(
+      answered,
       providerRequest,
       apiKeyId,
       guardReport,
       intent,
       metered.source,
+      !retryGranted,
     );
 
-    return response;
+    return answered;
+  }
+
+  /**
+   * A2-425 — may this timed-out attempt be retried by its caller?
+   *
+   * A2-299 made every `timeout` `{ retryable: false, recommendation: 'abort' }`
+   * because Model Connector retried it AND the agent client retried on top,
+   * each attempt re-sending the whole prompt under a budget a test double had
+   * shown to be insufficient (99 000 characters, `timeout: 5000`). That remedy
+   * stays for the case it was measured on. It was wrong for a different one,
+   * measured on the host by A2-403: over 552 `arcana` turns, 27 (4.9 %) took
+   * longer than 100 s with no relation to prompt size, a replay of the turn
+   * that died (A2-401, 110 s) finished in 1.4–29.6 s, and one such stall ended
+   * the whole run because `retryable: false` is terminal for the client.
+   *
+   * Granted only when ALL of these hold, each for a stated reason:
+   *
+   *   1. the outcome is `timeout` — the reply did not arrive. An upstream that
+   *      answered with a refusal is a different class and keeps its own entry;
+   *   2. the attempt went through `BaseApiConnector`: one HTTP completion call,
+   *      with no side effect but the provider's bill. A CLI lane runs an agent
+   *      that may already have executed tools before it was killed (`codex` is
+   *      spawned with `--sandbox workspace-write`, `claude-code` takes
+   *      `--allowed-tools`), so repeating it may do the work twice — not proven
+   *      safe, so not granted;
+   *   3. the caller sent its own `Idempotency-Key` and a reservation was opened
+   *      under it. The key is what ties the repeat to THIS attempt: the payload
+   *      fingerprint must match, and a concurrent duplicate is refused as
+   *      in-flight rather than dispatched twice;
+   *   4. this is the FIRST attempt under that key (`reclaimed` absent). A
+   *      second timeout is completed and stored as usual, so it is final and a
+   *      third repeat replays it: at most two provider calls per key, however
+   *      many times a client retries. That bounds A2-299's losing bet at one.
+   *
+   * Model Connector still does not retry a timeout itself (`RETRYABLE_ERRORS`
+   * is unchanged), so exactly one layer — the caller's — repeats it.
+   */
+  static grantsTransientTimeoutRetry(
+    connector: IConnector,
+    request: ServiceExecuteRequest,
+    intent: RequestIntentHandle | null,
+    response: ConnectorResponse,
+  ): boolean {
+    return (
+      response.status === 'timeout' &&
+      response.error?.type === 'timeout' &&
+      connector instanceof BaseApiConnector &&
+      Boolean(request.idempotencyKey) &&
+      intent !== null &&
+      intent.intentKey === request.idempotencyKey &&
+      intent.reclaimed !== true
+    );
+  }
+
+  /** A2-425 — the envelope of a timeout whose retry was granted. */
+  static withTransientTimeoutRetry(response: ConnectorResponse): ConnectorResponse {
+    const error = response.error!;
+    return {
+      ...response,
+      error: {
+        ...error,
+        retryable: true,
+        recommendation: 'retry',
+        message:
+          `No reply arrived within the per-attempt budget on \`${response.model}\`. A stall ` +
+          'like this is usually transient upstream latency, not a property of the prompt. ' +
+          'This attempt was recorded but not stored under your Idempotency-Key: send the ' +
+          'SAME request with the SAME key once more. A second timeout under this key is ' +
+          'final. (' +
+          error.message +
+          ')',
+      },
+    };
   }
 
   private applySanitization(response: ConnectorResponse): ConnectorResponse {
@@ -1371,6 +1462,10 @@ export class ConnectorsService {
     // ARAS-0058 — appended LAST. Callers construct this positionally and an
     // optional parameter inserted mid-list silently shifts everything after it.
     costSource: CostSource | null = null,
+    // A2-425 — appended last for the same reason. False only for an attempt
+    // whose envelope tells the caller to repeat it: the intent is released in
+    // the same transaction instead of completed, so the repeat dispatches.
+    replayable = true,
   ): Promise<void> {
     const digest = BaseCliConnector.promptDigest(request.prompt);
     const reason = ConnectorsService.settleReason(costSource);
@@ -1448,6 +1543,14 @@ export class ConnectorsService {
         // said "the customer never pays for this", so the second charging path
         // never learned about the first. One list, both sites.
         const customerChargeUsd = isChargeableToCustomer(costSource) ? response.usage.costUsd : 0;
+
+        if (intent && !replayable) {
+          // A2-425 — nothing is charged (the customer pays zero for an aborted
+          // attempt, DEC-AUP-0050 R2) and nothing is stored: the `Request` row
+          // above is the record of this attempt and of our cost (R3).
+          await this.billing.releaseIntentInTx(tx, intent);
+          return;
+        }
 
         if (intent) {
           await this.billing.settleIntentInTx(tx, {

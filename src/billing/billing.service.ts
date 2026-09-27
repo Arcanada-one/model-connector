@@ -179,6 +179,13 @@ export interface RequestIntentHandle {
   apiKeyId: string;
   intentKey: string;
   holdUsd: Prisma.Decimal;
+  /**
+   * A2-425 — true when this reservation took back a key whose earlier attempt
+   * was released without completing, i.e. this dispatch is a RETRY of that
+   * attempt under the caller's own key. Absent on a first open. The dispatch
+   * path reads it to grant a transient timeout exactly one retry per key.
+   */
+  reclaimed?: true;
 }
 
 /**
@@ -997,6 +1004,7 @@ export class BillingService {
           apiKeyId: params.apiKeyId,
           intentKey: params.intentKey,
           holdUsd: params.holdUsd,
+          reclaimed: true,
         },
       };
     } catch (err) {
@@ -1096,6 +1104,30 @@ export class BillingService {
       requestId: params.requestId,
       reason: params.reason ?? 'model-request',
     });
+  }
+
+  /**
+   * A2-425 — give the hold back without charging, inside the caller's
+   * transaction, so the `Request` row that records the attempt and the release
+   * of its reservation commit together.
+   *
+   * The in-transaction twin of {@link releaseIntent}: same state guard, same
+   * hold arithmetic. It exists for the one outcome that is recorded but must
+   * NOT be stored for replay — an attempt the envelope itself tells the caller
+   * to repeat. Completing it would make the repeat, which carries the same
+   * `Idempotency-Key`, replay the failure instead of dispatching.
+   */
+  async releaseIntentInTx(
+    tx: Prisma.TransactionClient,
+    intent: RequestIntentHandle,
+  ): Promise<boolean> {
+    const claimed = await tx.requestIntent.updateMany({
+      where: { id: intent.id, state: 'held' },
+      data: { state: 'released', completedAt: new Date() },
+    });
+    if (claimed.count !== 1) return false;
+    await BillingService.releaseHoldInTx(tx, intent);
+    return true;
   }
 
   /**
