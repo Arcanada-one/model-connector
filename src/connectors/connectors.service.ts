@@ -56,7 +56,14 @@ import { ModalityCatalogService } from './modality-catalog.service';
 // CONN-0245 — DB-as-source-of-truth catalog read path.
 import { CatalogRepository, type CatalogRepositoryLike } from './catalog.repository';
 import { rowToEntry } from './catalog-mapper';
-import { CATALOG_REDIS_CLIENT, type ICatalogRedis } from './catalog-redis.token';
+import {
+  CATALOG_REDIS_CLIENT,
+  catalogCacheIndexKey,
+  catalogCacheNamespace,
+  catalogRedisPrefix,
+  type ICatalogRedis,
+} from './catalog-redis.token';
+import { describeRedisError } from '../common/redis-client';
 import { ProviderAccessService, type ProviderAccessLike } from './provider-access.service';
 import { firstDispatchMeasurementSchema, type FirstDispatchMeasurementV0 } from './dto/execute.dto';
 // CONN-1665 — per-API-key access policy (single choke-point enforcement).
@@ -517,8 +524,11 @@ export class ConnectorsService {
           const models = response.models.filter((entry) => this.canRead(entry.connector));
           return this.applyPolicyToCatalog({ ...response, models, count: models.length }, apiKeyId);
         }
-      } catch {
-        this.logger.warn('catalog cache read failed; falling back to DB');
+      } catch (err) {
+        // A2-464 — name the client, the operation and the cause; the caller still gets the DB answer.
+        this.logger.warn(
+          `redis client=catalog-cache op=get ${describeRedisError(err)}; falling back to DB`,
+        );
       }
     }
 
@@ -539,14 +549,18 @@ export class ConnectorsService {
 
     if (cacheEnabled && this.catalogRedis) {
       try {
-        await this.catalogRedis.set(
-          cacheKey,
-          JSON.stringify(response),
-          'PX',
-          this.catalogCacheTtlMs(),
+        const ttlMs = this.catalogCacheTtlMs();
+        await this.catalogRedis.set(cacheKey, JSON.stringify(response), 'PX', ttlMs);
+        // A2-464 — record the key in this instance's index so invalidation can
+        // find it without KEYS. The index lives as long as its newest member, so
+        // it can never outgrow the keys it lists.
+        const indexKey = catalogCacheIndexKey(catalogRedisPrefix());
+        await this.catalogRedis.sadd(indexKey, cacheKey);
+        await this.catalogRedis.pexpire(indexKey, ttlMs);
+      } catch (err) {
+        this.logger.warn(
+          `redis client=catalog-cache op=set ${describeRedisError(err)}; continuing without cache`,
         );
-      } catch {
-        this.logger.warn('catalog cache write failed; continuing without cache');
       }
     }
 
@@ -652,7 +666,10 @@ export class ConnectorsService {
       .sort(([a], [b]) => a.localeCompare(b));
     const stable = JSON.stringify(sortedEntries);
     const hash = createHash('sha1').update(stable).digest('hex');
-    return `conn:catalog:${hash}`;
+    // A2-464 — under the instance's REDIS_PREFIX: two instances on one Redis
+    // (e.g. `conn-dev:` and the default `conn:`) no longer share or erase each
+    // other's cache. With the default prefix the key is unchanged: `conn:catalog:<hash>`.
+    return `${catalogCacheNamespace(catalogRedisPrefix())}${hash}`;
   }
 
   /**

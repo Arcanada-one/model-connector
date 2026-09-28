@@ -59,7 +59,7 @@ describe('CatalogRefreshService CONN-1646 provider-scoped cycles', () => {
     refresh: ReturnType<typeof vi.fn>;
   };
   let redis: {
-    keys: ReturnType<typeof vi.fn>;
+    smembers: ReturnType<typeof vi.fn>;
     del: ReturnType<typeof vi.fn>;
   };
   let service: CatalogRefreshService;
@@ -94,7 +94,7 @@ describe('CatalogRefreshService CONN-1646 provider-scoped cycles', () => {
       refresh: vi.fn().mockResolvedValue(undefined),
     };
     redis = {
-      keys: vi.fn().mockResolvedValue([]),
+      smembers: vi.fn().mockResolvedValue([]),
       del: vi.fn().mockResolvedValue(0),
     };
     service = new CatalogRefreshService(
@@ -242,7 +242,9 @@ describe('CatalogRefreshService CONN-1646 provider-scoped cycles', () => {
       connector: 'b',
     });
     expect(providerAccess.refresh).toHaveBeenCalledTimes(1);
-    expect(redis.keys).toHaveBeenCalled();
+    // A2-464 — invalidation walks this instance's own index (default prefix `conn:`), not KEYS.
+    expect(redis.smembers).toHaveBeenCalledWith('conn:catalog:index');
+    expect(redis.del).toHaveBeenCalledWith('conn:catalog:index');
   });
 
   it('seeds defaults before the non-blocking boot refresh', async () => {

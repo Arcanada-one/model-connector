@@ -25,6 +25,8 @@ describe('HealthController', () => {
       mockPrisma as unknown as PrismaService,
       mockMetrics as unknown as MetricsService,
       mockConnectors as unknown as ConnectorsService,
+      // A2-464 — readiness now probes Redis; a reachable one keeps these DB-focused cases as they were.
+      { ping: vi.fn().mockResolvedValue('PONG') },
     );
     vi.clearAllMocks();
   });

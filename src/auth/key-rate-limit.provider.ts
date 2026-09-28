@@ -1,6 +1,6 @@
 import { Provider } from '@nestjs/common';
-import Redis from 'ioredis';
 import { getConfig } from '../config/env.schema';
+import { createRedisClient } from '../common/redis-client';
 import { KEY_RATE_LIMIT_REDIS_CLIENT } from './key-rate-limit.token';
 
 /**
@@ -12,13 +12,7 @@ import { KEY_RATE_LIMIT_REDIS_CLIENT } from './key-rate-limit.token';
  */
 export const KEY_RATE_LIMIT_REDIS_PROVIDER: Provider = {
   provide: KEY_RATE_LIMIT_REDIS_CLIENT,
-  useFactory: () => {
-    const cfg = getConfig();
-    return new Redis({
-      host: cfg.REDIS_HOST,
-      port: cfg.REDIS_PORT,
-      ...(cfg.REDIS_PASSWORD && { password: cfg.REDIS_PASSWORD }),
-      lazyConnect: false,
-    });
-  },
+  // A2-464 — named error listener only; queueing/timeout behaviour is unchanged
+  // (the limiter fails CLOSED, and changing when it does is an auth decision).
+  useFactory: () => createRedisClient('key-rate-limit', getConfig()),
 };

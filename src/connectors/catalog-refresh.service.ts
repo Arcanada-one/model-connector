@@ -9,7 +9,13 @@ import {
 } from './catalog.repository';
 import { entryToRow } from './catalog-mapper';
 import { getConfig } from '../config/env.schema';
-import { CATALOG_REDIS_CLIENT, type ICatalogRedis } from './catalog-redis.token';
+import {
+  CATALOG_REDIS_CLIENT,
+  catalogCacheIndexKey,
+  catalogRedisPrefix,
+  type ICatalogRedis,
+} from './catalog-redis.token';
+import { describeRedisError } from '../common/redis-client';
 import { ProviderAccessService, type ProviderAccessLike } from './provider-access.service';
 
 // Defensive env reads evaluated at DECORATION time (class definition / import).
@@ -252,12 +258,18 @@ export class CatalogRefreshService implements OnModuleInit {
   private async invalidateCatalogCache(): Promise<void> {
     if (!this.catalogRedis) return;
     try {
-      const keys = await this.catalogRedis.keys('conn:catalog:*');
-      await Promise.all(keys.map((key) => this.catalogRedis!.del(key)));
-    } catch {
+      // A2-464 — only the keys THIS instance wrote, found through its own index
+      // under its own REDIS_PREFIX; no KEYS scan of the whole database, and no
+      // reach into another instance's namespace on a shared Redis.
+      const indexKey = catalogCacheIndexKey(catalogRedisPrefix());
+      const keys = await this.catalogRedis.smembers(indexKey);
+      await this.catalogRedis.del(indexKey, ...keys);
+    } catch (err) {
       // Non-fatal — the short cache TTL (CATALOG_CACHE_TTL_MS, default 30s)
       // self-heals staleness even if invalidation fails.
-      this.logger.warn('Catalog cache invalidation failed: reason=cache');
+      this.logger.warn(
+        `redis client=catalog-cache op=invalidate ${describeRedisError(err)}: reason=cache`,
+      );
     }
   }
 

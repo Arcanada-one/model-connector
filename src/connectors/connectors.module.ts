@@ -39,6 +39,7 @@ import { NovaMediaModule } from './bedrock/nova-media/nova-media.module';
 import { CatalogRepository } from './catalog.repository';
 import { CatalogRefreshService } from './catalog-refresh.service';
 import { CATALOG_REDIS_PROVIDER } from './catalog-redis.provider';
+import { CATALOG_REDIS_CLIENT } from './catalog-redis.token';
 // CONN-0245-EXT — provider READ/USE access.
 import { ProviderAccessService } from './provider-access.service';
 // CONN-1665 — per-API-key access policy.
@@ -91,6 +92,7 @@ import { PolicyModule } from '../policy/policy.module';
     CATALOG_REDIS_PROVIDER,
     ProviderAccessService,
   ],
-  exports: [ConnectorsService, CatalogRepository, ProviderAccessService],
+  // A2-464 — the catalog cache client is exported for the readiness probe (health/ready).
+  exports: [ConnectorsService, CatalogRepository, ProviderAccessService, CATALOG_REDIS_CLIENT],
 })
 export class ConnectorsModule {}

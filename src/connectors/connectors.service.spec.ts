@@ -1263,7 +1263,10 @@ describe('ConnectorsService', () => {
         get: vi.fn().mockResolvedValue(JSON.stringify(cachedResponse)),
         set: vi.fn(),
         del: vi.fn(),
-        keys: vi.fn().mockResolvedValue([]),
+        sadd: vi.fn().mockResolvedValue(1),
+        smembers: vi.fn().mockResolvedValue([]),
+        pexpire: vi.fn().mockResolvedValue(1),
+        ping: vi.fn().mockResolvedValue('PONG'),
       };
       const dbService = new ConnectorsService(
         mockQueue as unknown as Queue,
@@ -1287,7 +1290,10 @@ describe('ConnectorsService', () => {
         get: vi.fn().mockResolvedValue(null),
         set: vi.fn().mockResolvedValue('OK'),
         del: vi.fn(),
-        keys: vi.fn().mockResolvedValue([]),
+        sadd: vi.fn().mockResolvedValue(1),
+        smembers: vi.fn().mockResolvedValue([]),
+        pexpire: vi.fn().mockResolvedValue(1),
+        ping: vi.fn().mockResolvedValue('PONG'),
       };
       const dbService = new ConnectorsService(
         mockQueue as unknown as Queue,

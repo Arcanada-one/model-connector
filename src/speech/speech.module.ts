@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import Redis from 'ioredis';
 import { SpeechController } from './speech.controller';
 import { SpeechService } from './speech.service';
 import { TranscribatorProxy } from './transcribator.proxy';
@@ -10,11 +9,11 @@ import { AssemblyAiSttModule } from './stt/assemblyai-stt.module';
 import { OpenAiSttModule } from './stt/openai-stt.module';
 import { LocalWhisperSttModule } from './stt/local-whisper-stt.connector.module';
 import { SttRouterService } from './stt/stt-router.service';
-import { SttQuotaService, STT_REDIS_CLIENT } from './stt/stt-quota.service';
+import { SttQuotaService } from './stt/stt-quota.service';
+import { STT_REDIS_PROVIDER } from './stt-redis.provider';
 import { SttAsyncController } from './stt/stt-async.controller';
 import { SttJobProcessor } from './stt/stt-job.processor';
 import { MetricsModule } from '../metrics/metrics.module';
-import { getConfig } from '../config/env.schema';
 import { DeepgramTtsConnector } from './tts/deepgram-tts.connector';
 import { TogetherTtsConnector } from './tts/together-tts.connector';
 // CONN-1671 — per-key access policy enforcement on STT/TTS dispatch paths that
@@ -54,20 +53,7 @@ import { PolicyModule } from '../policy/policy.module';
     // configured for BullMQ (REDIS_HOST/PORT/PASSWORD) but is its own
     // connection — keeps the quota pipeline isolated from BullMQ's blocking
     // reads. ioredis is already a transitive dep of @nestjs/bullmq.
-    {
-      provide: STT_REDIS_CLIENT,
-      useFactory: () => {
-        const cfg = getConfig();
-        return new Redis({
-          host: cfg.REDIS_HOST,
-          port: cfg.REDIS_PORT,
-          ...(cfg.REDIS_PASSWORD && { password: cfg.REDIS_PASSWORD }),
-          // STT quota keys already start with `conn:` per convention; we
-          // omit `keyPrefix` so the literal key string is sent verbatim.
-          lazyConnect: false,
-        });
-      },
-    },
+    STT_REDIS_PROVIDER,
   ],
   exports: [SpeechService, SttRouterService, SttQuotaService],
 })
