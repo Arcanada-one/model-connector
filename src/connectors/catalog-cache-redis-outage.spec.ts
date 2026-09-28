@@ -32,6 +32,8 @@ import type { CatalogRepositoryLike } from './catalog.repository';
  * purpose — a timeout raised to half a second must turn this red.
  */
 const FAIL_FAST_BUDGET_MS = 400;
+/** A connection already known to be down: well under the 100 ms command timeout. */
+const KNOWN_DOWN_BUDGET_MS = 50;
 /** Past this, the call is reported as still pending — the pre-fix behaviour. */
 const PENDING_SENTINEL_MS = 3_000;
 
@@ -116,11 +118,13 @@ describe('A2-464 item 1 — catalog cache fails fast when Redis is gone', () => 
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
   });
 
-  it('refused port: get() rejects within the budget instead of queueing', async () => {
+  it('refused port: get() rejects at once — no queue, not even the command timeout', async () => {
     const client = buildCatalogClient(await freePort());
     const r = await settle(client.get('k'));
     expect(r.outcome).toBe('rejected');
-    expect(r.ms).toBeLessThan(FAIL_FAST_BUDGET_MS);
+    // A socket known to be down is refused immediately (offline queue off); only a
+    // silent Redis has to wait out CACHE_COMMAND_TIMEOUT_MS.
+    expect(r.ms).toBeLessThan(KNOWN_DOWN_BUDGET_MS);
   }, 10_000);
 
   it('stuck Redis (connected, never replies): get() rejects within the budget', async () => {
@@ -156,6 +160,35 @@ describe('A2-464 item 1 — catalog cache fails fast when Redis is gone', () => 
   }, 10_000);
 });
 
+describe('A2-464 item 2 — a failed cache command names client and operation', () => {
+  it('getCatalog with Redis gone logs client=catalog-cache op=get and the cause', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    const client = buildCatalogClient(await freePort());
+    const svc = new ConnectorsService(
+      { add: vi.fn() } as unknown as Queue,
+      {} as unknown as PrismaService,
+      {
+        record: vi.fn(),
+        getAll: vi.fn(),
+      } as unknown as import('../metrics/metrics.service').MetricsService,
+      new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+      {
+        getEntries: () => [],
+        getFilteredEntries: () => [],
+      } as unknown as import('./modality-catalog.service').ModalityCatalogService,
+      { findAll: vi.fn().mockResolvedValue([]) },
+      client,
+    );
+    await svc.getCatalog({ free: false, cheap: false, capability: undefined });
+    const lines = warn.mock.calls.map((c) => String(c[0]));
+    expect(
+      lines.some((l) => /client=catalog-cache op=get err=\S+: .+falling back to DB/.test(l)),
+    ).toBe(true);
+    expect(lines.some((l) => /client=catalog-cache op=set err=/.test(l))).toBe(true);
+  }, 10_000);
+});
+
 describe('A2-464 item 2 — a Redis connection error has somewhere to go, and says whose it is', () => {
   it('no "[ioredis] Unhandled error event"; the log line names the client and the operation', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -168,7 +201,7 @@ describe('A2-464 item 2 — a Redis connection error has somewhere to go, and sa
     expect(unhandled).toEqual([]);
     const line = String(warn.mock.calls[0]?.[0] ?? '');
     expect(line).toMatch(/client=catalog-cache/);
-    expect(line).toMatch(/op=connect/);
+    expect(line).toMatch(/op=connect\b/);
     expect(line).toMatch(/ECONNREFUSED/);
     expect(client.listenerCount('error')).toBeGreaterThan(0);
   }, 10_000);
