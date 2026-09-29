@@ -1,0 +1,4 @@
+CANARY ok throwaway CA/leaf for api.typesafe.ai and dummy key generated (no real key read)
+CANARY ok private network namespace: external network unreachable
+CANARY ok POST https://api.typesafe.ai/v1/systemone over TLS to loopback stub; shadow decision observed, answers and model preserved
+CANARY FAIL oversize-chunked accepted: {"id":"ba706adb-a622-4555-9948-c0ce7a5ea460","connector":"typesafe-jev","model":"jev-canary-stub","result":"","structured":{"version":"DecisionResult/v1","mode":"shadow","action":"none","decisionType"

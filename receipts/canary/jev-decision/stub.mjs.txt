@@ -1,0 +1,41 @@
+// Loopback HTTPS stand-in for api.typesafe.ai inside a private network namespace.
+// Scenario is chosen by the request's `state`; every request is appended to LOG as JSONL.
+import https from 'node:https';
+import fs from 'node:fs';
+const [cert, key, log, ready] = process.argv.slice(2);
+const ok = { model: 'jev-canary-stub', usage: { input_tokens: 11, output_tokens: 3 },
+  answers: { tier: { choice: 'small', confidence: 0.8, probabilities: { small: 0.8, large: 0.2 } },
+             complexity: { score: 2.4 }, risk: { noul: 0.6996 } } };
+const server = https.createServer({ cert: fs.readFileSync(cert), key: fs.readFileSync(key) }, (req, res) => {
+  let body = '';
+  req.on('data', (c) => { body += c; });
+  req.on('end', () => {
+    let state = null;
+    try { state = JSON.parse(body).state; } catch {}
+    fs.appendFileSync(log, JSON.stringify({ method: req.method, path: req.url, host: req.headers.host,
+      authorization: req.headers.authorization, model: (() => { try { return JSON.parse(body).model; } catch { return null; } })(),
+      state }) + '\n');
+    const big = 'x'.repeat(200 * 1024);
+    switch (state) {
+      case 'scenario:ok': res.writeHead(200, { 'content-type': 'application/json' }); return res.end(JSON.stringify(ok));
+      case 'scenario:oversize-chunked':
+        // A VALID decision padded past 128 KiB: only the byte bound can refuse it.
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.write('{"pad":"'); for (let i = 0; i < 25; i++) res.write('x'.repeat(8192));
+        return res.end('",' + JSON.stringify(ok).slice(1));
+      case 'scenario:oversize-length':
+        { const padded = JSON.stringify({ pad: big, ...ok });
+          res.writeHead(200, { 'content-type': 'application/json', 'content-length': String(Buffer.byteLength(padded)) });
+          return res.end(padded); }
+      case 'scenario:redirect':
+        res.writeHead(302, { location: 'https://api.typesafe.ai/v1/systemone-redirected' }); return res.end();
+      case 'scenario:error500':
+        res.writeHead(500, { 'content-type': 'text/plain' }); return res.end('SECRET-BODY-MARKER upstream trace');
+      case 'scenario:malformed':
+        res.writeHead(200, { 'content-type': 'application/json' });
+        return res.end(JSON.stringify({ model: 'jev-canary-stub', answers: { tier: { choice: 'huge' } } }));
+      default: res.writeHead(404); return res.end();
+    }
+  });
+});
+server.listen(443, '127.0.0.1', () => fs.writeFileSync(ready, 'ready'));

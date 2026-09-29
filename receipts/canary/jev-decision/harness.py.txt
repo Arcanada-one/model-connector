@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""Process canary for Arcanada-one/model-connector JEV decision adapter (jev.connector.ts).
+
+Outer: makes a throwaway dir under $TMPDIR with a one-off CA + leaf for api.typesafe.ai, a hosts file and
+a random DUMMY key, then re-executes itself inside `unshare -rnm` (private user, network and mount
+namespaces). Inner: loopback up, hosts bind-mounted so api.typesafe.ai -> 127.0.0.1, asserts the real
+network is unreachable, starts stub.mjs on 127.0.0.1:443 and runs driver.cjs against the subject's
+compiled connector with NODE_EXTRA_CA_CERTS. No real provider key or endpoint can be reached.
+argv: outer: (none)   cwd = subject checkout (built)
+"""
+import os, secrets, shutil, socket, subprocess, sys, tempfile, time
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+NODE = '/usr/bin/node'
+
+
+def out(m):
+    print(m, flush=True)
+
+
+def outer():
+    subject = Path.cwd().resolve()
+    base = Path(tempfile.mkdtemp(prefix='mcjev-')).resolve()
+    try:
+        ssl = lambda *a: subprocess.run(['openssl', *a], cwd=base, check=True, capture_output=True)
+        ssl('req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', 'ca.key', '-out', 'ca.pem', '-days', '1',
+            '-subj', '/CN=canary-throwaway-ca', '-addext', 'basicConstraints=critical,CA:TRUE',
+            '-addext', 'keyUsage=critical,keyCertSign')
+        ssl('req', '-newkey', 'rsa:2048', '-nodes', '-keyout', 'leaf.key', '-out', 'leaf.csr', '-subj', '/CN=api.typesafe.ai')
+        (base/'ext.cnf').write_text('subjectAltName=DNS:api.typesafe.ai\n')
+        ssl('x509', '-req', '-in', 'leaf.csr', '-CA', 'ca.pem', '-CAkey', 'ca.key', '-CAcreateserial', '-out', 'leaf.pem',
+            '-days', '1', '-extfile', 'ext.cnf')
+        (base/'hosts').write_text('127.0.0.1 localhost api.typesafe.ai\n')
+        out('CANARY ok throwaway CA/leaf for api.typesafe.ai and dummy key generated (no real key read)')
+        env = {'PATH': os.environ.get('PATH', '/usr/bin:/bin'), 'CANARY_DUMMY_KEY': 'canary-dummy-' + secrets.token_hex(16)}
+        done = subprocess.run(['unshare', '-rnm', sys.executable, __file__, 'inner', str(base), str(subject)],
+                              env=env, timeout=100)
+        if done.returncode != 0:
+            raise SystemExit(done.returncode)
+    finally:
+        shutil.rmtree(base, ignore_errors=True)
+    out('CANARY ok cleanup throwaway dir removed')
+
+
+def inner(base, subject):
+    base = Path(base)
+    subprocess.run(['ip', 'link', 'set', 'lo', 'up'], check=True)
+    subprocess.run(['mount', '--bind', str(base/'hosts'), '/etc/hosts'], check=True)
+    try:
+        socket.create_connection(('1.1.1.1', 443), timeout=2).close()
+        out('CANARY FAIL real network reachable inside the namespace'); raise SystemExit(1)
+    except OSError:
+        out('CANARY ok private network namespace: external network unreachable')
+    if socket.gethostbyname('api.typesafe.ai') != '127.0.0.1':
+        out('CANARY FAIL api.typesafe.ai does not resolve to loopback'); raise SystemExit(1)
+    log, ready = base/'requests.jsonl', base/'ready'
+    stub = subprocess.Popen([NODE, str(HERE/'stub.mjs'), str(base/'leaf.pem'), str(base/'leaf.key'), str(log), str(ready)])
+    try:
+        for _ in range(100):
+            if ready.exists():
+                break
+            time.sleep(0.05)
+        else:
+            out('CANARY FAIL stub did not start'); raise SystemExit(1)
+        env = {'PATH': os.environ['PATH'], 'NODE_EXTRA_CA_CERTS': str(base/'ca.pem'), 'JEV_ENABLED': 'true',
+               'TYPESAFE_API_KEY': os.environ['CANARY_DUMMY_KEY'], 'NODE_ENV': 'test'}
+        done = subprocess.run([NODE, str(HERE/'driver.cjs'), subject, str(log)], env=env, timeout=80)
+        raise SystemExit(done.returncode)
+    finally:
+        stub.kill(); stub.wait()
+
+
+if __name__ == '__main__':
+    if len(sys.argv) == 4 and sys.argv[1] == 'inner':
+        inner(sys.argv[2], sys.argv[3])
+    else:
+        outer()
