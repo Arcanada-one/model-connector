@@ -221,6 +221,18 @@ export abstract class BaseApiConnector implements IConnector {
     }
   }
 
+  protected getRedirectPolicy(): RequestRedirect {
+    return 'follow';
+  }
+
+  protected readResponseJson(response: Response): Promise<unknown> {
+    return response.json();
+  }
+
+  protected readResponseError(response: Response): Promise<string> {
+    return response.text();
+  }
+
   protected getHeaders(): Record<string, string> | Promise<Record<string, string>> {
     return { 'Content-Type': 'application/json' };
   }
@@ -515,11 +527,12 @@ export abstract class BaseApiConnector implements IConnector {
         method: 'POST',
         headers: await this.getRequestHeaders(request),
         body: JSON.stringify(body),
+        redirect: this.getRedirectPolicy(),
         signal: AbortSignal.timeout(timeout),
       });
 
       if (!res.ok) {
-        const text = await res.text();
+        const text = await this.readResponseError(res);
         const parsedError = this.parseHttpError(res.status, text, res.headers);
         const errorType = parsedError.type;
         const action = classifyErrorAction(errorType);
@@ -542,7 +555,7 @@ export abstract class BaseApiConnector implements IConnector {
         };
       }
 
-      const json = await res.json();
+      const json = await this.readResponseJson(res);
       const parsed = this.parseResponse(json, request);
 
       const base: ConnectorResponse = {
