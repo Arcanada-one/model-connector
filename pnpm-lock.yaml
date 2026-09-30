@@ -6,10 +6,10 @@ settings:
 
 overrides:
   fast-uri: '>=4.1.3 <5'
-  fastify: '>=5.8.5'
-  esbuild: '>=0.28.1'
-  vitest: '>=3.2.6'
-  '@vitest/coverage-v8': '>=3.2.6'
+  fastify: '>=5.8.5 <6'
+  esbuild: '>=0.28.1 <0.29'
+  vitest: '>=3.2.6 <5'
+  '@vitest/coverage-v8': '>=3.2.6 <5'
   hono: '>=4.12.34'
   '@hono/node-server': '>=2.0.10'
   uuid: '>=13.0.1'
@@ -83,7 +83,7 @@ importers:
         specifier: ^5.76.11
         version: 5.76.11
       fastify:
-        specifier: '>=5.8.5'
+        specifier: '>=5.8.5 <6'
         version: 5.8.5
       google-auth-library:
         specifier: ^10.6.2
@@ -147,7 +147,7 @@ importers:
         specifier: ^8.58.2
         version: 8.58.2(eslint@10.2.0(jiti@2.6.1))(typescript@6.0.3)
       '@vitest/coverage-v8':
-        specifier: '>=3.2.6'
+        specifier: '>=3.2.6 <5'
         version: 4.1.8(vitest@4.1.8)
       eslint:
         specifier: ^10.2.0
@@ -183,7 +183,7 @@ importers:
         specifier: ^1.5.9
         version: 1.5.9(@swc/core@1.15.26)(rollup@4.60.3)
       vitest:
-        specifier: '>=3.2.6'
+        specifier: '>=3.2.6 <5'
         version: 4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.8)(msw@2.14.4(@types/node@25.6.0)(typescript@6.0.3))(vite@8.1.3(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.1)(yaml@2.9.0))
 
   packages/sdk-ts:
@@ -201,7 +201,7 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
       vitest:
-        specifier: '>=3.2.6'
+        specifier: '>=3.2.6 <5'
         version: 4.1.8(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/coverage-v8@4.1.8)(msw@2.14.4(@types/node@22.19.19)(typescript@6.0.3))(vite@8.1.3(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.1)(yaml@2.9.0))
 
   watcher:
@@ -226,7 +226,7 @@ importers:
         specifier: ^8.61.1
         version: 8.67.0(eslint@10.8.1(jiti@2.6.1))(typescript@6.0.3)
       '@vitest/coverage-v8':
-        specifier: '>=3.2.6'
+        specifier: '>=3.2.6 <5'
         version: 4.1.8(vitest@4.1.8)
       eslint:
         specifier: ^10.5.0
@@ -235,7 +235,7 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
       vitest:
-        specifier: '>=3.2.6'
+        specifier: '>=3.2.6 <5'
         version: 4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.8)(msw@2.14.4(@types/node@25.6.0)(typescript@6.0.3))(vite@8.1.3(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.1)(yaml@2.9.0))
 
 packages:
@@ -2316,7 +2316,7 @@ packages:
     resolution: {integrity: sha512-lt3kovsyHwYe00wq4D1ti0Z974fWj4NLp6siqiyEufUpyFwK9Yhi7rBhac9JL5aA0zoMrJqc4vYPZRUnI7l7nw==}
     peerDependencies:
       '@vitest/browser': 4.1.8
-      vitest: '>=3.2.6'
+      vitest: '>=3.2.6 <5'
     peerDependenciesMeta:
       '@vitest/browser':
         optional: true
@@ -2661,7 +2661,7 @@ packages:
     resolution: {integrity: sha512-3WrrOuZiyaaZPWiEt4G3+IffISVC9HYlWueJEBWED4ZH4aIAC2PnkdnuRrR94M+w6yGWn4AglWtJtBI8YqvgoA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     peerDependencies:
-      esbuild: '>=0.28.1'
+      esbuild: '>=0.28.1 <0.29'
 
   byte-counter@0.1.0:
     resolution: {integrity: sha512-jheRLVMeUKrDBjVw2O5+k4EvR4t9wtxHL+bo/LxfkxsVeuGMy3a5SEGgXdAFA4FSzTrU8rQXQIrsZ3oBq5a0pQ==}
@@ -4774,7 +4774,7 @@ packages:
     peerDependencies:
       '@types/node': ^20.19.0 || >=22.12.0
       '@vitejs/devtools': ^0.3.0
-      esbuild: '>=0.28.1'
+      esbuild: '>=0.28.1 <0.29'
       jiti: '>=1.21.0'
       less: ^4.0.0
       sass: ^1.70.0
@@ -4822,7 +4822,7 @@ packages:
       '@vitest/browser-preview': 4.1.8
       '@vitest/browser-webdriverio': 4.1.8
       '@vitest/coverage-istanbul': 4.1.8
-      '@vitest/coverage-v8': '>=3.2.6'
+      '@vitest/coverage-v8': '>=3.2.6 <5'
       '@vitest/ui': 4.1.8
       happy-dom: '*'
       jsdom: '*'
