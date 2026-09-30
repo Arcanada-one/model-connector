@@ -5,9 +5,9 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted"
  },
- "captured_at_utc": "2026-09-30T19:18:24Z",
+ "captured_at_utc": "2026-09-30T19:57:52Z",
  "change_set": {
-  "base": "787d8d697337fcbbe50463a73fe90af5e2a4ea89",
+  "base": "becb0a46ab4f3faa22496d4579851269da3dbdb2",
   "files": [
    {
     "kind": "config",
@@ -29,12 +29,27 @@
    },
    {
     "kind": "other",
+    "path": "deploy/arcanada-compose-broker.sh",
+    "status": "M",
+    "uncovered": true
+   },
+   {
+    "kind": "receipt",
+    "node_id": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+    "node_ids": [
+     "receipt:receipts/graph/change-admission-A2-457-preflight.json"
+    ],
+    "path": "receipts/graph/change-admission-A2-457-preflight.json",
+    "status": "A"
+   },
+   {
+    "kind": "other",
     "new": true,
     "path": "scripts/ci/runner-broker-preflight.sh",
     "status": "A"
    }
   ],
-  "head": "591a5b1632ac27266b773b5ee3484b6cdeaa1bd3",
+  "head": "ae72e119ab296e31a3d5bd89df45b3f48ae2b0b2",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -42,19 +57,19 @@
  "graph": {
   "builder_version": "1.0.1",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:84c4342036cf9f81740c8794fd9efd2ad0d1e3f8501a592768385ff74c872764",
-  "path": "/tmp/arcana-verify/verifier-out/graph-787d8d697337.json",
-  "source_commit": "787d8d697337fcbbe50463a73fe90af5e2a4ea89"
+  "graph_digest": "sha256:68b64e8d98a218b7ba2423bb3ca2d854e82eaa070950c732cecc5fe0dcfb5d64",
+  "path": "/tmp/pub/vw-model-connector/verifier-out/graph-becb0a46ab4f.json",
+  "source_commit": "becb0a46ab4f3faa22496d4579851269da3dbdb2"
  },
  "head_graph": {
   "builder_version": "1.0.1",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:4d0cb7535d471071778c748e4686d990ca998d14fc281743289724ba0d26f922",
-  "path": "/tmp/arcana-verify/verifier-out/graph-head-591a5b1632ac.json",
-  "source_commit": "591a5b1632ac27266b773b5ee3484b6cdeaa1bd3",
+  "graph_digest": "sha256:2a2495076ecb5351278849d9d0b3bad60d087325045e811f2b6dc6e5371a592a",
+  "path": "/tmp/pub/vw-model-connector/verifier-out/graph-head-ae72e119ab29.json",
+  "source_commit": "ae72e119ab296e31a3d5bd89df45b3f48ae2b0b2",
   "staleness": {
-   "checked_at_utc": "2026-09-30T19:18:37Z",
-   "checked_nodes": 773,
+   "checked_at_utc": "2026-09-30T19:58:04Z",
+   "checked_nodes": 774,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -62,7 +77,7 @@
  },
  "host": "public-ci-host",
  "host_redacted": true,
- "host_sha256": "e7ab2e009cfd69069e741ee9f67098f161511cd38e3bdfd429c7973a1ceeb456",
+ "host_sha256": "4bb96c3587d6431a2ab689da5913865439fe1f9084b09caca6d9dcd61f59113d",
  "impact_set": {
   "deterministic_core": [
    {
@@ -283,11 +298,11 @@
   "tool": "tools/graph/verify.py",
   "version": "1.2.0"
  },
- "receipt_id": "car-verify-20260930T191824Z-591a5b16",
+ "receipt_id": "car-verify-20260930T195752Z-ae72e119",
  "receipt_path": "receipts/graph/change-admission-A2-457-preflight.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
-  "path": "/home/dev/aup/pfw1/model-connector"
+  "path": "/tmp/pub/model-connector"
  },
  "revision_selection": {
   "base": [
@@ -312,6 +327,7 @@
    "document:deploy/stt-whisper/README.md",
    "document:docs/how-to/deploy-runbook.md",
    "receipt:receipts/graph/A2-315.json",
+   "receipt:receipts/graph/change-admission-A2-457-preflight.json",
    "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
    "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
    "receipt:receipts/graph/change-admission-a2-432.json",
@@ -323,7 +339,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-09-30T19:18:37Z",
+  "checked_at_utc": "2026-09-30T19:58:04Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -339,6 +355,21 @@
    "path": "receipts/graph/A2-315.json",
    "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
    "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": null,
+    "head": "sha256:2891dcd421ab5cd5d1d603b55c8d6b38c4910787b5597bca008690e524468844"
+   },
+   "entity": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-A2-457-preflight.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it; superseded by construction — this run re-issues the receipt at receipts/graph/change-admission-A2-457-preflight.json for work item A2-457-preflight",
+   "rule": "DEC-AUP-0035",
+   "superseded": {
+    "receipt_path": "receipts/graph/change-admission-A2-457-preflight.json",
+    "work_item": "A2-457-preflight"
+   }
   },
   {
    "content_hash": {
@@ -397,7 +428,7 @@
   }
  ],
  "tree": {
-  "commit": "591a5b1632ac27266b773b5ee3484b6cdeaa1bd3",
+  "commit": "ae72e119ab296e31a3d5bd89df45b3f48ae2b0b2",
   "dirty": false
  },
  "verdicts": [
@@ -461,8 +492,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/pfw1/model-connector/node_modules/.bin/tsc -p /home/dev/aup/pfw1/model-connector/tsconfig.json --noEmit --incremental false --listFiles",
-   "duration_s": 12.35,
+   "command": "/tmp/pub/model-connector/node_modules/.bin/tsc -p /tmp/pub/model-connector/tsconfig.json --noEmit --incremental false --listFiles",
+   "duration_s": 10.84,
    "entities": [
     "deployable_unit:."
    ],
@@ -472,8 +503,8 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-09-30T19:18:49Z",
+   "output_ref": "/tmp/pub/vw-model-connector/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-09-30T19:58:14Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2719 files listed"
   },
   {
@@ -488,8 +519,8 @@
    "exit_code": 0,
    "id": "v-workflow-config-b803fcb7f17ed923",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
-   "started_at_utc": "2026-09-30T19:19:02Z",
+   "output_ref": "/tmp/pub/vw-model-connector/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-09-30T19:58:26Z",
    "summary": "bounded workflow configuration shape valid; expressions, shell, actions and hosted execution NOT_MEASURED"
   },
   {
@@ -504,13 +535,13 @@
    "exit_code": 0,
    "id": "v-workflow-config-6ceb21cf301c7eb2",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
-   "started_at_utc": "2026-09-30T19:19:02Z",
+   "output_ref": "/tmp/pub/vw-model-connector/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
+   "started_at_utc": "2026-09-30T19:58:26Z",
    "summary": "bounded workflow configuration shape valid; expressions, shell, actions and hosted execution NOT_MEASURED"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.25,
+   "duration_s": 0.26,
    "entities": [
     "code_unit:.github/workflows/ci.yml",
     "code_unit:.github/workflows/deploy-stt-whisper.yml",
@@ -524,8 +555,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/tmp/arcana-verify/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-09-30T19:19:02Z",
+   "output_ref": "/tmp/pub/vw-model-connector/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-09-30T19:58:26Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -544,17 +575,23 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/tmp/arcana-verify/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-09-30T19:19:02Z",
+   "output_ref": "/tmp/pub/vw-model-connector/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-09-30T19:58:26Z",
    "summary": "3 document(s), 0 failed"
   }
  ],
  "verify": {
   "events": [
    {
+    "code": "SUPERSEDED_SELF_EXCLUSION",
+    "entity": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+    "rule": "DEC-AUP-0035",
+    "text": "the receipt at receipts/graph/change-admission-A2-457-preflight.json is the previous version of the one this run is writing, for the same work item A2-457-preflight — superseded by construction, so it owes this change no verdict"
+   },
+   {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "6 affected entity(ies) owe no verdict (receipt: 6): unchanged at both revisions and given no verifier by the matrix"
+    "text": "7 affected entity(ies) owe no verdict (receipt: 7): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
@@ -580,6 +617,7 @@
     "doc_reference"
    ],
    "receipt:receipts/graph/A2-315.json": [],
+   "receipt:receipts/graph/change-admission-A2-457-preflight.json": [],
    "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": [],
    "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json": [],
    "receipt:receipts/graph/change-admission-a2-432.json": [],
@@ -587,9 +625,9 @@
    "receipt:receipts/graph/change-admission-jev-decision.json": []
   },
   "seconds": {
-   "prepare": 8.55,
-   "total": 38.42,
-   "verifiers": 12.6
+   "prepare": 7.95,
+   "total": 33.85,
+   "verifiers": 11.1
   }
  },
  "work_item": "A2-457-preflight"
