@@ -215,6 +215,15 @@ jobs:
       group: deploy-model-connector
       cancel-in-progress: false
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/ci
+
+      - name: Runner broker preflight (A2-457)
+        run: scripts/ci/runner-broker-preflight.sh
+        env: { BROKER_PREFLIGHT_BIN: /usr/local/sbin/arcanada-compose-broker }
+
       - name: Sync broker checkout to this commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
