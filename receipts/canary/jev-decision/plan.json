@@ -1,0 +1,103 @@
+{
+ "schema": "CanaryPlan/v2",
+ "id": "model-connector-jev-decision-loopback",
+ "environment": "arcana-devs-netns-loopback",
+ "owner": "Control network hand for JEV-audit remediation (Arcanada, claude-opus-5-5) on arcana-devs",
+ "read_only": false,
+ "subject": {
+  "schema": "GitCanarySubject/v1",
+  "commit": "2dbc77f449be1504552c73f5de2fb0070369b0c8",
+  "tree": "71fb5fc363762f9aeed9ab2ada5c3ac609354230",
+  "evidence": {
+   "path": "source-evidence.json",
+   "sha256": "45b0dfe134a35494a3c6062dcacc85409128ffff43dbdf070524676a594d84b3",
+   "source_field": "commit"
+  }
+ },
+ "purpose": "AUP-GRAPH-008 canary for code_unit:src/connectors/jev/jev.connector.ts on its inferred provider boundary, measured on a local candidate without real provider keys: the built subject connector runs with real fetch and TLS inside a private user/network/mount namespace where api.typesafe.ai resolves to a loopback HTTPS stub signed by a throwaway CA and the key is a random dummy. Asserts endpoint/method/auth header, preserved shadow decision, >128 KiB bodies refused (valid padded decisions, so only the byte bound can refuse), redirect not followed, error bodies and key never echoed, out-of-domain answers unknown, kill switch re-read. Mutant with the byte bound removed is red (see mutant-unbounded.log.txt). Not a measurement of the real provider.",
+ "probes": [
+  {
+   "kind": "process",
+   "id": "loopback-tls-stub-native-decision",
+   "argv": [
+    "/usr/bin/python3.12",
+    "/home/dev/aup/control-jev-mc/canary/harness.py"
+   ],
+   "cwd": ".",
+   "env_keys": [
+    "PATH",
+    "TMPDIR"
+   ],
+   "timeout_seconds": 120,
+   "capture_limit_bytes": 262144,
+   "executable_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+   "execution_files": [
+    {
+     "path": "/home/dev/aup/control-jev-mc/canary/harness.py",
+     "sha256": "52e2dfb37ac4fcb3798df5b44c794b6f6fe6232ab963ebbfb9901f3a214e3179"
+    },
+    {
+     "path": "/home/dev/aup/control-jev-mc/canary/stub.mjs",
+     "sha256": "c7ac205634662c1e94d57a62836163f95970b78be802ae1928be107f1216173f"
+    },
+    {
+     "path": "/home/dev/aup/control-jev-mc/canary/driver.cjs",
+     "sha256": "6f4978bd3f4ffb66103b65a4920bb9ab5c18d8320024d2e4853c581e2d116942"
+    },
+    {
+     "path": "/usr/bin/node",
+     "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7"
+    },
+    {
+     "path": "/home/dev/aup/control-jev-mc/subject/src/connectors/jev/jev.connector.ts",
+     "sha256": "b39e4fd7d8e004257dac37d52c8178dca5d09cbd1e7191237df9803d7b56c436"
+    },
+    {
+     "path": "/home/dev/aup/control-jev-mc/subject/src/connectors/jev/decision.contract.ts",
+     "sha256": "11bc4adda5ff488466083fbec34d5e984ae617007b315094ad060de29b591a99"
+    },
+    {
+     "path": "/home/dev/aup/control-jev-mc/subject/src/connectors/base-api.connector.ts",
+     "sha256": "a98b473ef78a74f358ee7e38eedaeba2410ecc2974a29bf499987a7b8d1b06b2"
+    },
+    {
+     "path": "/home/dev/aup/control-jev-mc/subject/dist/src/connectors/jev/jev.connector.js",
+     "sha256": "82b2d81315b657eee966b76789af091b35a008f333a66e473c078d7f6f3b6d58"
+    },
+    {
+     "path": "/home/dev/aup/control-jev-mc/subject/dist/src/connectors/jev/decision.contract.js",
+     "sha256": "60441babdb2ea025cf0c8e46606f0dbdd0a0428ada6afcf964156368e6631fc5"
+    },
+    {
+     "path": "/home/dev/aup/control-jev-mc/subject/dist/src/connectors/jev/decision.fixture.js",
+     "sha256": "185f3326744557315a8ba34bc7ef247fb03aed539b78102c4019e4bbf3b14ef0"
+    },
+    {
+     "path": "/home/dev/aup/control-jev-mc/subject/dist/src/connectors/base-api.connector.js",
+     "sha256": "6a501fa01de205263e6908bac84837ccd8d826ad52f81e28e6daf8c27f1f377f"
+    }
+   ],
+   "expect": {
+    "exit_codes": [
+     0
+    ],
+    "stdout_contains": [
+     "CANARY ok private network namespace: external network unreachable",
+     "CANARY ok POST https://api.typesafe.ai/v1/systemone over TLS to loopback stub; shadow decision observed, answers and model preserved",
+     "CANARY ok oversize-chunked (>128 KiB) body refused as JEV parse_error",
+     "CANARY ok oversize-length (>128 KiB) body refused as JEV parse_error",
+     "CANARY ok 302 redirect not followed (1 request)",
+     "CANARY ok HTTP 500 body not echoed",
+     "CANARY ok out-of-domain answer not observed",
+     "CANARY ok JEV_ENABLED=false stops the next call before any request (kill switch re-read)",
+     "CANARY ok all scenarios: responses never contain the key or an upstream body",
+     "CANARY ok cleanup throwaway dir removed"
+    ]
+   },
+   "entities": [
+    "code_unit:src/connectors/jev/jev.connector.ts"
+   ],
+   "mutating": true
+  }
+ ]
+}

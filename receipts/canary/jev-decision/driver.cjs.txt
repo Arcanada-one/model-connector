@@ -1,0 +1,42 @@
+// Drives the subject's compiled JevConnector against the loopback stub (real fetch, real TLS, real URL).
+const fs = require('node:fs');
+const path = require('node:path');
+const [subject, log] = process.argv.slice(2);
+const { JevConnector } = require(path.join(subject, 'dist/src/connectors/jev/jev.connector.js'));
+const { request } = require(path.join(subject, 'dist/src/connectors/jev/decision.fixture.js'));
+const KEY = process.env.TYPESAFE_API_KEY;
+const fail = (m) => { console.log('CANARY FAIL ' + m); process.exit(1); };
+const ok = (m) => console.log('CANARY ok ' + m);
+const seen = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse) : []);
+const call = (c, state) => c.execute({ prompt: JSON.stringify({ ...request, state }), model: 'jev-latest', maxRetries: 0, timeout: 10000 });
+const clean = (r, what) => { const s = JSON.stringify(r); if (s.includes(KEY)) fail(what + ' leaks the key'); if (s.includes('SECRET-BODY-MARKER') || s.includes('xxxxxxxx')) fail(what + ' leaks an upstream body'); };
+(async () => {
+  if (!KEY || KEY.length < 16) fail('dummy key missing');
+  const c = new JevConnector();
+  let r = await call(c, 'scenario:ok');
+  const s1 = seen();
+  if (r.status !== 'success' || r.structured?.status !== 'observed' || r.structured?.action !== 'none' || r.structured?.mode !== 'shadow') fail('ok scenario: ' + JSON.stringify(r).slice(0, 300));
+  if (r.structured.answers.tier.choice !== 'small' || r.structured.answers.risk.noul !== 0.6996 || r.structured.observedModel !== 'jev-canary-stub') fail('ok scenario answers not preserved');
+  const q = s1[s1.length - 1];
+  if (s1.length !== 1 || q.method !== 'POST' || q.path !== '/v1/systemone' || q.host !== 'api.typesafe.ai' || q.authorization !== 'Bearer ' + KEY || q.model !== 'jev-latest') fail('stub saw ' + JSON.stringify({ ...q, authorization: q && q.authorization === 'Bearer ' + KEY ? 'Bearer <dummy>' : 'other' }));
+  clean(r, 'ok');
+  ok('POST https://api.typesafe.ai/v1/systemone over TLS to loopback stub; shadow decision observed, answers and model preserved');
+  for (const sc of ['oversize-chunked', 'oversize-length']) {
+    const t0 = Date.now(); r = await call(c, 'scenario:' + sc);
+    if (r.status === 'success' || !String(r.error?.message).startsWith('JEV ')) fail(sc + ' accepted: ' + JSON.stringify(r).slice(0, 200));
+    clean(r, sc); ok(`${sc} (>128 KiB) body refused as ${r.error.message} in ${Date.now() - t0} ms, no body echoed`);
+  }
+  const before = seen().length; r = await call(c, 'scenario:redirect');
+  if (r.status === 'success' || seen().length !== before + 1) fail('redirect followed or accepted');
+  clean(r, 'redirect'); ok('302 redirect not followed (1 request), refused as ' + r.error.message);
+  r = await call(c, 'scenario:error500');
+  if (r.status === 'success' || !/^JEV /.test(r.error?.message)) fail('500 mishandled');
+  clean(r, 'error500'); ok('HTTP 500 body not echoed, message ' + r.error.message);
+  r = await call(c, 'scenario:malformed');
+  if (r.status === 'success' && r.structured?.status === 'observed') fail('malformed answer observed');
+  clean(r, 'malformed'); ok('out-of-domain answer not observed (status ' + r.status + ', decision ' + (r.structured?.status ?? 'none') + ')');
+  const n = seen().length; process.env.JEV_ENABLED = 'false'; r = await call(c, 'scenario:ok');
+  if (r.status === 'success' || seen().length !== n || r.error?.message !== 'JEV disabled') fail('kill switch did not stop the request');
+  ok('JEV_ENABLED=false stops the next call before any request (kill switch re-read)');
+  ok('all scenarios: responses never contain the key or an upstream body');
+})().catch((e) => fail('driver threw ' + e.message));

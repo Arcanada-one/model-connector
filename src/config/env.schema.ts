@@ -372,6 +372,11 @@ export const envSchema = z
     GROQ_FREE_MODELS: z.string().default(GROQ_FREE_MODELS_DEFAULT_CSV),
     OPENMODEL_TIMEOUT_MS: z.coerce.number().min(1_000).max(300_000).default(30_000),
     OPENMODEL_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(2),
+    JEV_ENABLED: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((v) => v === 'true'),
+    TYPESAFE_API_KEY: z.string().optional(),
     ANTHROPIC_ENABLED: envBool.default(false),
     ANTHROPIC_API_KEY: z.string().optional(),
     ANTHROPIC_BASE_URL: z.string().url().default('https://api.anthropic.com/v1'),

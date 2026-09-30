@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConnectorsService } from './connectors.service';
 import { ModalityCatalogService } from './modality-catalog.service';
 import { ConnectorsController } from './connectors.controller';
@@ -24,6 +24,8 @@ import { BedrockModule } from './bedrock/bedrock.module';
 import { VertexGenerativeModule } from './vertex-generative/vertex-generative.module';
 import { MistralModule } from './mistral/mistral.module';
 import { CohereModule } from './cohere/cohere.module';
+import { JevConnector } from './jev/jev.connector';
+import { DecisionService } from './jev/decision.service';
 import { DeepSeekModule } from './deepseek/deepseek.module';
 import { TogetherModule } from './together/together.module';
 import { FireworksModule } from './fireworks/fireworks.module';
@@ -84,6 +86,8 @@ import { PolicyModule } from '../policy/policy.module';
   ],
   controllers: [ConnectorsController],
   providers: [
+    JevConnector,
+    DecisionService,
     ConnectorsService,
     ModalityCatalogService,
     CatalogRepository,
@@ -91,6 +95,14 @@ import { PolicyModule } from '../policy/policy.module';
     CATALOG_REDIS_PROVIDER,
     ProviderAccessService,
   ],
-  exports: [ConnectorsService, CatalogRepository, ProviderAccessService],
+  exports: [ConnectorsService, CatalogRepository, ProviderAccessService, DecisionService],
 })
-export class ConnectorsModule {}
+export class ConnectorsModule implements OnModuleInit {
+  constructor(
+    private readonly jev: JevConnector,
+    private readonly connectors: ConnectorsService,
+  ) {}
+  onModuleInit(): void {
+    this.connectors.register(this.jev);
+  }
+}
