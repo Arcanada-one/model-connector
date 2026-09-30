@@ -107,7 +107,7 @@ jobs:
 
   build-python:
     name: Python — build + test + twine check
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: [self-hosted, Linux, X64, ci-general]
     permissions:
       id-token: write
       contents: read
