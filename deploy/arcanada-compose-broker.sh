@@ -105,6 +105,11 @@ declare -rA REPOS=(
   # checkout as root. No MIGRATE, IMAGE, VERIFY or SMOKE row: the service has no
   # schema, no pre-built image and no post-deploy script.
   [argana]='https://github.com/Arcanada-one/argana.git'
+  # Muneral cc96570a: the observability stack (Grafana/Loki/Tempo/Mimir) has
+  # been running on arcana-prd since INFRA-0417 (project `observability-stack`,
+  # named volumes obs_*), but its deploy job still SSHed to the decommissioned
+  # arcana-agents. The repository is PRIVATE, hence the AUTH row below.
+  [observability-stack]='https://github.com/Arcanada-one/observability-stack.git'
 )
 declare -rA COMPOSE=(
   # INFRA-0417: model-connector's OWN stack, not the whisper side-stack. The
@@ -122,6 +127,7 @@ declare -rA COMPOSE=(
   [verdicus]='docker-compose.prod.yml'
   [langfuse-deploy]='docker-compose.yml'
   [argana]='docker-compose.yml'
+  [observability-stack]='docker-compose.yml'
 )
 # Private repositories whose fetch needs a credential on stdin.
 declare -rA AUTH=(
@@ -137,6 +143,7 @@ declare -rA AUTH=(
   # opposite case, where a PUBLIC repo with an AUTH row would block on an empty
   # stdin read.
   [argana]='github-token'
+  [observability-stack]='github-token'
 )
 # Pin the compose project name. Unset means Compose derives it from the
 # checkout directory, which is what the whisper stack has always done —
@@ -180,6 +187,11 @@ declare -rA PROJECT=(
   # derives the same name; the pin is what stops the check from depending on
   # that coincidence, exactly as for arcanada-assistant.
   [argana]='argana'
+  # Pinned to the name the ALREADY-RUNNING stack carries
+  # (com.docker.compose.project=observability-stack, measured 2026-09-30). Its
+  # named volumes are fixed by `name:` (obs_*), so they would be adopted either
+  # way; the pin keeps the container identity from depending on a directory name.
+  [observability-stack]='observability-stack'
 )
 # Root-owned environment file. A bare name resolves under ENV_ROOT; an absolute
 # path is used as given, so a service whose env is already root-owned somewhere
@@ -208,6 +220,9 @@ declare -rA ENVFILE=(
   # secret is mounted FROM. A runner-writable env file here would be a runner
   # that can mount any file it likes into a container it can then read.
   [argana]='argana.env'
+  # Holds TAILSCALE_IP + GRAFANA_ADMIN_PASSWORD (+ GRAFANA_OIDC_CLIENT_SECRET).
+  # Operator-maintained under ENV_ROOT, root 0600; never carried in the repo.
+  [observability-stack]='observability-stack.env'
 )
 # A release script inside the checkout that already encapsulates the whole
 # deploy. Running it as root is the same trust boundary the broker already
