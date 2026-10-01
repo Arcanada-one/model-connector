@@ -26,14 +26,17 @@ services:
       - cursor-config:/home/connector/.config/cursor
       - gemini-auth:/home/connector/.gemini
     networks:
-      - default
+      default:
       # CONN-0214 — transcribator-api's compose stack is a separate project
       # (its own default bridge network); without joining it, the speech
       # proxy's TRANSCRIBATOR_API_URL default (localhost:3700, i.e. this
       # container's own loopback) can never reach it — 502 upstream_unavailable
       # on every tts/stt/vad call. Mirrors the same external-network pattern
       # arcanada-llm-proxy already uses to join model-connector_default.
-      - transcribator-api
+      transcribator-api:
+      assistant-native:
+        aliases:
+          - connector.arcanada.one
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3900/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
@@ -55,4 +58,7 @@ networks:
   default:
   transcribator-api:
     name: transcribator-api_default
+    external: true
+  assistant-native:
+    name: arcanada-assistant_default
     external: true
