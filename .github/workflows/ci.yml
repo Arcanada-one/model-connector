@@ -44,6 +44,8 @@ jobs:
           bash -n deploy/arcanada-compose-broker.sh
           bash -n deploy/arcanada-compose-broker.test.sh
           bash deploy/arcanada-compose-broker.test.sh
+          bash -n deploy/deploy.sh deploy/deploy.test.sh
+          bash deploy/deploy.test.sh
       # INFRA-0462 — watcher/test/*.bats existed from the day the watcher landed
       # and no step ever ran them. Specs nothing invokes are the same shape as
       # the defect this PR fixes: a check that cannot fail. shellcheck runs over
@@ -124,8 +126,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
       - name: Build Docker image
-        run: docker build -t model-connector-e2e .
+        run: docker buildx build --load -t model-connector-e2e .
 
       - name: Create DB schema
         run: |

@@ -43,8 +43,8 @@ grep -qx 'REDIS_HOST=100.97.136.74' .env \
 # codex-sidecar service.
 COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.codex.yml)
 
-# CONN-0208: clean up orphan containers before recreate (race condition);
-# named volumes are preserved.
+# Prepare the image while the existing issuer still serves. A failed or cancelled
+# build must not remove the running service before a replacement exists.
 # A2-228: bake the deployed commit into the image so /health can name it. Read from the
 # broker's own checkout, which is the thing being deployed. A checkout that cannot answer
 # leaves this empty, and /health then reports no build rather than a wrong one.
@@ -52,11 +52,14 @@ MC_BUILD_SHA="$(git rev-parse HEAD 2>/dev/null || true)"
 export MC_BUILD_SHA
 echo "[deploy] building MC_BUILD_SHA=${MC_BUILD_SHA:-(unknown)}"
 
-"${COMPOSE[@]}" down --remove-orphans || true
-"${COMPOSE[@]}" up -d --build
+"${COMPOSE[@]}" build
+"${COMPOSE[@]}" up -d --no-build
 
 sleep 10
-curl -fsS http://127.0.0.1:3900/health || { "${COMPOSE[@]}" logs --tail=50; exit 1; }
+curl -fsS -o /dev/null http://127.0.0.1:3900/health || {
+  echo 'FAIL: Model Connector health probe' >&2
+  exit 1
+}
 
 # ARAS-0071: apply schema migrations. Without this a schema change deploys as
 # CODE WITHOUT SCHEMA — which is exactly what happened to the credits tables:
