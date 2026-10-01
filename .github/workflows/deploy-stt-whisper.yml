@@ -50,7 +50,7 @@ jobs:
       # that passes against somebody else's endpoint.
       # (no port literal here: it is read from the running stack, below)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Runner broker preflight (A2-457)
         run: scripts/ci/runner-broker-preflight.sh
