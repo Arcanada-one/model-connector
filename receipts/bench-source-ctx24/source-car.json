@@ -1,0 +1,678 @@
+{
+  "admission": {
+    "rule": "admitted requires every verdict = verified; failed without exemption \u21d2 refused; not_measured without exemption \u21d2 paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+    "verdict": "admitted"
+  },
+  "captured_at_utc": "2026-10-02T16:35:45Z",
+  "change_set": {
+    "base": "58de1345b2fef3a04adb7f5655f48e2e7d39e197",
+    "files": [
+      {
+        "kind": "doc",
+        "node_id": "document:docs/explanation/bench-reservation-custody.md",
+        "node_ids": [
+          "document:docs/explanation/bench-reservation-custody.md"
+        ],
+        "path": "docs/explanation/bench-reservation-custody.md",
+        "status": "M"
+      },
+      {
+        "kind": "code",
+        "node_id": "code_unit:src/bench-reservation/adapter.ts",
+        "node_ids": [
+          "code_unit:src/bench-reservation/adapter.ts",
+          "contract:src/bench-reservation/adapter.ts#input"
+        ],
+        "path": "src/bench-reservation/adapter.ts",
+        "status": "A"
+      },
+      {
+        "kind": "test",
+        "node_id": "code_unit:src/bench-reservation/postgres.integration.spec.ts",
+        "node_ids": [
+          "code_unit:src/bench-reservation/postgres.integration.spec.ts"
+        ],
+        "path": "src/bench-reservation/postgres.integration.spec.ts",
+        "status": "M"
+      },
+      {
+        "kind": "code",
+        "node_id": "code_unit:src/bench-reservation/service.ts",
+        "node_ids": [
+          "code_unit:src/bench-reservation/service.ts"
+        ],
+        "path": "src/bench-reservation/service.ts",
+        "status": "M"
+      },
+      {
+        "kind": "code",
+        "node_id": "code_unit:src/bench-reservation/signatures.ts",
+        "node_ids": [
+          "code_unit:src/bench-reservation/signatures.ts"
+        ],
+        "path": "src/bench-reservation/signatures.ts",
+        "status": "M"
+      },
+      {
+        "kind": "code",
+        "node_id": "code_unit:src/bench-reservation/store.ts",
+        "node_ids": [
+          "code_unit:src/bench-reservation/store.ts"
+        ],
+        "path": "src/bench-reservation/store.ts",
+        "status": "M"
+      },
+      {
+        "kind": "config",
+        "new": true,
+        "path": "test/bench-reservation/.env.example",
+        "status": "A"
+      },
+      {
+        "kind": "test",
+        "new": true,
+        "path": "test/bench-reservation/graph.verify-profile.json",
+        "status": "A"
+      }
+    ],
+    "head": "878bf97d50f5b3fda74a869910da418b6cb7145b",
+    "mode": "diff"
+  },
+  "decision_ref": "DEC-AUP-0008",
+  "exemptions": [],
+  "graph": {
+    "builder_version": "1.0.1",
+    "built_at_utc": "2026-09-05T00:00:00Z",
+    "graph_digest": "sha256:bb3ed50a6c05da87922542aa6780b581c0042ab000ab13d7ea73b2890217977d",
+    "path": "/home/dev/aup/arc2/control/bench-canary-corpus-20261002-ctx24/MC-CAR-CANARY-V2.d/graph-58de1345b2fe.json",
+    "source_commit": "58de1345b2fef3a04adb7f5655f48e2e7d39e197"
+  },
+  "head_graph": {
+    "builder_version": "1.0.1",
+    "built_at_utc": "2026-09-05T00:00:00Z",
+    "graph_digest": "sha256:acc693149d0489a8566e074f7f52c54cc19793b8de6c44049df24ff26ee42f7d",
+    "path": "/home/dev/aup/arc2/control/bench-canary-corpus-20261002-ctx24/MC-CAR-CANARY-V2.d/graph-head-878bf97d50f5.json",
+    "source_commit": "878bf97d50f5b3fda74a869910da418b6cb7145b",
+    "staleness": {
+      "checked_at_utc": "2026-10-02T16:35:56Z",
+      "checked_nodes": 785,
+      "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+      "mismatched_nodes": [],
+      "verdict": "fresh"
+    }
+  },
+  "host": "arcana-devs",
+  "impact_set": {
+    "deterministic_core": [
+      {
+        "boundary": "intra_unit",
+        "depth": 1,
+        "entity": "code_unit:src/bench-reservation/authority.spec.ts",
+        "node_type": "code_unit",
+        "path": [
+          {
+            "edge_type": "imports",
+            "from": "code_unit:src/bench-reservation/authority.spec.ts",
+            "provenance": "deterministic",
+            "to": "code_unit:src/bench-reservation/signatures.ts",
+            "via": "relative"
+          }
+        ],
+        "revision_paths": [
+          {
+            "boundary": "intra_unit",
+            "depth": 1,
+            "entity": "code_unit:src/bench-reservation/authority.spec.ts",
+            "node_type": "code_unit",
+            "path": [
+              {
+                "edge_type": "imports",
+                "from": "code_unit:src/bench-reservation/authority.spec.ts",
+                "provenance": "deterministic",
+                "to": "code_unit:src/bench-reservation/signatures.ts",
+                "via": "relative"
+              }
+            ],
+            "revision": "base",
+            "section": "deterministic_core",
+            "verifier_hint": "type-check / compile of the importer"
+          },
+          {
+            "boundary": "intra_unit",
+            "depth": 1,
+            "entity": "code_unit:src/bench-reservation/authority.spec.ts",
+            "node_type": "code_unit",
+            "path": [
+              {
+                "edge_type": "imports",
+                "from": "code_unit:src/bench-reservation/authority.spec.ts",
+                "provenance": "deterministic",
+                "to": "code_unit:src/bench-reservation/signatures.ts",
+                "via": "relative"
+              }
+            ],
+            "revision": "head",
+            "section": "deterministic_core",
+            "verifier_hint": "type-check / compile of the importer"
+          }
+        ],
+        "verifier_hint": "type-check / compile of the importer"
+      },
+      {
+        "boundary": "intra_unit",
+        "depth": 1,
+        "entity": "code_unit:test/bench-reservation/fixture.ts",
+        "node_type": "code_unit",
+        "path": [
+          {
+            "edge_type": "imports",
+            "from": "code_unit:test/bench-reservation/fixture.ts",
+            "provenance": "deterministic",
+            "to": "code_unit:src/bench-reservation/service.ts",
+            "via": "relative"
+          }
+        ],
+        "revision_paths": [
+          {
+            "boundary": "intra_unit",
+            "depth": 1,
+            "entity": "code_unit:test/bench-reservation/fixture.ts",
+            "node_type": "code_unit",
+            "path": [
+              {
+                "edge_type": "imports",
+                "from": "code_unit:test/bench-reservation/fixture.ts",
+                "provenance": "deterministic",
+                "to": "code_unit:src/bench-reservation/service.ts",
+                "via": "relative"
+              }
+            ],
+            "revision": "base",
+            "section": "deterministic_core",
+            "verifier_hint": "type-check / compile of the importer"
+          },
+          {
+            "boundary": "intra_unit",
+            "depth": 1,
+            "entity": "code_unit:test/bench-reservation/fixture.ts",
+            "node_type": "code_unit",
+            "path": [
+              {
+                "edge_type": "imports",
+                "from": "code_unit:test/bench-reservation/fixture.ts",
+                "provenance": "deterministic",
+                "to": "code_unit:src/bench-reservation/service.ts",
+                "via": "relative"
+              }
+            ],
+            "revision": "head",
+            "section": "deterministic_core",
+            "verifier_hint": "type-check / compile of the importer"
+          }
+        ],
+        "verifier_hint": "type-check / compile of the importer"
+      },
+      {
+        "boundary": "intra_unit",
+        "depth": 2,
+        "entity": "code_unit:test/bench-reservation/process.fixture.ts",
+        "node_type": "code_unit",
+        "path": [
+          {
+            "edge_type": "imports",
+            "from": "code_unit:test/bench-reservation/fixture.ts",
+            "provenance": "deterministic",
+            "to": "code_unit:src/bench-reservation/service.ts",
+            "via": "relative"
+          },
+          {
+            "edge_type": "imports",
+            "from": "code_unit:test/bench-reservation/process.fixture.ts",
+            "provenance": "deterministic",
+            "to": "code_unit:test/bench-reservation/fixture.ts",
+            "via": "relative"
+          }
+        ],
+        "revision_paths": [
+          {
+            "boundary": "intra_unit",
+            "depth": 2,
+            "entity": "code_unit:test/bench-reservation/process.fixture.ts",
+            "node_type": "code_unit",
+            "path": [
+              {
+                "edge_type": "imports",
+                "from": "code_unit:test/bench-reservation/fixture.ts",
+                "provenance": "deterministic",
+                "to": "code_unit:src/bench-reservation/service.ts",
+                "via": "relative"
+              },
+              {
+                "edge_type": "imports",
+                "from": "code_unit:test/bench-reservation/process.fixture.ts",
+                "provenance": "deterministic",
+                "to": "code_unit:test/bench-reservation/fixture.ts",
+                "via": "relative"
+              }
+            ],
+            "revision": "base",
+            "section": "deterministic_core",
+            "verifier_hint": "type-check / compile of the importer"
+          },
+          {
+            "boundary": "intra_unit",
+            "depth": 2,
+            "entity": "code_unit:test/bench-reservation/process.fixture.ts",
+            "node_type": "code_unit",
+            "path": [
+              {
+                "edge_type": "imports",
+                "from": "code_unit:test/bench-reservation/fixture.ts",
+                "provenance": "deterministic",
+                "to": "code_unit:src/bench-reservation/service.ts",
+                "via": "relative"
+              },
+              {
+                "edge_type": "imports",
+                "from": "code_unit:test/bench-reservation/process.fixture.ts",
+                "provenance": "deterministic",
+                "to": "code_unit:test/bench-reservation/fixture.ts",
+                "via": "relative"
+              }
+            ],
+            "revision": "head",
+            "section": "deterministic_core",
+            "verifier_hint": "type-check / compile of the importer"
+          }
+        ],
+        "verifier_hint": "type-check / compile of the importer"
+      },
+      {
+        "boundary": "intra_unit",
+        "depth": 1,
+        "entity": "deployable_unit:.",
+        "node_type": "deployable_unit",
+        "path": [
+          {
+            "edge_type": "deploys_to",
+            "from": "code_unit:src/bench-reservation/postgres.integration.spec.ts",
+            "provenance": "deterministic",
+            "to": "deployable_unit:.",
+            "via": "containment"
+          }
+        ],
+        "revision_paths": [
+          {
+            "boundary": "intra_unit",
+            "depth": 1,
+            "entity": "deployable_unit:.",
+            "node_type": "deployable_unit",
+            "path": [
+              {
+                "edge_type": "deploys_to",
+                "from": "code_unit:src/bench-reservation/postgres.integration.spec.ts",
+                "provenance": "deterministic",
+                "to": "deployable_unit:.",
+                "via": "containment"
+              }
+            ],
+            "revision": "base",
+            "section": "deterministic_core",
+            "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+          },
+          {
+            "boundary": "intra_unit",
+            "depth": 1,
+            "entity": "deployable_unit:.",
+            "node_type": "deployable_unit",
+            "path": [
+              {
+                "edge_type": "deploys_to",
+                "from": "code_unit:src/bench-reservation/adapter.ts",
+                "provenance": "deterministic",
+                "to": "deployable_unit:.",
+                "via": "containment"
+              }
+            ],
+            "revision": "head",
+            "section": "deterministic_core",
+            "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+          }
+        ],
+        "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+      }
+    ],
+    "edge_types": "all",
+    "global_fallback": {
+      "triggered": false
+    },
+    "inferred_tail": [],
+    "max_depth": 3,
+    "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+    "total": 4
+  },
+  "notes": [
+    "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.0.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = \u22c3 edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i\u2026",
+    "profile: /home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/test/bench-reservation/graph.verify-profile.json; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none"
+  ],
+  "producer": {
+    "tool": "tools/graph/verify.py",
+    "version": "1.0.1"
+  },
+  "receipt_id": "car-verify-20261002T163545Z-878bf97d",
+  "repo": {
+    "name": "Arcanada-one/model-connector",
+    "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433"
+  },
+  "revision_selection": {
+    "base": [
+      "code_unit:src/bench-reservation/authority.spec.ts",
+      "code_unit:src/bench-reservation/postgres.integration.spec.ts",
+      "code_unit:src/bench-reservation/service.ts",
+      "code_unit:src/bench-reservation/signatures.ts",
+      "code_unit:src/bench-reservation/store.ts",
+      "code_unit:test/bench-reservation/fixture.ts",
+      "code_unit:test/bench-reservation/process.fixture.ts",
+      "deployable_unit:.",
+      "document:docs/explanation/bench-reservation-custody.md"
+    ],
+    "head": [
+      "code_unit:src/bench-reservation/adapter.ts",
+      "code_unit:src/bench-reservation/authority.spec.ts",
+      "code_unit:src/bench-reservation/postgres.integration.spec.ts",
+      "code_unit:src/bench-reservation/service.ts",
+      "code_unit:src/bench-reservation/signatures.ts",
+      "code_unit:src/bench-reservation/store.ts",
+      "code_unit:test/bench-reservation/fixture.ts",
+      "code_unit:test/bench-reservation/process.fixture.ts",
+      "contract:src/bench-reservation/adapter.ts#input",
+      "deployable_unit:.",
+      "document:docs/explanation/bench-reservation-custody.md"
+    ],
+    "schema": "RevisionImpactSelection/v1",
+    "unmeasured_head_files": []
+  },
+  "schema": "ChangeAdmissionReceipt/v1",
+  "staleness": {
+    "checked_at_utc": "2026-10-02T16:35:55Z",
+    "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+    "mismatched_nodes": [],
+    "verdict": "fresh"
+  },
+  "tree": {
+    "commit": "878bf97d50f5b3fda74a869910da418b6cb7145b",
+    "dirty": false
+  },
+  "verdicts": [
+    {
+      "entity": "code_unit:src/bench-reservation/adapter.ts",
+      "reason": "v-type-check-tsconfig: tsconfig.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+      "verdict": "verified",
+      "verifier_ids": [
+        "v-contract-diff",
+        "v-fitness",
+        "v-type-check-tsconfig"
+      ]
+    },
+    {
+      "entity": "code_unit:src/bench-reservation/authority.spec.ts",
+      "reason": "v-type-check-tsconfig: test/bench-reservation/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+      "verdict": "verified",
+      "verifier_ids": [
+        "v-fitness",
+        "v-type-check-tsconfig"
+      ]
+    },
+    {
+      "entity": "code_unit:src/bench-reservation/postgres.integration.spec.ts",
+      "reason": "v-type-check-tsconfig: test/bench-reservation/tsconfig.json: project compiles, 0 errors; v-config-schema: every key read is declared (1 frozen undeclared key(s): TMPDIR); v-fitness: no new fitness violation; v-canary: canary bench-mc-native-physical-ctx24-v2 (pre) on owned-offline-source-fixture: Actual owned process termination and original-plan assertions; escaped descendants are not proven absent",
+      "verdict": "verified",
+      "verifier_ids": [
+        "v-canary",
+        "v-config-schema",
+        "v-fitness",
+        "v-type-check-tsconfig"
+      ]
+    },
+    {
+      "entity": "code_unit:src/bench-reservation/service.ts",
+      "reason": "v-type-check-tsconfig: tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+      "verdict": "verified",
+      "verifier_ids": [
+        "v-fitness",
+        "v-type-check-tsconfig"
+      ]
+    },
+    {
+      "entity": "code_unit:src/bench-reservation/signatures.ts",
+      "reason": "v-type-check-tsconfig: tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+      "verdict": "verified",
+      "verifier_ids": [
+        "v-fitness",
+        "v-type-check-tsconfig"
+      ]
+    },
+    {
+      "entity": "code_unit:src/bench-reservation/store.ts",
+      "reason": "v-type-check-tsconfig: tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+      "verdict": "verified",
+      "verifier_ids": [
+        "v-fitness",
+        "v-type-check-tsconfig"
+      ]
+    },
+    {
+      "entity": "code_unit:test/bench-reservation/fixture.ts",
+      "reason": "v-type-check-tsconfig: test/bench-reservation/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+      "verdict": "verified",
+      "verifier_ids": [
+        "v-fitness",
+        "v-type-check-tsconfig"
+      ]
+    },
+    {
+      "entity": "code_unit:test/bench-reservation/process.fixture.ts",
+      "reason": "v-type-check-tsconfig: test/bench-reservation/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+      "verdict": "verified",
+      "verifier_ids": [
+        "v-fitness",
+        "v-type-check-tsconfig"
+      ]
+    },
+    {
+      "entity": "contract:src/bench-reservation/adapter.ts#input",
+      "reason": "v-contract-diff: added: no breaking change (1 change(s))",
+      "verdict": "verified",
+      "verifier_ids": [
+        "v-contract-diff"
+      ]
+    },
+    {
+      "entity": "deployable_unit:.",
+      "reason": "v-type-check-tsconfig: tsconfig.json: 0 errors; v-fitness: no new violation in . (35 frozen)",
+      "verdict": "verified",
+      "verifier_ids": [
+        "v-fitness",
+        "v-type-check-tsconfig"
+      ]
+    },
+    {
+      "entity": "document:docs/explanation/bench-reservation-custody.md",
+      "reason": "v-doc-reference: 0 reference(s) resolve at head",
+      "verdict": "verified",
+      "verifier_ids": [
+        "v-doc-reference"
+      ]
+    }
+  ],
+  "verifiers": [
+    {
+      "command": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.bin/tsc -p /home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/test/bench-reservation/tsconfig.json --noEmit --incremental false --listFiles",
+      "duration_s": 1.46,
+      "entities": [
+        "code_unit:src/bench-reservation/authority.spec.ts",
+        "code_unit:src/bench-reservation/postgres.integration.spec.ts",
+        "code_unit:test/bench-reservation/fixture.ts",
+        "code_unit:test/bench-reservation/process.fixture.ts"
+      ],
+      "exit_code": 0,
+      "id": "v-type-check-tsconfig",
+      "kind": "type_check",
+      "output_ref": "/home/dev/aup/arc2/control/bench-canary-corpus-20261002-ctx24/MC-CAR-CANARY-V2.d/v-type-check-tsconfig.txt",
+      "started_at_utc": "2026-10-02T16:36:05Z",
+      "summary": "test/bench-reservation/tsconfig.json: exit 0, 0 error(s), 332 files listed"
+    },
+    {
+      "command": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.bin/tsc -p /home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/tsconfig.json --noEmit --incremental false --listFiles",
+      "duration_s": 8.97,
+      "entities": [
+        "code_unit:src/bench-reservation/adapter.ts",
+        "code_unit:src/bench-reservation/service.ts",
+        "code_unit:src/bench-reservation/signatures.ts",
+        "code_unit:src/bench-reservation/store.ts",
+        "deployable_unit:."
+      ],
+      "exit_code": 0,
+      "id": "v-type-check-tsconfig",
+      "kind": "type_check",
+      "output_ref": "/home/dev/aup/arc2/control/bench-canary-corpus-20261002-ctx24/MC-CAR-CANARY-V2.d/v-type-check-tsconfig.txt",
+      "started_at_utc": "2026-10-02T16:36:06Z",
+      "summary": "tsconfig.json: exit 0, 0 error(s), 2727 files listed"
+    },
+    {
+      "command": "tools/graph/contract_diff.py.run_diff(base=58de1345b2fe, head=878bf97d50f5, graph=head graph)",
+      "duration_s": 5.49,
+      "entities": [
+        "code_unit:src/bench-reservation/adapter.ts",
+        "contract:src/bench-reservation/adapter.ts#input"
+      ],
+      "exit_code": 1,
+      "id": "v-contract-diff",
+      "kind": "contract_diff",
+      "output_ref": "/home/dev/aup/arc2/control/bench-canary-corpus-20261002-ctx24/MC-CAR-CANARY-V2.d/v-contract-diff.json",
+      "started_at_utc": "2026-10-02T16:36:16Z",
+      "summary": "168\u2192169 contracts, breaking 0, edges {'failed': 8, 'verified': 222}"
+    },
+    {
+      "command": "verify.py config_schema: keys read at head \u2286 declared keys",
+      "duration_s": 0.03,
+      "entities": [
+        "code_unit:src/bench-reservation/postgres.integration.spec.ts"
+      ],
+      "exit_code": 0,
+      "id": "v-config-schema",
+      "kind": "config_schema",
+      "output_ref": "/home/dev/aup/arc2/control/bench-canary-corpus-20261002-ctx24/MC-CAR-CANARY-V2.d/v-config-schema.json",
+      "started_at_utc": "2026-10-02T16:36:21Z",
+      "summary": "4 source(s), 0 new / 85 frozen undeclared reads, 0 failed"
+    },
+    {
+      "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+      "duration_s": 0.21,
+      "entities": [
+        "code_unit:src/bench-reservation/adapter.ts",
+        "code_unit:src/bench-reservation/authority.spec.ts",
+        "code_unit:src/bench-reservation/postgres.integration.spec.ts",
+        "code_unit:src/bench-reservation/service.ts",
+        "code_unit:src/bench-reservation/signatures.ts",
+        "code_unit:src/bench-reservation/store.ts",
+        "code_unit:test/bench-reservation/fixture.ts",
+        "code_unit:test/bench-reservation/process.fixture.ts",
+        "deployable_unit:."
+      ],
+      "exit_code": 0,
+      "id": "v-fitness",
+      "kind": "fitness_rules",
+      "output_ref": "/home/dev/aup/arc2/control/bench-canary-corpus-20261002-ctx24/MC-CAR-CANARY-V2.d/v-fitness.json",
+      "started_at_utc": "2026-10-02T16:36:21Z",
+      "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+    },
+    {
+      "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+      "duration_s": 0.0,
+      "entities": [
+        "document:docs/explanation/bench-reservation-custody.md"
+      ],
+      "exit_code": 0,
+      "id": "v-doc-reference",
+      "kind": "doc_reference",
+      "output_ref": "/home/dev/aup/arc2/control/bench-canary-corpus-20261002-ctx24/MC-CAR-CANARY-V2.d/v-doc-reference.txt",
+      "started_at_utc": "2026-10-02T16:36:21Z",
+      "summary": "1 document(s), 0 failed"
+    },
+    {
+      "command": "tools/graph/deploy_gate.py canary --plan <plan> --phase pre|post (results supplied with --canary)",
+      "duration_s": 0.36,
+      "entities": [
+        "code_unit:src/bench-reservation/postgres.integration.spec.ts"
+      ],
+      "exit_code": 0,
+      "id": "v-canary",
+      "kind": "canary",
+      "output_ref": "/home/dev/aup/arc2/control/bench-canary-corpus-20261002-ctx24/MC-CAR-CANARY-V2.d/v-canary.json",
+      "started_at_utc": "2026-10-02T16:36:21Z",
+      "summary": "1 canary result(s); 1 verified / 0 failed / 0 not_measured of 1 entities"
+    }
+  ],
+  "verify": {
+    "events": [],
+    "required_by_entity": {
+      "code_unit:src/bench-reservation/adapter.ts": [
+        "contract_diff",
+        "fitness_rules",
+        "type_check"
+      ],
+      "code_unit:src/bench-reservation/authority.spec.ts": [
+        "fitness_rules",
+        "type_check"
+      ],
+      "code_unit:src/bench-reservation/postgres.integration.spec.ts": [
+        "canary",
+        "config_schema",
+        "fitness_rules",
+        "type_check"
+      ],
+      "code_unit:src/bench-reservation/service.ts": [
+        "fitness_rules",
+        "type_check"
+      ],
+      "code_unit:src/bench-reservation/signatures.ts": [
+        "fitness_rules",
+        "type_check"
+      ],
+      "code_unit:src/bench-reservation/store.ts": [
+        "fitness_rules",
+        "type_check"
+      ],
+      "code_unit:test/bench-reservation/fixture.ts": [
+        "fitness_rules",
+        "type_check"
+      ],
+      "code_unit:test/bench-reservation/process.fixture.ts": [
+        "fitness_rules",
+        "type_check"
+      ],
+      "contract:src/bench-reservation/adapter.ts#input": [
+        "contract_diff"
+      ],
+      "deployable_unit:.": [
+        "fitness_rules",
+        "type_check"
+      ],
+      "document:docs/explanation/bench-reservation-custody.md": [
+        "doc_reference"
+      ]
+    },
+    "seconds": {
+      "prepare": 6.97,
+      "total": 36.51,
+      "verifiers": 16.52
+    }
+  },
+  "work_item": {
+    "system": "muneral",
+    "task_id": "31a9c0b9-c50a-41f9-ab11-168299e40afe",
+    "epic": "31a9c0b9-c50a-41f9-ab11-168299e40afe",
+    "scope": "BENCH product source contribution; no service owner assignment or runtime authority"
+  }
+}
