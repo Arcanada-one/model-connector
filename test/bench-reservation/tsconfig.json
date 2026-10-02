@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "noEmit": true, "incremental": false },
+  "include": ["../../src/bench-reservation/**/*.ts", "./*.ts"],
+  "exclude": ["../../node_modules", "../../dist"]
+}
