@@ -260,88 +260,106 @@ describe('actual isolated PostgreSQL campaign/custody boundary', () => {
     }
   });
 
-  it('actual Rust native producer authenticates through the real MC socket service', async () => {
-    const binary = process.env.BENCH_OWNED_NATIVE_TEST_BINARY;
-    if (!binary || !binary.includes('/clean-native-build-v4/target/debug/deps/codex_http_client-'))
-      throw new Error('explicit owned native UNIT TEST binary required; never invoke Codex');
-    const dir = await mkdtemp(join(process.env.BENCH_OWNED_TEST_SOCKET_ROOT!, 'native-mc-'));
-    await chmod(dir, 0o700);
-    const path = join(dir, 'custody.sock');
-    const grant = { ...f.grant, custodian_socket: path };
-    const adapter = new BenchTrustedSocketAdapter(s, path);
-    const wire = JSON.stringify({
-      model: 'gpt-6-luna',
-      input: 'public cross-language source fixture',
-      tools: [],
-    });
-    const input = JSON.stringify({
-      signed_grant: grantEnvelope(grant, f.issuer.privateKey),
-      caller_access_token: f.token,
-      issuer_public_hex: Buffer.from(
-        f.issuer.publicKey.export({ format: 'jwk' }).x!,
-        'base64url',
-      ).toString('hex'),
-      wire_utf8: wire,
-      now: f.now,
-    });
-    try {
-      await adapter.start(true);
-      const out = await new Promise<string>((resolve, reject) => {
-        const child = spawn(
-          binary,
-          [
-            '--exact',
-            'bench_admission::tests::bench_native_admission_mc_adapter_child',
-            '--ignored',
-            '--nocapture',
-          ],
-          {
-            env: {
-              PATH: '/usr/bin:/bin',
-              TMPDIR: process.env.TMPDIR!,
-              BENCH_OWNED_TEST_SOCKET_ROOT: process.env.BENCH_OWNED_TEST_SOCKET_ROOT!,
-            },
-            stdio: ['pipe', 'pipe', 'pipe'],
-          },
-        );
-        let stdout = '';
-        let stderr = '';
-        const timer = setTimeout(() => child.kill('SIGTERM'), 10000);
-        child.stdout.on('data', (b) => (stdout += b));
-        // Never return stdin/grant/JWT/key or crypto error contents in test diagnostics.
-        child.stderr.on('data', (b) => {
-          stderr += b;
+  for (const expireCallerAfterReply of [false, true])
+    it(
+      expireCallerAfterReply
+        ? 'authentic MC caller expiry after real native socket refuses without release'
+        : 'actual Rust native producer authenticates through the real MC socket service',
+      async () => {
+        const binary = process.env.BENCH_OWNED_NATIVE_TEST_BINARY;
+        if (
+          !binary ||
+          !binary.includes('/clean-native-build-v4/target/debug/deps/codex_http_client-')
+        )
+          throw new Error('explicit owned native UNIT TEST binary required; never invoke Codex');
+        const dir = await mkdtemp(join(process.env.BENCH_OWNED_TEST_SOCKET_ROOT!, 'native-mc-'));
+        await chmod(dir, 0o700);
+        const path = join(dir, 'custody.sock');
+        const grant = { ...f.grant, custodian_socket: path };
+        const adapter = new BenchTrustedSocketAdapter(s, path);
+        const wire = JSON.stringify({
+          model: 'gpt-6-luna',
+          input: 'public cross-language source fixture',
+          tools: [],
         });
-        child.on('error', (e) => {
-          clearTimeout(timer);
-          reject(e);
+        const claims = { ...f.claims, exp: expireCallerAfterReply ? f.now + 1 : f.claims.exp };
+        const body = Buffer.from(JSON.stringify(claims)).toString('base64url');
+        const token = `${f.header}.${body}.${sign('RSA-SHA256', Buffer.from(f.header + '.' + body), f.identity.privateKey).toString('base64url')}`;
+        const input = JSON.stringify({
+          signed_grant: grantEnvelope(grant, f.issuer.privateKey),
+          caller_access_token: token,
+          after_socket_unix: expireCallerAfterReply ? f.now + 1 : undefined,
+          expect_expired: expireCallerAfterReply,
+          issuer_public_hex: Buffer.from(
+            f.issuer.publicKey.export({ format: 'jwk' }).x!,
+            'base64url',
+          ).toString('hex'),
+          wire_utf8: wire,
+          now: f.now,
         });
-        child.on('close', (code) => {
-          clearTimeout(timer);
-          if (code === 0) resolve(stdout);
-          else
-            reject(
-              new Error(
-                `native unit helper failed exit${code}; stderr bytes${Buffer.byteLength(stderr)}`,
-              ),
+        try {
+          await adapter.start(true);
+          const out = await new Promise<string>((resolve, reject) => {
+            const child = spawn(
+              binary,
+              [
+                '--exact',
+                'bench_admission::tests::bench_native_admission_mc_adapter_child',
+                '--ignored',
+                '--nocapture',
+              ],
+              {
+                env: {
+                  PATH: '/usr/bin:/bin',
+                  TMPDIR: process.env.TMPDIR!,
+                  BENCH_OWNED_TEST_SOCKET_ROOT: process.env.BENCH_OWNED_TEST_SOCKET_ROOT!,
+                },
+                stdio: ['pipe', 'pipe', 'pipe'],
+              },
             );
-        });
-        child.stdin.end(input);
-      });
-      expect(out).toContain('NATIVE_MC_SOURCE_BOUNDARY_VERIFIED');
-      expect((await new CheckpointStore(checkpoint).read(grant.campaign)).aggregate).toEqual([
-        181,
-        1695917 + Buffer.byteLength(wire),
-        327911,
-      ]);
-      expect((await primary.query('SELECT verdict FROM bench_reservation')).rows[0].verdict).toBe(
-        'UNKNOWN_NO_RELEASE',
-      );
-    } finally {
-      await adapter.stop();
-      await rm(dir, { recursive: true });
-    }
-  });
+            let stdout = '';
+            let stderr = '';
+            const timer = setTimeout(() => child.kill('SIGTERM'), 10000);
+            child.stdout.on('data', (b) => (stdout += b));
+            // Never return stdin/grant/JWT/key or crypto error contents in test diagnostics.
+            child.stderr.on('data', (b) => {
+              stderr += b;
+            });
+            child.on('error', (e) => {
+              clearTimeout(timer);
+              reject(e);
+            });
+            child.on('close', (code) => {
+              clearTimeout(timer);
+              if (code === 0) resolve(stdout);
+              else
+                reject(
+                  new Error(
+                    `native unit helper failed exit${code}; stderr bytes${Buffer.byteLength(stderr)}`,
+                  ),
+                );
+            });
+            child.stdin.end(input);
+          });
+          expect(out).toContain(
+            expireCallerAfterReply
+              ? 'NATIVE_MC_LATE_CALLER_REFUSAL_VERIFIED'
+              : 'NATIVE_MC_SOURCE_BOUNDARY_VERIFIED',
+          );
+          expect((await new CheckpointStore(checkpoint).read(grant.campaign)).aggregate).toEqual([
+            181,
+            1695917 + Buffer.byteLength(wire),
+            327911,
+          ]);
+          expect(
+            (await primary.query('SELECT verdict FROM bench_reservation')).rows[0].verdict,
+          ).toBe('UNKNOWN_NO_RELEASE');
+        } finally {
+          await adapter.stop();
+          await rm(dir, { recursive: true });
+        }
+      },
+    );
 
   it('rejects actual superuser custody before spending any allowance', async () => {
     const unsafe = service(
