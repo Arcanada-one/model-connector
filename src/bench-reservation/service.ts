@@ -17,6 +17,7 @@ import {
   publicEd25519,
   signed,
   verifyCaller,
+  callerDeadline,
   verifyEnvelope,
 } from './signatures';
 import { CampaignStore, CheckpointStore, head, nextHead, same } from './store';
@@ -44,14 +45,8 @@ export class BenchReservationService {
         'BENCH-CUSTODY-BOOTSTRAP-v1\n',
       );
       const grant = grantSchema.parse(JSON.parse(payload));
-      checkGrant(grant, this.deps.now());
-      verifyCaller(
-        callerAccessToken,
-        this.deps.authArcanaJwks,
-        grant,
-        this.deps.now(),
-        'bench:provision',
-      );
+      const lease = this.freshLease(grant, callerAccessToken, 'bench:provision');
+      lease.assertFresh();
       this.verifySigner(grant);
       await this.verifyDatabaseSeparation();
       const initial: Head = {
@@ -68,6 +63,7 @@ export class BenchReservationService {
         ),
       };
       await this.deps.campaign.transaction(async (client) => {
+        lease.assertFresh();
         await client.query(
           `INSERT INTO bench_campaign(campaign,original_ledger_sha256,journal_id,sequence,input_tokens,output_tokens,head_sha256) VALUES($1,$2,$3,$4,$5,$6,$7)`,
           [
@@ -80,18 +76,26 @@ export class BenchReservationService {
         );
         // Unique original lineage and no upsert/reset. A partially completed
         // provision is frozen against the independent head, never retried as new.
-        await this.deps.checkpoint.initialize(initial);
-      });
+        lease.assertFresh();
+        await this.deps.checkpoint.initialize(initial, lease.assertFresh);
+        lease.assertFresh();
+      }, lease.assertFresh);
+      lease.assertFresh();
     } catch {
       throw new BenchRefused('bootstrap_refused_existing_state_preserved');
     }
   }
-  async reserve(signedGrant: unknown, rawRequest: unknown, callerAccessToken: string) {
+  async reserve(
+    signedGrant: unknown,
+    rawRequest: unknown,
+    callerAccessToken: string,
+    operationDeadline?: number,
+  ) {
     try {
       const payload = verifyEnvelope(signedGrant, this.deps.issuerPublicKey, 'BENCH-GRANT-v1\n');
       const grant = grantSchema.parse(JSON.parse(payload));
-      checkGrant(grant, this.deps.now());
-      verifyCaller(callerAccessToken, this.deps.authArcanaJwks, grant, this.deps.now());
+      const lease = this.freshLease(grant, callerAccessToken, 'bench:reserve', operationDeadline);
+      lease.assertFresh();
       this.verifySigner(grant);
       await this.verifyDatabaseSeparation();
       const request = requestSchema.parse(rawRequest);
@@ -101,6 +105,7 @@ export class BenchReservationService {
           `SELECT * FROM bench_campaign WHERE campaign=$1 AND original_ledger_sha256=$2 FOR UPDATE`,
           [grant.campaign, grant.original_ledger_sha256],
         );
+        lease.assertFresh(); // AFTER the potentially stalled authoritative row lock.
         requireBench(result.rows.length === 1, 'campaign_not_provisioned');
         const previous = head(result.rows[0]);
         requireBench(previous.journal === grant.journal_id, 'different_campaign_journal');
@@ -126,7 +131,9 @@ export class BenchReservationService {
         // Independently durable CAS consumes the allowance FIRST. If local insert
         // or commit fails, the checkpoint remains ahead; later attempts freeze.
         // No response/commit ambiguity can manufacture a refund or second permit.
-        await this.deps.checkpoint.compareAppend(previous, next, request);
+        lease.assertFresh();
+        await this.deps.checkpoint.compareAppend(previous, next, request, lease.assertFresh);
+        lease.assertFresh(); // Committed checkpoint is NEVER released on late refusal.
         await client.query(
           `INSERT INTO bench_reservation(campaign,attempt,nonce,sequence,grant_sha256,request,previous_head_sha256,head_sha256,verdict) VALUES($1,$2,$3,$4,$5,$6,$7,$8,'UNKNOWN_NO_RELEASE')`,
           [
@@ -144,7 +151,9 @@ export class BenchReservationService {
           `UPDATE bench_campaign SET sequence=$1,input_tokens=$2,output_tokens=$3,head_sha256=$4 WHERE campaign=$5`,
           [next.sequence, next.aggregate[1], next.aggregate[2], next.head, grant.campaign],
         );
+        lease.assertFresh();
         return {
+          valid_until_unix: lease.deadline,
           request,
           sequence: next.sequence,
           aggregate: next.aggregate,
@@ -152,14 +161,48 @@ export class BenchReservationService {
           head_sha256: next.head,
           durable_verdict: 'ATOMIC_FSYNC_RESERVED_UNKNOWN_NO_RELEASE',
         };
-      });
+      }, lease.assertFresh);
       // Signing is after BOTH durable commits. Missing response still spends.
+      lease.assertFresh();
       return signed(receipt, this.deps.custodianPrivateKey, CUSTODY_DOMAIN);
     } catch (error) {
       if (error instanceof BenchRefused) throw error;
       // Never return untrusted token/body/SQL/crypto error contents to callers.
       throw new BenchRefused('reservation_refused_unknown_preserved');
     }
+  }
+  inspectAuthority(signedGrant: unknown, token: string): Grant {
+    const grant = grantSchema.parse(
+      JSON.parse(verifyEnvelope(signedGrant, this.deps.issuerPublicKey, 'BENCH-GRANT-v1\n')),
+    );
+    this.freshLease(grant, token, 'bench:reserve').assertFresh();
+    this.verifySigner(grant);
+    return grant;
+  }
+  private freshLease(grant: Grant, token: string, scope: string, operationDeadline?: number) {
+    const started = this.deps.now();
+    requireBench(
+      operationDeadline === undefined ||
+        (Number.isSafeInteger(operationDeadline) &&
+          operationDeadline > started &&
+          operationDeadline <= started + 5),
+      'operation_deadline_invalid',
+    );
+    const deadline = Math.min(
+      operationDeadline ?? started + 5,
+      started + 5,
+      grant.expires_unix,
+      callerDeadline(token, this.deps.authArcanaJwks, grant, started, scope),
+    );
+    return {
+      deadline,
+      assertFresh: () => {
+        const now = this.deps.now();
+        requireBench(now >= started && now < deadline, 'authenticated_operation_expired');
+        checkGrant(grant, now);
+        verifyCaller(token, this.deps.authArcanaJwks, grant, now, scope);
+      },
+    };
   }
   private verifySigner(grant: Grant): void {
     const servicePublic =

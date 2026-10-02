@@ -47,8 +47,8 @@ export class CheckpointStore {
   async identity(): Promise<DatabaseIdentity> {
     return identity(this.pool);
   }
-  async initialize(initial: Head): Promise<void> {
-    await initializeCheckpoint(this.pool, initial);
+  async initialize(initial: Head, assertFresh: () => void): Promise<void> {
+    await initializeCheckpoint(this.pool, initial, assertFresh);
   }
   async read(campaign: string): Promise<Head> {
     const result = await this.pool.query<Row>('SELECT * FROM bench_checkpoint WHERE campaign=$1', [
@@ -57,15 +57,26 @@ export class CheckpointStore {
     requireBench(result.rows.length === 1, 'trusted_checkpoint_missing');
     return head(result.rows[0]);
   }
-  async compareAppend(previous: Head, next: Head, request: ReservationRequest): Promise<void> {
+  async compareAppend(
+    previous: Head,
+    next: Head,
+    request: ReservationRequest,
+    assertFresh: () => void,
+  ): Promise<void> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
       await client.query('SET LOCAL synchronous_commit = on');
+      await client.query("SET LOCAL statement_timeout = '5000ms'");
+      await client.query("SET LOCAL lock_timeout = '5000ms'");
       const durability = await client.query<{ fsync: string }>(
         "SELECT current_setting('fsync') AS fsync",
       );
       requireBench(durability.rows[0]?.fsync === 'on', 'postgres_fsync_required');
+      await client.query('SELECT campaign FROM bench_checkpoint WHERE campaign=$1 FOR UPDATE', [
+        previous.campaign,
+      ]);
+      assertFresh(); // Recheck AFTER a blocked checkpoint lock, BEFORE consumption.
       const updated = await client.query(
         `UPDATE bench_checkpoint SET sequence=$1,input_tokens=$2,output_tokens=$3,head_sha256=$4
         WHERE campaign=$5 AND journal_id=$6 AND sequence=$7 AND input_tokens=$8 AND output_tokens=$9 AND head_sha256=$10`,
@@ -93,6 +104,7 @@ export class CheckpointStore {
           next.head,
         ],
       );
+      assertFresh();
       await client.query('COMMIT');
     } catch (error) {
       await client.query('ROLLBACK');
@@ -107,16 +119,23 @@ export class CampaignStore {
   async identity(): Promise<DatabaseIdentity> {
     return identity(this.pool);
   }
-  async transaction<T>(operation: (client: PoolClient) => Promise<T>): Promise<T> {
+  async transaction<T>(
+    operation: (client: PoolClient) => Promise<T>,
+    assertFresh: () => void,
+  ): Promise<T> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
       await client.query('SET LOCAL synchronous_commit = on');
+      await client.query("SET LOCAL statement_timeout = '5000ms'");
+      await client.query("SET LOCAL lock_timeout = '5000ms'");
       const durability = await client.query<{ fsync: string }>(
         "SELECT current_setting('fsync') AS fsync",
       );
       requireBench(durability.rows[0]?.fsync === 'on', 'postgres_fsync_required');
+      assertFresh();
       const value = await operation(client);
+      assertFresh();
       await client.query('COMMIT');
       return value;
     } catch (error) {
@@ -131,9 +150,32 @@ export class CampaignStore {
 /** Initialization requires a separately verified Control bootstrap in the
  * service. It never replaces an existing head, even after a lost response.
  */
-export async function initializeCheckpoint(pool: Pool, initial: Head): Promise<void> {
-  await pool.query(
-    `INSERT INTO bench_checkpoint(campaign,journal_id,sequence,input_tokens,output_tokens,head_sha256) VALUES($1,$2,$3,$4,$5,$6)`,
-    [initial.campaign, initial.journal, ...initial.aggregate, initial.head],
-  );
+export async function initializeCheckpoint(
+  pool: Pool,
+  initial: Head,
+  assertFresh: () => void,
+): Promise<void> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('SET LOCAL synchronous_commit = on');
+    await client.query("SET LOCAL statement_timeout = '5000ms'");
+    await client.query("SET LOCAL lock_timeout = '5000ms'");
+    requireBench(
+      (await client.query('SHOW fsync')).rows[0]?.fsync === 'on',
+      'postgres_fsync_required',
+    );
+    assertFresh();
+    await client.query(
+      `INSERT INTO bench_checkpoint(campaign,journal_id,sequence,input_tokens,output_tokens,head_sha256) VALUES($1,$2,$3,$4,$5,$6)`,
+      [initial.campaign, initial.journal, ...initial.aggregate, initial.head],
+    );
+    assertFresh();
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }

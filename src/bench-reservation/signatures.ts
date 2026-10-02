@@ -123,3 +123,17 @@ export function verifyCaller(
   requireBench(claims.scope.split(' ').includes(requiredScope), 'caller_not_bench_authorized');
   return claims.sub;
 }
+
+/** The caller was cryptographically verified above; preserve its exact validity
+ * window in the custody signature, never a caller-selected duration. */
+export function callerDeadline(
+  token: string,
+  jwks: string,
+  grant: Grant,
+  now: number,
+  scope: string,
+): number {
+  verifyCaller(token, jwks, grant, now, scope);
+  const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
+  return Math.min(claims.exp, claims.iat + 300);
+}
