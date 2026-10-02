@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "src/**/*",
+    "test/bench-reservation/**/*.ts",
+    "vitest.bench-reservation.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.sync-conflict-*"
+  ]
+}
