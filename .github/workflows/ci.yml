@@ -44,6 +44,8 @@ jobs:
           bash -n deploy/arcanada-compose-broker.sh
           bash -n deploy/arcanada-compose-broker.test.sh
           bash deploy/arcanada-compose-broker.test.sh
+          PYTHONDONTWRITEBYTECODE=1 python3 deploy/test_billing_transaction.py
+          PYTHONDONTWRITEBYTECODE=1 python3 deploy/test_billing_installer.py
           bash -n deploy/deploy.sh deploy/deploy.test.sh
           bash deploy/deploy.test.sh
           bash -n deploy/compose-network.test.sh

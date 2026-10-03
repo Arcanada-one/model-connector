@@ -421,3 +421,8 @@ if grep -Fq 'FAKE_GIT_REACHED' \
 fi
 
 echo 'All aggregate readback broker cases passed.'
+
+# Billing preparation never registers a live service or enables a legacy verb.
+expect_fail billing_atomic_check_unregistered billing-arcana atomic-check "$muneral_head"
+expect_fail billing_atomic_deploy_unregistered billing-arcana atomic-deploy "$muneral_head"
+expect_fail billing_legacy_sync_unregistered billing-arcana sync "$muneral_head"
