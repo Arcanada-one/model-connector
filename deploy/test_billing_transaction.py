@@ -290,6 +290,18 @@ class Tests(unittest.TestCase):
         with self.assertRaises(subject.Refusal):
             engine.load()
 
+    def test_container_name_does_not_override_project_service_or_source_custody(self):
+        native = subject.Native()
+        valid = [LIVE, 'true', 'healthy', 'billing-arcana', 'billing', str(subject.STATE / 'billing-arcana/compose.deploy.yml')]
+        with patch.object(native, 'call', return_value='|'.join(valid)):
+            self.assertEqual(native.container()[0], LIVE)
+        for field, value in [(3, 'foreign'), (4, 'other'), (5, '/tmp/foreign.yml')]:
+            data = list(valid)
+            data[field] = value
+            with patch.object(native, 'call', return_value='|'.join(data)):
+                with self.assertRaises(subject.Refusal):
+                    native.container()
+
     def test_docker_listing_failure_is_not_missing_latest(self):
         native = subject.Native()
         with patch.object(native, 'call', side_effect=subject.Refusal('Docker denied')):
