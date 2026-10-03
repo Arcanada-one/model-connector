@@ -84,23 +84,26 @@ class Fixture:
 
 class Tests(unittest.TestCase):
     def setUp(self):
-        # This unprivileged Orca test namespace maps filesystem / to UID1000.
-        # Model only that ancestor as production root; all fixture ownership,
-        # modes, symlinks, inode exchange and writes remain real. No runtime flag.
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        # Model production root ancestry outside this owned disposable root.
+        # CI may place it under sticky shared /tmp; Orca maps / to UID1000.
+        # No production flag is added: all fixture nodes, modes, ownership,
+        # symlinks, writes and inode exchanges inside the root remain real.
         actual_lstat = Path.lstat
+        ancestors = set(self.root.parents)
         def lstat(path):
             st = actual_lstat(path)
-            if path == Path('/'):
+            if path in ancestors:
                 fields = list(st)
+                fields[0] = 0o40755
                 fields[4] = 0
                 return os.stat_result(fields)
             return st
         ancestor = patch.object(Path, 'lstat', lstat)
         ancestor.start()
         self.addCleanup(ancestor.stop)
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = Path(self.tmp.name)
         self.current = self.root / 'billing-arcana'
         self.current.mkdir(mode=0o700)
         (self.current / 'revision').write_text(OLD)
@@ -213,6 +216,13 @@ class Tests(unittest.TestCase):
                 self.env.unlink()
                 self.env.write_text(SENTINEL)
             self.env.chmod(0o600)
+
+    def test_writable_owned_state_root_is_not_normalized_away(self):
+        fixture = Fixture()
+        self.root.chmod(0o777)
+        with self.assertRaises(subject.Refusal):
+            self.engine(fixture).deploy(NEW, SENTINEL)
+        self.assertEqual(fixture.calls, [])
 
     def test_staged_symlink_or_tracked_env_refuses_before_tag_or_build(self):
         for point in ['stage-symlink', 'tracked-env']:
