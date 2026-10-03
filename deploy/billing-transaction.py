@@ -142,10 +142,20 @@ class Native:
     def tag(self, image, tag):
         self.call(['/usr/bin/docker', 'tag', image, IMAGE + ':' + tag])
 
-    def baseline(self, revision):
+    def container(self):
         value = self.call(['/usr/bin/docker', 'inspect', '--format',
-                           '{{.Image}} {{.State.Running}} {{.State.Health.Status}}', CONTAINER]).split()
-        if len(value) != 3 or not DIGEST.fullmatch(value[0]) or value[1:] != ['true', 'healthy']:
+                           '{{.Image}}|{{.State.Running}}|{{.State.Health.Status}}|'
+                           '{{index .Config.Labels "com.docker.compose.project"}}|'
+                           '{{index .Config.Labels "com.docker.compose.service"}}|'
+                           '{{index .Config.Labels "com.docker.compose.project.config_files"}}', CONTAINER]).split('|')
+        if (len(value) != 6 or not DIGEST.fullmatch(value[0])
+                or value[3:] != ['billing-arcana', 'billing', str(STATE / 'billing-arcana/compose.deploy.yml')]):
+            raise Refusal('installed container ownership or compose boundary mismatch')
+        return value
+
+    def baseline(self, revision):
+        value = self.container()
+        if value[1:3] != ['true', 'healthy']:
             raise Refusal('healthy installed baseline required')
         self.verify_image(value[0], revision)
         self.health(value[0], revision)
@@ -162,9 +172,8 @@ class Native:
         probe = "fetch('http://127.0.0.1:3600/health').then(async r=>{const b=await r.json();process.exit(r.ok&&b.status==='ok'?0:1)}).catch(()=>process.exit(1))"
         for _ in range(6):
             try:
-                value = self.call(['/usr/bin/docker', 'inspect', '--format',
-                                   '{{.Image}} {{.State.Running}} {{.State.Health.Status}}', CONTAINER])
-                if value == image + ' true healthy':
+                value = self.container()
+                if value[:3] == [image, 'true', 'healthy']:
                     self.call(['/usr/bin/docker', 'exec', CONTAINER, 'node', '-e', probe])
                     return
             except Refusal:
