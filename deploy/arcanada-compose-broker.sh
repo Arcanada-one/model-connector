@@ -271,10 +271,12 @@ declare -rA IMAGETAG=(
 )
 # Locally built image name for tag rotation and digest resolution.
 declare -rA IMAGE=(
+  [arcanada-assistant]='arcanada-assistant-assistant'
   [transcribator-api]='transcribator-api'
 )
 # Services to force-recreate on rollback.
 declare -rA ROLLBACK_SERVICES=(
+  [arcanada-assistant]='assistant'
   [transcribator-api]='redis api bot worker'
 )
 # Post-deploy verification script inside the checkout.
