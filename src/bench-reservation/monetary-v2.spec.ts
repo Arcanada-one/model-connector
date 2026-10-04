@@ -292,7 +292,7 @@ describe("strict native8daa monetary-v2 receiver source", () => {
           input.signed_grant.payload += " ";
           break;
         case "unknown-field":
-          (input as any).extra = true;
+          (input as typeof input & { extra?: boolean }).extra = true;
           break;
         case "old-version":
           input.schema = "NativeBenchCustodyEnvelope/v1";
@@ -360,7 +360,7 @@ describe("strict native8daa monetary-v2 receiver source", () => {
       const f = fixture(),
         original = f.deps.reserveAtomic!;
       f.deps.reserveAtomic = async (input) => {
-        const r = (await original(input)) as any;
+        const r = (await original(input)) as { monetary: { previous_head_sha256: string; next_money: number; cost: number; projection_binding_sha256: string; unknown?: boolean }; aggregate: number[] };
         if (bad === "head") r.monetary.previous_head_sha256 = "0".repeat(64);
         if (bad === "refund") r.monetary.next_money = 0;
         if (bad === "cost") {
@@ -397,7 +397,7 @@ describe("strict native8daa monetary-v2 receiver source", () => {
         reserve: async () => {
           legacy++;
         },
-      } as any,
+      } as unknown as ConstructorParameters<typeof BenchTrustedSocketAdapter>[0],
       f.grant.custodian_socket,
     );
     await expect(adapter.reserveEnvelope(f.envelope())).rejects.toThrow(
@@ -413,7 +413,7 @@ describe("strict native8daa monetary-v2 receiver source", () => {
         reserve: async () => {
           legacy++;
         },
-      } as any,
+      } as unknown as ConstructorParameters<typeof BenchTrustedSocketAdapter>[0],
       f.grant.custodian_socket,
       new BenchMonetaryV2Receiver(f.deps),
     );
