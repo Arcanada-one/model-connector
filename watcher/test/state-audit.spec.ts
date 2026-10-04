@@ -1,12 +1,16 @@
-import { lstat, readFile, stat, symlink, writeFile } from 'node:fs/promises';
+import { lstat, readFile, stat, symlink, writeFile, mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { tmpdir } from 'node:os';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { AuditLog } from '../src/audit-log.js';
 import { StateStore } from '../src/state-store.js';
 
 describe('state and audit persistence', () => {
+  let root: string;
+  beforeEach(async () => { root = await mkdtemp(join(tmpdir(), 'watcher-state-audit-')); });
+  afterEach(async () => { await rm(root, { recursive: true, force: true }); });
   it('writes state atomically with mode 0600', async () => {
-    const path = join(process.env.VITEST_POOL_ID ? '/tmp' : process.cwd(), `watcher-${crypto.randomUUID()}.json`);
+    const path = join(root, `watcher-${crypto.randomUUID()}.json`);
     const store = new StateStore(path);
     await store.write({ heartbeatAt: '2026-01-01T00:00:00.000Z' });
     expect(JSON.parse(await readFile(path, 'utf8')).heartbeatAt).toContain('2026');
@@ -15,8 +19,8 @@ describe('state and audit persistence', () => {
   });
 
   it('rejects malformed and symlink state targets', async () => {
-    const target = `/tmp/watcher-target-${crypto.randomUUID()}`;
-    const link = `/tmp/watcher-link-${crypto.randomUUID()}`;
+    const target = join(root, `watcher-target-${crypto.randomUUID()}`);
+    const link = join(root, `watcher-link-${crypto.randomUUID()}`);
     await writeFile(target, '{}', { mode: 0o600 });
     await symlink(target, link);
     await expect(new StateStore(link).write({ ok: true })).rejects.toThrow(/symlink/);
@@ -25,7 +29,7 @@ describe('state and audit persistence', () => {
   });
 
   it('appends mandatory audit fields', async () => {
-    const path = `/tmp/watcher-audit-${crypto.randomUUID()}.jsonl`;
+    const path = join(root, `watcher-audit-${crypto.randomUUID()}.jsonl`);
     const audit = new AuditLog(path);
     await audit.append({
       audit_ref: 'a-1',
@@ -41,7 +45,7 @@ describe('state and audit persistence', () => {
   });
 
   it('preserves the last valid state when serialization fails before rename', async () => {
-    const path = `/tmp/watcher-preserve-${crypto.randomUUID()}.json`;
+    const path = join(root, `watcher-preserve-${crypto.randomUUID()}.json`);
     const store = new StateStore<Record<string, unknown>>(path);
     await store.write({ generation: 1 });
     await expect(store.write({ invalid: 1n })).rejects.toThrow();
@@ -49,7 +53,7 @@ describe('state and audit persistence', () => {
   });
 
   it('serializes concurrent writes without producing malformed state', async () => {
-    const path = `/tmp/watcher-concurrent-${crypto.randomUUID()}.json`;
+    const path = join(root, `watcher-concurrent-${crypto.randomUUID()}.json`);
     const store = new StateStore<{ generation: number }>(path);
     await Promise.all(Array.from({ length: 10 }, (_, generation) => store.write({ generation })));
     expect((await store.read())?.generation).toBe(9);
