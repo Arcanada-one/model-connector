@@ -42,6 +42,10 @@ readonly GIT=/usr/bin/git
 readonly DOCKER=/usr/bin/docker
 readonly PNPM=/usr/bin/pnpm
 readonly NODE=/usr/bin/node
+# Content-addressed root helper; no runner-owned import or path override.
+# shellcheck disable=SC2034 # Root installer consumes the sudoers pin from this reviewed broker.
+readonly BILLING_SUDOERS_SHA=a9668698e99a2306887687726b978b71b6a26663e49f58d74086f89f00c95508
+readonly BILLING_TRANSACTION_SHA=b2e93bfc4b371323a2eb460e1751b77d8aeb80a3fc6675e6bc995fa718dc11c3
 
 # ---------------------------------------------------------------------------
 # Service table. Edit here, re-install, never parameterise.
@@ -733,7 +737,32 @@ main() {
   [[ $# -ge 2 ]] || die "$usage"
   local svc action
   svc="$(validate_service "$1")"; action="$2"; shift 2
+  # A future admitted Billing row may use only the protected transaction.
+  # There is deliberately no Billing service row in this preparation change.
+  if [[ "$svc" == billing-arcana ]]; then
+    case "$action" in
+      atomic-check|atomic-deploy|atomic-recover) ;;
+      *) die 'Billing requires its protected atomic transaction' ;;
+    esac
+  fi
   case "$action" in
+    atomic-check|atomic-deploy|atomic-recover)
+                  [[ "$svc" == billing-arcana && $# -eq 1 ]] || die 'Billing transaction takes one fixed argument'
+                  local helper="/usr/local/lib/arcanada-compose-broker/${BILLING_TRANSACTION_SHA}.py" verb parent
+                  for parent in /usr /usr/local /usr/local/lib /usr/local/lib/arcanada-compose-broker; do
+                    [[ -d "$parent" && ! -L "$parent" && "$(stat -c '%U' "$parent")" == root ]] || die 'unsafe transaction parent'
+                    [[ $(( 8#$(stat -c '%a' "$parent") & 8#022 )) -eq 0 ]] || die 'writable transaction parent'
+                  done
+                  [[ -f "$helper" && ! -L "$helper" ]] || die 'reviewed transaction helper missing'
+                  [[ "$(stat -c '%U:%G:%a' "$helper")" == root:root:600 ]] || die 'unsafe transaction helper'
+                  [[ "$(sha256sum "$helper" | cut -d' ' -f1)" == "$BILLING_TRANSACTION_SHA" ]] || die 'transaction helper source mismatch'
+                  if [[ "$action" == atomic-check || "$action" == atomic-deploy ]]; then
+                    validate_sha "$1" >/dev/null; verb="${action#atomic-}"
+                  else
+                    [[ "$1" =~ ^[0-9a-f]{32}$ ]] || die 'invalid recovery receipt'; verb=recover
+                  fi
+                  exec /usr/bin/python3 -I "$helper" "$verb" "$1"
+                  ;;
     sync)         [[ $# -eq 1 ]] || die 'sync takes exactly one sha'; cmd_sync "$svc" "$(validate_sha "$1")" ;;
     pull)         [[ $# -eq 0 ]] || die 'pull takes no arguments'; cmd_pull "$svc" ;;
     build)        [[ $# -eq 0 ]] || die 'build takes no arguments'; cmd_build "$svc" ;;
