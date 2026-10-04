@@ -21,6 +21,11 @@ class Controls(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        # Host Git shims may require HOME. Give fixtures private home state,
+        # never the caller's credential/config directory or a global repair.
+        home = patch.dict(os.environ, {'HOME': str(self.root)})
+        home.start()
+        self.addCleanup(home.stop)
         for unit in subject.UNITS[1:]:
             (self.root / unit).mkdir(parents=True)
 
@@ -177,7 +182,7 @@ class Controls(unittest.TestCase):
         temp = self.root / 'private'
         temp.mkdir(mode=0o700)
         result = subprocess.run(['bash', 'scripts/graph-full-suite.sh', '.'], cwd=self.root,
-                                env={'PATH': os.defpath, 'TMPDIR': str(temp),
+                                env={'PATH': os.defpath, 'TMPDIR': str(temp), 'HOME': str(self.root),
                                      'PROVIDER_API_KEY': 'fixture-secret-no-escape'}, capture_output=True, text=True)
         self.assertEqual(result.returncode, 127, result.stderr)
         self.assertNotIn('fixture-secret-no-escape', result.stdout + result.stderr)
