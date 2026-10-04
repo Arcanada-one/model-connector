@@ -444,8 +444,9 @@ export class BenchMonetaryV2Receiver {
         this.deps.custodianPrivateKey,
         "BENCH-CUSTODY-RESERVATION-v2\n",
       );
-    } catch (error) {
-      if (error instanceof BenchRefused) throw error;
+    } catch {
+      // Incumbent callbacks may throw typed errors containing their input.
+      // Never propagate callback/token/proof/body exceptions to a caller.
       throw new BenchRefused("monetary_v2_refused_unknown_preserved");
     }
   }

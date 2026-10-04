@@ -6,7 +6,7 @@ import {
   monetaryCanonical,
 } from "./monetary-v2";
 import { BenchTrustedSocketAdapter } from "./adapter";
-import { CAPS, FLOOR, ORIGINAL_LEDGER } from "./contract";
+import { CAPS, FLOOR, ORIGINAL_LEDGER, BenchRefused } from "./contract";
 import { canonical, digest, signed, verifyEnvelope } from "./signatures";
 
 // Synthetic offline keys only, generated in memory. No native key/session,
@@ -379,6 +379,14 @@ describe("strict native8daa monetary-v2 receiver source", () => {
       const receiver = new BenchMonetaryV2Receiver(f.deps);
       await expect(receiver.reserveEnvelope(f.envelope())).rejects.toThrow();
       expect(f.calls()).toBe(1);
+    });
+  }
+  for (const callback of ['verifyProof', 'reserveAtomic'] as const) {
+    it(`sanitizes typed ${callback} exceptions without body disclosure`, async () => {
+      const f = fixture();
+      f.deps[callback] = async () => { throw new BenchRefused('UNTRUSTED_BODY_SENTINEL'); };
+      await expect(new BenchMonetaryV2Receiver(f.deps).reserveEnvelope(f.envelope()))
+        .rejects.toThrow('monetary_v2_refused_unknown_preserved');
     });
   }
   it("missing v2 receiver never falls back to original token-only reserve", async () => {
