@@ -1,0 +1,23 @@
+{
+  "schema": "BenchDisabledInstallationManifest/v1",
+  "phase": "source_preparation_only",
+  "enabled": false,
+  "receiver_source": "709bc19e720cb049e71cbf8f58e9f584b74db31b",
+  "billing_source": "3a169ddfd2efd1af6ca160247430ffab41df0c64",
+  "module_pins_sha256": "3fa89a10c8f98d86b872912befd3b945fb9d8a11dfc220e42348fe09fe9ff486",
+  "protected_references": {
+    "authenticated_executor": null,
+    "executor_os_identity": null,
+    "owned_staging_directory": null,
+    "original_journal_identity": null,
+    "trusted_current_head_checkpoint": null,
+    "original_campaign_account_provider_model": null,
+    "original_caller_jwks_subject": null,
+    "grant_issuer": null,
+    "distinct_custody_signer": null,
+    "charging_policy_proof": null,
+    "wire_bounds_proof_issuer": null,
+    "current_revocation": null,
+    "native_hard_output_bound": null
+  }
+}
