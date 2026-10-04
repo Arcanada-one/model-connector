@@ -100,7 +100,7 @@ jobs:
 
       - name: Rate-limit CI report negative controls
         run: |
-          pnpm exec tsc --noEmit --project dev-tools/tsconfig.json
+          pnpm exec tsc --noEmit --project tsconfig.ci.json
           node --test dev-tools/rate-limit-ci-report.test.mjs
           PYTHONDONTWRITEBYTECODE=1 python3 dev-tools/rate-limit-ci-workflow.test.py
 
