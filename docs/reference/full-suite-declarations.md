@@ -28,6 +28,25 @@ shell validators retain their actual exit-status contract without invented count
 Missing dependencies, invalid reports, skips, empty counts, timeouts and raw failures
 remain non-success, with an unexecuted regression suffix preserved explicitly.
 
+The exact authored `templates/api-connector-scaffold/{{name}}.connector.spec.ts`
+remains a separate maintained obligation. It is template source, requiring the
+README's nine substitutions, filename rendering and alternate-model replacement;
+the literal file is not a default Vitest runtime member. The runner renders this
+one declared scaffold in its private evidence directory, retaining all authored
+assertions and importing the actual production base connector/interface. The
+synthetic fixture uses `.invalid` provider addressing, dummy environment names,
+mocked fetch responses and a default fetch refusal. It performs no real provider
+fixture capture, registration or environment installation.
+
+Evidence binds the committed README, connector, spec, imported base/interface and
+Vitest configuration, records generated source/support hashes, and checks the
+actual report against the rendered file identity. The authored member is never
+reported as a literally executed filename. Unknown placeholders, changed committed
+dependencies, unknown template membership, changed generated source and incomplete
+execution evidence refuse success. Other template paths retain their obligations;
+there is no template-prefix exclusion. A passing rendered scaffold is source
+verification, not provider-adoption or runtime authority.
+
 The seven real external provider/auth/storage/image arms, eight disposable
 PostgreSQL/Redis integration members and unconditional app E2E skip stay held as
 `not_measured` before child spawn. New integration members are held by default.
