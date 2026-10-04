@@ -5,6 +5,11 @@ import { Test } from '@nestjs/testing';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { request, IncomingHttpHeaders } from 'node:http';
 import { AddressInfo } from 'node:net';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { isAbsolute, join } from 'node:path';
 
 import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
@@ -177,6 +182,61 @@ beforeAll(async () => {
   await app.getHttpAdapter().getInstance().ready();
   await app.listen(0, '127.0.0.1');
   port = (app.getHttpServer().address() as AddressInfo).port;
+  // Source-only, explicit opt-in to the existing official HTTP producer.
+  // No copied controller, provider path, live identity or store is introduced.
+  if (process.env.BENCH_PROBE_HTTP_CANARY_DIR) {
+    const directory = process.env.BENCH_PROBE_HTTP_CANARY_DIR!;
+    const producer = process.env.BENCH_PROBE_HTTP_PRODUCER!;
+    const python = process.env.BENCH_PROBE_HTTP_PYTHON!;
+    for (const path of [directory, producer, python]) expect(isAbsolute(path)).toBe(true);
+    expect(createHash('sha256').update(readFileSync(producer)).digest('hex')).toBe(
+      process.env.BENCH_PROBE_HTTP_PRODUCER_SHA256,
+    );
+    const plan = JSON.parse(readFileSync(join(directory, 'PLAN.json'), 'utf8'));
+    expect(plan.schema).toBe('CanaryPlan/v1');
+    expect(plan.api_key_env).toBeUndefined();
+    const routes = [
+      ['/probe/abort', 401],
+      ['/probe/execute', 401],
+      ['/probe/health', 200],
+      ['/probe/metrics', 401],
+    ];
+    expect(
+      plan.probes.map((p: { method: string; path: string; expect: { status_in: number[] } }) => [
+        p.method,
+        p.path,
+        p.expect.status_in,
+      ]),
+    ).toEqual(routes.map(([path, status]) => ['GET', path, [status]]));
+    await promisify(execFile)(
+      python,
+      [
+        '-B',
+        producer,
+        'canary',
+        '--plan',
+        'PLAN.json',
+        '--subject-repo',
+        process.cwd(),
+        '--phase',
+        'pre',
+        '--base-url',
+        `http://127.0.0.1:${port}`,
+        '--timeout',
+        '1',
+        '--out',
+        'RESULT.json',
+      ],
+      { cwd: directory, timeout: 10000, maxBuffer: 1048576 },
+    );
+    const result = JSON.parse(readFileSync(join(directory, 'RESULT.json'), 'utf8'));
+    expect(result.schema).toBe('CanaryResult/v1');
+    expect(result.source_binding_errors ?? []).toEqual([]);
+    expect(result.counters).toEqual({ verified: 4, failed: 0, not_measured: 0 });
+    expect(
+      result.probes.map((p: { method: string; status: number }) => [p.method, p.status]),
+    ).toEqual(routes.map(([, status]) => ['GET', status]));
+  }
   redis = moduleRef.get(KEY_RATE_LIMIT_REDIS_CLIENT);
   rateLimit = moduleRef.get(KeyRateLimitService);
 });
