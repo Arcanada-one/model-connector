@@ -89,6 +89,86 @@ class Controls(unittest.TestCase):
         with self.assertRaises(subject.Refusal):
             subject.plan('watcher', ['watcher/test/a.spec.ts'])
 
+    def template_source_fixture(self):
+        names = ['templates/api-connector-scaffold/README.md',
+                 'templates/api-connector-scaffold/{{name}}.connector.ts',
+                 subject.AUTHORED_TEMPLATE, 'vitest.config.ts',
+                 'src/connectors/base-api.connector.ts',
+                 'src/connectors/interfaces/connector.interface.ts']
+        for name in names:
+            target = self.root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((ROOT / name).read_bytes())
+        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+        subprocess.run(['git', '-C', str(self.root), 'add', *names], check=True)
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture',
+                        '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture'], check=True)
+        scratch = self.root / 'private'
+        scratch.mkdir(mode=0o700)
+        return scratch
+
+    def test_authored_template_is_exact_distinct_obligation_not_prefix_omission(self):
+        members = ['src/a.spec.ts', subject.AUTHORED_TEMPLATE,
+                   'templates/new/new.spec.ts']
+        rows = subject.plan('.', members)
+        groups = {r['suite']: r['members'] for r in rows}
+        self.assertEqual(groups['maintained-authored-template'], [subject.AUTHORED_TEMPLATE])
+        self.assertEqual(groups['maintained-vitest'], ['src/a.spec.ts', 'templates/new/new.spec.ts'])
+        self.assertEqual(sorted(n for r in rows for n in r['members']), sorted(members))
+
+    def test_authored_template_render_binds_actual_sources_and_keeps_assertions(self):
+        scratch = self.template_source_fixture()
+        result = subject.render_authored_template(self.root, scratch, [subject.AUTHORED_TEMPLATE])
+        self.assertEqual(len(result['source_bindings']), 6)
+        self.assertEqual(len(result['rendered_files']), 2)
+        source = (ROOT / subject.AUTHORED_TEMPLATE).read_text()
+        actual = (result['target'] / 'scaffoldprobe.connector.spec.ts').read_text()
+        self.assertEqual(actual.count('it('), source.count('it('))
+        self.assertNotIn('{{', actual)
+        self.assertIn('probe-secondary', actual)
+        self.assertIn('vi.stubGlobal', actual)
+        self.assertIn('unmocked scaffold fetch refused',
+                      (result['target'] / 'no-network.mjs').read_text())
+        with self.assertRaises(subject.Refusal):
+            subject.render_authored_template(self.root, scratch, ['templates/new/new.spec.ts'])
+
+    def test_authored_template_uncommitted_dependency_refuses(self):
+        scratch = self.template_source_fixture()
+        (self.root / 'templates/api-connector-scaffold/README.md').write_text('changed')
+        with self.assertRaises(subject.Refusal):
+            subject.render_authored_template(self.root, scratch, [subject.AUTHORED_TEMPLATE])
+
+    def test_authored_template_unknown_placeholder_refuses_even_if_committed(self):
+        scratch = self.template_source_fixture()
+        path = self.root / subject.AUTHORED_TEMPLATE
+        path.write_text(path.read_text() + '\n// {{UNKNOWN}}\n')
+        subprocess.run(['git', '-C', str(self.root), 'add', subject.AUTHORED_TEMPLATE], check=True)
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture',
+                        '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'unknown'], check=True)
+        with self.assertRaises(subject.Refusal):
+            subject.render_authored_template(self.root, scratch, [subject.AUTHORED_TEMPLATE])
+
+    def test_authored_template_rendered_tamper_cannot_be_verified(self):
+        scratch = self.template_source_fixture()
+        runner = self.root / 'node_modules/.bin/vitest'
+        runner.parent.mkdir(parents=True)
+        runner.touch()
+        def executor(argv, cwd, env, deadline, private, name):
+            target = private / 'authored-template'
+            report = {'success': True, 'numTotalTests': 1, 'numPassedTests': 1,
+                      'numFailedTests': 0, 'testResults': [{
+                          'name': str(target / 'scaffoldprobe.connector.spec.ts'),
+                          'assertionResults': [{'status': 'passed'}]}]}
+            (target / 'result.json').write_text(json.dumps(report))
+            with (target / 'scaffoldprobe.connector.ts').open('a') as stream:
+                stream.write('/* tamper */')
+            return {'argv': argv, 'exit_code': 0, 'output': ''}
+        with patch.object(subject.shutil, 'which', return_value='/owned/tool'):
+            rows = subject.run_root_suites(self.root,
+                subject.plan('.', [subject.AUTHORED_TEMPLATE]), scratch, executor)
+        self.assertEqual(rows[0]['verdict'], 'not_measured')
+        self.assertEqual(rows[0]['executions'][0]['reason'], 'rendered execution source changed')
+
     def document(self):
         return {'numTotalTests': 1, 'numPassedTests': 1, 'numFailedTests': 0,
                 'testResults': [{'name': str(self.root / 'watcher/test/a.spec.ts'),

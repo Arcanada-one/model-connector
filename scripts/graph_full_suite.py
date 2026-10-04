@@ -18,6 +18,8 @@ import tempfile
 import time
 import xml.etree.ElementTree as ET
 
+AUTHORED_TEMPLATE = 'templates/api-connector-scaffold/{{name}}.connector.spec.ts'
+
 UNITS = ('.', 'packages/sdk-python', 'packages/sdk-ts', 'watcher')
 ROOT = Path(__file__).resolve().parents[1]
 ENV_FILES = ('.env', '.env.local', '.env.integration', '.env.test')
@@ -110,7 +112,9 @@ def plan(unit, members):
         # Preserve the entire maintained union. None of these rows is a PASS.
         groups = {}
         for name in members:
-            if name.endswith('.integration.spec.ts') and name.startswith('src/'):
+            if name == AUTHORED_TEMPLATE:
+                group = 'maintained-authored-template'
+            elif name.endswith('.integration.spec.ts') and name.startswith('src/'):
                 group = 'maintained-integration'
             elif name.endswith('.e2e-spec.ts'):
                 group = 'maintained-app-e2e'
@@ -329,6 +333,78 @@ def regression_counts(kind, output):
     return None
 
 
+def render_authored_template(root, scratch, members):
+    """Render the exact README contract; retain authored and executed identities.
+
+    This tests scaffold source with synthetic fetch fixtures, not adoption of a
+    new provider. Unknown templates and unresolved substitutions fail closed.
+    """
+    if members != [AUTHORED_TEMPLATE]:
+        raise Refusal('undeclared authored template membership')
+    folder = 'templates/api-connector-scaffold/'
+    sources = [folder + 'README.md', folder + '{{name}}.connector.ts', AUTHORED_TEMPLATE,
+               'vitest.config.ts', 'src/connectors/base-api.connector.ts',
+               'src/connectors/interfaces/connector.interface.ts']
+    bindings = []
+    for name in sources:
+        data = checked_file(root, name).read_bytes()
+        native = subprocess.run(['git', '-C', str(root), 'show', 'HEAD:' + name],
+                                capture_output=True, check=True).stdout
+        if data != native:
+            raise Refusal('template dependency differs from committed revision')
+        bindings.append({'path': name, 'sha256': hashlib.sha256(data).hexdigest()})
+    values = {'NAME': 'ScaffoldProbe', 'NAME_LOWER': 'scaffoldprobe',
+              'ENV_KEY_PREFIX': 'SCAFFOLD_PROBE', 'BASE_URL': 'https://scaffold-probe.invalid',
+              'DEFAULT_MODEL': 'probe-primary',
+              'MODELS_LIST': "['probe-primary', 'probe-secondary']",
+              'API_KEY_ENV': 'SCAFFOLD_PROBE_API_KEY',
+              'TIMEOUT_ENV': 'SCAFFOLD_PROBE_TIMEOUT', 'COST_FIELD': '0'}
+    target = scratch / 'authored-template'
+    target.mkdir(mode=0o700)
+    rendered = []
+    for suffix in ('ts', 'spec.ts'):
+        source = folder + '{{name}}.connector.' + suffix
+        text = checked_file(root, source).read_text()
+        for key, value in values.items():
+            text = text.replace('{{' + key + '}}', value)
+        text = text.replace('replace-me-alt-model', 'probe-secondary')
+        if '{{' in text:
+            raise Refusal('unresolved authored template placeholder')
+        # Relocation only: imported production contracts stay in the source repo.
+        if suffix == 'ts':
+            for name in ('base-api.connector', 'interfaces/connector.interface'):
+                old = "'../" + name + "'"
+                if text.count(old) != 1:
+                    raise Refusal('unknown scaffold import contract')
+                text = text.replace(old, json.dumps(str(root / 'src/connectors' / name)))
+        else:
+            if text.count("from 'vitest'") != 1:
+                raise Refusal('unknown scaffold test runner import')
+            text = text.replace("from 'vitest'", 'from ' + json.dumps(
+                str(root / 'node_modules/vitest/dist/index.js')))
+        output = target / ('scaffoldprobe.connector.' + suffix)
+        with output.open('x') as stream:
+            stream.write(text)
+        output.chmod(0o600)
+        rendered.append({'source': source, 'path': str(output),
+                         'sha256': hashlib.sha256(output.read_bytes()).hexdigest()})
+    setup = target / 'no-network.mjs'
+    setup.write_text("globalThis.fetch = () => { throw new Error('unmocked scaffold fetch refused'); };\n")
+    setup.chmod(0o600)
+    config = target / 'vitest.config.mjs'
+    config.write_text('import original from ' + json.dumps(str(root / 'vitest.config.ts')) +
+        '; export default {...original,test:{...original.test,root:' + json.dumps(str(target)) +
+        ',include:["scaffoldprobe.connector.spec.ts"],exclude:[],setupFiles:[' +
+        json.dumps(str(setup)) + ']}};\n')
+    config.chmod(0o600)
+    return {'authored_members': members, 'source_bindings': bindings,
+            'rendered_files': rendered, 'substitutions': values,
+            'verification_kind': 'README-rendered scaffold assertions with mocked transport',
+            'generated_support': [{'path': str(p), 'sha256': hashlib.sha256(p.read_bytes()).hexdigest()}
+                                  for p in (setup, config)],
+            'target': target, 'config': config}
+
+
 def run_root_suites(root, suites, scratch, executor=execute):
     """Dispatch ordinary local groups; preserve every held member without spawning it."""
     members = [n for suite in suites for n in suite['members']]
@@ -376,6 +452,23 @@ def run_root_suites(root, suites, scratch, executor=execute):
         if name == 'maintained-app-e2e':
             row.update(verdict='not_measured', reason='unconditional AppE2E skip; no execution grant',
                        held_members=members)
+        elif name == 'maintained-authored-template':
+            rendered = render_authored_template(root, scratch, members)
+            target, config = rendered.pop('target'), rendered.pop('config')
+            report = target / 'result.json'
+            selected = ['scaffoldprobe.connector.spec.ts']
+            result = run(['pnpm', 'exec', 'vitest', 'run', '--config', str(config),
+                          '--reporter=json', '--outputFile=' + str(report), *selected],
+                         members, 'root-' + str(index),
+                         lambda raw: vitest_counts(json.loads(report.read_text()), selected, target))
+            for binding in rendered['rendered_files'] + rendered['generated_support']:
+                path = Path(binding['path'])
+                if (path.is_symlink() or not path.is_file() or
+                        hashlib.sha256(path.read_bytes()).hexdigest() != binding['sha256']):
+                    result.update(verdict='not_measured', reason='rendered execution source changed')
+            result['template_evidence'] = rendered
+            row['executions'].append(result)
+            row['verdict'] = result['verdict']
         elif name in ('maintained-vitest', 'maintained-integration'):
             selected = members if name == 'maintained-vitest' else [n for n in members if n in OFFLINE_INTEGRATION]
             held = [n for n in members if n not in selected]
