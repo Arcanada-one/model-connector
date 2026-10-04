@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { BenchReservationService } from './service';
 import { requestSchema, requireBench } from './contract';
 import { digest } from './signatures';
+import { wireSchema } from './wire-schema';
+import { BenchMonetaryV2Receiver } from './monetary-v2';
 
 const envelopeSchema = z
   .object({
@@ -16,60 +18,6 @@ const envelopeSchema = z
     wire_utf8: z.string().max(10_000_000),
   })
   .strict();
-const textContent = z
-  .object({ type: z.enum(['input_text', 'output_text']), text: z.string() })
-  .strict();
-const message = z
-  .object({
-    type: z.literal('message').optional(),
-    role: z.enum(['system', 'developer', 'user', 'assistant']),
-    content: z.union([z.string(), z.array(textContent)]),
-  })
-  .strict();
-const input = z.union([z.string(), z.array(message)]);
-/** This is an admissible text-only source schema, not a measured provider token
- * bound. Unknown input variants refuse; original corpus may not be truncated. */
-const wireSchema = z
-  .object({
-    model: z.literal('gpt-6-luna'),
-    input,
-    instructions: z.string().optional(),
-    tools: z.array(z.never()).optional(),
-    tool_choice: z.enum(['auto', 'none']).optional(),
-    parallel_tool_calls: z.boolean().optional(),
-    reasoning: z
-      .object({
-        effort: z.enum(['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max']).optional(),
-        summary: z.enum(['auto', 'concise', 'detailed']).optional(),
-      })
-      .strict()
-      .nullable()
-      .optional(),
-    store: z.literal(false).optional(),
-    stream: z.literal(true).optional(),
-    stream_options: z.object({ include_usage: z.boolean() }).strict().optional(),
-    include: z.array(z.literal('reasoning.encrypted_content')).optional(),
-    service_tier: z.literal('auto').optional(),
-    prompt_cache_key: z.string().optional(),
-    text: z
-      .object({
-        verbosity: z.enum(['low', 'medium', 'high']).optional(),
-        format: z
-          .object({
-            type: z.enum(['text', 'json_schema']),
-            strict: z.boolean().optional(),
-            schema: z.record(z.string(), z.unknown()).optional(),
-            name: z.string().optional(),
-          })
-          .strict()
-          .optional(),
-      })
-      .strict()
-      .optional(),
-    client_metadata: z.record(z.string(), z.string()).optional(),
-  })
-  .strict();
-
 /** A foreign entry remains in private custody if exclusive restoration cannot
  * succeed. The owner gets a recovery path, never a silent delete or overwrite. */
 export class BenchSocketCleanupHold extends Error {
@@ -87,8 +35,14 @@ export class BenchTrustedSocketAdapter {
   constructor(
     private readonly service: BenchReservationService,
     private readonly socketPath: string,
+    private readonly monetaryV2?: BenchMonetaryV2Receiver,
   ) {}
   async reserveEnvelope(raw: unknown) {
+    if (raw !== null && typeof raw === 'object' &&
+        (raw as { schema?: unknown }).schema === 'NativeBenchCustodyEnvelope/v2') {
+      requireBench(this.monetaryV2, 'monetary_executor_not_bound');
+      return this.monetaryV2.reserveEnvelope(raw);
+    }
     const value = envelopeSchema.parse(raw);
     const grant = this.service.inspectAuthority(value.signed_grant, value.caller_access_token);
     requireBench(grant.custodian_socket === this.socketPath, 'socket_not_grant_bound');
