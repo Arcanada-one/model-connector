@@ -32,6 +32,10 @@ class Refusal(Exception):
     pass
 
 
+class NativeOutcomeUnknown(Refusal):
+    """The caller stopped waiting; daemon effect completion is unproved."""
+
+
 def protected(path, uid=0, directory=False, private=False):
     """Check every ancestor, never resolve a symlink into a trusted path."""
     path = Path(path).absolute()
@@ -111,7 +115,9 @@ class Native:
         try:
             result = subprocess.run(argv, env=env or CLEAN_ENV, stdout=subprocess.PIPE,
                                     stderr=subprocess.DEVNULL, text=True, timeout=min(180, remaining))
-        except (OSError, subprocess.TimeoutExpired):
+        except subprocess.TimeoutExpired:
+            raise NativeOutcomeUnknown('native completion is unknown') from None
+        except OSError:
             raise Refusal('native action unavailable') from None
         if result.returncode:
             raise Refusal('native action refused')
@@ -227,6 +233,27 @@ class Transaction:
         self.state['phase'] = phase
         self.writer(self.private / 'active.json', self.state)
 
+    @staticmethod
+    def pending(state):
+        return (state.get('native_action') or {}).get('completion') == 'pending'
+
+    def operation(self, name, call, *args):
+        # Durable before invocation: a killed caller or failed completion write
+        # cannot leave an externally recoverable claim that the daemon settled.
+        self.state['native_action'] = {'name': name, 'completion': 'pending'}
+        self.persist(self.state['phase'])
+        try:
+            result = call(*args)
+        except NativeOutcomeUnknown:
+            raise
+        except Refusal:
+            self.state['native_action']['completion'] = 'returned-refusal'
+            self.persist(self.state['phase'])
+            raise
+        self.state['native_action']['completion'] = 'returned'
+        self.persist(self.state['phase'])
+        return result
+
     def load(self):
         path = self.private / 'active.json'
         if not path.exists():
@@ -235,16 +262,28 @@ class Transaction:
         data = json.loads(path.read_text())
         if data.get('schema') != 'BillingTransaction/v1' or not re.fullmatch(r'[0-9a-f]{32}', data.get('id', '')):
             raise Refusal('invalid protected journal')
-        if (data.get('phase') not in ('build-intent', 'exchange-intent', 'up-intent', 'committed', 'rolled-back')
+        if (data.get('phase') not in ('build-intent', 'exchange-intent', 'up-intent', 'recovery-intent', 'committed', 'rolled-back')
                 or not all(isinstance(data.get(k), str) and SHA.fullmatch(data[k]) for k in ('old_sha', 'new_sha'))
                 or not isinstance(data.get('image'), str) or not DIGEST.fullmatch(data['image'])
                 or not all(type(data.get(k)) is int and data[k] > 0 for k in ('old_inode', 'new_inode'))
                 or type(data.get('up_intent')) is not bool):
             raise Refusal('invalid protected journal fields')
+        action = data.get('native_action')
+        if action is not None and (not isinstance(action, dict)
+                or set(action) != {'name', 'completion'}
+                or action['name'] not in ('tag-previous', 'build', 'image', 'verify-image', 'up',
+                                          'health', 'tag-release', 'restore-image', 'restore-up', 'restore-health')
+                or action['completion'] not in ('pending', 'returned', 'returned-refusal')):
+            raise Refusal('invalid native completion journal')
         return data
 
     def rollback(self):
         s = self.state
+        if self.pending(s) or (s['phase'] not in ('committed', 'rolled-back')
+                               and 'native_action' not in s):
+            # No completion/quiescence issuer exists in this source contour.
+            # Receipt ID/inode equality is not proof a timed-out daemon stopped.
+            raise Refusal('native completion unproved; retain journal without recovery')
         self.native.recovery_budget()
         backup = self.private / s['id'] / 'checkout'
         tree_safe(self.current, self.uid)
@@ -252,15 +291,16 @@ class Transaction:
         if any(p.stat().st_dev != self.root.stat().st_dev for p in (self.current, backup)):
             raise Refusal('rollback mount boundary')
         pair = (self.current.stat().st_ino, backup.stat().st_ino)
+        self.persist('recovery-intent')
         if pair == (s['new_inode'], s['old_inode']):
             self.swap(self.current, backup)
         elif pair != (s['old_inode'], s['new_inode']):
             raise Refusal('checkout custody changed; retain journal')
         # Restore the actual old live image, including a missing :latest baseline.
-        self.native.tag(s['image'], 'latest')
+        self.operation('restore-image', self.native.tag, s['image'], 'latest')
         if s['up_intent']:
-            self.native.compose(self.current, s['old_sha'], 'up')
-            self.native.health(s['image'], s['old_sha'])
+            self.operation('restore-up', self.native.compose, self.current, s['old_sha'], 'up')
+            self.operation('restore-health', self.native.health, s['image'], s['old_sha'])
         self.persist('rolled-back')
 
     def check(self, revision):
@@ -269,7 +309,7 @@ class Transaction:
         fd = self.lock()
         try:
             prior = self.load()
-            if prior and prior['phase'] not in ('committed', 'rolled-back'):
+            if prior and (self.pending(prior) or prior['phase'] not in ('committed', 'rolled-back')):
                 raise Refusal('unsettled transaction; explicit recovery required')
             tree_safe(self.current, self.uid)
             protected(self.current / '.env', self.uid, private=True)
@@ -292,7 +332,7 @@ class Transaction:
         fd = self.lock()
         try:
             prior = self.load()
-            if prior and prior['phase'] not in ('committed', 'rolled-back'):
+            if prior and (self.pending(prior) or prior['phase'] not in ('committed', 'rolled-back')):
                 raise Refusal('unsettled transaction; explicit recovery required')
             tree_safe(self.current, self.uid)
             protected(self.current / '.env', self.uid, private=True)
@@ -340,10 +380,10 @@ class Transaction:
                           'up_intent': False}
             self.persist('build-intent')
             try:
-                self.native.tag(image, 'previous')
-                self.native.compose(stage, revision, 'build')
-                candidate = self.native.image(IMAGE + ':latest')
-                self.native.verify_image(candidate, revision)
+                self.operation('tag-previous', self.native.tag, image, 'previous')
+                self.operation('build', self.native.compose, stage, revision, 'build')
+                candidate = self.operation('image', self.native.image, IMAGE + ':latest')
+                self.operation('verify-image', self.native.verify_image, candidate, revision)
                 self.persist('exchange-intent')
                 self.swap(self.current, stage)
                 self.state['up_intent'] = True
@@ -352,11 +392,13 @@ class Transaction:
                 except OSError:
                     self.state['up_intent'] = False
                     raise
-                self.native.compose(self.current, revision, 'up')
-                self.native.health(candidate, revision)
-                self.native.tag(candidate, revision)
+                self.operation('up', self.native.compose, self.current, revision, 'up')
+                self.operation('health', self.native.health, candidate, revision)
+                self.operation('tag-release', self.native.tag, candidate, revision)
                 self.persist('committed')
-            except (Refusal, OSError, ValueError, KeyboardInterrupt):
+            except (NativeOutcomeUnknown, KeyboardInterrupt):
+                raise Refusal('native completion unknown; protected journal retained') from None
+            except (Refusal, OSError, ValueError):
                 try:
                     self.rollback()
                 except (Refusal, OSError, ValueError):

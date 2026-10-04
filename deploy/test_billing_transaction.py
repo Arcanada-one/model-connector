@@ -8,6 +8,8 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 import unittest
 from unittest.mock import patch
 
@@ -232,7 +234,7 @@ class Tests(unittest.TestCase):
             self.assertEqual(fixture.tags, {})
             self.assertEqual(fixture.live, LIVE)
 
-    def test_interrupted_up_has_owned_explicit_recovery_and_blocks_new_deploy(self):
+    def test_interrupted_up_retains_unsettled_native_boundary_and_refuses_recovery(self):
         fixture = Fixture()
         original = fixture.compose
         def interrupted(path, revision, action):
@@ -248,8 +250,106 @@ class Tests(unittest.TestCase):
             engine.deploy(NEW, SENTINEL)
         with self.assertRaises(subject.Refusal):
             engine.recover('0' * 32)
-        engine.recover(ident)
-        self.assert_old(fixture)
+        with self.assertRaises(subject.Refusal):
+            engine.recover(ident)
+        self.assertEqual(engine.load()['phase'], 'up-intent')
+        self.assertEqual(engine.load()['native_action']['completion'], 'pending')
+        self.assertEqual(fixture.live, CANDIDATE)
+
+    def test_actual_native_timeout_preserves_unknown_type_without_child_exception_text(self):
+        native = subject.Native()
+        native.deadline = time.monotonic() + 0.04
+        with self.assertRaises(subject.NativeOutcomeUnknown) as raised:
+            native.call([sys.executable, '-c', 'import time; time.sleep(1)'])
+        self.assertEqual(str(raised.exception), 'native completion is unknown')
+
+    def test_late_build_effect_after_timeout_never_authorizes_recovery_or_new_deploy(self):
+        fixture = Fixture()
+        release = threading.Event()
+        finished = threading.Event()
+        def delayed(path, revision, action):
+            if action != 'build':
+                raise AssertionError('unexpected rollback or new native effect')
+            def daemon():
+                if release.wait(1):
+                    fixture.latest = CANDIDATE
+                finished.set()
+            worker = threading.Thread(target=daemon)
+            worker.start()
+            self.addCleanup(worker.join, 2)
+            self.addCleanup(release.set)
+            raise subject.NativeOutcomeUnknown('native completion is unknown')
+        fixture.compose = delayed
+        engine = self.engine(fixture)
+        with self.assertRaises(subject.Refusal):
+            engine.deploy(NEW, SENTINEL)
+        ident = engine.load()['id']
+        self.assertEqual(engine.load()['native_action'], {'name': 'build', 'completion': 'pending'})
+        for after_late_completion in (False, True):
+            if after_late_completion:
+                release.set()
+                self.assertTrue(finished.wait(1))
+                self.assertEqual(fixture.latest, CANDIDATE)
+            with self.assertRaises(subject.Refusal):
+                engine.check(NEW)
+            with self.assertRaises(subject.Refusal):
+                engine.deploy(NEW, SENTINEL)
+            with self.assertRaises(subject.Refusal):
+                engine.recover(ident)
+            self.assertEqual(engine.load()['phase'], 'build-intent')
+            self.assertEqual((self.current / 'revision').read_text(), OLD)
+            self.assertNotIn('latest', fixture.tags)
+
+    def test_keyboard_interrupt_during_native_up_retains_pending_boundary(self):
+        fixture = Fixture()
+        original = fixture.compose
+        def interrupted(path, revision, action):
+            original(path, revision, action)
+            if action == 'up':
+                raise KeyboardInterrupt
+        fixture.compose = interrupted
+        engine = self.engine(fixture)
+        with self.assertRaises(subject.Refusal):
+            engine.deploy(NEW, SENTINEL)
+        state = engine.load()
+        self.assertEqual(state['native_action'], {'name': 'up', 'completion': 'pending'})
+        self.assertEqual(state['phase'], 'up-intent')
+        with self.assertRaises(subject.Refusal):
+            engine.recover(state['id'])
+        self.assertEqual(fixture.live, CANDIDATE)
+
+    def test_native_completion_write_failure_retains_pending_recovery_fence(self):
+        fixture = Fixture()
+        def writer(path, data):
+            if data.get('native_action', {}).get('completion') != 'pending':
+                if 'native_action' in data:
+                    raise OSError('fixture cannot persist native completion')
+            subject.atomic_state(path, data)
+        engine = self.engine(fixture, writer=writer)
+        with self.assertRaises(subject.Refusal):
+            engine.deploy(NEW, SENTINEL)
+        state = engine.load()
+        self.assertEqual(state['native_action']['completion'], 'pending')
+        with self.assertRaises(subject.Refusal):
+            self.engine(fixture).recover(state['id'])
+
+    def test_recovery_timeout_stays_nonterminal_and_blocks_second_owner(self):
+        fixture = Fixture()
+        engine = self.engine(fixture)
+        ident = engine.deploy(NEW, SENTINEL)
+        def uncertain_tag(image, tag):
+            raise subject.NativeOutcomeUnknown('native completion is unknown')
+        fixture.tag = uncertain_tag
+        with self.assertRaises(subject.NativeOutcomeUnknown):
+            engine.recover(ident)
+        state = engine.load()
+        self.assertEqual(state['phase'], 'recovery-intent')
+        self.assertEqual(state['native_action'], {'name': 'restore-image', 'completion': 'pending'})
+        with self.assertRaises(subject.Refusal):
+            self.engine(fixture).check(NEW)
+        with self.assertRaises(subject.Refusal):
+            self.engine(fixture).recover(ident)
+        self.assertEqual(fixture.live, CANDIDATE)
 
     def test_changed_checkout_inode_refuses_recovery_instead_of_guessing(self):
         fixture = Fixture()

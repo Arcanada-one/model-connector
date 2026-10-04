@@ -45,7 +45,7 @@ readonly NODE=/usr/bin/node
 # Content-addressed root helper; no runner-owned import or path override.
 # shellcheck disable=SC2034 # Root installer consumes the sudoers pin from this reviewed broker.
 readonly BILLING_SUDOERS_SHA=a9668698e99a2306887687726b978b71b6a26663e49f58d74086f89f00c95508
-readonly BILLING_TRANSACTION_SHA=60b44c7152320ab04b77153b09720c5144520c9f9a9216764b8f8b1b5f92e63d
+readonly BILLING_TRANSACTION_SHA=053ad8cee09d8e1ab394c246995850ade05bbfbf339247ce5dfd33876b4f0f4a
 
 # ---------------------------------------------------------------------------
 # Service table. Edit here, re-install, never parameterise.
