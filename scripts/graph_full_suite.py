@@ -333,7 +333,7 @@ def regression_counts(kind, output):
     return None
 
 
-def render_authored_template(root, scratch, members):
+def render_authored_template(root, scratch, members, env=None):
     """Render the exact README contract; retain authored and executed identities.
 
     This tests scaffold source with synthetic fetch fixtures, not adoption of a
@@ -341,6 +341,11 @@ def render_authored_template(root, scratch, members):
     """
     if members != [AUTHORED_TEMPLATE]:
         raise Refusal('undeclared authored template membership')
+    if env is None:
+        home = scratch / 'template-git-home'
+        home.mkdir(mode=0o700)
+        env = {'PATH': os.environ.get('PATH', os.defpath), 'HOME': str(home),
+               'TMPDIR': str(scratch)}
     folder = 'templates/api-connector-scaffold/'
     sources = [folder + 'README.md', folder + '{{name}}.connector.ts', AUTHORED_TEMPLATE,
                'vitest.config.ts', 'src/connectors/base-api.connector.ts',
@@ -349,7 +354,7 @@ def render_authored_template(root, scratch, members):
     for name in sources:
         data = checked_file(root, name).read_bytes()
         native = subprocess.run(['git', '-C', str(root), 'show', 'HEAD:' + name],
-                                capture_output=True, check=True).stdout
+                                capture_output=True, check=True, env=env).stdout
         if data != native:
             raise Refusal('template dependency differs from committed revision')
         bindings.append({'path': name, 'sha256': hashlib.sha256(data).hexdigest()})
@@ -453,7 +458,7 @@ def run_root_suites(root, suites, scratch, executor=execute):
             row.update(verdict='not_measured', reason='unconditional AppE2E skip; no execution grant',
                        held_members=members)
         elif name == 'maintained-authored-template':
-            rendered = render_authored_template(root, scratch, members)
+            rendered = render_authored_template(root, scratch, members, env)
             target, config = rendered.pop('target'), rendered.pop('config')
             report = target / 'result.json'
             selected = ['scaffoldprobe.connector.spec.ts']

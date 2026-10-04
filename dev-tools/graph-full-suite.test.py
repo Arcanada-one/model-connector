@@ -169,6 +169,13 @@ class Controls(unittest.TestCase):
         self.assertEqual(rows[0]['verdict'], 'not_measured')
         self.assertEqual(rows[0]['executions'][0]['reason'], 'rendered execution source changed')
 
+    def test_authored_template_source_read_uses_private_home_without_ambient_home(self):
+        scratch = self.template_source_fixture()
+        with patch.dict(os.environ, {}, clear=True):
+            result = subject.render_authored_template(self.root, scratch, [subject.AUTHORED_TEMPLATE])
+        self.assertEqual(len(result['source_bindings']), 6)
+        self.assertEqual((scratch / 'template-git-home').stat().st_mode & 0o777, 0o700)
+
     def document(self):
         return {'numTotalTests': 1, 'numPassedTests': 1, 'numFailedTests': 0,
                 'testResults': [{'name': str(self.root / 'watcher/test/a.spec.ts'),
