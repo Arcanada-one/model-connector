@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CascadeRouterService } from './cascade-router.service';
 import { CascadeExhaustedError, CascadeBudgetExceededError } from './cascade.errors';
+import type { ApiKeyPolicy } from '../../policy/policy.schema';
 
 vi.mock('../../config/env.schema', () => ({
   getConfig: vi.fn(),
@@ -63,6 +64,9 @@ function makeRouter(
     execute: vi.fn(() => Promise.resolve(responses[idx++] ?? err('server_error'))),
     // CONN-0244 — cascade filters candidates by canUse; fully-routable in these tests.
     canUse: vi.fn(() => true),
+    // These fallback fixtures use legacy policy-less keys, as the unit harness does.
+    getKeyPolicy: vi.fn(async (): Promise<ApiKeyPolicy | null> => null),
+    isCandidateAllowedByPolicy: vi.fn(async () => true),
   };
   const mockMetrics = { recordCascade: vi.fn() };
 
@@ -76,6 +80,27 @@ function makeRouter(
 
 describe('CascadeRouter fallback integration (T1-T7)', () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it('a denied policy stops before any connector dispatch', async () => {
+    const { router, mockConnectorsService } = makeRouter([success()]);
+    mockConnectorsService.getKeyPolicy.mockResolvedValue({ policyVersion: 1, providers: [] });
+    mockConnectorsService.isCandidateAllowedByPolicy.mockResolvedValue(false);
+
+    const result = await router.execute('low-reasoning', { prompt: 'ping' }, 'k1');
+
+    expect(result.error?.type).toBe('policy_violation');
+    expect(mockConnectorsService.execute).not.toHaveBeenCalled();
+  });
+
+  it('a policy read failure remains closed before dispatch', async () => {
+    const { router, mockConnectorsService } = makeRouter([success()]);
+    mockConnectorsService.getKeyPolicy.mockRejectedValue(new Error('fixture policy failure'));
+
+    const result = await router.execute('low-reasoning', { prompt: 'ping' }, 'k1');
+
+    expect(result.error?.type).toBe('config_error');
+    expect(mockConnectorsService.execute).not.toHaveBeenCalled();
+  });
 
   it('T1: free success → success, fallbackCount=0, freeTierHit=true', async () => {
     const { router, mockConnectorsService, mockMetrics } = makeRouter([
