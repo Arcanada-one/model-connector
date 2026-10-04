@@ -169,7 +169,7 @@ class Controls(unittest.TestCase):
         results = subject.run_suites(self.root, 'watcher', suites, self.root, child)
         self.assertEqual([r['verdict'] for r in results], ['not_measured'] * 3)
 
-    def test_actual_root_entrypoint_returns127_without_child_execution(self):
+    def root_entrypoint_fixture(self):
         scripts = self.root / 'scripts'
         scripts.mkdir()
         for name in ['graph-full-suite.sh', 'graph_full_suite.py']:
@@ -179,6 +179,29 @@ class Controls(unittest.TestCase):
         subprocess.run(['git', '-C', str(self.root), 'add', 'scripts', 'test_contract.py'], check=True)
         subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture',
                         '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture'], check=True)
+
+    def test_actual_root_entrypoint_refuses_missing_empty_public_and_symlink_tmpdir(self):
+        self.root_entrypoint_fixture()
+        public = self.root / 'public'
+        public.mkdir(mode=0o755)
+        public.chmod(0o755)
+        private = self.root / 'private'
+        private.mkdir(mode=0o700)
+        link = self.root / 'link'
+        link.symlink_to(private, target_is_directory=True)
+        for value in [None, '', str(public), str(link)]:
+            env = {'PATH': os.defpath, 'HOME': str(self.root)}
+            if value is not None:
+                env['TMPDIR'] = value
+            with self.subTest(TMPDIR=value):
+                result = subprocess.run(['bash', 'scripts/graph-full-suite.sh', '.'], cwd=self.root,
+                                        env=env, capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn('FULL_FALLBACK_TEST_REFUSED: invalid source/path/environment', result.stderr)
+                self.assertEqual(list(self.root.rglob('execution.json')), [])
+
+    def test_actual_root_entrypoint_returns127_without_child_execution(self):
+        self.root_entrypoint_fixture()
         temp = self.root / 'private'
         temp.mkdir(mode=0o700)
         result = subprocess.run(['bash', 'scripts/graph-full-suite.sh', '.'], cwd=self.root,

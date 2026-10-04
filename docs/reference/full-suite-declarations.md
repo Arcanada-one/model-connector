@@ -42,6 +42,13 @@ their HOME and temporary state are private. Cleanup affects only a timed-out chi
 process group created by this runner. It never cancels foreign jobs or restarts
 services. Evidence directories are retained for the existing executor to collect.
 
+The template explicitly declares `TMPDIR` without a default. Missing or empty
+values refuse execution, including when the current directory is private. The
+watcher state/audit fixtures create a separate `mkdtemp` directory under the
+caller's native temporary root for each test and remove only that directory.
+They retain the atomic-write, symlink, malformed-state, audit, serialization and
+concurrent-write assertions without requiring or creating a shared `/tmp`.
+
 SAME Program remains the sole whole executor after exact source review and
 dependency/environment readiness. The focused `dev-tools/graph-full-suite.test.py`
 checks orchestration refusals and parsers with private fixtures; it does not execute

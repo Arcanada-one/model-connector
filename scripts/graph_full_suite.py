@@ -291,7 +291,10 @@ def main():
     rows = inventory(ROOT)
     members = members_for(rows, unit)
     suites = plan(unit, members)
-    temp = Path(os.environ.get('TMPDIR', ''))
+    temp_value = os.environ.get('TMPDIR')
+    if not temp_value:
+        raise Refusal('owned private TMPDIR required')
+    temp = Path(temp_value)
     info = temp.lstat()
     if (temp.is_symlink() or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid()
             or stat.S_IMODE(info.st_mode) & 0o077):
