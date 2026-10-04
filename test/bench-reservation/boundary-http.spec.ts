@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { getQueueToken } from '@nestjs/bullmq';
@@ -14,6 +14,7 @@ import { WatcherRepairController } from '../../src/admin/watcher-repair.controll
 import { CreditsController } from '../../src/billing/credits.controller';
 import { PaymentsController } from '../../src/billing/payments.controller';
 import { BillingService } from '../../src/billing/billing.service';
+import { PAYMENTS_PRINCIPAL } from '../../src/billing/payments-principal.guard';
 import { BillingReconcilerService } from '../../src/billing/reconciler.service';
 import { ConnectorsController } from '../../src/connectors/connectors.controller';
 import { ConnectorsService } from '../../src/connectors/connectors.service';
@@ -181,4 +182,67 @@ describe('owned actual controller/guard HTTP refusal boundary', () => {
       await mutant.app.close();
     }
   });
+
+  // Positive handler dispatch is separate from HTTP unauthenticated refusal.
+  // These doubles are explicit source-unit data, never a financial receipt.
+  const paymentBody = {
+    amountUsd: '1.25',
+    idempotencyKey: 'owned-source-payment-fixture',
+    source: 'owned-source-fixture',
+    livemode: false,
+  };
+  function paymentHandler() {
+    const billing = {
+      recordPayment: vi.fn().mockResolvedValue(false),
+      balance: vi.fn().mockResolvedValue('0'),
+    };
+    return {
+      controller: new PaymentsController(billing as unknown as BillingService),
+      billing,
+    };
+  }
+
+  it('actual payment handler preserves explicit fixture actor and decimal wire fields', async () => {
+    const { controller, billing } = paymentHandler();
+    const result = await controller.payment('owned-fixture', paymentBody, {
+      [PAYMENTS_PRINCIPAL]: 'owned-source-principal',
+    });
+    expect(billing.recordPayment).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        apiKeyId: 'owned-fixture',
+        ...paymentBody,
+        actor: 'owned-source-principal',
+      }),
+    );
+    expect(result).toEqual({
+      apiKeyId: 'owned-fixture',
+      applied: false,
+      entryType: 'payment',
+      balanceUsd: '0',
+    });
+  });
+
+  it('actual payment handler refuses absent principal before the inert billing double', async () => {
+    const { controller, billing } = paymentHandler();
+    await expect(controller.payment('owned-fixture', paymentBody, {})).rejects.toThrow(
+      'no authenticated payments principal',
+    );
+    expect(billing.recordPayment).not.toHaveBeenCalled();
+  });
+
+  for (const amountUsd of ['Infinity', 0, '1000000000']) {
+    it(`actual payment handler refuses invalid amount ${amountUsd} before billing`, async () => {
+      const { controller, billing } = paymentHandler();
+      await expect(
+        controller.payment(
+          'owned-fixture',
+          { ...paymentBody, amountUsd },
+          {
+            [PAYMENTS_PRINCIPAL]: 'owned-source-principal',
+          },
+        ),
+      ).rejects.toThrow();
+      expect(billing.recordPayment).not.toHaveBeenCalled();
+    });
+  }
 });
