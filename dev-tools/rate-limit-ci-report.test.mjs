@@ -5,7 +5,7 @@ import { verifyReport } from './rate-limit-ci-report.mjs';
 function valid() {
   return {
     success: true, numTotalTests: 6, numPassedTests: 6,
-    numFailedTests: 0, numPendingTests: 0,
+    numFailedTests: 0, numPendingTests: 0, numTodoTests: 0,
     testResults: [{ name: '/app/src/auth/rate-limit.integration.spec.ts',
       status: 'passed', assertionResults: Array.from({ length: 6 }, () => ({ status: 'passed' })) }],
   };
@@ -15,7 +15,8 @@ test('accepts six real passed assertions from the exact spec', () => {
   assert.doesNotThrow(() => verifyReport(valid()));
 });
 
-for (const [name, mutate] of [
+/** @type {Array<[string, (report: ReturnType<typeof valid>) => void]>} */
+const mutations = [
   ['empty selection', (r) => { r.numTotalTests = 0; r.testResults = []; }],
   ['one assertion missing', (r) => { r.numTotalTests = 5; r.numPassedTests = 5; }],
   ['skipped assertion', (r) => { r.testResults[0].assertionResults[0].status = 'pending'; }],
@@ -26,8 +27,9 @@ for (const [name, mutate] of [
   ['paid spec substitution', (r) => { r.testResults[0].name = '/app/src/connectors/image-generation/vertex/vertex-image.connector.integration.spec.ts'; }],
   ['additional spec', (r) => { r.testResults.push(structuredClone(r.testResults[0])); }],
   ['truncated assertion list', (r) => { r.testResults[0].assertionResults.pop(); }],
-  ['malformed suite', (r) => { r.testResults[0] = {}; }],
-]) {
+  ['malformed suite', (r) => { Reflect.set(r.testResults, '0', {}); }],
+];
+for (const [name, mutate] of mutations) {
   test(`refuses ${name}`, () => {
     const report = valid();
     mutate(report);

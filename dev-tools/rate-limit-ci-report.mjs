@@ -3,6 +3,14 @@ import { pathToFileURL } from 'node:url';
 
 const SPEC = '/src/auth/rate-limit.integration.spec.ts';
 
+/**
+ * @typedef {{success?: boolean, numTotalTests?: number, numPassedTests?: number,
+ * numFailedTests?: number, numPendingTests?: number, numTodoTests?: number,
+ * testResults?: Array<{name?: string, status?: string,
+ * assertionResults?: Array<{status?: string}>}>}} RateLimitReport
+ */
+
+/** @param {RateLimitReport | null | undefined} report */
 export function verifyReport(report) {
   const suites = report?.testResults;
   if (report?.success !== true || report.numTotalTests !== 6 ||
