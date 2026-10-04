@@ -11,7 +11,7 @@ import { canonical, digest, signed, verifyEnvelope } from "./signatures";
 
 // Synthetic offline keys only, generated in memory. No native key/session,
 // protected credential, provider, database, socket listener or grant is loaded.
-function fixture() {
+export function fixture() {
   const issuer = generateKeyPairSync("ed25519");
   const custodian = generateKeyPairSync("ed25519");
   const caller = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -217,6 +217,7 @@ function fixture() {
   };
   return {
     deps,
+    scope,
     grant,
     policy,
     bounds,

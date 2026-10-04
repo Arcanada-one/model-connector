@@ -173,6 +173,9 @@ export type MonetaryAtomicInput = Readonly<{
   policy: z.infer<typeof policySchema>;
   bounds: z.infer<typeof boundsSchema>;
   wire: string;
+  charging_policy_utf8: string;
+  wire_bounds_utf8: string;
+  deadline_unix: number;
   assertFresh: () => void;
 }>;
 /** Incumbent executor must perform ONE durable money+token append under its
@@ -370,7 +373,10 @@ export class BenchMonetaryV2Receiver {
       wireSchema.parse(JSON.parse(value.wire_utf8));
       assertFresh();
       const snapshot = JSON.parse(
-        canonical({ request: req, policy, bounds, wire: value.wire_utf8 }),
+        canonical({ request: req, policy, bounds, wire: value.wire_utf8,
+          charging_policy_utf8: value.charging_policy_utf8,
+          wire_bounds_utf8: value.wire_bounds_utf8,
+          deadline_unix: Math.min(deadline, proofDeadline) }),
       );
       const receipt = receiptSchema.parse(
         await this.deps.reserveAtomic!({ ...snapshot, assertFresh }),
@@ -416,7 +422,7 @@ export class BenchMonetaryV2Receiver {
         canonical(receipt.request) === canonical(req) &&
           canonical(m.request) === canonical(money) &&
           receipt.valid_until_unix > this.deps.now() &&
-          receipt.valid_until_unix <= deadline &&
+          receipt.valid_until_unix <= Math.min(deadline, proofDeadline) &&
           m.scale === policy.scale &&
           m.cap === policy.money_cap &&
           m.floor === policy.money_floor &&
