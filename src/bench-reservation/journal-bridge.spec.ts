@@ -11,11 +11,11 @@ import type { MonetaryAtomicInput } from './monetary-v2';
 const python = '/usr/bin/python3';
 const script = resolve('test/fixtures/bench-journal-custodian.py');
 const billingSource = process.env.BILLING_CUSTODIAN_SOURCE;
-const billingPins = process.env.BILLING_CUSTODIAN_PINS;
+const billingPins = resolve('test/fixtures/billing-3a-module-pins.json');
 const domain = (kind: string, raw: string) => Buffer.from(`BENCH-MONETARY-PROOF-v1\n${kind}\n${raw}`);
 
 it('refuses missing executor context and wrong externally pinned public key', async () => {
-  expect(() => incumbentJournalBridge({ executable: python, args: [], authorityContext: Buffer.alloc(0), now: () => 1000 })).toThrow();
+  expect(() => incumbentJournalBridge({ executable: python, args: [], authorityContext: Buffer.alloc(0), temporaryDirectory: tmpdir(), now: () => 1000 })).toThrow();
   const keys = generateKeyPairSync('ed25519');
   const der = keys.publicKey.export({ type: 'spki', format: 'der' });
   expect(() => pinnedMonetaryProofVerifier(der, '0'.repeat(64), { 'charging-policy': Buffer.alloc(64), 'wire-bounds': Buffer.alloc(64) })).toThrow();
@@ -54,7 +54,7 @@ process.stdin.on('data',b=>body+=b);process.stdin.on('end',()=>{
   try {
     const f = fixture();
     f.deps.reserveAtomic = incumbentJournalBridge({ executable: process.execPath, args: [childScript],
-      authorityContext: Buffer.from('PRIVATE_CONTEXT_SENTINEL'), now: f.deps.now });
+      authorityContext: Buffer.from('PRIVATE_CONTEXT_SENTINEL'), temporaryDirectory: root, now: f.deps.now });
     const Receiver = (await import('./monetary-v2')).BenchMonetaryV2Receiver;
     await expect(new Receiver(f.deps).reserveEnvelope(f.envelope()))
       .rejects.toThrow('monetary_v2_refused_unknown_preserved');
@@ -63,13 +63,13 @@ process.stdin.on('data',b=>body+=b);process.stdin.on('end',()=>{
 
 // Cross-repository real Journal evidence is explicitly opt-in to the exact
 // reviewed source snapshot. Absent snapshot is SKIP/NM, never mock success.
-describe.skipIf(!billingSource || !billingPins)('actual pinned Billing3a Journal bridge, offline synthetic authority', () => {
+describe.skipIf(!billingSource)('actual pinned Billing3a Journal bridge, offline synthetic authority', () => {
   for (const mode of ['success', 'altered-context', 'late', 'replay'] as const) {
     it(`preserves real Journal liabilities and refusal for ${mode}`, async () => {
       const root = mkdtempSync(join(tmpdir(), 'mc-journal-bridge-'));
       const store = join(root, 'store'); mkdirSync(store, { mode: 0o700 });
       const base = { fixture_only: true, module_dir: billingSource,
-        module_pins: JSON.parse(readFileSync(billingPins!, 'utf8')), store, synthetic_clock: 1000 };
+        module_pins: JSON.parse(readFileSync(billingPins, 'utf8')), store, synthetic_clock: 1000 };
       const { spawn } = await import('node:child_process');
       const privateCall = async (context: unknown): Promise<Record<string, unknown>> =>
         new Promise((accept, reject) => {
@@ -102,7 +102,7 @@ describe.skipIf(!billingSource || !billingPins)('actual pinned Billing3a Journal
           signatures: Object.fromEntries(Object.entries(signatures).map(([k,v]) => [k,v.toString('hex')])),
           late_after_unknown: mode === 'late' };
         f.deps.reserveAtomic = incumbentJournalBridge({ executable: python, args: [script],
-          authorityContext: Buffer.from(JSON.stringify(context)), now: f.deps.now });
+          authorityContext: Buffer.from(JSON.stringify(context)), temporaryDirectory: root, now: f.deps.now });
         const Receiver = (await import('./monetary-v2')).BenchMonetaryV2Receiver;
         if (mode === 'late' || mode === 'altered-context') {
           await expect(new Receiver(f.deps).reserveEnvelope(envelope)).rejects.toThrow('monetary_v2_refused_unknown_preserved');

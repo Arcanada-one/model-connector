@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createPublicKey, verify } from 'node:crypto';
 import { isAbsolute } from 'node:path';
+import { lstatSync, realpathSync } from 'node:fs';
 import { BenchRefused, requireBench } from './contract';
 import { digest } from './signatures';
 import type { MonetaryAtomicInput } from './monetary-v2';
@@ -35,6 +36,7 @@ export type IncumbentJournalProcess = Readonly<{
    * The incumbent executor must validate it, current authority and existing store.
    * This adapter never initializes a Journal or treats this blob as a grant. */
   authorityContext: Buffer;
+  temporaryDirectory: string;
   now: () => number;
 }>;
 /** Concrete one-shot process transport. The installed incumbent command and
@@ -45,6 +47,11 @@ export function incumbentJournalBridge(config: IncumbentJournalProcess) {
     Buffer.isBuffer(config.authorityContext) && config.authorityContext.length > 0 &&
     config.authorityContext.length <= 262144 && typeof config.now === 'function',
   'journal_executor_not_bound');
+  const temporaryDirectory = config.temporaryDirectory;
+  const directory = lstatSync(temporaryDirectory);
+  requireBench(isAbsolute(temporaryDirectory) && realpathSync(temporaryDirectory) === temporaryDirectory &&
+    directory.isDirectory() && !directory.isSymbolicLink() && directory.uid === process.getuid?.() &&
+    (directory.mode & 0o777) === 0o700, 'journal_private_temp_refused');
   const args = [...config.args], context = Buffer.from(config.authorityContext),
     executable = config.executable, now = config.now;
   return async (input: MonetaryAtomicInput): Promise<unknown> => {
@@ -58,7 +65,7 @@ export function incumbentJournalBridge(config: IncumbentJournalProcess) {
         deadline_unix: input.deadline_unix });
       const value = await new Promise<unknown>((resolve, reject) => {
         const child = spawn(executable, args, { shell: false,
-          env: { PATH: '/usr/bin:/bin', LANG: 'C' }, stdio: ['pipe', 'pipe', 'ignore', 'pipe'] });
+          env: { PATH: '/usr/bin:/bin', LANG: 'C', TMPDIR: temporaryDirectory }, stdio: ['pipe', 'pipe', 'ignore', 'pipe'] });
         let chunks: Buffer[] = [], bytes = 0, settled = false;
         const finish = (error?: Error, result?: unknown) => {
           if (settled) return;

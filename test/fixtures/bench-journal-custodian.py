@@ -9,6 +9,9 @@ import json
 import os
 from pathlib import Path
 import sys
+import importlib.abc
+import importlib.util
+import stat
 
 
 def main():
@@ -17,7 +20,27 @@ def main():
     source = Path(context['module_dir'])
     for name, expected in context['module_pins'].items():
         assert hashlib.sha256((source/name).read_bytes()).hexdigest() == expected
-    sys.path.insert(0, str(source))
+    class PinnedSourceLoader(importlib.abc.MetaPathFinder, importlib.abc.Loader):
+        def find_spec(self, fullname, path=None, target=None):
+            if fullname + '.py' in context['module_pins']:
+                return importlib.util.spec_from_loader(fullname, self)
+            return None
+
+        def create_module(self, spec):
+            return None
+
+        def exec_module(self, module):
+            name = module.__name__ + '.py'
+            fd = os.open(source/name, os.O_RDONLY | os.O_NOFOLLOW)
+            with os.fdopen(fd, 'rb') as stream:
+                metadata = os.fstat(stream.fileno())
+                assert stat.S_ISREG(metadata.st_mode)
+                body = stream.read(1000000)
+            assert hashlib.sha256(body).hexdigest() == context['module_pins'][name]
+            # Compile verified source bytes directly: no path-import or pyc trust.
+            exec(compile(body, str(source/name), 'exec'), module.__dict__)
+
+    sys.meta_path.insert(0, PinnedSourceLoader())
     import accounting as a
     import journal as j
     import monetary as m
