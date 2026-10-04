@@ -10,6 +10,7 @@ import json
 import os
 import re
 import signal
+import shutil
 import stat
 import subprocess
 import sys
@@ -20,6 +21,12 @@ import xml.etree.ElementTree as ET
 UNITS = ('.', 'packages/sdk-python', 'packages/sdk-ts', 'watcher')
 ROOT = Path(__file__).resolve().parents[1]
 ENV_FILES = ('.env', '.env.local', '.env.integration', '.env.test')
+# Reviewed existing fake-connector/MSW contracts, never a provider/storage grant.
+OFFLINE_INTEGRATION = frozenset({
+    'src/connectors/cascade/cascade-router.fallback.integration.spec.ts',
+    'src/openai-compat/openai-compat.failover.integration.spec.ts',
+    'src/speech/stt/stt-pilot.integration.spec.ts',
+})
 
 
 class Refusal(Exception):
@@ -113,7 +120,7 @@ def plan(unit, members):
                 group = 'maintained-regression'
             groups.setdefault(group, []).append(name)
         return [{'suite': key, 'members': value, 'verdict': 'not_measured',
-                 'reason': 'root full execution prerequisites unresolved'}
+                 'reason': 'root groups require actual execution and explicit held prerequisites'}
                 for key, value in sorted(groups.items())]
     if unit == 'packages/sdk-python':
         if any(not n.endswith('.py') for n in members):
@@ -283,6 +290,131 @@ def run_suites(root, unit, suites, scratch, executor=execute):
     return results
 
 
+def root_regression_command(root, member):
+    path = str(checked_file(root, member))
+    if member.endswith('.py'):
+        return [sys.executable, '-B', path], 'unittest'
+    if member.endswith('.test.mjs'):
+        return ['node', '--test', '--test-reporter=tap', path], 'node-tap'
+    if member.endswith('.bats'):
+        return ['bats', '--formatter', 'tap', path], 'bats'
+    if member.endswith('.sh'):
+        return ['bash', path], 'exit-status'
+    raise Refusal('undeclared root regression type')
+
+
+def regression_counts(kind, output):
+    if kind == 'bats':
+        return bats_counts(output)
+    if kind == 'unittest':
+        totals = re.findall(r'^Ran (\d+) tests? in ', output, re.M)
+        if len(totals) != 1 or int(totals[0]) == 0 or not re.search(r'^OK(?: \(|$)', output, re.M):
+            raise Refusal('missing or empty unittest counts')
+        count = sum(int(v) for v in re.findall(r'(?:skipped|expected failures)=(\d+)', output))
+        if count > int(totals[0]):
+            raise Refusal('inconsistent unittest counts')
+        return {'passed': int(totals[0]) - count, 'failed': 0, 'skipped': count}
+    if kind == 'node-tap':
+        counts = {}
+        for key in ('tests', 'pass', 'fail', 'skipped', 'cancelled', 'todo'):
+            values = re.findall(r'^# ' + key + r' (\d+)$', output, re.M)
+            if len(values) != 1:
+                raise Refusal('missing or duplicated Node TAP count')
+            counts[key] = int(values[0])
+        if not counts['tests'] or sum(counts[k] for k in ('pass', 'fail', 'skipped', 'cancelled', 'todo')) != counts['tests']:
+            raise Refusal('inconsistent or empty Node TAP counts')
+        return {'passed': counts['pass'], 'failed': counts['fail'] + counts['cancelled'],
+                'skipped': counts['skipped'] + counts['todo']}
+    # Existing shell validators have an exit-status contract, not invented counts.
+    return None
+
+
+def run_root_suites(root, suites, scratch, executor=execute):
+    """Dispatch ordinary local groups; preserve every held member without spawning it."""
+    members = [n for suite in suites for n in suite['members']]
+    expected = {r['suite']: r['members'] for r in plan('.', members)}
+    if (len(members) != len(set(members)) or len(suites) != len(expected)
+            or {r['suite']: r['members'] for r in suites} != expected):
+        raise Refusal('missing, duplicate or misclassified root membership')
+    # Resolve every owned source path/type before any local child can be spawned.
+    for suite in suites:
+        for member in suite['members']:
+            checked_file(root, member)
+            if suite['suite'] == 'maintained-regression':
+                root_regression_command(root, member)
+    env = clean_environment(scratch, root)
+    deadline = time.monotonic() + 900
+    results = []
+    def run(argv, members, name, parser):
+        required = [argv[0]]
+        if members == ['deploy/compose-network.test.sh']:
+            required.append('docker')  # Compose config only, never start or stop.
+        missing = [tool for tool in required if not shutil.which(tool, path=env['PATH'])]
+        if argv[0] == 'pnpm' and not (root / 'node_modules/.bin/vitest').is_file():
+            missing.append('owned Vitest dependency')
+        if missing:
+            return {'argv': argv, 'members': members, 'verdict': 'not_measured',
+                    'exit_code': 127, 'reason': 'missing local runner: ' + ', '.join(missing)}
+        result = executor(argv, root, env, deadline, scratch, name)
+        raw = result.pop('output')
+        code = result['exit_code']
+        result.update(members=members, raw_log=str(scratch / (name + '.log')),
+                      verdict='not_measured' if code in (124, 127) else 'failed' if code else 'verified')
+        if not code:
+            try:
+                counts = parser(raw)
+            except (Refusal, ValueError, KeyError, OSError):
+                result.update(verdict='not_measured', reason='missing or invalid exact execution evidence')
+            else:
+                result['counts'] = counts
+                if counts and (counts['failed'] or counts['skipped'] or not counts['passed']):
+                    result['verdict'] = 'failed' if counts['failed'] else 'not_measured'
+        return result
+    for index, suite in enumerate(suites):
+        name, members = suite['suite'], suite['members']
+        row = {'suite': name, 'members': members, 'executions': []}
+        if name == 'maintained-app-e2e':
+            row.update(verdict='not_measured', reason='unconditional AppE2E skip; no execution grant',
+                       held_members=members)
+        elif name in ('maintained-vitest', 'maintained-integration'):
+            selected = members if name == 'maintained-vitest' else [n for n in members if n in OFFLINE_INTEGRATION]
+            held = [n for n in members if n not in selected]
+            if held:
+                row.update(held_members=held, reason='real provider/auth/storage arms or disposable DB/Redis authority unresolved')
+            if selected:
+                report = scratch / (name + '.json')
+                argv = ['pnpm', 'exec', 'vitest', 'run']
+                if name == 'maintained-integration':
+                    argv += ['--config', 'vitest.integration.config.ts']
+                argv += ['--reporter=json', '--outputFile=' + str(report), *selected]
+                row['executions'].append(run(argv, selected, 'root-' + str(index),
+                    lambda raw: vitest_counts(json.loads(report.read_text()), selected, root)))
+            row['verdict'] = ('failed' if any(r['verdict'] == 'failed' for r in row['executions']) else
+                              'not_measured' if held or not row['executions'] or any(r['verdict'] != 'verified' for r in row['executions']) else 'verified')
+        elif name == 'maintained-regression':
+            for offset, member in enumerate(members):
+                argv, kind = root_regression_command(root, member)
+                result = run(argv, [member], 'root-' + str(index) + '-' + str(offset),
+                             lambda raw: regression_counts(kind, raw))
+                row['executions'].append(result)
+                if result['verdict'] != 'verified':
+                    row['held_members'] = members[offset + 1:]
+                    break
+            row['verdict'] = ('failed' if any(r['verdict'] == 'failed' for r in row['executions']) else
+                              'not_measured' if len(row['executions']) != len(members) or any(r['verdict'] != 'verified' for r in row['executions']) else 'verified')
+        else:
+            raise Refusal('undeclared root group')
+        results.append(row)
+    return results
+
+
+def execution_code(results):
+    executions = [r for row in results for r in row.get('executions', [row])]
+    return (1 if any(r['verdict'] == 'failed' for r in results) else
+            124 if any(r.get('exit_code') == 124 for r in executions) else
+            127 if any(r['verdict'] == 'not_measured' for r in results) else 0)
+
+
 def main():
     if len(sys.argv) != 2:
         raise Refusal('exactly one deployable required')
@@ -307,22 +439,17 @@ def main():
                 'membership': rows, 'suite_plan': suites, 'results': [],
                 'runtime_authorized': False, 'knowledge_admitted': False}
     if unit == '.':
-        document['results'] = suites
         document['remaining'] = ['seven real external provider/auth/storage/image arms',
                                  'unconditional AppE2E skip',
                                  'broader disposable DB/Redis executor and namespace authority']
-        code = 127
+    try:
+        document['results'] = (run_root_suites(ROOT, suites, scratch) if unit == '.' else
+                               run_suites(ROOT, unit, suites, scratch))
+    except (Refusal, ValueError, KeyError, OSError):
+        document['remaining'] = ['invalid or absent execution evidence; inspect private raw suite files']
+        code = 1
     else:
-        try:
-            document['results'] = run_suites(ROOT, unit, suites, scratch)
-        except (Refusal, ValueError, KeyError, OSError):
-            document['remaining'] = ['invalid or absent execution evidence; inspect private raw suite files']
-            code = 1
-        else:
-            results = document['results']
-            code = (1 if any(r['verdict'] == 'failed' for r in results) else
-                    124 if any(r.get('exit_code') == 124 for r in results) else
-                    127 if any(r['verdict'] == 'not_measured' for r in results) else 0)
+        code = execution_code(document['results'])
     document['exit_code'] = code
     target = scratch / 'execution.json'
     with target.open('x') as stream:

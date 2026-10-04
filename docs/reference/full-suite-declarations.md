@@ -18,13 +18,25 @@ members, the app E2E and shell/Python/Node/Bats regressions. Historical inventor
 omitted the two Billing installer/transaction Python regressions; they remain in
 the complete membership instead of silently following that omission.
 
-Root execution currently returns native-recognized exit 127 before any suite runs.
-Its seven external provider/auth/storage/image integration arms, unconditional app
-E2E skip and broader disposable PostgreSQL/Redis execution prerequisites remain
-`not_measured`. No environment opt-in can grant or bypass them. This is a prepared
-declaration with preserved debt, not a claim that root FULL has become executable
-or passed. Those prerequisites need a separately reviewed source/environment repair
-in the existing ownership lane before root's runner may change this refusal.
+Root dispatches the exact maintained default Vitest group and each existing
+shell/Python/Node/Bats regression through their native runner and result contract.
+Its three explicitly reviewed fake-connector/MSW integration members use the
+existing integration configuration and exact file selection. Every source member
+remains in the plan; actual Vitest result membership must match the selected files.
+Python unittest, Node TAP and Bats require nonempty consistent counts; existing
+shell validators retain their actual exit-status contract without invented counts.
+Missing dependencies, invalid reports, skips, empty counts, timeouts and raw failures
+remain non-success, with an unexecuted regression suffix preserved explicitly.
+
+The seven real external provider/auth/storage/image arms, eight disposable
+PostgreSQL/Redis integration members and unconditional app E2E skip stay held as
+`not_measured` before child spawn. New integration members are held by default.
+No environment opt-in, inherited service URL or caller flag grants access. Children
+receive the existing clean private environment, and local tool checks are read-only.
+The existing Compose regression renders disposable configuration only; it does not
+start or stop containers. Ordinary group success never implies complete root FULL.
+SAME Program executes the changed-source root only after exact source review and
+trusted adoption; focused dispatcher fixtures are not a root product-suite result.
 
 Python SDK executes complete maintained pytest collection and then its actual
 tests, matching file membership and each JUnit testcase identity. TypeScript SDK

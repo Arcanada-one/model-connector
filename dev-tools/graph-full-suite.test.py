@@ -174,9 +174,11 @@ class Controls(unittest.TestCase):
         scripts.mkdir()
         for name in ['graph-full-suite.sh', 'graph_full_suite.py']:
             (scripts / name).write_bytes((ROOT / 'scripts' / name).read_bytes())
-        (self.root / 'test_contract.py').write_text('raise RuntimeError("must never execute")')
+        (self.root / 'test_contract.py').write_text('import unittest\nclass Fixture(unittest.TestCase):\n def test_boundary(self): self.assertTrue(True)\nif __name__ == "__main__": unittest.main()\n')
+        (self.root / 'test').mkdir()
+        (self.root / 'test/app.e2e-spec.ts').write_text('throw new Error("must never execute")')
         subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
-        subprocess.run(['git', '-C', str(self.root), 'add', 'scripts', 'test_contract.py'], check=True)
+        subprocess.run(['git', '-C', str(self.root), 'add', 'scripts', 'test_contract.py', 'test'], check=True)
         subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture',
                         '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture'], check=True)
 
@@ -200,7 +202,7 @@ class Controls(unittest.TestCase):
                 self.assertIn('FULL_FALLBACK_TEST_REFUSED: invalid source/path/environment', result.stderr)
                 self.assertEqual(list(self.root.rglob('execution.json')), [])
 
-    def test_actual_root_entrypoint_returns127_without_child_execution(self):
+    def test_actual_root_entrypoint_dispatches_local_regression_retains_app_hold(self):
         self.root_entrypoint_fixture()
         temp = self.root / 'private'
         temp.mkdir(mode=0o700)
@@ -212,9 +214,151 @@ class Controls(unittest.TestCase):
         paths = list(temp.glob('mc-full-*/execution.json'))
         self.assertEqual(len(paths), 1)
         report = json.loads(paths[0].read_text())
-        self.assertTrue(all(r['verdict'] == 'not_measured' for r in report['results']))
+        self.assertEqual([r['verdict'] for r in report['results']], ['not_measured', 'verified'])
+        self.assertEqual(report['results'][1]['executions'][0]['counts']['passed'], 1)
+        self.assertEqual(report['results'][0]['held_members'], ['test/app.e2e-spec.ts'])
         self.assertEqual(report['exit_code'], 127)
-        self.assertEqual(list(temp.glob('mc-full-*/*.log')), [])
+        self.assertEqual(len(list(temp.glob('mc-full-*/*.log'))), 1)
+
+    def root_dispatch_fixture(self, members):
+        for member in members:
+            p = self.root / member
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text('fixture only')
+        runner = self.root / 'node_modules/.bin/vitest'
+        runner.parent.mkdir(parents=True)
+        runner.write_text('fixture only')
+        return subject.plan('.', members)
+
+    def root_child(self, calls, status='passed', missing=False):
+        def child(argv, cwd, env, deadline, scratch, name):
+            calls.append(argv)
+            self.assertNotIn('PROVIDER_API_KEY', env)
+            self.assertNotIn('DATABASE_URL', env)
+            self.assertNotIn('NODE_OPTIONS', env)
+            if argv[0] == 'pnpm':
+                output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
+                members = argv[argv.index('--outputFile=' + output) + 1:]
+                document = {'numTotalTests': len(members),
+                            'numPassedTests': len(members) if status == 'passed' else 0,
+                            'numFailedTests': 0,
+                            'testResults': [{'name': str(self.root / m),
+                                             'assertionResults': [{'status': status}]} for m in members]}
+                if missing:
+                    document['testResults'] = []
+                Path(output).write_text(json.dumps(document))
+            return {'argv': argv, 'exit_code': 0, 'output': '', 'duration_s': 0}
+        return child
+
+    def test_root_dispatches_exact_local_members_and_retains_live_and_app(self):
+        offline = sorted(subject.OFFLINE_INTEGRATION)[0]
+        members = ['src/a.spec.ts', offline, 'src/auth/live.integration.spec.ts',
+                   'test/app.e2e-spec.ts', 'scripts/control.test.sh']
+        suites = self.root_dispatch_fixture(members)
+        calls = []
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'), patch.dict(os.environ, {
+                'PROVIDER_API_KEY': 'sentinel-secret', 'DATABASE_URL': 'sentinel-secret',
+                'MC_ALLOW_LIVE': '1', 'NODE_OPTIONS': 'sentinel-secret'}):
+            result = subject.run_root_suites(self.root, suites, self.root, self.root_child(calls))
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(sorted(n for r in result for n in r['members']), sorted(members))
+        held = [n for r in result for n in r.get('held_members', [])]
+        self.assertEqual(set(held), {'src/auth/live.integration.spec.ts', 'test/app.e2e-spec.ts'})
+        self.assertFalse(any('live.integration.spec.ts' in a or 'app.e2e-spec.ts' in a for args in calls for a in args))
+        self.assertEqual([r['verdict'] for r in result], ['not_measured', 'not_measured', 'verified', 'verified'])
+        self.assertEqual(subject.execution_code(result), 127)
+
+    def test_root_missing_runner_refuses_before_spawn(self):
+        suites = self.root_dispatch_fixture(['src/a.spec.ts'])
+        with patch.object(subject.shutil, 'which', return_value=None):
+            result = subject.run_root_suites(self.root, suites, self.root,
+                lambda *args: self.fail('missing runner spawned a child'))
+        self.assertEqual(result[0]['verdict'], 'not_measured')
+        self.assertEqual(subject.execution_code(result), 127)
+
+    def test_root_skipped_missing_and_zero_counts_never_verify(self):
+        for status, missing in [('pending', False), ('passed', True)]:
+            with self.subTest(status=status, missing=missing), tempfile.TemporaryDirectory() as directory:
+                scratch = Path(directory)
+                if not (self.root / 'src/a.spec.ts').exists():
+                    suites = self.root_dispatch_fixture(['src/a.spec.ts'])
+                calls = []
+                with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
+                    result = subject.run_root_suites(self.root, suites, scratch,
+                        self.root_child(calls, status, missing))
+                self.assertEqual(result[0]['verdict'], 'not_measured')
+                self.assertEqual(subject.execution_code(result), 127)
+        for output in ['', 'Ran 0 tests in 0s\n\nOK\n']:
+            with self.assertRaises(subject.Refusal):
+                subject.regression_counts('unittest', output)
+
+    def test_root_new_unknown_type_and_duplicate_members_refuse_before_spawn(self):
+        for members in [['dev-tools/new.test.ts'], ['src/a.spec.ts', 'src/a.spec.ts']]:
+            with self.subTest(members=members), tempfile.TemporaryDirectory() as directory:
+                scratch = Path(directory)
+                for member in members:
+                    p = self.root / member
+                    p.parent.mkdir(parents=True, exist_ok=True)
+                    p.write_text('fixture only')
+                with self.assertRaises(subject.Refusal):
+                    subject.run_root_suites(self.root, subject.plan('.', members), scratch,
+                        lambda *args: self.fail('invalid member spawned a child'))
+
+    def test_root_raw_failure_and_timeout_keep_suffix_and_held_obligations(self):
+        for code in [9, 124]:
+            with self.subTest(code=code), tempfile.TemporaryDirectory() as directory:
+                scratch = Path(directory)
+                members = ['scripts/a.test.sh', 'scripts/b.test.sh', 'test/app.e2e-spec.ts']
+                for member in members:
+                    p = self.root / member
+                    p.parent.mkdir(parents=True, exist_ok=True)
+                    p.write_text('fixture only')
+                calls = []
+                def child(argv, *args):
+                    calls.append(argv)
+                    return {'argv': argv, 'exit_code': code, 'output': 'fixture failure', 'duration_s': 0}
+                with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
+                    result = subject.run_root_suites(self.root, subject.plan('.', members), scratch, child)
+                self.assertEqual(len(calls), 1)
+                self.assertEqual(result[1]['held_members'], ['scripts/b.test.sh'])
+                self.assertEqual(result[1]['executions'][0]['exit_code'], code)
+                self.assertEqual(subject.execution_code(result), 1 if code == 9 else 124)
+
+    def test_root_maintained_regression_commands_and_real_count_parsers(self):
+        members = ['scripts/a.test.sh', 'scripts/a.test.mjs', 'dev-tools/a.spec.bats', 'dev-tools/test_a.py']
+        for member in members:
+            p = self.root / member
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text('fixture only')
+        commands = [subject.root_regression_command(self.root, member) for member in members]
+        self.assertEqual([c[0][0] for c in commands], ['bash', 'node', 'bats', sys.executable])
+        self.assertEqual(subject.regression_counts('unittest', 'Ran 2 tests in 0.1s\nOK (skipped=1)\n'),
+                         {'passed': 1, 'failed': 0, 'skipped': 1})
+        tap = '# tests 2\n# pass 1\n# fail 0\n# skipped 1\n# cancelled 0\n# todo 0\n'
+        self.assertEqual(subject.regression_counts('node-tap', tap)['skipped'], 1)
+        for text in ['', tap + '# tests 2\n', tap.replace('# pass 1', '# pass 2')]:
+            with self.assertRaises(subject.Refusal):
+                subject.regression_counts('node-tap', text)
+
+    def test_root_missing_physical_vitest_dependency_refuses_before_spawn(self):
+        suites = self.root_dispatch_fixture(['src/a.spec.ts'])
+        (self.root / 'node_modules/.bin/vitest').unlink()
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
+            result = subject.run_root_suites(self.root, suites, self.root,
+                lambda *args: self.fail('missing dependency spawned a child'))
+        self.assertEqual(result[0]['verdict'], 'not_measured')
+        self.assertIn('owned Vitest dependency', result[0]['executions'][0]['reason'])
+
+    def test_root_source_escape_and_expected_failure_cannot_verify(self):
+        suites = self.root_dispatch_fixture(['src/a.spec.ts'])
+        path = self.root / 'src/a.spec.ts'
+        path.unlink()
+        path.symlink_to(Path(__file__))
+        with self.assertRaises(subject.Refusal):
+            subject.run_root_suites(self.root, suites, self.root,
+                lambda *args: self.fail('escaped source spawned a child'))
+        self.assertEqual(subject.regression_counts('unittest',
+            'Ran 1 test in 0.1s\nOK (expected failures=1)\n')['skipped'], 1)
 
 
 if __name__ == '__main__':
