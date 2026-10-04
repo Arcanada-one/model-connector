@@ -98,6 +98,11 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Rate-limit CI report negative controls
+        run: |
+          node --test dev-tools/rate-limit-ci-report.test.mjs
+          PYTHONDONTWRITEBYTECODE=1 python3 dev-tools/rate-limit-ci-workflow.test.py
+
   docker-e2e:
     runs-on: [self-hosted, Linux, ci-general]
     needs: lint-and-test
@@ -133,6 +138,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
+      - name: Build isolated rate-limit test stage
+        run: |
+          set -euo pipefail
+          # Do not copy a runner's leftover dotenv override into the test image.
+          for file in .env .env.local .env.integration .env.integration.local; do
+            { test ! -e "$file" && test ! -L "$file"; } || { echo "Unexpected dotenv override in test checkout" >&2; exit 1; }
+          done
+          docker buildx build --target build --load -t model-connector-rate-limit-test .
+
       - name: Build Docker image
         run: docker buildx build --load -t model-connector-e2e .
 
@@ -148,6 +162,35 @@ jobs:
             -e DATABASE_URL=postgresql://test:test@localhost:15432/connector_test \
             -v "$PWD/dev-tools/first-dispatch-observation-db-contract.mjs:/app/first-dispatch-observation-db-contract.mjs:ro" \
             model-connector-e2e /app/first-dispatch-observation-db-contract.mjs
+
+      - name: Six rate-limit assertions against disposable stores
+        run: |
+          set -euo pipefail
+          name="mc-rate-limit-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cleanup() {
+            # Only this run's disposable test container, never a service or runner.
+            timeout --kill-after=5s 15s docker rm -f "$name" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          timeout --kill-after=5s 90s docker run --rm --init --name "$name" --network=host \
+            --user "$(id -u):$(id -g)" \
+            --entrypoint sh \
+            -e HOME=/tmp \
+            -e NODE_ENV=test \
+            -e CI=1 \
+            -e DATABASE_URL=postgresql://test:test@localhost:15432/connector_test \
+            -e REDIS_HOST=127.0.0.1 \
+            -e REDIS_PORT=16379 \
+            -e REDIS_PREFIX="mc-rate-limit-ci:${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}:" \
+            model-connector-rate-limit-test -ec '
+              for file in .env .env.local .env.integration .env.integration.local; do
+                { test ! -e "$file" && test ! -L "$file"; } || { echo "Unexpected dotenv override in test image" >&2; exit 1; }
+              done
+              node node_modules/vitest/vitest.mjs run src/auth/rate-limit.integration.spec.ts \
+                --config vitest.integration.config.ts --mode integration --no-cache \
+                --reporter=json --outputFile=/tmp/mc-rate-limit-result.json
+              node dev-tools/rate-limit-ci-report.mjs /tmp/mc-rate-limit-result.json
+            '
 
       - name: Start container
         run: |
