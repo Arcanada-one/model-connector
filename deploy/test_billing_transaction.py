@@ -333,6 +333,78 @@ class Tests(unittest.TestCase):
         with self.assertRaises(subject.Refusal):
             self.engine(fixture).recover(state['id'])
 
+    def test_one_shot_completion_write_failure_never_replaces_pending_with_rollback(self):
+        for completion in ('returned', 'returned-refusal'):
+            with self.subTest(completion=completion):
+                fixture = Fixture(failure='build' if completion == 'returned-refusal' else None)
+                failed = []
+                def writer(path, data):
+                    action = data.get('native_action', {})
+                    if not failed and action == {'name': 'build', 'completion': completion}:
+                        failed.append(True)
+                        raise OSError('one-shot completion write failed')
+                    subject.atomic_state(path, data)
+                engine = self.engine(fixture, writer=writer)
+                with self.assertRaises(subject.Refusal):
+                    engine.deploy(NEW, SENTINEL)
+                self.assertEqual(failed, [True])
+                state = engine.load()
+                self.assertEqual(state['phase'], 'build-intent')
+                self.assertEqual(state['native_action'], {'name': 'build', 'completion': 'pending'})
+                self.assertTrue(engine.pending(engine.state))
+                self.assertEqual(fixture.latest, CANDIDATE)
+                self.assertNotIn('latest', fixture.tags)
+                fresh = self.engine(fixture)
+                with self.assertRaises(subject.Refusal):
+                    fresh.recover(state['id'])
+                with self.assertRaises(subject.Refusal):
+                    fresh.check(NEW)
+                with self.assertRaises(subject.Refusal):
+                    fresh.deploy(NEW, SENTINEL)
+                # Only this fixture's protected journal is reset between cases.
+                (engine.private / 'active.json').unlink()
+
+    def test_native_health_propagates_unknown_without_retry_or_sleep(self):
+        for point in ('container', 'docker-exec'):
+            with self.subTest(point=point):
+                native = subject.Native()
+                calls = []
+                def call(argv, **kwargs):
+                    calls.append(argv)
+                    if argv[1:3] == ['image', 'inspect']:
+                        return NEW
+                    if argv[1] == 'inspect':
+                        if point == 'container':
+                            raise subject.NativeOutcomeUnknown('native completion is unknown')
+                        return '|'.join([CANDIDATE, 'true', 'healthy', 'billing-arcana',
+                                         'billing', str(subject.STATE / 'billing-arcana/compose.deploy.yml')])
+                    raise subject.NativeOutcomeUnknown('native completion is unknown')
+                with patch.object(native, 'call', call), patch.object(subject.time, 'sleep') as sleep:
+                    with self.assertRaises(subject.NativeOutcomeUnknown):
+                        native.health(CANDIDATE, NEW)
+                    sleep.assert_not_called()
+                self.assertEqual(len(calls), 2 if point == 'container' else 3)
+
+    def test_unknown_native_health_keeps_transaction_pending_without_commit_or_rollback(self):
+        fixture = Fixture()
+        def health(image, revision):
+            native = subject.Native()
+            with patch.object(native, 'verify_image'), patch.object(
+                    native, 'container', side_effect=subject.NativeOutcomeUnknown('native completion is unknown')):
+                native.health(image, revision)
+        fixture.health = health
+        engine = self.engine(fixture)
+        with self.assertRaises(subject.Refusal):
+            engine.deploy(NEW, SENTINEL)
+        state = engine.load()
+        self.assertEqual(state['phase'], 'up-intent')
+        self.assertEqual(state['native_action'], {'name': 'health', 'completion': 'pending'})
+        self.assertEqual(fixture.live, CANDIDATE)
+        self.assertNotIn(NEW, fixture.tags)
+        self.assertNotIn('latest', fixture.tags)
+        with self.assertRaises(subject.Refusal):
+            self.engine(fixture).recover(state['id'])
+
     def test_recovery_timeout_stays_nonterminal_and_blocks_second_owner(self):
         fixture = Fixture()
         engine = self.engine(fixture)

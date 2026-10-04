@@ -182,6 +182,8 @@ class Native:
                 if value[:3] == [image, 'true', 'healthy']:
                     self.call(['/usr/bin/docker', 'exec', CONTAINER, 'node', '-e', probe])
                     return
+            except NativeOutcomeUnknown:
+                raise
             except Refusal:
                 pass
             time.sleep(2)
@@ -247,12 +249,21 @@ class Transaction:
         except NativeOutcomeUnknown:
             raise
         except Refusal:
-            self.state['native_action']['completion'] = 'returned-refusal'
-            self.persist(self.state['phase'])
+            self.complete_operation('returned-refusal')
             raise
-        self.state['native_action']['completion'] = 'returned'
-        self.persist(self.state['phase'])
+        self.complete_operation('returned')
         return result
+
+    def complete_operation(self, completion):
+        # Copy before writing: the in-memory recovery guard must stay pending
+        # until the completion is durable, including a one-shot writer failure.
+        completed = dict(self.state, native_action={
+            **self.state['native_action'], 'completion': completion})
+        try:
+            self.writer(self.private / 'active.json', completed)
+        except OSError:
+            raise NativeOutcomeUnknown('native completion persistence is unknown') from None
+        self.state = completed
 
     def load(self):
         path = self.private / 'active.json'
