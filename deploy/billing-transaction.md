@@ -34,6 +34,17 @@ baselines and old helper generations remain retained. A process killed outside
 this protocol is not automatically claimed healthy: the root owner must use the
 receipt-bound recovery and collect an actual runtime receipt.
 
+Every native operation after journal creation has a durable pending record before
+invocation and a separate completion write after a returned result. A timeout,
+interrupt, process kill or failed completion write cannot mean that the daemon
+finished. Pending operations block both a new deploy and recovery, including a
+pending recovery operation under a previously committed transaction. The source
+has no genuine completion/quiescence evidence issuer for such unknown outcomes;
+there is no receipt-ID override, state reset or claim that a caller process exit
+settled a daemon. A separately reviewed owner completion mechanism is a remaining
+source prerequisite before this class of recovery can be enabled. Ordinary
+returned failures can restore the baseline; unknown outcomes retain their WAL.
+
 The installer remains root-only and outside runner sudo. It verifies the helper
 and unchanged sudoers hashes bound inside the expected broker, installs a private
 content-addressed helper first, preserves the old broker, and publishes the new
@@ -43,7 +54,9 @@ Install/restore require a reviewed maintenance fence with no active Billing
 transaction; these commands do not establish that runtime fence themselves.
 
 Tests use owned disposable paths and fake native adapters, plus real rename,
-fsync and process argv. The fixture models production root metadata only for the
+fsync, process argv and a real subprocess timeout. A controlled late completion
+does not clear the native pending record or authorize another operation. The
+fixture models production root metadata only for the
 unprivileged test namespace; there is no runtime path/UID override. Local tests
 and CI are source evidence. Installation, legitimate bootstrap, rollback under
 production ownership and live auth remain NOT_MEASURED until executed separately.
