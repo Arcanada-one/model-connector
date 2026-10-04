@@ -28,6 +28,11 @@ jobs:
       - name: Credential documentation regression
         run: bash dev-tools/credential-docs-regression.sh
 
+      - name: Full-suite declaration boundary controls
+        run: |
+          bash -n scripts/graph-full-suite.sh
+          PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/graph-full-suite.test.py
+
       # ARAS-0058 — BILLING_ENFORCED was declared nowhere outside src/: not in
       # .env.example, not in docker-compose.yml, not in deploy/, not here. It
       # was set by hand on the prod container, so the next deploy that rebuilt
