@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted"
  },
- "captured_at_utc": "2026-10-04T00:54:41Z",
+ "captured_at_utc": "2026-10-04T01:37:57Z",
  "change_set": {
   "base": "ec9ce753a7c9c392767691e7eb6f13bc55a91a0a",
   "files": [
@@ -82,7 +82,7 @@
     "status": "A"
    }
   ],
-  "head": "20fff83274426fb08086d51d60adbc2253078976",
+  "head": "003405f4de5f9270b2bb88e674194272317b3616",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -91,17 +91,17 @@
   "builder_version": "1.0.3",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:d5bc478c4f53279d815ddda5e56c021a62838cbe87829c23c4396f34c4a48250",
-  "path": "/home/dev/.infra-cleanup-9b098/billing174-R1-current8c/verifier-out/graph-ec9ce753a7c9.json",
+  "path": "/home/dev/.infra-cleanup-9b098/tmp/arcana-verify/verifier-out/graph-ec9ce753a7c9.json",
   "source_commit": "ec9ce753a7c9c392767691e7eb6f13bc55a91a0a"
  },
  "head_graph": {
   "builder_version": "1.0.3",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:a0a669df89ec039daf86c53b1d077781c2f5d6ab6d248df630ed5b9eae46bcb6",
-  "path": "/home/dev/.infra-cleanup-9b098/billing174-R1-current8c/verifier-out/graph-head-20fff8327442.json",
-  "source_commit": "20fff83274426fb08086d51d60adbc2253078976",
+  "graph_digest": "sha256:f2ecd8a006778a3d641bf082b8584affbbf0deae646790f49ddf07a5b2b7b377",
+  "path": "/home/dev/.infra-cleanup-9b098/tmp/arcana-verify/verifier-out/graph-head-003405f4de5f.json",
+  "source_commit": "003405f4de5f9270b2bb88e674194272317b3616",
   "staleness": {
-   "checked_at_utc": "2026-10-04T00:54:54Z",
+   "checked_at_utc": "2026-10-04T01:38:11Z",
    "checked_nodes": 779,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -329,7 +329,7 @@
   "tool": "tools/graph/verify.py",
   "version": "1.3.0"
  },
- "receipt_id": "car-verify-20261004T005441Z-20fff832",
+ "receipt_id": "car-verify-20261004T013757Z-003405f4",
  "receipt_path": "receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -372,7 +372,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-10-04T00:54:54Z",
+  "checked_at_utc": "2026-10-04T01:38:11Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -458,7 +458,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:8599143e1c61a5c2616c7b9bfbb262ae4f30ad0650b30c21e6bca6c0a5e83007"
+    "head": "sha256:93da801101fbe00661d5c5a2bda32d68e0378fe556b12fcf068b6183e78a75ca"
    },
    "entity": "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json",
    "node_type": "receipt",
@@ -472,7 +472,7 @@
   }
  ],
  "tree": {
-  "commit": "20fff83274426fb08086d51d60adbc2253078976",
+  "commit": "003405f4de5f9270b2bb88e674194272317b3616",
   "dirty": false
  },
  "verdicts": [
@@ -551,8 +551,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/.worktrees/model-connector/infra-billing-atomic-ctx-ea314/node_modules/.bin/tsc -p /home/dev/.worktrees/model-connector/infra-billing-atomic-ctx-ea314/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/.infra-cleanup-9b098/billing174-R1-current8c/verifier-out/type-check-dbqa57en/check.tsbuildinfo --listFiles",
-   "duration_s": 8.79,
+   "command": "/home/dev/.worktrees/model-connector/infra-billing-atomic-ctx-ea314/node_modules/.bin/tsc -p /home/dev/.worktrees/model-connector/infra-billing-atomic-ctx-ea314/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/.infra-cleanup-9b098/tmp/arcana-verify/verifier-out/type-check-rjp6kdrr/check.tsbuildinfo --listFiles",
+   "duration_s": 7.71,
    "entities": [
     "deployable_unit:."
    ],
@@ -562,13 +562,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/.infra-cleanup-9b098/billing174-R1-current8c/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-10-04T00:55:08Z",
+   "output_ref": "/home/dev/.infra-cleanup-9b098/tmp/arcana-verify/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-10-04T01:38:26Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2115 files listed"
   },
   {
-   "command": "/home/dev/.worktrees/model-connector/infra-billing-atomic-ctx-ea314/node_modules/.bin/tsc -p /home/dev/.worktrees/model-connector/infra-billing-atomic-ctx-ea314/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/.infra-cleanup-9b098/billing174-R1-current8c/verifier-out/type-check-0_h0bnpu/check.tsbuildinfo --listFiles",
-   "duration_s": 15.76,
+   "command": "/home/dev/.worktrees/model-connector/infra-billing-atomic-ctx-ea314/node_modules/.bin/tsc -p /home/dev/.worktrees/model-connector/infra-billing-atomic-ctx-ea314/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/.infra-cleanup-9b098/tmp/arcana-verify/verifier-out/type-check-k30cnkty/check.tsbuildinfo --listFiles",
+   "duration_s": 12.32,
    "entities": [
     "deployable_unit:."
    ],
@@ -578,8 +578,8 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/.infra-cleanup-9b098/billing174-R1-current8c/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-10-04T00:55:17Z",
+   "output_ref": "/home/dev/.infra-cleanup-9b098/tmp/arcana-verify/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-10-04T01:38:34Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2719 files listed"
   },
   {
@@ -594,13 +594,13 @@
    "exit_code": 0,
    "id": "v-workflow-config-b803fcb7f17ed923",
    "kind": "config_schema",
-   "output_ref": "/home/dev/.infra-cleanup-9b098/billing174-R1-current8c/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
-   "started_at_utc": "2026-10-04T00:55:33Z",
+   "output_ref": "/home/dev/.infra-cleanup-9b098/tmp/arcana-verify/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-10-04T01:38:48Z",
    "summary": "bounded workflow configuration shape valid; expressions, shell, actions, callee interface compatibility and hosted execution NOT_MEASURED"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.4,
+   "duration_s": 0.36,
    "entities": [
     "code_unit:.github/workflows/ci.yml",
     "code_unit:deploy/billing-transaction.py",
@@ -618,8 +618,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/.infra-cleanup-9b098/billing174-R1-current8c/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-10-04T00:55:33Z",
+   "output_ref": "/home/dev/.infra-cleanup-9b098/tmp/arcana-verify/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-10-04T01:38:48Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -638,8 +638,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/.infra-cleanup-9b098/billing174-R1-current8c/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-10-04T00:55:34Z",
+   "output_ref": "/home/dev/.infra-cleanup-9b098/tmp/arcana-verify/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-10-04T01:38:48Z",
    "summary": "3 document(s), 0 failed"
   }
  ],
@@ -694,9 +694,9 @@
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
   },
   "seconds": {
-   "prepare": 10.2,
-   "total": 52.61,
-   "verifiers": 24.95
+   "prepare": 11.03,
+   "total": 50.68,
+   "verifiers": 20.39
   }
  },
  "work_item": "9f9dc191-ee2b-4e37-81fc-0f8106174f27"
