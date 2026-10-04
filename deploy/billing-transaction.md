@@ -44,6 +44,10 @@ there is no receipt-ID override, state reset or claim that a caller process exit
 settled a daemon. A separately reviewed owner completion mechanism is a remaining
 source prerequisite before this class of recovery can be enabled. Ordinary
 returned failures can restore the baseline; unknown outcomes retain their WAL.
+Completion publication uses a separate state copy: a one-shot persistence failure
+cannot replace the in-memory pending guard before recovery. Health probes propagate
+typed unknown outcomes immediately, without retrying or converting them to ordinary
+health failure; the transaction retains its pending health invocation.
 
 The installer remains root-only and outside runner sudo. It verifies the helper
 and unchanged sudoers hashes bound inside the expected broker, installs a private
