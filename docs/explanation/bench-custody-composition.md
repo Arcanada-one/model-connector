@@ -15,17 +15,54 @@ reservations remain governed by the existing classes. Authentic executor,
 financial entitlement and provider hard-output receipts remain missing; no
 reference or benchmark result is produced.
 
-## Measured dependency defect
+## Socket lifecycle repair
 
-The new regression `stop preserves a replacement path rather than unlinking
-another owner` currently fails. The unchanged adapter closes Node's named Unix
-server before checking the path inode. Closing removes a replacement regular file,
-so the later inode check cannot protect it. The raw negative must remain visible;
-this composition is a draft and is not admitted. No filesystem rename workaround,
-private Node handle mutation, test skip or fixture waiver is introduced. A bounded
-adapter ownership/close design and the preserved negative must be independently
-reviewed before integration. A pre-close inode check alone does not establish
-race-safe ownership.
+The immutable `3e61984` preparation and natural CI run retain the original
+replacement-file deletion failure (3371/3372 tests). Node22's libuv closes a
+pathname-bound Unix socket by unlinking its original bound name before closing
+its file descriptor. A pre-close inode observation cannot prevent deletion of a
+replacement created between that observation and close.
+
+The adapter now binds in a fresh per-instance private directory (0700) beneath
+the existing owner-controlled parent, then exclusively publishes a hardlink to
+that same socket inode (0600) at the unchanged signed grant path. This is an
+actual filesystem socket, not a symlink, abstract socket, proxy or changed grant.
+Node only closes/unlinks the private bound name. Existing grant-path entries are
+never overwritten at publication; unsupported hardlinks or an overlong private
+address refuse without fallback. The private directory is an adapter-owned
+namespace; this is not isolation against a malicious process sharing its Unix
+identity and arbitrarily modifying that private namespace.
+
+After closing the listener and its accepted connections, cleanup atomically
+renames the public entry into private custody. It checks the captured device,
+inode and socket type, rather than deleting a name based on an earlier check.
+An already foreign public entry is untouched. A foreign entry swapped during
+capture is restored through an exclusive hardlink, never by an overwriting
+rename. If restoration is impossible (including an occupied public name or a
+captured directory), `BenchSocketCleanupHold` exposes the retained recovery
+path. Both entries and their contents remain intact. No recursive cleanup,
+financial release, reset, silent success or automatic recovery occurs.
+
+A cleanup hold blocks restart. The source owner may explicitly recover the held
+entry and call stop to finish empty-directory cleanup; the fixtures exercise
+only their own synthetic entries. The composition clears its running flag before
+awaiting cleanup so a failed stop cannot make a later start report stale success.
+
+Controls cover the original replacement-file negative, replacements at the
+actual close boundary and before/after atomic capture, occupied restoration,
+foreign socket/listener, symlink and nonempty directory preservation, exclusive
+publication collision, same-inode/mode publication, direct duplicate-start
+refusal, active partial-envelope shutdown, and ordinary stop/restart. They keep
+real Node socket and filesystem operations, inserting deterministic fixture-only
+interleavings at the relevant syscalls. Removing captured-identity verification
+or lifecycle hold handling is detected, and the original adapter is genuinely
+RED on its preserved regression. Source controls do not authorize runtime.
+
+Primary references: [Node22 net documentation](https://nodejs.org/docs/latest-v22.x/api/net.html),
+[pinned Node22.23.2 libuv close source](https://github.com/nodejs/node/blob/v22.23.2/deps/uv/src/unix/pipe.c),
+[Node22 filesystem documentation](https://nodejs.org/docs/latest-v22.x/api/fs.html),
+[Linux rename](https://man7.org/linux/man-pages/man2/rename.2.html) and
+[Linux link](https://man7.org/linux/man-pages/man2/link.2.html).
 
 ## Offline verification
 
@@ -43,4 +80,4 @@ TMPDIR must name an owned directory, with mode 0700. The local fixture uses real
 classes, synthetic existing fixture key material and a real private Unix socket;
 its database pool refuses all access. It never invokes a provider. Default-off,
 issuer separation and duplicate-start removal mutations are killed by the specs.
-The failing ownership negative is independent of those passing controls.
+The original failing ownership control is retained and now passes on the repair.

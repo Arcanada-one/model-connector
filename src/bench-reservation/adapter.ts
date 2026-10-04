@@ -1,6 +1,6 @@
 import { createServer, Server, Socket } from 'node:net';
-import { lstat, chmod, unlink } from 'node:fs/promises';
-import { dirname, isAbsolute } from 'node:path';
+import { lstat, chmod, unlink, mkdtemp, link, rename, rmdir } from 'node:fs/promises';
+import { dirname, isAbsolute, join } from 'node:path';
 import { z } from 'zod';
 import { BenchReservationService } from './service';
 import { requestSchema, requireBench } from './contract';
@@ -70,9 +70,20 @@ const wireSchema = z
   })
   .strict();
 
+/** A foreign entry remains in private custody if exclusive restoration cannot
+ * succeed. The owner gets a recovery path, never a silent delete or overwrite. */
+export class BenchSocketCleanupHold extends Error {
+  constructor(readonly recoveryPath: string) {
+    super('socket_cleanup_held');
+  }
+}
 export class BenchTrustedSocketAdapter {
   private server?: Server;
-  private inode?: number;
+  private readonly sockets = new Set<Socket>();
+  private privateDirectory?: string;
+  private identity?: { dev: number; ino: number };
+  private published = false;
+  private starting = false;
   constructor(
     private readonly service: BenchReservationService,
     private readonly socketPath: string,
@@ -101,42 +112,62 @@ export class BenchTrustedSocketAdapter {
    * provider path or AppModule activation. Owner supplies existing service. */
   async start(enabled = false): Promise<boolean> {
     if (!enabled) return false;
-    requireBench(!this.server && isAbsolute(this.socketPath), 'socket_start_refused');
-    requireBench(Buffer.byteLength(this.socketPath) < 108, 'socket_path_too_long');
-    const parent = await lstat(dirname(this.socketPath));
     requireBench(
-      parent.isDirectory() &&
-        !parent.isSymbolicLink() &&
-        parent.uid === process.getuid?.() &&
-        (parent.mode & 0o777) === 0o700,
-      'private_socket_directory_required',
+      !this.server && !this.privateDirectory && !this.starting && isAbsolute(this.socketPath),
+      'socket_start_refused',
     );
+    requireBench(Buffer.byteLength(this.socketPath) < 108, 'socket_path_too_long');
+    this.starting = true;
     try {
-      await lstat(this.socketPath);
-      throw new Error('existing socket preserved');
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-    }
-    const server = createServer({ allowHalfOpen: true }, (socket) => this.handle(socket));
-    this.server = server;
-    try {
+      const parent = await lstat(dirname(this.socketPath));
+      requireBench(
+        parent.isDirectory() &&
+          !parent.isSymbolicLink() &&
+          parent.uid === process.getuid?.() &&
+          (parent.mode & 0o777) === 0o700,
+        'private_socket_directory_required',
+      );
+      try {
+        await lstat(this.socketPath);
+        throw new Error('existing socket preserved');
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      }
+      // Node/libuv unlinks the name supplied to listen() during close(), without
+      // comparing inode identity. Never give it the grant-visible mutable name.
+      // Same-filesystem hardlink publication preserves the exact filesystem socket
+      // and signed grant path; no symlink, abstract socket, private handle or proxy.
+      requireBench(
+        Buffer.byteLength(join(dirname(this.socketPath), '.b-XXXXXX', 's')) < 108,
+        'private_socket_path_too_long',
+      );
+      this.privateDirectory = await mkdtemp(join(dirname(this.socketPath), '.b-'));
+      const boundPath = join(this.privateDirectory, 's');
+      const server = createServer({ allowHalfOpen: true }, (socket) => this.handle(socket));
+      this.server = server;
       await new Promise<void>((resolve, reject) => {
         server.once('error', reject);
-        server.listen(this.socketPath, () => {
+        server.listen(boundPath, () => {
           server.removeListener('error', reject);
           resolve();
         });
       });
-      await chmod(this.socketPath, 0o600);
-      this.inode = (await lstat(this.socketPath)).ino;
+      await chmod(boundPath, 0o600);
+      const bound = await lstat(boundPath);
+      this.identity = { dev: bound.dev, ino: bound.ino };
+      await link(boundPath, this.socketPath); // Exclusive: existing entries are never replaced.
+      this.published = true;
       return true;
     } catch (error) {
-      this.server = undefined;
-      server.close();
+      await this.stop();
       throw error;
+    } finally {
+      this.starting = false;
     }
   }
   private handle(socket: Socket): void {
+    this.sockets.add(socket);
+    socket.once('close', () => this.sockets.delete(socket));
     // No payload/token/key/error logging. A timeout may lose a committed reply;
     // the service still preserves every UNKNOWN reservation without release.
     const chunks: Buffer[] = [];
@@ -162,16 +193,60 @@ export class BenchTrustedSocketAdapter {
       })();
     });
   }
+  private async releasePublicName(directory: string): Promise<void> {
+    const captured = join(directory, 'captured');
+    try {
+      await lstat(captured);
+      throw new BenchSocketCleanupHold(captured); // Preserve unresolved prior custody.
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    }
+    if (!this.published) return;
+    try {
+      const current = await lstat(this.socketPath);
+      if (!this.ownsSocket(current)) return; // Already foreign: leave it exactly where it is.
+      await rename(this.socketPath, captured); // Capture the actual entry, not an earlier check.
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
+      throw error;
+    }
+    const actual = await lstat(captured);
+    if (!this.ownsSocket(actual)) {
+      try {
+        // link() is no-clobber and does not follow a captured symlink on Linux.
+        // Directory replacements or an occupied public name remain held, never deleted.
+        await link(captured, this.socketPath);
+      } catch {
+        throw new BenchSocketCleanupHold(captured);
+      }
+    }
+    await unlink(captured); // Only private captured custody; never unlink the public name.
+  }
+  private ownsSocket(value: { dev: number; ino: number; isSocket(): boolean }): boolean {
+    return value.isSocket() && value.dev === this.identity?.dev && value.ino === this.identity?.ino;
+  }
   async stop(): Promise<void> {
     const server = this.server;
     this.server = undefined;
-    if (!server) return;
-    await new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve())));
-    try {
-      const s = await lstat(this.socketPath);
-      if (s.ino === this.inode && s.isSocket()) await unlink(this.socketPath);
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e;
+    if (server) {
+      for (const socket of this.sockets) socket.destroy();
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) =>
+          error && (error as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING'
+            ? reject(error)
+            : resolve(),
+        ),
+      );
     }
+    const directory = this.privateDirectory;
+    if (!directory) return;
+    await this.releasePublicName(directory);
+    // No recursive cleanup: any unexpected entry preserves the private directory
+    // and blocks a restart until owner recovery. Explicit stop can finish cleanup
+    // after that recovery; it never releases an UNKNOWN financial reservation.
+    await rmdir(directory);
+    this.privateDirectory = undefined;
+    this.identity = undefined;
+    this.published = false;
   }
 }

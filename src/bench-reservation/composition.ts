@@ -79,9 +79,8 @@ export function composeBenchCustody(
       }),
     stop: () =>
       serialize(async () => {
-        if (!running) return;
-        await adapter.stop();
         running = false;
+        await adapter.stop();
       }),
   });
 }
