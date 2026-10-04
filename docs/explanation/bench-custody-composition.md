@@ -81,3 +81,25 @@ classes, synthetic existing fixture key material and a real private Unix socket;
 its database pool refuses all access. It never invokes a provider. Default-off,
 issuer separation and duplicate-start removal mutations are killed by the specs.
 The original failing ownership control is retained and now passes on the repair.
+
+## Source-local verification scope
+
+The full candidate is compared with the actual Model Connector main revision.
+Test-only socket/binary/TMPDIR declarations live in
+`test/bench-reservation/.env.example`. The application and BENCH test compiler
+project is `test/bench-reservation/tsconfig.json`; it includes all application
+source/spec files and the BENCH fixtures. Watcher files retain their separately
+declared ESM project instead of being compiled under the application CommonJS
+project. Compiler membership is measured using `--listFiles`.
+
+The earlier source candidate introduced test comments in the production
+`.env.example` and a root `tsconfig.test.json`. This successor removes those
+unnecessary production-global changes and consolidates the same application
+source/test compilation in the owned fixture project. This is an explicit source
+change, not an impact-set filter, prefix assumption, graph-policy exception,
+or canary waiver. Earlier whole-PR failure receipts remain immutable. The current
+whole base/head graph must still select every real affected entity and require
+each inferred boundary's genuine physical evidence. The unchanged main bootstrap,
+service registration and runtime configuration are not modified to accommodate
+the verifier. Default-disabled construction, financial custody and null gold
+remain unchanged.
