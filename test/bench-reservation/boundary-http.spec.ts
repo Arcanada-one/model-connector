@@ -5,6 +5,11 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { getQueueToken } from '@nestjs/bullmq';
 import { AddressInfo } from 'node:net';
 import { request } from 'node:http';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { isAbsolute, join } from 'node:path';
 import { AuthGuard } from '../../src/auth/auth.guard';
 import { AuthService } from '../../src/auth/auth.service';
 import { AdminController } from '../../src/admin/admin.controller';
@@ -156,6 +161,67 @@ describe('owned actual controller/guard HTTP refusal boundary', () => {
   afterAll(async () => {
     await fixture?.app.close();
   });
+
+  // Explicit opt-in to the existing canonical producer, never a local imitation.
+  // Inputs belong to this disposable fixture only; no application startup uses them.
+  if (process.env.BENCH_SOURCE_HTTP_CANARY_DIR) {
+    it('existing canonical producer observes this exact owned physical HTTP contour', async () => {
+      const directory = process.env.BENCH_SOURCE_HTTP_CANARY_DIR!;
+      const producer = process.env.BENCH_SOURCE_HTTP_PRODUCER!;
+      const python = process.env.BENCH_SOURCE_HTTP_PYTHON!;
+      const expectedDigest = process.env.BENCH_SOURCE_HTTP_PRODUCER_SHA256!;
+      for (const path of [directory, producer, python]) {
+        expect(typeof path).toBe('string');
+        expect(isAbsolute(path)).toBe(true);
+      }
+      expect(createHash('sha256').update(readFileSync(producer)).digest('hex')).toBe(
+        expectedDigest,
+      );
+      const plan = JSON.parse(readFileSync(join(directory, 'PLAN.json'), 'utf8'));
+      expect(plan.schema).toBe('CanaryPlan/v1');
+      expect(plan.api_key_env).toBeUndefined();
+      expect(plan.probes).toHaveLength(boundaryCases.length);
+      expect(
+        plan.probes.map((p: { method: string; path: string; expect: { status_in: number[] } }) => [
+          p.method,
+          p.path,
+          p.expect.status_in[0],
+        ]),
+      ).toEqual(boundaryCases);
+      await promisify(execFile)(
+        python,
+        [
+          '-B',
+          producer,
+          'canary',
+          '--plan',
+          'PLAN.json',
+          '--subject-repo',
+          process.cwd(),
+          '--phase',
+          'pre',
+          '--base-url',
+          `http://127.0.0.1:${fixture.port}`,
+          '--timeout',
+          '1',
+          '--out',
+          'RESULT.json',
+        ],
+        { cwd: directory, timeout: 45000, maxBuffer: 1048576 },
+      );
+      const result = JSON.parse(readFileSync(join(directory, 'RESULT.json'), 'utf8'));
+      expect(result.schema).toBe('CanaryResult/v1');
+      expect(result.source_binding_errors ?? []).toEqual([]);
+      expect(result.counters).toEqual({
+        verified: boundaryCases.length,
+        failed: 0,
+        not_measured: 0,
+      });
+      expect(
+        result.probes.map((p: { method: string; status: number }) => [p.method, p.status]),
+      ).toEqual(boundaryCases.map(([method, , status]) => [method, status]));
+    }, 60000);
+  }
 
   for (const [method, path, status] of boundaryCases) {
     it(`physical ${method} ${path} returns ${status} with no caller/provider`, async () => {
