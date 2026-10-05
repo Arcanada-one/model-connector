@@ -25,3 +25,31 @@ No loader, filesystem discovery, Journal opening, reserve, signing, send,
 credential access or provider call is added. All thirteen existing references
 remain null and activation stays disabled. This source must pass independent
 review, current whole admission and exact CI before any separate adoption.
+
+## Disabled image packaging
+
+The production image includes only `bench-account-receiving.py`, the unchanged
+`bench-monetary-v2.disabled.json`, and the offline package verifier under
+`/app/deploy`. It installs Python's minimal standard-library runtime. The build
+requires the existing `MC_BUILD_SHA` argument and creates an exclusive provenance
+receipt binding that revision to the three actual file hashes. Files are owned by
+root and read-only to the existing non-root connector user. No deploy broker or
+financial execution entrypoint is copied or started.
+
+The ordinary Docker CI verifies the actual candidate image with networking disabled
+and a read-only filesystem:
+
+```sh
+docker run --rm --network=none --read-only --entrypoint python3 \
+  model-connector-e2e -B /app/deploy/bench-receiving-package.py verify "$GITHUB_SHA"
+```
+
+A successful readback proves file presence, exact bytes, interpreter importability,
+and the supplied build revision only. It is local image custody metadata, not a
+signed issuer attestation or proof that the supplied revision is authentic. The
+registry image identity and ordinary CI source revision must be bound separately
+by the existing deployment receipt. All thirteen protected references remain NULL;
+financial designation, cap resolution, executable authorization, native issuer,
+Journal and transaction composition remain unresolved and disabled. Rollback uses
+the existing reviewed image/deployment route to the prior image; there is no host
+installation or account mutation in this packaging change.
