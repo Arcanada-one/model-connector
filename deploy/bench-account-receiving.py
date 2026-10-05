@@ -7,6 +7,7 @@ Even qualified source inputs do not admit an installed binary or financial effec
 from dataclasses import dataclass
 import hashlib
 import json
+import math
 import re
 import time
 from typing import Literal, Protocol
@@ -72,6 +73,47 @@ def qualify_composition(original_pins: bytes, composition: bytes,
         return False
 
 
+def _valid_scope(scope) -> bool:
+    return (type(scope) is AccountScope
+            and all(type(v) is str for v in (scope.task, scope.source_head,
+                    scope.binary_sha256, scope.checkpoint_head))
+            and re.fullmatch(r'[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}', scope.task) is not None
+            and all(type(v) is str and 0 < len(v) <= 256
+                    for v in (scope.account, scope.subject))
+            and re.fullmatch(r'[a-f0-9]{40}', scope.source_head) is not None
+            and all(re.fullmatch(r'[a-f0-9]{64}', v) is not None
+                    for v in (scope.binary_sha256, scope.checkpoint_head)))
+
+
+def _valid_receipts(receipts) -> bool:
+    return (type(receipts) is dict and set(receipts) == set(KINDS)
+            and all(type(v) is bytes and 0 < len(v) <= 65536
+                    for v in receipts.values()))
+
+
+def _valid_proofs(scope, receipts, proofs, now) -> bool:
+    if (not _valid_scope(scope) or not _valid_receipts(receipts)
+            or type(proofs) is not tuple or len(proofs) != 2
+            or any(type(p) is not ResolvedAccountReceipt for p in proofs)
+            or type(now) not in (int, float) or not math.isfinite(now)):
+        return False
+    if (any(type(p.kind) is not str or p.kind not in KINDS for p in proofs)
+            or {p.kind for p in proofs} != set(KINDS)):
+        return False
+    for proof in proofs:
+        if (type(proof.scope) is not AccountScope or proof.scope != scope
+                or proof.revoked is not False
+                or type(proof.valid_until) is not int or proof.valid_until <= now
+                or not all(type(v) is str and 0 < len(v) <= 1024 for v in
+                           (proof.original_issuer_reference, proof.issuer_subject,
+                            proof.current_revocation_reference))
+                or type(proof.receipt_sha256) is not str
+                or proof.receipt_sha256 != hashlib.sha256(receipts[proof.kind]).hexdigest()):
+            return False
+    return (proofs[0].original_issuer_reference != proofs[1].original_issuer_reference
+            and proofs[0].issuer_subject != proofs[1].issuer_subject)
+
+
 class PreparedAccountVerifier:
     """Synchronous Billing byte interface, bound to one prepared observation.
 
@@ -82,52 +124,39 @@ class PreparedAccountVerifier:
     source_only = True
     def __init__(self, receipts: dict[str, bytes], proofs: tuple,
                  scope: AccountScope, clock):
-        self._digests = {k: hashlib.sha256(v).hexdigest() for k, v in receipts.items()}
+        self._receipts = dict(receipts) if _valid_receipts(receipts) else {}
         self._proofs, self._scope, self._clock = proofs, scope, clock
+        self._prepared = False
+        try:
+            self._prepared = _valid_proofs(scope, self._receipts, proofs, clock())
+        except Exception:
+            pass  # malformed construction never logs receipt or clock exceptions
 
     def __call__(self, kind: Kind, receipt: bytes) -> bool:
-        if kind not in KINDS or type(receipt) is not bytes:
+        if type(kind) is not str or kind not in KINDS or type(receipt) is not bytes:
             return False
-        now = self._clock()
-        return (all(p.scope == self._scope and p.revoked is False
-                    and p.valid_until > now for p in self._proofs)
-                and hashlib.sha256(receipt).hexdigest() == self._digests[kind])
+        try:
+            return (self._prepared
+                    and _valid_proofs(self._scope, self._receipts, self._proofs, self._clock())
+                    and receipt == self._receipts[kind])
+        except Exception:
+            return False  # no malformed proof, clock or payload exception escapes
 
 
 async def prepare_account_verifier(scope: AccountScope, receipts: dict[str, bytes],
                                    resolver: OriginalAccountResolver | None = None,
                                    clock=time.time) -> PreparedAccountVerifier | None:
     """Default refuse; await role-specific evidence, never Promise truthiness."""
-    if (type(scope) is not AccountScope or resolver is None
-            or type(receipts) is not dict or set(receipts) != set(KINDS)
-            or any(type(v) is not bytes or not 0 < len(v) <= 65536
-                   for v in receipts.values())):
-        return None
-    if (not all(type(v) is str for v in (scope.task, scope.source_head,
-                scope.binary_sha256, scope.checkpoint_head))
-            or not re.fullmatch(r'[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}', scope.task)
-            or not all(type(v) is str and 0 < len(v) <= 256
-                       for v in (scope.account, scope.subject))
-            or not re.fullmatch(r'[a-f0-9]{40}', scope.source_head)
-            or not all(re.fullmatch(r'[a-f0-9]{64}', v)
-                       for v in (scope.binary_sha256, scope.checkpoint_head))):
+    if resolver is None or not _valid_scope(scope) or not _valid_receipts(receipts):
         return None
     proofs = []
     try:
         for kind in KINDS:
             proof = await resolver.resolve(kind, receipts[kind], scope)
-            if (type(proof) is not ResolvedAccountReceipt or proof.kind != kind
-                    or proof.scope != scope or proof.revoked is not False
-                    or type(proof.valid_until) is not int or proof.valid_until <= clock()
-                    or not all(type(v) is str and 0 < len(v) <= 1024
-                               for v in (proof.original_issuer_reference,
-                                         proof.issuer_subject, proof.current_revocation_reference))
-                    or proof.receipt_sha256 != hashlib.sha256(receipts[kind]).hexdigest()):
+            if type(proof) is not ResolvedAccountReceipt or proof.kind != kind:
                 return None
             proofs.append(proof)
-        if (proofs[0].original_issuer_reference == proofs[1].original_issuer_reference
-                or proofs[0].issuer_subject == proofs[1].issuer_subject):
-            return None  # independent original checkpoint issuer, not designation reuse
-        return PreparedAccountVerifier(dict(receipts), tuple(proofs), scope, clock)
+        verifier = PreparedAccountVerifier(receipts, tuple(proofs), scope, clock)
+        return verifier if verifier._prepared else None
     except Exception:
         return None  # never emit resolver exception or receipt bodies

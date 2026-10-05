@@ -78,6 +78,75 @@ class SourceContracts(unittest.TestCase):
     def test_bad_composition_and_legacy_fifteen_are_not_adopted(self):
         self.assertFalse(r.qualify_composition(b'{}', b'{}', {}, b'changed'))
 
+    def direct_proofs(self):
+        return tuple(r.ResolvedAccountReceipt(kind, hashlib.sha256(self.receipts[kind]).hexdigest(),
+            self.scope, 'fixture-original-' + kind, 'fixture-principal-' + kind,
+            'fixture-current-revocation', False, 120) for kind in r.KINDS)
+
+    def test_direct_empty_incomplete_duplicate_and_untyped_proofs_refuse(self):
+        first, second = self.direct_proofs()
+        cases = [(), (first,), (first, first), (first, second, second),
+                 (True, second), (first, None), [first, second],
+                 (first, replace(second, kind='charging-policy'))]
+        for proofs in cases:
+            with self.subTest(proofs=proofs):
+                verifier = r.PreparedAccountVerifier(self.receipts, proofs, self.scope, lambda: self.now)
+                for kind in r.KINDS:
+                    self.assertFalse(verifier(kind, self.receipts[kind]))
+
+    def test_direct_malformed_role_binding_and_authority_fields_refuse(self):
+        first, second = self.direct_proofs()
+        changes = [dict(scope=replace(self.scope, account='other')),
+                   dict(receipt_sha256='d' * 64), dict(revoked=True),
+                   dict(revoked=0), dict(valid_until=100), dict(valid_until=True),
+                   dict(original_issuer_reference=first.original_issuer_reference),
+                   dict(issuer_subject=first.issuer_subject),
+                   dict(original_issuer_reference=''), dict(issuer_subject=None),
+                   dict(current_revocation_reference='')]
+        for change in changes:
+            with self.subTest(change=change):
+                verifier = r.PreparedAccountVerifier(self.receipts, (first, replace(second, **change)),
+                                                       self.scope, lambda: self.now)
+                self.assertFalse(verifier(r.KINDS[0], self.receipts[r.KINDS[0]]))
+
+    def test_direct_bad_inputs_and_clock_fail_closed_without_logs(self):
+        import contextlib
+        import io
+        def broken_clock(): raise RuntimeError('sentinel-never-log')
+        cases = [({}, self.scope, lambda: 100), (None, self.scope, lambda: 100),
+                 (self.receipts, replace(self.scope, task='bad'), lambda: 100),
+                 (self.receipts, self.scope, lambda: float('nan')),
+                 (self.receipts, self.scope, lambda: float('inf')),
+                 (self.receipts, self.scope, lambda: True),
+                 (self.receipts, self.scope, lambda: '100'),
+                 (self.receipts, self.scope, broken_clock)]
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+            for receipts, scope, clock in cases:
+                with self.subTest(scope=scope, clock=clock):
+                    verifier = r.PreparedAccountVerifier(receipts, self.direct_proofs(), scope, clock)
+                    self.assertFalse(verifier(r.KINDS[0], self.receipts[r.KINDS[0]]))
+        self.assertEqual(output.getvalue(), '')
+
+    def test_direct_valid_independent_pair_and_call_revalidation(self):
+        proofs = self.direct_proofs()
+        verifier = r.PreparedAccountVerifier(self.receipts, tuple(reversed(proofs)), self.scope,
+                                               lambda: self.now)
+        for kind in r.KINDS:
+            self.assertTrue(verifier(kind, self.receipts[kind]))
+        self.assertFalse(verifier.runtime_authorized)
+        self.assertTrue(verifier.source_only)
+        self.receipts[r.KINDS[0]] = b'changed-external-dict'
+        self.assertTrue(verifier(r.KINDS[0], b'fixture-account-designation'))
+        for change in [dict(kind='charging-policy'), dict(receipt_sha256='d' * 64),
+                       dict(current_revocation_reference=''), dict(revoked=True),
+                       dict(original_issuer_reference=proofs[0].original_issuer_reference)]:
+            verifier._proofs = (proofs[0], replace(proofs[1], **change))
+            self.assertFalse(verifier(r.KINDS[0], b'fixture-account-designation'))
+        verifier._proofs = proofs
+        self.now = 120
+        self.assertFalse(verifier(r.KINDS[0], b'fixture-account-designation'))
+
 
 if __name__ == '__main__':
     unittest.main()
