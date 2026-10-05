@@ -27,7 +27,7 @@ RUN npm install -g @anthropic-ai/claude-code @google/gemini-cli
 
 # Install Cursor CLI + keyring for persistent auth (Cursor stores tokens in OS keyring)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl ca-certificates dbus dbus-x11 gnome-keyring libsecret-1-0 python3-minimal \
+        curl ca-certificates dbus dbus-x11 gnome-keyring libsecret-1-0 python3 \
     && curl -fsSL https://cursor.com/install | bash \
     && cp -r /root/.local/share/cursor-agent /opt/cursor-agent \
     && ln -sf /opt/cursor-agent/versions/*/cursor-agent /usr/local/bin/cursor-agent \

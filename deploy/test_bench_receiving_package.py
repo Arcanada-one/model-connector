@@ -96,7 +96,8 @@ class PackagingContracts(unittest.TestCase):
         repo = ROOT.parent
         docker = (repo / 'Dockerfile').read_text()
         production = docker.split('FROM base AS production', 1)[1]
-        self.assertIn('python3-minimal', production)
+        self.assertIn('libsecret-1-0 python3', production)
+        self.assertNotIn('python3-minimal', production)
         self.assertIn('COPY deploy/bench-account-receiving.py deploy/bench-monetary-v2.disabled.json deploy/bench-receiving-package.py /app/deploy/', production)
         self.assertNotIn('COPY deploy/ /app/deploy', production)
         self.assertIn('chmod 0555 /app/deploy && chmod 0444 /app/deploy/*', production)

@@ -30,7 +30,7 @@ review, current whole admission and exact CI before any separate adoption.
 
 The production image includes only `bench-account-receiving.py`, the unchanged
 `bench-monetary-v2.disabled.json`, and the offline package verifier under
-`/app/deploy`. It installs Python's minimal standard-library runtime. The build
+`/app/deploy`. It installs `python3` with its standard library; `python3-minimal` alone omits required modules such as `json`. The build
 requires the existing `MC_BUILD_SHA` argument and creates an exclusive provenance
 receipt binding that revision to the three actual file hashes. Files are owned by
 root and read-only to the existing non-root connector user. No deploy broker or
