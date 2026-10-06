@@ -8,6 +8,20 @@ import { validateEnv } from './config/env.schema';
 
 async function bootstrap() {
   const config = validateEnv();
+  // Keep the validated bind/parser values in primitive local custody before
+  // module initialization can acquire or mutate the shared configuration object.
+  const HOST = config.HOST;
+  if (typeof HOST !== 'string') {
+    throw new Error('Validated HOST must remain a string');
+  }
+  const PORT = config.PORT;
+  if (typeof PORT !== 'number') {
+    throw new Error('Validated PORT must remain a number');
+  }
+  const STT_MAX_AUDIO_BYTES = config.STT_MAX_AUDIO_BYTES;
+  if (typeof STT_MAX_AUDIO_BYTES !== 'number') {
+    throw new Error('Validated STT_MAX_AUDIO_BYTES must remain a number');
+  }
   const logger = new Logger('Bootstrap');
 
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -24,14 +38,14 @@ async function bootstrap() {
   // tracked separately.
   await app.register(multipart as never, {
     limits: {
-      fileSize: config.STT_MAX_AUDIO_BYTES,
+      fileSize: STT_MAX_AUDIO_BYTES,
       files: 1,
       fields: 16,
     },
   });
 
-  await app.listen(config.PORT, config.HOST);
-  logger.log(`Model Connector running on ${config.HOST}:${config.PORT}`);
+  await app.listen(PORT, HOST);
+  logger.log(`Model Connector running on ${HOST}:${PORT}`);
 }
 
 bootstrap();

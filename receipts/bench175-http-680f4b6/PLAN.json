@@ -1,0 +1,532 @@
+{
+  "schema": "CanaryPlan/v1",
+  "id": "BENCH175-actual-HTTP-680f4b6",
+  "owner": "BENCH existing31a owned loopback fixture",
+  "environment": "owned-source-only-no-provider",
+  "base_url": "http://127.0.0.1:9",
+  "executor": {
+    "path": "tools/graph/deploy_gate.py"
+  },
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "680f4b60e782d91888596ae8abc4c88c11354779",
+    "tree": "126ec7522df0eec5eb73b3010952e18a01663220",
+    "evidence": {
+      "path": "SOURCE.json",
+      "sha256": "ead25b66bf0bd0a9c9dd81c47b50b837b95cacbeedd9dfc6ccc6000764605312",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "id": "actual-route-1",
+      "method": "DELETE",
+      "path": "/admin/keys/owned-fixture",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:DELETE /admin/keys/:id"
+      ]
+    },
+    {
+      "id": "actual-route-2",
+      "method": "GET",
+      "path": "/admin/credits/owned-fixture",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /admin/credits/:apiKeyId"
+      ]
+    },
+    {
+      "id": "actual-route-3",
+      "method": "GET",
+      "path": "/admin/credits/owned-fixture/history",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /admin/credits/:apiKeyId/history"
+      ]
+    },
+    {
+      "id": "actual-route-4",
+      "method": "GET",
+      "path": "/admin/keys",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /admin/keys"
+      ]
+    },
+    {
+      "id": "actual-route-5",
+      "method": "GET",
+      "path": "/connectors",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /connectors"
+      ]
+    },
+    {
+      "id": "actual-route-6",
+      "method": "GET",
+      "path": "/connectors/owned-fixture/status",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /connectors/:name/status"
+      ]
+    },
+    {
+      "id": "actual-route-7",
+      "method": "GET",
+      "path": "/connectors/catalog",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /connectors/catalog"
+      ]
+    },
+    {
+      "id": "actual-route-8",
+      "method": "GET",
+      "path": "/connectors/image/capabilities",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /connectors/image/capabilities"
+      ]
+    },
+    {
+      "id": "actual-route-9",
+      "method": "GET",
+      "path": "/health",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          200
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /health"
+      ]
+    },
+    {
+      "id": "actual-route-10",
+      "method": "GET",
+      "path": "/health/connectors",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          200
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /health/connectors"
+      ]
+    },
+    {
+      "id": "actual-route-11",
+      "method": "GET",
+      "path": "/health/metrics",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          200
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /health/metrics"
+      ]
+    },
+    {
+      "id": "actual-route-12",
+      "method": "GET",
+      "path": "/health/ready",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          200
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /health/ready"
+      ]
+    },
+    {
+      "id": "actual-route-13",
+      "method": "GET",
+      "path": "/jobs/owned-fixture",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /jobs/:id"
+      ]
+    },
+    {
+      "id": "actual-route-14",
+      "method": "GET",
+      "path": "/v1/models",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /v1/models"
+      ]
+    },
+    {
+      "id": "actual-route-15",
+      "method": "GET",
+      "path": "/v1/speech/stt/jobs/owned-fixture",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /v1/speech/stt/jobs/:id"
+      ]
+    },
+    {
+      "id": "actual-route-16",
+      "method": "PATCH",
+      "path": "/admin/keys/owned-fixture/policy",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:PATCH /admin/keys/:id/policy"
+      ]
+    },
+    {
+      "id": "actual-route-17",
+      "method": "POST",
+      "path": "/admin/circuit-breaker/reset",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/circuit-breaker/reset"
+      ]
+    },
+    {
+      "id": "actual-route-18",
+      "method": "POST",
+      "path": "/admin/credits/owned-fixture",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/credits/:apiKeyId"
+      ]
+    },
+    {
+      "id": "actual-route-19",
+      "method": "POST",
+      "path": "/admin/credits/owned-fixture/gift",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/credits/:apiKeyId/gift"
+      ]
+    },
+    {
+      "id": "actual-route-20",
+      "method": "POST",
+      "path": "/admin/credits/holds/sweep",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/credits/holds/sweep"
+      ]
+    },
+    {
+      "id": "actual-route-21",
+      "method": "POST",
+      "path": "/admin/credits/reconcile",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/credits/reconcile"
+      ]
+    },
+    {
+      "id": "actual-route-22",
+      "method": "POST",
+      "path": "/admin/keys",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/keys"
+      ]
+    },
+    {
+      "id": "actual-route-23",
+      "method": "POST",
+      "path": "/connectors/owned-fixture/execute",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /connectors/:name/execute"
+      ]
+    },
+    {
+      "id": "actual-route-24",
+      "method": "POST",
+      "path": "/execute",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /execute"
+      ]
+    },
+    {
+      "id": "actual-route-25",
+      "method": "POST",
+      "path": "/images/generate",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /images/generate"
+      ]
+    },
+    {
+      "id": "actual-route-26",
+      "method": "POST",
+      "path": "/internal/credits/owned-fixture/payment",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /internal/credits/:apiKeyId/payment"
+      ]
+    },
+    {
+      "id": "actual-route-27",
+      "method": "POST",
+      "path": "/internal/credits/owned-fixture/reverse",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /internal/credits/:apiKeyId/reverse"
+      ]
+    },
+    {
+      "id": "actual-route-28",
+      "method": "POST",
+      "path": "/internal/watcher/circuit-breaker/reset",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /internal/watcher/circuit-breaker/reset"
+      ]
+    },
+    {
+      "id": "actual-route-29",
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/chat/completions"
+      ]
+    },
+    {
+      "id": "actual-route-30",
+      "method": "POST",
+      "path": "/v1/prompt-cache/prewarm",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/prompt-cache/prewarm"
+      ]
+    },
+    {
+      "id": "actual-route-31",
+      "method": "POST",
+      "path": "/v1/speech/stt",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/speech/stt"
+      ]
+    },
+    {
+      "id": "actual-route-32",
+      "method": "POST",
+      "path": "/v1/speech/stt/async",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/speech/stt/async"
+      ]
+    },
+    {
+      "id": "actual-route-33",
+      "method": "POST",
+      "path": "/v1/speech/tts",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/speech/tts"
+      ]
+    },
+    {
+      "id": "actual-route-34",
+      "method": "POST",
+      "path": "/v1/speech/vad",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/speech/vad"
+      ]
+    }
+  ]
+}

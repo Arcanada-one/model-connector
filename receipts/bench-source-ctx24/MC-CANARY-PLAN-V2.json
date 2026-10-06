@@ -1,0 +1,123 @@
+{
+  "schema": "CanaryPlan/v2",
+  "id": "bench-mc-native-physical-ctx24-v2",
+  "owner": "task_8ee71c163a74",
+  "environment": "owned-offline-source-fixture",
+  "read_only": false,
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "878bf97d50f5b3fda74a869910da418b6cb7145b",
+    "tree": "0c1193a63e774e68f6365236e0361f52fb63c8a0",
+    "evidence": {
+      "path": "/home/dev/aup/arc2/control/bench-canary-corpus-20261002-ctx24/MC-MEASURED-SOURCE.json",
+      "sha256": "ebe06cd1f2e77a956931a68333e4c63f8281a3c21165c413d4ea0fe3e15b6aa7",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "id": "actual-pg-unix-rust-caller-expiry",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.bench-reservation.config.ts",
+        "--no-color",
+        "--pool=threads",
+        "--maxWorkers=1",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "PATH",
+        "TMPDIR",
+        "BENCH_OWNED_TEST_PG_SOCKET",
+        "BENCH_OWNED_TEST_SOCKET_ROOT",
+        "BENCH_OWNED_NATIVE_TEST_BINARY",
+        "HOME"
+      ],
+      "timeout_seconds": 30,
+      "capture_limit_bytes": 1048576,
+      "mutating": true,
+      "entities": [
+        "code_unit:src/bench-reservation/postgres.integration.spec.ts"
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/src/bench-reservation/contract.ts",
+          "sha256": "4a5a856e9653b989f9ace2fc3efb0924df9fddc09a4772839c124d983b94bb49"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/src/bench-reservation/authority.spec.ts",
+          "sha256": "b5137002920f7402f6754d2bcd6f5f2fc699502e77a85e2fabc44eb297049d07"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/src/bench-reservation/postgres.integration.spec.ts",
+          "sha256": "ed17d0431060bb3d33160113e796a329eff5456e8ac979d72ede0b84c6f23423"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/src/bench-reservation/signatures.ts",
+          "sha256": "6ec8f19b520a625bf0da0f9a774a393f288a3bc5427c830b4e38f0686577412c"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/src/bench-reservation/service.ts",
+          "sha256": "98dac943a9d302a42752ef78bbba97bc5882a0b77f4a1760a579280dfb589918"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/src/bench-reservation/store.ts",
+          "sha256": "466f58d79132d352a74b5574ca002f0988532b42a307c21fe68ff0c172312425"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/src/bench-reservation/adapter.ts",
+          "sha256": "dfcb280e5dcceb372bf6d45aed831fc696447697908c33d108529f8cc189b3f0"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/test/bench-reservation/process.fixture.ts",
+          "sha256": "fec91feb42eb819e8342931b27d95f5d1deb47cd49f2c8cec4b8f0e5224abb42"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/test/bench-reservation/fixture.ts",
+          "sha256": "09ca6fca31c4d2e45db3e91bb0eadf897866266ed765e2c70da1c7fec8d15b47"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/vitest.bench-reservation.config.ts",
+          "sha256": "cd7417af663f2991527e7de95f88959fab9b9783376c7e630894818ad2d406aa"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/pnpm-lock.yaml",
+          "sha256": "b41c7adb348f4a64449c503d56cd1b653d1cda95e49d7a1e16270794cd8a090f"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/prisma/migrations/20261001233000_bench_unknown_reservations/migration.sql",
+          "sha256": "9b6a5e42adbc26624aff71ad41d4ccb0348a59fed1be0910d7a5d07707b25ec7"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/src/bench-reservation/checkpoint.sql",
+          "sha256": "d7b14382d96740965ba38c8f250724b4fdc9fc6f857a224e015591880ef115a8"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        },
+        {
+          "path": "/home/dev/aup/arc2/control/bench-product-recovery-20261001-ctx433/clean-native-build-v4/target/debug/deps/codex_http_client-a2609bfe08e2283a",
+          "sha256": "4104f438cc013d662d4807d3e33d668bb5927062e348c36a1de6a954d6b4176e"
+        }
+      ],
+      "artifacts": [],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "26 passed",
+          "actual Rust native producer authenticates through the real MC socket service",
+          "authentic MC caller expiry after real native socket refuses without release"
+        ]
+      }
+    }
+  ]
+}

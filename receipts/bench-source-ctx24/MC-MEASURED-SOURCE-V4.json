@@ -1,0 +1,8 @@
+{
+  "schema": "MeasuredGitSource/v1",
+  "commit": "b140aa21391601f916e3f558287dc24f2f424ba6",
+  "tree": "ab9294b978d5fc618e51d0b6471eb8c3af7511a4",
+  "dirty": false,
+  "captured_at_utc": "2026-10-02T17:12:50.558337+00:00",
+  "producer": "git rev-parse and git status against actual clean MC checkout"
+}

@@ -1,0 +1,684 @@
+{
+  "schema": "CanaryPlan/v2",
+  "id": "BENCH175-per-controller-680f4b6",
+  "owner": "BENCH existing31a explicit source unit boundaries",
+  "environment": "owned-source-only-no-provider",
+  "read_only": false,
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "680f4b60e782d91888596ae8abc4c88c11354779",
+    "tree": "126ec7522df0eec5eb73b3010952e18a01663220",
+    "evidence": {
+      "path": "SOURCE.json",
+      "sha256": "773cf4922893e384585a60e19c1677ecfb2d35ba5e10a4c05842cf584cb1ff66",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "id": "actual-source-1",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/admin/admin.controller.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "13 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/admin/admin.controller.ts",
+          "sha256": "1a9045091def2c09a7912550a6a125804564b7e35ed57cc6929069d23147118f"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/admin/admin.controller.spec.ts",
+          "sha256": "f2c44d0e0386510ca270f19feacbd6fb0dabcd67ab3aefacd282ea52b1ac3930"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/admin/admin.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-2",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/admin/circuit-breaker.controller.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "3 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/admin/circuit-breaker.controller.ts",
+          "sha256": "0a9bea2273251f706df3dfcd84dd55bafcdeb8c6a094eabbbe340081c923ca99"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/admin/circuit-breaker.controller.spec.ts",
+          "sha256": "a911c958822c3dc80dd131b9d0b52a1c8783cb6522442c60f0b6038f732455f0"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/admin/circuit-breaker.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-3",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/admin/watcher-repair.controller.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "4 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/admin/watcher-repair.controller.ts",
+          "sha256": "1ddf2c708413bd887a29ba8d59432bfe34639890972d7f8bb1c0bc20b36e9c0c"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/admin/watcher-repair.controller.spec.ts",
+          "sha256": "5babdff0b30d2c294f2dc44cc23a93e34499a7182d03048277fd2a05c203a022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/admin/watcher-repair.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-4",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/billing/credits.controller.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "12 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/billing/credits.controller.ts",
+          "sha256": "81c04223391e69bb586931ea5cd2dac9daa931e2529ba3fe54cf63cd78603cf7"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/billing/credits.controller.spec.ts",
+          "sha256": "fc3cb7ffcd8385800a29fe9d8a0d6b4360919a83782d22a1970d7f71ecb3931c"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/billing/credits.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-5",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/health/health.controller.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "8 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/health/health.controller.ts",
+          "sha256": "e7c01f278a21b0852cb9c5515da26c9a084a28e699286b0bb7eda874d22b4f31"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/health/health.controller.spec.ts",
+          "sha256": "8cdb8d552ee26946d0f5c8566b03c85df4504ffbcc2a233204c7b742c66cf592"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/health/health.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-6",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/openai-compat/openai-compat.controller.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "8 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/openai-compat/openai-compat.controller.ts",
+          "sha256": "bdc4a01741054afb408c17e2d64f962b5f3b895743f1382f3fb0176e04ffd3cf"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/openai-compat/openai-compat.controller.spec.ts",
+          "sha256": "cf1ac927c5d620e4e7d3f777a31ceda1ba607e236bd56295ba657efb3bfe0903"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/openai-compat/openai-compat.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-7",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/connectors/connectors.controller.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "25 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/connectors/connectors.controller.ts",
+          "sha256": "8bd02cda50816563dee78fc5fec3bff5c391b6b1002b6b82da49c3e7bf8eb387"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/connectors/connectors.controller.spec.ts",
+          "sha256": "fc46e21625356be8c6cb62931c69b888836694dbb1fb61207bdd44353bab80f3"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-8",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/prompt-cache/prompt-cache-prewarm.controller.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "3 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/prompt-cache/prompt-cache-prewarm.controller.ts",
+          "sha256": "75eeb6fccd331a333e273d32656219f4d874d0f0e09c7c292320c0f45e62b322"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/prompt-cache/prompt-cache-prewarm.controller.spec.ts",
+          "sha256": "0dc64db1218ef5b1344d40280ce563865c8e01fc023f7e7b3c702f7a69cd430d"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-9",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/speech/speech.controller.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "25 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/speech/speech.controller.ts",
+          "sha256": "1afba50464b328347845168391c1f1c6ba3455e27efcdd556948a5aca3afbd3f"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/speech/speech.controller.spec.ts",
+          "sha256": "33325901dc29259940548c4682e27ee4578407fc96e3ddcd72a792151b2202bf"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/speech/speech.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-10",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/speech/stt/stt-async.controller.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "8 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/speech/stt/stt-async.controller.ts",
+          "sha256": "e1868f2e1a8b843d57fd6f958ffcde847b6f5c0e033fc2af22dca94385777b8a"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/speech/stt/stt-async.controller.spec.ts",
+          "sha256": "4057ecbdbdab216c22cbd9de0d52313867d18a77c1a73f6bb4407d92cf0445d6"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/speech/stt/stt-async.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-11",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/connectors/image-generation/jobs/image-job.controller.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "2 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/connectors/image-generation/jobs/image-job.controller.ts",
+          "sha256": "d8ae33c1b0aab6d814ec0e5cef2c148485e95dff8b881584e373ea0e4bdb47d0"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/connectors/image-generation/jobs/image-job.controller.spec.ts",
+          "sha256": "16d53da9a8c193f1e54899297eaf694cdfbf7e2e8a5b704e0c4d5075782a8703"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/connectors/image-generation/jobs/image-job.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-12",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "test/bench-reservation/boundary-http.spec.ts",
+        "--reporter=verbose",
+        "--testNamePattern",
+        "actual payment handler"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "5 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/billing/payments.controller.ts",
+          "sha256": "f4c4022698a45b63272e033d381f6a9aba52022529cd32a251373bc38098b22b"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/test/bench-reservation/boundary-http.spec.ts",
+          "sha256": "c176506f96526c3b74bca5b6e05974ad930edd968d1c4f20ecdb5ed5a3087fd9"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/billing/payments.controller.ts"
+      ],
+      "mutating": true
+    },
+    {
+      "id": "actual-source-13",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "test/bench-reservation/bootstrap-source.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "TMPDIR",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "timeout_seconds": 60,
+      "capture_limit_bytes": 1048576,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "Tests",
+          "4 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/src/main.ts",
+          "sha256": "3d5aa2d6b00f318fd82ab7286c420b65032881e1c618974ca0e324aad26cfb8f"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/test/bench-reservation/bootstrap-source.spec.ts",
+          "sha256": "4a55f1b58039071aadd294a7b927e05f1884ae16696ecafd4119832137f69263"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-custody-composition-20261004/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/bench-reservation-ctx433/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "artifacts": [],
+      "entities": [
+        "code_unit:src/main.ts"
+      ],
+      "mutating": true
+    }
+  ]
+}
