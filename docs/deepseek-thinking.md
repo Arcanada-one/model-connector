@@ -22,7 +22,10 @@ or `max`. The shared MC `effort` maps explicitly: `low` to `low`, `medium` to `h
 and `high` to `high`. Providing both effort fields requires them to agree after
 this mapping. Disabled thinking with either effort field refuses as
 `validation_error` with no retry. The universal DTO validates these options only
-for DeepSeek; direct/per-connector callers are checked by the adapter as well.
+for DeepSeek. Once the service resolves a provider, it validates DeepSeek options
+before opening a Billing intent or reserving a first-dispatch observation,
+including per-connector and cascade-profile routes. The adapter retains its
+independent guard for direct calls.
 
 The [provider's thinking contract](https://api-docs.deepseek.com/guides/thinking_mode/)
 documents the mode, effort mapping and that temperature has no effect while
