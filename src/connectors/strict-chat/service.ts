@@ -135,10 +135,13 @@ export class StrictChatService {
     const c = new AbortController();
     const abort = () => c.abort();
     callerSignal.addEventListener('abort', abort, { once: true });
+    // acquire may have blocked across the original caller cancellation event.
+    if (callerSignal.aborted) abort();
     const timer = setTimeout(abort, Math.max(0, body.deadline_ms - now()));
     let row: IntentRecord | null = null,
       started = false;
     const current = async () =>
+      !callerSignal.aborted &&
       !c.signal.aborted &&
       now() < body.deadline_ms &&
       now() < lease.deadline_ms &&
@@ -146,6 +149,7 @@ export class StrictChatService {
       lease.tenant === tenant &&
       lease.generation === body.generation &&
       (await lease.current()) === true &&
+      !callerSignal.aborted &&
       !c.signal.aborted &&
       now() < body.deadline_ms;
     try {

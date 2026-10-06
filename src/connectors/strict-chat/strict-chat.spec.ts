@@ -57,13 +57,21 @@ class MemoryStore implements StrictIntentStore {
 }
 const frame = (delta: unknown, finish: string | null = null) =>
   `data: ${JSON.stringify({ id: 'offline-id', model: 'pinned', choices: [{ index: 0, delta, finish_reason: finish }] })}\n\n`;
-const usage = `data: ${JSON.stringify({ id: 'offline-id', model: 'pinned', choices: [], usage: { prompt_tokens: 2, completion_tokens: 3, total_tokens: 5 } })}\n\n`;
+const terminal = (
+  finish = 'stop',
+  stats: unknown = { prompt_tokens: 2, completion_tokens: 3, total_tokens: 5 },
+) =>
+  `data: ${JSON.stringify({ id: 'offline-id', model: 'pinned', choices: [{ index: 0, delta: { content: '', role: null }, finish_reason: finish }], usage: stats })}\n\n`;
+const usage = terminal();
 const normal =
   frame({ reasoning_content: 'PRIVATE-CONTINUATION' }) +
-  frame({ content: '答' }, 'stop') +
+  frame({ content: '答' }) +
   usage +
   'data: [DONE]\n\n';
-function setup(payload = normal) {
+function setup(
+  payload = normal,
+  deferred?: { wait: Promise<void>; entered: () => void; closed: () => void },
+) {
   const store = new MemoryStore(),
     events: string[] = [];
   let sends = 0,
@@ -76,8 +84,12 @@ function setup(payload = normal) {
     now: () => clock,
     authority: {
       statusAllowed: async (t) => authorized && t === 'tenant',
-      acquire: async (t, c, b, d) =>
-        authorized && t === 'tenant'
+      acquire: async (t, c, b, d) => {
+        if (deferred) {
+          deferred.entered();
+          await deferred.wait;
+        }
+        return authorized && t === 'tenant'
           ? {
               tenant: t,
               connector: c,
@@ -100,10 +112,13 @@ function setup(payload = normal) {
                 scale: 6,
               },
               current: async () => valid,
-              close: async () => {},
+              close: async () => {
+                deferred?.closed();
+              },
               withDispatchFence: async (f) => f(),
             }
-          : null,
+          : null;
+      },
     },
     transport: new DeepSeekStrictStream(async () => {
       sends++;
@@ -194,7 +209,7 @@ describe('strict additive source transport', () => {
     expect(x.sendCount()).toBe(1);
   });
   it('missing usage retains uncertain rather than default zero', async () => {
-    const x = setup(normal.replace(usage, ''));
+    const x = setup(normal.replace(usage, terminal('stop', null)));
     await expect(x.run()).rejects.toThrow('uncertain');
     expect((await x.store.read('tenant', 'logical'))?.state).toBe('uncertain');
     expect(x.events).not.toContain('data: [DONE]\n\n');
@@ -244,8 +259,8 @@ describe('strict additive source transport', () => {
           },
         ],
       }) +
-      frame({ tool_calls: [{ index: 0, function: { arguments: '1}' } }] }, 'tool_calls') +
-      usage +
+      frame({ tool_calls: [{ index: 0, function: { arguments: '1}' } }] }) +
+      terminal('tool_calls') +
       'data: [DONE]\n\n';
     const b = body() as Record<string, unknown>;
     b.tools = [{ type: 'function', function: { name: 'lookup', parameters: { type: 'object' } } }];
@@ -424,5 +439,62 @@ describe('strict additive source transport', () => {
     expect(reads).toBe(1);
     expect(await sql.finish(row, 'completed', { usage: null })).toBe(false);
     expect(reads).toBe(2);
+  });
+  it('R1 authentic final single choice plus finish plus usage completes', async () => {
+    const x = setup();
+    await x.run();
+    expect((await x.store.read('tenant', 'logical'))?.state).toBe('completed');
+    expect(x.events.at(-1)).toBe('data: [DONE]\n\n');
+  });
+  it('R1 legacy usage-only/early/duplicate/bad usage and final-content chunk refuse', async () => {
+    const only = `data: ${JSON.stringify({ id: 'offline-id', model: 'pinned', choices: [], usage: { prompt_tokens: 2, completion_tokens: 3, total_tokens: 5 } })}\n\n`;
+    const early = `data: ${JSON.stringify({ id: 'offline-id', model: 'pinned', choices: [{ index: 0, delta: { content: 'bad' }, finish_reason: null }], usage: { prompt_tokens: 2, completion_tokens: 3, total_tokens: 5 } })}\n\n`;
+    const withContent = terminal().replace('"content":""', '"content":"unexpected"');
+    for (const bad of [
+      normal.replace(usage, only),
+      early + normal,
+      normal.replace(usage, usage + usage),
+      normal.replace(
+        usage,
+        terminal('stop', { prompt_tokens: 2, completion_tokens: 3, total_tokens: 99 }),
+      ),
+      normal.replace(usage, withContent),
+    ]) {
+      const x = setup(bad);
+      await expect(x.run()).rejects.toThrow('uncertain');
+      expect(x.sendCount()).toBe(1);
+      expect(x.events).not.toContain('data: [DONE]\n\n');
+    }
+  });
+  it('R2 caller abort while acquire waits closes late lease and denies durable begin/egress', async () => {
+    let resolve!: () => void,
+      entered!: () => void,
+      closed = 0;
+    const wait = new Promise<void>((r) => (resolve = r)),
+      seen = new Promise<void>((r) => (entered = r));
+    const x = setup(normal, { wait, entered, closed: () => closed++ }),
+      c = new AbortController();
+    const pending = x.service.execute('deepseek', 'tenant', body(), async () => {}, c.signal);
+    const observed = pending.then(
+      () => null,
+      (e) => e.message,
+    );
+    await seen;
+    c.abort();
+    resolve();
+    const error = await observed;
+    console.log(
+      JSON.stringify({
+        control: 'R2-deferred-acquire',
+        sends: x.sendCount(),
+        durable_rows: x.store.rows.size,
+        late_lease_closes: closed,
+        error,
+      }),
+    );
+    expect(x.sendCount()).toBe(0);
+    expect(error).toBe('refused');
+    expect(x.store.rows.size).toBe(0);
+    expect(closed).toBe(1);
   });
 });

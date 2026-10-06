@@ -117,22 +117,11 @@ export class DeepSeekStrictStream implements StrictTransport {
           }
           if (finish && usage !== null) throw new Error('strict-after-final-refused');
           const c = JSON.parse(data);
-          if (!c || c.model !== body.model || !Array.isArray(c.choices) || c.choices.length > 1)
+          if (!c || c.model !== body.model || !Array.isArray(c.choices) || c.choices.length !== 1)
             throw new Error('strict-model-or-choice-refused');
           if (typeof c.id === 'string') {
             if (providerId && providerId !== c.id) throw new Error('strict-id-drift');
             providerId = c.id;
-          }
-          if (c.usage != null) {
-            if (!finish || c.choices.length) throw new Error('strict-usage-order');
-            if (usage) throw new Error('strict-duplicate-usage');
-            usage = usageSchema.parse(c.usage);
-            if (
-              usage.total_tokens !== usage.prompt_tokens + usage.completion_tokens ||
-              usage.completion_tokens > body.max_tokens ||
-              usage.prompt_tokens > body.input_token_bound
-            )
-              throw new Error('strict-usage-refused');
           }
           for (const choice of c.choices) {
             if (choice.index !== 0 || !choice.delta || typeof choice.delta !== 'object')
@@ -144,7 +133,7 @@ export class DeepSeekStrictStream implements StrictTransport {
               )
             )
               throw new Error('strict-delta-field-refused');
-            if (delta.role !== undefined && delta.role !== 'assistant')
+            if (delta.role != null && delta.role !== 'assistant')
               throw new Error('strict-role-refused');
             for (const field of ['content', 'reasoning_content'])
               if (delta[field] != null && typeof delta[field] !== 'string')
@@ -183,6 +172,26 @@ export class DeepSeekStrictStream implements StrictTransport {
                 throw new Error('strict-finish-refused');
               finish = choice.finish_reason;
             }
+          }
+          if (c.usage != null) {
+            const terminal = c.choices[0];
+            if (
+              !finish ||
+              terminal.finish_reason !== finish ||
+              (terminal.delta.content != null && terminal.delta.content !== '') ||
+              (terminal.delta.reasoning_content != null &&
+                terminal.delta.reasoning_content !== '') ||
+              (terminal.delta.tool_calls != null && terminal.delta.tool_calls.length !== 0)
+            )
+              throw new Error('strict-usage-order');
+            if (usage) throw new Error('strict-duplicate-usage');
+            usage = usageSchema.parse(c.usage);
+            if (
+              usage.total_tokens !== usage.prompt_tokens + usage.completion_tokens ||
+              usage.completion_tokens > body.max_tokens ||
+              usage.prompt_tokens > body.input_token_bound
+            )
+              throw new Error('strict-usage-refused');
           }
           if (!(await current()) || signal.aborted) throw new Error('strict-delivery-refused');
           yield `data: ${data}\n\n`; // protected continuation goes only to active caller, never durable receipt/replay/log
