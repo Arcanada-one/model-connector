@@ -63,6 +63,10 @@ export function incumbentJournalBridge(config: IncumbentJournalProcess) {
       const body = JSON.stringify({ request: input.request, wire_utf8: input.wire,
         charging_policy_utf8: input.charging_policy_utf8, wire_bounds_utf8: input.wire_bounds_utf8,
         deadline_unix: input.deadline_unix });
+      // The incumbent stdin limit covers the complete escaped UTF-8 envelope,
+      // not just the model wire. Refuse before any child or private pipe exists.
+      requireBench(Buffer.byteLength(body, 'utf8') <= 8388608,
+        'journal_envelope_limit_refused');
       const value = await new Promise<unknown>((resolve, reject) => {
         const child = spawn(executable, args, { shell: false,
           env: { PATH: '/usr/bin:/bin', LANG: 'C', TMPDIR: temporaryDirectory }, stdio: ['pipe', 'pipe', 'ignore', 'pipe'] });
