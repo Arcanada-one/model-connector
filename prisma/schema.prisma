@@ -84,6 +84,7 @@ model ApiKey {
   creditsBalance    CreditsBalance?
   creditsLedger     CreditsLedger[]
   requestIntents    RequestIntent[]
+  strictSupplierIntents StrictSupplierIntent[]
   createdAt         DateTime           @default(now())
 }
 
@@ -662,6 +663,7 @@ model BenchReservation {
 /// Protected response/continuation is never stored; only an allowlisted receipt.
 model StrictSupplierIntent {
   apiKeyId String @map("api_key_id")
+  apiKey ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Restrict)
   intentKey String @map("intent_key")
   attempt String
   generation BigInt
@@ -671,7 +673,7 @@ model StrictSupplierIntent {
   state String
   exposure Json
   receipt Json?
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   @@id([apiKeyId,intentKey])
   @@map("strict_supplier_intent")
 }
