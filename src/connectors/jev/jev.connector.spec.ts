@@ -2,7 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DecisionRequestSchema, normalizeDecision } from './decision.contract';
 import { JevConnector } from './jev.connector';
 
-import { request, nativeResponse } from './decision.fixture';
+import { request, nativeResponse as historicalNativeResponse } from './decision.fixture';
+
+// Keep the historical fixture immutable; use the documented provider confidence.
+const nativeResponse = {
+  ...historicalNativeResponse,
+  answers: {
+    ...historicalNativeResponse.answers,
+    tier: { ...historicalNativeResponse.answers.tier, confidence: 0.6 },
+  },
+};
 
 describe('native decision contract and adapter', () => {
   let connector: JevConnector;
@@ -149,6 +158,42 @@ describe('native decision contract and adapter', () => {
       confidence: null,
       probabilities: null,
     });
+  });
+  it.each([
+    [{ small: 0.8, large: 0.2 }, 0.6],
+    [{ small: 0.5, large: 0.5 }, 0],
+    [{ small: 1, large: 0 }, 1],
+  ])('accepts provider-normalized binary confidence %j -> %s', (probabilities, confidence) => {
+    const result = normalizeDecision(request, {
+      ...nativeResponse,
+      answers: { ...nativeResponse.answers, tier: { choice: 'small', probabilities, confidence } },
+    });
+    expect(result).toMatchObject({ status: 'observed', action: 'none', mode: 'shadow' });
+    expect(result.answers.tier).toEqual({ primitive: 'choice', choice: 'small', probabilities, confidence });
+    expect(result.answers.complexity).toEqual({ primitive: 'score', score: 2.4 });
+    expect(result.answers.risk).toEqual({ primitive: 'noul', noul: 0.6996 });
+  });
+  it('uses the complete option count for three-way confidence', () => {
+    const three = { ...request, questions: {
+      tier: { type: 'choice' as const, instructions: 'Choose', criteria: { small: 'Small', large: 'Large', other: 'Other' } },
+    } };
+    expect(normalizeDecision(three, { answers: { tier: {
+      choice: 'small', probabilities: { small: 0.6, large: 0.3, other: 0.1 }, confidence: 0.4,
+    } } })).toMatchObject({ status: 'observed', action: 'none' });
+  });
+  it.each([0.8, -0.1, 1.1, true, NaN, Infinity])('refuses inconsistent or malformed confidence %s atomically', (confidence) => {
+    expect(normalizeDecision(request, { ...nativeResponse, answers: {
+      ...nativeResponse.answers, tier: { ...nativeResponse.answers.tier, confidence },
+    } })).toMatchObject({ status: 'unknown', action: 'none', answers: {} });
+  });
+  it('preserves absence of confidence even with a valid distribution', () => {
+    expect(normalizeDecision(request, { answers: { ...nativeResponse.answers,
+      tier: { choice: 'small', probabilities: { small: 0.8, large: 0.2 } },
+    } }).answers.tier).toEqual({ primitive: 'choice', choice: 'small',
+      confidence: null, probabilities: { small: 0.8, large: 0.2 } });
+  });
+  it('does not retrofit the historical probability-as-confidence fixture', () => {
+    expect(normalizeDecision(request, historicalNativeResponse)).toMatchObject({ status: 'unknown', action: 'none', answers: {} });
   });
   it('request digest binds policy and native state', () => {
     const first = normalizeDecision(request, nativeResponse).requestSha256;
