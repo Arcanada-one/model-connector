@@ -68,6 +68,7 @@ export const boundaryCases: readonly Case[] = [
   ['GET', '/connectors/owned-fixture/status', 401],
   ['GET', '/connectors/catalog', 401],
   ['GET', '/connectors/image/capabilities', 401],
+  ['GET', '/connectors/intents/owned-fixture', 401],
   ['GET', '/health', 200],
   ['GET', '/health/connectors', 200],
   ['GET', '/health/metrics', 200],
@@ -83,6 +84,7 @@ export const boundaryCases: readonly Case[] = [
   ['POST', '/admin/credits/reconcile', 403],
   ['POST', '/admin/keys', 403],
   ['POST', '/connectors/owned-fixture/execute', 401],
+  ['POST', '/connectors/owned-fixture/chat/completions', 401],
   ['POST', '/execute', 401],
   ['POST', '/images/generate', 401],
   ['POST', '/internal/credits/owned-fixture/payment', 403],
@@ -96,10 +98,13 @@ export const boundaryCases: readonly Case[] = [
   ['POST', '/v1/speech/vad', 401],
 ];
 
-async function start(omitHealth = false) {
+async function start(omitHealth = false, omitConnectors = false) {
   const empty = Object.freeze({});
   const moduleRef = await Test.createTestingModule({
-    controllers: controllers.filter((c) => !omitHealth || c !== HealthController),
+    controllers: controllers.filter(
+      (c) =>
+        (!omitHealth || c !== HealthController) && (!omitConnectors || c !== ConnectorsController),
+    ),
     providers: [
       AuthGuard,
       { provide: AuthService, useValue: empty },
@@ -248,6 +253,22 @@ describe('owned actual controller/guard HTTP refusal boundary', () => {
       await mutant.app.close();
     }
   });
+
+  for (const [method, path] of [
+    ['GET', '/connectors/intents/owned-fixture'],
+    ['POST', '/connectors/owned-fixture/chat/completions'],
+  ]) {
+    it(`real strict controller removal makes ${method} ${path} return 404`, async () => {
+      const mutant = await start(false, true);
+      try {
+        const result = await probe(mutant.port, method, path);
+        expect(result.status).toBe(404);
+        expect(result.status).not.toBe(401);
+      } finally {
+        await mutant.app.close();
+      }
+    });
+  }
 
   // Positive handler dispatch is separate from HTTP unauthenticated refusal.
   // These doubles are explicit source-unit data, never a financial receipt.
