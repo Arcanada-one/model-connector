@@ -1,0 +1,7 @@
+{
+  "extends": "./dev-tools/tsconfig.json",
+  "include": [
+    "dev-tools/rate-limit-ci-report.mjs",
+    "dev-tools/rate-limit-ci-report.test.mjs"
+  ]
+}

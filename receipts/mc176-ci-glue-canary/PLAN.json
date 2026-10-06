@@ -1,0 +1,80 @@
+{
+  "schema": "CanaryPlan/v2",
+  "id": "MC176-fa9-owned-CI-glue-controls",
+  "owner": "Infra ctx_ea314606b1e6",
+  "environment": "owned disposable command-double fixture; no Docker or services",
+  "read_only": false,
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "fa9fc8b9374441b5d81512bee2464662ff96d175",
+    "tree": "b0ebc4979ff16aba96304f824933160fa7abdda5",
+    "evidence": {
+      "path": "SOURCE.json",
+      "sha256": "47159d8578d5a90a743249ae6dc60f258ec0822719f4ae3ec74c0bc3c3c3fe5a",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "kind": "process",
+      "id": "five-original-CI-glue-controls",
+      "argv": [
+        "/usr/bin/python3.12",
+        "-B",
+        "dev-tools/rate-limit-ci-workflow.test.py"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "PATH",
+        "TMPDIR",
+        "PYTHONDONTWRITEBYTECODE"
+      ],
+      "timeout_seconds": 15,
+      "capture_limit_bytes": 65536,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stderr_contains": [
+          "Ran 5 tests",
+          "OK"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/dev-tools/rate-limit-ci-workflow.test.py",
+          "sha256": "a1505d8f055d13bd4463681aae1e2231110dee2b734e0d715f1c130c52ba2264"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/.github/workflows/ci.yml",
+          "sha256": "e43d6e2f239012c5ce89e36f43cad1b75534fdeb16701b7b369202fb0a1cc111"
+        },
+        {
+          "path": "/usr/bin/python3.12",
+          "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+        },
+        {
+          "path": "/usr/bin/bash",
+          "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1"
+        },
+        {
+          "path": "/usr/bin/timeout",
+          "sha256": "12690a043dfd555a6c14ccc1564f5649c18f1762c0d6ff66729948130898ec52"
+        },
+        {
+          "path": "/usr/bin/id",
+          "sha256": "0e967a87e22a60b330c6dbdc7affe1dda41f342f14d20877725f0486d8777df2"
+        },
+        {
+          "path": "/usr/bin/env",
+          "sha256": "886e5fa8be716b03eeda48856e0f04493f2969fc148fb7812594ffac647fa050"
+        }
+      ],
+      "executable_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "entities": [
+        "code_unit:dev-tools/rate-limit-ci-workflow.test.py"
+      ],
+      "mutating": true
+    }
+  ]
+}

@@ -7,8 +7,18 @@ import { StateStore } from '../src/state-store.js';
 
 describe('state and audit persistence', () => {
   let root: string;
-  beforeEach(async () => { root = await mkdtemp(join(tmpdir(), 'watcher-state-audit-')); });
-  afterEach(async () => { await rm(root, { recursive: true, force: true }); });
+  beforeEach(async () => {
+    root = await mkdtemp(join(tmpdir(), 'watcher-state-audit-'));
+  });
+  afterEach(async () => {
+    await rm(root, { recursive: true, force: true });
+  });
+  it('isolates state fixtures in a private directory under the caller temporary root', async () => {
+    expect(join(root, '..')).toBe(tmpdir());
+    expect((await stat(root)).mode & 0o777).toBe(0o700);
+    expect((await lstat(root)).isSymbolicLink()).toBe(false);
+  });
+
   it('writes state atomically with mode 0600', async () => {
     const path = join(root, `watcher-${crypto.randomUUID()}.json`);
     const store = new StateStore(path);
@@ -40,7 +50,14 @@ describe('state and audit persistence', () => {
     });
     const row = JSON.parse((await readFile(path, 'utf8')).trim());
     expect(Object.keys(row)).toEqual(
-      expect.arrayContaining(['timestamp', 'audit_ref', 'component', 'level_attempted', 'fix_applied', 'outcome']),
+      expect.arrayContaining([
+        'timestamp',
+        'audit_ref',
+        'component',
+        'level_attempted',
+        'fix_applied',
+        'outcome',
+      ]),
     );
   });
 
