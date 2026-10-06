@@ -657,3 +657,21 @@ model BenchReservation {
   @@unique([campaign, sequence])
   @@map("bench_reservation")
 }
+
+/// Additive strict supplier exposure. Never swept/released as customer credit.
+/// Protected response/continuation is never stored; only an allowlisted receipt.
+model StrictSupplierIntent {
+  apiKeyId String @map("api_key_id")
+  intentKey String @map("intent_key")
+  attempt String
+  generation BigInt
+  digest String
+  model String
+  connector String
+  state String
+  exposure Json
+  receipt Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  @@id([apiKeyId,intentKey])
+  @@map("strict_supplier_intent")
+}
