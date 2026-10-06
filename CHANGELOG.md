@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A key's rate limit can be read and changed through the admin API, and a probe proves
+  a 429 can happen (A2-319).** `ApiKey.rateLimit` could only be set at creation, so the one
+  live limit that had to move (`arcana-kb-agent`, 10 -> 60) was moved by editing the
+  production database. `GET /admin/keys/:id` and `PATCH /admin/keys/:id/rate-limit`
+  (`{rateLimit, actor, reason?}`, `AdminGuard`) now do it; the write invalidates the
+  limiter's 10 s cache, so the new limit is in force on the next request, and one audit
+  line names key, old -> new, actor and source ip — never a key value.
+  `scripts/rate-limit-probe.mjs` mints disposable keys, bursts one past a limit of 2 and
+  requires 429 + `Retry-After` for it and 200 for a key within its limit; against a build
+  without `RateLimitGuard` it fails. See `docs/how-to/per-key-rate-limit.md`.
+
 ### Fixed
 
 - **A provider timeout was reported as a network error, and the breaker status lied after
