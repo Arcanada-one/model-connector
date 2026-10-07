@@ -59,7 +59,7 @@ jobs:
       # INFRA-0121 mandate: pre-deploy preflight against the target host.
       # SHA-bridge per CLAUDE.md § 8 — INFRA-0122 PR #8 head until merge tag v1.x.y lands.
       - name: Preflight check
-        uses: Arcanada-one/datarim/.github/actions/preflight-check@fff25210a90204db04962dc2de63fe255a084ec3 # v1 SHA-bridge (INFRA-0122 PR #8 head)
+        uses: Arcanada-one/datarim/.github/actions/preflight-check@50351e0468f57a39b280d75cf41827329d6393d2
         with:
           # A logical name for metric keys and Ops Bot metadata, not a
           # connection target: the checks run locally on the runner.
@@ -76,6 +76,8 @@ jobs:
             loadavg
             time-skew
           ops-bot-emit: 'true'
+          ops-bot-url: https://ops.arcanada.ai/events
+          allowed_hosts: ops.arcanada.ai
           ops-bot-key: ${{ secrets.OPS_BOT_API_KEY }}
 
       # These were a single plain YAML scalar, which folds into one line: the
