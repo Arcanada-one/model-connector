@@ -47,6 +47,17 @@ export const SetKeyRateLimitSchema = z.object({
 
 export type SetKeyRateLimitDto = z.infer<typeof SetKeyRateLimitSchema>;
 
+/** Rotation changes the credential, never the account or its credit history. */
+export const RotateKeySchema = z.strictObject({
+  actor: SetKeyRateLimitSchema.shape.actor,
+  reason: SetKeyRateLimitSchema.shape.reason.unwrap(),
+  expectedActive: z.boolean(),
+  // A revoked identity stays revoked unless the administrator explicitly restores it.
+  reactivate: z.boolean().default(false),
+});
+
+export type RotateKeyDto = z.infer<typeof RotateKeySchema>;
+
 export const ResetCircuitBreakerSchema = z.object({
   connector: z.string().min(1).max(100).optional(),
   model: z.string().min(1).max(200).optional(),

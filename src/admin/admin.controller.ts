@@ -11,11 +11,12 @@ import {
   UseGuards,
   BadRequestException,
   Req,
+  Header,
 } from '@nestjs/common';
 import { Public } from '../auth/public.decorator';
 import { AdminGuard } from './admin.guard';
 import { AdminService } from './admin.service';
-import { CreateKeySchema, SetKeyPolicySchema, SetKeyRateLimitSchema } from './dto';
+import { CreateKeySchema, SetKeyPolicySchema, SetKeyRateLimitSchema, RotateKeySchema } from './dto';
 
 @Controller('admin/keys')
 @UseGuards(AdminGuard)
@@ -42,6 +43,16 @@ export class AdminController {
   @Get(':id')
   async get(@Param('id') id: string) {
     return this.adminService.getKey(id);
+  }
+
+  /** Return the new secret once; retain the original account, policy and ledger. */
+  @Post(':id/rotate')
+  @HttpCode(HttpStatus.OK)
+  @Header('Cache-Control', 'no-store')
+  async rotate(@Param('id') id: string, @Body() body: unknown, @Req() req: { ip?: string }) {
+    const result = RotateKeySchema.safeParse(body);
+    if (!result.success) throw new BadRequestException(result.error.issues);
+    return this.adminService.rotateKey(id, result.data, req.ip);
   }
 
   /**
