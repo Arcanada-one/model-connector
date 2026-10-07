@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -17,6 +18,7 @@ import type { ApiKeyPolicy } from '../policy/policy.schema';
 import { AuthService } from '../auth/auth.service';
 // A2-319 — a changed limit must be in force on the next request, not after the 10s cache.
 import { KeyRateLimitService } from '../auth/key-rate-limit.service';
+import type { RotateKeyDto } from './dto';
 
 /** A2-319 — the public, secret-free view of one key. */
 export interface KeySummary {
@@ -131,6 +133,40 @@ export class AdminService {
     if (!key) throw new NotFoundException(`Key ${id} not found`);
     await this.prisma.apiKey.update({ where: { id }, data: { active: false } });
     this.authService?.flushVerifyCache();
+  }
+
+  async rotateKey(id: string, request: RotateKeyDto, sourceIp?: string) {
+    const before = await this.prisma.apiKey.findUnique({
+      where: { id },
+      select: { id: true, name: true, active: true, keyHash: true },
+    });
+    if (!before) throw new NotFoundException(`Key ${id} not found`);
+    if (before.active !== request.expectedActive) {
+      throw new ConflictException('Key activity changed; inspect the key before retrying');
+    }
+    if (!before.active && !request.reactivate) {
+      throw new ConflictException('Revoked key requires explicit reactivation');
+    }
+    if (before.active && request.reactivate) {
+      throw new BadRequestException('Reactivation requires a revoked key');
+    }
+    const raw = `mc-${randomBytes(16).toString('hex')}`;
+    const keyHash = await hash(raw, getConfig().API_KEY_SALT_ROUNDS);
+    // Compare both identity state and credential version: concurrent rotation or
+    // revocation must not return a secret that already lost the race.
+    const changed = await this.prisma.apiKey.updateMany({
+      where: { id, active: before.active, keyHash: before.keyHash },
+      data: { keyHash, ...(request.reactivate ? { active: true } : {}) },
+    });
+    if (changed.count !== 1) {
+      throw new ConflictException('Key changed during rotation; inspect it before retrying');
+    }
+    this.authService?.flushVerifyCache();
+    this.logger.warn(
+      `admin: key rotated keyId=${id} actor=${request.actor} ` +
+        `reactivated=${request.reactivate} ip=${sourceIp ?? 'unknown'}`,
+    );
+    return { id: before.id, name: before.name, active: true, key: raw };
   }
 
   /**
