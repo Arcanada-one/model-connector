@@ -10,6 +10,27 @@ import { AuthGuard } from '../auth/auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
 vi.mock('../config/env.schema', () => ({ getConfig: () => ({ API_KEY_SALT_ROUNDS: 4 }) }));
+const comparePause = vi.hoisted(() => ({ next: null as null | (() => Promise<void>) }));
+vi.mock('bcryptjs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('bcryptjs')>();
+  return {
+    ...actual,
+    compare: async (password: string, storedHash: string) => {
+      const pause = comparePause.next;
+      comparePause.next = null;
+      if (pause) await pause();
+      return actual.compare(password, storedHash);
+    },
+  };
+});
+
+function deferred() {
+  let resolve!: () => void;
+  const promise = new Promise<void>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
 
 // Actual controllers, guards, hashing and auth cache; storage is an explicit fixture.
 // These tests prove HTTP/auth behavior and the write contract, not a deployed DB.
@@ -50,6 +71,7 @@ const body = {
 beforeEach(async () => {
   process.env.ADMIN_TOKEN = adminToken;
   loseRace = false;
+  comparePause.next = null;
   updateMany.mockClear();
   row = {
     id: 'existing-account',
@@ -88,6 +110,47 @@ const rotate = (payload: unknown = body, token = adminToken) =>
 const authenticate = (secret: string) => app.get(AuthService).validateKey(secret);
 
 describe('account-preserving key rotation', () => {
+  it('rejects in-flight old-key validation completed after rotation and cache flush', async () => {
+    const entered = deferred();
+    const released = deferred();
+    comparePause.next = async () => {
+      entered.resolve();
+      await released.promise;
+    };
+    const pending = authenticate(oldSecret);
+    await entered.promise;
+    let fresh: string;
+    try {
+      const response = await rotate();
+      expect(response.statusCode).toBe(200);
+      fresh = response.json().key;
+    } finally {
+      released.resolve();
+    }
+    expect(await pending).toBeNull();
+    expect(await authenticate(oldSecret)).toBeNull();
+    expect(await authenticate(fresh!)).toMatchObject({ id: row.id });
+  });
+
+  it('accepts concurrent validation when no rotation or invalidation occurs', async () => {
+    const entered = deferred();
+    const released = deferred();
+    comparePause.next = async () => {
+      entered.resolve();
+      await released.promise;
+    };
+    const pending = authenticate(oldSecret);
+    await entered.promise;
+    try {
+      expect(await authenticate(oldSecret)).toMatchObject({ id: row.id });
+    } finally {
+      released.resolve();
+    }
+    expect(await pending).toMatchObject({ id: row.id });
+    expect(await authenticate(oldSecret)).toMatchObject({ id: row.id });
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
   it('retains the funded identity and ledger; cached old credential fails immediately', async () => {
     expect(await authenticate(oldSecret)).toMatchObject({ id: row.id }); // Populate the real cache.
     const before = structuredClone(account);

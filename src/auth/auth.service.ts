@@ -20,6 +20,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class AuthService {
   private static readonly VERIFY_CACHE_TTL_MS = 5 * 60_000;
   private static readonly VERIFY_NEGATIVE_TTL_MS = 60_000;
+  private verifyCacheGeneration = 0;
   private readonly verifyCache = new Map<
     string,
     { identity: { id: string; name: string } | null; expiresAt: number }
@@ -33,6 +34,7 @@ export class AuthService {
 
   /** Flush the verified-key cache (on key create/revoke, and in tests). */
   flushVerifyCache(): void {
+    this.verifyCacheGeneration += 1;
     this.verifyCache.clear();
   }
 
@@ -41,9 +43,14 @@ export class AuthService {
     const cached = this.verifyCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) return cached.identity;
 
+    const generation = this.verifyCacheGeneration;
     const keys = await this.prisma.apiKey.findMany({ where: { active: true } });
+    if (generation !== this.verifyCacheGeneration) return null;
     for (const key of keys) {
       const match = await compare(rawKey, key.keyHash);
+      // A rotation/revocation can commit while DB or bcrypt work is pending.
+      // Refuse that old snapshot; it must not repopulate either cache branch.
+      if (generation !== this.verifyCacheGeneration) return null;
       if (match) {
         const identity = { id: key.id, name: key.name };
         this.verifyCache.set(cacheKey, {

@@ -34,6 +34,11 @@ a receipt. Rotation flushes the serving process's verified-key cache. This prove
 immediate invalidation in that process; other serving replicas require separate
 cache-invalidation or restart evidence before claiming global rejection.
 
+An invalidation also changes the serving process's cache generation. A validation
+that was still awaiting database or bcrypt work refuses its stale result after
+invalidation and cannot repopulate either the positive or negative cache. The
+caller can make a fresh request against the current credential state.
+
 ## Recover a revoked funded identity
 
 A revoked identity is refused by default. An authorized custodian can explicitly

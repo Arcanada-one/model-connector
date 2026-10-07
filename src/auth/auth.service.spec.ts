@@ -48,6 +48,24 @@ describe('AuthService', () => {
   // The verify cache must collapse repeats to a single sweep. These are the
   // mutation target: removing the cache makes the findMany call-count fail.
   describe('verify cache (CONN-1668)', () => {
+    it('does not cache a stale negative DB read after invalidation', async () => {
+      const rawKey = 'fixture-created-during-validation';
+      const keyHash = await hash(rawKey, 4);
+      let release!: (rows: unknown[]) => void;
+      const pausedRead = new Promise<unknown[]>((resolve) => {
+        release = resolve;
+      });
+      mockPrisma.apiKey.findMany.mockReturnValueOnce(pausedRead);
+      const pending = service.validateKey(rawKey);
+      mockPrisma.apiKey.findMany.mockResolvedValue([
+        { id: 'key-new', name: 'new-fixture', keyHash, active: true },
+      ]);
+      service.flushVerifyCache();
+      release([]);
+      expect(await pending).toBeNull();
+      expect(await service.validateKey(rawKey)).toEqual({ id: 'key-new', name: 'new-fixture' });
+    });
+
     it('verifies once, then serves repeats from the cache (no bcrypt sweep)', async () => {
       const rawKey = 'cache-key-1';
       const keyHash = await hash(rawKey, 10);
