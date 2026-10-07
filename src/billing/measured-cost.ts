@@ -165,6 +165,8 @@ export interface MeasuredCostPricing {
    * direction (we never under-bill on an assumption).
    */
   cachedInputPerMTok?: number | null;
+  cacheWrite5mPerMTok?: number | null;
+  cacheWrite1hPerMTok?: number | null;
   /** `deriveTier` output: 'free' | 'paid' | 'unknown'. */
   tier?: string | null;
 }
@@ -264,6 +266,9 @@ export function measureCostUsd(input: {
    * remainder, so it is clamped rather than trusted.
    */
   cachedInputTokens?: number | null;
+  /** Cache writes are also subsets of inputTokens, with provider-reported TTLs. */
+  cacheCreationInputTokens?: number | null;
+  cacheCreation?: { ephemeral5mInputTokens?: number; ephemeral1hInputTokens?: number };
   /** The catalogue row for the model actually served, or null if there is none. */
   pricing?: MeasuredCostPricing | null;
   /**
@@ -348,7 +353,24 @@ export function measureCostUsd(input: {
     // than input tokens is a bug on their side, and a negative remainder here
     // would silently credit the customer.
     const cachedInputTokens = Math.min(nonNegativeTokens(input.cachedInputTokens), inputTokens);
-    const uncachedInputTokens = inputTokens - cachedInputTokens;
+    const write5m = nonNegativeTokens(input.cacheCreation?.ephemeral5mInputTokens);
+    const write1h = nonNegativeTokens(input.cacheCreation?.ephemeral1hInputTokens);
+    const writes = write5m + write1h;
+    const reportedWrites =
+      input.cacheCreationInputTokens == null
+        ? writes
+        : nonNegativeTokens(input.cacheCreationInputTokens);
+    // Never infer a TTL or use the cheaper base rate for a cache write.
+    // Incomplete/conflicting usage or an unknown consumed tariff is unpriced.
+    if (
+      reportedWrites !== writes ||
+      writes > inputTokens - cachedInputTokens ||
+      (write5m > 0 && !isUsablePrice(pricing?.cacheWrite5mPerMTok)) ||
+      (write1h > 0 && !isUsablePrice(pricing?.cacheWrite1hPerMTok))
+    ) {
+      return { costUsd: 0, source: 'unpriced', inputCostUsd: null, outputCostUsd: null };
+    }
+    const uncachedInputTokens = inputTokens - cachedInputTokens - writes;
     // No cache tariff → cached tokens bill at the normal input rate. That is
     // the conservative direction: it can overstate the cost of a cache hit, and
     // never understates it.
@@ -356,7 +378,10 @@ export function measureCostUsd(input: {
       ? pricing.cachedInputPerMTok
       : inputPerMTok;
     const inputCost =
-      (uncachedInputTokens * (inputPerMTok ?? 0) + cachedInputTokens * (cachedRate ?? 0)) /
+      (uncachedInputTokens * (inputPerMTok ?? 0) +
+        cachedInputTokens * (cachedRate ?? 0) +
+        write5m * (isUsablePrice(pricing?.cacheWrite5mPerMTok) ? pricing.cacheWrite5mPerMTok : 0) +
+        write1h * (isUsablePrice(pricing?.cacheWrite1hPerMTok) ? pricing.cacheWrite1hPerMTok : 0)) /
       TOKENS_PER_PRICE_UNIT;
     const outputCost = (outputTokens * (outputPerMTok ?? 0)) / TOKENS_PER_PRICE_UNIT;
     // The TOTAL is computed from the unrounded halves, so the charge never

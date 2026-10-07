@@ -70,6 +70,7 @@ describe('CatalogRepository CONN-1646', () => {
     modelCatalog: {
       updateMany: ReturnType<typeof vi.fn>;
       findMany: ReturnType<typeof vi.fn>;
+      findFirst: ReturnType<typeof vi.fn>;
     };
   };
   let repository: CatalogRepository;
@@ -95,9 +96,34 @@ describe('CatalogRepository CONN-1646', () => {
       modelCatalog: {
         updateMany: vi.fn().mockResolvedValue({ count: 0 }),
         findMany: vi.fn().mockResolvedValue([]),
+        findFirst: vi.fn().mockResolvedValue(null),
       },
     };
     repository = new CatalogRepository(prisma as unknown as PrismaService);
+  });
+
+  it('CACHE-003b selects all cache tariffs on the per-request pricing path', async () => {
+    const pricing = {
+      inputPerMTok: 10,
+      outputPerMTok: 50,
+      tier: 'paid',
+      cachedInputPerMTok: 0.25,
+      cacheWrite5mPerMTok: 12.5,
+      cacheWrite1hPerMTok: 20,
+    };
+    prisma.modelCatalog.findFirst.mockResolvedValue(pricing);
+    expect(await repository.findPricing('anthropic', 'claude-fable-5-1')).toEqual(pricing);
+    expect(prisma.modelCatalog.findFirst).toHaveBeenCalledWith({
+      where: { connector: 'anthropic', model: 'claude-fable-5-1', absent: false },
+      select: {
+        inputPerMTok: true,
+        outputPerMTok: true,
+        tier: true,
+        cachedInputPerMTok: true,
+        cacheWrite5mPerMTok: true,
+        cacheWrite1hPerMTok: true,
+      },
+    });
   });
 
   it('rejects a connector mismatch before opening a transaction', async () => {

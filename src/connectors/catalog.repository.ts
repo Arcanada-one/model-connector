@@ -42,6 +42,9 @@ export interface ModelCatalogUpsert {
   supportsTools: boolean;
   inputPerMTok: number | null;
   outputPerMTok: number | null;
+  cachedInputPerMTok?: number | null;
+  cacheWrite5mPerMTok?: number | null;
+  cacheWrite1hPerMTok?: number | null;
   priceUnit: string;
   tier: 'free' | 'paid' | 'unknown';
   free: boolean;
@@ -145,6 +148,9 @@ export interface CatalogRepositoryLike {
 export interface CatalogPricingRow {
   inputPerMTok: number | null;
   outputPerMTok: number | null;
+  cachedInputPerMTok?: number | null;
+  cacheWrite5mPerMTok?: number | null;
+  cacheWrite1hPerMTok?: number | null;
   tier: string;
 }
 
@@ -229,7 +235,14 @@ export class CatalogRepository implements CatalogRepositoryLike {
   async findPricing(connector: string, model: string): Promise<CatalogPricingRow | null> {
     const row = await this.prisma.modelCatalog.findFirst({
       where: { connector, model, absent: false },
-      select: { inputPerMTok: true, outputPerMTok: true, tier: true },
+      select: {
+        inputPerMTok: true,
+        outputPerMTok: true,
+        cachedInputPerMTok: true,
+        cacheWrite5mPerMTok: true,
+        cacheWrite1hPerMTok: true,
+        tier: true,
+      },
     });
     return row ?? null;
   }
@@ -279,6 +292,9 @@ export class CatalogRepository implements CatalogRepositoryLike {
           }
           const persistence = {
             ...prepared.row,
+            cachedInputPerMTok: prepared.row.cachedInputPerMTok ?? null,
+            cacheWrite5mPerMTok: prepared.row.cacheWrite5mPerMTok ?? null,
+            cacheWrite1hPerMTok: prepared.row.cacheWrite1hPerMTok ?? null,
             snapshotId: snapshot.id,
             contentFingerprint: prepared.contentFingerprint,
             observedAt: input.observedAt,

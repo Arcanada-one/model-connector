@@ -467,3 +467,69 @@ describe('measureCostUsd', () => {
     });
   });
 });
+
+describe('CACHE-003b — explicit read/write invoice arms', () => {
+  const pricing = {
+    inputPerMTok: 10,
+    outputPerMTok: 50,
+    cachedInputPerMTok: 0.25,
+    cacheWrite5mPerMTok: 12.5,
+    cacheWrite1hPerMTok: 20,
+  };
+  const usage = {
+    inputTokens: 10_000,
+    outputTokens: 100,
+    cachedInputTokens: 6_000,
+    cacheCreationInputTokens: 3_000,
+    cacheCreation: { ephemeral5mInputTokens: 2_000, ephemeral1hInputTokens: 1_000 },
+  };
+  it('ignores invalid unused write tariffs instead of producing NaN', () => {
+    expect(
+      measureCostUsd({
+        inputTokens: 100,
+        pricing: { ...pricing, cacheWrite5mPerMTok: NaN, cacheWrite1hPerMTok: Infinity },
+      }),
+    ).toMatchObject({ costUsd: 0.001, source: 'catalog' });
+  });
+  it('matches the independently expanded fixture invoice, without double charging cached input', () => {
+    // (1000*10 + 6000*.25 + 2000*12.5 + 1000*20 + 100*50)/1e6 = .0615
+    expect(measureCostUsd({ ...usage, pricing })).toEqual({
+      costUsd: 0.0615,
+      source: 'catalog',
+      inputCostUsd: 0.0565,
+      outputCostUsd: 0.005,
+    });
+  });
+  it('keeps a provider invoice authoritative over incomplete cache details', () => {
+    expect(
+      measureCostUsd({ ...usage, cacheCreation: undefined, pricing, providerCostUsd: 0.07 }),
+    ).toMatchObject({ costUsd: 0.07, source: 'provider' });
+  });
+  it.each([
+    { cacheCreation: undefined },
+    { cacheCreationInputTokens: 2_999 },
+    {
+      cacheCreation: { ephemeral5mInputTokens: 10_000, ephemeral1hInputTokens: 1_000 },
+      cacheCreationInputTokens: 11_000,
+    },
+    { pricing: { ...pricing, cacheWrite5mPerMTok: null } },
+    { pricing: { ...pricing, cacheWrite1hPerMTok: null } },
+  ])('marks missing tariffs or inconsistent write counts unpriced (%j)', (overrides) => {
+    expect(measureCostUsd({ ...usage, pricing, ...overrides })).toEqual({
+      costUsd: 0,
+      source: 'unpriced',
+      inputCostUsd: null,
+      outputCostUsd: null,
+    });
+  });
+  it('accepts a published zero write price without replacing it with base input', () => {
+    expect(
+      measureCostUsd({
+        inputTokens: 100,
+        cacheCreationInputTokens: 100,
+        cacheCreation: { ephemeral5mInputTokens: 100 },
+        pricing: { ...pricing, cacheWrite5mPerMTok: 0 },
+      }),
+    ).toMatchObject({ costUsd: 0, source: 'catalog' });
+  });
+});
