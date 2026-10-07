@@ -42,7 +42,9 @@ describe('CascadeModule DI bootstrap (CONN-0223)', () => {
     ({ AppModule } = await import('../../app.module'));
     ({ PrismaService } = await import('../../prisma/prisma.service'));
     ({ CascadeRouterService } = await import('./cascade-router.service'));
-  });
+    // Cold AppModule imports exceed the default 10s hook budget when the full
+    // suite compiles in parallel. Match this spec's existing finite DI budget.
+  }, 30_000);
 
   it('resolves CascadeRouterService through the real module graph', async () => {
     const moduleRef = await Test.createTestingModule({
