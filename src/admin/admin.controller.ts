@@ -51,7 +51,9 @@ export class AdminController {
   @Header('Cache-Control', 'no-store')
   async rotate(@Param('id') id: string, @Body() body: unknown, @Req() req: { ip?: string }) {
     const result = RotateKeySchema.safeParse(body);
-    if (!result.success) throw new BadRequestException(result.error.issues);
+    if (!result.success) {
+      throw new BadRequestException(result.error.issues);
+    }
     return this.adminService.rotateKey(id, result.data, req.ip);
   }
 

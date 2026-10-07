@@ -30,8 +30,9 @@ Inspect `GET /admin/keys/:id` before rotating. A stale activity expectation or a
 concurrent credential change returns `409` without returning a new secret.
 The successful response is `200` with `id`, `name`, `active`, and `key`. Capture
 `key` directly into protected storage; never print the response or include it in
-a receipt. The old credential stops authenticating immediately because rotation
-flushes the verified-key cache.
+a receipt. Rotation flushes the serving process's verified-key cache. This proves
+immediate invalidation in that process; other serving replicas require separate
+cache-invalidation or restart evidence before claiming global rejection.
 
 ## Recover a revoked funded identity
 

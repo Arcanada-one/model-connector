@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Controller, Get } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
@@ -40,14 +39,6 @@ const storage = {
   },
 };
 
-@Controller()
-class AccountFixtureController {
-  @Get('account-fixture')
-  read() {
-    return account;
-  }
-}
-
 let app: NestFastifyApplication;
 const originalAdminToken = process.env.ADMIN_TOKEN;
 const body = {
@@ -68,7 +59,7 @@ beforeEach(async () => {
     rateLimit: 17,
   };
   const module = await Test.createTestingModule({
-    controllers: [AdminController, AccountFixtureController],
+    controllers: [AdminController],
     providers: [
       AdminService,
       AuthService,
@@ -94,16 +85,11 @@ const rotate = (payload: unknown = body, token = adminToken) =>
     headers: { 'x-admin-token': token, 'content-type': 'application/json' },
     payload: JSON.stringify(payload),
   });
-const read = (secret: string) =>
-  app.inject({
-    method: 'GET',
-    url: '/account-fixture',
-    headers: { authorization: `Bearer ${secret}` },
-  });
+const authenticate = (secret: string) => app.get(AuthService).validateKey(secret);
 
 describe('account-preserving key rotation', () => {
   it('retains the funded identity and ledger; cached old credential fails immediately', async () => {
-    expect((await read(oldSecret)).statusCode).toBe(200); // Populate the real positive auth cache.
+    expect(await authenticate(oldSecret)).toMatchObject({ id: row.id }); // Populate the real cache.
     const before = structuredClone(account);
     const response = await rotate();
     expect(response.statusCode).toBe(200);
@@ -117,10 +103,9 @@ describe('account-preserving key rotation', () => {
     expect(replacement.key).toMatch(/^mc-[a-f0-9]{32}$/);
     expect(row.rateLimit).toBe(17);
     expect(account).toEqual(before);
-    expect((await read(oldSecret)).statusCode).toBe(401);
-    const fresh = await read(replacement.key);
-    expect(fresh.statusCode).toBe(200);
-    expect(fresh.json()).toEqual(before);
+    expect(await authenticate(oldSecret)).toBeNull();
+    expect(await authenticate(replacement.key)).toMatchObject({ id: 'existing-account' });
+    expect(account).toEqual(before);
     expect(Object.keys(updateMany.mock.calls[0][0].data)).toEqual(['keyHash']);
   });
 
@@ -165,8 +150,9 @@ describe('account-preserving key rotation', () => {
     expect(response.statusCode).toBe(200);
     const fresh = response.json();
     expect(fresh.id).toBe('existing-account');
-    expect((await read(oldSecret)).statusCode).toBe(401);
-    expect((await read(fresh.key)).json()).toEqual(before);
+    expect(await authenticate(oldSecret)).toBeNull();
+    expect(await authenticate(fresh.key)).toMatchObject({ id: 'existing-account' });
+    expect(account).toEqual(before);
     expect(row.active).toBe(true);
     expect(Object.keys(updateMany.mock.calls[0][0].data)).toEqual(['keyHash', 'active']);
   });
@@ -181,7 +167,7 @@ describe('account-preserving key rotation', () => {
     const response = await rotate();
     expect(response.statusCode).toBe(409);
     expect(response.json()).not.toHaveProperty('key');
-    expect((await read(oldSecret)).statusCode).toBe(200);
+    expect(await authenticate(oldSecret)).toMatchObject({ id: row.id });
   });
 
   it('returns 404 for a nonexistent identity', async () => {
@@ -192,6 +178,11 @@ describe('account-preserving key rotation', () => {
       payload: body,
     });
     expect(response.statusCode).toBe(404);
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects reactivation of an already active identity', async () => {
+    expect((await rotate({ ...body, reactivate: true })).statusCode).toBe(400);
     expect(updateMany).not.toHaveBeenCalled();
   });
 });
