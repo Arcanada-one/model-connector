@@ -54,7 +54,16 @@ export class AdminController {
     if (!result.success) {
       throw new BadRequestException(result.error.issues);
     }
-    return this.adminService.rotateKey(id, result.data, req.ip);
+    return this.adminService.rotateKey(
+      id,
+      {
+        actor: result.data.actor,
+        reason: result.data.reason,
+        expectedActive: result.data.expectedActive,
+        reactivate: result.data.reactivate,
+      },
+      req.ip,
+    );
   }
 
   /**
