@@ -1,0 +1,8 @@
+{
+  "schema": "MeasuredGitSource/v1",
+  "commit": "fa9fc8b9374441b5d81512bee2464662ff96d175",
+  "tree": "b0ebc4979ff16aba96304f824933160fa7abdda5",
+  "dirty": false,
+  "producer": "same Infra scoped git readback",
+  "captured_at_utc": "2026-10-04T05:45:04.461053+00:00"
+}

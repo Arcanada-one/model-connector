@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  Optional,
+} from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { hash } from 'bcryptjs';
 import { Prisma } from '@prisma/client';
@@ -9,9 +15,30 @@ import { PolicyService } from '../policy/policy.service';
 import type { ApiKeyPolicy } from '../policy/policy.schema';
 // CONN-1668 — flush the verified-key cache on key create/revoke.
 import { AuthService } from '../auth/auth.service';
+// A2-319 — a changed limit must be in force on the next request, not after the 10s cache.
+import { KeyRateLimitService } from '../auth/key-rate-limit.service';
+
+/** A2-319 — the public, secret-free view of one key. */
+export interface KeySummary {
+  id: string;
+  name: string;
+  rateLimit: number;
+  active: boolean;
+  createdAt: Date;
+}
+
+const KEY_SUMMARY_SELECT = {
+  id: true,
+  name: true,
+  rateLimit: true,
+  active: true,
+  createdAt: true,
+} as const;
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     // CONN-1665 — optional so pre-existing manual constructions keep working;
@@ -22,6 +49,8 @@ export class AdminService {
     // cache immediately (a revoked key must stop authenticating, and a freshly
     // created key must not be shadowed by a negative-cache entry).
     @Optional() private readonly authService?: AuthService,
+    // A2-319 — optional for the same reason as the two above.
+    @Optional() private readonly keyRateLimit?: KeyRateLimitService,
   ) {}
 
   async createKey(
@@ -44,13 +73,57 @@ export class AdminService {
     return { id: record.id, name: record.name, key: raw };
   }
 
-  async listKeys(): Promise<
-    Array<{ id: string; name: string; rateLimit: number; active: boolean; createdAt: Date }>
-  > {
+  async listKeys(): Promise<KeySummary[]> {
     return this.prisma.apiKey.findMany({
-      select: { id: true, name: true, rateLimit: true, active: true, createdAt: true },
+      select: KEY_SUMMARY_SELECT,
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  /** A2-319 — read one key (never the hash: the select names the columns). */
+  async getKey(id: string): Promise<KeySummary> {
+    const key = await this.prisma.apiKey.findUnique({ where: { id }, select: KEY_SUMMARY_SELECT });
+    if (!key) throw new NotFoundException(`Key ${id} not found`);
+    return key;
+  }
+
+  /**
+   * A2-319 — change the per-key rate limit of an EXISTING key.
+   *
+   * Until this existed the column could only be set at creation, and the one
+   * time a live limit had to move (`arcana-kb-agent`, 10 -> 60, before the
+   * A2-301 enforcement shipped) it was moved by editing the production
+   * database by hand. The database is not an interface.
+   *
+   * The audit line names the key id, the key's name, old -> new, the actor and
+   * where the request came from; it never contains a key value or hash (this
+   * method never reads either). A revoked key may still be changed — the limit
+   * is a property of the row, and refusing would make a re-activation start
+   * from a stale value — but the log says the key is inactive.
+   */
+  async setKeyRateLimit(
+    id: string,
+    rateLimit: number,
+    audit: { actor: string; reason?: string; sourceIp?: string },
+  ): Promise<KeySummary & { previousRateLimit: number }> {
+    const before = await this.prisma.apiKey.findUnique({
+      where: { id },
+      select: KEY_SUMMARY_SELECT,
+    });
+    if (!before) throw new NotFoundException(`Key ${id} not found`);
+    const after = await this.prisma.apiKey.update({
+      where: { id },
+      data: { rateLimit },
+      select: KEY_SUMMARY_SELECT,
+    });
+    this.keyRateLimit?.invalidateLimit(id);
+    this.logger.warn(
+      `admin: rateLimit changed keyId=${id} name=${JSON.stringify(after.name)} ` +
+        `${before.rateLimit} -> ${after.rateLimit} active=${after.active} ` +
+        `actor=${audit.actor} ip=${audit.sourceIp ?? 'unknown'}` +
+        (audit.reason ? ` reason=${JSON.stringify(audit.reason)}` : ''),
+    );
+    return { ...after, previousRateLimit: before.rateLimit };
   }
 
   async revokeKey(id: string): Promise<void> {

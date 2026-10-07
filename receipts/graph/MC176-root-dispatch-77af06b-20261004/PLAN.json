@@ -1,0 +1,274 @@
+{
+  "schema": "CanaryPlan/v2",
+  "id": "MC176-77af-native-root-dispatch-controls",
+  "owner": "Infra ctx_ea314606b1e6",
+  "environment": "owned disposable source controls only; no Docker/product whole/services/provider or model calls",
+  "read_only": false,
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "77af06b221ed314d1c578970c6cb8b9737e6d79c",
+    "tree": "756f6a821557ee07a0e9f0bf89aff023db2faee6",
+    "evidence": {
+      "path": "SOURCE.json",
+      "sha256": "8d54066e92c21785227f8c0a561b314dc207eb73f637f7aeb51ede6c1fa12806",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "kind": "process",
+      "id": "twentyfour-native-root-dispatch-prerequisite-controls",
+      "argv": [
+        "/usr/bin/python3.12",
+        "-B",
+        "dev-tools/graph-full-suite.test.py"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "PATH",
+        "TMPDIR",
+        "PYTHONDONTWRITEBYTECODE",
+        "NODE_DISABLE_COMPILE_CACHE",
+        "NO_COLOR"
+      ],
+      "timeout_seconds": 15,
+      "capture_limit_bytes": 65536,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stderr_contains": [
+          "Ran 24 tests",
+          "OK"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/.env.example",
+          "sha256": "8fe2a8db0fe06bde4fb069f12b9bb2afce5116f9d650136eb919563ff3451657"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/.arcana/verify.json",
+          "sha256": "bd1af827b6ae12a15441c707fee7dc1e76f65b303140b977d1c486f0cf04693b"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/scripts/graph-full-suite.sh",
+          "sha256": "2368cd45307570a8a1f7a33212723b9f324dae7d5c7b33a5b30dc4023e302c6f"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/scripts/graph_full_suite.py",
+          "sha256": "bb6679e22c0dc40754d41f3be4a016b6d0c5b119e096c2e0d49c93bf8ed51a5d"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/dev-tools/graph-full-suite.test.py",
+          "sha256": "96a4cfa375da5e6ae4d88737a23873ba5ad7f8af7a9d75dbeaf550bd47fb1196"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/.github/workflows/ci.yml",
+          "sha256": "4b31624ec1fcbc79c4df964115ab51526e0b074a155c4818892777fb9bcb8a71"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/dev-tools/rate-limit-ci-workflow.test.py",
+          "sha256": "a1505d8f055d13bd4463681aae1e2231110dee2b734e0d715f1c130c52ba2264"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/watcher/test/state-audit.spec.ts",
+          "sha256": "42924181b1065d33eefbfe2d08c6bc43643e00f246166b8ff5e9e05b29f9ef2d"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/watcher/src/state-store.ts",
+          "sha256": "f5f06f2b37c9b8a11aba81de41a7aaba4eaa462f5d6eef7c014696f7a1075f9e"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/watcher/src/audit-log.ts",
+          "sha256": "0aaa5dee68b5afb3c6afb5b866af6aab35b919711a1fa488e904a1a5065c3b7f"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/docs/reference/full-suite-declarations.md",
+          "sha256": "5bf87ebc847a4b7029901628e0444e036c8ddc88400d3314bf56d03f65cd954e"
+        },
+        {
+          "path": "/usr/bin/python3.12",
+          "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+        }
+      ],
+      "executable_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "entities": [
+        "code_unit:scripts/graph_full_suite.py",
+        "code_unit:dev-tools/graph-full-suite.test.py"
+      ],
+      "mutating": true
+    },
+    {
+      "kind": "process",
+      "id": "five-disposable-CI-glue-controls",
+      "argv": [
+        "/usr/bin/python3.12",
+        "-B",
+        "dev-tools/rate-limit-ci-workflow.test.py"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "PATH",
+        "TMPDIR",
+        "PYTHONDONTWRITEBYTECODE",
+        "NODE_DISABLE_COMPILE_CACHE",
+        "NO_COLOR"
+      ],
+      "timeout_seconds": 15,
+      "capture_limit_bytes": 65536,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stderr_contains": [
+          "Ran 5 tests",
+          "OK"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/.env.example",
+          "sha256": "8fe2a8db0fe06bde4fb069f12b9bb2afce5116f9d650136eb919563ff3451657"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/.arcana/verify.json",
+          "sha256": "bd1af827b6ae12a15441c707fee7dc1e76f65b303140b977d1c486f0cf04693b"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/scripts/graph-full-suite.sh",
+          "sha256": "2368cd45307570a8a1f7a33212723b9f324dae7d5c7b33a5b30dc4023e302c6f"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/scripts/graph_full_suite.py",
+          "sha256": "bb6679e22c0dc40754d41f3be4a016b6d0c5b119e096c2e0d49c93bf8ed51a5d"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/dev-tools/graph-full-suite.test.py",
+          "sha256": "96a4cfa375da5e6ae4d88737a23873ba5ad7f8af7a9d75dbeaf550bd47fb1196"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/.github/workflows/ci.yml",
+          "sha256": "4b31624ec1fcbc79c4df964115ab51526e0b074a155c4818892777fb9bcb8a71"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/dev-tools/rate-limit-ci-workflow.test.py",
+          "sha256": "a1505d8f055d13bd4463681aae1e2231110dee2b734e0d715f1c130c52ba2264"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/watcher/test/state-audit.spec.ts",
+          "sha256": "42924181b1065d33eefbfe2d08c6bc43643e00f246166b8ff5e9e05b29f9ef2d"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/watcher/src/state-store.ts",
+          "sha256": "f5f06f2b37c9b8a11aba81de41a7aaba4eaa462f5d6eef7c014696f7a1075f9e"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/watcher/src/audit-log.ts",
+          "sha256": "0aaa5dee68b5afb3c6afb5b866af6aab35b919711a1fa488e904a1a5065c3b7f"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/docs/reference/full-suite-declarations.md",
+          "sha256": "5bf87ebc847a4b7029901628e0444e036c8ddc88400d3314bf56d03f65cd954e"
+        },
+        {
+          "path": "/usr/bin/python3.12",
+          "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+        }
+      ],
+      "executable_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "entities": [
+        "code_unit:dev-tools/rate-limit-ci-workflow.test.py"
+      ],
+      "mutating": true
+    },
+    {
+      "kind": "process",
+      "id": "original-five-and-private-directory-watcher-controls",
+      "argv": [
+        "/usr/bin/node",
+        "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+        "run",
+        "test/state-audit.spec.ts",
+        "--reporter=verbose"
+      ],
+      "cwd": "watcher",
+      "env_keys": [
+        "PATH",
+        "TMPDIR",
+        "PYTHONDONTWRITEBYTECODE",
+        "NODE_DISABLE_COMPILE_CACHE",
+        "NO_COLOR"
+      ],
+      "timeout_seconds": 15,
+      "capture_limit_bytes": 65536,
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "6 passed"
+        ]
+      },
+      "execution_files": [
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/.env.example",
+          "sha256": "8fe2a8db0fe06bde4fb069f12b9bb2afce5116f9d650136eb919563ff3451657"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/.arcana/verify.json",
+          "sha256": "bd1af827b6ae12a15441c707fee7dc1e76f65b303140b977d1c486f0cf04693b"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/scripts/graph-full-suite.sh",
+          "sha256": "2368cd45307570a8a1f7a33212723b9f324dae7d5c7b33a5b30dc4023e302c6f"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/scripts/graph_full_suite.py",
+          "sha256": "bb6679e22c0dc40754d41f3be4a016b6d0c5b119e096c2e0d49c93bf8ed51a5d"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/dev-tools/graph-full-suite.test.py",
+          "sha256": "96a4cfa375da5e6ae4d88737a23873ba5ad7f8af7a9d75dbeaf550bd47fb1196"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/.github/workflows/ci.yml",
+          "sha256": "4b31624ec1fcbc79c4df964115ab51526e0b074a155c4818892777fb9bcb8a71"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/dev-tools/rate-limit-ci-workflow.test.py",
+          "sha256": "a1505d8f055d13bd4463681aae1e2231110dee2b734e0d715f1c130c52ba2264"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/watcher/test/state-audit.spec.ts",
+          "sha256": "42924181b1065d33eefbfe2d08c6bc43643e00f246166b8ff5e9e05b29f9ef2d"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/watcher/src/state-store.ts",
+          "sha256": "f5f06f2b37c9b8a11aba81de41a7aaba4eaa462f5d6eef7c014696f7a1075f9e"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/watcher/src/audit-log.ts",
+          "sha256": "0aaa5dee68b5afb3c6afb5b866af6aab35b919711a1fa488e904a1a5065c3b7f"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/docs/reference/full-suite-declarations.md",
+          "sha256": "5bf87ebc847a4b7029901628e0444e036c8ddc88400d3314bf56d03f65cd954e"
+        },
+        {
+          "path": "/usr/bin/node",
+          "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7"
+        },
+        {
+          "path": "/home/dev/.worktrees/model-connector/infra-six-rate-limit-CI-ctx-ea314/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.1_@types+node@25.6.0_@vitest+coverage-v8@4.1.8_msw@_29fe70b9f385518d95c81e98c2809b14/node_modules/vitest/vitest.mjs",
+          "sha256": "39db22f579acf5639bbb17a261408debbde03f4692c0c439e77e7f13aeba74d6"
+        }
+      ],
+      "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "entities": [
+        "code_unit:watcher/test/state-audit.spec.ts"
+      ],
+      "mutating": true
+    }
+  ]
+}

@@ -6,6 +6,7 @@
 // the completion through the OpenAI-shaped surface — the durable Hermes fix.
 
 import { describe, it, expect } from 'vitest';
+import type { PolicyServiceLike } from '../policy/policy.service';
 import { ConnectorsService } from '../connectors/connectors.service';
 import { FailoverRouterService } from '../connectors/failover/failover-router.service';
 import { OpenAiCompatController } from './openai-compat.controller';
@@ -82,7 +83,10 @@ function rateLimited(connector: string, model: string): ConnectorResponse {
   };
 }
 
-function buildStack(connectors: FakeConnector[]) {
+function buildStack(
+  connectors: FakeConnector[],
+  options: { routable?: boolean; policy?: PolicyServiceLike } = {},
+) {
   // Minimal stubs for the deps ConnectorsService.execute actually touches:
   // metrics.record (no-op) and prisma.request.create (fire-and-forget, caught).
   const jobQueue = {} as never;
@@ -93,7 +97,21 @@ function buildStack(connectors: FakeConnector[]) {
   const metrics = { record: () => undefined } as never;
   const outputGuard = { wrapExecute: () => Promise.resolve({ response: null }) } as never;
 
-  const service = new ConnectorsService(jobQueue, prisma, metrics, outputGuard);
+  // Scope READ/USE to these fake connectors. Never depend on the host's
+  // production PROVIDER_ACCESS or change the production access gate.
+  const names = new Set(connectors.map((connector) => connector.name));
+  const providerAccess = {
+    seedDefaults: async () => {},
+    refresh: async () => {},
+    getAccess: (name: string) => ({
+      read: names.has(name),
+      use: names.has(name) && options.routable !== false,
+    }),
+  };
+  const service = new ConnectorsService(
+    jobQueue, prisma, metrics, outputGuard,
+    undefined, undefined, null, providerAccess, options.policy,
+  );
   for (const c of connectors) service.register(c);
 
   const failover = new FailoverRouterService(service);
@@ -112,6 +130,39 @@ const body: OpenAiChatCompletionRequest = {
 } as OpenAiChatCompletionRequest;
 
 describe('OpenAI-compat failover integration', () => {
+  it('READ-only fake providers remain denied before any provider call', async () => {
+    const connector = new FakeConnector('openmodel', 'deepseek-v4-flash', () =>
+      ok('openmodel', 'deepseek-v4-flash', 'unused'),
+    );
+    const { controller } = buildStack([connector], { routable: false });
+    await expect(controller.chatCompletions(body, undefined, req)).rejects.toMatchObject({
+      response: { error: { type: 'provider_not_routable' } },
+    });
+    expect(connector.calls).toBe(0);
+  });
+
+  it.each(['denied', 'read-error'] as const)('policy %s prevents all fake provider calls', async (mode) => {
+    const connector = new FakeConnector('openmodel', 'deepseek-v4-flash', () =>
+      ok('openmodel', 'deepseek-v4-flash', 'unused'),
+    );
+    const policy: PolicyServiceLike = {
+      getPolicyForKey: async () => {
+        if (mode === 'read-error') throw new Error('fixture policy failure');
+        return { policyVersion: 1, providers: [] };
+      },
+      isProviderAllowed: () => false,
+      isModelAllowed: () => ({ allowed: false }),
+      getTier: async () => undefined,
+      resolveProviderKeyEnv: () => null,
+      invalidateKey: () => {},
+    };
+    const { controller } = buildStack([connector], { policy });
+    await expect(controller.chatCompletions(body, undefined, req)).rejects.toMatchObject({
+      response: { error: { type: mode === 'read-error' ? 'config_error' : 'policy_violation' } },
+    });
+    expect(connector.calls).toBe(0);
+  });
+
   it('AC2: first provider 429 → a DIFFERENT provider serves the OpenAI completion', async () => {
     // openmodel (DeepSeek, free, first hop) returns 429; groq (free) succeeds.
     const deepseek = new FakeConnector('openmodel', 'deepseek-v4-flash', () =>
