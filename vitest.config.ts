@@ -4,6 +4,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     globals: true,
+    // Bound cold module-import contention in the complete service suite.
+    maxWorkers: 4,
     root: './',
     include: [
       'src/**/*.spec.ts',
