@@ -24,6 +24,7 @@ import { ConnectorJobData } from '../queue/connector-job.processor';
 import { PrismaService } from '../prisma/prisma.service';
 import { BaseCliConnector } from './base-cli.connector';
 import { BaseApiConnector } from './base-api.connector';
+import { parseDeepSeekOptions } from './deepseek/deepseek-options';
 import { sanitizeJsonResponse, JsonSanitizeError } from '../core/utils/json-sanitizer';
 import { getConfig } from '../config/env.schema';
 import { MetricsService } from '../metrics/metrics.service';
@@ -803,6 +804,18 @@ export class ConnectorsService {
           ...action,
         },
       };
+    }
+
+    // Resolve provider-specific options before opening a financial intent or
+    // reserving an observation. Per-connector/profile DTOs cannot know which
+    // adapter will receive the request; direct adapter validation remains too.
+    if (connector.name === 'deepseek' && !parseDeepSeekOptions(request).success) {
+      return this.gateErrorResponse(
+        connectorName,
+        request.model || 'unknown',
+        'validation_error',
+        'Invalid DeepSeek thinking/effort options',
+      );
     }
 
     // ARAS-0064 — the credit gate used to sit here. ARAS-0058 moved it to just
