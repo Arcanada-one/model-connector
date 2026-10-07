@@ -20,10 +20,41 @@ jobs:
     # A2-315: pre-deploy gates run on the dedicated `deploy-gate` lane, not on `ci-general`, where
     # KC2 batteries held all five slots for hours (argana 95 min, muneral 150 min in the queue on
     # 2026-09-24/25). The lane's runners carry ONLY that label (--no-default-labels): nothing else lands there.
-    # Pull requests keep the shared pool; only the push that deploys takes the lane.
-    runs-on: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && fromJSON('["deploy-gate"]') || fromJSON('["self-hosted","Linux","ci-general"]') }}
+    # DEC-AUP-0101 O3: pull requests use the existing unprivileged ci-nodocker lane.
+    # Main pre-deploy checks retain deploy-gate; Docker e2e retains ci-general.
+    runs-on: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && fromJSON('["deploy-gate"]') || fromJSON('["ci-nodocker"]') }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Provision pinned Compose CLI in PR job temp (no daemon)
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          [ "$(uname -m)" = x86_64 ] || { echo "Unsupported Compose CLI architecture" >&2; exit 1; }
+          compose_root="${RUNNER_TEMP}/o3-compose-cli"
+          mkdir -p "$compose_root/cli-plugins"
+          curl --fail --silent --show-error --location --retry 2 --connect-timeout 10 --max-time 120 \
+            https://github.com/docker/compose/releases/download/v5.6.0/docker-compose-linux-x86_64 \
+            --output "$compose_root/cli-plugins/docker-compose"
+          printf '%s  %s\n' \
+            40343e21ca777173e69cff5dbafeb37c6f81f3b0d57d9e597f036e95eb63e76a \
+            "$compose_root/cli-plugins/docker-compose" | sha256sum --check --strict
+          chmod 700 "$compose_root/cli-plugins/docker-compose"
+          printf 'DOCKER_CONFIG=%s\n' "$compose_root" >> "$GITHUB_ENV"
+          DOCKER_CONFIG="$compose_root" docker compose version
+
+      - name: PR runner tooling qualification (DEC-AUP-0101 O3)
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          # Read versions only; never contact a daemon or install host packages.
+          command -v docker
+          docker --version
+          docker compose version
+          command -v shellcheck
+          shellcheck --version
+          command -v bats
+          bats --version
 
       - name: Credential documentation regression
         run: bash dev-tools/credential-docs-regression.sh
