@@ -17,6 +17,12 @@ NodeNext module settings. The forwarding files under `test/watcher` import that
 deployable's ESM tests and are outside this CommonJS service project. This project
 does not establish their compiler coverage or replace watcher verification.
 
+The service Vitest project caps concurrency at four workers. Complete-suite
+diagnostics showed cold dynamic imports exhausting default deadlines under the
+host-derived worker count. The bounded run preserves all test members and
+assertions. Cascade's cold AppModule setup has the same finite 30-second budget
+as its existing DI assertion; financial and HTTP assertions are unchanged.
+
 Compiler success establishes type compatibility for the listed project. It does
 not execute HTTP tests, qualify a deployed route, authorize key rotation, or
 replace graph admission and the canonical merge gate.
