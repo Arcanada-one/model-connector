@@ -26,6 +26,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Provision pinned Compose CLI in PR job temp (no daemon)
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          [ "$(uname -m)" = x86_64 ] || { echo "Unsupported Compose CLI architecture" >&2; exit 1; }
+          compose_root="${RUNNER_TEMP}/o3-compose-cli"
+          mkdir -p "$compose_root/cli-plugins"
+          curl --fail --silent --show-error --location --retry 2 --connect-timeout 10 --max-time 120 \
+            https://github.com/docker/compose/releases/download/v5.6.0/docker-compose-linux-x86_64 \
+            --output "$compose_root/cli-plugins/docker-compose"
+          printf '%s  %s\n' \
+            40343e21ca777173e69cff5dbafeb37c6f81f3b0d57d9e597f036e95eb63e76a \
+            "$compose_root/cli-plugins/docker-compose" | sha256sum --check --strict
+          chmod 700 "$compose_root/cli-plugins/docker-compose"
+          printf 'DOCKER_CONFIG=%s\n' "$compose_root" >> "$GITHUB_ENV"
+          DOCKER_CONFIG="$compose_root" docker compose version
+
       - name: PR runner tooling qualification (DEC-AUP-0101 O3)
         if: github.event_name == 'pull_request'
         run: |
