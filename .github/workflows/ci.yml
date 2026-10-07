@@ -26,6 +26,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: PR runner tooling qualification (DEC-AUP-0101 O3)
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          # Read versions only; never contact a daemon or install host packages.
+          command -v docker
+          docker --version
+          docker compose version
+          command -v shellcheck
+          shellcheck --version
+          command -v bats
+          bats --version
+
       - name: Credential documentation regression
         run: bash dev-tools/credential-docs-regression.sh
 
