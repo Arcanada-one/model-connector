@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateKeyPairSync, sign } from 'node:crypto';
-import { mkdtempSync, mkdirSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fixture } from './monetary-v2.spec';
@@ -120,3 +120,44 @@ describe.skipIf(!billingSource)('actual pinned Billing3a Journal bridge, offline
     });
   }
 });
+
+
+// Synthetic transport only: no account, Journal, provider or real authority.
+for (const mode of ['exact-limit', 'one-over', 'multibyte', 'json-escaping'] as const) {
+  it(`bounds the complete UTF-8 envelope before child creation: ${mode}`, async () => {
+    const root = mkdtempSync(join(tmpdir(), 'mc-envelope-bound-'));
+    const marker = join(root, 'child-started'), childScript = join(root, 'executor.cjs');
+    writeFileSync(childScript, `const fs=require('node:fs');
+fs.writeFileSync(${JSON.stringify(marker)},'started');
+fs.readFileSync(3);let chunks=[];
+process.stdin.on('data',b=>chunks.push(b));process.stdin.on('end',()=>{
+ const raw=Buffer.concat(chunks);JSON.parse(raw.toString('utf8'));
+ process.stdout.write(JSON.stringify({bytes:raw.length}));
+});`, { mode: 0o600 });
+    try {
+      const body = (wire: string) => JSON.stringify({request:{},wire_utf8:wire,
+        charging_policy_utf8:'synthetic-policy',wire_bounds_utf8:'synthetic-bounds',deadline_unix:1005});
+      const overhead = Buffer.byteLength(body(''), 'utf8');
+      const room = 8388608-overhead;
+      const wire = mode === 'exact-limit' ? 'x'.repeat(room)
+        : mode === 'one-over' ? 'x'.repeat(room+1)
+        : mode === 'multibyte' ? 'é'.repeat(Math.floor(room/2)+1)
+        : '\"'.repeat(Math.floor(room/2)+1);
+      const serialized = body(wire);
+      const input = {request:{},wire,charging_policy_utf8:'synthetic-policy',
+        wire_bounds_utf8:'synthetic-bounds',deadline_unix:1005,assertFresh:()=>{}} as unknown as MonetaryAtomicInput;
+      const call = incumbentJournalBridge({executable:process.execPath,args:[childScript],
+        authorityContext:Buffer.from('synthetic transport fixture only'),temporaryDirectory:root,now:()=>1000});
+      if (mode === 'exact-limit') {
+        expect(Buffer.byteLength(serialized,'utf8')).toBe(8388608);
+        await expect(call(input)).resolves.toEqual({bytes:8388608});
+        expect(existsSync(marker)).toBe(true);
+      } else {
+        expect(wire.length).toBeLessThanOrEqual(8388608);
+        expect(Buffer.byteLength(serialized,'utf8')).toBeGreaterThan(8388608);
+        await expect(call(input)).rejects.toThrow('journal_bridge_unknown_preserved');
+        expect(existsSync(marker)).toBe(false);
+      }
+    } finally { rmSync(root,{recursive:true,force:true}); }
+  });
+}

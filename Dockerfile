@@ -27,7 +27,7 @@ RUN npm install -g @anthropic-ai/claude-code @google/gemini-cli
 
 # Install Cursor CLI + keyring for persistent auth (Cursor stores tokens in OS keyring)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl ca-certificates dbus dbus-x11 gnome-keyring libsecret-1-0 \
+        curl ca-certificates dbus dbus-x11 gnome-keyring libsecret-1-0 python3 \
     && curl -fsSL https://cursor.com/install | bash \
     && cp -r /root/.local/share/cursor-agent /opt/cursor-agent \
     && ln -sf /opt/cursor-agent/versions/*/cursor-agent /usr/local/bin/cursor-agent \
@@ -46,6 +46,11 @@ COPY --from=build --chown=connector /app/prisma ./prisma
 COPY --from=build --chown=connector /app/prisma.config.ts ./
 # CONN-1666: Vault provider-key sourcing runs from the entrypoint at boot.
 COPY --from=build --chown=connector /app/scripts ./scripts
+
+# Disabled BENCH source component only; no broker scripts, credentials or Journal.
+COPY deploy/bench-account-receiving.py deploy/bench-monetary-v2.disabled.json deploy/bench-receiving-package.py /app/deploy/
+RUN python3 -B /app/deploy/bench-receiving-package.py seal \
+    && chmod 0555 /app/deploy && chmod 0444 /app/deploy/*
 
 COPY --chown=connector entrypoint.sh /usr/local/bin/entrypoint.sh
 

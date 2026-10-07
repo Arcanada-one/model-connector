@@ -52,6 +52,8 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 deploy/test_billing_transaction.py
           PYTHONDONTWRITEBYTECODE=1 python3 deploy/test_billing_installer.py
           PYTHONDONTWRITEBYTECODE=1 python3 -B deploy/tests/test_bench_monetary_manifest.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -B deploy/test_bench_account_receiving.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -B deploy/test_bench_receiving_package.py
           bash -n deploy/deploy.sh deploy/deploy.test.sh
           bash deploy/deploy.test.sh
           bash -n deploy/compose-network.test.sh
@@ -155,7 +157,12 @@ jobs:
           docker buildx build --target build --load -t model-connector-rate-limit-test .
 
       - name: Build Docker image
-        run: docker buildx build --load -t model-connector-e2e .
+        run: docker buildx build --load --build-arg MC_BUILD_SHA="$GITHUB_SHA" -t model-connector-e2e .
+
+      - name: Verify disabled receiver image provenance
+        run: |
+          docker run --rm --network=none --read-only --entrypoint python3 \
+            model-connector-e2e -B /app/deploy/bench-receiving-package.py verify "$GITHUB_SHA"
 
       - name: Create DB schema
         run: |
