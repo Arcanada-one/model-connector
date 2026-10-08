@@ -623,10 +623,14 @@ describe('durable supplier admission (isolated PostgreSQL)', () => {
       join(process.cwd(), 'src/billing/profile-spend/envelope-mirror.ts'),
       'utf8',
     );
-    expect(source.includes(before)).toBe(true);
+    expect(source.split(before).length - 1).toBe(1);
     const compiled = ts.transpileModule(source.replace(before, after), {
       compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
+      reportDiagnostics: true,
     });
+    expect(
+      compiled.diagnostics?.filter((d) => d.category === ts.DiagnosticCategory.Error) ?? [],
+    ).toEqual([]);
     const exports: Record<string, unknown> = {};
     runInNewContext(compiled.outputText, {
       exports,
@@ -638,6 +642,7 @@ describe('durable supplier admission (isolated PostgreSQL)', () => {
         throw new Error('Unexpected mutation import');
       },
     });
+    expect(typeof exports.PrimeExposureEnvelope).toBe('function');
     return exports.PrimeExposureEnvelope as typeof PrimeExposureEnvelope;
   };
   it.each(['direct', 'carry', 'dedup', 'pause'])(
@@ -683,7 +688,7 @@ describe('durable supplier admission (isolated PostgreSQL)', () => {
         carry: ['(at < from.getTime() && hold.carry)', 'false'],
         dedup: ['unique.set(hold.physicalId,', "unique.set(hold.physicalId + ':' + unique.size,"],
         pause: [
-          "if (this.paused || Date.now() - this.observedAt > 60_000) throw new ProfileSpendError('prime_envelope_paused');",
+          "if (this.paused || Date.now() - this.observedAt > 60_000)\n      throw new ProfileSpendError('prime_envelope_paused');",
           '',
         ],
       };
@@ -721,7 +726,9 @@ describe('durable supplier admission (isolated PostgreSQL)', () => {
         }
       };
       oracle(PrimeExposureEnvelope);
-      expect(() => oracle(mutantMirror(...replacements[guard]))).toThrow();
+      // Setup errors must fail the test, never satisfy the behavioral RED oracle.
+      const Mutant = mutantMirror(...replacements[guard]);
+      expect(() => oracle(Mutant)).toThrow(/expected .* to be/);
     },
   );
   it('exports immutable F3 reliance fields and refuses mapping/snapshot substitutions before initial import', async () => {
