@@ -3,7 +3,7 @@
 // Wires the REAL ConnectorsService.execute path + the REAL FailoverRouterService +
 // the REAL OpenAiCompatController, with two fake IConnectors registered. Forces a
 // 429 on the first (DeepSeek) provider and asserts that a DIFFERENT provider served
-// the completion through the OpenAI-shaped surface — the durable Hermes fix.
+// the completion through the OpenAI-shaped surface — the durable rate-limit fix.
 
 import { describe, it, expect } from 'vitest';
 import type { PolicyServiceLike } from '../policy/policy.service';
@@ -109,8 +109,15 @@ function buildStack(
     }),
   };
   const service = new ConnectorsService(
-    jobQueue, prisma, metrics, outputGuard,
-    undefined, undefined, null, providerAccess, options.policy,
+    jobQueue,
+    prisma,
+    metrics,
+    outputGuard,
+    undefined,
+    undefined,
+    null,
+    providerAccess,
+    options.policy,
   );
   for (const c of connectors) service.register(c);
 
@@ -141,27 +148,30 @@ describe('OpenAI-compat failover integration', () => {
     expect(connector.calls).toBe(0);
   });
 
-  it.each(['denied', 'read-error'] as const)('policy %s prevents all fake provider calls', async (mode) => {
-    const connector = new FakeConnector('openmodel', 'deepseek-v4-flash', () =>
-      ok('openmodel', 'deepseek-v4-flash', 'unused'),
-    );
-    const policy: PolicyServiceLike = {
-      getPolicyForKey: async () => {
-        if (mode === 'read-error') throw new Error('fixture policy failure');
-        return { policyVersion: 1, providers: [] };
-      },
-      isProviderAllowed: () => false,
-      isModelAllowed: () => ({ allowed: false }),
-      getTier: async () => undefined,
-      resolveProviderKeyEnv: () => null,
-      invalidateKey: () => {},
-    };
-    const { controller } = buildStack([connector], { policy });
-    await expect(controller.chatCompletions(body, undefined, req)).rejects.toMatchObject({
-      response: { error: { type: mode === 'read-error' ? 'config_error' : 'policy_violation' } },
-    });
-    expect(connector.calls).toBe(0);
-  });
+  it.each(['denied', 'read-error'] as const)(
+    'policy %s prevents all fake provider calls',
+    async (mode) => {
+      const connector = new FakeConnector('openmodel', 'deepseek-v4-flash', () =>
+        ok('openmodel', 'deepseek-v4-flash', 'unused'),
+      );
+      const policy: PolicyServiceLike = {
+        getPolicyForKey: async () => {
+          if (mode === 'read-error') throw new Error('fixture policy failure');
+          return { policyVersion: 1, providers: [] };
+        },
+        isProviderAllowed: () => false,
+        isModelAllowed: () => ({ allowed: false }),
+        getTier: async () => undefined,
+        resolveProviderKeyEnv: () => null,
+        invalidateKey: () => {},
+      };
+      const { controller } = buildStack([connector], { policy });
+      await expect(controller.chatCompletions(body, undefined, req)).rejects.toMatchObject({
+        response: { error: { type: mode === 'read-error' ? 'config_error' : 'policy_violation' } },
+      });
+      expect(connector.calls).toBe(0);
+    },
+  );
 
   it('AC2: first provider 429 → a DIFFERENT provider serves the OpenAI completion', async () => {
     // openmodel (DeepSeek, free, first hop) returns 429; groq (free) succeeds.

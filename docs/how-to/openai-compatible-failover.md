@@ -9,7 +9,7 @@ beyond the base URL and API key (CONN-0243).
 
 Use the `/v1/chat/completions` gateway when:
 
-- You have an OpenAI SDK / LiteLLM / Hermes custom-provider client and want resilience
+- You have an OpenAI SDK / LiteLLM / custom-provider agent client and want resilience
   against a single provider's 429 / over-quota / 5xx without writing your own fallback.
 - You want free providers preferred automatically (DeepSeek as the default first hop),
   with paid providers only as a configured last resort.
@@ -59,7 +59,7 @@ The `model` field is a **routing preference, not a hard constraint** — MC is a
 gateway:
 
 - `"auto"` / `"failover"` / `"free"` / an unknown id → the pure free-first chain
-  (DeepSeek → other free providers). This is the recommended Hermes setting.
+  (DeepSeek → other free providers). This is the recommended setting for agent clients.
 - A concrete catalog model (e.g. `"deepseek-v4-flash"`) → that model is tried first,
   then the free-first chain follows as fallback.
 - A paid model with `FAILOVER_ALLOW_FREE_DOWNGRADE=false` → only that model is attempted

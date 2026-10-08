@@ -1,5 +1,5 @@
 // CONN-0243 — OpenAI-compatible facade. Lets an unmodified OpenAI-shaped client
-// (Hermes custom provider, coworker, any OpenAI SDK) point base_url at MC and get a
+// (custom-provider agents, coworker, any OpenAI SDK) point base_url at MC and get a
 // completion served by the free-first cross-provider failover chain. The global
 // AuthGuard applies (Authorization: Bearer <MC key>) — these routes are NOT @Public.
 

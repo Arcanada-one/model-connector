@@ -451,7 +451,7 @@ export const envSchema = z
     // Append paid candidates after all free ones. Default OFF (free-only gateway).
     FAILOVER_PAID_ENABLED: envBool.default(false),
     // When true (default), a client-requested model that fails (or is unknown) falls
-    // back to the free-first chain — the Hermes use case. Set false for strict callers
+    // back to the free-first chain — the default gateway use case. Set false for strict callers
     // that must not silently downgrade a requested paid model to a free one.
     FAILOVER_ALLOW_FREE_DOWNGRADE: envBool.default(true),
   })
