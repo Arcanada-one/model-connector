@@ -1,6 +1,6 @@
 {
- "base_url": "http://127.0.0.1:36989",
- "captured_at_utc": "2026-10-08T11:39:19Z",
+ "base_url": "http://127.0.0.1:46705",
+ "captured_at_utc": "2026-10-08T11:45:56Z",
  "card": "AUP-GRAPH-008",
  "contract_ref": "contracts/graph-verified-change/observed-edges-and-deploy-gate.v1.json",
  "counters": {
@@ -30,32 +30,32 @@
  "model": "claude-opus-5",
  "phase": "pre",
  "plan": {
-  "digest": "sha256:4f382d4872b24461a196a88d76ce01ff960c24ac2d8c136431b473d5dccd9286",
+  "digest": "sha256:7d7280a0ce52f466b18083238afb4937801f9982c77857ff541cd7229947ab88",
   "id": "provider-profile-admin-routes",
-  "path": "receipts/provider-profile-admin-canary/PLAN.json"
+  "path": "/tmp/mc-keys-20261008/final-canary/PLAN.json"
  },
  "probes": [
   {
    "body_bytes": 69,
    "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
-   "elapsed_ms": 59,
+   "elapsed_ms": 29,
    "id": "policy-requires-admin",
    "method": "GET",
    "outcome": "verified",
    "reason": "status 403 is neither 404 nor 405: the route is served by the resident version; key `statusCode` present",
    "status": 403,
-   "url": "http://127.0.0.1:36989/admin/keys/canary-a/policy"
+   "url": "http://127.0.0.1:46705/admin/keys/canary-a/policy"
   },
   {
    "body_bytes": 69,
    "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
-   "elapsed_ms": 2,
+   "elapsed_ms": 1,
    "id": "usage-requires-admin",
    "method": "GET",
    "outcome": "verified",
    "reason": "status 403 is neither 404 nor 405: the route is served by the resident version; key `statusCode` present",
    "status": 403,
-   "url": "http://127.0.0.1:36989/admin/keys/canary-a/usage"
+   "url": "http://127.0.0.1:46705/admin/keys/canary-a/usage"
   }
  ],
  "producer": {
@@ -71,13 +71,13 @@
  ],
  "schema": "CanaryResult/v1",
  "subject": {
-  "commit": "3b26285b6f40c3f8d825d0eb24283bc3c15b11c5",
+  "commit": "7ab41918a0660bb781bae4df0ccfcb24755eca1e",
   "evidence": {
    "path": "SOURCE.json",
-   "sha256": "9c72f4d4bfcf6f29832c218f2d92789eac580360666ed38e6df01fd98f54b7e9",
+   "sha256": "9849dc1d49fe643afef0b3200286979b5a75b05cbeb838dfdcbd9024b344856c",
    "source_field": "commit"
   },
   "schema": "GitCanarySubject/v1",
-  "tree": "0e09356467af73fe38fd74620e4ae0fd2b4892ee"
+  "tree": "f93b49863236d170143da43c0025b99cc8a64336"
  }
 }

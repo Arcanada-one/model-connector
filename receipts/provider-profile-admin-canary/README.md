@@ -1,6 +1,6 @@
 # Dedicated provider profile admin route canary
 
-Measured source: `3b26285b6f40c3f8d825d0eb24283bc3c15b11c5`.
+Measured source: `7ab41918a0660bb781bae4df0ccfcb24755eca1e`.
 
 The source was clean, built with the normal Nest build, and loaded into an owned
 loopback Nest application containing the production AdminController, AdminService,
@@ -32,6 +32,8 @@ controls (client binding, JEV override, revocation, request cap, redaction and
 attribution) also fail when their guards are removed.
 
 The rebased default suite passed 3654 assertions, with four existing skips, across
-241 files. This canary covers only the two added routes; inherited graph findings
+241 files. PROCESS-PLAN.json / PROCESS-RESULT.json additionally measure both affected provider-specific error code units with compiled-code assertions at all 41 offsets. The native process producer pins the executable, harness and loaded implementation bytes. These are deterministic process observations, not live provider measurements.
+
+The canaries cover the two added routes and two provider error code units; inherited graph findings
 retain their own tri-valued status. Full native change admission is reported
 separately and is not implied by this record.

@@ -1,11 +1,10 @@
 {
   "schema": "MeasuredGitSource/v1",
-  "commit": "3b26285b6f40c3f8d825d0eb24283bc3c15b11c5",
-  "tree": "0e09356467af73fe38fd74620e4ae0fd2b4892ee",
+  "commit": "7ab41918a0660bb781bae4df0ccfcb24755eca1e",
+  "tree": "f93b49863236d170143da43c0025b99cc8a64336",
   "dirty": false,
-  "producer": "MC-KEYS owned canary build + compiled admin route harness",
-  "captured_at_utc": "2026-10-08T11:39:19.613512+00:00",
-  "runtime_readback": "AUTHENTICATED.json",
+  "producer": "MC-KEYS clean source build and owned compiled-code canaries",
+  "captured_at_utc": "2026-10-08T11:45:56.016647+00:00",
   "loaded_files": [
     {
       "path": "dist/src/admin/admin.controller.js",
@@ -22,6 +21,26 @@
     {
       "path": "dist/src/prisma/prisma.service.js",
       "sha256": "e2258b2e0b0dbb9eb0089ff7392198ba2281ff7d70ab27754ada85111f052b06"
+    },
+    {
+      "path": "test/provider-profiles/canary/error-renderers.cjs",
+      "sha256": "fca7c6ed1f68ff648b19648f6047dfd07c2bf64224732fddf35df482edb936c2"
+    },
+    {
+      "path": "dist/src/connectors/azure-openai/azure-openai.connector.js",
+      "sha256": "3e6557f61e8e77a8581c12d21afc5a684acc4d0e551697712f8d520088598c2e"
+    },
+    {
+      "path": "dist/src/connectors/perplexity/perplexity.connector.js",
+      "sha256": "b5a1a076b09bbe7a428d4b3297e555ec2eff27fc2399467f073d1666dfe9ff27"
+    },
+    {
+      "path": "dist/src/connectors/base-api.connector.js",
+      "sha256": "14570219a020ff8c87cc2b80d17798ab490dc479d4a57a4ac9fa7f1ad85bcf90"
+    },
+    {
+      "path": "dist/src/policy/provider-key.context.js",
+      "sha256": "987b2b855ef19361c36b909ba2932f0475a19bf7c94c92f0fad1e358a21f0ca2"
     }
   ]
 }
