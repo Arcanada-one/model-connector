@@ -1,0 +1,12 @@
+{
+  "schema": "MeasuredGitSource/v1",
+  "commit": "41f08e3a8e2167bbd73fb35651060650f9c93481",
+  "tree": "b10c7c6971e7351638fd73dc80279306fedf8c5c",
+  "dirty": false,
+  "captured_at_utc": "2026-10-08T02:38:35.131236+00:00",
+  "scope": "Owned actual controller handlers with six native Vitest suites and synthetic downstream dependencies. No deployed/provider/auth/billing proof.",
+  "producer": {
+    "tool": "AGENT-AUTH Git HEAD/tree/clean source observer",
+    "version": "1.0.0"
+  }
+}
