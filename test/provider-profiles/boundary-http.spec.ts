@@ -3,26 +3,30 @@ import { Test } from '@nestjs/testing';
 import { APP_GUARD } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { hash } from 'bcryptjs';
-import { ConnectorsController } from '../connectors/connectors.controller';
-import { ConnectorsService } from '../connectors/connectors.service';
-import { JevConnector } from '../connectors/jev/jev.connector';
-import { DeepSeekConnector } from '../connectors/deepseek/deepseek.connector';
-import { request as decision, nativeResponse } from '../connectors/jev/decision.fixture';
-import { ImageGenerationService } from '../connectors/image-generation/image-generation.service';
-import { CascadeRouterService } from '../connectors/cascade/cascade-router.service';
-import { PrismaService } from '../prisma/prisma.service';
-import { AdminService } from '../admin/admin.service';
-import { AdminController } from '../admin/admin.controller';
-import { AdminGuard } from '../admin/admin.guard';
-import { AuthService } from '../auth/auth.service';
-import { AuthGuard } from '../auth/auth.guard';
-import { RateLimitGuard } from '../auth/rate-limit.guard';
-import { KeyRateLimitService } from '../auth/key-rate-limit.service';
-import { validateEnv } from '../config/env.schema';
-import { apiKeyPolicySchema, ApiKeyPolicy } from './policy.schema';
-import { PolicyService } from './policy.service';
-import { providerKeyContext } from './provider-key.context';
-import { resolveRegisteredCredential } from './credential-registry';
+import { ConnectorsController } from '../../src/connectors/connectors.controller';
+import { ConnectorsService } from '../../src/connectors/connectors.service';
+import { JevConnector } from '../../src/connectors/jev/jev.connector';
+import { DeepSeekConnector } from '../../src/connectors/deepseek/deepseek.connector';
+import { request as decision, nativeResponse } from '../../src/connectors/jev/decision.fixture';
+import { ImageGenerationService } from '../../src/connectors/image-generation/image-generation.service';
+import { CascadeRouterService } from '../../src/connectors/cascade/cascade-router.service';
+import { PrismaService } from '../../src/prisma/prisma.service';
+import { AdminService } from '../../src/admin/admin.service';
+import { AdminController } from '../../src/admin/admin.controller';
+import { AdminGuard } from '../../src/admin/admin.guard';
+import { AuthService } from '../../src/auth/auth.service';
+import { AuthGuard } from '../../src/auth/auth.guard';
+import { RateLimitGuard } from '../../src/auth/rate-limit.guard';
+import { KeyRateLimitService } from '../../src/auth/key-rate-limit.service';
+import { validateEnv } from '../../src/config/env.schema';
+import { apiKeyPolicySchema, ApiKeyPolicy } from '../../src/policy/policy.schema';
+import { PolicyService } from '../../src/policy/policy.service';
+import { providerKeyContext } from '../../src/policy/provider-key.context';
+import { resolveRegisteredCredential } from '../../src/policy/credential-registry';
+
+function fixtureCredential(provider: string, id: string): string {
+  return `synthetic-${provider}-${id}-1`;
+}
 
 function profile(id: string, provider: string): ApiKeyPolicy {
   return apiKeyPolicySchema.parse({
@@ -110,7 +114,7 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
     for (const provider of ['TYPESAFE', 'DEEPSEEK']) {
       vi.stubEnv(`${provider}_API_KEY`, `shared-${provider}`);
       for (const id of ['A', 'B'])
-        vi.stubEnv(`${provider}_API_KEY_${id}_1`, `synthetic-${provider}-${id}-1`);
+        vi.stubEnv(`${provider}_API_KEY_${id}_1`, fixtureCredential(provider, id));
     }
     vi.stubEnv('JEV_ENABLED', 'true');
     vi.stubEnv('ADMIN_TOKEN', 'fixture-admin');
@@ -345,7 +349,7 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
   });
   it('redacts dedicated secret from upstream DeepSeek errors before DB and response', async () => {
     rows['key-a'].policy = profile('a', 'deepseek');
-    const secret = process.env.DEEPSEEK_API_KEY_A_1!;
+    const secret = fixtureCredential('DEEPSEEK', 'A');
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify({ error: { message: `bad ${secret}` } }), { status: 400 }),
     );
@@ -383,7 +387,7 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
   });
   it('redacts a successful dedicated upstream secret echo before response and persistence', async () => {
     rows['key-a'].policy = profile('a', 'deepseek');
-    const secret = process.env.DEEPSEEK_API_KEY_A_1!;
+    const secret = fixtureCredential('DEEPSEEK', 'A');
     fetchMock.mockResolvedValue(
       new Response(
         JSON.stringify({
