@@ -20,6 +20,7 @@ import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { Queue } from 'bullmq';
 
 import { ConnectorsService } from './connectors.service';
+import { executeRequestSchema, perConnectorExecuteSchema } from './dto/execute.dto';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import type { CatalogPricingRow, CatalogRepositoryLike } from './catalog.repository';
 import type { IConnector } from './interfaces/connector.interface';
@@ -200,6 +201,28 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
     service.register(connector);
     return service;
   }
+
+  it('HTTP-parsed zero retries dispatches a retryable failure only once on both routes', async () => {
+    for (const schema of [executeRequestSchema, perConnectorExecuteSchema]) {
+      const connector = groqShapedConnector({ inputTokens: 0, outputTokens: 0 });
+      const success = await connector.execute({ prompt: 'fixture' });
+      (connector.execute as Mock).mockReset().mockResolvedValue({
+        ...success,
+        status: 'error',
+        error: { type: 'rate_limited', message: 'synthetic rate limit' },
+      });
+      const parsed = schema.parse({
+        connector: 'groq',
+        prompt: 'ping',
+        model: 'llama-3.3-70b-versatile',
+        maxRetries: 0,
+      });
+      const result = await buildService(connector).execute('groq', parsed, 'key-1');
+      expect(connector.execute).toHaveBeenCalledTimes(1);
+      expect(result.status).toBe('error');
+      expect(result.maxAttempts).toBe(1);
+    }
+  });
 
   beforeEach(() => {
     process.env.PROVIDER_ACCESS = '';
