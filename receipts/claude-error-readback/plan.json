@@ -7,11 +7,11 @@
   "producer_repository": "/tmp/model-connector-error-readback",
   "subject": {
     "schema": "GitCanarySubject/v1",
-    "commit": "82b3cefc5259907fd1a58974a40b47aec88c0bba",
-    "tree": "27a1c01dc602be878e7b18c09920899d9a84aad1",
+    "commit": "6320758dbbb6b5e04eadb9914ebaafa49900c360",
+    "tree": "2d995bc0eb3ddefcd589458d37500cca6b715f06",
     "evidence": {
       "path": "source.json",
-      "sha256": "ab201bdecb90416170bf3daaabda99f88ac1a476535ce0055f09296a110bc328",
+      "sha256": "03e79b0be96ac37cfe3e5864228579d522fba887ef7875cc4d632a45d8c6238f",
       "source_field": "commit"
     }
   },
@@ -4944,8 +4944,8 @@
           "sha256": "d421ef5f1702ccf1a5a74925fe878c4be983a4969e4f6ff8f1d543262305d949"
         },
         {
-          "path": "/tmp/model-connector-error-readback/scripts/canary/tsconfig.json",
-          "sha256": "755571a8de27c69ce786685038e83c6e80d8498b503410870811634e9923a56f"
+          "path": "/tmp/model-connector-error-readback/tsconfig.canary.json",
+          "sha256": "558121722d3b3d5aaabf226923d40c9d6a79fb20c83d2c00dd9ca3c54f01b60b"
         }
       ],
       "timeout_seconds": 60,
