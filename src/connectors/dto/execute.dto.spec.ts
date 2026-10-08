@@ -275,3 +275,26 @@ describe('executeRequestSchema (CONN-0223 profile XOR connector)', () => {
     expect(r.success).toBe(false);
   });
 });
+
+// A2-P0-2-PRE: an HTTP caller may suppress retries, never raise server policy.
+describe('execute DTO retry suppression', () => {
+  const input = { prompt: 'ping', model: 'claude-fable-5-1' };
+  for (const [name, schema, body] of [
+    ['universal', executeRequestSchema, { ...input, connector: 'anthropic' }],
+    ['per connector', perConnectorExecuteSchema, input],
+  ] as const) {
+    it(`${name} preserves an explicit zero retry budget`, () => {
+      const parsed = schema.parse({ ...body, maxRetries: 0 });
+      expect(parsed).toHaveProperty('maxRetries', 0);
+    });
+    it(`${name} preserves the absent legacy retry field`, () => {
+      expect(schema.parse(body)).not.toHaveProperty('maxRetries');
+    });
+    it(`${name} refuses increased, malformed or coerced retry budgets`, () => {
+      for (const maxRetries of [1, -1, 0.5, '0', null, true, Number.NaN, Infinity]) {
+        const parsed = schema.safeParse({ ...body, maxRetries });
+        expect(parsed.success, String(maxRetries)).toBe(false);
+      }
+    });
+  }
+});

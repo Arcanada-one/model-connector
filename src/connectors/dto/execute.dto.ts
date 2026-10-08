@@ -61,6 +61,8 @@ const executeRequestBaseShape = {
   jsonSchema: z.record(z.string(), z.unknown()).optional(),
   responseFormat: z.object({ type: z.enum(['json_object', 'text']) }).optional(),
   timeout: z.number().int().min(5_000).max(600_000).optional(),
+  // A2-P0-2-PRE: HTTP callers can suppress retries, never raise server policy.
+  maxRetries: z.literal(0).optional(),
   extra: z.record(z.string(), z.unknown()).optional(),
   // CONN-0223 — cascade profile: mutually exclusive with connector.
   profile: z.enum(['low-reasoning']).optional(),
