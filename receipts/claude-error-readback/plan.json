@@ -7,11 +7,11 @@
   "producer_repository": "/tmp/model-connector-error-readback",
   "subject": {
     "schema": "GitCanarySubject/v1",
-    "commit": "6320758dbbb6b5e04eadb9914ebaafa49900c360",
-    "tree": "2d995bc0eb3ddefcd589458d37500cca6b715f06",
+    "commit": "19baa01c4a1d4a85812b7be9637c7f39badca259",
+    "tree": "88391e394b552a2704927ae0d0582aa6a4427d45",
     "evidence": {
       "path": "source.json",
-      "sha256": "03e79b0be96ac37cfe3e5864228579d522fba887ef7875cc4d632a45d8c6238f",
+      "sha256": "741d7ed49e6c33c29cd72ffefd83c8cdccabcb3ebe4bb6e9340040a7a7af173d",
       "source_field": "commit"
     }
   },
@@ -22,7 +22,8 @@
       "cwd": ".",
       "argv": [
         "/usr/bin/node",
-        "scripts/canary/claude-error-readback.cjs"
+        "-e",
+        "'use strict';\n\n// Explicitly invoked synthetic storage probe. It never starts a provider CLI.\n// DATABASE_URL selects the authorized database. Only a newly generated inactive\n// key and its synthetic Request row are written, read back, then deleted.\nconst assert = require('node:assert/strict');\nconst { randomUUID, createHash } = require('node:crypto');\nconst { existsSync } = require('node:fs');\nconst path = require('node:path');\nconst root = process.cwd();\nconst dist = existsSync(path.join(root, 'dist/src/connectors')) ? 'dist/src' : 'dist';\nconst { ClaudeCodeConnector } = require(\n  path.join(root, dist, 'connectors/claude-code/claude-code.connector'),\n);\nconst { ConnectorsService } = require(path.join(root, dist, 'connectors/connectors.service'));\nconst { PrismaService } = require(path.join(root, dist, 'prisma/prisma.service'));\nconst { OutputGuardMiddleware } = require(\n  path.join(root, dist, 'connectors/output-guard/output-guard.middleware'),\n);\n\nconst cause = 'Synthetic upstream limit; enabled=true; resets at 16:00 UTC.';\nconst expected = `[subtype=success] ${cause}`;\nconst fixture = JSON.stringify({\n  type: 'result',\n  subtype: 'success',\n  is_error: true,\n  result: cause,\n  total_cost_usd: 0,\n  usage: { input_tokens: 0, output_tokens: 0 },\n});\n\nclass SyntheticClaude extends ClaudeCodeConnector {\n  getBinaryPath() {\n    return process.execPath;\n  }\n  buildArgs() {\n    return ['-e', `process.stdout.write(${JSON.stringify(fixture)})`];\n  }\n}\n\nasync function main() {\n  assert(process.env.DATABASE_URL, 'DATABASE_URL is required');\n  const db = new PrismaService();\n  const keyId = randomUUID();\n  const marker = `synthetic-error-readback-${keyId}`;\n  let created = false;\n  let verified = false;\n  try {\n    await db.$connect();\n    await db.apiKey.create({\n      data: {\n        id: keyId,\n        name: marker,\n        active: false,\n        rateLimit: 1,\n        keyHash: createHash('sha256').update(randomUUID()).digest('hex'),\n      },\n    });\n    created = true;\n    // This isolated service has only the synthetic connector registered and no\n    // billing/queue worker. The serving application's registry is untouched.\n    const access = {\n      seedDefaults: async () => {},\n      refresh: async () => {},\n      getAccess: () => ({ read: true, use: true }),\n    };\n    const service = new ConnectorsService(\n      {\n        add: () => {\n          throw new Error('Unexpected queue dispatch');\n        },\n      },\n      db,\n      { record: () => {} },\n      new OutputGuardMiddleware({ enabled: false, maxRetries: 0, timeoutMs: 5000 }),\n      undefined,\n      { findAll: async () => [] },\n      null,\n      access,\n    );\n    const connector = new SyntheticClaude();\n    connector.setSemaphore(1);\n    service.register(connector);\n    const response = await service.execute(\n      'claude-code',\n      {\n        prompt: marker,\n        model: 'synthetic-error-fixture',\n        maxRetries: 0,\n        timeout: 5000,\n      },\n      keyId,\n    );\n    assert.equal(response.status, 'error');\n    assert.equal(response.result, '');\n    assert.equal(response.error.message, expected);\n    // Reconnect after the service's transaction commits: a mocked create call\n    // or an uncommitted row cannot satisfy this readback.\n    await db.$disconnect();\n    await db.$connect();\n    const rows = await db.request.findMany({ where: { apiKeyId: keyId } });\n    assert.equal(rows.length, 1);\n    assert.equal(rows[0].status, 'error');\n    assert.equal(rows[0].errorType, 'execution_error');\n    assert.equal(rows[0].errorMessage, expected);\n    assert.equal(Number(rows[0].costUsd), 0);\n    verified = true;\n  } finally {\n    if (created) {\n      await db.$transaction([\n        db.request.deleteMany({ where: { apiKeyId: keyId } }),\n        db.apiKey.delete({ where: { id: keyId } }),\n      ]);\n      assert.equal(await db.request.count({ where: { apiKeyId: keyId } }), 0);\n      assert.equal(await db.apiKey.count({ where: { id: keyId } }), 0);\n    }\n    await db.$disconnect();\n  }\n  assert(verified);\n  console.log(\n    JSON.stringify({\n      schema: 'SyntheticErrorReadback/v1',\n      verified: true,\n      cli_process: 'synthetic-node-fixture',\n      provider_calls: 0,\n      stored_message: expected,\n      stored_rows: 1,\n      remaining_owned_rows: 0,\n      usage_cost_usd: 0,\n      build_sha: process.env.MC_BUILD_SHA || null,\n    }),\n  );\n}\n\nmain().catch((error) => {\n  // Do not echo raw database/provider exceptions or connection strings.\n  console.error(JSON.stringify({ verified: false, category: error.name || 'Error' }));\n  process.exitCode = 1;\n});\n"
       ],
       "env_keys": [
         "PATH",
@@ -4928,10 +4929,6 @@
           "sha256": "35fb20c055b0a2c35c07099538ca13a92f29977f1f6a36d24ebd6b60a7468c95"
         },
         {
-          "path": "/tmp/model-connector-error-readback/scripts/canary/claude-error-readback.cjs",
-          "sha256": "3ae93978e31bb8d486cb4e15b3810fabf13bc10c6302dbaaa789a6057a9489ff"
-        },
-        {
           "path": "/tmp/model-connector-error-readback/src/connectors/base-cli.connector.ts",
           "sha256": "ee3c813e87eaa844d534234ace4e3ac56b225827f86eaa03d9b6f00242701cbb"
         },
@@ -4942,10 +4939,6 @@
         {
           "path": "/tmp/model-connector-error-readback/src/connectors/connectors.service.ts",
           "sha256": "d421ef5f1702ccf1a5a74925fe878c4be983a4969e4f6ff8f1d543262305d949"
-        },
-        {
-          "path": "/tmp/model-connector-error-readback/tsconfig.canary.json",
-          "sha256": "558121722d3b3d5aaabf226923d40c9d6a79fb20c83d2c00dd9ca3c54f01b60b"
         }
       ],
       "timeout_seconds": 60,
@@ -4965,8 +4958,7 @@
         ]
       },
       "entities": [
-        "code_unit:src/connectors/claude-code/claude-code.connector.ts",
-        "code_unit:scripts/canary/claude-error-readback.cjs"
+        "code_unit:src/connectors/claude-code/claude-code.connector.ts"
       ]
     }
   ]
