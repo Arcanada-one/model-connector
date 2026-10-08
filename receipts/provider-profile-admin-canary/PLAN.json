@@ -1,0 +1,53 @@
+{
+  "schema": "CanaryPlan/v1",
+  "id": "provider-profile-admin-routes",
+  "owner": "MC-KEYS",
+  "environment": "owned loopback Nest admin application + disposable Unix-socket PostgreSQL; no upstream providers",
+  "base_url": "http://127.0.0.1:42087",
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "863c635805924b5a8d92fcc1a781ff8e1d0500e5",
+    "tree": "04ae60bf445ddbecf445f46f3dca3b68999e22d6",
+    "evidence": {
+      "path": "SOURCE.json",
+      "sha256": "0c4e20daa98f0516d62bd7609edbfb12c70290870404ff28ce91ab05b0b72d52",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "id": "policy-requires-admin",
+      "method": "GET",
+      "path": "/admin/keys/canary-a/policy",
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true,
+        "json_has": [
+          "statusCode"
+        ]
+      },
+      "entities": [
+        "route:GET /admin/keys/:id/policy"
+      ]
+    },
+    {
+      "id": "usage-requires-admin",
+      "method": "GET",
+      "path": "/admin/keys/canary-a/usage",
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true,
+        "json_has": [
+          "statusCode"
+        ]
+      },
+      "entities": [
+        "route:GET /admin/keys/:id/usage"
+      ]
+    }
+  ]
+}

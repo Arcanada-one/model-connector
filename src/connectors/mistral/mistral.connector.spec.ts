@@ -37,7 +37,7 @@ describe('MistralConnector', () => {
   });
 
   const ok = (body: unknown) =>
-    fetchSpy.mockResolvedValueOnce({ ok: true, status: 200, json: async () => body });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
 
   it('uses native identity, URL, Bearer auth and Mistral-compatible body', async () => {
     ok(chatResponse);

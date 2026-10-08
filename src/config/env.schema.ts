@@ -1,3 +1,4 @@
+import { validateCredentialRegistry } from '../policy/credential-registry';
 import { z } from 'zod';
 import { GROQ_FREE_MODELS_DEFAULT_CSV } from '../connectors/groq/groq.catalogue';
 
@@ -377,6 +378,20 @@ export const envSchema = z
       .default('false')
       .transform((v) => v === 'true'),
     TYPESAFE_API_KEY: z.string().optional(),
+    // Metadata only; values are separately injected provider credentials.
+    PROVIDER_CREDENTIAL_REGISTRY: z
+      .string()
+      .default('{}')
+      .superRefine((raw, ctx) => {
+        try {
+          validateCredentialRegistry(raw);
+        } catch {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Invalid provider credential registry metadata',
+          });
+        }
+      }),
     ANTHROPIC_ENABLED: envBool.default(false),
     ANTHROPIC_API_KEY: z.string().optional(),
     ANTHROPIC_BASE_URL: z.string().url().default('https://api.anthropic.com/v1'),

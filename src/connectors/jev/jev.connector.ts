@@ -1,3 +1,4 @@
+import { getProviderKeyOverride } from '../../policy/provider-key.context';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
@@ -16,7 +17,10 @@ export class JevConnector extends BaseApiConnector {
 
   private enabled(): boolean {
     // Re-read before every attempt: an in-process kill switch must not be cached.
-    return process.env.JEV_ENABLED === 'true' && !!process.env.TYPESAFE_API_KEY?.trim();
+    return (
+      process.env.JEV_ENABLED === 'true' &&
+      !!(getProviderKeyOverride(this.name) ?? process.env.TYPESAFE_API_KEY)?.trim()
+    );
   }
 
   protected getBaseUrl(): string {
@@ -31,7 +35,7 @@ export class JevConnector extends BaseApiConnector {
   protected getHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.TYPESAFE_API_KEY || ''}`,
+      Authorization: `Bearer ${getProviderKeyOverride(this.name) ?? (process.env.TYPESAFE_API_KEY || '')}`,
     };
   }
 
@@ -61,7 +65,7 @@ export class JevConnector extends BaseApiConnector {
   }
 
   protected async readResponseJson(response: Response): Promise<unknown> {
-    return JSON.parse(await this.readBounded(response));
+    return this.parseResponseJsonText(await this.readBounded(response));
   }
 
   protected readResponseError(response: Response): Promise<string> {

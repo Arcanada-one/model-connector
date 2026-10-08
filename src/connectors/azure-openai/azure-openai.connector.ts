@@ -1,3 +1,4 @@
+import { redactProviderSecrets } from '../../policy/provider-key.context';
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
 import {
   ConnectorCapabilities,
@@ -65,6 +66,7 @@ export class AzureOpenAiConnector extends BaseApiConnector {
   }
 
   protected formatHttpErrorMessage(_status: number, body: string): string {
+    body = redactProviderSecrets(body);
     try {
       const error = (JSON.parse(body) as { error?: { code?: unknown; message?: unknown } }).error;
       if (error && typeof error.message === 'string') {

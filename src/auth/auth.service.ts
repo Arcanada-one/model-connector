@@ -39,7 +39,18 @@ export class AuthService {
   async validateKey(rawKey: string): Promise<{ id: string; name: string } | null> {
     const cacheKey = AuthService.cacheKey(rawKey);
     const cached = this.verifyCache.get(cacheKey);
-    if (cached && cached.expiresAt > Date.now()) return cached.identity;
+    if (cached && cached.expiresAt > Date.now()) {
+      if (!cached.identity) return null;
+      // Keep bcrypt cached, but recheck the authoritative active bit on every hit.
+      // Process-local admin invalidation cannot revoke keys in another replica.
+      const row = await this.prisma.apiKey.findUnique({
+        where: { id: cached.identity.id },
+        select: { active: true },
+      });
+      if (row?.active) return cached.identity;
+      this.verifyCache.delete(cacheKey);
+      return null;
+    }
 
     const keys = await this.prisma.apiKey.findMany({ where: { active: true } });
     for (const key of keys) {

@@ -130,11 +130,11 @@ describe('PolicyService (CONN-1665)', () => {
   });
 
   describe('getPolicyForKey (cached, fail-closed on malformed)', () => {
-    it('null column → null policy, cached', async () => {
+    it('null column → null policy, reread to detect cross-replica profile assignment', async () => {
       const { service, prisma } = buildService({ apiKeyRow: { policy: null } });
       await expect(service.getPolicyForKey('k1')).resolves.toBeNull();
       await service.getPolicyForKey('k1');
-      expect(prisma.apiKey.findUnique).toHaveBeenCalledTimes(1);
+      expect(prisma.apiKey.findUnique).toHaveBeenCalledTimes(2);
     });
 
     it('valid stored policy → parsed policy', async () => {

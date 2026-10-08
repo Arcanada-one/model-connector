@@ -1,3 +1,4 @@
+import { getProviderKeyOverride } from '../../policy/provider-key.context';
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
 import { randomUUID } from 'node:crypto';
 import { deepSeekBodyOptions, parseDeepSeekOptions } from './deepseek-options';
@@ -246,7 +247,7 @@ export class DeepSeekConnector extends BaseApiConnector {
   protected getHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY || ''}`,
+      Authorization: `Bearer ${getProviderKeyOverride(this.name) ?? (process.env.DEEPSEEK_API_KEY || '')}`,
     };
   }
 

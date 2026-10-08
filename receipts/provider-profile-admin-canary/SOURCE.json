@@ -1,0 +1,54 @@
+{
+  "schema": "MeasuredGitSource/v1",
+  "commit": "863c635805924b5a8d92fcc1a781ff8e1d0500e5",
+  "tree": "04ae60bf445ddbecf445f46f3dca3b68999e22d6",
+  "dirty": false,
+  "producer": "MC-KEYS clean source build and owned compiled-code canaries",
+  "captured_at_utc": "2026-10-08T12:48:40.255168+00:00",
+  "loaded_files": [
+    {
+      "path": "dist/src/admin/admin.controller.js",
+      "sha256": "5831d0c06638e62e871debaf50086f5a89dd5863a3c22dff7e2d99bc0fbb96dd"
+    },
+    {
+      "path": "dist/src/admin/admin.service.js",
+      "sha256": "ee6b87c147dc2acaf0e5b19675390790db8b0f11f563f64016c48d2dafdd9576"
+    },
+    {
+      "path": "dist/src/admin/admin.guard.js",
+      "sha256": "4fd38a5f97bd386fa4cbd28b0e2d27b3b690567206e0a2ddbe6b3a74a4a5f7ed"
+    },
+    {
+      "path": "dist/src/prisma/prisma.service.js",
+      "sha256": "e2258b2e0b0dbb9eb0089ff7392198ba2281ff7d70ab27754ada85111f052b06"
+    },
+    {
+      "path": "test/provider-profiles/canary/error-renderers.cjs",
+      "sha256": "e5bc3ca450bd558901a3a0f780090be388a1e69797ef5676574b39d0b117b319"
+    },
+    {
+      "path": "dist/src/connectors/azure-openai/azure-openai.connector.js",
+      "sha256": "3e6557f61e8e77a8581c12d21afc5a684acc4d0e551697712f8d520088598c2e"
+    },
+    {
+      "path": "dist/src/connectors/perplexity/perplexity.connector.js",
+      "sha256": "b5a1a076b09bbe7a428d4b3297e555ec2eff27fc2399467f073d1666dfe9ff27"
+    },
+    {
+      "path": "dist/src/connectors/base-api.connector.js",
+      "sha256": "3be0d527ba3dbb21dd8f00dc29181211d9d8739c16d6846f030e41ebaec4f470"
+    },
+    {
+      "path": "dist/src/policy/provider-key.context.js",
+      "sha256": "987b2b855ef19361c36b909ba2932f0475a19bf7c94c92f0fad1e358a21f0ca2"
+    },
+    {
+      "path": "dist/src/connectors/jev/jev.connector.js",
+      "sha256": "ba60d5f15cc5c5bd5be0a4c8d9ccc08e589552e14ec10da30155d0125557c3d8"
+    },
+    {
+      "path": "dist/src/connectors/deepseek/deepseek.connector.js",
+      "sha256": "6490f722e3929fae8d45f00eca268258ec3b557cea3abf91f1a52f27491860b3"
+    }
+  ]
+}
