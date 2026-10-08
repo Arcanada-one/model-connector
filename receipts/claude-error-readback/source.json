@@ -1,9 +1,9 @@
 {
   "schema": "MeasuredGitSource/v1",
-  "commit": "4c498ea09a52a4b38eaf6241eefe7930bf4c4a4f",
-  "tree": "5f707f431454920478e2aec5ac0b89de464df4b9",
+  "commit": "82b3cefc5259907fd1a58974a40b47aec88c0bba",
+  "tree": "27a1c01dc602be878e7b18c09920899d9a84aad1",
   "dirty": false,
-  "captured_at_utc": "2026-10-08T10:41:18.183662+00:00",
+  "captured_at_utc": "2026-10-08T10:47:41.771634+00:00",
   "producer": "Source-pinned synthetic CLI and committed SQL storage readback; actual checkout HEAD/tree/status inspected",
   "repository_path": "/tmp/model-connector-error-readback"
 }

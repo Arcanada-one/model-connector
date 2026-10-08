@@ -7,11 +7,11 @@
   "producer_repository": "/tmp/model-connector-error-readback",
   "subject": {
     "schema": "GitCanarySubject/v1",
-    "commit": "4c498ea09a52a4b38eaf6241eefe7930bf4c4a4f",
-    "tree": "5f707f431454920478e2aec5ac0b89de464df4b9",
+    "commit": "82b3cefc5259907fd1a58974a40b47aec88c0bba",
+    "tree": "27a1c01dc602be878e7b18c09920899d9a84aad1",
     "evidence": {
       "path": "source.json",
-      "sha256": "26e947000853f09ada667b41ac41a171187d5ff317c707debd4fca28a909e66e",
+      "sha256": "ab201bdecb90416170bf3daaabda99f88ac1a476535ce0055f09296a110bc328",
       "source_field": "commit"
     }
   },
@@ -4942,6 +4942,10 @@
         {
           "path": "/tmp/model-connector-error-readback/src/connectors/connectors.service.ts",
           "sha256": "d421ef5f1702ccf1a5a74925fe878c4be983a4969e4f6ff8f1d543262305d949"
+        },
+        {
+          "path": "/tmp/model-connector-error-readback/scripts/canary/tsconfig.json",
+          "sha256": "755571a8de27c69ce786685038e83c6e80d8498b503410870811634e9923a56f"
         }
       ],
       "timeout_seconds": 60,
@@ -4961,7 +4965,8 @@
         ]
       },
       "entities": [
-        "code_unit:src/connectors/claude-code/claude-code.connector.ts"
+        "code_unit:src/connectors/claude-code/claude-code.connector.ts",
+        "code_unit:scripts/canary/claude-error-readback.cjs"
       ]
     }
   ]
