@@ -1,0 +1,111 @@
+{
+  "schema": "CanaryPlan/v2",
+  "id": "d65-owned-controller-handlers",
+  "environment": "arcana-devs-owned-synthetic-process-fixture",
+  "owner": "AGENT-AUTH d65e81e5-6dbf-4951-bf98-a36a9d34e672",
+  "read_only": false,
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "4dae16907563985e3b596bee70b5b2c6ebab14c5",
+    "tree": "666661c3f6eea6a7c179115f1b02e3bc3645ca61",
+    "evidence": {
+      "path": "source-evidence.json",
+      "sha256": "082c51ff1dae95fe4ee91a4af562412858962264a1161c3c6ba8e5b3af60e277",
+      "source_field": "commit"
+    }
+  },
+  "purpose": "Owned actual controller handlers with six native Vitest suites and synthetic downstream dependencies. No deployed/provider/auth/billing proof.",
+  "probes": [
+    {
+      "id": "six-actual-controller-handler-fixtures",
+      "kind": "process",
+      "mutating": true,
+      "argv": [
+        "/usr/bin/python3.12",
+        "/home/dev/aup/agent-auth/D65-PR196-OWNED-CONTROLLER-PROCESS-CANARY-R2-20261008/runner.py"
+      ],
+      "cwd": ".",
+      "env_keys": [
+        "PATH",
+        "HOME"
+      ],
+      "timeout_seconds": 110,
+      "capture_limit_bytes": 65536,
+      "executable_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "execution_files": [
+        {
+          "path": "/home/dev/aup/agent-auth/D65-PR196-OWNED-CONTROLLER-PROCESS-CANARY-R2-20261008/runner.py",
+          "sha256": "8ec6e344c058229e4cb339b2e6faade198c6102a632d6d30173dbb04a6501fee"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/admin/circuit-breaker.controller.ts",
+          "sha256": "0a9bea2273251f706df3dfcd84dd55bafcdeb8c6a094eabbbe340081c923ca99"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/admin/watcher-repair.controller.ts",
+          "sha256": "1ddf2c708413bd887a29ba8d59432bfe34639890972d7f8bb1c0bc20b36e9c0c"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/health/health.controller.ts",
+          "sha256": "e7c01f278a21b0852cb9c5515da26c9a084a28e699286b0bb7eda874d22b4f31"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/openai-compat/openai-compat.controller.ts",
+          "sha256": "bdc4a01741054afb408c17e2d64f962b5f3b895743f1382f3fb0176e04ffd3cf"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/prompt-cache/prompt-cache-prewarm.controller.ts",
+          "sha256": "75eeb6fccd331a333e273d32656219f4d874d0f0e09c7c292320c0f45e62b322"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/connectors/connectors.controller.ts",
+          "sha256": "da24748f26f72da2fa944490dc0636b3ab6e0094cc6c80081ceb664b8136b2e6"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/admin/circuit-breaker.controller.spec.ts",
+          "sha256": "a911c958822c3dc80dd131b9d0b52a1c8783cb6522442c60f0b6038f732455f0"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/admin/watcher-repair.controller.spec.ts",
+          "sha256": "5babdff0b30d2c294f2dc44cc23a93e34499a7182d03048277fd2a05c203a022"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/health/health.controller.spec.ts",
+          "sha256": "8cdb8d552ee26946d0f5c8566b03c85df4504ffbcc2a233204c7b742c66cf592"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/openai-compat/openai-compat.controller.spec.ts",
+          "sha256": "cf1ac927c5d620e4e7d3f777a31ceda1ba607e236bd56295ba657efb3bfe0903"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/prompt-cache/prompt-cache-prewarm.controller.spec.ts",
+          "sha256": "0dc64db1218ef5b1344d40280ce563865c8e01fc023f7e7b3c702f7a69cd430d"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/src/connectors/connectors.controller.spec.ts",
+          "sha256": "fc46e21625356be8c6cb62931c69b888836694dbb1fb61207bdd44353bab80f3"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/auth-anthropic-single-attempt-20261008/vitest.config.ts",
+          "sha256": "3cef9ecdc43c317e1021fc755cb207b517fba734d6e6a8d6aa85ecc20cf8d022"
+        }
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "D65_OWNED_CONTROLLER_HANDLER_FIXTURES_PASS"
+        ]
+      },
+      "entities": [
+        "code_unit:src/admin/circuit-breaker.controller.ts",
+        "code_unit:src/admin/watcher-repair.controller.ts",
+        "code_unit:src/health/health.controller.ts",
+        "code_unit:src/openai-compat/openai-compat.controller.ts",
+        "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ]
+    }
+  ]
+}
