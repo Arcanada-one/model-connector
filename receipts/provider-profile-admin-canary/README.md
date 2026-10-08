@@ -1,6 +1,6 @@
 # Dedicated provider profile admin route canary
 
-Measured source: `204685bbe8afa3757b710ebed5c3a0642f0a3144`.
+Measured source: `863c635805924b5a8d92fcc1a781ff8e1d0500e5`.
 
 The source was clean, built with the normal Nest build, and loaded into an owned
 loopback Nest application containing the production AdminController, AdminService,
@@ -48,3 +48,6 @@ controls fail on both old readers. Restoring each unsafe reader makes its test
 RED. The process canary also executes both compiled readers against malformed and
 valid credential-echo JSON; this is bounded-reader evidence, not qualification of
 the separate strict transport or a live supplier.
+
+The authored connector scaffold also uses an actual Response body; its native
+README-rendered test execution passes all 21 assertions with mocked transport.
