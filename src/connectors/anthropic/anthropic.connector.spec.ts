@@ -289,6 +289,9 @@ describe('AnthropicConnector', () => {
       expect(fable?.pricing).toEqual({
         inputPerMTok: 10,
         outputPerMTok: 50,
+        cachedInputPerMTok: 0.25,
+        cacheWrite5mPerMTok: 12.5,
+        cacheWrite1hPerMTok: 20,
         unit: 'USD/1M tokens',
       });
       for (const m of metas) {
@@ -307,6 +310,9 @@ describe('AnthropicConnector', () => {
       expect(metas.find((m) => m.id === 'claude-fable-5-1')?.pricing).toEqual({
         inputPerMTok: 10,
         outputPerMTok: 50,
+        cachedInputPerMTok: 0.25,
+        cacheWrite5mPerMTok: 12.5,
+        cacheWrite1hPerMTok: 20,
         unit: 'USD/1M tokens',
       });
       expect(metas.find((m) => m.id === 'claude-experimental-9')?.pricing).toBeNull();

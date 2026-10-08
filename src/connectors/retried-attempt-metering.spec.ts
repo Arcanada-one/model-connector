@@ -43,7 +43,7 @@ import type { CatalogRepositoryLike } from './catalog.repository';
 
 const PRICED_MODEL = 'metered-model';
 
-function buildService(): ConnectorsService {
+function buildService(cacheRates = false): ConnectorsService {
   const mockPrisma = {
     request: { create: vi.fn().mockResolvedValue({ id: 'req-1' }) },
     $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(mockPrisma)),
@@ -61,7 +61,9 @@ function buildService(): ConnectorsService {
         model: PRICED_MODEL,
         inputPerMTok: 1_000,
         outputPerMTok: 2_000,
-        cachedInputPerMTok: null,
+        cachedInputPerMTok: cacheRates ? 0.25 : null,
+        cacheWrite5mPerMTok: cacheRates ? 12.5 : null,
+        cacheWrite1hPerMTok: cacheRates ? 20 : null,
         status: 'online',
       },
     ]),
@@ -138,6 +140,28 @@ function scriptedConnector(script: ConnectorResponse[]): IConnector {
 }
 
 describe('A2-299 §4 — a retried request is metered for every attempt the provider billed', () => {
+  it('CACHE-003b preserves cache-write TTL counts across a discarded attempt', async () => {
+    process.env.PROVIDER_ACCESS = '';
+    const first = resp('error', 'json_parse_error', 3_000, 0);
+    first.usage.cacheCreationInputTokens = 3_000;
+    first.usage.cacheCreation = { ephemeral5mInputTokens: 2_000, ephemeral1hInputTokens: 1_000 };
+    const second = resp('success', null, 6_000, 0);
+    second.usage.cachedInputTokens = 6_000;
+    const service = buildService(true);
+    service.register(scriptedConnector([first, second]));
+    const result = await service.execute(
+      'test',
+      { prompt: 'fixture', model: PRICED_MODEL },
+      'key-1',
+    );
+    expect(result.usage.cacheCreationInputTokens).toBe(3_000);
+    expect(result.usage.cacheCreation).toEqual({
+      ephemeral5mInputTokens: 2_000,
+      ephemeral1hInputTokens: 1_000,
+    });
+    expect(result.usage.costUsd).toBe(0.0465);
+  });
+
   it('counts the provider-reported tokens of a discarded attempt, not just the last', async () => {
     process.env.PROVIDER_ACCESS = '';
     const service = buildService();

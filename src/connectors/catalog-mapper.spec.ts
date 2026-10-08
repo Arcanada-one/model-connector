@@ -435,3 +435,28 @@ describe('rowToEntry (CONN-0245 — getCatalog read path)', () => {
     });
   });
 });
+
+describe('CACHE-003b catalogue round trip', () => {
+  it('preserves all published cache tariffs through entry, DB row and response', () => {
+    const pricing = {
+      inputPerMTok: 10,
+      outputPerMTok: 50,
+      cachedInputPerMTok: 0.25,
+      cacheWrite5mPerMTok: 12.5,
+      cacheWrite1hPerMTok: 20,
+      unit: 'USD/1M tokens',
+    };
+    const mapped = entryToRow(baseEntry({ pricing }));
+    expect(rowToEntry(baseRow(mapped)).pricing).toEqual(pricing);
+  });
+  it('clears unknown cache tariffs to NULL rather than inventing multipliers', () => {
+    const mapped = entryToRow(
+      baseEntry({ pricing: { inputPerMTok: 1, outputPerMTok: 2, unit: 'USD/1M tokens' } }),
+    );
+    expect(mapped).toMatchObject({
+      cachedInputPerMTok: null,
+      cacheWrite5mPerMTok: null,
+      cacheWrite1hPerMTok: null,
+    });
+  });
+});

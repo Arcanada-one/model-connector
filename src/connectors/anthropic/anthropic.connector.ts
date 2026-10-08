@@ -57,25 +57,64 @@ const DEFAULT_MODEL = 'claude-sonnet-4-5';
 const DEFAULT_MAX_TOKENS = 4096;
 
 /**
- * DEC-AUP-0028 R4 — hand-curated list price per model, USD per 1M tokens, from
- * platform.claude.com/docs/en/about-claude/pricing (fetched 2026-09-13). The
- * catalogue carries only base input / output: cache-read (0.1×; 0.025× on
- * Fable / Mythos 5.1) and cache-write (1.25× 5m / 2× 1h) rates have no
- * catalogue column yet, so the ledger over-charges cache reads and
- * under-charges cache writes relative to the invoice. That gap is recorded as
- * `cache_rates: not_measured` in the admission receipt, never hidden. A model
- * outside this table stays UNPRICED (null) — the meter then records its tokens
- * as unpriced and charges nothing; an invented price would be worse than none.
+ * Curated global, standard-tier USD/MTok tariffs, verified 2026-10-07:
+ * https://platform.claude.com/docs/en/about-claude/pricing
+ * Unknown model IDs remain unpriced; no tariff is inferred from their names.
  */
 export const ANTHROPIC_LIST_PRICES_USD_PER_MTOK: Readonly<
-  Record<string, { inputPerMTok: number; outputPerMTok: number }>
+  Record<
+    string,
+    {
+      inputPerMTok: number;
+      outputPerMTok: number;
+      cachedInputPerMTok: number;
+      cacheWrite5mPerMTok: number;
+      cacheWrite1hPerMTok: number;
+    }
+  >
 > = {
-  'claude-fable-5-1': { inputPerMTok: 10, outputPerMTok: 50 },
-  'claude-opus-5': { inputPerMTok: 5, outputPerMTok: 25 },
-  'claude-sonnet-5': { inputPerMTok: 2, outputPerMTok: 10 },
-  'claude-sonnet-4-5': { inputPerMTok: 3, outputPerMTok: 15 },
-  'claude-haiku-4-5': { inputPerMTok: 1, outputPerMTok: 5 },
-  'claude-opus-4-1': { inputPerMTok: 15, outputPerMTok: 75 },
+  'claude-fable-5-1': {
+    inputPerMTok: 10,
+    outputPerMTok: 50,
+    cachedInputPerMTok: 0.25,
+    cacheWrite5mPerMTok: 12.5,
+    cacheWrite1hPerMTok: 20,
+  },
+  'claude-opus-5': {
+    inputPerMTok: 5,
+    outputPerMTok: 25,
+    cachedInputPerMTok: 0.5,
+    cacheWrite5mPerMTok: 6.25,
+    cacheWrite1hPerMTok: 10,
+  },
+  'claude-sonnet-5': {
+    inputPerMTok: 2,
+    outputPerMTok: 10,
+    cachedInputPerMTok: 0.2,
+    cacheWrite5mPerMTok: 2.5,
+    cacheWrite1hPerMTok: 4,
+  },
+  'claude-sonnet-4-5': {
+    inputPerMTok: 3,
+    outputPerMTok: 15,
+    cachedInputPerMTok: 0.3,
+    cacheWrite5mPerMTok: 3.75,
+    cacheWrite1hPerMTok: 6,
+  },
+  'claude-haiku-4-5': {
+    inputPerMTok: 1,
+    outputPerMTok: 5,
+    cachedInputPerMTok: 0.1,
+    cacheWrite5mPerMTok: 1.25,
+    cacheWrite1hPerMTok: 2,
+  },
+  'claude-opus-4-1': {
+    inputPerMTok: 15,
+    outputPerMTok: 75,
+    cachedInputPerMTok: 1.5,
+    cacheWrite5mPerMTok: 18.75,
+    cacheWrite1hPerMTok: 30,
+  },
 };
 const PRICE_UNIT = 'USD/1M tokens';
 

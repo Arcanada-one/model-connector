@@ -238,6 +238,9 @@ model ModelCatalog {
   supportsTools      Boolean  @default(false)
   inputPerMTok       Float?
   outputPerMTok      Float?
+  cachedInputPerMTok Float?
+  cacheWrite5mPerMTok Float?
+  cacheWrite1hPerMTok Float?
   priceUnit          String   @default("USD/1M tokens")
   tier               String // "free" | "paid" | "unknown"
   free               Boolean  @default(false)

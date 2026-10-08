@@ -132,3 +132,31 @@ describe('diffCatalogRows corrected state machine', () => {
     ).toEqual([]);
   });
 });
+
+describe('CACHE-003b cache-only price drift', () => {
+  it('normalizes omitted and persisted NULL tariffs to the same fingerprint', () => {
+    expect(fingerprintCatalogRow(row())).toBe(
+      fingerprintCatalogRow(
+        row({
+          cachedInputPerMTok: null,
+          cacheWrite5mPerMTok: null,
+          cacheWrite1hPerMTok: null,
+        }),
+      ),
+    );
+  });
+
+  it.each(['cachedInputPerMTok', 'cacheWrite5mPerMTok', 'cacheWrite1hPerMTok'] as const)(
+    'fingerprints and names a change in %s',
+    (field) => {
+      const previous = row({ [field]: 1 });
+      const next = row({ [field]: 2 });
+      expect(
+        diffCatalogRows(
+          [{ ...previous, absent: false, contentFingerprint: fingerprintCatalogRow(previous) }],
+          prepareCatalogRows([next]),
+        ),
+      ).toMatchObject([{ changeType: 'changed', changedFields: [field] }]);
+    },
+  );
+});

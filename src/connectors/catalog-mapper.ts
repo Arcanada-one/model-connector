@@ -89,6 +89,9 @@ export function entryToRow(
     supportsTools: entry.capabilities.supportsTools,
     inputPerMTok,
     outputPerMTok,
+    cachedInputPerMTok: entry.pricing?.cachedInputPerMTok ?? null,
+    cacheWrite5mPerMTok: entry.pricing?.cacheWrite5mPerMTok ?? null,
+    cacheWrite1hPerMTok: entry.pricing?.cacheWrite1hPerMTok ?? null,
     priceUnit: entry.pricing?.unit ?? DEFAULT_PRICE_UNIT,
     tier,
     free,
@@ -139,9 +142,26 @@ export function rowToEntry(row: ModelCatalogRow): CatalogModelEntry {
   };
   const modality = row.modality as ModelModality;
   const pricing: ModelPricing | null =
-    row.inputPerMTok === null && row.outputPerMTok === null
+    row.inputPerMTok === null &&
+    row.outputPerMTok === null &&
+    (row.cachedInputPerMTok ?? null) === null &&
+    (row.cacheWrite5mPerMTok ?? null) === null &&
+    (row.cacheWrite1hPerMTok ?? null) === null
       ? null
-      : { inputPerMTok: row.inputPerMTok, outputPerMTok: row.outputPerMTok, unit: row.priceUnit };
+      : {
+          inputPerMTok: row.inputPerMTok,
+          outputPerMTok: row.outputPerMTok,
+          ...(row.cachedInputPerMTok !== undefined
+            ? { cachedInputPerMTok: row.cachedInputPerMTok }
+            : {}),
+          ...(row.cacheWrite5mPerMTok !== undefined
+            ? { cacheWrite5mPerMTok: row.cacheWrite5mPerMTok }
+            : {}),
+          ...(row.cacheWrite1hPerMTok !== undefined
+            ? { cacheWrite1hPerMTok: row.cacheWrite1hPerMTok }
+            : {}),
+          unit: row.priceUnit,
+        };
   const priceMultiplier = row.priceMultiplier;
   const cheap = row.free || (priceMultiplier !== null && priceMultiplier <= 1);
 

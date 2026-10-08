@@ -40,6 +40,9 @@ export type ModelModality = (typeof MODEL_MODALITY_VALUES)[number];
 export const ModelPricingSchema = z.object({
   inputPerMTok: z.number().nullable(),
   outputPerMTok: z.number().nullable(),
+  cachedInputPerMTok: z.number().nonnegative().finite().nullable().optional(),
+  cacheWrite5mPerMTok: z.number().nonnegative().finite().nullable().optional(),
+  cacheWrite1hPerMTok: z.number().nonnegative().finite().nullable().optional(),
   unit: z.string(),
 });
 

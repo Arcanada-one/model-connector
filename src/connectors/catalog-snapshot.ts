@@ -10,6 +10,9 @@ export type CatalogStableContent = {
   supportsTools: boolean;
   inputPerMTok: number | null;
   outputPerMTok: number | null;
+  cachedInputPerMTok?: number | null;
+  cacheWrite5mPerMTok?: number | null;
+  cacheWrite1hPerMTok?: number | null;
   priceUnit: string;
   tier: 'free' | 'paid' | 'unknown';
   free: boolean;
@@ -53,6 +56,9 @@ export function catalogStableContent(row: ModelCatalogUpsert): CatalogStableCont
     supportsTools: row.supportsTools,
     inputPerMTok: row.inputPerMTok,
     outputPerMTok: row.outputPerMTok,
+    cachedInputPerMTok: row.cachedInputPerMTok ?? null,
+    cacheWrite5mPerMTok: row.cacheWrite5mPerMTok ?? null,
+    cacheWrite1hPerMTok: row.cacheWrite1hPerMTok ?? null,
     priceUnit: row.priceUnit,
     tier: row.tier,
     free: row.free,
