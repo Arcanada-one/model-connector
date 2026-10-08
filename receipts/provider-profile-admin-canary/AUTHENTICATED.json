@@ -1,8 +1,8 @@
 {
   "schema": "AdminRouteCanaryReadback/v1",
-  "captured_at_utc": "2026-10-08T11:44:47.168Z",
-  "base_url": "http://127.0.0.1:46705",
-  "pid": 324474,
+  "captured_at_utc": "2026-10-08T12:37:48.236Z",
+  "base_url": "http://127.0.0.1:34637",
+  "pid": 837208,
   "environment": "owned loopback Nest admin application + disposable Unix-socket PostgreSQL; no upstream providers",
   "probes": [
     {
