@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
+import { Logger, ConsoleLogger } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { hash } from 'bcryptjs';
@@ -107,10 +108,23 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
     }
   >;
   let records: Array<Record<string, unknown>>;
+  let capturedLogs: unknown[][];
   const sent: Array<{ url: string; authorization: string; client?: string }> = [];
   const fetchMock = vi.fn();
   let prisma: PrismaService;
   beforeEach(async () => {
+    capturedLogs = [];
+    const capture = (...messages: unknown[]) => {
+      capturedLogs.push(messages);
+    };
+    Logger.overrideLogger({
+      log: capture,
+      error: capture,
+      warn: capture,
+      debug: capture,
+      verbose: capture,
+      fatal: capture,
+    });
     for (const provider of ['TYPESAFE', 'DEEPSEEK']) {
       vi.stubEnv(`${provider}_API_KEY`, `shared-${provider}`);
       for (const id of ['A', 'B'])
@@ -234,6 +248,7 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
   });
   afterEach(async () => {
     await app?.close();
+    Logger.overrideLogger(new ConsoleLogger());
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
@@ -357,6 +372,7 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
     expect(response.json().status).toBe('error');
     expect(records).toHaveLength(1);
     expect(JSON.stringify(records)).not.toContain(secret);
+    expect(JSON.stringify(capturedLogs)).not.toContain(secret);
     expect(response.body).not.toContain(secret);
   });
   it('reads cross-replica assignment from warmed legacy policy and refuses missing dedicated key', async () => {
@@ -402,6 +418,7 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
     expect(response.statusCode).toBe(201);
     expect(response.json().result).toBe('[REDACTED]');
     expect(JSON.stringify(records)).not.toContain(secret);
+    expect(JSON.stringify(capturedLogs)).not.toContain(secret);
   });
   it('refuses a dedicated profile on an unqualified strict route before any send', async () => {
     rows['key-a'].policy = profile('a', 'deepseek');
