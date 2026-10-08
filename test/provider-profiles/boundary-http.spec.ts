@@ -449,6 +449,7 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
       ]) {
         expect(surface).not.toContain(secret);
         expect(surface).not.toContain(secret.slice(0, 20));
+        if (offset < 500) expect(surface).not.toContain((padding + secret).slice(0, 500));
       }
     },
   );

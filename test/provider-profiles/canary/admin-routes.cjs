@@ -16,7 +16,10 @@ const { AdminGuard } = require('../../../dist/src/admin/admin.guard');
 const { PrismaService } = require('../../../dist/src/prisma/prisma.service');
 
 async function main() {
-  assert(process.env.MC_OWNED_CANARY === '1', 'disposable database assertion required');
+  assert(
+    process.argv.includes('--owned-disposable-database'),
+    'disposable database assertion required',
+  );
   const out = process.argv[2];
   assert(out, 'output path required');
   process.env.ADMIN_TOKEN = ['owned', 'canary', 'admin'].join('-');
