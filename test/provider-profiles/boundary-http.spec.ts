@@ -372,6 +372,67 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
     expect(records).toHaveLength(1);
     expect((await call('b', 'deepseek')).statusCode).toBe(201);
   });
+  it.each(['deepseek', 'typesafe-jev'])(
+    'malformed 2xx JSON from %s never exposes parser excerpts across fresh-response retries',
+    async (provider) => {
+      rows['key-a'].policy = profile('a', provider);
+      const secret = fixtureCredential(provider === 'deepseek' ? 'DEEPSEEK' : 'TYPESAFE', 'A');
+      const responses: Response[] = [];
+      fetchMock.mockImplementation(async (_url: string, init: RequestInit) => {
+        expect((init.headers as Record<string, string>).Authorization).toBe(`Bearer ${secret}`);
+        const response = new Response(secret, { status: 200 });
+        responses.push(response);
+        return response;
+      });
+      const response = await app.inject({
+        method: 'POST',
+        url: `/connectors/${provider}/execute`,
+        headers: { authorization: 'Bearer client-a' },
+        payload: { ...payload(provider), maxRetries: 1 },
+      });
+      expect(response.json().status).toBe('error');
+      expect(response.json().error).toMatchObject({ type: 'parse_error' });
+      expect(records).toHaveLength(1);
+      for (const surface of [
+        response.body,
+        JSON.stringify(records),
+        JSON.stringify(capturedLogs),
+      ]) {
+        expect(surface).not.toContain(secret.slice(0, 10));
+        expect(surface).not.toContain(secret);
+      }
+      const expectedMessage =
+        provider === 'typesafe-jev' ? 'JEV parse_error' : 'Invalid upstream JSON response';
+      expect(response.json().error.message).toBe(expectedMessage);
+      expect(records[0].errorMessage).toBe(expectedMessage);
+      expect(responses).toHaveLength(2);
+      expect(new Set(responses).size).toBe(2);
+      expect(responses.every((body) => body.bodyUsed)).toBe(true);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  it.each(['deepseek', 'typesafe-jev'])(
+    '%s JSON reader redacts full text before parsing and bounds malformed errors',
+    async (provider) => {
+      const connector = provider === 'deepseek' ? new DeepSeekConnector() : new JevConnector();
+      const reader = connector as unknown as {
+        readResponseJson(response: Response): Promise<unknown>;
+      };
+      const secret = fixtureCredential(provider === 'deepseek' ? 'DEEPSEEK' : 'TYPESAFE', 'A');
+      await providerKeyContext.run({ provider, apiKey: secret }, async () => {
+        await expect(reader.readResponseJson(new Response(secret))).rejects.toThrow(
+          /^Invalid upstream JSON response$/,
+        );
+        await expect(
+          reader.readResponseJson(new Response(JSON.stringify({ echo: secret }))),
+        ).resolves.toEqual({
+          echo: '[REDACTED]',
+        });
+      });
+    },
+  );
+
   it('redacts dedicated secret from upstream DeepSeek errors before DB and response', async () => {
     rows['key-a'].policy = profile('a', 'deepseek');
     const secret = fixtureCredential('DEEPSEEK', 'A');
