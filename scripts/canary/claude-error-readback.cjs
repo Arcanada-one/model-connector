@@ -80,7 +80,6 @@ async function main() {
     );
     const connector = new SyntheticClaude();
     connector.setSemaphore(1);
-    process.env.SYNTHETIC_TOKEN_ENABLED = 'true';
     service.register(connector);
     const response = await service.execute(
       'claude-code',
