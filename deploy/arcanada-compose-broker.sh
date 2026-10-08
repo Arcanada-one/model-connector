@@ -443,7 +443,13 @@ cmd_sync() {
   "$GIT" -C "$dir" cat-file -e "${sha}^{commit}" 2>/dev/null || die 'sha not found after fetch'
   "$GIT" -C "$dir" merge-base --is-ancestor "$sha" origin/main ||
     die 'refusing: sha is not reachable from origin/main'
-  "$GIT" -C "$dir" checkout --quiet --detach "$sha"
+  # --force: the checkout must equal the reviewed commit. Without it git carries a
+  # locally modified TRACKED file across the checkout whenever the file is
+  # identical in the old and new commit, so a stale local edit survives every
+  # deploy (observability-stack, 2026-10-08: a rollback's alloy/config.alloy
+  # stayed in place through a green deploy of main). `clean` below only ever
+  # removed untracked files; this makes tracked ones obey the same rule.
+  "$GIT" -C "$dir" checkout --quiet --force --detach "$sha"
   # node_modules is survivable build state, not repo content: wiping it turns
   # every deploy into a cold install. Everything else untracked goes.
   "$GIT" -C "$dir" clean -qxdff -e node_modules

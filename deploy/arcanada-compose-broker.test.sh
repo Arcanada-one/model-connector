@@ -426,3 +426,58 @@ echo 'All aggregate readback broker cases passed.'
 expect_fail billing_atomic_check_unregistered billing-arcana atomic-check "$muneral_head"
 expect_fail billing_atomic_deploy_unregistered billing-arcana atomic-deploy "$muneral_head"
 expect_fail billing_legacy_sync_unregistered billing-arcana sync "$muneral_head"
+
+# ---------------------------------------------------------------------------
+# sync must leave the checkout byte-identical to the reviewed commit, even for a
+# tracked file that a local edit changed and that the old and new commits share.
+sync_origin="${fixture_dir}/sync-origin.git"
+sync_seed="${fixture_dir}/sync-seed"
+git init -q --bare -b main "$sync_origin"
+git init -q -b main "$sync_seed"
+mkdir -p "${sync_seed}/alloy"
+printf '%s\n' 'reviewed config' >"${sync_seed}/alloy/config.alloy"
+printf '%s\n' 'compose' >"${sync_seed}/docker-compose.yml"
+printf '%s\n' 'one' >"${sync_seed}/other.txt"
+git_t() { git -c user.email=t@example.invalid -c user.name=t "$@"; }
+git_t -C "$sync_seed" add -A
+git_t -C "$sync_seed" commit -q -m c1
+sync_c1="$(git -C "$sync_seed" rev-parse HEAD)"
+printf '%s\n' 'two' >"${sync_seed}/other.txt"
+git_t -C "$sync_seed" commit -q -am c2
+sync_c2="$(git -C "$sync_seed" rev-parse HEAD)"
+git -C "$sync_seed" push -q "$sync_origin" main
+printf '%s\n' 'ENV=1' >"${env_root}/arcanada-assistant.env"
+
+# Returns the config content after a sync from c1 to c2 with a dirty tracked file.
+sync_dirty_config() {
+  local brokerfile="$1" dir="${state_root}/arcanada-assistant"
+  rm -rf -- "$dir"
+  git clone -q "$sync_origin" "$dir"
+  git -C "$dir" checkout -q --detach "$sync_c1"
+  printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${dir}/alloy/config.alloy"
+  "$brokerfile" arcanada-assistant sync "$sync_c2" >"${fixture_dir}/sync_dirty.out" 2>&1 || {
+    sed -n '1,40p' "${fixture_dir}/sync_dirty.out" >&2; return 1; }
+  cat "${dir}/alloy/config.alloy"
+}
+
+# The `$broker` copy above had GIT replaced by a fake; sync needs the real git.
+real_broker="${fixture_dir}/broker-real-git"
+sed "s#^readonly GIT=.*#readonly GIT='$(command -v git)'#" "$broker" >"$real_broker"
+chmod 0755 "$real_broker"
+if [ "$(sync_dirty_config "$real_broker")" != 'reviewed config' ]; then
+  echo 'FAIL: sync_discards_local_tracked_edit: a stale local edit survived the sync' >&2
+  exit 1
+fi
+[ -z "$(git -C "${state_root}/arcanada-assistant" status --porcelain --untracked-files=no)" ] || {
+  echo 'FAIL: sync_discards_local_tracked_edit: checkout is not clean' >&2; exit 1; }
+echo 'PASS: sync_discards_local_tracked_edit'
+
+# Red control: the previous behaviour (no --force) really does keep the edit, so the case above can fail.
+mutant="${fixture_dir}/broker-no-force"
+sed 's/checkout --quiet --force --detach/checkout --quiet --detach/' "$real_broker" >"$mutant"
+chmod 0755 "$mutant"
+if [ "$(sync_dirty_config "$mutant")" != 'LOCAL ROLLBACK EDIT' ]; then
+  echo 'FAIL: sync_dirty_control: the old behaviour did not reproduce, the case proves nothing' >&2
+  exit 1
+fi
+echo 'PASS: sync_dirty_control_reproduces_the_stale_edit'
