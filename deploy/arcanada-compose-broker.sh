@@ -429,8 +429,47 @@ read_fetch_credential() {
   export GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0
 }
 
+# Tracked drift: any difference between the checkout and its HEAD in the index or the worktree, plus
+# tracked paths whose changes git has been told to ignore (assume-unchanged / skip-worktree). Untracked files
+# are not drift here; `clean` below owns them. Prints sanitized metadata only: path, status letters and a
+# sha256 of the worktree bytes, never content. Returns 0 when the tracked state is exactly clean.
+tracked_drift_report() {
+  local dir="$1" svc="$2" n=0 entry xy path hash flag
+  local -a fields=()
+  while IFS= read -r -d '' entry; do fields+=("$entry"); done < <("$GIT" -C "$dir" status --porcelain -z --untracked-files=no)
+  local i=0
+  while ((i < ${#fields[@]})); do
+    entry="${fields[$i]}"; xy="${entry:0:2}"; path="${entry:3}"
+    # rename/copy records carry the origin path as a second NUL field
+    if [[ "${xy:0:1}" == [RC] || "${xy:1:1}" == [RC] ]]; then i=$((i + 1)); fi
+    i=$((i + 1))
+    if [[ -f "$dir/$path" && ! -L "$dir/$path" ]]; then hash="$(sha256sum -- "$dir/$path" | cut -d' ' -f1)"
+    else hash='absent-or-not-a-regular-file'; fi
+    printf 'BROKER_SYNC_DRIFT service=%s status=%q sha256=%s path=%q\n' "$svc" "$xy" "$hash" "$path" >&2
+    n=$((n + 1))
+  done
+  while IFS= read -r -d '' entry; do
+    flag="${entry:0:1}"; path="${entry:2}"
+    if [[ "$flag" == [a-z] || "$flag" == S ]]; then
+      printf 'BROKER_SYNC_DRIFT service=%s status=hidden:%s sha256=unmeasured path=%q\n' "$svc" "$flag" "$path" >&2
+      n=$((n + 1))
+    fi
+  done < <("$GIT" -C "$dir" ls-files -v -z)
+  if ! "$GIT" -C "$dir" diff --cached --quiet; then
+    printf 'BROKER_SYNC_DRIFT service=%s status=index sha256=unmeasured path=-\n' "$svc" >&2
+    n=$((n + 1))
+  fi
+  ((n == 0))
+}
+
 # Fetch main, then refuse anything not already an ancestor of origin/main.
 # A SHA that only exists on a branch, or was force-pushed away, must not deploy.
+#
+# The checkout is custody, not scratch: a tracked file that differs from HEAD is somebody's bytes. Sync
+# REFUSES such drift before it touches anything (no checkout, no clean, no env install), leaves the bytes where
+# they are, and fails the deploy loudly. It never discards a tracked edit; clearing one is a separate, reviewed,
+# per-path action. After the checkout the exact commit and a fully clean tracked state are verified before
+# BROKER_SYNC_PASS is printed.
 cmd_sync() {
   local svc="$1" sha="$2" dir
   dir="$(checkout_dir "$svc")"
@@ -439,21 +478,21 @@ cmd_sync() {
     install -d -m 0755 -o root -g root "$STATE_ROOT"
     "$GIT" clone --quiet "${REPOS[$svc]}" "$dir"
   fi
+  if ! tracked_drift_report "$dir" "$svc"; then
+    printf 'BROKER_SYNC_REFUSED_DRIFT service=%s: tracked files differ from HEAD; bytes preserved, nothing changed\n' "$svc" >&2
+    exit 1
+  fi
   "$GIT" -C "$dir" fetch --quiet origin main
   "$GIT" -C "$dir" cat-file -e "${sha}^{commit}" 2>/dev/null || die 'sha not found after fetch'
   "$GIT" -C "$dir" merge-base --is-ancestor "$sha" origin/main ||
     die 'refusing: sha is not reachable from origin/main'
-  # --force: the checkout must equal the reviewed commit. Without it git carries a
-  # locally modified TRACKED file across the checkout whenever the file is
-  # identical in the old and new commit, so a stale local edit survives every
-  # deploy (observability-stack, 2026-10-08: a rollback's alloy/config.alloy
-  # stayed in place through a green deploy of main). `clean` below only ever
-  # removed untracked files; this makes tracked ones obey the same rule.
-  "$GIT" -C "$dir" checkout --quiet --force --detach "$sha"
+  "$GIT" -C "$dir" checkout --quiet --detach "$sha"
   # node_modules is survivable build state, not repo content: wiping it turns
   # every deploy into a cold install. Everything else untracked goes.
   "$GIT" -C "$dir" clean -qxdff -e node_modules
   install_env "$svc"
+  [[ "$(head_sha "$svc")" == "$sha" ]] || die 'BROKER_SYNC_FAILED_VERIFY: HEAD is not the requested sha'
+  tracked_drift_report "$dir" "$svc" || die 'BROKER_SYNC_FAILED_VERIFY: tracked state not clean after checkout'
   printf 'BROKER_SYNC_PASS service=%s sha=%s\n' "$svc" "$(head_sha "$svc")"
 }
 

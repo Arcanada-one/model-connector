@@ -428,8 +428,8 @@ expect_fail billing_atomic_deploy_unregistered billing-arcana atomic-deploy "$mu
 expect_fail billing_legacy_sync_unregistered billing-arcana sync "$muneral_head"
 
 # ---------------------------------------------------------------------------
-# sync must leave the checkout byte-identical to the reviewed commit, even for a
-# tracked file that a local edit changed and that the old and new commits share.
+# sync must REFUSE tracked drift (never discard it) and verify an exact clean tracked state after the checkout.
+# The case that matters: a tracked file changed locally and identical in the old and new commit.
 sync_origin="${fixture_dir}/sync-origin.git"
 sync_seed="${fixture_dir}/sync-seed"
 git init -q --bare -b main "$sync_origin"
@@ -448,36 +448,76 @@ sync_c2="$(git -C "$sync_seed" rev-parse HEAD)"
 git -C "$sync_seed" push -q "$sync_origin" main
 printf '%s\n' 'ENV=1' >"${env_root}/arcanada-assistant.env"
 
-# Returns the config content after a sync from c1 to c2 with a dirty tracked file.
-sync_dirty_config() {
-  local brokerfile="$1" dir="${state_root}/arcanada-assistant"
-  rm -rf -- "$dir"
-  git clone -q "$sync_origin" "$dir"
-  git -C "$dir" checkout -q --detach "$sync_c1"
-  printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${dir}/alloy/config.alloy"
-  "$brokerfile" arcanada-assistant sync "$sync_c2" >"${fixture_dir}/sync_dirty.out" 2>&1 || {
-    sed -n '1,40p' "${fixture_dir}/sync_dirty.out" >&2; return 1; }
-  cat "${dir}/alloy/config.alloy"
-}
-
 # The `$broker` copy above had GIT replaced by a fake; sync needs the real git.
 real_broker="${fixture_dir}/broker-real-git"
 sed "s#^readonly GIT=.*#readonly GIT='$(command -v git)'#" "$broker" >"$real_broker"
 chmod 0755 "$real_broker"
-if [ "$(sync_dirty_config "$real_broker")" != 'reviewed config' ]; then
-  echo 'FAIL: sync_discards_local_tracked_edit: a stale local edit survived the sync' >&2
-  exit 1
-fi
-[ -z "$(git -C "${state_root}/arcanada-assistant" status --porcelain --untracked-files=no)" ] || {
-  echo 'FAIL: sync_discards_local_tracked_edit: checkout is not clean' >&2; exit 1; }
-echo 'PASS: sync_discards_local_tracked_edit'
+sync_dir="${state_root}/arcanada-assistant"
+sync_out="${fixture_dir}/sync.out"
 
-# Red control: the previous behaviour (no --force) really does keep the edit, so the case above can fail.
-mutant="${fixture_dir}/broker-no-force"
-sed 's/checkout --quiet --force --detach/checkout --quiet --detach/' "$real_broker" >"$mutant"
-chmod 0755 "$mutant"
-if [ "$(sync_dirty_config "$mutant")" != 'LOCAL ROLLBACK EDIT' ]; then
-  echo 'FAIL: sync_dirty_control: the old behaviour did not reproduce, the case proves nothing' >&2
+# Fresh checkout at c1 (clean).
+sync_reset() {
+  rm -rf -- "$sync_dir"
+  git clone -q "$sync_origin" "$sync_dir"
+  git -C "$sync_dir" checkout -q --detach "$sync_c1"
+}
+sync_rc() { "$real_broker" arcanada-assistant sync "$sync_c2" >"$sync_out" 2>&1 && echo 0 || echo "$?"; }
+expect_refused_drift() {
+  local name="$1"
+  if [ "$(sync_rc)" = 0 ]; then echo "FAIL: ${name}: drift was not refused" >&2; exit 1; fi
+  grep -Fq 'BROKER_SYNC_REFUSED_DRIFT service=arcanada-assistant' "$sync_out" || {
+    echo "FAIL: ${name}: no BROKER_SYNC_REFUSED_DRIFT line" >&2; sed -n '1,20p' "$sync_out" >&2; exit 1; }
+  if grep -Fq 'BROKER_SYNC_PASS' "$sync_out"; then echo "FAIL: ${name}: PASS printed" >&2; exit 1; fi
+  if grep -Fq 'LOCAL ROLLBACK EDIT' "$sync_out"; then echo "FAIL: ${name}: file content leaked" >&2; exit 1; fi
+  [ "$(git -C "$sync_dir" rev-parse HEAD)" = "$sync_c1" ] || { echo "FAIL: ${name}: HEAD moved" >&2; exit 1; }
+  echo "PASS: ${name}"
+}
+
+# RED: unstaged tracked edit in a file identical across c1/c2 (the case --force destroyed). Bytes preserved,
+# metadata sanitized (a sha256, the path, status letters), untracked files untouched because nothing ran.
+sync_reset
+printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${sync_dir}/alloy/config.alloy"
+printf '%s\n' 'untracked custody' >"${sync_dir}/stray.txt"
+expected_hash="$(sha256sum "${sync_dir}/alloy/config.alloy" | cut -d' ' -f1)"
+expect_refused_drift sync_refuses_unstaged_tracked_drift
+grep -Fq "sha256=${expected_hash}" "$sync_out" && grep -Fq 'path=alloy/config.alloy' "$sync_out" ||
+  { echo 'FAIL: drift metadata lacks the path or digest' >&2; exit 1; }
+[ "$(cat "${sync_dir}/alloy/config.alloy")" = 'LOCAL ROLLBACK EDIT' ] || { echo 'FAIL: drift bytes were not preserved' >&2; exit 1; }
+[ -f "${sync_dir}/stray.txt" ] || { echo 'FAIL: refusal ran clean' >&2; exit 1; }
+
+# RED: index-only drift (staged, worktree equals index).
+sync_reset
+printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${sync_dir}/alloy/config.alloy"
+git -C "$sync_dir" add alloy/config.alloy
+expect_refused_drift sync_refuses_staged_tracked_drift
+git -C "$sync_dir" diff --cached --quiet && { echo 'FAIL: staged change was dropped' >&2; exit 1; }
+[ "$(cat "${sync_dir}/alloy/config.alloy")" = 'LOCAL ROLLBACK EDIT' ] || { echo 'FAIL: staged worktree bytes lost' >&2; exit 1; }
+
+# RED: drift in a file that also differs between c1 and c2.
+sync_reset
+printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${sync_dir}/other.txt"
+expect_refused_drift sync_refuses_drift_in_a_changed_file
+
+# RED: drift hidden from `git status` by assume-unchanged.
+sync_reset
+git -C "$sync_dir" update-index --assume-unchanged alloy/config.alloy
+printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${sync_dir}/alloy/config.alloy"
+expect_refused_drift sync_refuses_assume_unchanged_hidden_edit
+
+# The global force behaviour is gone.
+if grep -Eq 'checkout[^#]*--force|reset --hard' "$subject"; then
+  echo 'FAIL: sync still force-discards tracked edits' >&2
   exit 1
 fi
-echo 'PASS: sync_dirty_control_reproduces_the_stale_edit'
+echo 'PASS: sync_has_no_force_or_reset'
+
+# GREEN: a clean tree syncs, stray untracked files go, and the exact tracked state is verified.
+sync_reset
+printf '%s\n' 'untracked' >"${sync_dir}/stray.txt"
+[ "$(sync_rc)" = 0 ] || { echo 'FAIL: clean sync failed' >&2; sed -n '1,20p' "$sync_out" >&2; exit 1; }
+grep -Fq "BROKER_SYNC_PASS service=arcanada-assistant sha=${sync_c2}" "$sync_out" || { echo 'FAIL: no PASS line' >&2; exit 1; }
+[ "$(git -C "$sync_dir" rev-parse HEAD)" = "$sync_c2" ] || { echo 'FAIL: HEAD is not c2' >&2; exit 1; }
+[ -z "$(git -C "$sync_dir" status --porcelain --untracked-files=no)" ] || { echo 'FAIL: tracked state not clean' >&2; exit 1; }
+[ ! -e "${sync_dir}/stray.txt" ] || { echo 'FAIL: untracked file survived clean' >&2; exit 1; }
+[ "$(cat "${sync_dir}/other.txt")" = two ] || { echo 'FAIL: checkout did not land c2' >&2; exit 1; }
+echo 'PASS: sync_clean_tree_syncs_and_verifies'
