@@ -31,6 +31,7 @@ import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import { BillingService, RequestIntentHandle } from '../billing/billing.service';
 import { estimateCostUsd, promptCharLength } from '../billing/cost-estimate';
+import { prepareSpend, ProfileSpendError } from '../billing/profile-spend/plan';
 import { mintServerIntentKey, intentPayloadFingerprint } from '../billing/intent';
 import {
   measureCostUsd,
@@ -958,6 +959,15 @@ export class ConnectorsService {
           },
         };
       }
+    }
+
+    // A spend policy must never enter the legacy, unmetered dispatch path. Check
+    // tariff/bounds and impossible caps before opening any billing intent. The
+    // durable execution integration remains held until reservation, physical
+    // egress and Request settlement are linked and independently qualified.
+    if (policy?.spend) {
+      prepareSpend(policy, connectorName, request, apiKeyId, providerKeyOverride);
+      throw new ProfileSpendError('profile_spend_execution_unavailable');
     }
 
     // CONN-0243 — a per-request `maxRetries` (e.g. 0 from the failover gateway) overrides

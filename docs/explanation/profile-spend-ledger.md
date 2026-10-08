@@ -2,7 +2,11 @@
 
 Status: draft slice-two implementation for independent review. The durable
 ledger, authenticated event readback and reference envelope have local controls;
-strict execute admission remains unwired and its four HTTP controls are RED.
+strict execute validates tariff/bounds and impossible caps before billing or
+dispatch. A qualified positive-cap policy still refuses with HTTP 503 before
+egress while durable execution admission and Request settlement remain unwired.
+Keys without a spend policy retain their existing dispatch behavior. This safety
+containment does not establish positive-cap metering or enable Prime migration.
 This extends the dedicated credential profile with explicit supplier exposure limits. It does not grant
 runtime authority, provide production tariff values, or enable a provider.
 

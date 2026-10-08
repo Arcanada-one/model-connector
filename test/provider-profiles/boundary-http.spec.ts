@@ -610,6 +610,7 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
       rows['key-a'].policy = apiKeyPolicySchema.parse({ ...profile('a', 'deepseek'), spend });
       const response = await budgetCall();
       expect(response.statusCode).toBe(429);
+      expect(response.json()).toEqual({ error: 'profile_spend_cap_exceeded' });
       expect(sent).toEqual([]);
       expect(records).toEqual([]);
     },
@@ -620,6 +621,7 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
     rows['key-a'].policy = apiKeyPolicySchema.parse({ ...profile('a', 'deepseek'), spend });
     const response = await budgetCall();
     expect(response.statusCode).toBe(503);
+    expect(response.json()).toEqual({ error: 'profile_spend_tariff_unavailable' });
     expect(sent).toEqual([]);
     expect(records).toEqual([]);
   });
@@ -634,6 +636,18 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
     rows['key-a'].policy = apiKeyPolicySchema.parse({ ...profile('a', 'deepseek'), spend });
     const response = await budgetCall();
     expect(response.statusCode).toBe(503);
+    expect(response.json()).toEqual({ error: 'profile_spend_tariff_unavailable' });
+    expect(sent).toEqual([]);
+    expect(records).toEqual([]);
+  });
+  it('holds a valid positive-cap spend policy before unmetered dispatch', async () => {
+    rows['key-a'].policy = apiKeyPolicySchema.parse({
+      ...profile('a', 'deepseek'),
+      spend: spendPolicy(),
+    });
+    const response = await budgetCall();
+    expect(response.statusCode).toBe(503);
+    expect(response.json()).toEqual({ error: 'profile_spend_execution_unavailable' });
     expect(sent).toEqual([]);
     expect(records).toEqual([]);
   });
