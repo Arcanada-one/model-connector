@@ -1,0 +1,51 @@
+{
+  "schema": "AdminRouteCanaryReadback/v1",
+  "captured_at_utc": "2026-10-08T11:38:59.996Z",
+  "base_url": "http://127.0.0.1:36989",
+  "pid": 224729,
+  "environment": "owned loopback Nest admin application + disposable Unix-socket PostgreSQL; no upstream providers",
+  "probes": [
+    {
+      "path": "/admin/keys/canary-a/policy",
+      "status": 200,
+      "body_sha256": "f93f6f460c3571d6f3c8a7f9cc1f56f686dfa0d628a3a30ae1834df25106805a",
+      "checks": "profile identity / client-scoped real-PG aggregates / no keyHash"
+    },
+    {
+      "path": "/admin/keys/canary-a/usage",
+      "status": 200,
+      "body_sha256": "a9cd46cef7a41eb415873219c126208a599ff7c6199e2d33d967fb068ca55224",
+      "checks": "profile identity / client-scoped real-PG aggregates / no keyHash"
+    },
+    {
+      "path": "/admin/keys/canary-b/policy",
+      "status": 200,
+      "body_sha256": "e7938b6e08b860510438304f5469fb0329ef7a9f195533a29e65673d01d3a66f",
+      "checks": "profile identity / client-scoped real-PG aggregates / no keyHash"
+    },
+    {
+      "path": "/admin/keys/canary-b/usage",
+      "status": 200,
+      "body_sha256": "4c706462ce14558108965640778b252216944540f4581e797b7bafd5018f7ee7",
+      "checks": "profile identity / client-scoped real-PG aggregates / no keyHash"
+    }
+  ],
+  "loaded_files": [
+    {
+      "path": "dist/src/admin/admin.controller.js",
+      "sha256": "5831d0c06638e62e871debaf50086f5a89dd5863a3c22dff7e2d99bc0fbb96dd"
+    },
+    {
+      "path": "dist/src/admin/admin.service.js",
+      "sha256": "ee6b87c147dc2acaf0e5b19675390790db8b0f11f563f64016c48d2dafdd9576"
+    },
+    {
+      "path": "dist/src/admin/admin.guard.js",
+      "sha256": "4fd38a5f97bd386fa4cbd28b0e2d27b3b690567206e0a2ddbe6b3a74a4a5f7ed"
+    },
+    {
+      "path": "dist/src/prisma/prisma.service.js",
+      "sha256": "e2258b2e0b0dbb9eb0089ff7392198ba2281ff7d70ab27754ada85111f052b06"
+    }
+  ]
+}
