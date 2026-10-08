@@ -1,10 +1,31 @@
 import { ProfileSpendError } from './plan';
-import { spendPageSchema, type SpendEvent } from './envelope';
+import {
+  spendPageSchema,
+  spendQualificationSchema,
+  type SpendEvent,
+  type SpendQualification,
+} from './envelope';
+import { assertSpendReliance } from './reliance';
 
 export interface MirrorAuthority {
   ledgerId: string;
   accountId: string;
   ownerProfileId: string;
+}
+export interface PhysicalAttemptBinding {
+  physicalId: string;
+  runId: string;
+  operationId: string;
+  routeEpoch: string;
+  provider: string;
+  model: string;
+  profileId: string;
+  clientKeyId: string;
+  admittedAt: string;
+  digest: string;
+  credentialRef: string;
+  credentialVersion: string;
+  qualification: SpendQualification;
 }
 export interface EnvelopeHold {
   physicalId: string;
@@ -29,7 +50,7 @@ export class PrimeExposureEnvelope {
   constructor(
     private readonly authority: MirrorAuthority,
     direct: readonly EnvelopeHold[],
-    private readonly physicalMapping: Readonly<Record<string, string>>,
+    private readonly physicalMapping: Readonly<Record<string, PhysicalAttemptBinding>>,
   ) {
     this.authority = Object.freeze({ ...authority });
     if (
@@ -51,10 +72,18 @@ export class PrimeExposureEnvelope {
     )
       throw new ProfileSpendError('prime_envelope_baseline_invalid');
     this.direct = direct.map((h) => Object.freeze({ ...h }));
-    const physical = Object.values(physicalMapping);
+    const physical = Object.values(physicalMapping).map((v) => v.physicalId);
     if (new Set(physical).size !== physical.length)
       throw new ProfileSpendError('prime_envelope_mapping_conflict');
-    this.physicalMapping = Object.freeze({ ...physicalMapping });
+    this.physicalMapping = Object.freeze(
+      Object.fromEntries(
+        Object.entries(physicalMapping).map(([id, value]) => {
+          const copy = JSON.parse(JSON.stringify(value)) as PhysicalAttemptBinding;
+          spendQualificationSchema.parse(copy.qualification);
+          return [id, copy];
+        }),
+      ),
+    );
   }
   private readonly direct: readonly EnvelopeHold[];
 
@@ -93,8 +122,10 @@ export class PrimeExposureEnvelope {
           attempt.ownerProfileId !== this.authority.ownerProfileId
         )
           throw new Error('foreign_attempt');
-        const physicalId = this.physicalMapping[attempt.id];
-        if (!physicalId) throw new Error('mapping_missing');
+        const binding = this.physicalMapping[attempt.id];
+        if (!binding) throw new Error('mapping_missing');
+        assertSpendReliance(attempt, binding);
+        const physicalId = binding.physicalId;
         const previous = nextHolds.get(attempt.id);
         if (
           previous &&

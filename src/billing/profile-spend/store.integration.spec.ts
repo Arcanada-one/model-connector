@@ -10,6 +10,9 @@ import { moneyUnits } from './money';
 import { PrimeExposureEnvelope, type EnvelopeHold } from './envelope-mirror';
 import { spendPageSchema, type SpendPage } from './envelope';
 import { ProfileSpendError } from './plan';
+import { assertSpendReliance } from './reliance';
+import { spendQualificationSchema } from './envelope';
+import { buildDeepSeekRequestBody } from '../../connectors/deepseek/deepseek.connector';
 import ts from 'typescript';
 import { runInNewContext } from 'node:vm';
 import { Test } from '@nestjs/testing';
@@ -66,55 +69,73 @@ describe('durable supplier admission (isolated PostgreSQL)', () => {
       }
     },
   });
-  const plan = (intent: string, changes: Partial<SpendPlan> = {}): SpendPlan => ({
-    accountId: 'account-a',
-    ownerProfileId: 'client-a',
-    clientKeyId: 'key-a',
-    profileId: 'allocated-deepseek',
-    provider: 'deepseek',
-    credentialRef: 'opaque-ref',
-    credentialVersion: 'v1',
-    intentKey: intent,
-    digest: intent,
-    model: 'fixture-model',
-    runId: intent,
-    nodes: ['node-a', 'node-b'],
-    at: new Date('2026-10-08T12:00:00Z'),
-    policy: {
-      mode: 'strict',
-      revision: 'policy-1',
-      currency: 'USD',
-      effectiveFrom: '2026-01-01T00:00:00Z',
-      effectiveUntil: '2027-01-01T00:00:00Z',
-      client: { dailyLimit: '1', monthlyLimit: '1', runLimit: '1', maxConcurrent: 64 },
-      providers: {
-        deepseek: {
-          profileId: 'allocated-deepseek',
-          dailyLimit: '1',
-          monthlyLimit: '1',
-          models: {},
+  const plan = (intent: string, changes: Partial<SpendPlan> = {}): SpendPlan => {
+    const p: SpendPlan = {
+      accountId: 'account-a',
+      ownerProfileId: 'client-a',
+      clientKeyId: 'key-a',
+      profileId: 'allocated-deepseek',
+      provider: 'deepseek',
+      credentialRef: 'opaque-ref',
+      credentialVersion: 'v1',
+      intentKey: intent,
+      digest: intent,
+      model: 'fixture-model',
+      runId: intent,
+      operationId: intent,
+      routeEpoch: 'fixture-epoch-1',
+      requestBytes: 100,
+      nodes: ['node-a', 'node-b'],
+      at: new Date('2026-10-08T12:00:00Z'),
+      policy: {
+        mode: 'strict',
+        revision: 'policy-1',
+        currency: 'USD',
+        effectiveFrom: '2026-01-01T00:00:00Z',
+        effectiveUntil: '2027-01-01T00:00:00Z',
+        client: { dailyLimit: '1', monthlyLimit: '1', runLimit: '1', maxConcurrent: 64 },
+        providers: {
+          deepseek: {
+            profileId: 'allocated-deepseek',
+            dailyLimit: '1',
+            monthlyLimit: '1',
+            models: {},
+          },
         },
       },
-    },
-    tariff: {
-      revision: 'tariff-1',
-      sourceRef: 'fixture:synthetic',
-      validFrom: '2026-01-01T00:00:00Z',
-      validUntil: '2027-01-01T00:00:00Z',
-      inputPerMTok: '1',
-      outputPerMTok: '1',
-      inputTokenBound: 1,
-      maxOutputTokens: 1,
-      maxPayloadBytes: 100,
-      boundAuthority: 'synthetic-only',
-    },
-    reserve: moneyUnits('0.6'),
-    inputBound: 1,
-    outputBound: 1,
-    request: { prompt: 'synthetic', model: 'fixture-model' },
-    profileBindings: { deepseek: 'allocated-deepseek' },
-    ...changes,
-  });
+      tariff: {
+        revision: 'tariff-1',
+        sourceRef: 'fixture:synthetic',
+        validFrom: '2026-01-01T00:00:00Z',
+        validUntil: '2027-01-01T00:00:00Z',
+        inputPerMTok: '300000',
+        outputPerMTok: '300000',
+        inputTokenBound: 1,
+        maxOutputTokens: 1,
+        maxPayloadBytes: 512,
+        boundAuthority: 'synthetic-only',
+        capability: {
+          id: 'fixture-capability',
+          sha256: 'a'.repeat(64),
+          provider: 'deepseek',
+          model: 'fixture-model',
+          validFrom: '2026-01-01T00:00:00Z',
+          validUntil: '2027-01-01T00:00:00Z',
+          inputTokenCeiling: 10,
+          outputTokenCeiling: 10,
+          payloadByteCeiling: 512,
+        },
+      },
+      reserve: moneyUnits('0.6'),
+      inputBound: 1,
+      outputBound: 1,
+      request: { prompt: 'private-prompt-canary-only', model: 'fixture-model' },
+      profileBindings: { deepseek: 'allocated-deepseek' },
+      ...changes,
+    };
+    p.policy.providers.deepseek.models[p.model] = p.tariff;
+    return p;
+  };
   beforeAll(async () => {
     root = mkdtempSync(join(tmpdir(), 'spg-'));
     execFileSync(join(bin, 'initdb'), ['-D', join(root, 'data'), '-A', 'trust', '--no-locale'], {
@@ -312,6 +333,11 @@ describe('durable supplier admission (isolated PostgreSQL)', () => {
   });
   const parityPlan = (intent: string, changes: Partial<SpendPlan> = {}) => {
     const p = plan(intent, { runId: 'parity-run', reserve: moneyUnits('100'), ...changes });
+    p.tariff.inputPerMTok = p.tariff.outputPerMTok = '5000000';
+    p.tariff.inputTokenBound = p.tariff.maxOutputTokens = p.inputBound = p.outputBound = 10;
+    p.request = { ...p.request, extra: { max_tokens: 10 } };
+    p.requestBytes = Buffer.byteLength(JSON.stringify(buildDeepSeekRequestBody(p.request)));
+    p.policy.providers.deepseek.models[p.model] = p.tariff;
     p.policy.client.dailyLimit = p.policy.client.monthlyLimit = p.policy.client.runLimit = '250';
     p.policy.providers.deepseek.dailyLimit = p.policy.providers.deepseek.monthlyLimit = '250';
     return p;
@@ -387,11 +413,26 @@ describe('durable supplier admission (isolated PostgreSQL)', () => {
       });
     },
   );
+  const bindingOf = (a: SpendPage['events'][number]['attempt']) => ({
+    physicalId: 'prime-' + a.id,
+    clientKeyId: a.clientKeyId,
+    admittedAt: a.admittedAt,
+    digest: a.digest,
+    runId: a.runId,
+    operationId: a.operationId,
+    routeEpoch: a.routeEpoch,
+    provider: a.provider,
+    model: a.model,
+    profileId: a.profileId,
+    credentialRef: a.credentialRef,
+    credentialVersion: a.credentialVersion,
+    qualification: a.qualification,
+  });
   const mirrorOf = (page: SpendPage, direct: EnvelopeHold[] = []) =>
     new PrimeExposureEnvelope(
       { ledgerId: page.ledgerId, accountId: page.accountId, ownerProfileId: page.ownerProfileId },
       direct,
-      Object.fromEntries(page.events.map((e) => [e.attempt.id, 'prime-' + e.attempt.id])),
+      Object.fromEntries(page.events.map((e) => [e.attempt.id, bindingOf(e.attempt)])),
     );
   it('adds direct history to MC held exposure, counts mirrored copies once and preserves partial-page holds', async () => {
     const store = new SqlProfileSpendStore(database());
@@ -575,7 +616,7 @@ describe('durable supplier admission (isolated PostgreSQL)', () => {
     });
     expect(page.events[0].attempt.admissionCaps[0].authority).toBe('mc_client');
     expect(page.events[0].attempt.admissionCaps[0].scope).toBe('mc_client_currency');
-    expect(JSON.stringify(page)).not.toContain('synthetic'); // Prompt is not exported.
+    expect(JSON.stringify(page)).not.toContain('private-prompt-canary-only'); // Prompt is not exported.
   });
   const mutantMirror = (before: string, after: string): typeof PrimeExposureEnvelope => {
     const source = readFileSync(
@@ -592,7 +633,8 @@ describe('durable supplier admission (isolated PostgreSQL)', () => {
       Date,
       require: (name: string) => {
         if (name === './plan') return { ProfileSpendError };
-        if (name === './envelope') return { spendPageSchema };
+        if (name === './envelope') return { spendPageSchema, spendQualificationSchema };
+        if (name === './reliance') return { assertSpendReliance };
         throw new Error('Unexpected mutation import');
       },
     });
@@ -653,7 +695,7 @@ describe('durable supplier admission (isolated PostgreSQL)', () => {
             ownerProfileId: page.ownerProfileId,
           },
           direct,
-          { [a.id]: 'prime-' + a.id },
+          { [a.id]: bindingOf(a) },
         );
         if (guard !== 'pause') mirror.import(page);
         if (guard === 'dedup') {
@@ -682,6 +724,95 @@ describe('durable supplier admission (isolated PostgreSQL)', () => {
       expect(() => oracle(mutantMirror(...replacements[guard]))).toThrow();
     },
   );
+  it('exports immutable F3 reliance fields and refuses mapping/snapshot substitutions before initial import', async () => {
+    const store = new SqlProfileSpendStore(database());
+    const p = parityPlan('qualified');
+    await finishParity(store, p);
+    const page = await store.readEvents('account-a', 'client-a', '0', 500);
+    const first = page.events[0].attempt;
+    expect(first.qualification.requestBytes).toBe(
+      Buffer.byteLength(JSON.stringify(buildDeepSeekRequestBody(p.request))),
+    );
+    expect(first.qualification.tariff.capability.sha256).toBe('a'.repeat(64));
+    expect(page.events[3].attempt.servedModel).toBe(p.model);
+    expect(page.events[3].attempt.providerRequestId).toBeNull(); // Absent upstream identity stays unknown.
+    const registry = { [first.id]: bindingOf(first) };
+    const create = (Ctor = PrimeExposureEnvelope) =>
+      new Ctor(
+        { ledgerId: page.ledgerId, accountId: page.accountId, ownerProfileId: page.ownerProfileId },
+        [],
+        registry,
+      );
+    create().import(page);
+    const mutations = [
+      (a: typeof first) => {
+        a.operationId = 'other-operation';
+      },
+      (a: typeof first) => {
+        a.routeEpoch = 'other-epoch';
+      },
+      (a: typeof first) => {
+        a.qualification.tariff.inputPerMTok = '1';
+      },
+      (a: typeof first) => {
+        a.qualification.policy.revision = 'other-policy';
+      },
+      (a: typeof first) => {
+        a.qualification.tariff.capability.sha256 = 'b'.repeat(64);
+      },
+      (a: typeof first) => {
+        a.qualification.outputTokenCeiling = 1;
+      },
+      (a: typeof first) => {
+        a.qualification.requestBytes = 513;
+      },
+      (a: typeof first) => {
+        a.servedModel = 'substitute-model';
+      },
+      (a: typeof first) => {
+        a.inputTokens = '11';
+      },
+      (a: typeof first) => {
+        a.admissionCaps[0].limitNano = '1';
+      },
+    ];
+    for (const mutate of mutations) {
+      const bad = structuredClone(page);
+      mutate(bad.events[0].attempt);
+      const mirror = create();
+      expect(() => mirror.import(bad)).toThrow();
+      let dispatches = 0;
+      expect(() => {
+        mirror.admit(1n, moneyUnits('250'), new Date('2026-10-08'), new Date('2026-10-09'));
+        dispatches++;
+      }).toThrow();
+      expect(dispatches).toBe(0);
+    }
+    const bad = structuredClone(page);
+    bad.events[0].attempt.operationId = 'other-operation';
+    const mutant = create(mutantMirror('assertSpendReliance(attempt, binding);', ''));
+    expect(() => mutant.import(bad)).not.toThrow(); // Guard removal really accepts the forbidden first page.
+    const mirror = create();
+    mirror.import(page);
+    const held = mirror.exposure(new Date('2026-10-08'), new Date('2026-10-09'));
+    expect(() => mirror.import(bad)).toThrow();
+    expect(mirror.exposure(new Date('2026-10-08'), new Date('2026-10-09'))).toBe(held);
+  });
+  it('independently checks reserve/observed arithmetic even with a matching trusted snapshot', async () => {
+    const store = new SqlProfileSpendStore(database());
+    await finishParity(store, parityPlan('arithmetic'));
+    const page = await store.readEvents('account-a', 'client-a', '0', 500);
+    const badReserve = structuredClone(page);
+    badReserve.events[0].attempt.reserveNano = moneyUnits('99').toString();
+    expect(() => mirrorOf(badReserve).import(badReserve)).toThrow();
+    const badObserved = structuredClone(page);
+    badObserved.events[3].attempt.observedNano = moneyUnits('11').toString();
+    expect(() => mirrorOf(badObserved).import(badObserved)).toThrow();
+    const expired = structuredClone(page);
+    for (const e of expired.events)
+      e.attempt.qualification.tariff.capability.validUntil = '2026-07-01T00:00:00Z';
+    expect(() => mirrorOf(expired).import(expired)).toThrow();
+  });
   it('serves real HTTP+PG events with native auth guard and fresh policy scope, rejects revoked/foreign keys', async () => {
     const store = new SqlProfileSpendStore(database());
     await finishParity(store, parityPlan('http'));

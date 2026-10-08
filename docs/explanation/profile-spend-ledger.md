@@ -207,3 +207,20 @@ observed cost on the first page as well as subsequent pages. Invalid receipts
 pause admission and retain all previously imported exposure. These controls do
 not establish tariff arithmetic, capability/bounds qualification or Prime's
 persisted importer; those common-interface acceptance gates remain open.
+
+## F3 immutable reliance interface
+
+Each event includes the admitted policy and tariff snapshots, qualified wire
+input/output/byte ceilings, measured serialized request bytes and capability
+receipt reference/digest with provider/model and validity. Operation ID and
+route epoch come from accounting context and must match the consumer's trusted
+physical-attempt registry. The receipt cannot enroll its own authority.
+
+The reference consumer requires an immutable registry entry for every physical
+attempt, including the full expected qualification snapshot, operation/run and
+route epoch. At import it independently checks policy/tariff digests and exact
+fixed-point reserve/observed arithmetic, capability/admission intervals, wire
+ceilings and served model identity. Missing or conflicting reliance fields fail
+closed with prior exposure retained. Capability evidence is configured and
+matched, not fabricated by exporting a hash; installed evidence verification,
+Prime persistence and live qualification remain separate acceptance gates.

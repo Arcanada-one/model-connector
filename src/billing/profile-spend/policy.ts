@@ -3,7 +3,21 @@ import { z } from 'zod';
 const id = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/);
 export const moneyStringSchema = z.string().regex(/^(0|[1-9][0-9]{0,6})(\.[0-9]{1,9})?$/);
 const utc = z.iso.datetime({ offset: false });
-const tariff = z
+export const capabilityReceiptSchema = z
+  .object({
+    id,
+    sha256: z.string().regex(/^[0-9a-f]{64}$/),
+    provider: id,
+    model: id,
+    validFrom: utc,
+    validUntil: utc,
+    inputTokenCeiling: z.number().int().min(1).max(2_000_000),
+    outputTokenCeiling: z.number().int().min(1).max(1_000_000),
+    payloadByteCeiling: z.number().int().min(1).max(262_144),
+  })
+  .strict()
+  .refine((v) => v.validFrom < v.validUntil);
+export const spendTariffSchema = z
   .object({
     revision: id,
     sourceRef: z.string().min(1).max(256),
@@ -15,6 +29,7 @@ const tariff = z
     maxOutputTokens: z.number().int().min(1).max(1_000_000),
     maxPayloadBytes: z.number().int().min(1).max(262_144),
     boundAuthority: id,
+    capability: capabilityReceiptSchema,
   })
   .strict()
   .refine((v) => v.validFrom < v.validUntil, 'Tariff validity interval must be ordered');
@@ -41,7 +56,9 @@ export const profileSpendPolicySchema = z
             profileId: id,
             dailyLimit: moneyStringSchema,
             monthlyLimit: moneyStringSchema,
-            models: z.record(z.string().min(1), tariff).refine((v) => Object.keys(v).length > 0),
+            models: z
+              .record(z.string().min(1), spendTariffSchema)
+              .refine((v) => Object.keys(v).length > 0),
           })
           .strict(),
       )
@@ -54,6 +71,8 @@ export const spendContextSchema = z
   .object({
     version: z.literal('profile-spend/v1'),
     runId: id,
+    operationId: id,
+    routeEpoch: id,
     nodes: z
       .array(id)
       .min(1)

@@ -569,6 +569,17 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
             maxOutputTokens: 128,
             maxPayloadBytes: 512,
             boundAuthority: 'fixture-bounded-provider',
+            capability: {
+              id: 'fixture-capability',
+              sha256: 'a'.repeat(64),
+              provider: 'deepseek',
+              model: 'deepseek-v4-flash',
+              validFrom: '2026-01-01T00:00:00Z',
+              validUntil: '2027-01-01T00:00:00Z',
+              inputTokenCeiling: 1024,
+              outputTokenCeiling: 128,
+              payloadByteCeiling: 512,
+            },
           },
         },
       },
@@ -582,7 +593,13 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
       payload: {
         ...payload('deepseek'),
         extra: { max_tokens: 128 },
-        spendContext: { version: 'profile-spend/v1', runId: 'run-a', nodes: ['n1', 'n2'] },
+        spendContext: {
+          version: 'profile-spend/v1',
+          runId: 'run-a',
+          operationId: 'operation-a',
+          routeEpoch: 'epoch-a',
+          nodes: ['n1', 'n2'],
+        },
       },
     });
   it.each(['dailyLimit', 'monthlyLimit'] as const)(

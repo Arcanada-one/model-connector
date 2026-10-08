@@ -249,7 +249,21 @@ export class SqlProfileSpendStore {
           policyHash,
           p.tariff.revision,
           tariffHash,
-          JSON.stringify({ policy: p.policy, tariff: p.tariff, admissionCaps }),
+          JSON.stringify({
+            policy: p.policy,
+            tariff: p.tariff,
+            admissionCaps,
+            operationId: p.operationId,
+            routeEpoch: p.routeEpoch,
+            qualification: {
+              policy: p.policy,
+              tariff: p.tariff,
+              inputTokenCeiling: p.inputBound,
+              outputTokenCeiling: p.outputBound,
+              payloadByteCeiling: p.tariff.maxPayloadBytes,
+              requestBytes: p.requestBytes,
+            },
+          }),
           p.at,
         ],
       );
@@ -381,7 +395,12 @@ export class SqlProfileSpendStore {
     const nullableString = (v: unknown) => (v == null ? null : String(v));
     const admittedAt =
       call.admitted_at instanceof Date ? call.admitted_at.toISOString() : String(call.admitted_at);
-    const snapshot = call.snapshot as { admissionCaps: unknown };
+    const snapshot = call.snapshot as {
+      admissionCaps: unknown;
+      operationId: string;
+      routeEpoch: string;
+      qualification: unknown;
+    };
     const data = spendEventSchema.parse({
       sequence: String(sequence.event_sequence),
       kind,
@@ -395,6 +414,11 @@ export class SqlProfileSpendStore {
         provider: String(call.provider),
         model: String(call.model),
         runId: String(call.run_id),
+        operationId: snapshot.operationId,
+        routeEpoch: snapshot.routeEpoch,
+        qualification: snapshot.qualification,
+        servedModel: nullableString(call.served_model),
+        providerRequestId: nullableString(call.provider_request_id),
         intentKey: String(call.intent_key),
         digest: String(call.digest),
         credentialRef: String(call.credential_ref),

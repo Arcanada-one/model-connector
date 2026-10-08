@@ -1,4 +1,16 @@
 import { z } from 'zod';
+import { profileSpendPolicySchema, spendTariffSchema } from './policy';
+export const spendQualificationSchema = z
+  .object({
+    policy: profileSpendPolicySchema,
+    tariff: spendTariffSchema,
+    inputTokenCeiling: z.number().int().min(1).max(2_000_000),
+    outputTokenCeiling: z.number().int().min(1).max(1_000_000),
+    payloadByteCeiling: z.number().int().min(1).max(262_144),
+    requestBytes: z.number().int().min(1).max(262_144),
+  })
+  .strict();
+export type SpendQualification = z.infer<typeof spendQualificationSchema>;
 
 const sequence = z
   .string()
@@ -22,6 +34,11 @@ export const spendEventSchema = z
         provider: text,
         model: text,
         runId: text,
+        operationId: text,
+        routeEpoch: text,
+        qualification: spendQualificationSchema,
+        servedModel: text.nullable(),
+        providerRequestId: text.nullable(),
         intentKey: text,
         digest: text,
         credentialRef: text,

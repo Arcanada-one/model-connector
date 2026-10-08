@@ -4,6 +4,7 @@ import type { ApiKeyPolicy } from '../../policy/policy.schema';
 import type { ProviderKeyOverride } from '../../policy/provider-key.context';
 import type { ConnectorRequest } from '../../connectors/interfaces/connector.interface';
 import { spendContextSchema, type ProfileSpendPolicy, type SpendContext } from './policy';
+import { buildDeepSeekRequestBody } from '../../connectors/deepseek/deepseek.connector';
 import { moneyUnits, pricedUnits } from './money';
 
 export class ProfileSpendError extends HttpException {
@@ -29,6 +30,9 @@ export interface SpendPlan {
   digest: string;
   model: string;
   runId: string;
+  operationId: string;
+  routeEpoch: string;
+  requestBytes: number;
   nodes: string[];
   at: Date;
   policy: ProfileSpendPolicy;
@@ -87,6 +91,16 @@ export function prepareSpend(
     output > tariff.maxOutputTokens
   )
     throw new ProfileSpendError('profile_spend_output_bound', HttpStatus.BAD_REQUEST);
+  const capability = tariff.capability;
+  if (
+    !valid(capability.validFrom, capability.validUntil) ||
+    capability.provider !== provider ||
+    capability.model !== request.model ||
+    tariff.inputTokenBound > capability.inputTokenCeiling ||
+    output > capability.outputTokenCeiling ||
+    tariff.maxPayloadBytes > capability.payloadByteCeiling
+  )
+    throw new ProfileSpendError('profile_spend_capability_unavailable');
   const reserve = pricedUnits(
     tariff.inputTokenBound,
     output,
@@ -107,6 +121,9 @@ export function prepareSpend(
     maxRetries: 0,
     extra: { ...request.extra, max_tokens: output },
   };
+  const requestBytes = Buffer.byteLength(JSON.stringify(buildDeepSeekRequestBody(providerRequest)));
+  if (requestBytes > tariff.maxPayloadBytes)
+    throw new ProfileSpendError('profile_spend_payload_bound', HttpStatus.BAD_REQUEST);
   const { idempotencyKey: _key, ...payload } = providerRequest;
   const digest = createHash('sha256')
     .update(JSON.stringify({ provider, request: payload }))
@@ -123,6 +140,9 @@ export function prepareSpend(
     digest,
     model: request.model!,
     runId: context.data.runId,
+    operationId: context.data.operationId,
+    routeEpoch: context.data.routeEpoch,
+    requestBytes,
     nodes: context.data.nodes,
     at,
     policy: spend,
