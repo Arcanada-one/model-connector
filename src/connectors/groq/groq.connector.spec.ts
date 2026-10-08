@@ -59,11 +59,7 @@ describe('GroqConnector', () => {
   };
 
   function mockOk(body: unknown) {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve(body),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
   }
 
   // --- URL building ---
@@ -321,11 +317,9 @@ describe('GroqConnector', () => {
   // live entries.
   describe('refreshModels (CONN-0238 all-modalities + pricing)', () => {
     function mockModelsOk() {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(GROQ_MODELS_FIXTURE),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify(GROQ_MODELS_FIXTURE), { status: 200 }),
+      );
     }
     const metaFor = (caps: ReturnType<GroqConnector['getCapabilities']>, id: string) =>
       (caps.modelMeta ?? []).find((m) => m.id === id);
@@ -443,11 +437,9 @@ describe('GroqConnector', () => {
   // explicit allowlist, not a blanket free-flag override).
   describe('GROQ_FREE_MODELS allowlist (CONN-1672 free-tier suppression)', () => {
     function mockModelsOk() {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(GROQ_MODELS_FIXTURE),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify(GROQ_MODELS_FIXTURE), { status: 200 }),
+      );
     }
     const metaFor = (caps: ReturnType<GroqConnector['getCapabilities']>, id: string) =>
       (caps.modelMeta ?? []).find((m) => m.id === id);

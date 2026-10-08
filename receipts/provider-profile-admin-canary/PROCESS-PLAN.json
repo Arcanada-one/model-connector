@@ -2,15 +2,15 @@
   "schema": "CanaryPlan/v2",
   "id": "provider-specific-error-redaction",
   "owner": "MC-KEYS",
-  "environment": "owned deterministic process against compiled Azure/Perplexity error renderers; no network or DB",
+  "environment": "owned deterministic process against compiled Azure/Perplexity errors and Base/JEV JSON readers; no network or DB",
   "read_only": true,
   "subject": {
     "schema": "GitCanarySubject/v1",
-    "commit": "7ab41918a0660bb781bae4df0ccfcb24755eca1e",
-    "tree": "f93b49863236d170143da43c0025b99cc8a64336",
+    "commit": "863c635805924b5a8d92fcc1a781ff8e1d0500e5",
+    "tree": "04ae60bf445ddbecf445f46f3dca3b68999e22d6",
     "evidence": {
       "path": "SOURCE.json",
-      "sha256": "9849dc1d49fe643afef0b3200286979b5a75b05cbeb838dfdcbd9024b344856c",
+      "sha256": "0c4e20daa98f0516d62bd7609edbfb12c70290870404ff28ce91ab05b0b72d52",
       "source_field": "commit"
     }
   },
@@ -43,7 +43,7 @@
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-provider-profiles-20261008/test/provider-profiles/canary/error-renderers.cjs",
-          "sha256": "fca7c6ed1f68ff648b19648f6047dfd07c2bf64224732fddf35df482edb936c2"
+          "sha256": "e5bc3ca450bd558901a3a0f780090be388a1e69797ef5676574b39d0b117b319"
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-provider-profiles-20261008/dist/src/connectors/azure-openai/azure-openai.connector.js",
@@ -55,17 +55,26 @@
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-provider-profiles-20261008/dist/src/connectors/base-api.connector.js",
-          "sha256": "14570219a020ff8c87cc2b80d17798ab490dc479d4a57a4ac9fa7f1ad85bcf90"
+          "sha256": "3be0d527ba3dbb21dd8f00dc29181211d9d8739c16d6846f030e41ebaec4f470"
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-provider-profiles-20261008/dist/src/policy/provider-key.context.js",
           "sha256": "987b2b855ef19361c36b909ba2932f0475a19bf7c94c92f0fad1e358a21f0ca2"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/mc-keys-provider-profiles-20261008/dist/src/connectors/jev/jev.connector.js",
+          "sha256": "ba60d5f15cc5c5bd5be0a4c8d9ccc08e589552e14ec10da30155d0125557c3d8"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/mc-keys-provider-profiles-20261008/dist/src/connectors/deepseek/deepseek.connector.js",
+          "sha256": "6490f722e3929fae8d45f00eca268258ec3b557cea3abf91f1a52f27491860b3"
         }
       ],
       "executable_sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
       "entities": [
         "code_unit:src/connectors/azure-openai/azure-openai.connector.ts",
-        "code_unit:src/connectors/perplexity/perplexity.connector.ts"
+        "code_unit:src/connectors/perplexity/perplexity.connector.ts",
+        "code_unit:src/connectors/jev/jev.connector.ts"
       ],
       "mutating": false
     }

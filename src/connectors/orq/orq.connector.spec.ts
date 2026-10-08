@@ -31,11 +31,7 @@ describe('OrqConnector', () => {
 
   // Helper to mock a successful fetch response
   function mockOk(body: unknown) {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve(body),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
   }
 
   // --- 1. buildRequestUrl ---
@@ -213,11 +209,7 @@ describe('OrqConnector', () => {
 
   describe('refreshModels', () => {
     it('should filter fixture to all 6 chat+active model_ids (all in fixture qualify)', async () => {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(modelsFixture),
-      });
+      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(modelsFixture), { status: 200 }));
 
       await connector.refreshModels();
       const caps = connector.getCapabilities();
@@ -233,11 +225,7 @@ describe('OrqConnector', () => {
     });
 
     it('should emit model_id (not UUID id field)', async () => {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(modelsFixture),
-      });
+      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(modelsFixture), { status: 200 }));
 
       const result = await connector.refreshCatalogModels();
       expect(result).toMatchObject({ status: 'success', source: 'provider-api' });
@@ -255,11 +243,7 @@ describe('OrqConnector', () => {
         { model_id: 'x-image-model', model_type: 'image', is_active: true },
         { model_id: 'x-embed-model', model_type: 'embedding', is_active: true },
       ];
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(mixedFixture),
-      });
+      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(mixedFixture), { status: 200 }));
 
       await connector.refreshModels();
       const caps = connector.getCapabilities();
@@ -272,11 +256,7 @@ describe('OrqConnector', () => {
         ...modelsFixture,
         { model_id: 'inactive-chat', model_type: 'chat', is_active: false },
       ];
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(withInactive),
-      });
+      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(withInactive), { status: 200 }));
 
       await connector.refreshModels();
       const caps = connector.getCapabilities();
@@ -315,11 +295,7 @@ describe('OrqConnector', () => {
     });
 
     it('should keep seed list when response is not an array', async () => {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ data: [] }), // object, not array
-      });
+      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ data: [] }), { status: 200 }));
       await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
         status: 'failed',
         reason: 'parse',
@@ -331,11 +307,11 @@ describe('OrqConnector', () => {
     });
 
     it('should keep seed list when array has 0 chat+active entries', async () => {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve([{ model_id: 'img', model_type: 'image', is_active: true }]),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify([{ model_id: 'img', model_type: 'image', is_active: true }]), {
+          status: 200,
+        }),
+      );
       await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
         status: 'failed',
         reason: 'empty',

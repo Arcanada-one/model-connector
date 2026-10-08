@@ -9,6 +9,8 @@ const {
   PerplexityConnector,
 } = require('../../../dist/src/connectors/perplexity/perplexity.connector');
 const { providerKeyContext } = require('../../../dist/src/policy/provider-key.context');
+const { DeepSeekConnector } = require('../../../dist/src/connectors/deepseek/deepseek.connector');
+const { JevConnector } = require('../../../dist/src/connectors/jev/jev.connector');
 const secret = ['synthetic', 'canary', 'credential'].join('-');
 providerKeyContext.run({ provider: 'deepseek', apiKey: secret }, () => {
   const azure = new AzureOpenAiConnector();
@@ -29,6 +31,22 @@ providerKeyContext.run({ provider: 'deepseek', apiKey: secret }, () => {
     );
   }
 });
-console.log(
-  'VERIFIED: 41 boundary offsets; Azure renderer and all Perplexity error branches; no upstream call',
-);
+async function checkJsonReaders() {
+  for (const [provider, connector] of [
+    ['deepseek', new DeepSeekConnector()],
+    ['typesafe-jev', new JevConnector()],
+  ]) {
+    await providerKeyContext.run({ provider, apiKey: secret }, async () => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        await assert.rejects(connector.readResponseJson(new Response(secret)), {
+          name: 'SyntaxError', message: 'Invalid upstream JSON response',
+        });
+      }
+      assert.deepEqual(await connector.readResponseJson(new Response(JSON.stringify({ echo: secret }))), {
+        echo: '[REDACTED]',
+      });
+    });
+  }
+  console.log('VERIFIED: 41 boundary offsets; safe Base/JEV JSON readers; no upstream call');
+}
+checkJsonReaders().catch((error) => { console.error(error); process.exitCode = 1; });

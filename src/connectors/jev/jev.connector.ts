@@ -65,7 +65,7 @@ export class JevConnector extends BaseApiConnector {
   }
 
   protected async readResponseJson(response: Response): Promise<unknown> {
-    return JSON.parse(await this.readBounded(response));
+    return this.parseResponseJsonText(await this.readBounded(response));
   }
 
   protected readResponseError(response: Response): Promise<string> {

@@ -226,8 +226,19 @@ export abstract class BaseApiConnector implements IConnector {
     return 'follow';
   }
 
-  protected readResponseJson(response: Response): Promise<unknown> {
-    return response.json();
+  protected async readResponseJson(response: Response): Promise<unknown> {
+    return this.parseResponseJsonText(await response.text());
+  }
+
+  /** Redact complete bodies before a JSON decoder can shorten a credential into an excerpt. */
+  protected parseResponseJsonText(text: string): unknown {
+    const sanitized = redactProviderSecrets(text);
+    try {
+      return JSON.parse(sanitized);
+    } catch {
+      // Never propagate a parser message or cause: both may contain raw body excerpts.
+      throw new SyntaxError('Invalid upstream JSON response');
+    }
   }
 
   protected readResponseError(response: Response): Promise<string> {
@@ -622,7 +633,9 @@ export abstract class BaseApiConnector implements IConnector {
       const message = err instanceof Error ? err.message : String(err);
       const errorType = isAbort
         ? 'timeout'
-        : message.includes('SyntaxError') || message.includes('Unexpected')
+        : err instanceof SyntaxError ||
+            message.includes('SyntaxError') ||
+            message.includes('Unexpected')
           ? 'parse_error'
           : 'network_error';
       const action = classifyErrorAction(errorType);

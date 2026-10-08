@@ -7,15 +7,17 @@ describe('CloudflareWorkersAiConnector native REST contract', () => {
   it('uses the account-scoped native run endpoint and Bearer auth', async () => {
     process.env.CLOUDFLARE_WORKERS_AI_ACCOUNT_ID = 'account-123';
     process.env.CLOUDFLARE_WORKERS_AI_API_TOKEN = 'fixture-token';
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        success: true,
-        errors: [],
-        messages: [],
-        result: { response: 'hello', usage: { prompt_tokens: 4, completion_tokens: 2 } },
-      }),
-    });
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          success: true,
+          errors: [],
+          messages: [],
+          result: { response: 'hello', usage: { prompt_tokens: 4, completion_tokens: 2 } },
+        }),
+        { status: 200 },
+      ),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     const response = await new CloudflareWorkersAiConnector().execute({
@@ -36,10 +38,13 @@ describe('CloudflareWorkersAiConnector native REST contract', () => {
 
   it('sends native messages and response_format fields without OpenAI choices', async () => {
     process.env.CLOUDFLARE_WORKERS_AI_ACCOUNT_ID = 'account-123';
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ result: { response: '{"ok":true}' }, success: true }),
-    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ result: { response: '{"ok":true}' }, success: true }), {
+          status: 200,
+        }),
+      );
     vi.stubGlobal('fetch', fetchMock);
 
     await new CloudflareWorkersAiConnector().execute({
@@ -61,15 +66,17 @@ describe('CloudflareWorkersAiConnector native REST contract', () => {
     process.env.CLOUDFLARE_WORKERS_AI_ACCOUNT_ID = 'account-123';
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          success: false,
-          result: null,
-          errors: [{ code: 3036, message: 'daily neuron allocation exhausted' }],
-          messages: [],
-        }),
-      }),
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            success: false,
+            result: null,
+            errors: [{ code: 3036, message: 'daily neuron allocation exhausted' }],
+            messages: [],
+          }),
+          { status: 200 },
+        ),
+      ),
     );
 
     const response = await new CloudflareWorkersAiConnector().execute({ prompt: 'hello' });

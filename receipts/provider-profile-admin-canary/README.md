@@ -1,6 +1,6 @@
 # Dedicated provider profile admin route canary
 
-Measured source: `7ab41918a0660bb781bae4df0ccfcb24755eca1e`.
+Measured source: `863c635805924b5a8d92fcc1a781ff8e1d0500e5`.
 
 The source was clean, built with the normal Nest build, and loaded into an owned
 loopback Nest application containing the production AdminController, AdminService,
@@ -31,9 +31,23 @@ so the negative test fails while the legacy control passes. Six original negativ
 controls (client binding, JEV override, revocation, request cap, redaction and
 attribution) also fail when their guards are removed.
 
-The rebased default suite passed 3654 assertions, with four existing skips, across
+The rebased default suite passed 3658 assertions, with four existing skips, across
 241 files. PROCESS-PLAN.json / PROCESS-RESULT.json additionally measure both affected provider-specific error code units with compiled-code assertions at all 41 offsets. The native process producer pins the executable, harness and loaded implementation bytes. These are deterministic process observations, not live provider measurements.
 
-The canaries cover the two added routes and two provider error code units; inherited graph findings
+The canaries cover the two added routes, two provider error code units and the JEV bounded JSON reader; inherited graph findings
 retain their own tri-valued status. Full native change admission is reported
 separately and is not implied by this record.
+
+Malformed 2xx JSON is read as complete text and redacted before JSON decoding in
+the Base reader and the bounded JEV override. Parse failures use a generic
+SyntaxError without a parser excerpt or cause. The HTTP regression creates a
+fresh Response on both retries and checks client error, Request.errorMessage and
+captured logs. The unchanged Base reader fails with a ten-character credential
+prefix; the JEV adapter retains its existing generic outbound error. Direct-reader
+controls fail on both old readers. Restoring each unsafe reader makes its test
+RED. The process canary also executes both compiled readers against malformed and
+valid credential-echo JSON; this is bounded-reader evidence, not qualification of
+the separate strict transport or a live supplier.
+
+The authored connector scaffold also uses an actual Response body; its native
+README-rendered test execution passes all 21 assertions with mocked transport.

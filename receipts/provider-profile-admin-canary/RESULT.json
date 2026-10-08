@@ -1,6 +1,6 @@
 {
- "base_url": "http://127.0.0.1:46705",
- "captured_at_utc": "2026-10-08T11:45:56Z",
+ "base_url": "http://127.0.0.1:42087",
+ "captured_at_utc": "2026-10-08T12:48:40Z",
  "card": "AUP-GRAPH-008",
  "contract_ref": "contracts/graph-verified-change/observed-edges-and-deploy-gate.v1.json",
  "counters": {
@@ -30,21 +30,21 @@
  "model": "claude-opus-5",
  "phase": "pre",
  "plan": {
-  "digest": "sha256:7d7280a0ce52f466b18083238afb4937801f9982c77857ff541cd7229947ab88",
+  "digest": "sha256:b70f3c769c3483ba1fb77a888a40957d1f28e4c6ce0bc8d89c5992228b563af4",
   "id": "provider-profile-admin-routes",
-  "path": "/tmp/mc-keys-20261008/final-canary/PLAN.json"
+  "path": "/home/dev/aup/mc-keys-work/20261008/review2/canary-final/PLAN.json"
  },
  "probes": [
   {
    "body_bytes": 69,
    "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
-   "elapsed_ms": 29,
+   "elapsed_ms": 26,
    "id": "policy-requires-admin",
    "method": "GET",
    "outcome": "verified",
    "reason": "status 403 is neither 404 nor 405: the route is served by the resident version; key `statusCode` present",
    "status": 403,
-   "url": "http://127.0.0.1:46705/admin/keys/canary-a/policy"
+   "url": "http://127.0.0.1:42087/admin/keys/canary-a/policy"
   },
   {
    "body_bytes": 69,
@@ -55,7 +55,7 @@
    "outcome": "verified",
    "reason": "status 403 is neither 404 nor 405: the route is served by the resident version; key `statusCode` present",
    "status": 403,
-   "url": "http://127.0.0.1:46705/admin/keys/canary-a/usage"
+   "url": "http://127.0.0.1:42087/admin/keys/canary-a/usage"
   }
  ],
  "producer": {
@@ -71,13 +71,13 @@
  ],
  "schema": "CanaryResult/v1",
  "subject": {
-  "commit": "7ab41918a0660bb781bae4df0ccfcb24755eca1e",
+  "commit": "863c635805924b5a8d92fcc1a781ff8e1d0500e5",
   "evidence": {
    "path": "SOURCE.json",
-   "sha256": "9849dc1d49fe643afef0b3200286979b5a75b05cbeb838dfdcbd9024b344856c",
+   "sha256": "0c4e20daa98f0516d62bd7609edbfb12c70290870404ff28ce91ab05b0b72d52",
    "source_field": "commit"
   },
   "schema": "GitCanarySubject/v1",
-  "tree": "f93b49863236d170143da43c0025b99cc8a64336"
+  "tree": "04ae60bf445ddbecf445f46f3dca3b68999e22d6"
  }
 }
