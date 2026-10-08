@@ -4,9 +4,12 @@ import { Logger, ConsoleLogger } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { hash } from 'bcryptjs';
+import { STRICT_CHAT_BOUNDARY, StrictChatService } from '../../src/connectors/strict-chat/service';
 import { ConnectorsController } from '../../src/connectors/connectors.controller';
 import { ConnectorsService } from '../../src/connectors/connectors.service';
 import { JevConnector } from '../../src/connectors/jev/jev.connector';
+import { AzureOpenAiConnector } from '../../src/connectors/azure-openai/azure-openai.connector';
+import { PerplexityConnector } from '../../src/connectors/perplexity/perplexity.connector';
 import { DeepSeekConnector } from '../../src/connectors/deepseek/deepseek.connector';
 import { request as decision, nativeResponse } from '../../src/connectors/jev/decision.fixture';
 import { ImageGenerationService } from '../../src/connectors/image-generation/image-generation.service';
@@ -111,9 +114,15 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
   let capturedLogs: unknown[][];
   const sent: Array<{ url: string; authorization: string; client?: string }> = [];
   const fetchMock = vi.fn();
+  const strictExecute =
+    vi.fn<(...args: Parameters<StrictChatService['execute']>) => Promise<void>>();
   let prisma: PrismaService;
   beforeEach(async () => {
     capturedLogs = [];
+    strictExecute.mockReset();
+    strictExecute.mockImplementation(async (_name, _tenant, _body, sink, signal) => {
+      await sink('data: {"fixture":true}\n\n', signal);
+    });
     const capture = (...messages: unknown[]) => {
       capturedLogs.push(messages);
     };
@@ -230,6 +239,7 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
       controllers: [ConnectorsController, AdminController],
       providers: [
         AdminGuard,
+        { provide: STRICT_CHAT_BOUNDARY, useValue: { execute: strictExecute } },
         { provide: AdminService, useValue: new AdminService(prisma) },
         { provide: ConnectorsService, useValue: service },
         { provide: ImageGenerationService, useValue: {} },
@@ -420,6 +430,76 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
     expect(JSON.stringify(records)).not.toContain(secret);
     expect(JSON.stringify(capturedLogs)).not.toContain(secret);
   });
+  it.each(Array.from({ length: 41 }, (_, i) => 480 + i))(
+    'redacts dedicated credentials before the 500-character cut at offset %i',
+    async (offset) => {
+      rows['key-a'].policy = profile('a', 'deepseek');
+      const secret = fixtureCredential('DEEPSEEK', 'A');
+      const padding = 'x'.repeat(offset);
+      fetchMock.mockResolvedValue(new Response(padding + secret + ' suffix', { status: 401 }));
+      const response = await call('a', 'deepseek');
+      const expected = (padding + '[REDACTED]' + ' suffix').slice(0, 500);
+      expect(response.json().error.message).toBe(expected);
+      expect(records).toHaveLength(1);
+      expect(records[0].errorMessage).toBe(expected);
+      for (const surface of [
+        response.body,
+        JSON.stringify(records),
+        JSON.stringify(capturedLogs),
+      ]) {
+        expect(surface).not.toContain(secret);
+        expect(surface).not.toContain(secret.slice(0, 20));
+      }
+    },
+  );
+  it('redacts complete bodies in provider-specific error renderers and parsers', () => {
+    const secret = fixtureCredential('DEEPSEEK', 'A');
+    providerKeyContext.run({ provider: 'deepseek', apiKey: secret }, () => {
+      const azure = new AzureOpenAiConnector() as unknown as {
+        formatHttpErrorMessage(status: number, body: string): string;
+      };
+      const perplexity = new PerplexityConnector() as unknown as {
+        parseHttpError(
+          status: number,
+          body: string,
+          headers: Headers,
+        ): { message: string; details?: unknown };
+      };
+      for (let offset = 480; offset <= 520; offset++) {
+        const plain = 'x'.repeat(offset) + secret;
+        const expected = ('x'.repeat(offset) + '[REDACTED]').slice(0, 500);
+        expect(azure.formatHttpErrorMessage(401, plain)).toBe(expected);
+        expect(
+          azure.formatHttpErrorMessage(
+            401,
+            JSON.stringify({ error: { code: secret, message: plain } }),
+          ),
+        ).toBe('[REDACTED]: ' + 'x'.repeat(offset) + '[REDACTED]');
+        for (const status of [401, 403, 422, 429, 500])
+          expect(perplexity.parseHttpError(status, plain, new Headers()).message).toBe(expected);
+        expect(
+          perplexity.parseHttpError(422, JSON.stringify({ detail: secret }), new Headers()).details,
+        ).toBe('[REDACTED]');
+      }
+    });
+  });
+  it('dispatches a legacy client through the injected strict boundary', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/connectors/deepseek/chat/completions',
+      headers: { authorization: 'Bearer client-a' },
+      payload: {},
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toBe('data: {"fixture":true}\n\n');
+    expect(strictExecute).toHaveBeenCalledExactlyOnceWith(
+      'deepseek',
+      'key-a',
+      {},
+      expect.any(Function),
+      expect.any(AbortSignal),
+    );
+  });
   it('refuses a dedicated profile on an unqualified strict route before any send', async () => {
     rows['key-a'].policy = profile('a', 'deepseek');
     const response = await app.inject({
@@ -429,7 +509,10 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
       payload: {},
     });
     expect(response.statusCode).toBe(503);
+    expect(response.json()).toEqual({ error: 'strict_profile_unavailable' });
+    expect(strictExecute).not.toHaveBeenCalled();
     expect(sent).toEqual([]);
+    expect(records).toEqual([]);
   });
   it('model allowlist refuses before fetch', async () => {
     rows['key-a'].policy = profile('a', 'deepseek');

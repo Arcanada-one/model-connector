@@ -248,7 +248,7 @@ export abstract class BaseApiConnector implements IConnector {
 
   /** CONN-0243 — provider-specific rendering of a non-2xx response body. */
   protected formatHttpErrorMessage(_status: number, body: string): string {
-    return body.slice(0, 500);
+    return redactProviderSecrets(body).slice(0, 500);
   }
 
   /**
@@ -256,6 +256,7 @@ export abstract class BaseApiConnector implements IConnector {
    * composes {@link classifyHttpError} with {@link formatHttpErrorMessage}.
    */
   protected parseHttpError(status: number, text: string, _headers: Headers): ParsedHttpError {
+    text = redactProviderSecrets(text);
     return {
       type: this.classifyHttpError(status, text),
       message: redactProviderSecrets(this.formatHttpErrorMessage(status, text)),
@@ -533,7 +534,7 @@ export abstract class BaseApiConnector implements IConnector {
       });
 
       if (!res.ok) {
-        const text = await this.readResponseError(res);
+        const text = redactProviderSecrets(await this.readResponseError(res));
         const parsedError = this.parseHttpError(res.status, text, res.headers);
         const errorType = parsedError.type;
         const action = classifyErrorAction(errorType);
