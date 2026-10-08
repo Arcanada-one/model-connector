@@ -43,13 +43,12 @@ interface ClaudeResultSuccess extends ClaudeResultBase {
 }
 
 interface ClaudeResultError extends ClaudeResultBase {
-  subtype:
-    | 'error_during_execution'
-    | 'error_max_turns'
-    | 'error_max_budget_usd'
-    | 'error_max_structured_output_retries';
+  // Some CLI failures use subtype=success and put the cause in result.
+  // is_error determines failure; subtype alone does not.
+  subtype: string;
   is_error: true;
-  errors: string[];
+  errors?: unknown;
+  result?: unknown;
 }
 
 type ClaudeResult = ClaudeResultSuccess | ClaudeResultError;
@@ -267,6 +266,21 @@ export class ClaudeCodeConnector extends BaseCliConnector {
 
     if (json.is_error) {
       const errorJson = json as ClaudeResultError;
+      const errors = Array.isArray(errorJson.errors)
+        ? errorJson.errors.filter((value): value is string => typeof value === 'string')
+        : [];
+      const messages = [...errors, errorJson.result].filter(
+        (value): value is string => typeof value === 'string' && value.trim().length > 0,
+      );
+      const subtype =
+        typeof errorJson.subtype === 'string' && /^[a-z_0-9]{1,80}$/.test(errorJson.subtype)
+          ? errorJson.subtype
+          : 'unknown';
+      // Prefix survives the Request.errorMessage 500-character storage limit.
+      // Keep diagnostics out of result, which callers treat as generated content.
+      const errorMessage = this.safeErrorMessage(
+        `[subtype=${subtype}] ${[...new Set(messages)].join('; ') || stderr || 'CLI reported an error without a message'}`,
+      );
       return {
         text: '',
         structured: meta,
@@ -277,8 +291,10 @@ export class ClaudeCodeConnector extends BaseCliConnector {
         ...passthrough,
         costUsd,
         isError: true,
-        errorType: ERROR_SUBTYPE_MAP[errorJson.subtype] || 'execution_error',
-        errorMessage: errorJson.errors?.join('; ') || errorJson.subtype,
+        errorType: Object.hasOwn(ERROR_SUBTYPE_MAP, subtype)
+          ? ERROR_SUBTYPE_MAP[subtype]
+          : 'execution_error',
+        errorMessage,
       };
     }
 
@@ -298,6 +314,28 @@ export class ClaudeCodeConnector extends BaseCliConnector {
       costUsd,
       isError: false,
     };
+  }
+
+  private safeErrorMessage(message: string): string {
+    // Redact before truncating so a credential crossing the storage boundary
+    // cannot leave a usable prefix. Never copy the complete provider envelope.
+    let safe = message;
+    for (const [name, value] of Object.entries(process.env)) {
+      if (/(?:TOKEN|SECRET|PASSWORD|API_KEY|AUTHORIZATION)/i.test(name) && value) {
+        safe = safe.split(value).join('[REDACTED]');
+      }
+    }
+    return safe
+      .replace(/\x1b\[[0-9;]*m/g, '')
+      .replace(/\b(?:Bearer|Basic)\s+[^\s,;]+/gi, '[REDACTED_AUTH]')
+      .replace(/\b(?:sk-|ghp_|github_pat_|mun_sk_)[A-Za-z0-9_.-]+/g, '[REDACTED]')
+      .replace(
+        /(["']?(?:api[_-]?key|access[_-]?token|refresh[_-]?token|password|secret|authorization)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi,
+        '$1[REDACTED]',
+      )
+      .replace(/https?:\/\/[^\s<>"']+/gi, '[REDACTED_URL]')
+      .replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ')
+      .slice(0, 500);
   }
 
   protected classifyError(message: string, exitCode: number): string {

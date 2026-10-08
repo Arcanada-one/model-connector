@@ -13,6 +13,7 @@ import {
 } from './dto/catalog.dto';
 import type { CatalogRepositoryLike, ModelCatalogRow } from './catalog.repository';
 import type { ICatalogRedis } from './catalog-redis.token';
+import { ClaudeCodeConnector } from './claude-code/claude-code.connector';
 
 // CONN-0245 — DB-as-source-of-truth catalog: builds a narrow CatalogRepository
 // mock whose `findAll()` returns rows equivalent to a given entry list (via
@@ -130,6 +131,49 @@ describe('ConnectorsService', () => {
   it('should register and get a connector', () => {
     service.register(mockConnector);
     expect(service.get('test')).toBe(mockConnector);
+  });
+
+  it('persists the CLI failure subtype and cause through execute and the Request write', async () => {
+    class FailingClaude extends ClaudeCodeConnector {
+      protected override async spawnProcess() {
+        return {
+          stdout: JSON.stringify({
+            type: 'result',
+            subtype: 'success',
+            is_error: true,
+            result: 'Usage limit reached; resets at 16:00 UTC.',
+          }),
+          stderr: '',
+          exitCode: 0,
+        };
+      }
+    }
+    const connector = new FailingClaude();
+    connector.setSemaphore(1);
+    service.register(connector);
+    const response = await service.execute(
+      'claude-code',
+      {
+        prompt: 'synthetic input',
+        model: 'test-model',
+        maxRetries: 0,
+      },
+      'test-key',
+    );
+    expect(response.status).toBe('error');
+    expect(response.result).toBe('');
+    expect(response.error?.message).toBe(
+      '[subtype=success] Usage limit reached; resets at 16:00 UTC.',
+    );
+    expect(mockPrisma.request.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'error',
+          errorType: 'execution_error',
+          errorMessage: '[subtype=success] Usage limit reached; resets at 16:00 UTC.',
+        }),
+      }),
+    );
   });
 
   it('should throw NotFoundException for unknown connector', () => {

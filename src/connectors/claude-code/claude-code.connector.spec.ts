@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { ClaudeCodeConnector } from './claude-code.connector';
 import { ConnectorRequest } from '../interfaces/connector.interface';
 import { SpawnResult } from '../base-cli.connector';
@@ -230,6 +230,94 @@ describe('ClaudeCodeConnector', () => {
   // --- parseOutput tests (T11-T15) ---
 
   describe('parseOutput', () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    it('preserves a provider cause when is_error is true but subtype is success', () => {
+      const parsed = connector.testParseOutput(
+        JSON.stringify({
+          type: 'result',
+          subtype: 'success',
+          is_error: true,
+          result: 'Usage limit reached; resets at 16:00 UTC.',
+        }),
+        '',
+      );
+      expect(parsed.isError).toBe(true);
+      expect(parsed.text).toBe('');
+      expect(parsed.errorType).toBe('execution_error');
+      expect(parsed.errorMessage).toBe(
+        '[subtype=success] Usage limit reached; resets at 16:00 UTC.',
+      );
+    });
+
+    it('keeps both error-array detail and result without trusting malformed errors', () => {
+      for (const errors of [undefined, 'not an array', [null, 42, 'Failure detail']]) {
+        const parsed = connector.testParseOutput(
+          JSON.stringify({
+            is_error: true,
+            subtype: 'error_during_execution',
+            errors,
+            result: 'Provider cause',
+          }),
+          '',
+        );
+        expect(parsed.errorMessage).toContain('Provider cause');
+        if (Array.isArray(errors)) expect(parsed.errorMessage).toContain('Failure detail');
+        expect(parsed.isError).toBe(true);
+      }
+    });
+
+    it('retains the failure subtype even when no diagnostic text is available', () => {
+      const parsed = connector.testParseOutput(
+        JSON.stringify({
+          is_error: true,
+          subtype: 'error_max_turns',
+          errors: [],
+          result: null,
+        }),
+        '',
+      );
+      expect(parsed.errorType).toBe('max_turns_exceeded');
+      expect(parsed.errorMessage).toBe(
+        '[subtype=error_max_turns] CLI reported an error without a message',
+      );
+    });
+
+    it('redacts credentials and signed URLs before bounding persisted diagnostics', () => {
+      vi.stubEnv('ANTHROPIC_AUTH_TOKEN', 'synthetic-session-credential');
+      const parsed = connector.testParseOutput(
+        JSON.stringify({
+          is_error: true,
+          subtype: 'success',
+          result:
+            'Quota exhausted\nsynthetic-session-credential Bearer synthetic-bearer; ' +
+            'api_key="synthetic-assigned" https://example.invalid/reset?token=synthetic-url ' +
+            'sk-synthetic-token ' +
+            'x'.repeat(700),
+        }),
+        '',
+      );
+      expect(parsed.errorMessage).toContain('Quota exhausted');
+      expect(parsed.errorMessage).toHaveLength(500);
+      expect(parsed.errorMessage).not.toMatch(/synthetic|\n|https:/);
+      expect(parsed.text).toBe('');
+      expect(JSON.stringify(parsed.structured)).not.toContain('synthetic');
+    });
+
+    it('redacts a credential that straddles the storage truncation boundary', () => {
+      vi.stubEnv('ANTHROPIC_API_KEY', 'synthetic-boundary-credential');
+      const parsed = connector.testParseOutput(
+        JSON.stringify({
+          is_error: true,
+          subtype: 'success',
+          result: 'x'.repeat(470) + 'synthetic-boundary-credential',
+        }),
+        '',
+      );
+      expect(parsed.errorMessage).not.toContain('synthetic');
+      expect(parsed.errorMessage).toContain('[REDACTED]');
+    });
+
     it('should parse success fixture correctly', () => {
       const parsed = connector.testParseOutput(successFixture, '');
       expect(parsed.text).toBe('hello');
