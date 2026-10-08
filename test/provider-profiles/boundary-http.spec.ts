@@ -484,6 +484,81 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
       }
     });
   });
+  const spendPolicy = () => ({
+    mode: 'strict' as const,
+    revision: 'budget-1',
+    currency: 'USD' as const,
+    effectiveFrom: '2026-01-01T00:00:00Z',
+    effectiveUntil: '2027-01-01T00:00:00Z',
+    client: { dailyLimit: '10', monthlyLimit: '100', runLimit: '1', maxConcurrent: 1 },
+    providers: {
+      deepseek: {
+        profileId: 'allocated-a-deepseek',
+        dailyLimit: '1',
+        monthlyLimit: '10',
+        models: {
+          'deepseek-v4-flash': {
+            revision: 'tariff-1',
+            sourceRef: 'fixture:synthetic-tariff',
+            validFrom: '2026-01-01T00:00:00Z',
+            validUntil: '2027-01-01T00:00:00Z',
+            inputPerMTok: '1',
+            outputPerMTok: '2',
+            inputTokenBound: 1024,
+            maxOutputTokens: 128,
+            maxPayloadBytes: 512,
+            boundAuthority: 'fixture-bounded-provider',
+          },
+        },
+      },
+    },
+  });
+  const budgetCall = () =>
+    app.inject({
+      method: 'POST',
+      url: '/connectors/deepseek/execute',
+      headers: { authorization: 'Bearer client-a', 'idempotency-key': 'slice-two-call' },
+      payload: {
+        ...payload('deepseek'),
+        extra: { max_tokens: 128 },
+        spendContext: { version: 'profile-spend/v1', runId: 'run-a', nodes: ['n1', 'n2'] },
+      },
+    });
+  it.each(['dailyLimit', 'monthlyLimit'] as const)(
+    'spend %s refuses at HTTP429 with zero physical upstream calls',
+    async (period) => {
+      const spend = spendPolicy();
+      spend.providers.deepseek[period] = '0';
+      rows['key-a'].policy = apiKeyPolicySchema.parse({ ...profile('a', 'deepseek'), spend });
+      const response = await budgetCall();
+      expect(response.statusCode).toBe(429);
+      expect(sent).toEqual([]);
+      expect(records).toEqual([]);
+    },
+  );
+  it('strict spend refuses an expired tariff before a physical upstream call', async () => {
+    const spend = spendPolicy();
+    spend.providers.deepseek.models['deepseek-v4-flash'].validUntil = '2026-02-01T00:00:00Z';
+    rows['key-a'].policy = apiKeyPolicySchema.parse({ ...profile('a', 'deepseek'), spend });
+    const response = await budgetCall();
+    expect(response.statusCode).toBe(503);
+    expect(sent).toEqual([]);
+    expect(records).toEqual([]);
+  });
+  it('strict spend refuses a missing named tariff rather than inventing zero cost', async () => {
+    const spend = spendPolicy();
+    const tariffs = spend.providers.deepseek.models as Record<
+      string,
+      (typeof spend.providers.deepseek.models)['deepseek-v4-flash']
+    >;
+    tariffs['another-model'] = tariffs['deepseek-v4-flash'];
+    delete tariffs['deepseek-v4-flash'];
+    rows['key-a'].policy = apiKeyPolicySchema.parse({ ...profile('a', 'deepseek'), spend });
+    const response = await budgetCall();
+    expect(response.statusCode).toBe(503);
+    expect(sent).toEqual([]);
+    expect(records).toEqual([]);
+  });
   it('dispatches a legacy client through the injected strict boundary', async () => {
     const response = await app.inject({
       method: 'POST',

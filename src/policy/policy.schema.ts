@@ -16,6 +16,7 @@
 //    policy is REJECTED instead (fail-closed).
 
 import { z } from 'zod';
+import { profileSpendPolicySchema } from '../billing/profile-spend/policy';
 
 /**
  * Connectors that support a per-request provider-key override via
@@ -73,6 +74,7 @@ export const apiKeyPolicySchema = z
     providers: z.array(z.string().min(1)).min(1).optional(),
     /** Model restriction. Absent = all models of the allowed providers. */
     models: modelPolicySchema.optional(),
+    spend: profileSpendPolicySchema.optional(),
     /**
      * Provider name to legacy environment name or registered reference list.
      * Version 2 pins the first reference; no automatic credential failover.
@@ -89,6 +91,28 @@ export const apiKeyPolicySchema = z
   })
   .strict()
   .superRefine((policy, ctx) => {
+    if (policy.spend) {
+      if (policy.policyVersion !== 2)
+        ctx.addIssue({ code: 'custom', message: 'Spend profiles require policy version 2' });
+      const providers = Object.keys(policy.spend.providers);
+      if (
+        providers.length !== policy.providers?.length ||
+        providers.some((p) => !policy.providers?.includes(p))
+      )
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Every dedicated provider requires a spend profile',
+        });
+      if (
+        new Set(Object.values(policy.spend.providers).map((p) => p.profileId)).size !==
+        providers.length
+      )
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Accounting profile identities must be distinct per provider',
+        });
+    }
+
     if (
       policy.policyVersion === 2 &&
       (!policy.profile || !policy.providers || !policy.providerKeys)

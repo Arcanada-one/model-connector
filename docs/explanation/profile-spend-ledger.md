@@ -1,7 +1,9 @@
 # Profile spend admission and accounting
 
-Status: slice-two design, before implementation. This extends the dedicated
-credential profile with explicit supplier exposure limits. It does not grant
+Status: draft slice-two implementation for independent review. The durable
+ledger, authenticated event readback and reference envelope have local controls;
+strict execute admission remains unwired and its four HTTP controls are RED.
+This extends the dedicated credential profile with explicit supplier exposure limits. It does not grant
 runtime authority, provide production tariff values, or enable a provider.
 
 ## Contract and boundaries
@@ -146,3 +148,62 @@ separate live evidence; the interim direct route remains available meanwhile.
 
 Evidence and test state belong to the existing work item and durable review
 bundle. This design is not a passing test, production acceptance or spend grant.
+
+## Prime parity gates (ROOT 2026-10-08 16:30 UTC)
+
+R1 and R2 remain contract gaps: the measured conservative MC exposure differs
+from Prime settled exposure and its UTC treatment of completed, unreconciled
+calls. No implicit reconciliation or exposure reduction is permitted. A reviewed
+shared representation must make headroom, threshold alerts and next-call decisions
+match while retaining unknown exposure exactly once.
+
+R3 uses a stable logical identity `(account, run, intent)`, independently of the
+client API-key identity. A rotated key replaying an existing logical intent must
+refuse without another reservation or dispatch; changed payload must conflict.
+The original key and upstream credential references remain attribution on the
+original physical attempt. Tests must use generous caps so a budget rejection
+cannot conceal a missing replay guard. Service and importer parity remain separate
+acceptance gates; store tests alone do not permit Prime cutover.
+
+The stable owner profile is bound to one durable accounting bucket. Rotating a
+client key cannot bind that same owner to a new bucket and erase exposure. A
+unique owner constraint serializes first binding even across competing buckets;
+a conflicting binding refuses before reservation or dispatch. A deliberate
+account migration would require its own reviewed transfer of retained exposure.
+
+## Consumer mapping clarification (PM05 ACK_CONCEPT_ONLY, 16:49 UTC)
+
+For MC-route calls, the proposed mirror keeps observed tariff metrics separate
+from authoritative MC held cap exposure. Two reservations of 100 with observed
+cost 10 each mean tariff metrics 20 and held exposure 200; both MC and its future
+Prime mirror refuse a further reservation of 100 under a 250 cap. This preserves
+the existing conservative MC rule. It does not reinterpret Prime direct history.
+
+The Prime-wide envelope must combine direct history and distinct MC physical
+attempts without counting mirror copies twice. A client cap is not automatically
+Prime's global cap. Export requires authenticated policy/scope/interval, original
+admission UTC, monotonic event/cursor identity, outbox provenance and an explicit
+registry of the budget authority. Existing internal prime_currency keys must not
+be exported as ambiguous global authority rows.
+
+Completed calls with reconciliation NOT_MEASURED retain held exposure across UTC
+periods exactly once, as do uncertain calls. Their observed usage remains on the
+original admission date. Missing invoices, balances, stale imports or missing
+receipts do not release exposure; rollback must preserve it. The common envelope
+API/schema, importer and integrated comparator remain open gates. Consumer ACK
+is conceptual only and grants no release, deployment, provider use or cutover.
+
+## Independent R1/R2 importer controls (2026-10-08)
+
+The candidate reference adapter requires an explicit route and call state for
+baseline holds. A settled direct call keeps its original UTC attribution even
+when supplier reconciliation is NOT_MEASURED; invoice uncertainty alone must
+not carry settled direct tariff cost into every later period. Uncertain direct
+holds and MC unreconciled reservations retain their conservative carry separately.
+Physical identity deduplication retains the stronger carry basis of both copies.
+
+Every imported attempt must hold at least its reservation and any reported
+observed cost on the first page as well as subsequent pages. Invalid receipts
+pause admission and retain all previously imported exposure. These controls do
+not establish tariff arithmetic, capability/bounds qualification or Prime's
+persisted importer; those common-interface acceptance gates remain open.
