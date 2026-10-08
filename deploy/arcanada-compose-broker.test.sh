@@ -504,6 +504,55 @@ git -C "$sync_dir" update-index --assume-unchanged alloy/config.alloy
 printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${sync_dir}/alloy/config.alloy"
 expect_refused_drift sync_refuses_assume_unchanged_hidden_edit
 
+# RED: a failed query is not a clean tree. A git shim fails ONE subcommand; the checkout is dirty, which the
+# failed query would otherwise hide. Nothing may move: no fetch, checkout, clean or env.
+shim_dir="${fixture_dir}/gitshim"
+mkdir -p "$shim_dir"
+cat >"${shim_dir}/git" <<SH
+#!/usr/bin/env bash
+# Fails the subcommand named in FAIL_GIT (optionally only when FAIL_GIT_ARG appears) with FAIL_GIT_RC.
+real='$(command -v git)'
+for a in "\$@"; do
+  if [ "\$a" = "\${FAIL_GIT:-}" ] && { [ -z "\${FAIL_GIT_ARG:-}" ] || [[ " \$* " == *" \${FAIL_GIT_ARG} "* ]]; }; then
+    echo "shim: injected failure for \$a" >&2
+    exit "\${FAIL_GIT_RC:-1}"
+  fi
+done
+exec "\$real" "\$@"
+SH
+chmod 0755 "${shim_dir}/git"
+shim_broker="${fixture_dir}/broker-shim-git"
+sed "s#^readonly GIT=.*#readonly GIT='${shim_dir}/git'#" "$broker" >"$shim_broker"
+chmod 0755 "$shim_broker"
+expect_refused_query() {
+  local name="$1" sub="$2" arg="$3" rc="$4"
+  sync_reset
+  printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${sync_dir}/alloy/config.alloy"
+  printf '%s\n' 'untracked custody' >"${sync_dir}/stray.txt"
+  if FAIL_GIT="$sub" FAIL_GIT_ARG="$arg" FAIL_GIT_RC="$rc" "$shim_broker" arcanada-assistant sync "$sync_c2" >"$sync_out" 2>&1; then
+    echo "FAIL: ${name}: a failed query was accepted" >&2; exit 1
+  fi
+  grep -Fq 'BROKER_SYNC_REFUSED_QUERY service=arcanada-assistant' "$sync_out" || {
+    echo "FAIL: ${name}: no BROKER_SYNC_REFUSED_QUERY line" >&2; sed -n '1,20p' "$sync_out" >&2; exit 1; }
+  if grep -Fq 'BROKER_SYNC_PASS' "$sync_out"; then echo "FAIL: ${name}: PASS printed" >&2; exit 1; fi
+  [ "$(git -C "$sync_dir" rev-parse HEAD)" = "$sync_c1" ] || { echo "FAIL: ${name}: HEAD moved" >&2; exit 1; }
+  [ "$(cat "${sync_dir}/alloy/config.alloy")" = 'LOCAL ROLLBACK EDIT' ] || { echo "FAIL: ${name}: bytes lost" >&2; exit 1; }
+  [ -f "${sync_dir}/stray.txt" ] || { echo "FAIL: ${name}: clean ran" >&2; exit 1; }
+  echo "PASS: ${name}"
+}
+expect_refused_query sync_refuses_when_status_query_fails status '' 1
+expect_refused_query sync_refuses_when_status_query_dies status '' 128
+expect_refused_query sync_refuses_when_ls_files_query_fails ls-files '' 1
+expect_refused_query sync_refuses_when_hidden_flag_ls_files_fails ls-files -v 1
+expect_refused_query sync_refuses_when_diff_cached_exits_128 diff --cached 128
+expect_refused_query sync_refuses_when_diff_cached_exits_2 diff --cached 2
+# The shim itself is transparent when nothing is injected: a clean tree still syncs through it.
+sync_reset
+if ! "$shim_broker" arcanada-assistant sync "$sync_c2" >"$sync_out" 2>&1; then
+  echo 'FAIL: the git shim is not transparent' >&2; sed -n '1,20p' "$sync_out" >&2; exit 1
+fi
+echo 'PASS: git_shim_is_transparent_and_clean_sync_passes'
+
 # The global force behaviour is gone.
 if grep -Eq 'checkout[^#]*--force|reset --hard' "$subject"; then
   echo 'FAIL: sync still force-discards tracked edits' >&2
