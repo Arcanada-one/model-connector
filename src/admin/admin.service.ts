@@ -12,7 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { getConfig } from '../config/env.schema';
 // CONN-1665 — per-key access policy (validated by the controller BEFORE it gets here).
 import { PolicyService } from '../policy/policy.service';
-import type { ApiKeyPolicy } from '../policy/policy.schema';
+import { apiKeyPolicySchema, type ApiKeyPolicy } from '../policy/policy.schema';
 // CONN-1668 — flush the verified-key cache on key create/revoke.
 import { AuthService } from '../auth/auth.service';
 // A2-319 — a changed limit must be in force on the next request, not after the 10s cache.
@@ -85,6 +85,38 @@ export class AdminService {
     const key = await this.prisma.apiKey.findUnique({ where: { id }, select: KEY_SUMMARY_SELECT });
     if (!key) throw new NotFoundException(`Key ${id} not found`);
     return key;
+  }
+
+  /** Secret-free metadata readback; never return the raw stored JSON on invalid policy. */
+  async getKeyPolicy(id: string): Promise<{ id: string; policy: ApiKeyPolicy | null }> {
+    const row = await this.prisma.apiKey.findUnique({
+      where: { id },
+      select: { id: true, policy: true },
+    });
+    if (!row) throw new NotFoundException('Key not found');
+    if (row.policy === null) return { id, policy: null };
+    const parsed = apiKeyPolicySchema.safeParse(row.policy);
+    if (!parsed.success) throw new BadRequestException('Stored policy is invalid');
+    return { id, policy: parsed.data };
+  }
+
+  /** Bounded key-scoped aggregates from the existing Request meter, without prompts/errors. */
+  async getKeyUsage(id: string) {
+    await this.getKey(id);
+    return this.prisma.request.groupBy({
+      by: [
+        'connector',
+        'model',
+        'upstreamCredentialRef',
+        'upstreamCredentialVersion',
+        'accountingBucket',
+      ],
+      where: { apiKeyId: id },
+      _count: { _all: true },
+      _sum: { inputTokens: true, outputTokens: true, totalTokens: true, costUsd: true },
+      orderBy: { connector: 'asc' },
+      take: 500,
+    });
   }
 
   /**

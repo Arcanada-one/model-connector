@@ -67,7 +67,12 @@ import {
   type PolicyServiceLike,
 } from '../policy/policy.service';
 import type { ApiKeyPolicy } from '../policy/policy.schema';
-import { providerKeyContext } from '../policy/provider-key.context';
+import {
+  providerKeyContext,
+  redactProviderSecrets,
+  type ProviderKeyOverride,
+} from '../policy/provider-key.context';
+import { resolveRegisteredCredential } from '../policy/credential-registry';
 import { promptCacheContext } from '../prompt-cache/prompt-cache.context';
 import {
   finalizeFirstDispatchObservationV0,
@@ -893,12 +898,23 @@ export class ConnectorsService {
     // NAME to a key VALUE. A missing/empty env var fails LOUD (config_error)
     // — never a silent fallback to the shared provider key. The env var NAME
     // is logged server-side only and never appears in the client message.
-    let providerKeyOverride: { provider: string; apiKey: string } | null = null;
-    if (policy) {
+    let providerKeyOverride: ProviderKeyOverride | null = null;
+    if (policy?.policyVersion === 2) {
+      try {
+        providerKeyOverride = resolveRegisteredCredential(policy, connectorName, apiKeyId);
+      } catch {
+        return this.policyErrorResponse(
+          connectorName,
+          request.model,
+          'config_error',
+          'Dedicated provider credential is unavailable or unauthorized.',
+        );
+      }
+    } else if (policy) {
       const envName = this.policyService.resolveProviderKeyEnv(policy, connectorName);
       if (envName) {
         const value = process.env[envName];
-        if (!value) {
+        if (!value?.trim()) {
           this.logger.error(
             `Provider key alias for '${connectorName}' (env var ${envName}) is not configured — denying request for key ${apiKeyId}`,
           );
@@ -1035,12 +1051,12 @@ export class ConnectorsService {
         let response: ConnectorResponse;
         if (guardActive) {
           const outcome = await this.outputGuardMiddleware.wrapExecute(connector, providerRequest);
-          response = outcome.response;
+          response = redactProviderSecrets(outcome.response);
           if (outcome.report) {
-            report = outcome.report;
+            report = redactProviderSecrets(outcome.report);
           }
         } else {
-          response = await connector.execute(providerRequest);
+          response = redactProviderSecrets(await connector.execute(providerRequest));
         }
 
         // JSON sanitization if responseFormat requested (legacy path).
@@ -1263,6 +1279,7 @@ export class ConnectorsService {
       intent,
       metered.source,
       !retryGranted,
+      providerKeyOverride,
     );
 
     return answered;
@@ -1535,6 +1552,7 @@ export class ConnectorsService {
     // whose envelope tells the caller to repeat it: the intent is released in
     // the same transaction instead of completed, so the repeat dispatches.
     replayable = true,
+    credential: ProviderKeyOverride | null = null,
   ): Promise<void> {
     const digest = BaseCliConnector.promptDigest(request.prompt);
     const reason = ConnectorsService.settleReason(costSource);
@@ -1579,6 +1597,15 @@ export class ConnectorsService {
             errorType: response.error?.type,
             errorMessage: response.error?.message?.slice(0, 500),
             apiKeyId,
+            ...(credential?.credentialRef
+              ? {
+                  upstreamCredentialRef: credential.credentialRef,
+                  upstreamCredentialVersion: credential.credentialVersion,
+                  providerProfileId: credential.profileId,
+                  providerProfileRevision: credential.profileRevision,
+                  accountingBucket: credential.accountingBucket,
+                }
+              : {}),
             // Written in the SAME transaction as `costUsd`, so the amount and
             // the provenance of the amount cannot disagree.
             costSource,
