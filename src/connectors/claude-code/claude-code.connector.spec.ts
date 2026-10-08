@@ -318,6 +318,24 @@ describe('ClaudeCodeConnector', () => {
       expect(parsed.errorMessage).toContain('[REDACTED]');
     });
 
+    it('preserves short env values and boolean diagnostics while redacting values of length eight', () => {
+      vi.stubEnv('FOO_TOKEN_ENABLED', 'true');
+      vi.stubEnv('FOO_SECRET_DISABLED', 'false');
+      vi.stubEnv('FOO_PASSWORD', '1234567');
+      vi.stubEnv('FOO_API_KEY', '12345678');
+      const parsed = connector.testParseOutput(
+        JSON.stringify({
+          is_error: true,
+          subtype: 'success',
+          result: 'enabled=true disabled=false code 1234567 credential 12345678',
+        }),
+        '',
+      );
+      expect(parsed.errorMessage).toBe(
+        '[subtype=success] enabled=true disabled=false code 1234567 credential [REDACTED]',
+      );
+    });
+
     it('should parse success fixture correctly', () => {
       const parsed = connector.testParseOutput(successFixture, '');
       expect(parsed.text).toBe('hello');

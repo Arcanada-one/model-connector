@@ -321,7 +321,11 @@ export class ClaudeCodeConnector extends BaseCliConnector {
     // cannot leave a usable prefix. Never copy the complete provider envelope.
     let safe = message;
     for (const [name, value] of Object.entries(process.env)) {
-      if (/(?:TOKEN|SECRET|PASSWORD|API_KEY|AUTHORIZATION)/i.test(name) && value) {
+      if (
+        /(?:TOKEN|SECRET|PASSWORD|API_KEY|AUTHORIZATION)/i.test(name) &&
+        value &&
+        value.length >= 8
+      ) {
         safe = safe.split(value).join('[REDACTED]');
       }
     }
