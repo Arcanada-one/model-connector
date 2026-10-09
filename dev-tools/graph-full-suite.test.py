@@ -326,7 +326,7 @@ class Controls(unittest.TestCase):
             # /usr/bin may hold a real docker; the control for a missing tool hides it by name.
             (bindir / 'docker').write_text('')
             (bindir / 'docker').unlink()
-        env = {'PATH': path, 'HOME': str(self.root)}
+        env = {'PATH': path, 'HOME': str(self.root), 'MC_COMPOSE_SYSTEM_PLUGIN_DIRS': str(self.root / 'no-system-plugins')}
         return subprocess.run(['bash', str(ROOT / 'deploy/compose-network.test.sh')], cwd=ROOT, env=env,
                               capture_output=True, text=True, timeout=60)
 

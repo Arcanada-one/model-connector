@@ -100,16 +100,40 @@ if code != 0:
         except Exception as error:
             print('variant %s: %s' % (label, type(error).__name__))
     print('cwd:', os.getcwd().replace(str(Path.home()), '<home>'), 'PATH entries:', len(base.get('PATH', '').split(':')))
+compose = [docker, 'compose']
 if code != 0 and re.search(r"(?i)unknown command|is not a docker command|unknown shorthand flag", text):
-    # The contract was never rendered: the toolchain, not the repository, is what is missing here.
-    refuse('compose_plugin_missing', sanitize(text, str(Path.home())), 127)
+    # `docker compose` does not resolve here (e.g. a private HOME hides the user-local plugin). The
+    # same real Compose binary installed system-wide can still be run directly, provided it is
+    # root-owned and not writable by anyone else. Never a stand-in: it is hashed and its version printed.
+    trusted = None
+    system_dirs = os.environ.get('MC_COMPOSE_SYSTEM_PLUGIN_DIRS',
+                                 '/usr/local/lib/docker/cli-plugins:/usr/lib/docker/cli-plugins:'
+                                 '/usr/libexec/docker/cli-plugins:/usr/local/libexec/docker/cli-plugins')
+    for base in (Path(d) for d in system_dirs.split(':') if d):
+        candidate = base / 'docker-compose'
+        try:
+            info = candidate.stat()
+        except OSError:
+            continue
+        if info.st_uid == 0 and not info.st_mode & 0o022 and os.access(candidate, os.X_OK):
+            trusted = candidate
+            break
+    if trusted is None:
+        refuse('compose_plugin_missing', sanitize(text, str(Path.home())), 127)
+    standalone = run([str(trusted), 'version'])
+    print('FALLBACK: `docker compose` unresolved; running the system Compose directly:', trusted,
+          'sha256', sha256(trusted), '->', sanitize(standalone.stdout or standalone.stderr, str(Path.home())))
+    if standalone.returncode != 0:
+        refuse('compose_plugin_missing', 'system Compose is not runnable: ' + sanitize(standalone.stderr, str(Path.home())), 127)
+    compose = [str(trusted)]
+
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
     (root / 'docker-compose.yml').write_bytes(Path('docker-compose.yml').read_bytes())
     # Render only a disposable empty environment; never read production credentials.
     (root / '.env').write_text('')
     try:
-        result = run([docker, 'compose', '--project-directory', str(root),
+        result = run([*compose, '--project-directory', str(root),
                       '-f', str(root / 'docker-compose.yml'), 'config', '--format', 'json'])
     except subprocess.TimeoutExpired:
         refuse('compose_timeout', 'docker compose config exceeded 30 s')
