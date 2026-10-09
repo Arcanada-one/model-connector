@@ -84,6 +84,22 @@ docker = tool_record()
 if not docker:
     refuse('tool_missing', 'docker is not on PATH', 127)
 code, text = PROBE.get('compose version', (0, ''))
+if code != 0:
+    # Bisect which part of the environment hides the plugin; each variant changes exactly one thing.
+    base = dict(os.environ)
+    variants = {
+        'PATH=/usr/bin:/bin': dict(base, PATH='/usr/bin:/bin'),
+        'HOME unset': {k: v for k, v in base.items() if k != 'HOME'},
+        'HOME=/nonexistent': dict(base, HOME='/nonexistent'),
+        'empty environment except PATH': {'PATH': base.get('PATH', '/usr/bin:/bin')},
+    }
+    for label, variant_env in variants.items():
+        try:
+            done = run([docker, 'compose', 'version'], env=variant_env)
+            print('variant %-32s exit %d: %s' % (label, done.returncode, sanitize(done.stdout or done.stderr, str(Path.home()))[:120]))
+        except Exception as error:
+            print('variant %s: %s' % (label, type(error).__name__))
+    print('cwd:', os.getcwd().replace(str(Path.home()), '<home>'), 'PATH entries:', len(base.get('PATH', '').split(':')))
 if code != 0 and re.search(r"(?i)unknown command|is not a docker command|unknown shorthand flag", text):
     # The contract was never rendered: the toolchain, not the repository, is what is missing here.
     refuse('compose_plugin_missing', sanitize(text, str(Path.home())), 127)
