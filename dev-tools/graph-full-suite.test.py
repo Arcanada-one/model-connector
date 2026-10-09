@@ -352,39 +352,6 @@ class Controls(unittest.TestCase):
         self.assertIn('docker binary:', render.stdout)  # tool record is printed
         self.assertIn('sha256', render.stdout)
 
-    def pinned_source_fixture(self):
-        names = [subject.PINNED_BILLING_SOURCE, subject.BILLING_MODULE_PINS,
-                 'test/fixtures/billing-3a-source.tar.gz']
-        for name in names:
-            (self.root / name).parent.mkdir(parents=True, exist_ok=True)
-            (self.root / name).write_bytes((ROOT / name).read_bytes())
-        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
-        subprocess.run(['git', '-C', str(self.root), 'add', *names], check=True)
-        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture',
-                        '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture'], check=True)
-        scratch = self.root / 'private'
-        scratch.mkdir(mode=0o700)
-        return scratch
-
-    def test_pinned_billing_source_unpacks_only_after_every_byte_matches_its_pin(self):
-        scratch = self.pinned_source_fixture()
-        directory = Path(subject.unpack_pinned_billing_source(self.root, scratch))
-        pins = json.loads((self.root / subject.BILLING_MODULE_PINS).read_text())
-        self.assertEqual(sorted(p.name for p in directory.iterdir()), sorted(pins))
-
-    def test_pinned_billing_source_tamper_refuses_and_absence_is_not_a_pass(self):
-        scratch = self.pinned_source_fixture()
-        pins = self.root / subject.BILLING_MODULE_PINS
-        document = json.loads(pins.read_text())
-        document['journal.py'] = '0' * 64
-        pins.write_text(json.dumps(document))
-        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=F', '-c', 'user.email=f@example.invalid',
-                        'commit', '-qam', 'tamper'], check=True)
-        with self.assertRaises(subject.Refusal):
-            subject.unpack_pinned_billing_source(self.root, scratch)
-        (self.root / subject.PINNED_BILLING_SOURCE).unlink()
-        self.assertIsNone(subject.unpack_pinned_billing_source(self.root, self.root / 'private2'))
-
     @staticmethod
     def no_stores(home, path):
         raise subject.StoreUnavailable('fixture: no store on this runner')

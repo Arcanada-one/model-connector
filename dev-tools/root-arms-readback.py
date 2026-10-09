@@ -67,16 +67,9 @@ def main():
             import shutil
             shutil.copytree(Path(found[1]).parent, keep, dirs_exist_ok=True)
         problems = []
-        for name in ('maintained-app-e2e', 'maintained-integration', 'maintained-vitest'):
+        for name in ('maintained-app-e2e', 'maintained-integration'):
             if rows.get(name, {}).get('verdict') != 'verified':
                 problems.append(name + ' is not verified')
-        # The Billing3a-dependent tests must now execute from the pinned snapshot (no skips).
-        bridge = [t for t in json.loads((Path(found[1]).parent / 'maintained-vitest.json').read_text())['testResults']
-                  if t['name'].endswith('src/bench-reservation/journal-bridge.spec.ts')]
-        states = [a['status'] for t in bridge for a in t['assertionResults']]
-        print('  journal-bridge.spec.ts assertions:', {s: states.count(s) for s in set(states)})
-        if not states or set(states) != {'passed'}:
-            problems.append('journal-bridge.spec.ts did not fully pass from the pinned Billing3a snapshot')
         live = rows.get('maintained-external-live', {})
         if live.get('verdict') != 'not_measured' or sorted(live.get('classification', {})) != sorted(suite.EXTERNAL_ARMS):
             problems.append('external arms are not held and classified exactly')

@@ -17,7 +17,6 @@ import shutil
 import stat
 import subprocess
 import sys
-import tarfile
 import tempfile
 import time
 import uuid
@@ -75,15 +74,13 @@ EXTERNAL_ARMS = {
         ('native_binary', ['BENCH_OWNED_NATIVE_TEST_BINARY', 'BENCH_OWNED_TEST_SOCKET_ROOT']),
 }
 # Tests inside an executed file that skip by design when an external source is absent.
-# The snapshot is committed as a sha256-pinned archive (see PINNED_BILLING_SOURCE), so the skip
-# only survives when that archive is missing from the tree being measured.
+# The Billing3a module lives in a private repository that this public repository (and its CI)
+# cannot read, and it must not be copied here: these tests stay skipped, so the row stays not_measured.
 EXTERNAL_SKIPS = {
     'src/bench-reservation/journal-bridge.spec.ts':
         ('external_source_snapshot', ['BILLING_CUSTODIAN_SOURCE'],
-         '4 tests need the reviewed Billing3a source snapshot from another repository'),
+         '4 tests need the reviewed Billing3a module, which lives in a private repository the public CI cannot read'),
 }
-PINNED_BILLING_SOURCE = 'test/fixtures/billing-3a-source.lineage.json'
-BILLING_MODULE_PINS = 'test/fixtures/billing-3a-module-pins.json'
 # Held files that still carry measurable tests: name filter that leaves out only the native-binary tests.
 BENCH_PARTIAL = {'src/bench-reservation/postgres.integration.spec.ts': '^(?!.*native)'}
 # The one arm that a local S3-compatible stub measures at the contract level.
@@ -471,37 +468,6 @@ def render_authored_template(root, scratch, members, env=None):
             'target': target, 'config': config}
 
 
-def unpack_pinned_billing_source(root, scratch):
-    """Unpack the committed Billing3a snapshot after proving every byte against its pins.
-
-    → the directory to hand the spec as BILLING_CUSTODIAN_SOURCE, or None when the lineage
-    record is absent (the dependent tests then stay skipped, i.e. not_measured). A record that
-    is present but does not match is a tampered input and refuses the run.
-    """
-    if not (root / PINNED_BILLING_SOURCE).is_file():
-        return None
-    lineage = json.loads(checked_file(root, PINNED_BILLING_SOURCE).read_text())
-    pins = json.loads(checked_file(root, BILLING_MODULE_PINS).read_text())
-    archive = checked_file(root, lineage['archive']['path'])
-    data = archive.read_bytes()
-    native = subprocess.run(['git', '-C', str(root), 'show', 'HEAD:' + lineage['archive']['path']],
-                            capture_output=True, check=True).stdout
-    if hashlib.sha256(data).hexdigest() != lineage['archive']['sha256'] or native != data:
-        raise Refusal('pinned source archive differs from its lineage or committed revision')
-    target = scratch / 'billing-3a-source'
-    target.mkdir(mode=0o700)
-    with tarfile.open(fileobj=__import__('io').BytesIO(data), mode='r:gz') as bundle:
-        members = bundle.getmembers()
-        if sorted(m.name for m in members) != sorted(pins) or any(not m.isreg() for m in members):
-            raise Refusal('pinned source archive membership differs from the module pins')
-        for member in members:
-            body = bundle.extractfile(member).read()
-            if hashlib.sha256(body).hexdigest() != pins[member.name]:
-                raise Refusal('pinned source file differs from its pin')
-            (target / member.name).write_bytes(body)
-    return str(target)
-
-
 class _Owned:
     def __init__(self, pg, redis, extras=()):
         self.pg, self.redis, self.extras = pg, redis, list(extras)
@@ -755,27 +721,23 @@ def run_root_suites(root, suites, scratch, executor=execute, stores=None):
         elif name == 'maintained-vitest':
             report = scratch / (name + '.json')
             argv = ['pnpm', 'exec', 'vitest', 'run', '--reporter=json', '--outputFile=' + str(report), *members]
-            source = unpack_pinned_billing_source(root, scratch)
             # Some unit specs boot the real AppModule, whose BullMQ/ioredis clients dial the default
             # Redis address. Give them an owned Redis so the result does not depend on whatever
             # happens to listen on 6379 of the measuring host.
             result = with_stores('vitest-redis', members, lambda owned_env: run(
                 argv, members, 'root-' + str(index),
                 lambda raw: vitest_counts(json.loads(report.read_text()), members, root), env=owned_env),
-                {'BILLING_CUSTODIAN_SOURCE': source} if source else None,
+                None,
                 only=('REDIS_HOST', 'REDIS_PORT', 'REDIS_PREFIX'))
             if result.get('reason', '').startswith('owned disposable store unavailable'):
                 # Fall back to the ambient default, and say so: this result then depends on the host.
                 result = run(argv, members, 'root-' + str(index),
                              lambda raw: vitest_counts(json.loads(report.read_text()), members, root),
-                             env={**env, 'BILLING_CUSTODIAN_SOURCE': source} if source else env)
+                             env=env)
                 result['owned_redis'] = False
             else:
                 result['owned_redis'] = True
             row['executions'].append(result)
-            result['pinned_billing_source'] = (
-                {'lineage': PINNED_BILLING_SOURCE, 'verified_files': len(json.loads(
-                    (root / BILLING_MODULE_PINS).read_text()))} if source else None)
             row['verdict'] = row['executions'][0]['verdict']
             if row['verdict'] != 'verified':
                 row['external_skips'] = {n: {'class': c, 'requires': r, 'note': t}
