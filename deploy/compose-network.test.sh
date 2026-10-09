@@ -65,6 +65,11 @@ def tool_record():
                 print('  plugin metadata (exit %d):' % meta.returncode, sanitize(meta.stdout or meta.stderr, str(Path.home()))[:300])
             except Exception as error:
                 print('  plugin metadata: not runnable (%s)' % type(error).__name__)
+    try:  # the CLI's own account of the plugins it found and why it rejected any (client side only)
+        info = run([docker, 'info', '--format', '{{json .ClientInfo.Plugins}}'])
+        print('docker client plugins (exit %d):' % info.returncode, sanitize(info.stdout or info.stderr, str(Path.home()))[:1500])
+    except Exception as error:
+        print('docker client plugins: unavailable (%s)' % type(error).__name__)
     print('environment: HOME set=%s DOCKER_CONFIG set=%s DOCKER_HOST set=%s'
           % (bool(os.environ.get('HOME')), bool(os.environ.get('DOCKER_CONFIG')), bool(os.environ.get('DOCKER_HOST'))))
     return docker
