@@ -42,7 +42,9 @@ def main():
                 print('      %-12s exit=%s counts=%s %s' % (execution.get('verdict'), execution.get('exit_code'),
                                                            execution.get('counts'), execution.get('reason', '')))
                 if execution.get('verdict') == 'failed' and execution.get('raw_log'):
+                    print('      members:', execution.get('members'))
                     print('      --- raw log tail ---')
+                    print(Path(execution['raw_log']).read_text(errors='replace')[-1500:])
                     scratch = Path(execution['raw_log']).parent
                     for report_path in sorted(scratch.glob('*.json')):
                         if report_path.name == 'execution.json':
