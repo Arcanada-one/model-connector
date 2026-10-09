@@ -17,6 +17,7 @@ import shutil
 import stat
 import subprocess
 import sys
+import tarfile
 import tempfile
 import time
 import uuid
@@ -74,11 +75,17 @@ EXTERNAL_ARMS = {
         ('native_binary', ['BENCH_OWNED_NATIVE_TEST_BINARY', 'BENCH_OWNED_TEST_SOCKET_ROOT']),
 }
 # Tests inside an executed file that skip by design when an external source is absent.
+# The snapshot is committed as a sha256-pinned archive (see PINNED_BILLING_SOURCE), so the skip
+# only survives when that archive is missing from the tree being measured.
 EXTERNAL_SKIPS = {
     'src/bench-reservation/journal-bridge.spec.ts':
         ('external_source_snapshot', ['BILLING_CUSTODIAN_SOURCE'],
          '4 tests need the reviewed Billing3a source snapshot from another repository'),
 }
+PINNED_BILLING_SOURCE = 'test/fixtures/billing-3a-source.lineage.json'
+BILLING_MODULE_PINS = 'test/fixtures/billing-3a-module-pins.json'
+# Held files that still carry measurable tests: name filter that leaves out only the native-binary tests.
+BENCH_PARTIAL = {'src/bench-reservation/postgres.integration.spec.ts': '^(?!.*native)'}
 # The one arm that a local S3-compatible stub measures at the contract level.
 STUB_STORAGE_INTEGRATION = frozenset({'src/connectors/image-generation/storage/r2.service.integration.spec.ts'})
 
@@ -464,6 +471,37 @@ def render_authored_template(root, scratch, members, env=None):
             'target': target, 'config': config}
 
 
+def unpack_pinned_billing_source(root, scratch):
+    """Unpack the committed Billing3a snapshot after proving every byte against its pins.
+
+    → the directory to hand the spec as BILLING_CUSTODIAN_SOURCE, or None when the lineage
+    record is absent (the dependent tests then stay skipped, i.e. not_measured). A record that
+    is present but does not match is a tampered input and refuses the run.
+    """
+    if not (root / PINNED_BILLING_SOURCE).is_file():
+        return None
+    lineage = json.loads(checked_file(root, PINNED_BILLING_SOURCE).read_text())
+    pins = json.loads(checked_file(root, BILLING_MODULE_PINS).read_text())
+    archive = checked_file(root, lineage['archive']['path'])
+    data = archive.read_bytes()
+    native = subprocess.run(['git', '-C', str(root), 'show', 'HEAD:' + lineage['archive']['path']],
+                            capture_output=True, check=True).stdout
+    if hashlib.sha256(data).hexdigest() != lineage['archive']['sha256'] or native != data:
+        raise Refusal('pinned source archive differs from its lineage or committed revision')
+    target = scratch / 'billing-3a-source'
+    target.mkdir(mode=0o700)
+    with tarfile.open(fileobj=__import__('io').BytesIO(data), mode='r:gz') as bundle:
+        members = bundle.getmembers()
+        if sorted(m.name for m in members) != sorted(pins) or any(not m.isreg() for m in members):
+            raise Refusal('pinned source archive membership differs from the module pins')
+        for member in members:
+            body = bundle.extractfile(member).read()
+            if hashlib.sha256(body).hexdigest() != pins[member.name]:
+                raise Refusal('pinned source file differs from its pin')
+            (target / member.name).write_bytes(body)
+    return str(target)
+
+
 class _Owned:
     def __init__(self, pg, redis, extras=()):
         self.pg, self.redis, self.extras = pg, redis, list(extras)
@@ -580,7 +618,7 @@ def run_root_suites(root, suites, scratch, executor=execute, stores=None):
                     result['verdict'] = 'failed' if counts['failed'] else 'not_measured'
         return result
 
-    def with_stores(label, members, build, extra_env=None, prepare=()):
+    def with_stores(label, members, build, extra_env=None, prepare=(), only=None, provision=None):
         """Run one execution against stores this process owns; always tear them down."""
         missing = [tool for tool in ('pnpm', 'node') if not shutil.which(tool, path=env['PATH'])]
         if not (root / 'node_modules/.bin/vitest').is_file():
@@ -596,7 +634,10 @@ def run_root_suites(root, suites, scratch, executor=execute, stores=None):
             return {'members': members, 'verdict': 'not_measured', 'exit_code': 127,
                     'reason': 'owned disposable store unavailable: ' + str(error)}
         try:
-            owned_env = {**env, **owned.environment(), **(extra_env or {})}
+            provided = owned.environment()
+            if only:  # hand the child just these names, nothing else the stores define
+                provided = {k: v for k, v in provided.items() if k in only}
+            owned_env = {**env, **provided, **(extra_env or {}), **(provision(owned, home) if provision else {})}
             for step, argv in enumerate(prepare):
                 done = executor(argv, root, owned_env, deadline, scratch, label + '-prepare-' + str(step))
                 done.pop('output')
@@ -625,6 +666,34 @@ def run_root_suites(root, suites, scratch, executor=execute, stores=None):
         return with_stores(label, members, lambda owned_env: run(
             argv, members, label, lambda raw: vitest_counts(json.loads(report.read_text()), members, root),
             env=owned_env), extra, prepare)
+
+    def owned_bench_partial(member):
+        label, report = 'bench-owned-postgres-partial', scratch / 'bench-owned-postgres-partial.json'
+
+        def provision(owned, home):
+            if not getattr(owned.pg, 'socket_dir', None):
+                raise StoreUnavailable('the bench spec needs a local Unix-socket PostgreSQL')
+            owned.pg.provision_bench_fixture()
+            # The spec binds Unix sockets here, so the directory must be short (~107-byte limit).
+            base = next((c for c in (os.environ.get('XDG_RUNTIME_DIR'), '/dev/shm', str(home))
+                         if c and os.path.isdir(c) and os.access(c, os.W_OK) and len(c) <= 40), None)
+            if base is None:
+                raise StoreUnavailable('no private directory short enough for the spec sockets')
+            sockets = Path(tempfile.mkdtemp(prefix='s', dir=base))
+            owned.pg.closers.append(lambda: shutil.rmtree(sockets, ignore_errors=True))
+            return {'BENCH_OWNED_TEST_PG_SOCKET': owned.pg.socket_dir, 'BENCH_OWNED_TEST_SOCKET_ROOT': str(sockets)}
+
+        argv = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.integration.config.ts', '--no-file-parallelism',
+                '--reporter=json', '--outputFile=' + str(report), '-t', BENCH_PARTIAL[member], member]
+        try:
+            result = with_stores(label, [member], lambda owned_env: run(
+                argv, [member], label, lambda raw: vitest_counts(json.loads(report.read_text()), [member], root),
+                env=owned_env), None,
+                [['pnpm', 'exec', 'prisma', 'generate']], ('DATABASE_URL', 'NODE_ENV'), provision)
+        except StoreUnavailable as error:
+            return {'members': [member], 'verdict': 'not_measured', 'exit_code': 127, 'reason': str(error)}
+        result['partial'] = 'tests needing BENCH_OWNED_NATIVE_TEST_BINARY are filtered out and count as skipped'
+        return result
 
     def stub_vitest(label, members):
         report = scratch / (label + '.json')
@@ -661,6 +730,11 @@ def run_root_suites(root, suites, scratch, executor=execute, stores=None):
                        reason='each member needs a live external service or an externally built native binary',
                        classification={m: {'class': EXTERNAL_ARMS[m][0], 'requires': EXTERNAL_ARMS[m][1]}
                                        for m in members})
+            for bench in [m for m in members if m in BENCH_PARTIAL]:
+                # Measure what IS measurable in a held file: everything except the tests that need the
+                # externally built native binary. Those are filtered out, so they count as skipped and
+                # the file can never verify without the binary.
+                row['executions'].append(owned_bench_partial(bench))
         elif name == 'maintained-authored-template':
             rendered = render_authored_template(root, scratch, members, env)
             target, config = rendered.pop('target'), rendered.pop('config')
@@ -681,8 +755,27 @@ def run_root_suites(root, suites, scratch, executor=execute, stores=None):
         elif name == 'maintained-vitest':
             report = scratch / (name + '.json')
             argv = ['pnpm', 'exec', 'vitest', 'run', '--reporter=json', '--outputFile=' + str(report), *members]
-            row['executions'].append(run(argv, members, 'root-' + str(index),
-                lambda raw: vitest_counts(json.loads(report.read_text()), members, root)))
+            source = unpack_pinned_billing_source(root, scratch)
+            # Some unit specs boot the real AppModule, whose BullMQ/ioredis clients dial the default
+            # Redis address. Give them an owned Redis so the result does not depend on whatever
+            # happens to listen on 6379 of the measuring host.
+            result = with_stores('vitest-redis', members, lambda owned_env: run(
+                argv, members, 'root-' + str(index),
+                lambda raw: vitest_counts(json.loads(report.read_text()), members, root), env=owned_env),
+                {'BILLING_CUSTODIAN_SOURCE': source} if source else None,
+                only=('REDIS_HOST', 'REDIS_PORT', 'REDIS_PREFIX'))
+            if result.get('reason', '').startswith('owned disposable store unavailable'):
+                # Fall back to the ambient default, and say so: this result then depends on the host.
+                result = run(argv, members, 'root-' + str(index),
+                             lambda raw: vitest_counts(json.loads(report.read_text()), members, root),
+                             env={**env, 'BILLING_CUSTODIAN_SOURCE': source} if source else env)
+                result['owned_redis'] = False
+            else:
+                result['owned_redis'] = True
+            row['executions'].append(result)
+            result['pinned_billing_source'] = (
+                {'lineage': PINNED_BILLING_SOURCE, 'verified_files': len(json.loads(
+                    (root / BILLING_MODULE_PINS).read_text()))} if source else None)
             row['verdict'] = row['executions'][0]['verdict']
             if row['verdict'] != 'verified':
                 row['external_skips'] = {n: {'class': c, 'requires': r, 'note': t}

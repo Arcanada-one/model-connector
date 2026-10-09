@@ -27,6 +27,11 @@ class Controls(unittest.TestCase):
         home = patch.dict(os.environ, {'HOME': str(self.root)})
         home.start()
         self.addCleanup(home.stop)
+        # No test may start a real store by accident; store-using tests pass `stores=` explicitly.
+        unavailable = patch.object(subject, 'open_owned_stores',
+                                   side_effect=subject.StoreUnavailable('fixture: no store'))
+        unavailable.start()
+        self.addCleanup(unavailable.stop)
         for unit in subject.UNITS[1:]:
             (self.root / unit).mkdir(parents=True)
 
@@ -345,6 +350,39 @@ class Controls(unittest.TestCase):
         self.assertIn('docker binary:', render.stdout)  # tool record is printed
         self.assertIn('sha256', render.stdout)
 
+    def pinned_source_fixture(self):
+        names = [subject.PINNED_BILLING_SOURCE, subject.BILLING_MODULE_PINS,
+                 'test/fixtures/billing-3a-source.tar.gz']
+        for name in names:
+            (self.root / name).parent.mkdir(parents=True, exist_ok=True)
+            (self.root / name).write_bytes((ROOT / name).read_bytes())
+        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+        subprocess.run(['git', '-C', str(self.root), 'add', *names], check=True)
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture',
+                        '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture'], check=True)
+        scratch = self.root / 'private'
+        scratch.mkdir(mode=0o700)
+        return scratch
+
+    def test_pinned_billing_source_unpacks_only_after_every_byte_matches_its_pin(self):
+        scratch = self.pinned_source_fixture()
+        directory = Path(subject.unpack_pinned_billing_source(self.root, scratch))
+        pins = json.loads((self.root / subject.BILLING_MODULE_PINS).read_text())
+        self.assertEqual(sorted(p.name for p in directory.iterdir()), sorted(pins))
+
+    def test_pinned_billing_source_tamper_refuses_and_absence_is_not_a_pass(self):
+        scratch = self.pinned_source_fixture()
+        pins = self.root / subject.BILLING_MODULE_PINS
+        document = json.loads(pins.read_text())
+        document['journal.py'] = '0' * 64
+        pins.write_text(json.dumps(document))
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=F', '-c', 'user.email=f@example.invalid',
+                        'commit', '-qam', 'tamper'], check=True)
+        with self.assertRaises(subject.Refusal):
+            subject.unpack_pinned_billing_source(self.root, scratch)
+        (self.root / subject.PINNED_BILLING_SOURCE).unlink()
+        self.assertIsNone(subject.unpack_pinned_billing_source(self.root, self.root / 'private2'))
+
     @staticmethod
     def no_stores(home, path):
         raise subject.StoreUnavailable('fixture: no store on this runner')
@@ -574,10 +612,43 @@ class Controls(unittest.TestCase):
         suites = self.root_dispatch_fixture(sorted(subject.EXTERNAL_ARMS))
         result = subject.run_root_suites(self.root, suites, self.root,
                                          lambda *a: self.fail('an external arm spawned a child'),
-                                         stores=lambda *a: self.fail('an external arm opened a store'))
+                                         stores=self.no_stores)
         self.assertEqual(result[0]['verdict'], 'not_measured')
         self.assertEqual(sorted(result[0]['classification']), sorted(subject.EXTERNAL_ARMS))
         self.assertEqual(subject.execution_code(result), 127)
+
+    def test_held_bench_file_measures_only_what_needs_no_native_binary(self):
+        bench = 'src/bench-reservation/postgres.integration.spec.ts'
+        suites = self.root_dispatch_fixture([bench])
+        provisioned = []
+
+        class Pg:
+            socket_dir = '/fixture/mc-owned-postgres/socket'
+            closers = []
+            url = 'postgresql://dev@localhost/x?host=/fixture'
+
+            def provision_bench_fixture(self):
+                provisioned.append(True)
+
+        class Owned(self.FakeOwned):
+            pg = Pg()
+            closed = 0
+        calls = []
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
+            result = subject.run_root_suites(self.root, suites, self.root, self.owned_executor(calls),
+                                             stores=lambda home, path: Owned())
+        row = result[0]
+        self.assertEqual(row['verdict'], 'not_measured')  # the file as a whole is never verified
+        self.assertEqual(row['held_members'], [bench])
+        vitest = [(a, e) for a, e in calls if a[2:4] == ['vitest', 'run']][0]
+        self.assertIn('-t', vitest[0])
+        self.assertEqual(vitest[0][vitest[0].index('-t') + 1], subject.BENCH_PARTIAL[bench])
+        self.assertTrue(vitest[1]['BENCH_OWNED_TEST_PG_SOCKET'].endswith('/mc-owned-postgres/socket'))
+        self.assertNotIn('BENCH_OWNED_NATIVE_TEST_BINARY', vitest[1])
+        self.assertEqual(provisioned, [True])
+        self.assertEqual(Owned.closed, 1)
+        for closer in Owned.pg.closers:  # the fake store stands in for OwnedPostgres.close()
+            closer()
 
     def test_unclassified_integration_spec_is_held_not_run(self):
         suites = self.root_dispatch_fixture(['src/new/thing.integration.spec.ts'])

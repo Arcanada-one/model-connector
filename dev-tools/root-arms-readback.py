@@ -42,9 +42,12 @@ def main():
                 print('      %-12s exit=%s counts=%s %s' % (execution.get('verdict'), execution.get('exit_code'),
                                                            execution.get('counts'), execution.get('reason', '')))
                 if execution.get('verdict') == 'failed' and execution.get('raw_log'):
-                    print('      members:', execution.get('members'))
+                    log = Path(execution['raw_log']).read_text(errors='replace')
                     print('      --- raw log tail ---')
-                    print(Path(execution['raw_log']).read_text(errors='replace')[-1500:])
+                    print(log[-1500:])
+                    for number, line in enumerate(log.splitlines()):
+                        if re.search(r'Unhandled|Vitest caught|ERR_|exited with|SIGKILL|timed out', line):
+                            print('      LOG[%d] %s' % (number, line[:300]))
                     scratch = Path(execution['raw_log']).parent
                     for report_path in sorted(scratch.glob('*.json')):
                         if report_path.name == 'execution.json':
@@ -54,12 +57,23 @@ def main():
                                 if case.get('status') == 'failed':
                                     print('      FAILED', file['name'], '::', case.get('title'))
                                     print('        ', (case.get('failureMessages') or [''])[0][:700])
-                            if file.get('status') == 'failed' and not file.get('assertionResults'):
+                            if file.get('status') == 'failed' and (file.get('message') or not file.get('assertionResults')):
                                 print('      FILE FAILED', file['name'], file.get('message', '')[:700])
+        keep = os.environ.get('RB_KEEP_DIR')
+        if keep:  # diagnostics only: keep the private raw files of this run
+            import shutil
+            shutil.copytree(Path(found[1]).parent, keep, dirs_exist_ok=True)
         problems = []
-        for name in ('maintained-app-e2e', 'maintained-integration'):
+        for name in ('maintained-app-e2e', 'maintained-integration', 'maintained-vitest'):
             if rows.get(name, {}).get('verdict') != 'verified':
                 problems.append(name + ' is not verified')
+        # The Billing3a-dependent tests must now execute from the pinned snapshot (no skips).
+        bridge = [t for t in json.loads((Path(found[1]).parent / 'maintained-vitest.json').read_text())['testResults']
+                  if t['name'].endswith('src/bench-reservation/journal-bridge.spec.ts')]
+        states = [a['status'] for t in bridge for a in t['assertionResults']]
+        print('  journal-bridge.spec.ts assertions:', {s: states.count(s) for s in set(states)})
+        if not states or set(states) != {'passed'}:
+            problems.append('journal-bridge.spec.ts did not fully pass from the pinned Billing3a snapshot')
         live = rows.get('maintained-external-live', {})
         if live.get('verdict') != 'not_measured' or sorted(live.get('classification', {})) != sorted(suite.EXTERNAL_ARMS):
             problems.append('external arms are not held and classified exactly')
