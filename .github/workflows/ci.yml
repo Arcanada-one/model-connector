@@ -110,6 +110,37 @@ jobs:
           node --test dev-tools/rate-limit-ci-report.test.mjs
           PYTHONDONTWRITEBYTECODE=1 python3 dev-tools/rate-limit-ci-workflow.test.py
 
+  # Root complete-fallback rows made executable. The graph gate's
+  # complete-fallback suite used to hard-code AppE2E and the DB/Redis arms as not_measured.
+  # They now run against stores the suite starts itself (kernel-chosen endpoints, private
+  # data directory, torn down in `finally`): never a shared service, never a fixed port.
+  # Arms that need a live external service stay not_measured, classified in EXTERNAL_ARMS.
+  root-arms:
+    runs-on: [self-hosted, Linux, ci-general]
+    needs: lint-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v6
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Disposable stores start, answer and leave nothing
+        run: MC_REQUIRE_STORES=1 PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/owned-stores-smoke.py
+
+      - name: AppE2E red controls (a broken app must turn the arm red)
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/app-e2e-red-control.py
+
+      - name: Root rows read back (AppE2E and integration verified, external arms held and classified)
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/root-arms-readback.py
+
   docker-e2e:
     runs-on: [self-hosted, Linux, ci-general]
     needs: lint-and-test

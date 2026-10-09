@@ -1,8 +1,11 @@
 """Maintain complete source membership and honest per-suite results, without grants.
 
-Root's real external arms, disposable-store authority and skipped app E2E remain
-unmeasured. No environment flag changes that disposition. The other declarations
-exercise their complete existing offline/owned-loopback contracts, not production.
+Root's database, Redis and app E2E arms run against stores this process creates
+itself (scripts/owned_stores.py: private data directory, kernel-chosen endpoints,
+torn down in ``finally``), never a shared or production store. Arms that need a live
+external service stay not_measured and are listed with a precise class in
+``EXTERNAL_ARMS``; no environment flag changes that disposition. The other
+declarations exercise their complete existing offline/owned-loopback contracts.
 """
 from pathlib import Path
 import hashlib
@@ -16,7 +19,11 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 import xml.etree.ElementTree as ET
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from owned_stores import OwnedPostgres, OwnedRedis, StoreUnavailable  # noqa: E402
 
 AUTHORED_TEMPLATE = 'templates/api-connector-scaffold/{{name}}.connector.spec.ts'
 
@@ -29,6 +36,51 @@ OFFLINE_INTEGRATION = frozenset({
     'src/openai-compat/openai-compat.failover.integration.spec.ts',
     'src/speech/stt/stt-pilot.integration.spec.ts',
 })
+# Offline, in-process: needs only the spec's own RUN_INTEGRATION=1 switch; no network and no
+# credential is read. Its single credential-conditional test returns early without one, so
+# the row carries that fact in `credential_conditional_tests` instead of hiding it.
+OFFLINE_RUN_FLAG = {
+    'src/connectors/image-generation/image-router.fallback.integration.spec.ts':
+        ['VertexImageConnector with real SA JSON passes placeholder check (is NOT placeholder)'],
+}
+# Reviewed specs that need only a disposable PostgreSQL and/or Redis owned by the run.
+OWNED_STORE_INTEGRATION = frozenset({
+    'src/auth/rate-limit.integration.spec.ts',
+    'src/billing/billing.integration.spec.ts',
+    'src/billing/gift.integration.spec.ts',
+    'src/billing/hold.integration.spec.ts',
+    'src/billing/idempotency.integration.spec.ts',
+    'src/billing/metering.integration.spec.ts',
+    'src/billing/payment.integration.spec.ts',
+    'src/billing/reconciler.integration.spec.ts',
+})
+# Disposable stores plus a seeded API key; the spec makes no provider call without credentials.
+OWNED_STORE_SEEDED_KEY = frozenset({
+    'src/connectors/image-generation/image-generation.e2e.integration.spec.ts',
+})
+# Arms that cannot be measured by this process, each with the measured reason.
+# 'live_external_service': the assertion is about a real third-party service and needs
+#     its credential; 'native_binary': needs an externally built native test binary.
+EXTERNAL_ARMS = {
+    'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts':
+        ('live_external_service', ['VERTEX_SERVICE_ACCOUNT_JSON', 'RUN_INTEGRATION']),
+    'src/connectors/image-generation/vertex/vertex-image.connector.integration.spec.ts':
+        ('live_external_service', ['VERTEX_SERVICE_ACCOUNT_JSON', 'VERTEX_BILLING_ENABLED', 'RUN_INTEGRATION']),
+    'src/connectors/image-generation/fal-ai/fal-ai.connector.integration.spec.ts':
+        ('live_external_service', ['FAL_AI_API_KEY', 'FAL_AI_INTEGRATION', 'RUN_INTEGRATION']),
+    'src/connectors/image-generation/openai-images/openai-images.connector.integration.spec.ts':
+        ('live_external_service', ['OPENAI_API_KEY', 'OPENAI_INTEGRATION', 'RUN_INTEGRATION']),
+    'src/bench-reservation/postgres.integration.spec.ts':
+        ('native_binary', ['BENCH_OWNED_NATIVE_TEST_BINARY', 'BENCH_OWNED_TEST_SOCKET_ROOT']),
+}
+# Tests inside an executed file that skip by design when an external source is absent.
+EXTERNAL_SKIPS = {
+    'src/bench-reservation/journal-bridge.spec.ts':
+        ('external_source_snapshot', ['BILLING_CUSTODIAN_SOURCE'],
+         '4 tests need the reviewed Billing3a source snapshot from another repository'),
+}
+# The one arm that a local S3-compatible stub measures at the contract level.
+STUB_STORAGE_INTEGRATION = frozenset({'src/connectors/image-generation/storage/r2.service.integration.spec.ts'})
 
 
 class Refusal(Exception):
@@ -114,6 +166,8 @@ def plan(unit, members):
         for name in members:
             if name == AUTHORED_TEMPLATE:
                 group = 'maintained-authored-template'
+            elif name in EXTERNAL_ARMS:
+                group = 'maintained-external-live'
             elif name.endswith('.integration.spec.ts') and name.startswith('src/'):
                 group = 'maintained-integration'
             elif name.endswith('.e2e-spec.ts'):
@@ -410,7 +464,79 @@ def render_authored_template(root, scratch, members, env=None):
             'target': target, 'config': config}
 
 
-def run_root_suites(root, suites, scratch, executor=execute):
+class _Owned:
+    def __init__(self, pg, redis, extras=()):
+        self.pg, self.redis, self.extras = pg, redis, list(extras)
+
+    def environment(self):
+        values = {'NODE_ENV': 'test', 'MC_OWNED_STORES': '1', 'STT_PROVIDER_GROQ_ENABLED': 'false'}
+        if self.pg:
+            values['DATABASE_URL'] = self.pg.url
+        if self.redis:
+            values.update(REDIS_HOST=self.redis.host, REDIS_PORT=str(self.redis.port),
+                          REDIS_PREFIX='mc-owned:' + uuid.uuid4().hex[:12] + ':')
+        return values
+
+    def describe(self):
+        # No URL, port or path is recorded: the evidence is that stores existed and were removed.
+        return {'postgres': ('local-binaries-unix-socket' if getattr(self.pg, 'socket_dir', None)
+                             else 'container-ephemeral-port') if self.pg else None,
+                'redis': ('local-binary-kernel-port' if self.redis and not getattr(self.redis, 'container', False)
+                          else 'container-ephemeral-port') if self.redis else None,
+                'torn_down_in_finally': True}
+
+    def close(self):
+        first = None
+        for store in (self.redis, self.pg):
+            try:
+                store and store.close()
+            except Exception as error:
+                first = first or error
+        if first:
+            raise first
+
+
+def open_owned_stores(home, path):
+    pg = OwnedPostgres(home, path)
+    try:
+        return _Owned(pg, OwnedRedis(home, path))
+    except BaseException:
+        pg and pg.close()
+        raise
+
+
+class _Stub:
+    def __init__(self, child, port):
+        self.child, self.port = child, port
+
+    def close(self):
+        self.child.terminate()
+        try:
+            self.child.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            self.child.kill()
+            self.child.wait()
+
+
+def open_s3_stub(scratch, path, credentials):
+    node = shutil.which('node', path=path)
+    if not node:
+        raise StoreUnavailable('node is not available')
+    env = {'PATH': path, 'HOME': str(scratch / 'home'),
+           'STUB_ACCESS_KEY_ID': credentials['R2_ACCESS_KEY_ID'],
+           'STUB_SECRET_ACCESS_KEY': credentials['R2_SECRET_ACCESS_KEY']}
+    child = subprocess.Popen([node, str(ROOT / 'scripts/s3-contract-stub.mjs')], env=env,
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, start_new_session=True)
+    try:
+        port = json.loads(child.stdout.readline())['port']
+    except (ValueError, KeyError):
+        child.kill()
+        child.wait()
+        raise StoreUnavailable('contract stub did not report a port')
+    return _Stub(child, port)
+
+
+def run_root_suites(root, suites, scratch, executor=execute, stores=None):
     """Dispatch ordinary local groups; preserve every held member without spawning it."""
     members = [n for suite in suites for n in suite['members']]
     expected = {r['suite']: r['members'] for r in plan('.', members)}
@@ -426,7 +552,9 @@ def run_root_suites(root, suites, scratch, executor=execute):
     env = clean_environment(scratch, root)
     deadline = time.monotonic() + 900
     results = []
-    def run(argv, members, name, parser):
+    open_stores = stores or open_owned_stores
+
+    def run(argv, members, name, parser, env=env):
         required = [argv[0]]
         if members == ['deploy/compose-network.test.sh']:
             required.append('docker')  # Compose config only, never start or stop.
@@ -451,12 +579,88 @@ def run_root_suites(root, suites, scratch, executor=execute):
                 if counts and (counts['failed'] or counts['skipped'] or not counts['passed']):
                     result['verdict'] = 'failed' if counts['failed'] else 'not_measured'
         return result
+
+    def with_stores(label, members, build, extra_env=None, prepare=()):
+        """Run one execution against stores this process owns; always tear them down."""
+        missing = [tool for tool in ('pnpm', 'node') if not shutil.which(tool, path=env['PATH'])]
+        if not (root / 'node_modules/.bin/vitest').is_file():
+            missing.append('owned Vitest dependency')
+        if missing:
+            return {'members': members, 'verdict': 'not_measured', 'exit_code': 127,
+                    'reason': 'missing local runner: ' + ', '.join(missing)}
+        home = scratch / ('stores-' + label)
+        home.mkdir(mode=0o700)
+        try:
+            owned = open_stores(home, env['PATH'])
+        except StoreUnavailable as error:
+            return {'members': members, 'verdict': 'not_measured', 'exit_code': 127,
+                    'reason': 'owned disposable store unavailable: ' + str(error)}
+        try:
+            owned_env = {**env, **owned.environment(), **(extra_env or {})}
+            for step, argv in enumerate(prepare):
+                done = executor(argv, root, owned_env, deadline, scratch, label + '-prepare-' + str(step))
+                done.pop('output')
+                if done['exit_code']:
+                    return {'argv': argv, 'members': members, 'exit_code': done['exit_code'],
+                            'verdict': 'not_measured' if done['exit_code'] in (124, 127) else 'failed',
+                            'reason': 'owned-store preparation step failed'}
+            result = build(owned_env)
+            result['owned_stores'] = owned.describe()
+            return result
+        finally:
+            owned.close()
+
+    def owned_vitest(label, members, extra_env=None, seed=False):
+        report = scratch / (label + '.json')
+        argv = ['pnpm', 'exec', 'vitest', 'run', '--config',
+                'vitest.integration.config.ts' if label != 'app-e2e' else 'vitest.e2e.config.ts',
+                '--no-file-parallelism',  # spec files share the run's one database and Redis
+                '--reporter=json', '--outputFile=' + str(report), *members]
+        prepare = [['pnpm', 'exec', 'prisma', 'generate'], ['pnpm', 'exec', 'prisma', 'migrate', 'deploy']]
+        if seed:
+            prepare.append(['node', 'scripts/seed-owned-api-key.mjs'])
+        extra = dict(extra_env or {})
+        if seed:
+            extra['INTEGRATION_API_KEY'] = uuid.uuid4().hex + uuid.uuid4().hex
+        return with_stores(label, members, lambda owned_env: run(
+            argv, members, label, lambda raw: vitest_counts(json.loads(report.read_text()), members, root),
+            env=owned_env), extra, prepare)
+
+    def stub_vitest(label, members):
+        report = scratch / (label + '.json')
+        credentials = {'R2_ACCESS_KEY_ID': 'stub' + uuid.uuid4().hex[:16],
+                       'R2_SECRET_ACCESS_KEY': uuid.uuid4().hex + uuid.uuid4().hex,
+                       'R2_ACCOUNT_ID': 'contract-stub', 'RUN_INTEGRATION': '1'}
+        try:
+            stub = open_s3_stub(scratch, env['PATH'], credentials)
+        except StoreUnavailable as error:
+            return {'members': members, 'verdict': 'not_measured', 'exit_code': 127,
+                    'reason': 'contract stub unavailable: ' + str(error)}
+        try:
+            run_env = {**env, **credentials, 'R2_ENDPOINT': 'http://127.0.0.1:%d' % stub.port}
+            argv = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.integration.config.ts',
+                    '--reporter=json', '--outputFile=' + str(report), *members]
+            result = run(argv, members, label, lambda raw: vitest_counts(json.loads(report.read_text()), members, root),
+                         env=run_env)
+            result['verification_kind'] = ('local S3-compatible contract stub with SigV4 verification; '
+                                           'not Cloudflare R2')
+            return result
+        finally:
+            stub.close()
     for index, suite in enumerate(suites):
         name, members = suite['suite'], suite['members']
         row = {'suite': name, 'members': members, 'executions': []}
         if name == 'maintained-app-e2e':
-            row.update(verdict='not_measured', reason='unconditional AppE2E skip; no execution grant',
-                       held_members=members)
+            result = owned_vitest('app-e2e', members)
+            row['executions'].append(result)
+            row['verdict'] = result['verdict']
+            if result['verdict'] != 'verified':
+                row.update(held_members=members, reason=result.get('reason', 'AppE2E did not verify'))
+        elif name == 'maintained-external-live':
+            row.update(verdict='not_measured', held_members=members,
+                       reason='each member needs a live external service or an externally built native binary',
+                       classification={m: {'class': EXTERNAL_ARMS[m][0], 'requires': EXTERNAL_ARMS[m][1]}
+                                       for m in members})
         elif name == 'maintained-authored-template':
             rendered = render_authored_template(root, scratch, members, env)
             target, config = rendered.pop('target'), rendered.pop('config')
@@ -474,19 +678,44 @@ def run_root_suites(root, suites, scratch, executor=execute):
             result['template_evidence'] = rendered
             row['executions'].append(result)
             row['verdict'] = result['verdict']
-        elif name in ('maintained-vitest', 'maintained-integration'):
-            selected = members if name == 'maintained-vitest' else [n for n in members if n in OFFLINE_INTEGRATION]
+        elif name == 'maintained-vitest':
+            report = scratch / (name + '.json')
+            argv = ['pnpm', 'exec', 'vitest', 'run', '--reporter=json', '--outputFile=' + str(report), *members]
+            row['executions'].append(run(argv, members, 'root-' + str(index),
+                lambda raw: vitest_counts(json.loads(report.read_text()), members, root)))
+            row['verdict'] = row['executions'][0]['verdict']
+            if row['verdict'] != 'verified':
+                row['external_skips'] = {n: {'class': c, 'requires': r, 'note': t}
+                                         for n, (c, r, t) in EXTERNAL_SKIPS.items() if n in members}
+        elif name == 'maintained-integration':
+            def pick(allowed):
+                return [n for n in members if n in allowed]
+            plain, flagged = pick(OFFLINE_INTEGRATION), pick(OFFLINE_RUN_FLAG)
+            owned, seeded = pick(OWNED_STORE_INTEGRATION), pick(OWNED_STORE_SEEDED_KEY)
+            stubbed = pick(STUB_STORAGE_INTEGRATION)
+            selected = set(plain + flagged + owned + seeded + stubbed)
             held = [n for n in members if n not in selected]
             if held:
-                row.update(held_members=held, reason='real provider/auth/storage arms or disposable DB/Redis authority unresolved')
-            if selected:
-                report = scratch / (name + '.json')
-                argv = ['pnpm', 'exec', 'vitest', 'run']
-                if name == 'maintained-integration':
-                    argv += ['--config', 'vitest.integration.config.ts']
-                argv += ['--reporter=json', '--outputFile=' + str(report), *selected]
-                row['executions'].append(run(argv, selected, 'root-' + str(index),
-                    lambda raw: vitest_counts(json.loads(report.read_text()), selected, root)))
+                row.update(held_members=held, reason='unclassified integration spec: no declared executor, held fail-closed')
+
+            def local_vitest(label, chosen, extra_env):
+                report = scratch / (label + '.json')
+                return run(['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.integration.config.ts',
+                            '--reporter=json', '--outputFile=' + str(report), *chosen], chosen, label,
+                           lambda raw: vitest_counts(json.loads(report.read_text()), chosen, root),
+                           env={**env, **extra_env})
+            if plain:
+                row['executions'].append(local_vitest('root-' + str(index), plain, {}))
+            if flagged:
+                result = local_vitest('offline-run-flag', flagged, {'RUN_INTEGRATION': '1'})
+                result['credential_conditional_tests'] = {n: OFFLINE_RUN_FLAG[n] for n in flagged}
+                row['executions'].append(result)
+            if owned:
+                row['executions'].append(owned_vitest('owned-stores', owned))
+            if seeded:
+                row['executions'].append(owned_vitest('owned-stores-seeded-key', seeded, {'RUN_INTEGRATION': '1'}, seed=True))
+            if stubbed:
+                row['executions'].append(stub_vitest('storage-contract-stub', stubbed))
             row['verdict'] = ('failed' if any(r['verdict'] == 'failed' for r in row['executions']) else
                               'not_measured' if held or not row['executions'] or any(r['verdict'] != 'verified' for r in row['executions']) else 'verified')
         elif name == 'maintained-regression':
@@ -537,9 +766,9 @@ def main():
                 'membership': rows, 'suite_plan': suites, 'results': [],
                 'runtime_authorized': False, 'knowledge_admitted': False}
     if unit == '.':
-        document['remaining'] = ['seven real external provider/auth/storage/image arms',
-                                 'unconditional AppE2E skip',
-                                 'broader disposable DB/Redis executor and namespace authority']
+        document['remaining'] = [
+            'maintained-external-live: ' + str(len(EXTERNAL_ARMS)) + ' arms need a live external service '
+            'or an externally built native binary (see EXTERNAL_ARMS and the impossibility evidence)']
     try:
         document['results'] = (run_root_suites(ROOT, suites, scratch) if unit == '.' else
                                run_suites(ROOT, unit, suites, scratch))

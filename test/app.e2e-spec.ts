@@ -3,9 +3,11 @@ import { Test } from '@nestjs/testing';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from '../src/app.module';
 
-// E2E tests require Redis + PostgreSQL — skip in CI without infra
-// Run locally with: DATABASE_URL=... REDIS_HOST=... pnpm test:e2e
-describe.skip('App E2E (requires infra)', () => {
+// E2E needs Redis + PostgreSQL. It runs only when the caller owns disposable stores and says so
+// with MC_OWNED_STORES=1 (scripts/graph_full_suite.py starts both on kernel-chosen endpoints,
+// migrates the schema and tears them down). Without that flag the suite is skipped, never green.
+// By hand: MC_OWNED_STORES=1 DATABASE_URL=<scratch db> REDIS_HOST=... REDIS_PORT=... pnpm test:e2e
+describe.skipIf(process.env.MC_OWNED_STORES !== '1')('App E2E (owned disposable stores)', () => {
   let app: NestFastifyApplication;
 
   beforeAll(async () => {
@@ -31,6 +33,11 @@ describe.skip('App E2E (requires infra)', () => {
   it('GET /health/ready should be public', async () => {
     const response = await app.inject({ method: 'GET', url: '/health/ready' });
     expect(response.statusCode).toBe(200);
+  });
+
+  it('GET /connectors without auth should return 401', async () => {
+    const response = await app.inject({ method: 'GET', url: '/connectors' });
+    expect(response.statusCode).toBe(401);
   });
 
   it('POST /execute without auth should return 401', async () => {
