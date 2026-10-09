@@ -41,6 +41,9 @@ def main():
             for execution in row.get('executions', []):
                 print('      %-12s exit=%s counts=%s %s' % (execution.get('verdict'), execution.get('exit_code'),
                                                            execution.get('counts'), execution.get('reason', '')))
+                if execution.get('verdict') == 'not_measured' and execution.get('exit_code') == 127 and execution.get('raw_log'):
+                    print('      --- not measured: raw log ---')
+                    print(Path(execution['raw_log']).read_text(errors='replace')[-2500:])
                 if execution.get('verdict') == 'failed' and execution.get('raw_log'):
                     log = Path(execution['raw_log']).read_text(errors='replace')
                     print('      --- raw log tail ---')
