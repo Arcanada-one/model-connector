@@ -1,0 +1,268 @@
+{
+  "schema": "RootArmImpossibilityEvidence/v1",
+  "status": "UNSIGNED_FACTS_ONLY_NOT_A_QUALIFICATION",
+  "statement": "Plain measured facts about root arms that are held. This file does not qualify any arm for an exemption, is not signed, and drafts nothing for signature: per the VERIFIER review of PR 205 no existing signed exemption class covers a full root not_measured, and that needs a new Program DEC. The native-binary arm is a missing measurable prerequisite, not an impossibility.",
+  "repo": "Arcanada-one/model-connector",
+  "code_head": "4c006af8ed39563e90f299096dbc86c3646e3439",
+  "base_main": "ce812cb43e1b86d937f74a855e7f0dae13bf98b2",
+  "verifier_edge": "v-global-fallback-test (scripts/graph-full-suite.sh .) on the root deployable",
+  "measured_on": {
+    "host_class": "arcana-devs user dev",
+    "postgres": "local binaries, Unix socket",
+    "redis": "local redis-server 7.2.5 built from the upstream tarball for this measurement"
+  },
+  "now_measurable_not_exemption_candidates": {
+    "maintained-app-e2e": [
+      "test/app.e2e-spec.ts"
+    ],
+    "maintained-integration": [
+      "src/auth/rate-limit.integration.spec.ts",
+      "src/billing/billing.integration.spec.ts",
+      "src/billing/gift.integration.spec.ts",
+      "src/billing/hold.integration.spec.ts",
+      "src/billing/idempotency.integration.spec.ts",
+      "src/billing/metering.integration.spec.ts",
+      "src/billing/payment.integration.spec.ts",
+      "src/billing/reconciler.integration.spec.ts",
+      "src/connectors/cascade/cascade-router.fallback.integration.spec.ts",
+      "src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+      "src/connectors/image-generation/image-router.fallback.integration.spec.ts",
+      "src/connectors/image-generation/storage/r2.service.integration.spec.ts",
+      "src/openai-compat/openai-compat.failover.integration.spec.ts",
+      "src/speech/stt/stt-pilot.integration.spec.ts"
+    ]
+  },
+  "held_arms": [
+    {
+      "path": "src/bench-reservation/postgres.integration.spec.ts",
+      "sha256": "ed17d0431060bb3d33160113e796a329eff5456e8ac979d72ede0b84c6f23423",
+      "class": "native_binary",
+      "class_meaning": "missing measurable prerequisite: a reviewed immutable native binary input does not exist yet; this is NOT a finding of impossibility",
+      "external_dependency": "no external network service; needs a native test binary built from another repository (Codex http client unit-test artifact)",
+      "what_the_spec_asserts": "two tests drive the real Rust native producer over the custody socket; the other tests need an owned PostgreSQL and a socket root",
+      "required_inputs": "BENCH_OWNED_NATIVE_TEST_BINARY must name a path containing /clean-native-build-v4/target/debug/deps/codex_http_client- ; BENCH_OWNED_TEST_SOCKET_ROOT",
+      "required_env_names": [
+        "BENCH_OWNED_NATIVE_TEST_BINARY",
+        "BENCH_OWNED_TEST_SOCKET_ROOT"
+      ],
+      "required_env_names_present_in_suite_environment": [],
+      "source_provenance": {
+        "upstream_repo": "https://github.com/openai/codex (not an Arcanada-one repository)",
+        "upstream_commit": "ff6aec96948b70d94983af2641a6b67c94faeff5",
+        "local_build_dir": "arcana-devs /home/dev/aup/arc2/control/bench-product-recovery-20261001-ctx433/clean-native-build-v4/upstream",
+        "working_tree_state": "dirty: 17 tracked files modified (290 insertions, 30 deletions) and 3 untracked files (codex-rs/codex-api/tests/bench_send.rs, codex-rs/http-client/src/bench.rs, codex-rs/http-client/src/bench_admission.rs); not committed to any repository found",
+        "recorded_patch_sha256": "3f197713a554f3ce366016485d572d2bbea96fa338b98c2ed918312f645a74c4",
+        "recorded_patchset_sha256": "531deeca8b0979126227e4c03e6d3c0aadbdc31401e6ac1971021c9bf5b774ca",
+        "sha256_of_git_diff_of_tracked_files_today": "6e5488a2040dcf780e9e41181d996814a415ed4255d6d06246ca2d693a7a68bc",
+        "recorded_hashes_reproduced_from_the_tree": false,
+        "built_binary_present_at_the_pinned_path": false,
+        "earlier_build_receipt": "cargo build --locked -p codex-cli --bin codex, 348 s, verdict verified (receipt 054f3d84-e81b-4e13-ab63-a02cb95e8d42)",
+        "finding": "No committed, hash-reproducible source for the patched producer exists in the Arcanada-one organisation; the recorded patch hashes do not match the tree that is present. A pinned input has to be created and reviewed before the two native tests can run."
+      },
+      "local_stub_considered": "rejected for the native-binary tests: a stand-in binary would fake the producer the tests exist to exercise. The non-native tests are measurable (see measured.owned_store_probe) but the suite plans and reports per file, so the file stays held.",
+      "offline_contract_coverage_that_already_runs": null,
+      "measured": {
+        "owned_store_probe": {
+          "exit_code": 1,
+          "passed": 19,
+          "failed": 2,
+          "skipped": 0,
+          "file_level_failure": false,
+          "first_messages": [
+            "Error: explicit owned native UNIT TEST binary required; never invoke Codex"
+          ],
+          "note": "owned PostgreSQL + private socket root, no native binary: the tests that need the binary fail with \"explicit owned native UNIT TEST binary required\""
+        },
+        "without_native_binary_tests": {
+          "exit_code": 0,
+          "passed": 18,
+          "failed": 0,
+          "skipped": 3,
+          "filter": "^(?!.*native)"
+        }
+      }
+    },
+    {
+      "path": "src/connectors/image-generation/fal-ai/fal-ai.connector.integration.spec.ts",
+      "sha256": "0f8281bdbdfc7929b65d0b30bd7419d6d2d914f93bba44148831505f546b6e38",
+      "class": "live_external_service",
+      "class_meaning": "paid live provider: held, not executed here (no credential, no spend)",
+      "external_dependency": "fal.ai image generation (flux/dev and others)",
+      "what_the_spec_asserts": "real images are generated by fal.ai with a real API key",
+      "required_inputs": "FAL_AI_API_KEY plus FAL_AI_INTEGRATION=1 (spends money)",
+      "required_env_names": [
+        "FAL_AI_API_KEY",
+        "FAL_AI_INTEGRATION",
+        "RUN_INTEGRATION"
+      ],
+      "required_env_names_present_in_suite_environment": [],
+      "source_provenance": null,
+      "local_stub_considered": "rejected: live provider response is the assertion. Offline contract is covered by fal-ai.connector.spec.ts.",
+      "offline_contract_coverage_that_already_runs": {
+        "path": "src/connectors/image-generation/fal-ai/fal-ai.connector.spec.ts",
+        "exists": true,
+        "group": "maintained-vitest"
+      },
+      "measured": {
+        "run_in_clean_env_RUN_INTEGRATION_1_no_credentials": {
+          "exit_code": 0,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 3,
+          "file_level_failure": false,
+          "first_messages": []
+        },
+        "run_in_clean_env_no_switch": {
+          "exit_code": 0,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 3,
+          "file_level_failure": false,
+          "first_messages": []
+        }
+      }
+    },
+    {
+      "path": "src/connectors/image-generation/openai-images/openai-images.connector.integration.spec.ts",
+      "sha256": "c08a31d626911668af1f1fd784e0dd47e95b92c85b0c625aa77ebf4ed60d80e9",
+      "class": "live_external_service",
+      "class_meaning": "paid live provider: held, not executed here (no credential, no spend)",
+      "external_dependency": "OpenAI Images API",
+      "what_the_spec_asserts": "real images are generated by OpenAI with a real API key",
+      "required_inputs": "OPENAI_API_KEY plus OPENAI_INTEGRATION=1 (spends money)",
+      "required_env_names": [
+        "OPENAI_API_KEY",
+        "OPENAI_INTEGRATION",
+        "RUN_INTEGRATION"
+      ],
+      "required_env_names_present_in_suite_environment": [],
+      "source_provenance": null,
+      "local_stub_considered": "rejected: live provider response is the assertion. Offline contract is covered by openai-images.connector.spec.ts.",
+      "offline_contract_coverage_that_already_runs": {
+        "path": "src/connectors/image-generation/openai-images/openai-images.connector.spec.ts",
+        "exists": true,
+        "group": "maintained-vitest"
+      },
+      "measured": {
+        "run_in_clean_env_RUN_INTEGRATION_1_no_credentials": {
+          "exit_code": 0,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 3,
+          "file_level_failure": false,
+          "first_messages": []
+        },
+        "run_in_clean_env_no_switch": {
+          "exit_code": 0,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 4,
+          "file_level_failure": false,
+          "first_messages": []
+        }
+      }
+    },
+    {
+      "path": "src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts",
+      "sha256": "8dba36839c3cc2c7b98bfc6c137d560c5a816b41aee3a7b86b1d256b5c5dd95d",
+      "class": "live_external_service",
+      "class_meaning": "paid live provider: held, not executed here (no credential, no spend)",
+      "external_dependency": "Google OAuth2 token endpoint (service-account JWT exchange)",
+      "what_the_spec_asserts": "a real access token string starting \"ya29.\" is returned by Google",
+      "required_inputs": "VERTEX_SERVICE_ACCOUNT_JSON (a Google service-account private key)",
+      "required_env_names": [
+        "VERTEX_SERVICE_ACCOUNT_JSON",
+        "RUN_INTEGRATION"
+      ],
+      "required_env_names_present_in_suite_environment": [],
+      "source_provenance": null,
+      "local_stub_considered": "rejected: the assertion is that Google accepts a signed JWT and issues a token; a local stub would only echo a token the test then calls real. The offline JWT-building contract is already covered by vertex-auth.service.spec.ts.",
+      "offline_contract_coverage_that_already_runs": {
+        "path": "src/connectors/image-generation/vertex/vertex-auth.service.spec.ts",
+        "exists": true,
+        "group": "maintained-vitest"
+      },
+      "measured": {
+        "run_in_clean_env_RUN_INTEGRATION_1_no_credentials": {
+          "exit_code": 1,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 2,
+          "file_level_failure": false,
+          "first_messages": []
+        },
+        "run_in_clean_env_no_switch": {
+          "exit_code": 0,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 2,
+          "file_level_failure": false,
+          "first_messages": []
+        }
+      }
+    },
+    {
+      "path": "src/connectors/image-generation/vertex/vertex-image.connector.integration.spec.ts",
+      "sha256": "13d94a0fccef1fa21402d74a46a3fdbd36c44f4aea013a8c55f82c6a1691a179",
+      "class": "live_external_service",
+      "class_meaning": "paid live provider: held, not executed here (no credential, no spend)",
+      "external_dependency": "Vertex AI Imagen 4 generation (billed per image)",
+      "what_the_spec_asserts": "a real generated image comes back from Imagen and is billed",
+      "required_inputs": "VERTEX_SERVICE_ACCOUNT_JSON plus VERTEX_BILLING_ENABLED=1 (spends money)",
+      "required_env_names": [
+        "VERTEX_SERVICE_ACCOUNT_JSON",
+        "VERTEX_BILLING_ENABLED",
+        "RUN_INTEGRATION"
+      ],
+      "required_env_names_present_in_suite_environment": [],
+      "source_provenance": null,
+      "local_stub_considered": "rejected: the value of the arm is the live provider response and its billing; a stub measures nothing about Imagen. Offline connector behaviour is covered by vertex-image.connector.spec.ts.",
+      "offline_contract_coverage_that_already_runs": {
+        "path": "src/connectors/image-generation/vertex/vertex-image.connector.spec.ts",
+        "exists": true,
+        "group": "maintained-vitest"
+      },
+      "measured": {
+        "run_in_clean_env_RUN_INTEGRATION_1_no_credentials": {
+          "exit_code": 1,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 3,
+          "file_level_failure": false,
+          "first_messages": []
+        },
+        "run_in_clean_env_no_switch": {
+          "exit_code": 0,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 3,
+          "file_level_failure": false,
+          "first_messages": []
+        }
+      }
+    }
+  ],
+  "skips_inside_executed_files": [
+    {
+      "path": "src/bench-reservation/journal-bridge.spec.ts",
+      "sha256": "ad016145a5c7a489ea21b8017526bbebd91a265eb950fe8140789e7377c05f74",
+      "group": "maintained-vitest",
+      "class": "private_repository_prerequisite",
+      "skipped_tests": 4,
+      "skipped_by": "describe.skipIf(!process.env.BILLING_CUSTODIAN_SOURCE)",
+      "required_env_names": [
+        "BILLING_CUSTODIAN_SOURCE"
+      ],
+      "finding": "The Billing3a module these tests execute lives in a private Arcanada repository. This repository is public and its CI cannot read the private one; copying the source here would publish private code and needs an explicit public-surface decision. A first attempt to vendor a pinned snapshot was reverted. The prerequisite is measurable only where the private repository is readable (for example a private CI contour).",
+      "effect": "maintained-vitest reports skipped=4 and therefore not_measured; the other 3592 tests in that group pass"
+    }
+  ],
+  "resolved_since_the_previous_version": [
+    "deploy/compose-network.test.sh: the hosted failure was environmental, not a defect of docker-compose.yml. In the suite private HOME the docker CLI (29.5.3) lists the system Compose plugin v5.1.4 but answers \"unknown command: docker compose\"; the runner user resolves Compose only through ~/.docker/cli-plugins (v5.4.0), which a private HOME hides (variants measured on the runner: HOME unset or empty env -> v5.4.0 resolves; HOME=<private dir> or /nonexistent -> unknown command). The script now classifies this precisely and runs the root-owned system Compose directly (hash and version printed); on the hosted runner the row verifies."
+  ],
+  "not_measured_here_and_not_claimed": [
+    "hosted-runner behaviour of the container fallback (docker run postgres:16 / redis:7) was not exercised on this host; the hosted root-arms job is the measurement",
+    "the R2 arm ran against a local SigV4-verifying S3 contract stub, which says nothing about Cloudflare R2 availability or account configuration",
+    "image-router.fallback has one credential-conditional test that returns early without VERTEX_SERVICE_ACCOUNT_JSON; it counts as passed without checking its subject (recorded in the suite row as credential_conditional_tests)"
+  ]
+}
