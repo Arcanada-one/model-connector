@@ -308,6 +308,43 @@ class Controls(unittest.TestCase):
         self.assertEqual(report['exit_code'], 127)
         self.assertEqual(len(list(temp.glob('mc-full-*/*.log'))), 1)
 
+    def compose_script(self, docker_body):
+        """Run the real script with a PATH whose `docker` is a classifier control, not a Compose stand-in."""
+        bindir = self.root / 'ctl-bin'
+        bindir.mkdir(exist_ok=True)
+        if docker_body is not None:
+            (bindir / 'docker').write_text('#!/bin/sh\n' + docker_body)
+            (bindir / 'docker').chmod(0o755)
+        path = str(bindir) + ':' + os.path.dirname(sys.executable) + ':/usr/bin:/bin'
+        if docker_body is None:
+            path = str(bindir) + ':' + '/usr/bin:/bin'
+            # /usr/bin may hold a real docker; the control for a missing tool hides it by name.
+            (bindir / 'docker').write_text('')
+            (bindir / 'docker').unlink()
+        env = {'PATH': path, 'HOME': str(self.root)}
+        return subprocess.run(['bash', str(ROOT / 'deploy/compose-network.test.sh')], cwd=ROOT, env=env,
+                              capture_output=True, text=True, timeout=60)
+
+    def test_compose_contract_failures_are_classified_not_collapsed(self):
+        cases = [
+            ('echo "docker: \'compose\' is not a docker command." >&2; exit 1', 127, 'compose_plugin_missing'),
+            ('[ "$1" = compose ] && [ "$2" = version ] && { echo fixture; exit 0; }\n'
+             'echo "yaml: line 3: could not find expected key TOKEN=hunter2" >&2; exit 15', 1, 'compose_render_failed'),
+            ('[ "$1" = compose ] && [ "$2" = version ] && { echo fixture; exit 0; }\n'
+             'echo \'{"services":{"model-connector":{"networks":{},"ports":[]}},"networks":{}}\'', 1,
+             'contract_assertion_failed'),
+        ]
+        for body, code, kind in cases:
+            with self.subTest(kind=kind):
+                done = self.compose_script(body)
+                self.assertEqual(done.returncode, code, done.stdout + done.stderr)
+                self.assertIn('[' + kind + ']', done.stderr)
+                self.assertNotIn('hunter2', done.stderr)
+        render = self.compose_script(cases[1][0])
+        self.assertIn('could not find expected key', render.stderr)  # sanitized child stderr is retained
+        self.assertIn('docker binary:', render.stdout)  # tool record is printed
+        self.assertIn('sha256', render.stdout)
+
     @staticmethod
     def no_stores(home, path):
         raise subject.StoreUnavailable('fixture: no store on this runner')
