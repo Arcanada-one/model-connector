@@ -333,6 +333,8 @@ class Controls(unittest.TestCase):
     def test_compose_contract_failures_are_classified_not_collapsed(self):
         cases = [
             ('echo "docker: \'compose\' is not a docker command." >&2; exit 1', 127, 'compose_plugin_missing'),
+            ('[ "$1" = compose ] && [ "$2" = version ] && { echo "docker: unknown command: docker compose" >&2; exit 1; }\n'
+             'echo "unknown flag: --project-directory" >&2; exit 125', 127, 'compose_plugin_missing'),
             ('[ "$1" = compose ] && [ "$2" = version ] && { echo fixture; exit 0; }\n'
              'echo "yaml: line 3: could not find expected key TOKEN=hunter2" >&2; exit 15', 1, 'compose_render_failed'),
             ('[ "$1" = compose ] && [ "$2" = version ] && { echo fixture; exit 0; }\n'
@@ -345,7 +347,7 @@ class Controls(unittest.TestCase):
                 self.assertEqual(done.returncode, code, done.stdout + done.stderr)
                 self.assertIn('[' + kind + ']', done.stderr)
                 self.assertNotIn('hunter2', done.stderr)
-        render = self.compose_script(cases[1][0])
+        render = self.compose_script(next(b for b, _, k in cases if k == 'compose_render_failed'))
         self.assertIn('could not find expected key', render.stderr)  # sanitized child stderr is retained
         self.assertIn('docker binary:', render.stdout)  # tool record is printed
         self.assertIn('sha256', render.stdout)

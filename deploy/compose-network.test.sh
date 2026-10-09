@@ -34,6 +34,9 @@ def run(argv, **kw):
     return subprocess.run(argv, capture_output=True, text=True, timeout=30, **kw)
 
 
+PROBE = {}
+
+
 def tool_record():
     docker = shutil.which('docker')
     print('docker binary:', docker, 'sha256', sha256(docker) if docker else '-')
@@ -44,6 +47,7 @@ def tool_record():
         try:
             done = run(argv)
             print(label + ':', sanitize(done.stdout or done.stderr, str(Path.home())), '(exit %d)' % done.returncode)
+            PROBE[label] = (done.returncode, (done.stdout + done.stderr))
         except Exception as error:  # a record must never hide the real measurement
             print(label + ': unavailable (%s)' % type(error).__name__)
     seen = set()
@@ -52,7 +56,15 @@ def tool_record():
         plugin = base / 'docker-compose'
         if plugin.exists() and plugin.resolve() not in seen:
             seen.add(plugin.resolve())
-            print('compose plugin:', str(plugin).replace(str(Path.home()), '<home>'), 'sha256', sha256(plugin))
+            info = plugin.stat()
+            print('compose plugin:', str(plugin).replace(str(Path.home()), '<home>'), 'sha256', sha256(plugin),
+                  'mode %o uid %d gid %d size %d' % (info.st_mode & 0o7777, info.st_uid, info.st_gid, info.st_size),
+                  'executable_by_this_user=%s' % os.access(plugin, os.X_OK), 'running_uid=%d' % os.getuid())
+            try:
+                meta = run([str(plugin), 'docker-cli-plugin-metadata'])
+                print('  plugin metadata (exit %d):' % meta.returncode, sanitize(meta.stdout or meta.stderr, str(Path.home()))[:300])
+            except Exception as error:
+                print('  plugin metadata: not runnable (%s)' % type(error).__name__)
     print('environment: HOME set=%s DOCKER_CONFIG set=%s DOCKER_HOST set=%s'
           % (bool(os.environ.get('HOME')), bool(os.environ.get('DOCKER_CONFIG')), bool(os.environ.get('DOCKER_HOST'))))
     return docker
@@ -66,6 +78,10 @@ def refuse(kind, detail, code=1):
 docker = tool_record()
 if not docker:
     refuse('tool_missing', 'docker is not on PATH', 127)
+code, text = PROBE.get('compose version', (0, ''))
+if code != 0 and re.search(r"(?i)unknown command|is not a docker command|unknown shorthand flag", text):
+    # The contract was never rendered: the toolchain, not the repository, is what is missing here.
+    refuse('compose_plugin_missing', sanitize(text, str(Path.home())), 127)
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
     (root / 'docker-compose.yml').write_bytes(Path('docker-compose.yml').read_bytes())
