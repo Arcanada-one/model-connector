@@ -3,7 +3,7 @@
   "status": "UNSIGNED_FACTS_ONLY_NOT_A_QUALIFICATION",
   "statement": "Plain measured facts about root arms that are held. This file does not qualify any arm for an exemption, is not signed, and drafts nothing for signature: per the VERIFIER review of PR 205 no existing signed exemption class covers a full root not_measured, and that needs a new Program DEC. The native-binary arm is a missing measurable prerequisite, not an impossibility.",
   "repo": "Arcanada-one/model-connector",
-  "code_head": "40220af08b9312c56245c0b937b4904db84b6e5e",
+  "code_head": "00f50b2679f9b243bd9cad9dd45f84508a68304d",
   "base_main": "ce812cb43e1b86d937f74a855e7f0dae13bf98b2",
   "verifier_edge": "v-global-fallback-test (scripts/graph-full-suite.sh .) on the root deployable",
   "measured_on": {
@@ -243,6 +243,7 @@
     }
   ],
   "resolved_since_the_previous_version": [
+    "deploy/compose-network.test.sh: the hosted failure was environmental, not a defect of docker-compose.yml. In the suite private HOME the docker CLI (29.5.3) lists the system Compose plugin v5.1.4 but answers \"unknown command: docker compose\"; the runner user resolves Compose only through ~/.docker/cli-plugins (v5.4.0), which a private HOME hides (variants measured on the runner: HOME unset or empty env -> v5.4.0 resolves; HOME=<private dir> or /nonexistent -> unknown command). The script now classifies this precisely and runs the root-owned system Compose directly (hash and version printed); on the hosted runner the row verifies.",
     "journal-bridge.spec.ts (4 tests): BILLING_CUSTODIAN_SOURCE now comes from a sha256-pinned snapshot committed at test/fixtures/billing-3a-source.tar.gz (lineage: arcanada-workspace@7060d26d38dd); 38/38 pass"
   ],
   "not_measured_here_and_not_claimed": [
