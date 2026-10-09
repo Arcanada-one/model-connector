@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('full_suite', ROOT / 'scripts/graph_full_suite.py')
+sys.path.insert(0, str(ROOT / 'scripts'))
 subject = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(subject)
 
@@ -26,6 +27,11 @@ class Controls(unittest.TestCase):
         home = patch.dict(os.environ, {'HOME': str(self.root)})
         home.start()
         self.addCleanup(home.stop)
+        # No test may start a real store by accident; store-using tests pass `stores=` explicitly.
+        unavailable = patch.object(subject, 'open_owned_stores',
+                                   side_effect=subject.StoreUnavailable('fixture: no store'))
+        unavailable.start()
+        self.addCleanup(unavailable.stop)
         for unit in subject.UNITS[1:]:
             (self.root / unit).mkdir(parents=True)
 
@@ -259,7 +265,7 @@ class Controls(unittest.TestCase):
     def root_entrypoint_fixture(self):
         scripts = self.root / 'scripts'
         scripts.mkdir()
-        for name in ['graph-full-suite.sh', 'graph_full_suite.py']:
+        for name in ['graph-full-suite.sh', 'graph_full_suite.py', 'owned_stores.py']:
             (scripts / name).write_bytes((ROOT / 'scripts' / name).read_bytes())
         (self.root / 'test_contract.py').write_text('import unittest\nclass Fixture(unittest.TestCase):\n def test_boundary(self): self.assertTrue(True)\nif __name__ == "__main__": unittest.main()\n')
         (self.root / 'test').mkdir()
@@ -307,6 +313,49 @@ class Controls(unittest.TestCase):
         self.assertEqual(report['exit_code'], 127)
         self.assertEqual(len(list(temp.glob('mc-full-*/*.log'))), 1)
 
+    def compose_script(self, docker_body):
+        """Run the real script with a PATH whose `docker` is a classifier control, not a Compose stand-in."""
+        bindir = self.root / 'ctl-bin'
+        bindir.mkdir(exist_ok=True)
+        if docker_body is not None:
+            (bindir / 'docker').write_text('#!/bin/sh\n' + docker_body)
+            (bindir / 'docker').chmod(0o755)
+        path = str(bindir) + ':' + os.path.dirname(sys.executable) + ':/usr/bin:/bin'
+        if docker_body is None:
+            path = str(bindir) + ':' + '/usr/bin:/bin'
+            # /usr/bin may hold a real docker; the control for a missing tool hides it by name.
+            (bindir / 'docker').write_text('')
+            (bindir / 'docker').unlink()
+        env = {'PATH': path, 'HOME': str(self.root), 'MC_COMPOSE_SYSTEM_PLUGIN_DIRS': str(self.root / 'no-system-plugins')}
+        return subprocess.run(['bash', str(ROOT / 'deploy/compose-network.test.sh')], cwd=ROOT, env=env,
+                              capture_output=True, text=True, timeout=60)
+
+    def test_compose_contract_failures_are_classified_not_collapsed(self):
+        cases = [
+            ('echo "docker: \'compose\' is not a docker command." >&2; exit 1', 127, 'compose_plugin_missing'),
+            ('[ "$1" = compose ] && [ "$2" = version ] && { echo "docker: unknown command: docker compose" >&2; exit 1; }\n'
+             'echo "unknown flag: --project-directory" >&2; exit 125', 127, 'compose_plugin_missing'),
+            ('[ "$1" = compose ] && [ "$2" = version ] && { echo fixture; exit 0; }\n'
+             'echo "yaml: line 3: could not find expected key TOKEN=hunter2" >&2; exit 15', 1, 'compose_render_failed'),
+            ('[ "$1" = compose ] && [ "$2" = version ] && { echo fixture; exit 0; }\n'
+             'echo \'{"services":{"model-connector":{"networks":{},"ports":[]}},"networks":{}}\'', 1,
+             'contract_assertion_failed'),
+        ]
+        for body, code, kind in cases:
+            with self.subTest(kind=kind):
+                done = self.compose_script(body)
+                self.assertEqual(done.returncode, code, done.stdout + done.stderr)
+                self.assertIn('[' + kind + ']', done.stderr)
+                self.assertNotIn('hunter2', done.stderr)
+        render = self.compose_script(next(b for b, _, k in cases if k == 'compose_render_failed'))
+        self.assertIn('could not find expected key', render.stderr)  # sanitized child stderr is retained
+        self.assertIn('docker binary:', render.stdout)  # tool record is printed
+        self.assertIn('sha256', render.stdout)
+
+    @staticmethod
+    def no_stores(home, path):
+        raise subject.StoreUnavailable('fixture: no store on this runner')
+
     def root_dispatch_fixture(self, members):
         for member in members:
             p = self.root / member
@@ -346,7 +395,8 @@ class Controls(unittest.TestCase):
         with patch.object(subject.shutil, 'which', return_value='/fixture/runner'), patch.dict(os.environ, {
                 'PROVIDER_API_KEY': 'sentinel-secret', 'DATABASE_URL': 'sentinel-secret',
                 'MC_ALLOW_LIVE': '1', 'NODE_OPTIONS': 'sentinel-secret'}):
-            result = subject.run_root_suites(self.root, suites, self.root, self.root_child(calls))
+            result = subject.run_root_suites(self.root, suites, self.root, self.root_child(calls),
+                                             stores=self.no_stores)
         self.assertEqual(len(calls), 3)
         self.assertEqual(sorted(n for r in result for n in r['members']), sorted(members))
         held = [n for r in result for n in r.get('held_members', [])]
@@ -446,6 +496,163 @@ class Controls(unittest.TestCase):
                 lambda *args: self.fail('escaped source spawned a child'))
         self.assertEqual(subject.regression_counts('unittest',
             'Ran 1 test in 0.1s\nOK (expected failures=1)\n')['skipped'], 1)
+
+    class FakeOwned:
+        closed = 0
+
+        def environment(self):
+            return {'DATABASE_URL': 'postgresql://fixture@localhost/fixture?host=/fixture',
+                    'REDIS_HOST': '127.0.0.1', 'REDIS_PORT': '1', 'MC_OWNED_STORES': '1'}
+
+        def describe(self):
+            return {'postgres': 'fixture', 'redis': 'fixture', 'torn_down_in_finally': True}
+
+        def close(self):
+            type(self).closed += 1
+
+    def owned_executor(self, calls, status='passed', boom=False):
+        def child(argv, cwd, env, deadline, scratch, name):
+            calls.append((argv, dict(env)))
+            if boom and '--outputFile' in ' '.join(argv):
+                raise OSError('fixture executor crash')
+            if argv[:3] == ['pnpm', 'exec', 'vitest']:
+                output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
+                members = argv[argv.index('--outputFile=' + output) + 1:]
+                Path(output).write_text(json.dumps({
+                    'numTotalTests': len(members), 'numFailedTests': int(status == 'failed'),
+                    'numPassedTests': len(members) - int(status == 'failed'),
+                    'testResults': [{'name': str(self.root / m), 'assertionResults': [{'status': status}]}
+                                    for m in members]}))
+            return {'argv': argv, 'exit_code': 0, 'output': '', 'duration_s': 0}
+        return child
+
+    def test_app_e2e_runs_against_owned_stores_and_tears_them_down(self):
+        suites = self.root_dispatch_fixture(['test/app.e2e-spec.ts'])
+        self.FakeOwned.closed = 0
+        calls = []
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
+            result = subject.run_root_suites(self.root, suites, self.root, self.owned_executor(calls),
+                                             stores=lambda home, path: self.FakeOwned())
+        self.assertEqual(result[0]['verdict'], 'verified')
+        self.assertEqual(self.FakeOwned.closed, 1)
+        self.assertNotIn('held_members', result[0])
+        steps = [argv[2:4] for argv, _ in calls]
+        self.assertEqual(steps, [['prisma', 'generate'], ['prisma', 'migrate'], ['vitest', 'run']])
+        self.assertIn('vitest.e2e.config.ts', calls[-1][0])
+        self.assertTrue(all(env.get('DATABASE_URL', '').endswith('host=/fixture') for _, env in calls))
+        self.assertEqual(subject.execution_code(result), 0)
+
+    def test_app_e2e_failure_is_failed_and_stores_still_torn_down(self):
+        suites = self.root_dispatch_fixture(['test/app.e2e-spec.ts'])
+        self.FakeOwned.closed = 0
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
+            result = subject.run_root_suites(self.root, suites, self.root,
+                                             self.owned_executor([], status='failed'),
+                                             stores=lambda home, path: self.FakeOwned())
+        self.assertEqual(result[0]['verdict'], 'failed')
+        self.assertEqual(self.FakeOwned.closed, 1)
+        self.assertEqual(subject.execution_code(result), 1)
+        second = self.root / 'second'
+        second.mkdir(mode=0o700)
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
+            with self.assertRaises(OSError):
+                subject.run_root_suites(self.root, suites, second, self.owned_executor([], boom=True),
+                                        stores=lambda home, path: self.FakeOwned())
+        self.assertEqual(self.FakeOwned.closed, 2)
+
+    def test_app_e2e_without_stores_is_not_measured_never_verified(self):
+        suites = self.root_dispatch_fixture(['test/app.e2e-spec.ts'])
+        calls = []
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
+            result = subject.run_root_suites(self.root, suites, self.root, self.owned_executor(calls),
+                                             stores=self.no_stores)
+        self.assertEqual(result[0]['verdict'], 'not_measured')
+        self.assertEqual(calls, [])
+        self.assertIn('owned disposable store unavailable', result[0]['executions'][0]['reason'])
+        self.assertEqual(subject.execution_code(result), 127)
+
+    def test_owned_store_integration_and_external_arms_are_classified_exactly(self):
+        names = sorted(subject.OWNED_STORE_INTEGRATION | set(subject.EXTERNAL_ARMS))
+        rows = {r['suite']: r for r in subject.plan('.', names)}
+        self.assertEqual(rows['maintained-external-live']['members'], sorted(subject.EXTERNAL_ARMS))
+        self.assertEqual(rows['maintained-integration']['members'], sorted(subject.OWNED_STORE_INTEGRATION))
+        self.assertTrue(all(c in ('live_external_service', 'native_binary')
+                            for c, _ in subject.EXTERNAL_ARMS.values()))
+        suites = self.root_dispatch_fixture(sorted(subject.EXTERNAL_ARMS))
+        result = subject.run_root_suites(self.root, suites, self.root,
+                                         lambda *a: self.fail('an external arm spawned a child'),
+                                         stores=self.no_stores)
+        self.assertEqual(result[0]['verdict'], 'not_measured')
+        self.assertEqual(sorted(result[0]['classification']), sorted(subject.EXTERNAL_ARMS))
+        self.assertEqual(subject.execution_code(result), 127)
+
+    def test_held_bench_file_measures_only_what_needs_no_native_binary(self):
+        bench = 'src/bench-reservation/postgres.integration.spec.ts'
+        suites = self.root_dispatch_fixture([bench])
+        provisioned = []
+
+        class Pg:
+            socket_dir = '/fixture/mc-owned-postgres/socket'
+            closers = []
+            url = 'postgresql://dev@localhost/x?host=/fixture'
+
+            def provision_bench_fixture(self):
+                provisioned.append(True)
+
+        class Owned(self.FakeOwned):
+            pg = Pg()
+            closed = 0
+        calls = []
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
+            result = subject.run_root_suites(self.root, suites, self.root, self.owned_executor(calls),
+                                             stores=lambda home, path: Owned())
+        row = result[0]
+        self.assertEqual(row['verdict'], 'not_measured')  # the file as a whole is never verified
+        self.assertEqual(row['held_members'], [bench])
+        vitest = [(a, e) for a, e in calls if a[2:4] == ['vitest', 'run']][0]
+        self.assertIn('-t', vitest[0])
+        self.assertEqual(vitest[0][vitest[0].index('-t') + 1], subject.BENCH_PARTIAL[bench])
+        self.assertTrue(vitest[1]['BENCH_OWNED_TEST_PG_SOCKET'].endswith('/mc-owned-postgres/socket'))
+        self.assertNotIn('BENCH_OWNED_NATIVE_TEST_BINARY', vitest[1])
+        self.assertEqual(provisioned, [True])
+        self.assertEqual(Owned.closed, 1)
+        for closer in Owned.pg.closers:  # the fake store stands in for OwnedPostgres.close()
+            closer()
+
+    def test_unclassified_integration_spec_is_held_not_run(self):
+        suites = self.root_dispatch_fixture(['src/new/thing.integration.spec.ts'])
+        result = subject.run_root_suites(self.root, suites, self.root,
+                                         lambda *a: self.fail('unclassified spec spawned a child'),
+                                         stores=lambda *a: self.fail('unclassified spec opened a store'))
+        self.assertEqual(result[0]['verdict'], 'not_measured')
+        self.assertEqual(result[0]['held_members'], ['src/new/thing.integration.spec.ts'])
+
+    def test_owned_store_refuses_without_binaries_or_container_runtime(self):
+        import owned_stores
+        with patch.object(owned_stores, '_which', return_value=None), \
+                patch.object(owned_stores, '_docker_ready', return_value=None):
+            with self.assertRaises(owned_stores.StoreUnavailable):
+                owned_stores.OwnedPostgres(self.root, os.defpath)
+            with self.assertRaises(owned_stores.StoreUnavailable):
+                owned_stores.OwnedRedis(self.root, os.defpath)
+
+    def test_s3_contract_stub_refuses_unsigned_and_mis_signed_requests(self):
+        import urllib.error
+        import urllib.request
+        credentials = {'R2_ACCESS_KEY_ID': 'stubkey', 'R2_SECRET_ACCESS_KEY': 'stubsecret'}
+        (self.root / 'home').mkdir()
+        stub = subject.open_s3_stub(self.root, os.environ.get('PATH', os.defpath), credentials)
+        self.addCleanup(stub.close)
+        url = 'http://127.0.0.1:%d/bucket/images/x.png' % stub.port
+        forged = ('AWS4-HMAC-SHA256 Credential=stubkey/20260101/auto/s3/aws4_request, '
+                  'SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=' + '0' * 64)
+        for headers in ({}, {'Authorization': forged, 'x-amz-date': '20260101T000000Z',
+                             'x-amz-content-sha256': 'UNSIGNED-PAYLOAD'}):
+            request = urllib.request.Request(url, data=b'payload', method='PUT', headers=headers)
+            with self.assertRaises(urllib.error.HTTPError) as caught:
+                urllib.request.urlopen(request, timeout=10)
+            self.assertEqual(caught.exception.code, 403)
+            caught.exception.close()
 
 
 if __name__ == '__main__':
