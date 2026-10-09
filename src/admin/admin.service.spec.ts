@@ -5,6 +5,7 @@ import { compare } from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 
 const mockPrisma = {
+  request: { groupBy: vi.fn() },
   apiKey: {
     create: vi.fn(),
     findMany: vi.fn(),
@@ -28,6 +29,37 @@ describe('AdminService', () => {
     vi.clearAllMocks();
     cfg.value = { API_KEY_SALT_ROUNDS: 4, SHOWCASE_KEY_IDS: '' };
     service = new AdminService(mockPrisma as unknown as PrismaService);
+  });
+
+  it('returns validated profile metadata and refuses raw invalid stored JSON', async () => {
+    mockPrisma.apiKey.findUnique.mockResolvedValue({ id: 'key-1', policy: { policyVersion: 1 } });
+    await expect(service.getKeyPolicy('key-1')).resolves.toEqual({
+      id: 'key-1',
+      policy: { policyVersion: 1 },
+    });
+    mockPrisma.apiKey.findUnique.mockResolvedValue({
+      id: 'key-1',
+      policy: { rawSecret: 'synthetic-value' },
+    });
+    await expect(service.getKeyPolicy('key-1')).rejects.toThrow('Stored policy is invalid');
+  });
+  it('scopes usage to the selected key and groups only nonsensitive attribution', async () => {
+    mockPrisma.apiKey.findUnique.mockResolvedValue({ id: 'key-1' });
+    mockPrisma.request.groupBy.mockResolvedValue([]);
+    await expect(service.getKeyUsage('key-1')).resolves.toEqual([]);
+    expect(mockPrisma.request.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { apiKeyId: 'key-1' },
+        take: 500,
+        by: [
+          'connector',
+          'model',
+          'upstreamCredentialRef',
+          'upstreamCredentialVersion',
+          'accountingBucket',
+        ],
+      }),
+    );
   });
 
   describe('createKey', () => {

@@ -1,3 +1,4 @@
+import { getProviderKeyOverride } from '../../policy/provider-key.context';
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
 import { randomUUID } from 'node:crypto';
 import { deepSeekBodyOptions, parseDeepSeekOptions } from './deepseek-options';
@@ -183,6 +184,41 @@ function withListPrice(meta: ProviderModelMeta): ProviderModelMeta {
  * streaming, tools, and JSON schema remain false until implemented and tested.
  * @see https://api-docs.deepseek.com/
  */
+export function buildDeepSeekRequestBody(request: ConnectorRequest): unknown {
+  if (typeof request.prompt !== 'string') {
+    throw new Error('deepseek connector requires string prompt');
+  }
+  const messages: Array<{ role: string; content: string }> = [];
+  if (request.systemPrompt) messages.push({ role: 'system', content: request.systemPrompt });
+  messages.push({ role: 'user', content: request.prompt });
+
+  const body: Record<string, unknown> = {
+    model: request.model || DEFAULT_MODEL,
+    messages,
+    stream: false,
+    ...deepSeekBodyOptions(request),
+  };
+  const extra = request.extra ?? {};
+  if (extra.max_tokens != null) body.max_tokens = extra.max_tokens;
+  // A2-209 — these four were suppressed whenever the model was `deepseek-reasoner`,
+  // a rule written when that id named a separate reasoning model that rejected them.
+  // The id is retired and the rule was measured stale: on 2026-09-23 a live request
+  // with `model: 'deepseek-reasoner'` plus temperature/top_p/presence_penalty/
+  // frequency_penalty returned HTTP 200 (served by deepseek-flash, reasoning intact),
+  // as did the same parameters on `deepseek-flash` and `deepseek-v4-pro` directly.
+  // Keeping the branch meant a caller's sampling parameters were dropped on the floor
+  // for one string, silently — and the branch was about to go dead anyway once
+  // DEFAULT_MODEL stopped being a retired id.
+  //
+  // not_measured: whether DeepSeek HONOURS these on an aliased request or merely
+  // accepts them. Forwarding is still the better failure: the provider gets what the
+  // caller asked for and can say no, instead of this connector deciding for it.
+  for (const key of ['temperature', 'top_p', 'presence_penalty', 'frequency_penalty']) {
+    if (extra[key] != null) body[key] = extra[key];
+  }
+  return body;
+}
+
 export class DeepSeekConnector extends BaseApiConnector {
   readonly name = 'deepseek';
 
@@ -246,7 +282,7 @@ export class DeepSeekConnector extends BaseApiConnector {
   protected getHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY || ''}`,
+      Authorization: `Bearer ${getProviderKeyOverride(this.name) ?? (process.env.DEEPSEEK_API_KEY || '')}`,
     };
   }
 
@@ -255,38 +291,7 @@ export class DeepSeekConnector extends BaseApiConnector {
   }
 
   protected buildRequestBody(request: ConnectorRequest): unknown {
-    if (typeof request.prompt !== 'string') {
-      throw new Error('deepseek connector requires string prompt');
-    }
-    const messages: Array<{ role: string; content: string }> = [];
-    if (request.systemPrompt) messages.push({ role: 'system', content: request.systemPrompt });
-    messages.push({ role: 'user', content: request.prompt });
-
-    const body: Record<string, unknown> = {
-      model: request.model || DEFAULT_MODEL,
-      messages,
-      stream: false,
-      ...deepSeekBodyOptions(request),
-    };
-    const extra = request.extra ?? {};
-    if (extra.max_tokens != null) body.max_tokens = extra.max_tokens;
-    // A2-209 — these four were suppressed whenever the model was `deepseek-reasoner`,
-    // a rule written when that id named a separate reasoning model that rejected them.
-    // The id is retired and the rule was measured stale: on 2026-09-23 a live request
-    // with `model: 'deepseek-reasoner'` plus temperature/top_p/presence_penalty/
-    // frequency_penalty returned HTTP 200 (served by deepseek-flash, reasoning intact),
-    // as did the same parameters on `deepseek-flash` and `deepseek-v4-pro` directly.
-    // Keeping the branch meant a caller's sampling parameters were dropped on the floor
-    // for one string, silently — and the branch was about to go dead anyway once
-    // DEFAULT_MODEL stopped being a retired id.
-    //
-    // not_measured: whether DeepSeek HONOURS these on an aliased request or merely
-    // accepts them. Forwarding is still the better failure: the provider gets what the
-    // caller asked for and can say no, instead of this connector deciding for it.
-    for (const key of ['temperature', 'top_p', 'presence_penalty', 'frequency_penalty']) {
-      if (extra[key] != null) body[key] = extra[key];
-    }
-    return body;
+    return buildDeepSeekRequestBody(request);
   }
 
   protected parseResponse(json: DeepSeekChatResponse, request: ConnectorRequest): ParsedApiOutput {

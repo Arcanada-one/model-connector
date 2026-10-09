@@ -7,7 +7,7 @@ export default [
     languageOptions: {
       parser: tsparser,
       parserOptions: {
-        project: './tsconfig.json',
+        project: ['./tsconfig.json', './test/provider-profiles/tsconfig.json'],
         sourceType: 'module',
       },
     },

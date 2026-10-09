@@ -164,6 +164,14 @@ export class ConnectorsController {
   ) {
     if (!this.strictChat || !req.apiKey?.id)
       throw new HttpException({ error: 'strict_chat_unavailable' }, HttpStatus.SERVICE_UNAVAILABLE);
+    // Versioned dedicated profiles must not bypass normal credential resolution.
+    // The strict authority/transport adapter is a separate qualified integration.
+    if ((await this.connectorsService.getKeyPolicy(req.apiKey.id))?.policyVersion === 2) {
+      throw new HttpException(
+        { error: 'strict_profile_unavailable' },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
     const abort = new AbortController();
     const closed = () => abort.abort();
     reply.raw.once('close', closed);

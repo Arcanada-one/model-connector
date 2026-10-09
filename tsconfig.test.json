@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": ["src/**/*", "test/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.sync-conflict-*"]
+}
