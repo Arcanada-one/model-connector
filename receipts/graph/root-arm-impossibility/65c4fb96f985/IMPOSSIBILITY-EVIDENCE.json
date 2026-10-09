@@ -4,7 +4,7 @@
   "statement": "Measured facts about arms that this repository cannot execute. Nothing here is signed, none of it grants or requests an exemption by itself; control decides whether to sign, bound to range, entity and verifier per documentation/runbooks/graph-admission-canary-or-exemption.md (A2-455c).",
   "format_note": "The runbook defines the signing order but no field schema for the impossibility evidence; this file therefore records the facts a signer needs (path, sha256, class, dependency, required inputs, measured outcome with and without credentials, stub verdict, existing offline coverage). Mapping to the signer input format is control work.",
   "repo": "Arcanada-one/model-connector",
-  "code_head": "cb2980e804f83dbb9d5808f610b04d6528242b49",
+  "code_head": "65c4fb96f98581a166e620cd484d507c9da943ad",
   "base_main": "ce812cb43e1b86d937f74a855e7f0dae13bf98b2",
   "verifier_edge": "v-global-fallback-test (scripts/graph-full-suite.sh .) on the root deployable",
   "measured_on": {
@@ -240,6 +240,7 @@
     "the R2 arm ran against a local SigV4-verifying S3 contract stub, which says nothing about Cloudflare R2 availability or account configuration",
     "image-router.fallback has one credential-conditional test that returns early without VERTEX_SERVICE_ACCOUNT_JSON; it counts as passed without checking its subject (recorded in the suite row as credential_conditional_tests)",
     "openai-images.connector.integration.spec.ts with RUN_INTEGRATION=1 and no key reports 1 passed + 3 skipped: the one pass does not touch OpenAI and proves nothing about it, so the file is not counted as measured",
-    "for the vertex arms, the credential-less run exits 1 because beforeAll throws \"VERTEX_SERVICE_ACCOUNT_JSON not set\"; the tests are then reported skipped, never passed"
+    "for the vertex arms, the credential-less run exits 1 because beforeAll throws \"VERTEX_SERVICE_ACCOUNT_JSON not set\"; the tests are then reported skipped, never passed",
+    "on the hosted ci-general runner (PR 205 run 37882496052) maintained-regression reported failed at deploy/compose-network.test.sh (\"REFUSED native Compose consumer network contract\") under the suite's clean environment, although the same script passes in the lint-and-test step; that row is outside this change and is reported, not fixed or exempted here"
   ]
 }
