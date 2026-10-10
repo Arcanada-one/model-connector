@@ -179,6 +179,9 @@ cat >"$fake_docker" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 image="sha256:$(printf 'a%.0s' {1..64})"
+if [[ "$1" == image && "$2" == inspect && "${*: -1}" == '{{json .Config.Env}}' ]]; then
+  printf '["MUNERAL_BUILD_SHA=%s"]\n' "$(printf 'f%.0s' {1..40})"; exit 0
+fi
 if [[ "$1" == inspect ]]; then
   printf '%s|healthy|muneral|muneral-api|%s|2026-10-10T18:00:00Z\n' "$image" "$(printf 'b%.0s' {1..64})"
   exit 0
@@ -420,6 +423,8 @@ export RECOVERY_IMAGE
 export RECOVERY_STATE="${fixture_dir}/recovery-state"
 export RECOVERY_HEALTH=healthy RECOVERY_PROJECT=arcanada-assistant RECOVERY_SERVICE=assistant
 export RECOVERY_LATEST="$RECOVERY_IMAGE" RECOVERY_PREVIOUS="$RECOVERY_IMAGE"
+export RECOVERY_BAD_IMAGE=0 RECOVERY_BAD_TIME=0
+export RECOVERY_FOREIGN_BEFORE=0
 export RECOVERY_NOOP=0 RECOVERY_WRONG=0 RECOVERY_INSPECT_COUNT="${fixture_dir}/inspect-count" RECOVERY_INTERLEAVE=0
 : > "$RECOVERY_INSPECT_COUNT"
 cat >"$fake_docker_assistant" <<'SH'
@@ -428,7 +433,9 @@ set -euo pipefail
 printf '%s\n' "$*" >>"${ASSISTANT_DOCKER_LOG}"
 if [[ "${1:-}" == image && "${2:-}" == inspect ]]; then
   if [[ "${3:-}" == arcanada-assistant-assistant:previous && "$ASSISTANT_PREVIOUS_PRESENT" != 1 ]]; then exit 1; fi
-  if [[ "${4:-}" == --format ]]; then
+  if [[ "${4:-}" == --format && "${5:-}" == '{{json .Config.Env}}' ]]; then
+    printf '["MUNERAL_BUILD_SHA=%s","ASSISTANT_SOURCE_FINGERPRINT=%s"]\n' "$(printf 'f%.0s' {1..40})" "$RECOVERY_IMAGE"
+  elif [[ "${4:-}" == --format ]]; then
     case "$3" in *:previous) echo "$RECOVERY_PREVIOUS";; *:latest) echo "$RECOVERY_LATEST";; *) echo "$RECOVERY_IMAGE";; esac
   fi
 elif [[ "${1:-}" == inspect ]]; then
@@ -439,8 +446,12 @@ elif [[ "${1:-}" == inspect ]]; then
       if [[ -f "$RECOVERY_STATE" ]]; then id="$(printf 'c%.0s' {1..64})"; started=2026-10-10T19:00:00Z; fi
       if [[ "$RECOVERY_WRONG" == 1 && -f "$RECOVERY_STATE" ]]; then image="sha256:$(printf 'd%.0s' {1..64})"; fi
       if [[ "$RECOVERY_INTERLEAVE" == 1 && -s "$RECOVERY_INSPECT_COUNT" ]]; then id="$(printf 'e%.0s' {1..64})"; fi
+      if [[ "$RECOVERY_BAD_IMAGE" == 1 ]]; then image=not-an-image; fi
+      if [[ "$RECOVERY_BAD_TIME" == 1 ]]; then started=2026-99-99T19:00:00Z; fi
+      project="$RECOVERY_PROJECT"
+      if [[ "$RECOVERY_FOREIGN_BEFORE" == 1 && ! -s "$RECOVERY_INSPECT_COUNT" ]]; then project=foreign; fi
       printf x >> "$RECOVERY_INSPECT_COUNT"
-      printf '%s|%s|%s|%s|%s|%s\n' "$image" "$RECOVERY_HEALTH" "$RECOVERY_PROJECT" "$RECOVERY_SERVICE" "$id" "$started"
+      printf '%s|%s|%s|%s|%s|%s\n' "$image" "$RECOVERY_HEALTH" "$project" "$RECOVERY_SERVICE" "$id" "$started"
       ;;
   esac
 elif [[ "$1" == compose && "$*" == *'up -d --force-recreate'* && "$RECOVERY_NOOP" == 0 ]]; then
@@ -523,6 +534,27 @@ mv "${state_root}/recovery-arcanada-assistant/previous" "${fixture_dir}/saved-pr
 expect_fail recovery_without_custody_refused arcanada-assistant rollback
 [[ ! -s "$ASSISTANT_DOCKER_LOG" ]] || ! grep -Eq '^tag |compose .* up' "$ASSISTANT_DOCKER_LOG"
 mv "${fixture_dir}/saved-previous" "${state_root}/recovery-arcanada-assistant/previous"
+
+# A foreign BEFORE identity must refuse before tag/up, even if later reads would be own.
+export RECOVERY_FOREIGN_BEFORE=1
+: > "$RECOVERY_INSPECT_COUNT"
+: > "$ASSISTANT_DOCKER_LOG"
+expect_fail recovery_foreign_before_own_after_no_mutation arcanada-assistant rollback
+expect_message recovery_foreign_before_own_after_no_mutation 'rollback before identity refused'
+! grep -Eq '^tag |compose .* up' "$ASSISTANT_DOCKER_LOG"
+export RECOVERY_FOREIGN_BEFORE=0
+
+for name in malformed_image malformed_timestamp; do
+  export RECOVERY_BAD_IMAGE=0 RECOVERY_BAD_TIME=0
+  case "$name" in
+    malformed_image) export RECOVERY_BAD_IMAGE=1 ;;
+    malformed_timestamp) export RECOVERY_BAD_TIME=1 ;;
+  esac
+  : > "$ASSISTANT_DOCKER_LOG"
+  expect_fail "recovery_before_${name}_no_mutation" arcanada-assistant rollback
+  ! grep -Eq '^tag |compose .* up' "$ASSISTANT_DOCKER_LOG"
+done
+export RECOVERY_BAD_IMAGE=0 RECOVERY_BAD_TIME=0
 
 # Muneral uses the same custody policy but its own app and Compose identity.
 export RECOVERY_PROJECT=muneral RECOVERY_SERVICE=muneral-api

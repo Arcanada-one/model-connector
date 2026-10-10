@@ -554,10 +554,10 @@ recovery_record() {
   local record="$RECOVERY_DIR/previous"
   [[ -f "$record" && ! -L "$record" && "$(stat -c '%U' "$record")" == 'root' &&
      "$(stat -c '%a' "$record")" == 600 ]] || die 'recovery record unavailable or unsafe'
-  IFS='|' read -r RECOVERY_IMAGE RECOVERY_CONTAINER RECOVERY_STARTED RECOVERY_SOURCE < "$record"
+  IFS='|' read -r RECOVERY_IMAGE RECOVERY_CONTAINER RECOVERY_STARTED RECOVERY_PREPARING_SOURCE < "$record"
   [[ "$RECOVERY_IMAGE" =~ ^sha256:[0-9a-f]{64}$ &&
      "$RECOVERY_CONTAINER" =~ ^[0-9a-f]{64}$ &&
-     "$RECOVERY_STARTED" =~ ^[0-9TZ:.+-]+$ && "$RECOVERY_SOURCE" =~ ^[0-9a-f]{40}$ ]] ||
+     "$RECOVERY_STARTED" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?Z$ && "$RECOVERY_PREPARING_SOURCE" =~ ^[0-9a-f]{40}$ ]] ||
     die 'recovery record identity refused'
 }
 
@@ -619,8 +619,9 @@ cmd_tag_rotate() {
     IFS='|' read -r live health project service container started <<< "$observed"
     [[ "$live" =~ ^sha256:[0-9a-f]{64}$ && "$health" == healthy &&
        "$project" == "${PROJECT[$svc]}" && "$service" == "${ROLLBACK_SERVICES[$svc]}" &&
-       "$container" =~ ^[0-9a-f]{64}$ && "$started" =~ ^[0-9TZ:.+-]+$ ]] ||
+       "$container" =~ ^[0-9a-f]{64}$ && "$started" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?Z$ ]] ||
       die 'recovery snapshot identity or health refused'
+    /usr/bin/date -u -d "$started" +%s >/dev/null 2>&1 || die 'recovery snapshot timestamp refused'
     latest="$("$DOCKER" image inspect "${img}:latest" --format '{{.Id}}' 2>/dev/null)" ||
       die 'recovery latest image unavailable'
     [[ "$latest" == "$live" ]] || die 'recovery latest differs from live image'
@@ -633,11 +634,20 @@ cmd_tag_rotate() {
     recovery_custody "$svc"
     source="$(head_sha "$svc")"
     [[ "$source" =~ ^[0-9a-f]{40}$ ]] || die 'recovery source identity refused'
-    local pending
-    pending="$(mktemp "$RECOVERY_DIR/.pending.XXXXXXXX")"
-    printf '%s|%s|%s|%s\n' "$live" "$container" "$started" "$source" > "$pending"
-    chmod 600 "$pending"
-    mv -T "$pending" "$RECOVERY_DIR/previous"
+    [[ "$(recovery_identity "$svc")" == "$observed" ]] || die 'live identity changed before custody publication'
+    # Record field 4 is PREPARING_SOURCE, never a claim about old image source.
+    /usr/bin/python3 -I -c '
+import os,sys,tempfile
+directory=sys.argv[1]
+fd,path=tempfile.mkstemp(prefix=".pending.",dir=directory)
+with os.fdopen(fd,"w") as out:
+ out.write("|".join(sys.argv[2:])+"\n"); out.flush(); os.fsync(out.fileno())
+os.replace(path,directory+"/previous")
+fd=os.open(directory,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+try: os.fsync(fd)
+finally: os.close(fd)
+' "$RECOVERY_DIR" "$live" "$container" "$started" "$source" ||
+      die 'recovery custody durability not verified'
     printf 'BROKER_RECOVERY_SNAPSHOT_PASS service=%s image=%s\n' "$svc" "$live"
     return ;;
   esac
@@ -724,6 +734,13 @@ cmd_rollback() {
   case "$svc" in muneral|arcanada-assistant)
     recovery_custody "$svc"; recovery_record
     before="$(recovery_identity "$svc")" || die 'rollback current identity unavailable'
+    IFS='|' read -r live health project service container started <<< "$before"
+    [[ "$live" =~ ^sha256:[0-9a-f]{64}$ &&
+       "$health" =~ ^(healthy|unhealthy|starting)$ &&
+       "$project" == "${PROJECT[$svc]}" && "$service" == "${ROLLBACK_SERVICES[$svc]}" &&
+       "$container" =~ ^[0-9a-f]{64}$ && "$started" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?Z$ ]] ||
+      die 'rollback before identity refused'
+    /usr/bin/date -u -d "$started" +%s >/dev/null 2>&1 || die 'rollback before timestamp refused'
     expected_image="$("$DOCKER" image inspect "${img}:previous" --format '{{.Id}}' 2>/dev/null)" ||
       die 'rollback image readback unavailable'
     [[ "$expected_image" == "$RECOVERY_IMAGE" ]] || die 'rollback previous differs from custody'
@@ -736,6 +753,10 @@ cmd_rollback() {
   esac
   compose_env "$svc"; set_compose_argv "$svc"
   IFS=' ' read -r -a services <<< "${ROLLBACK_SERVICES[$svc]}"
+  case "$svc" in muneral|arcanada-assistant)
+    [[ "$(recovery_identity "$svc")" == "$before" ]] || die 'rollback identity changed before recreate'
+    ;;
+  esac
   case "$svc" in
     muneral|arcanada-assistant)
       "$DOCKER" "${COMPOSE_ARGV[@]}" up -d --force-recreate --no-deps --no-build --pull never "${services[@]}"
@@ -764,7 +785,7 @@ cmd_rollback() {
     IFS='|' read -r live health project service container started <<< "$after"
     [[ "$live" == "$expected_image" && "$health" == healthy &&
        "$project" == "${PROJECT[$svc]}" && "$service" == "${ROLLBACK_SERVICES[$svc]}" &&
-       "$container" =~ ^[0-9a-f]{64}$ && "$started" =~ ^[0-9TZ:.+-]+$ &&
+       "$container" =~ ^[0-9a-f]{64}$ && "$started" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?Z$ &&
        "$after" != "$before" ]] || die 'rollback restored identity refused'
     local old_container old_started
     IFS='|' read -r live health project service old_container old_started <<< "$before"
