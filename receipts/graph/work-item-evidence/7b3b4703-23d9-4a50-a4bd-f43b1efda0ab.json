@@ -1,12 +1,12 @@
 {
  "attachments": [
   {
-   "attached_at_utc": "2026-10-10T19:29:45Z",
+   "attached_at_utc": "2026-10-10T19:32:58Z",
    "attachment_kind": "evidence",
    "delivery": {
-    "checked_at_utc": "2026-10-10T19:29:45Z",
-    "created_at": "2026-10-10T19:29:45.602Z",
-    "evidence_id": "6d4ab84a-22fc-4dd3-b780-3bac6058c6a7",
+    "checked_at_utc": "2026-10-10T19:32:59Z",
+    "created_at": "2026-10-10T19:32:59.315Z",
+    "evidence_id": "5b8f251b-78f2-4bef-a0ea-4dc956bbcc2a",
     "http": 201,
     "idempotent": false,
     "muneral_task_id": "7b3b4703-23d9-4a50-a4bd-f43b1efda0ab",
@@ -24,8 +24,8 @@
    },
    "evidence_ref": {
     "contentType": "application/json",
-    "digest": "sha256:e47754c35e04e11153a45af0c2e5bb6beca7900f796cfb1153f33f12165b9551",
-    "label": "ChangeAdmissionReceipt/v1 car-verify-20261010T192753Z-c522b8c9",
+    "digest": "sha256:9918c1396091e5c8968f58813fd0ce3b9256344fc5824a7d5483ae56998c258f",
+    "label": "ChangeAdmissionReceipt/v1 car-verify-20261010T193131Z-f8975d98",
     "uri": "file:///home/dev/aup/infra-mc-thinking-77999436-20261006/receipts/graph/change-admission-broker-recovery-20261010.json"
    },
    "model": "claude-opus-5",
@@ -34,7 +34,7 @@
     "version": "1.0.0"
    },
    "provisional_until_fable_review": true,
-   "receipt_id": "car-verify-20261010T192753Z-c522b8c9",
+   "receipt_id": "car-verify-20261010T193131Z-f8975d98",
    "receipt_path": "receipts/graph/change-admission-broker-recovery-20261010.json",
    "schema": "WorkItemEvidenceAttachment/v1",
    "work_item": {
@@ -47,6 +47,6 @@
  ],
  "schema": "WorkItemEvidenceLedger/v1",
  "system": "muneral",
- "updated_at_utc": "2026-10-10T19:29:45Z",
+ "updated_at_utc": "2026-10-10T19:32:59Z",
  "work_item": "7b3b4703-23d9-4a50-a4bd-f43b1efda0ab"
 }
