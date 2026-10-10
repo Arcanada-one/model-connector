@@ -52,6 +52,26 @@ sed -i \
   "$broker"
 chmod 0755 "$broker"
 
+# Count only assertions that reached their existing successful completion.
+# The fixed inventory is reviewed source; never infer success from exit zero alone.
+readonly expected_pass_count=66
+readonly pass_inventory="${fixture_dir}/passed-controls"
+: >"$pass_inventory"
+record_pass() {
+  # One assertion runs in a subshell; retain its completion in owned fixture custody.
+  printf '1\n' >>"$pass_inventory"
+  printf 'PASS: %s\n' "$1"
+}
+report_inventory() {
+  local pass_count
+  pass_count="$(wc -l <"$pass_inventory")"
+  if [[ "$pass_count" -ne "$expected_pass_count" ]]; then
+    printf 'FAIL: native inventory expected=%s observed=%s\n' "$expected_pass_count" "$pass_count" >&2
+    return 1
+  fi
+  printf '%s passed\n' "$pass_count"
+}
+
 expect_pass() {
   local name="$1"; shift
   if ! "$broker" "$@" >"${fixture_dir}/${name}.out" 2>&1; then
@@ -63,7 +83,7 @@ expect_pass() {
     echo "FAIL: ${name} leaked connection material" >&2
     exit 1
   fi
-  echo "PASS: ${name}"
+  record_pass "${name}"
 }
 
 expect_fail() {
@@ -72,7 +92,7 @@ expect_fail() {
     echo "FAIL: ${name} unexpectedly passed" >&2
     exit 1
   fi
-  echo "PASS: ${name}"
+  record_pass "${name}"
 }
 
 # `expect_fail` is satisfied by ANY non-zero exit, so on its own it cannot tell
@@ -295,7 +315,7 @@ check_env_placement() {
     echo "FAIL: ${name}: env also landed at ${unexpected}" >&2
     exit 1
   fi
-  echo "PASS: ${name}"
+  record_pass "${name}"
 }
 
 check_env_placement env_installed_beside_subdirectory_compose stt-whisper \
@@ -351,7 +371,7 @@ grep -Fq 'ARGANA_CLIENT_SECRET_HOST_PATH=/etc/muneral-kb-sync/auth-client-secret
     exit 1
   }
 )
-echo 'PASS: argana_container_name_is_inside_the_pinned_project'
+record_pass 'argana_container_name_is_inside_the_pinned_project'
 
 # And the same pairing end to end: `up` must create the project that
 # `freshness` then inspects into. A fake docker records argv so the assertions
@@ -642,7 +662,7 @@ expect_refused_drift() {
   if grep -Fq 'BROKER_SYNC_PASS' "$sync_out"; then echo "FAIL: ${name}: PASS printed" >&2; exit 1; fi
   if grep -Fq 'LOCAL ROLLBACK EDIT' "$sync_out"; then echo "FAIL: ${name}: file content leaked" >&2; exit 1; fi
   [ "$(git -C "$sync_dir" rev-parse HEAD)" = "$sync_c1" ] || { echo "FAIL: ${name}: HEAD moved" >&2; exit 1; }
-  echo "PASS: ${name}"
+  record_pass "${name}"
 }
 
 # RED: unstaged tracked edit in a file identical across c1/c2 (the case --force destroyed). Bytes preserved,
@@ -710,7 +730,7 @@ expect_refused_query() {
   [ "$(git -C "$sync_dir" rev-parse HEAD)" = "$sync_c1" ] || { echo "FAIL: ${name}: HEAD moved" >&2; exit 1; }
   [ "$(cat "${sync_dir}/alloy/config.alloy")" = 'LOCAL ROLLBACK EDIT' ] || { echo "FAIL: ${name}: bytes lost" >&2; exit 1; }
   [ -f "${sync_dir}/stray.txt" ] || { echo "FAIL: ${name}: clean ran" >&2; exit 1; }
-  echo "PASS: ${name}"
+  record_pass "${name}"
 }
 expect_refused_query sync_refuses_when_status_query_fails status '' 1
 expect_refused_query sync_refuses_when_status_query_dies status '' 128
@@ -723,14 +743,14 @@ sync_reset
 if ! "$shim_broker" arcanada-assistant sync "$sync_c2" >"$sync_out" 2>&1; then
   echo 'FAIL: the git shim is not transparent' >&2; sed -n '1,20p' "$sync_out" >&2; exit 1
 fi
-echo 'PASS: git_shim_is_transparent_and_clean_sync_passes'
+record_pass 'git_shim_is_transparent_and_clean_sync_passes'
 
 # The global force behaviour is gone.
 if grep -Eq 'checkout[^#]*--force|reset --hard' "$subject"; then
   echo 'FAIL: sync still force-discards tracked edits' >&2
   exit 1
 fi
-echo 'PASS: sync_has_no_force_or_reset'
+record_pass 'sync_has_no_force_or_reset'
 
 # GREEN: a clean tree syncs, stray untracked files go, and the exact tracked state is verified.
 sync_reset
@@ -741,4 +761,6 @@ grep -Fq "BROKER_SYNC_PASS service=arcanada-assistant sha=${sync_c2}" "$sync_out
 [ -z "$(git -C "$sync_dir" status --porcelain --untracked-files=no)" ] || { echo 'FAIL: tracked state not clean' >&2; exit 1; }
 [ ! -e "${sync_dir}/stray.txt" ] || { echo 'FAIL: untracked file survived clean' >&2; exit 1; }
 [ "$(cat "${sync_dir}/other.txt")" = two ] || { echo 'FAIL: checkout did not land c2' >&2; exit 1; }
-echo 'PASS: sync_clean_tree_syncs_and_verifies'
+record_pass 'sync_clean_tree_syncs_and_verifies'
+
+report_inventory
