@@ -178,6 +178,13 @@ fake_docker="${bin_root}/docker"
 cat >"$fake_docker" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
+image="sha256:$(printf 'a%.0s' {1..64})"
+if [[ "$1" == inspect ]]; then
+  printf '%s|healthy|muneral|muneral-api|%s|2026-10-10T18:00:00Z\n' "$image" "$(printf 'b%.0s' {1..64})"
+  exit 0
+elif [[ "$1" == image && "$2" == inspect ]]; then
+  printf '%s\n' "$image"; exit 0
+fi
 # Report the variables the broker exported, so the tests assert the VALUE and
 # not merely that the command was reached.
 printf 'FAKE_DOCKER IMAGE_TAG=%s BUILD_SHA=%s ARGV=%s\n' \
@@ -408,15 +415,36 @@ printf '%s\n' 'FIXTURE_ONLY=1' >"${env_root}/arcanada-assistant.env"
 fake_docker_assistant="${bin_root}/docker-assistant"
 export ASSISTANT_DOCKER_LOG="${fixture_dir}/assistant-docker.log"
 export ASSISTANT_PREVIOUS_PRESENT=1
+RECOVERY_IMAGE=sha256:$(printf 'a%.0s' {1..64})
+export RECOVERY_IMAGE
+export RECOVERY_STATE="${fixture_dir}/recovery-state"
+export RECOVERY_HEALTH=healthy RECOVERY_PROJECT=arcanada-assistant RECOVERY_SERVICE=assistant
+export RECOVERY_LATEST="$RECOVERY_IMAGE" RECOVERY_PREVIOUS="$RECOVERY_IMAGE"
+export RECOVERY_NOOP=0 RECOVERY_WRONG=0 RECOVERY_INSPECT_COUNT="${fixture_dir}/inspect-count" RECOVERY_INTERLEAVE=0
+: > "$RECOVERY_INSPECT_COUNT"
 cat >"$fake_docker_assistant" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\n' "$*" >>"${ASSISTANT_DOCKER_LOG}"
 if [[ "${1:-}" == image && "${2:-}" == inspect ]]; then
-  if [[ "${3:-}" == arcanada-assistant-assistant:previous && "$ASSISTANT_PREVIOUS_PRESENT" != 1 ]]; then
-    exit 1
+  if [[ "${3:-}" == arcanada-assistant-assistant:previous && "$ASSISTANT_PREVIOUS_PRESENT" != 1 ]]; then exit 1; fi
+  if [[ "${4:-}" == --format ]]; then
+    case "$3" in *:previous) echo "$RECOVERY_PREVIOUS";; *:latest) echo "$RECOVERY_LATEST";; *) echo "$RECOVERY_IMAGE";; esac
   fi
-  if [[ "${4:-}" == --format ]]; then printf '%s\n' 'sha256:fixture-assistant-image'; fi
+elif [[ "${1:-}" == inspect ]]; then
+  case "${*: -1}" in
+    '{{.State.Health.Status}}') printf '%s\n' healthy ;;
+    *)
+      image="$RECOVERY_IMAGE"; id="$(printf 'b%.0s' {1..64})"; started=2026-10-10T18:00:00Z
+      if [[ -f "$RECOVERY_STATE" ]]; then id="$(printf 'c%.0s' {1..64})"; started=2026-10-10T19:00:00Z; fi
+      if [[ "$RECOVERY_WRONG" == 1 && -f "$RECOVERY_STATE" ]]; then image="sha256:$(printf 'd%.0s' {1..64})"; fi
+      if [[ "$RECOVERY_INTERLEAVE" == 1 && -s "$RECOVERY_INSPECT_COUNT" ]]; then id="$(printf 'e%.0s' {1..64})"; fi
+      printf x >> "$RECOVERY_INSPECT_COUNT"
+      printf '%s|%s|%s|%s|%s|%s\n' "$image" "$RECOVERY_HEALTH" "$RECOVERY_PROJECT" "$RECOVERY_SERVICE" "$id" "$started"
+      ;;
+  esac
+elif [[ "$1" == compose && "$*" == *'up -d --force-recreate'* && "$RECOVERY_NOOP" == 0 ]]; then
+  : > "$RECOVERY_STATE"
 fi
 SH
 chmod 0755 "$fake_docker_assistant"
@@ -426,17 +454,15 @@ expect_pass assistant_release_tag_is_checkout_head arcanada-assistant tag-releas
 expect_message assistant_release_tag_is_checkout_head "arcanada-assistant-assistant:${assistant_head}"
 grep -Fxq "tag arcanada-assistant-assistant:latest arcanada-assistant-assistant:${assistant_head}" "$ASSISTANT_DOCKER_LOG"
 expect_pass assistant_image_id_is_checkout_tag arcanada-assistant image-id
-expect_message assistant_image_id_is_checkout_tag 'sha256:fixture-assistant-image'
+expect_message assistant_image_id_is_checkout_tag "$RECOVERY_IMAGE"
 grep -Fxq "image inspect arcanada-assistant-assistant:${assistant_head} --format {{.Id}}" "$ASSISTANT_DOCKER_LOG"
 expect_pass assistant_preserves_previous_image arcanada-assistant tag-rotate
-grep -Fxq 'tag arcanada-assistant-assistant:latest arcanada-assistant-assistant:previous' "$ASSISTANT_DOCKER_LOG"
+grep -Fxq "tag ${RECOVERY_IMAGE} arcanada-assistant-assistant:previous" "$ASSISTANT_DOCKER_LOG"
 : >"$ASSISTANT_DOCKER_LOG"
 expect_pass assistant_rollback_recreates_only_assistant arcanada-assistant rollback
-expected_calls="$(printf '%s\n' 'image inspect arcanada-assistant-assistant:previous' 'tag arcanada-assistant-assistant:previous arcanada-assistant-assistant:latest' "compose -p arcanada-assistant -f ${assistant_checkout}/docker-compose.yml up -d --force-recreate assistant")"
-[[ "$(cat "$ASSISTANT_DOCKER_LOG")" == "$expected_calls" ]] || {
-  echo 'FAIL: Assistant rollback image/order/service scope differs' >&2
-  exit 1
-}
+grep -Fxq "compose -p arcanada-assistant -f ${assistant_checkout}/docker-compose.yml up -d --force-recreate --no-deps --no-build --pull never assistant" "$ASSISTANT_DOCKER_LOG"
+grep -Fq 'inspect arcanada-assistant-assistant-1 --format {{.Image}}|' "$ASSISTANT_DOCKER_LOG"
+! grep -Eq 'up .* (postgres|redis)( |$)' "$ASSISTANT_DOCKER_LOG"
 export ASSISTANT_PREVIOUS_PRESENT=0
 : >"$ASSISTANT_DOCKER_LOG"
 expect_fail assistant_missing_previous_refuses arcanada-assistant rollback
@@ -447,9 +473,66 @@ export ASSISTANT_PREVIOUS_PRESENT=1
 expect_fail assistant_rollback_rejects_caller_service arcanada-assistant rollback postgres
 expect_message assistant_rollback_rejects_caller_service 'rollback takes no arguments'
 [[ ! -s "$ASSISTANT_DOCKER_LOG" ]]
-expect_fail unmapped_rollback_stays_refused muneral rollback
-expect_message unmapped_rollback_stays_refused 'service has no rollback recipe: muneral'
+expect_fail unmapped_rollback_stays_refused argana rollback
+expect_message unmapped_rollback_stays_refused 'service has no rollback recipe: argana'
 [[ ! -s "$ASSISTANT_DOCKER_LOG" ]]
+
+# Emergency recovery controls: real main dispatch, root-custody paths and Docker argv.
+for name in unhealthy foreign_project foreign_service latest_drift previous_drift interleaving; do
+  export RECOVERY_HEALTH=healthy RECOVERY_PROJECT=arcanada-assistant RECOVERY_SERVICE=assistant
+  export RECOVERY_LATEST="$RECOVERY_IMAGE" RECOVERY_PREVIOUS="$RECOVERY_IMAGE" RECOVERY_INTERLEAVE=0
+  : > "$RECOVERY_INSPECT_COUNT"
+  case "$name" in
+    unhealthy) export RECOVERY_HEALTH=unhealthy ;;
+    foreign_project) export RECOVERY_PROJECT=foreign ;;
+    foreign_service) export RECOVERY_SERVICE=postgres ;;
+    latest_drift) RECOVERY_LATEST="sha256:$(printf 'd%.0s' {1..64})"; export RECOVERY_LATEST ;;
+    previous_drift) RECOVERY_PREVIOUS="sha256:$(printf 'd%.0s' {1..64})"; export RECOVERY_PREVIOUS ;;
+    interleaving) export RECOVERY_INTERLEAVE=1 ;;
+  esac
+  : > "$ASSISTANT_DOCKER_LOG"
+  expect_fail "recovery_build_$name" arcanada-assistant build
+  ! grep -Eq 'compose .* build$' "$ASSISTANT_DOCKER_LOG"
+done
+export RECOVERY_HEALTH=healthy RECOVERY_PROJECT=arcanada-assistant RECOVERY_SERVICE=assistant
+export RECOVERY_LATEST="$RECOVERY_IMAGE" RECOVERY_PREVIOUS="$RECOVERY_IMAGE" RECOVERY_INTERLEAVE=0
+rm -f "$RECOVERY_STATE"
+expect_pass recovery_assistant_build_preserves_live arcanada-assistant build
+for name in wrong_image compose_noop previous_drift foreign_project; do
+  rm -f "$RECOVERY_STATE"
+  export RECOVERY_WRONG=0 RECOVERY_NOOP=0 RECOVERY_PREVIOUS="$RECOVERY_IMAGE" RECOVERY_PROJECT=arcanada-assistant
+  case "$name" in
+    wrong_image) export RECOVERY_WRONG=1 ;;
+    compose_noop) export RECOVERY_NOOP=1 ;;
+    previous_drift) RECOVERY_PREVIOUS="sha256:$(printf 'd%.0s' {1..64})"; export RECOVERY_PREVIOUS ;;
+    foreign_project) export RECOVERY_PROJECT=foreign ;;
+  esac
+  expect_fail "recovery_rollback_$name" arcanada-assistant rollback
+  ! grep -Fq BROKER_ROLLBACK_PASS "${fixture_dir}/recovery_rollback_$name.out"
+done
+export RECOVERY_WRONG=0 RECOVERY_NOOP=0 RECOVERY_PREVIOUS="$RECOVERY_IMAGE" RECOVERY_PROJECT=arcanada-assistant
+(
+  exec 8>> "${state_root}/recovery-arcanada-assistant/lifecycle.lock"
+  /usr/bin/flock -n 8
+  expect_fail recovery_parallel_lifecycle_refused arcanada-assistant build
+  expect_message recovery_parallel_lifecycle_refused 'recovery lifecycle busy'
+)
+# No custody record means no image-changing recovery operation.
+mv "${state_root}/recovery-arcanada-assistant/previous" "${fixture_dir}/saved-previous"
+: > "$ASSISTANT_DOCKER_LOG"
+expect_fail recovery_without_custody_refused arcanada-assistant rollback
+[[ ! -s "$ASSISTANT_DOCKER_LOG" ]] || ! grep -Eq '^tag |compose .* up' "$ASSISTANT_DOCKER_LOG"
+mv "${fixture_dir}/saved-previous" "${state_root}/recovery-arcanada-assistant/previous"
+
+# Muneral uses the same custody policy but its own app and Compose identity.
+export RECOVERY_PROJECT=muneral RECOVERY_SERVICE=muneral-api
+rm -f "$RECOVERY_STATE"
+expect_pass recovery_muneral_build_preserves_live muneral build
+: > "$ASSISTANT_DOCKER_LOG"
+expect_pass recovery_muneral_rollback_only_app muneral rollback
+grep -Fq 'up -d --force-recreate --no-deps --no-build --pull never muneral-api' "$ASSISTANT_DOCKER_LOG"
+! grep -Eq 'up .* (postgres|redis)( |$)' "$ASSISTANT_DOCKER_LOG"
+export RECOVERY_PROJECT=arcanada-assistant RECOVERY_SERVICE=assistant
 
 # The repository is PRIVATE, so `sync` must demand a fetch credential on stdin
 # BEFORE it touches the network. The fake git makes the difference visible: if

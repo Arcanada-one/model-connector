@@ -275,11 +275,13 @@ declare -rA IMAGETAG=(
 )
 # Locally built image name for tag rotation and digest resolution.
 declare -rA IMAGE=(
+  [muneral]='muneral-api'
   [arcanada-assistant]='arcanada-assistant-assistant'
   [transcribator-api]='transcribator-api'
 )
 # Services to force-recreate on rollback.
 declare -rA ROLLBACK_SERVICES=(
+  [muneral]='muneral-api'
   [arcanada-assistant]='assistant'
   [transcribator-api]='redis api bot worker'
 )
@@ -289,6 +291,7 @@ declare -rA VERIFY=(
 )
 # Single container to inspect for freshness / smoke checks.
 declare -rA CONTAINER=(
+  [muneral]='muneral-muneral-api-1'
   [opsbot]='opsbot'
   [arcanada-assistant]='arcanada-assistant-assistant-1'
   # <project>-<service>-1. The service half is `argana`, read from the
@@ -519,8 +522,53 @@ cmd_sync() {
   printf 'BROKER_SYNC_PASS service=%s sha=%s\n' "$svc" "$(head_sha "$svc")"
 }
 
+# Root-owned recovery custody; all cooperating lifecycle verbs use one lock.
+# Noncooperating root/Docker access is outside this broker's trust boundary.
+recovery_custody() {
+  local svc="$1" dir="$STATE_ROOT/recovery-$1"
+  [[ -d "$STATE_ROOT" && ! -L "$STATE_ROOT" && "$(stat -c '%U' "$STATE_ROOT")" == 'root' ]] ||
+    die 'unsafe recovery state root'
+  [[ $(( 8#$(stat -c '%a' "$STATE_ROOT") & 8#022 )) -eq 0 ]] || die 'writable recovery state root'
+  [[ ! -L "$dir" ]] || die 'symlinked recovery custody'
+  if [[ ! -e "$dir" ]]; then (umask 077; mkdir "$dir"); fi
+  [[ -d "$dir" && "$(stat -c '%U' "$dir")" == 'root' && "$(stat -c '%a' "$dir")" == 700 ]] ||
+    die 'unsafe recovery custody'
+  RECOVERY_DIR="$dir"
+}
+recovery_lock() {
+  recovery_custody "$1"
+  local lock="$RECOVERY_DIR/lifecycle.lock"
+  [[ ! -L "$lock" ]] || die 'symlinked recovery lock'
+  if [[ -e "$lock" ]]; then
+    [[ -f "$lock" && "$(stat -c '%U' "$lock")" == 'root' && "$(stat -c '%a' "$lock")" == 600 ]] ||
+      die 'unsafe recovery lock'
+  fi
+  (umask 077; : >> "$lock")
+  exec 9>> "$lock"
+  /usr/bin/flock -n 9 || die 'recovery lifecycle busy'
+}
+recovery_identity() {
+  "$DOCKER" inspect "${CONTAINER[$1]}" --format '{{.Image}}|{{.State.Health.Status}}|{{index .Config.Labels "com.docker.compose.project"}}|{{index .Config.Labels "com.docker.compose.service"}}|{{.Id}}|{{.State.StartedAt}}' 2>/dev/null
+}
+recovery_record() {
+  local record="$RECOVERY_DIR/previous"
+  [[ -f "$record" && ! -L "$record" && "$(stat -c '%U' "$record")" == 'root' &&
+     "$(stat -c '%a' "$record")" == 600 ]] || die 'recovery record unavailable or unsafe'
+  IFS='|' read -r RECOVERY_IMAGE RECOVERY_CONTAINER RECOVERY_STARTED RECOVERY_SOURCE < "$record"
+  [[ "$RECOVERY_IMAGE" =~ ^sha256:[0-9a-f]{64}$ &&
+     "$RECOVERY_CONTAINER" =~ ^[0-9a-f]{64}$ &&
+     "$RECOVERY_STARTED" =~ ^[0-9TZ:.+-]+$ && "$RECOVERY_SOURCE" =~ ^[0-9a-f]{40}$ ]] ||
+    die 'recovery record identity refused'
+}
+
 cmd_pull()  { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" pull; }
-cmd_build() { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" build; }
+cmd_build() {
+  require_checkout "$1"
+  # These existing live services require a qualified recovery image BEFORE build.
+  case "$1" in muneral|arcanada-assistant) cmd_tag_rotate "$1" ;; esac
+  compose_env "$1"; set_compose_argv "$1"
+  "$DOCKER" "${COMPOSE_ARGV[@]}" build
+}
 cmd_up()    { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" up -d; }
 cmd_ps()    { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" ps; }
 cmd_logs() {
@@ -564,6 +612,35 @@ cmd_tag_rotate() {
   local svc="$1" img
   [[ -n "${IMAGE[$svc]+set}" ]] || die "service has no local image: $svc"
   img="${IMAGE[$svc]}"
+  case "$svc" in muneral|arcanada-assistant)
+    local observed live health project service latest previous container started source
+    observed="$(recovery_identity "$svc")" ||
+      die 'recovery snapshot unavailable'
+    IFS='|' read -r live health project service container started <<< "$observed"
+    [[ "$live" =~ ^sha256:[0-9a-f]{64}$ && "$health" == healthy &&
+       "$project" == "${PROJECT[$svc]}" && "$service" == "${ROLLBACK_SERVICES[$svc]}" &&
+       "$container" =~ ^[0-9a-f]{64}$ && "$started" =~ ^[0-9TZ:.+-]+$ ]] ||
+      die 'recovery snapshot identity or health refused'
+    latest="$("$DOCKER" image inspect "${img}:latest" --format '{{.Id}}' 2>/dev/null)" ||
+      die 'recovery latest image unavailable'
+    [[ "$latest" == "$live" ]] || die 'recovery latest differs from live image'
+    [[ "$(recovery_identity "$svc")" == "$observed" ]] || die 'live identity changed before snapshot'
+    "$DOCKER" tag "$live" "${img}:previous"
+    previous="$("$DOCKER" image inspect "${img}:previous" --format '{{.Id}}' 2>/dev/null)" ||
+      die 'recovery snapshot readback unavailable'
+    [[ "$previous" == "$live" ]] || die 'recovery snapshot readback differs'
+    [[ "$(recovery_identity "$svc")" == "$observed" ]] || die 'live identity changed during snapshot'
+    recovery_custody "$svc"
+    source="$(head_sha "$svc")"
+    [[ "$source" =~ ^[0-9a-f]{40}$ ]] || die 'recovery source identity refused'
+    local pending
+    pending="$(mktemp "$RECOVERY_DIR/.pending.XXXXXXXX")"
+    printf '%s|%s|%s|%s\n' "$live" "$container" "$started" "$source" > "$pending"
+    chmod 600 "$pending"
+    mv -T "$pending" "$RECOVERY_DIR/previous"
+    printf 'BROKER_RECOVERY_SNAPSHOT_PASS service=%s image=%s\n' "$svc" "$live"
+    return ;;
+  esac
   if "$DOCKER" image inspect "${img}:latest" >/dev/null 2>&1; then
     "$DOCKER" tag "${img}:latest" "${img}:previous"
     printf 'BROKER_TAG_ROTATE_PASS service=%s %s:latest -> %s:previous\n' "$svc" "$img" "$img"
@@ -636,7 +713,7 @@ cmd_verify() {
 # excluded because it is not recreated here, and no expected digest is passed
 # because the image being restored is deliberately the previous one.
 cmd_rollback() {
-  local svc="$1" img dir script
+  local svc="$1" img dir script expected_image before after live health project service container started
   local -a services
   [[ -n "${IMAGE[$svc]+set}" && -n "${ROLLBACK_SERVICES[$svc]+set}" ]] ||
     die "service has no rollback recipe: $svc"
@@ -644,10 +721,27 @@ cmd_rollback() {
   img="${IMAGE[$svc]}"
   "$DOCKER" image inspect "${img}:previous" >/dev/null 2>&1 ||
     die 'no :previous image — first deploy or pruned; cannot roll back'
-  "$DOCKER" tag "${img}:previous" "${img}:latest"
+  case "$svc" in muneral|arcanada-assistant)
+    recovery_custody "$svc"; recovery_record
+    before="$(recovery_identity "$svc")" || die 'rollback current identity unavailable'
+    expected_image="$("$DOCKER" image inspect "${img}:previous" --format '{{.Id}}' 2>/dev/null)" ||
+      die 'rollback image readback unavailable'
+    [[ "$expected_image" == "$RECOVERY_IMAGE" ]] || die 'rollback previous differs from custody'
+    [[ "$(recovery_identity "$svc")" == "$before" ]] || die 'rollback current identity changed'
+    ;;
+  esac
+  case "$svc" in
+    muneral|arcanada-assistant) "$DOCKER" tag "$expected_image" "${img}:latest" ;;
+    *) "$DOCKER" tag "${img}:previous" "${img}:latest" ;;
+  esac
   compose_env "$svc"; set_compose_argv "$svc"
   IFS=' ' read -r -a services <<< "${ROLLBACK_SERVICES[$svc]}"
-  "$DOCKER" "${COMPOSE_ARGV[@]}" up -d --force-recreate "${services[@]}"
+  case "$svc" in
+    muneral|arcanada-assistant)
+      "$DOCKER" "${COMPOSE_ARGV[@]}" up -d --force-recreate --no-deps --no-build --pull never "${services[@]}"
+      ;;
+    *) "$DOCKER" "${COMPOSE_ARGV[@]}" up -d --force-recreate "${services[@]}" ;;
+  esac
   if [[ -n "${VERIFY[$svc]+set}" ]]; then
     sleep 30
     dir="$(checkout_dir "$svc")"
@@ -658,6 +752,27 @@ cmd_rollback() {
       COMPOSE_FILE="${COMPOSE[$svc]}" \
       bash "$script" )
   fi
+  case "$svc" in muneral|arcanada-assistant)
+    local attempt state
+    for ((attempt=0; attempt<30; attempt++)); do
+      state="$("$DOCKER" inspect "${CONTAINER[$svc]}" --format '{{.State.Health.Status}}' 2>/dev/null)" || state=unknown
+      [[ "$state" != healthy ]] || break
+      sleep 1
+    done
+    [[ "$state" == healthy ]] || die 'rollback health not verified'
+    after="$(recovery_identity "$svc")" || die 'rollback restored identity unavailable'
+    IFS='|' read -r live health project service container started <<< "$after"
+    [[ "$live" == "$expected_image" && "$health" == healthy &&
+       "$project" == "${PROJECT[$svc]}" && "$service" == "${ROLLBACK_SERVICES[$svc]}" &&
+       "$container" =~ ^[0-9a-f]{64}$ && "$started" =~ ^[0-9TZ:.+-]+$ &&
+       "$after" != "$before" ]] || die 'rollback restored identity refused'
+    local old_container old_started
+    IFS='|' read -r live health project service old_container old_started <<< "$before"
+    [[ "$container" != "$old_container" && "$started" != "$old_started" ]] ||
+      die 'rollback did not recreate the exact container'
+    [[ "$(recovery_identity "$svc")" == "$after" ]] || die 'rollback final identity changed'
+    ;;
+  esac
   printf 'BROKER_ROLLBACK_PASS service=%s\n' "$svc"
 }
 
@@ -813,6 +928,10 @@ main() {
       *) die 'Billing requires its protected atomic transaction' ;;
     esac
   fi
+  case "$svc:$action" in
+    muneral:sync|muneral:pull|muneral:build|muneral:up|muneral:migrate|muneral:tag-rotate|muneral:tag-release|muneral:rollback|muneral:promote|arcanada-assistant:sync|arcanada-assistant:pull|arcanada-assistant:build|arcanada-assistant:up|arcanada-assistant:migrate|arcanada-assistant:tag-rotate|arcanada-assistant:tag-release|arcanada-assistant:rollback|arcanada-assistant:promote)
+      recovery_lock "$svc" ;;
+  esac
   case "$action" in
     atomic-check|atomic-deploy|atomic-recover)
                   [[ "$svc" == billing-arcana && $# -eq 1 ]] || die 'Billing transaction takes one fixed argument'
