@@ -449,7 +449,7 @@ elif [[ "${1:-}" == inspect ]]; then
       if [[ "$RECOVERY_BAD_IMAGE" == 1 ]]; then image=not-an-image; fi
       if [[ "$RECOVERY_BAD_TIME" == 1 ]]; then started=2026-99-99T19:00:00Z; fi
       project="$RECOVERY_PROJECT"
-      if [[ "$RECOVERY_FOREIGN_BEFORE" == 1 && ! -s "$RECOVERY_INSPECT_COUNT" ]]; then project=foreign; fi
+      if [[ "$RECOVERY_FOREIGN_BEFORE" == 1 && ! -f "$RECOVERY_STATE" ]]; then project=foreign; fi
       printf x >> "$RECOVERY_INSPECT_COUNT"
       printf '%s|%s|%s|%s|%s|%s\n' "$image" "$RECOVERY_HEALTH" "$project" "$RECOVERY_SERVICE" "$id" "$started"
       ;;
@@ -537,6 +537,7 @@ mv "${fixture_dir}/saved-previous" "${state_root}/recovery-arcanada-assistant/pr
 
 # A foreign BEFORE identity must refuse before tag/up, even if later reads would be own.
 export RECOVERY_FOREIGN_BEFORE=1
+rm -f "$RECOVERY_STATE"
 : > "$RECOVERY_INSPECT_COUNT"
 : > "$ASSISTANT_DOCKER_LOG"
 expect_fail recovery_foreign_before_own_after_no_mutation arcanada-assistant rollback
