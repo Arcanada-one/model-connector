@@ -5,10 +5,12 @@ import { ClaudeCodeConnector } from '../../src/connectors/claude-code/claude-cod
 import { ProcessTimeoutError, SpawnResult } from '../../src/connectors/base-cli.connector';
 import { ConnectorsService } from '../../src/connectors/connectors.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import type { ConnectorRequest } from '../../src/connectors/interfaces/connector.interface';
 import type { Prisma } from '@prisma/client';
 
 export interface RawCase {
   id: string;
+  request: ConnectorRequest;
   stdout: string;
   stderr: string;
   exitCode: number;
@@ -89,8 +91,6 @@ export async function observeDiagnostic(
       }
       return async (callback: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
         target.$transaction(async (tx) => {
-          if (fixture.fault === 'read-only-transaction')
-            await tx.$executeRawUnsafe('SET TRANSACTION READ ONLY');
           const request = new Proxy(tx.request, {
             get(delegate, property) {
               const value = Reflect.get(delegate, property);
@@ -107,6 +107,8 @@ export async function observeDiagnostic(
                   throw new Error('DIAG actual INSERT identity absent');
                 }
                 inserted.push(row.id);
+                if (fixture.fault === 'read-only-transaction')
+                  throw new Error('DIAG rollback after actual INSERT before commit');
                 return row;
               };
             },
@@ -126,17 +128,9 @@ export async function observeDiagnostic(
   const service = await compose(observed);
   const transport = new RawTransport(fixture);
   service.register(transport);
-  const model = 'diag-offline';
+  const model = fixture.request.model ?? 'diag-offline-fixture-model';
   if (fixture.fault === 'circuit') transport.openCircuit(model);
-  const response = await service.execute(
-    transport.name,
-    {
-      prompt: 'df60/' + fixture.id + '/' + randomUUID(),
-      model,
-      maxRetries: fixture.fault === 'second-attempt' ? 1 : 0,
-    },
-    apiKeyId,
-  );
+  const response = await service.execute(transport.name, fixture.request, apiKeyId);
   if (fixture.fault === 'delete-row') {
     await writer.request.deleteMany({ where: { id: { in: inserted }, apiKeyId } });
   }
