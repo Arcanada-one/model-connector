@@ -11,7 +11,7 @@ subject=importlib.util.module_from_spec(spec);spec.loader.exec_module(subject)
 
 class Controls(unittest.TestCase):
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory(prefix='mc-plugin-control-',dir='/home/dev')
+        self.temp=tempfile.TemporaryDirectory(prefix='mc-plugin-control-',dir=Path.home())
         self.addCleanup(self.temp.cleanup);self.root=Path(self.temp.name)
         self.home=self.root/'home';self.home.mkdir(mode=0o700)
         self.source=self.root/'plugin';self.source.write_bytes(b'bounded synthetic executable');self.source.chmod(0o500)
