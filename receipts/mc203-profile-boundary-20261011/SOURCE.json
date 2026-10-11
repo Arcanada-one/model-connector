@@ -1,9 +1,9 @@
 {
   "schema": "MeasuredGitSource/v1",
-  "commit": "7b08b52866a83bd4deb6fae7d9447ad5ad90d1fb",
-  "tree": "9d2b67b98dc8e73309d734a317edc2feec870172",
+  "commit": "668d5ba1c8da3228fac73794844111893bfd7f31",
+  "tree": "b4c5db94742c0e7622ee8e1d48708dcaa7622637",
   "dirty": false,
   "producer": "MC-KEYS bounded real HTTP profile boundary executor",
-  "captured_at_utc": "2026-10-11T06:00:43.458402+00:00",
+  "captured_at_utc": "2026-10-11T06:16:45.728102+00:00",
   "repository_path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008"
 }

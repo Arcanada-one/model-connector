@@ -1,17 +1,17 @@
 {
   "schema": "CanaryPlan/v2",
-  "id": "mc203-profile-boundaries-7b08b52866a8",
+  "id": "mc203-profile-boundaries-668d5ba1c8da",
   "environment": "owned-local-synthetic-no-live-services",
   "owner": "MC-KEYS",
   "producer_repository": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008",
   "read_only": false,
   "subject": {
     "schema": "GitCanarySubject/v1",
-    "commit": "7b08b52866a83bd4deb6fae7d9447ad5ad90d1fb",
-    "tree": "9d2b67b98dc8e73309d734a317edc2feec870172",
+    "commit": "668d5ba1c8da3228fac73794844111893bfd7f31",
+    "tree": "b4c5db94742c0e7622ee8e1d48708dcaa7622637",
     "evidence": {
       "path": "SOURCE.json",
-      "sha256": "d2b7b2f004ab1b24d10f1ff491f12e2562a03ecc42d15936d3103b5acb3eb0eb",
+      "sha256": "3a2353a51ae8e5c9da44a545fe12acb5b4b47582a6ebe96b65eb591a30370373",
       "source_field": "commit"
     }
   },
@@ -52,7 +52,7 @@
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/.arcana/verify.json",
-          "sha256": "bd1af827b6ae12a15441c707fee7dc1e76f65b303140b977d1c486f0cf04693b"
+          "sha256": "753ae893e45b4b0e45a9eb1fa08b83b99ba79c1c94a59ee2bc2e0eb77f2543b9"
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/.dockerignore",
@@ -169984,11 +169984,11 @@
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/src/connectors/connectors.controller.spec.ts",
-          "sha256": "fc46e21625356be8c6cb62931c69b888836694dbb1fb61207bdd44353bab80f3"
+          "sha256": "6784c044b0d907578f71b17d98e93b51b9d0ff6366e5f960a333bbde40fbd6a6"
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/src/connectors/connectors.controller.ts",
-          "sha256": "b98d69927c008e71b09d006f40f93a96ce374b3763537662cc14e9943fdcc4d4"
+          "sha256": "a76141cc20d040883d2b1ebd5a6ea27590df661319ab40a507536ca6e437c3a6"
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/src/connectors/connectors.module.ts",
@@ -172260,11 +172260,11 @@
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/test/provider-profiles/canary/admin-routes.cjs",
-          "sha256": "83c5c3e43f94fde6f305ec7bd72eb1b9779158cc0d9f5f767fc8b2c670adc954"
+          "sha256": "86d9b7dc1784c3235a28e4c380137dddfec88f00f216153a6a6a73a0c2a1d58f"
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/test/provider-profiles/canary/error-renderers.cjs",
-          "sha256": "e5bc3ca450bd558901a3a0f780090be388a1e69797ef5676574b39d0b117b319"
+          "sha256": "45e7a634dd097ea3400396551908766374efe3fdc5d77dc1a43c29f8be4746f7"
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/test/provider-profiles/tsconfig.json",
@@ -172315,6 +172315,10 @@
           "sha256": "7cd9dbded8ba6f8602adf648712476ddf9422d0ff2445425605b579b12132e7b"
         },
         {
+          "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/tsconfig.canary.json",
+          "sha256": "eb47c8ade62c0a2612d6f05679e946fb4dab1cfd7d914bc3843cc1a7f232b991"
+        },
+        {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/tsconfig.ci.json",
           "sha256": "a74926a43da95a29f26a4d62fb407c768e1db9388270f79b21cbfa0f2362ea42"
         },
@@ -172325,6 +172329,10 @@
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/tsconfig.test.json",
           "sha256": "2462c8fd893eafa0c41e0a5e50150e24588a157ceb2dbfbb58338abe6b1fd288"
+        },
+        {
+          "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/tsconfig.tooling.json",
+          "sha256": "61d72e9e378c9f6f4c2581492ecc076741586d4f060a4feb5463b64ba3dbe83f"
         },
         {
           "path": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008/vitest.bench-reservation.config.ts",
