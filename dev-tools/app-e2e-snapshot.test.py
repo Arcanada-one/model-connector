@@ -78,4 +78,18 @@ class Controls(unittest.TestCase):
                 m.verify(owned,digest)
                 with (owned/target).open('a') as stream:stream.write('mutation')
                 with self.assertRaises(ValueError):m.verify(owned,digest)
+    def test_dependency_capacity_refuses_without_large_allocation(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);self.fixture(root);old=m.MAX_BYTES
+            try:
+                m.MAX_BYTES=1
+                with self.assertRaisesRegex(ValueError,'capacity'):m.inventory(root/'node_modules')
+            finally:m.MAX_BYTES=old
+    def test_workspace_mode_drift_refuses(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);head=self.workspace_fixture(root);owned=root/'owned';owned.mkdir();m.export(root,head,owned)
+            digest=hashlib.sha256((owned/'custody.json').read_bytes()).hexdigest()
+            (owned/'dependencies/packages/sdk-ts/source.ts').chmod(0o700)
+            with self.assertRaisesRegex(ValueError,'workspace'):m.verify(owned,digest)
 if __name__=='__main__':unittest.main()

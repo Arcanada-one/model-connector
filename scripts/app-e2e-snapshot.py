@@ -1,14 +1,30 @@
 """Export pinned Git bytes and separately copy byte-bound owned dependencies."""
-import fnmatch, hashlib, json, os, re, shutil, subprocess, sys, tarfile
+import fnmatch, hashlib, json, os, re, shutil, stat, subprocess, sys, tarfile
 from pathlib import Path
+
+
+MAX_BYTES = 2 * 1024 ** 3
+MAX_ENTRIES = 200000
+MAX_FILE_BYTES = 128 * 1024 ** 2
+
+
+def file_digest(path):
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        while chunk := stream.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def inventory(root, workspaces=None):
     workspaces = workspaces or {}
     if root.is_symlink() or not root.is_dir():
         raise ValueError('dependency root indirection or absence')
-    rows = []
-    for path in sorted(root.rglob('*')):
+    rows = [['.', 'directory', stat.S_IMODE(root.stat().st_mode)]]
+    total = 0
+    for path in root.rglob('*'):
+        if len(rows) >= MAX_ENTRIES:
+            raise ValueError('snapshot entry capacity exceeded')
         name = path.relative_to(root).as_posix()
         if path.is_symlink():
             target = path.resolve(strict=True)
@@ -21,10 +37,16 @@ def inventory(root, workspaces=None):
             else:
                 rows.append([name, 'link', os.readlink(path)])
         elif path.is_file():
-            rows.append([name, 'file', hashlib.sha256(path.read_bytes()).hexdigest()])
-        elif not path.is_dir():
+            size = path.stat().st_size
+            total += size
+            if size > MAX_FILE_BYTES or total > MAX_BYTES:
+                raise ValueError('snapshot byte capacity exceeded')
+            rows.append([name, 'file', file_digest(path), stat.S_IMODE(path.stat().st_mode)])
+        elif path.is_dir():
+            rows.append([name, 'directory', stat.S_IMODE(path.stat().st_mode)])
+        else:
             raise ValueError('unsupported dependency object')
-    return rows
+    return sorted(rows)
 
 
 def workspace_bindings(source, head, git):
@@ -65,7 +87,22 @@ def export(root, head, owned):
     if git('rev-parse', head).decode().strip() != head:
         raise ValueError('nonexact source head')
     source = owned / 'source'; source.mkdir(mode=0o700)
-    archive = owned / 'source.tar'; archive.write_bytes(git('archive', head))
+    archive = owned / 'source.tar'
+    process = subprocess.Popen(['git', '-c', f'safe.directory={root}', '-C', str(root), 'archive', head], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    try:
+        archive_size = 0
+        with archive.open('xb') as stream:
+            while chunk := process.stdout.read(1024 * 1024):
+                archive_size += len(chunk)
+                if archive_size > MAX_FILE_BYTES:
+                    raise ValueError('Git archive capacity exceeded')
+                stream.write(chunk)
+        if process.wait(timeout=30):
+            raise ValueError('Git archive failed')
+    finally:
+        if process.poll() is None:
+            process.kill(); process.wait()
+        process.stdout.close()
     with tarfile.open(archive) as stream:
         if any(m.issym() or m.islnk() or m.name.startswith('/') or '..' in Path(m.name).parts for m in stream.getmembers()):
             raise ValueError('source archive indirection')
@@ -77,12 +114,27 @@ def export(root, head, owned):
               if (root / row['path']).is_dir() and (root / row['path']).resolve() == root / row['path']}
     before = inventory(root / 'node_modules', inputs)
     deps = owned / 'dependencies'; deps.mkdir(mode=0o700)
-    shutil.copytree(root / 'node_modules', deps / 'node_modules', symlinks=True)
+    copied = 0
+    def bounded_copy(src, dst):
+        nonlocal copied
+        size = Path(src).stat().st_size
+        if size > MAX_FILE_BYTES or copied + size > MAX_BYTES:
+            raise ValueError('snapshot copy capacity exceeded')
+        with open(src, 'rb') as incoming, open(dst, 'wb') as outgoing:
+            file_bytes = 0
+            while chunk := incoming.read(1024 * 1024):
+                file_bytes += len(chunk); copied += len(chunk)
+                if file_bytes > MAX_FILE_BYTES or copied > MAX_BYTES:
+                    raise ValueError('snapshot copy capacity exceeded')
+                outgoing.write(chunk)
+        shutil.copystat(src, dst)
+        return dst
+    shutil.copytree(root / 'node_modules', deps / 'node_modules', symlinks=True, copy_function=bounded_copy)
     # Targets come from the Git archive, never the live workspace or ignored build output.
     for row in bindings:
         target = deps / row['path']
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(source / row['path'], target)
+        shutil.copytree(source / row['path'], target, copy_function=bounded_copy)
     outputs = {(deps / row['path']).resolve(): row for row in bindings}
     if os.geteuid() == 0:
         for base in (source, deps):
@@ -95,7 +147,8 @@ def export(root, head, owned):
               'source_archive_sha256': hashlib.sha256(archive.read_bytes()).hexdigest(),
               'source_inventory': inventory(source),
               'lock_sha256': hashlib.sha256((source / 'pnpm-lock.yaml').read_bytes()).hexdigest(),
-              'dependency_inventory': after, 'workspace_bindings': bindings}
+              'dependency_inventory': after, 'workspace_bindings': bindings,
+              'limits': {'bytes': MAX_BYTES, 'entries': MAX_ENTRIES, 'single_file_bytes': MAX_FILE_BYTES}}
     (owned / 'custody.json').write_text(json.dumps(record, sort_keys=True))
     print('APP_E2E_CUSTODY_SHA256=' + hashlib.sha256((owned / 'custody.json').read_bytes()).hexdigest())
 
