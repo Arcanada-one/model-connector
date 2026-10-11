@@ -108,7 +108,7 @@ describe('actual child deadline controls with synthetic SQL/output, no native re
   it('cutoff-removal control is detected by independent subprocess timeout', () => {
     const result = child('disconnect', 250, true);
     expect(result.status).not.toBe(124);
-    expect(result.error?.code).toBe('ETIMEDOUT');
+    expect(result.error).toMatchObject({ code: 'ETIMEDOUT' });
     expect(result.stdout).toBe('');
   });
 });
