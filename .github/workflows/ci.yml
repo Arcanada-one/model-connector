@@ -274,7 +274,18 @@ jobs:
           info=base.lstat()
           if base.is_symlink() or not base.is_absolute() or not stat.S_ISDIR(info.st_mode) or info.st_uid!=os.geteuid():
               raise SystemExit('FULL_CUSTODY_REFUSED: home identity')
+          ancestors=[base,*base.parents]
+          identities=[]
+          for parent in ancestors:
+              current=parent.lstat()
+              if parent.is_symlink() or not stat.S_ISDIR(current.st_mode) or current.st_mode&0o022 or current.st_uid not in (0,os.geteuid()):
+                  raise SystemExit('FULL_CUSTODY_REFUSED: writable or ambiguous ancestor')
+              identities.append((current.st_dev,current.st_ino))
           owned=Path(tempfile.mkdtemp(prefix='mcf-',dir=base))
+          for parent, identity in zip(ancestors,identities):
+              current=parent.lstat()
+              if parent.is_symlink() or (current.st_dev,current.st_ino)!=identity or current.st_mode&0o022:
+                  raise SystemExit('FULL_CUSTODY_REFUSED: ancestor replacement; custody retained')
           # Root scratch plus the longest maintained BENCH fixture socket must fit sun_path.
           if len(os.fsencode(str(owned/'mc-full-.-XXXXXXXX'/'bench-composition-XXXXXX'/'custody.sock')))>=108:
               raise SystemExit('FULL_CUSTODY_REFUSED: socket path capacity; custody retained')
