@@ -72,7 +72,7 @@ describe('{{NAME}}Connector', () => {
   describe('buildRequestBody', () => {
     it('rejects content blocks before any upstream call', async () => {
       const result = await connector.execute({ prompt: [{ type: 'text', text: 'hello' }] });
-      expect(result.success).toBe(false);
+      expect(result.status).toBe('error');
       expect(result.error?.message).toContain('requires string prompt');
       expect(fetchSpy).not.toHaveBeenCalled();
     });
