@@ -78,31 +78,41 @@ def main():
                 '-v', str(src)+':/work:ro', '-v', str(deps)+':/work/node_modules:ro',
                 '-w', '/work', '--entrypoint', '/bin/sh', image,
                 '-c', 'env -i PATH=/usr/local/bin:/usr/bin:/bin node -e \'const f=require("fs");if(process.getuid()===0)process.exit(42);if(f.readFileSync("node_modules/probe","utf8")!=="MC_OCI_BOUND_DEPENDENCY")process.exit(43);for(const p of ["/work/probe-write","/work/node_modules/probe-write"]){try{f.writeFileSync(p,"x");process.exit(44)}catch(e){if(!["EROFS","EACCES"].includes(e.code))process.exit(45)}}console.log("MC_OCI_RECEIVED")\'']
-        code, raw, labels = command(argv, case/'create.log')
-        identity = (case/'app.cid').read_text().strip() if (case/'app.cid').exists() else ''
-        reconcile.write(case/'app.response.json', {'code':code, 'id':identity})
-        phase = 'create'
-        if code == 0:
-            if not __import__('re').fullmatch(r'[a-f0-9]{64}', identity):
-                raise ValueError('exact created identity absent')
-            phase = 'start'
-            code, raw, labels = command(['docker', 'start', '-a', identity], case/'start.log')
-        receiving = False
-        if identity:
-            inspect_code, inspected, _ = command(['docker', 'inspect', identity], case/'inspect.log')
-            if inspect_code == 0:
-                try:
-                    objects = json.loads(inspected)
-                    receiving = len(objects) == 1 and restrictions(objects[0],owner,name,head,image,src,deps)
-                except (ValueError, KeyError, TypeError): pass
-        cleanup = reconcile.reconcile(case)
+        code, raw, labels, phase, receiving = 127, b'', ['receiving_exception'], 'create', False
+        primary_exception = None
+        try:
+            code, raw, labels = command(argv, case/'create.log')
+            identity = (case/'app.cid').read_text().strip() if (case/'app.cid').exists() else ''
+            reconcile.write(case/'app.response.json', {'code':code, 'id':identity})
+            phase = 'create'
+            if code == 0:
+                if not __import__('re').fullmatch(r'[a-f0-9]{64}', identity):
+                    raise ValueError('exact created identity absent')
+                phase = 'start'
+                code, raw, labels = command(['docker', 'start', '-a', identity], case/'start.log')
+            receiving = False
+            if identity:
+                inspect_code, inspected, _ = command(['docker', 'inspect', identity], case/'inspect.log')
+                if inspect_code == 0:
+                    try:
+                        objects = json.loads(inspected)
+                        receiving = len(objects) == 1 and restrictions(objects[0],owner,name,head,image,src,deps)
+                    except (ValueError, KeyError, TypeError): pass
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+            primary_exception = 'receiving_exception'
+        finally:
+            try:
+                cleanup = reconcile.reconcile(case)
+            except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+                cleanup = 127
+        # Unknown custody remains on disk; no removal of the projection or intents.
         rows.append({'variant':variant,'phase':phase,'exit_code':code,
                      'failure_codes':labels,'mount_destination_seen':b'/work/node_modules' in raw,'raw_sha256':hashlib.sha256(raw).hexdigest(),
                      'received':code == 0 and raw.strip() == b'MC_OCI_RECEIVED' and receiving,
                      'restrictions_verified':receiving,
                      'projection_unchanged':before_source == snapshot.inventory(src) and before_deps == snapshot.inventory(deps),
-                     'cleanup_exit_code':cleanup})
-        if cleanup or code == 124: break
+                     'cleanup_exit_code':cleanup,'primary_exception':primary_exception})
+        if cleanup or code == 124 or primary_exception: break
     result = {'schema':'MCNativeOCIMountReceiving/v1','head':head,'image_id':image,
               'reconcile_sha256':hashlib.sha256(source).hexdigest(),
               'snapshot_sha256':hashlib.sha256(snapshot_raw).hexdigest(),'results':rows,
