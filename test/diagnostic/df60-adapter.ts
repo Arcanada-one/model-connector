@@ -1,5 +1,5 @@
 /** df60 candidate instrument: real MC parser/service/SQL, raw transport seam only. */
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { createRequire, syncBuiltinESMExports } from 'node:module';
 import { ClaudeCodeConnector } from '../../src/connectors/claude-code/claude-code.connector';
 import { ProcessTimeoutError, SpawnResult } from '../../src/connectors/base-cli.connector';
@@ -138,15 +138,40 @@ export async function observeDiagnostic(
   const reader = new PrismaService();
   try {
     await reader.$connect();
-    const queryIds = fixture.fault === 'wrong-read-id' ? [randomUUID()] : inserted;
+    let otherExistingRowId: string | null = null;
+    if (fixture.fault === 'wrong-read-id') {
+      // This control must read a real different row, not merely an absent UUID.
+      const other = await writer.request.create({
+        data: {
+          id: randomUUID(),
+          connector: transport.name,
+          model,
+          promptHash: createHash('sha256')
+            .update('other-owned-request:' + fixture.id)
+            .digest('hex'),
+          promptLength: 0,
+          latencyMs: 0,
+          status: 'success',
+          apiKeyId,
+        },
+      });
+      if (inserted.includes(other.id)) throw new Error('DIAG wrong-row identity collision');
+      otherExistingRowId = other.id;
+    }
+    const queryIds = otherExistingRowId ? [otherExistingRowId] : inserted;
     const rows = await reader.request.findMany({ where: { id: { in: queryIds }, apiKeyId } });
+    const committedInsertedRows = await reader.request.findMany({
+      where: { id: { in: inserted }, apiKeyId },
+    });
     return {
       schema: 'MCActualDiagnosticObservation/v1',
       caseId: fixture.id,
       response,
       insertedIds: inserted,
       queryIds,
+      otherExistingRowId,
       committedRows: rows,
+      committedInsertedRows,
       correlationVerified: inserted.length === 1 && rows.length === 1 && rows[0].id === inserted[0],
       transportReceipts: transport.received,
       simulatedPossibleDispatches: transport.possibleDispatches,
