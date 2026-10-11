@@ -19,24 +19,39 @@ REDIS_IMAGE=$(pin_image redis:7)
 APP_IMAGE=$(pin_image model-connector-e2e:latest)
 printf 'APP_E2E_IMAGE_IDS=%s %s %s\n' "$PG_IMAGE" "$REDIS_IMAGE" "$APP_IMAGE"
 HEAD=$(git -c safe.directory="$ROOT" rev-parse HEAD)
+[[ "${MC_APP_E2E_EXPECTED_HEAD:-$HEAD}" == "$HEAD" ]] || { echo "APP_E2E_REFUSED: wrong head"; exit 127; }
 META=$(mktemp -d "${TMPDIR:-/tmp}/mc-app-cid.XXXXXX")
 CID_FILE="$META/app.cid"
 OWN="mc-app-e2e-${HEAD:0:10}-$(basename "$META")"
 NET_ID='' PG_ID='' REDIS_ID=''
 cleanup() {
-  local id
-  if [[ -f "$CID_FILE" ]]; then
-    id=$(cat "$CID_FILE")
-    [[ "$id" =~ ^[a-f0-9]{64}$ ]] && docker rm -f "$id" >/dev/null 2>&1 || true
-  fi
-  for id in "$PG_ID" "$REDIS_ID"; do
-    [[ "$id" =~ ^[a-f0-9]{64}$ ]] && docker rm -f "$id" >/dev/null 2>&1 || true
+  local primary=$? cleanup_failed=0 id ids=()
+  trap - EXIT INT TERM
+  [[ ! -f "$CID_FILE" ]] || ids+=("$(cat "$CID_FILE")")
+  ids+=("$PG_ID" "$REDIS_ID")
+  for id in "${ids[@]}"; do
+    [[ "$id" =~ ^[a-f0-9]{64}$ ]] || continue
+    timeout 5s docker rm -f "$id" >/dev/null 2>&1 || cleanup_failed=1
+    # A successful inventory read is mandatory; absence is an empty exact-ID list.
+    residual=$(timeout 5s docker ps -aq --no-trunc --filter "id=$id") || cleanup_failed=1
+    [[ -z "${residual-unknown}" ]] || cleanup_failed=1
   done
-  [[ "$NET_ID" =~ ^[a-f0-9]{64}$ ]] && docker network rm "$NET_ID" >/dev/null 2>&1 || true
-  [[ ! -e "$CID_FILE" ]] || rm -- "$CID_FILE"
-  rmdir -- "$META" || true
+  if [[ "$NET_ID" =~ ^[a-f0-9]{64}$ ]]; then
+    timeout 5s docker network rm "$NET_ID" >/dev/null 2>&1 || cleanup_failed=1
+    residual=$(timeout 5s docker network ls -q --no-trunc --filter "id=$NET_ID") || cleanup_failed=1
+    [[ -z "${residual-unknown}" ]] || cleanup_failed=1
+  fi
+  printf 'APP_E2E_PRIMARY_EXIT=%s CLEANUP_FAILED=%s\n' "$primary" "$cleanup_failed"
+  # Preserve failed custody and diagnostics; remove only our private successful export.
+  if [[ $cleanup_failed == 0 ]]; then rm -rf -- "$META"; fi
+  [[ $primary == 0 ]] || exit "$primary"
+  [[ $cleanup_failed == 0 ]] || exit 127
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+git -c safe.directory="$ROOT" show "$HEAD:scripts/app-e2e-snapshot.py" > "$META/export.py"
+timeout --signal=TERM --kill-after=5s 120s python3 "$META/export.py" "$ROOT" "$HEAD" "$META"
 NET_ID=$(docker network create --internal --label mc-owned="$OWN" "$OWN")
 [[ "$NET_ID" =~ ^[a-f0-9]{64}$ ]] || exit 127
 docker network inspect "$NET_ID" --format '{{.Internal}}' | test "$(cat)" = true
@@ -52,5 +67,5 @@ for attempt in $(seq 1 30); do
 done
 # Read-only exact source/dependencies. No host ports, inherited env, Docker socket,
 # host credentials, image entrypoint or provider keys enter the application.
-timeout --signal=TERM --kill-after=10s 180s docker run --rm --pull=never --name "$OWN-app" --cidfile "$CID_FILE" --user "$(stat -c %u:%g "$ROOT/node_modules")" --network "$NET_ID" --cpus=1.5 --memory=2g --read-only --tmpfs /tmp:rw,size=256m,mode=1777 --cap-drop=ALL --security-opt=no-new-privileges -v "$ROOT:/work:ro" -w /work --entrypoint /bin/sh "$APP_IMAGE" -c 'env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/tmp TMPDIR=/tmp NODE_ENV=test DATABASE_URL=postgresql://test:test@mc-pg:5432/connector_test REDIS_HOST=mc-redis REDIS_PORT=6379 REDIS_PREFIX=mc-app-e2e STT_PROVIDER_GROQ_ENABLED=false MC_DISPOSABLE_APP_E2E=1 MC_NO_EGRESS=1 /bin/sh -ec "node node_modules/prisma/build/index.js migrate deploy; node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts --reporter=json --outputFile=/tmp/app-result.json; echo APP_E2E_RESULT_BEGIN; cat /tmp/app-result.json; echo APP_E2E_RESULT_END"'
+timeout --signal=TERM --kill-after=10s 180s docker run --rm --pull=never --name "$OWN-app" --cidfile "$CID_FILE" --user "$(stat -c %u:%g "$ROOT/node_modules")" --network "$NET_ID" --cpus=1.5 --memory=2g --read-only --tmpfs /tmp:rw,size=256m,mode=1777 --cap-drop=ALL --security-opt=no-new-privileges -v "$META/source:/work:ro" -v "$META/dependencies/node_modules:/work/node_modules:ro" -w /work --entrypoint /bin/sh "$APP_IMAGE" -c 'env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/tmp TMPDIR=/tmp NODE_ENV=test DATABASE_URL=postgresql://test:test@mc-pg:5432/connector_test REDIS_HOST=mc-redis REDIS_PORT=6379 REDIS_PREFIX=mc-app-e2e STT_PROVIDER_GROQ_ENABLED=false MC_DISPOSABLE_APP_E2E=1 MC_NO_EGRESS=1 /bin/sh -ec "node node_modules/prisma/build/index.js migrate deploy; node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts --reporter=json --outputFile=/tmp/app-result.json; echo APP_E2E_RESULT_BEGIN; cat /tmp/app-result.json; echo APP_E2E_RESULT_END"'
 echo "APP_E2E_SOURCE_HEAD=$HEAD"

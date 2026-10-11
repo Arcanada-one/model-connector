@@ -271,6 +271,30 @@ jobs:
           TMPDIR: ${{ runner.temp }}/mc-owned-full
         run: bash scripts/graph-full-suite.sh .
 
+      - name: Receive bounded FULL diagnostics
+        if: always()
+        run: |
+          python3 - <<'PYTHON'
+          import json, os
+          from pathlib import Path
+          rows=[]
+          for path in Path(os.environ['RUNNER_TEMP'], 'mc-owned-full').glob('mc-full-*/execution.json'):
+              doc=json.loads(path.read_text())
+              rows.append({k:doc.get(k) for k in ('schema','head','unit','exit_code','remaining','refusal')})
+              rows[-1]['results']=[{k:r.get(k) for k in ('suite','verdict','exit_code','counts')} for r in doc.get('results',[])]
+          target=Path(os.environ['RUNNER_TEMP'])/'mc-full-diagnostics.json'
+          target.write_text(json.dumps({'schema':'MCFullDiagnostics/v1','github_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'executions':rows},indent=2))
+          print(target.read_text())
+          PYTHON
+
+      - name: Retain bounded FULL diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mc-full-diagnostics
+          path: ${{ runner.temp }}/mc-full-diagnostics.json
+          if-no-files-found: error
+
       - name: Cleanup
         if: always()
         run: docker rm -f mc-e2e || true

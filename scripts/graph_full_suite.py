@@ -560,7 +560,9 @@ def main():
     try:
         document['results'] = (run_root_suites(ROOT, suites, scratch) if unit == '.' else
                                run_suites(ROOT, unit, suites, scratch))
-    except (Refusal, ValueError, KeyError, OSError):
+    except (Refusal, ValueError, KeyError, OSError) as error:
+        document['refusal'] = str(error) if isinstance(error, Refusal) else type(error).__name__
+        print('FULL_EXECUTION_REFUSED:', document['refusal'])
         document['remaining'] = ['invalid or absent execution evidence; inspect private raw suite files']
         code = 1
     else:
