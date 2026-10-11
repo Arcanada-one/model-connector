@@ -1,5 +1,5 @@
 """Receive immutable scaffold compiler evidence without granting native exemption."""
-import argparse, hashlib, json, sys
+import argparse, hashlib, json, subprocess, sys
 from pathlib import Path
 
 
@@ -9,6 +9,15 @@ def receive(repo, program, evidence, owned):
     doc = upstream.strict_json(evidence.read_bytes())
     if doc['schema'] != 'MCScaffoldRenderedFixtureEvidence/v1':
         raise ValueError('unsupported scaffold evidence schema')
+    required = {'templates/api-connector-scaffold/README.md',
+                'templates/api-connector-scaffold/{{name}}.connector.ts',
+                'templates/api-connector-scaffold/{{name}}.connector.spec.ts',
+                'vitest.config.ts', 'src/connectors/base-api.connector.ts',
+                'src/connectors/interfaces/connector.interface.ts',
+                'scripts/graph_full_suite.py'}
+    rows = doc['source_bindings']
+    if len(rows) != len(required) or {r['path'] for r in rows} != required:
+        raise ValueError('missing, duplicate or additional rendering input closure')
     snapshot = upstream.GitSnapshot.read(repo, doc['source_commit'])
     for binding in doc['source_bindings']:
         upstream.GitSnapshot.bound(snapshot, binding)
@@ -31,7 +40,24 @@ def receive(repo, program, evidence, owned):
             raise ValueError('rendered output escapes owned scope')
         if row['sha256'] != hashes[row['source']] or hashlib.sha256(path.read_bytes()).hexdigest() != hashes[row['source']]:
             raise ValueError('rendered output/provenance mismatch')
-    return {'source_commit': snapshot.commit, 'source_bindings': len(doc['source_bindings']),
+    # Execute an independently constructed compiler invocation; sender fields are
+    # assertions, never an execution qualification or an arbitrary argv grant.
+    config = replay / 'receiving-tsconfig.json'
+    config.write_text(json.dumps({'extends':str(repo/'tsconfig.test.json'),
+        'compilerOptions':{'rootDir':'/', 'noEmit':True, 'incremental':False,
+                           'typeRoots':[str(repo/'node_modules/@types'),str(repo/'node_modules')]},
+        'files':[r['path'] for r in expected['rendered_files']], 'include':[], 'exclude':[]}))
+    compiler = repo / 'node_modules/typescript/bin/tsc'
+    argv = ['node', str(compiler), '-p', str(config), '--pretty', 'false', '--listFiles']
+    execution = subprocess.run(argv, cwd=repo, capture_output=True, text=True, timeout=60)
+    (replay/'compiler.log').write_text(execution.stdout+execution.stderr)
+    if execution.returncode or any(str(Path(r['path']).resolve()) not in execution.stdout.splitlines()
+                                  for r in expected['rendered_files']):
+        raise ValueError('receiver compiler failed or omitted rendered output')
+    identity = {'argv':argv, 'exit_code':execution.returncode,
+                'compiler_sha256':hashlib.sha256(compiler.read_bytes()).hexdigest(),
+                'config_sha256':hashlib.sha256(config.read_bytes()).hexdigest()}
+    return {'receiving_execution': identity, 'source_commit': snapshot.commit, 'source_bindings': len(doc['source_bindings']),
             'reconstructed_outputs': len(hashes), 'verdict': 'verified_rendered_fixture_only',
             'native_raw_membership_accepted': False}
 
