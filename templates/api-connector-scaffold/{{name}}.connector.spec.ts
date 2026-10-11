@@ -73,7 +73,8 @@ describe('{{NAME}}Connector', () => {
     it('rejects content blocks before any upstream call', async () => {
       const result = await connector.execute({ prompt: [{ type: 'text', text: 'hello' }] });
       expect(result.status).toBe('error');
-      expect(result.error?.message).toContain('requires string prompt');
+      expect(result.error?.type).toBe('unsupported_modality');
+      expect(result.error?.message).toBe("Connector '{{NAME_LOWER}}' does not accept ContentBlock[] prompts");
       expect(fetchSpy).not.toHaveBeenCalled();
     });
 
