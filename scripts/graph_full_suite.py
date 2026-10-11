@@ -494,6 +494,16 @@ def run_root_suites(root, suites, scratch, executor=execute):
             result['failure_codes'] = failure_labels(raw)
             phases = re.findall(r'^APP_E2E_PHASE=(snapshot|network_create|postgres_create|redis_create|stores_ready|app_dispatch|post_custody)$', raw, re.MULTILINE)
             if phases: result['failure_receiving'] = {'phase': phases[-1]}
+            if members == ['deploy/compose-network.test.sh']:
+                records = re.findall(r'^COMPOSE_FAILURE_RECEIVING=(.*)$', raw, re.MULTILINE)
+                if len(records) == 1:
+                    try:
+                        received = json.loads(records[0])
+                        if (received.get('phase') in ('config_invocation','config_parse','network_identity','service_membership','alias','ports')
+                                and received.get('failure_code') in ('docker_absent','timeout','invalid_json','config_nonzero','semantic_assertion','UNKNOWN')
+                                and (received.get('exit_code') is None or type(received.get('exit_code')) is int)):
+                            result['failure_receiving'] = received
+                    except (ValueError, TypeError): pass
         if not code:
             try:
                 counts = parser(raw)
