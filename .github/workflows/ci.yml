@@ -312,7 +312,9 @@ jobs:
       - name: Maintained root FULL
         env:
           TMPDIR: ${{ env.MC_FULL_TMPDIR }}
-        run: bash scripts/graph-full-suite.sh .
+        # Private Billing source requires a qualified attempt-owned transfer.
+        # Fail before suite dispatch while the registered adapter is absent.
+        run: bash scripts/graph-full-suite.sh . --require-billing-fixture-acquisition
 
       - name: Receive bounded FULL diagnostics
         if: always()
@@ -323,7 +325,7 @@ jobs:
           rows=[]
           for path in Path(os.environ.get('MC_FULL_TMPDIR', os.environ['RUNNER_TEMP']+'/mc-owned-full')).glob('mc-full-*/execution.json'):
               doc=json.loads(path.read_text())
-              rows.append({k:doc.get(k) for k in ('schema','head','unit','exit_code','remaining','refusal','compose_plugin_custody')})
+              rows.append({k:doc.get(k) for k in ('schema','head','unit','exit_code','remaining','refusal','compose_plugin_custody','billing_fixture_acquisition','failure_facts')})
               rows[-1]['results']=[]
               for r in doc.get('results',[]):
                   summary={k:r.get(k) for k in ('suite','verdict','exit_code','counts')}

@@ -8,7 +8,7 @@ import sys
 import tempfile
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('full_suite', ROOT / 'scripts/graph_full_suite.py')
@@ -17,6 +17,165 @@ spec.loader.exec_module(subject)
 
 
 class Controls(unittest.TestCase):
+    def test_explicit_fixture_manifest_entrypoint_is_typed_and_root_only(self):
+        self.assertEqual(subject.parse_entrypoint(['.']), ('.', None))
+        self.assertEqual(subject.parse_entrypoint(['.', '--billing-fixture-manifest', '/private/input.json']),
+                         ('.', Path('/private/input.json')))
+        for argv in [[], ['.', '--billing-fixture-manifest'],
+                     ['.', '--billing-fixture-manifest', 'relative'],
+                     ['.', '--billing-fixture-manifest', '/private/../input.json'],
+                     ['.', '--billing-fixture-manifest', '/private/\x00input'],
+                     ['watcher', '--billing-fixture-manifest', '/private/input.json'],
+                     ['.', '--foreign', '/private/input.json'],
+                     ['.', '--billing-fixture-manifest', '/private/input.json', '--extra']]:
+            with self.subTest(argv=argv), self.assertRaises(subject.Refusal):
+                subject.parse_entrypoint(argv)
+
+    def test_explicit_missing_input_refuses_before_root_child_dispatch(self):
+        calls = []
+        suites = self.root_dispatch_fixture(['src/a.spec.ts'])
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'), self.assertRaises(subject.Refusal):
+            subject.run_root_suites(self.root, suites, self.root, self.root_child(calls),
+                billing_fixture_manifest=self.root / 'absent-protected-input.json')
+        self.assertEqual(calls, [])
+
+    def test_dispatch_custody_checks_before_after_and_releases_on_child_failure(self):
+        import types
+        custody = Mock()
+        receiver = types.SimpleNamespace(SourceCustody=Mock(return_value=custody),
+                                         InputRefused=type('InputRefused', (Exception,), {}))
+        loader = types.SimpleNamespace(exec_module=lambda module: None)
+        spec = types.SimpleNamespace(loader=loader)
+        calls = []
+        def child(*args, **kwargs):
+            calls.append('dispatch')
+            raise RuntimeError('synthetic child failure')
+        def body(root, suites, scratch, executor, **kwargs):
+            return executor('synthetic')
+        with patch.object(subject.importlib.util, 'spec_from_file_location', return_value=spec), \
+             patch.object(subject.importlib.util, 'module_from_spec', return_value=receiver), \
+             patch.object(subject, '_run_root_suites', side_effect=body):
+            with self.assertRaises(subject.DispatchFailure) as raised:
+                subject.run_root_suites(self.root, [], self.root, child,
+                    billing_fixture_manifest=self.root / 'input')
+        self.assertEqual(raised.exception.failure_facts['child']['class'], 'RuntimeError')
+        self.assertEqual(raised.exception.failure_facts['custody']['status'], 'verified')
+        self.assertEqual(calls, ['dispatch'])
+        self.assertEqual(custody.revalidate.call_count, 2)
+        custody.release.assert_called_once_with()
+
+    def test_dispatch_custody_failed_precheck_makes_zero_child_calls(self):
+        import types
+        error = type('InputRefused', (Exception,), {})
+        custody = Mock(); custody.revalidate.side_effect = error()
+        receiver = types.SimpleNamespace(SourceCustody=Mock(return_value=custody), InputRefused=error)
+        spec = types.SimpleNamespace(loader=types.SimpleNamespace(exec_module=lambda module: None))
+        child = Mock()
+        def body(root, suites, scratch, executor, **kwargs): return executor('synthetic')
+        with patch.object(subject.importlib.util, 'spec_from_file_location', return_value=spec), \
+             patch.object(subject.importlib.util, 'module_from_spec', return_value=receiver), \
+             patch.object(subject, '_run_root_suites', side_effect=body):
+            with self.assertRaises(subject.Refusal):
+                subject.run_root_suites(self.root, [], self.root, child,
+                    billing_fixture_manifest=self.root / 'input')
+        child.assert_not_called(); custody.release.assert_called_once_with()
+
+    def test_post_dispatch_custody_loss_refuses_successful_child(self):
+        import types
+        error = type('InputRefused', (Exception,), {})
+        custody = Mock(); custody.revalidate.side_effect = [None, error()]
+        receiver = types.SimpleNamespace(SourceCustody=Mock(return_value=custody), InputRefused=error)
+        spec = types.SimpleNamespace(loader=types.SimpleNamespace(exec_module=lambda module: None))
+        child = Mock(return_value={'exit_code': 0})
+        def body(root, suites, scratch, executor, **kwargs): return executor('synthetic')
+        with patch.object(subject.importlib.util, 'spec_from_file_location', return_value=spec), \
+             patch.object(subject.importlib.util, 'module_from_spec', return_value=receiver), \
+             patch.object(subject, '_run_root_suites', side_effect=body):
+            with self.assertRaises(subject.DispatchFailure) as raised:
+                subject.run_root_suites(self.root, [], self.root, child,
+                    billing_fixture_manifest=self.root / 'input')
+        self.assertEqual(raised.exception.failure_facts['child']['status'], 0)
+        self.assertEqual(raised.exception.failure_facts['custody']['status'], 'refused')
+        child.assert_called_once(); custody.release.assert_called_once_with()
+
+    def test_required_ci_acquisition_cannot_be_replaced_by_manifest_or_ambient_flag(self):
+        flag = subject.BILLING_ACQUISITION_REQUIRED
+        self.assertEqual(subject.parse_entrypoint(['.', flag]), ('.', None))
+        for argv in [['watcher', flag], ['.', flag, '--billing-fixture-manifest', '/private/input'],
+                     ['.', flag, '--adapter-ready'], ['.', '--adapter-ready']]:
+            with self.assertRaises(subject.Refusal): subject.parse_entrypoint(argv)
+        with patch.dict(os.environ, {'BILLING_CUSTODIAN_SOURCE': '/foreign',
+                'BILLING_FIXTURE_ADAPTER_READY': '1'}), self.assertRaises(subject.AcquisitionUnavailable):
+            subject.require_billing_acquisition()
+
+    def test_maintained_ci_missing_adapter_records_nm_without_suite_dispatch(self):
+        scratch = self.root / 'private'; scratch.mkdir(mode=0o700)
+        with patch.object(subject.sys, 'argv', ['runner', '.', subject.BILLING_ACQUISITION_REQUIRED]), \
+             patch.object(subject, 'check_context'), patch.object(subject, 'inventory', return_value=[]), \
+             patch.object(subject, 'members_for', return_value=[]), patch.object(subject, 'plan', return_value=[]), \
+             patch.object(subject.subprocess, 'run', return_value=Mock(stdout=b'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')), \
+             patch.dict(os.environ, {'TMPDIR': str(scratch)}), \
+             patch.object(subject, 'run_root_suites', side_effect=AssertionError('suite dispatch must not occur')) as dispatch:
+            self.assertEqual(subject.main(), 127)
+        dispatch.assert_not_called()
+        docs = list(scratch.glob('mc-full-*/execution.json'))
+        self.assertEqual(len(docs), 1)
+        doc = json.loads(docs[0].read_text())
+        self.assertEqual(doc['results'], [])
+        self.assertEqual(doc['billing_fixture_acquisition']['suite_dispatches'], 0)
+        self.assertEqual(doc['refusal'], 'billing_fixture_acquisition_adapter_not_supplied')
+
+    def test_combined_child_and_post_custody_failures_preserve_safe_facts(self):
+        import types, traceback
+        error = type('InputRefused', (Exception,), {})
+        custody = Mock(); custody.revalidate.side_effect = [None, error('private custody excerpt')]
+        receiver = types.SimpleNamespace(SourceCustody=Mock(return_value=custody), InputRefused=error)
+        spec = types.SimpleNamespace(loader=types.SimpleNamespace(exec_module=lambda module: None))
+        child = Mock(side_effect=RuntimeError('private child excerpt'))
+        def body(root, suites, scratch, executor, **kwargs): return executor('synthetic')
+        with patch.object(subject.importlib.util, 'spec_from_file_location', return_value=spec), \
+             patch.object(subject.importlib.util, 'module_from_spec', return_value=receiver), \
+             patch.object(subject, '_run_root_suites', side_effect=body):
+            with self.assertRaises(subject.Refusal) as raised:
+                subject.run_root_suites(self.root, [], self.root, child,
+                    billing_fixture_manifest=self.root / 'input')
+        self.assertEqual(raised.exception.failure_facts, {
+            'child': {'kind': 'exception', 'class': 'RuntimeError', 'status': None},
+            'custody': {'kind': 'post_dispatch', 'class': 'InputRefused', 'status': 'refused'}})
+        rendered = ''.join(traceback.format_exception(raised.exception))
+        self.assertNotIn('private child excerpt', rendered)
+        self.assertNotIn('private custody excerpt', rendered)
+        child.assert_called_once(); custody.release.assert_called_once_with()
+
+    def test_child_failure_facts_keep_bounded_status_without_private_fields(self):
+        private = 'private credential excerpt'
+        failed = subprocess.CalledProcessError(17, [private], output=private, stderr=private)
+        self.assertEqual(subject.child_failure_fact(error=failed),
+            {'kind': 'exception', 'class': 'CalledProcessError', 'status': 17})
+        arbitrary = type(private, (Exception,), {})(private)
+        self.assertEqual(subject.child_failure_fact(error=arbitrary),
+            {'kind': 'exception', 'class': 'Exception', 'status': None})
+        self.assertEqual(subject.child_failure_fact(result={'exit_code': 42, 'output': private}),
+            {'kind': 'returned', 'class': None, 'status': 42})
+        for value in [private, True, 1000000]:
+            self.assertIsNone(subject.child_failure_fact(result={'exit_code': value})['status'])
+
+    def test_main_records_both_dispatch_facts_in_bounded_receipt(self):
+        scratch = self.root / 'private'; scratch.mkdir(mode=0o700)
+        facts = {'child': {'kind': 'exception', 'class': 'CalledProcessError', 'status': 17},
+                 'custody': {'kind': 'post_dispatch', 'class': 'InputRefused', 'status': 'refused'}}
+        failure = subject.DispatchFailure(facts['child'], facts['custody'])
+        with patch.object(subject.sys, 'argv', ['runner', '.']), \
+             patch.object(subject, 'check_context'), patch.object(subject, 'inventory', return_value=[]), \
+             patch.object(subject, 'members_for', return_value=[]), patch.object(subject, 'plan', return_value=[]), \
+             patch.object(subject.subprocess, 'run', return_value=Mock(stdout=b'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')), \
+             patch.dict(os.environ, {'TMPDIR': str(scratch)}), \
+             patch.object(subject, 'run_root_suites', side_effect=failure):
+            self.assertEqual(subject.main(), 1)
+        doc = json.loads(next(scratch.glob('mc-full-*/execution.json')).read_text())
+        self.assertEqual(doc['failure_facts'], facts)
+        self.assertEqual(doc['refusal'], 'protected fixture dispatch failed')
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

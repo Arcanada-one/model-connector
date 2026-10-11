@@ -6,6 +6,7 @@ exercise their complete existing offline/owned-loopback contracts, not productio
 """
 from pathlib import Path
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -31,8 +32,50 @@ OFFLINE_INTEGRATION = frozenset({
 })
 
 
+BILLING_ACQUISITION_REQUIRED = '--require-billing-fixture-acquisition'
+
+
+class AcquisitionUnavailable(Exception):
+    """No installed authorized producer/receiver adapter for this CI attempt."""
+
+
+def require_billing_acquisition():
+    # There is no registered protected transport on the measured maintained CI
+    # callsite. A local manifest or environment flag cannot supply that authority.
+    raise AcquisitionUnavailable('billing_fixture_acquisition_adapter_not_supplied')
+
+
 class Refusal(Exception):
     """Invalid source, membership, path or execution result."""
+
+
+class DispatchFailure(Refusal):
+    """Bounded public facts; never retain private exception messages in the result."""
+    def __init__(self, child, custody):
+        super().__init__('protected fixture dispatch failed')
+        self.failure_facts = {'child': child, 'custody': custody}
+
+
+def child_failure_fact(error=None, result=None):
+    status = None
+    if error is not None:
+        # Canonical categories only: arbitrary exception class names can carry data.
+        category = 'Exception' if isinstance(error, Exception) else 'BaseException'
+        for known in (subprocess.TimeoutExpired, subprocess.CalledProcessError,
+                      TimeoutError, RuntimeError, ValueError, TypeError,
+                      KeyError, AssertionError, OSError, KeyboardInterrupt, SystemExit):
+            if isinstance(error, known):
+                category = known.__name__
+                break
+        if isinstance(error, subprocess.CalledProcessError): status = error.returncode
+        if isinstance(error, subprocess.TimeoutExpired): status = 124
+        if isinstance(error, SystemExit): status = error.code
+        kind = 'exception'
+    else:
+        category, kind = None, 'returned'
+        if type(result) is dict: status = result.get('exit_code')
+    if type(status) is not int or not -255 <= status <= 255: status = None
+    return {'kind': kind, 'class': category, 'status': status}
 
 
 def checked_file(root, relative):
@@ -145,7 +188,7 @@ def plan(unit, members):
     return suites
 
 
-def clean_environment(scratch, unit_root):
+def clean_environment(scratch, unit_root, *, billing_fixture_manifest=None):
     # No inherited tokens, flags, URLs, NODE_OPTIONS, PYTHONPATH or agent hooks.
     env = {'PATH': os.environ.get('PATH', os.defpath), 'HOME': str(scratch / 'home'),
            'TMPDIR': str(scratch), 'CI': '1', 'NO_COLOR': '1', 'FORCE_COLOR': '0',
@@ -154,6 +197,16 @@ def clean_environment(scratch, unit_root):
     if any(not Path(part).is_absolute() for part in env['PATH'].split(os.pathsep)):
         raise Refusal('relative PATH entry')
     (scratch / 'home').mkdir(mode=0o700)
+    if billing_fixture_manifest is not None:
+        # Explicit protected input only; never inherit a source locator or grant.
+        import importlib.util
+        path = checked_file(ROOT, 'scripts/billing_fixture_input.py')
+        spec = importlib.util.spec_from_file_location('billing_fixture_input', path)
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        try:
+            env = module.bind_clean_environment(ROOT, env, billing_fixture_manifest)
+        except module.InputRefused:
+            raise Refusal('protected fixture input refused') from None
     return env
 
 
@@ -472,7 +525,44 @@ def stage_compose_plugin(root, home):
     return receipt
 
 
-def run_root_suites(root, suites, scratch, executor=execute):
+def run_root_suites(root, suites, scratch, executor=execute, *, billing_fixture_manifest=None):
+    """Keep borrowed input custody across dispatch and release on every exit."""
+    if billing_fixture_manifest is None:
+        return _run_root_suites(root, suites, scratch, executor)
+    spec = importlib.util.spec_from_file_location('billing_dispatch_custody',
+        checked_file(ROOT, 'scripts/billing_fixture_input.py'))
+    receiver = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(receiver)
+    custody = None
+    try:
+        custody = receiver.SourceCustody(root, billing_fixture_manifest)
+        def guarded_executor(*args, **kwargs):
+            custody.revalidate()
+            result, child_fact = None, None
+            try:
+                result = executor(*args, **kwargs)
+            except BaseException as error:
+                child_fact = child_failure_fact(error=error)
+            try:
+                custody.revalidate()
+            except receiver.InputRefused:
+                raise DispatchFailure(child_fact or child_failure_fact(result=result),
+                    {'kind': 'post_dispatch', 'class': 'InputRefused',
+                     'status': 'refused'}) from None
+            if child_fact is not None:
+                raise DispatchFailure(child_fact,
+                    {'kind': 'post_dispatch', 'class': None, 'status': 'verified'}) from None
+            return result
+        return _run_root_suites(root, suites, scratch, guarded_executor,
+            billing_fixture_manifest=billing_fixture_manifest)
+    except receiver.InputRefused:
+        raise Refusal('protected fixture input refused') from None
+    finally:
+        if custody is not None:
+            custody.release()
+
+
+def _run_root_suites(root, suites, scratch, executor=execute, *, billing_fixture_manifest=None):
     """Dispatch ordinary local groups; preserve every held member without spawning it."""
     members = [n for suite in suites for n in suite['members']]
     expected = {r['suite']: r['members'] for r in plan('.', members)}
@@ -485,7 +575,7 @@ def run_root_suites(root, suites, scratch, executor=execute):
             checked_file(root, member)
             if suite['suite'] == 'maintained-regression':
                 root_regression_command(root, member)
-    env = clean_environment(scratch, root)
+    env = clean_environment(scratch, root, billing_fixture_manifest=billing_fixture_manifest)
     if 'deploy/compose-network.test.sh' in members:
         stage_compose_plugin(root, Path(env['HOME']))
     deadline = time.monotonic() + 900
@@ -605,14 +695,23 @@ def execution_code(results):
             127 if any(r['verdict'] == 'not_measured' for r in results) else 0)
 
 
+def parse_entrypoint(arguments):
+    """Explicit fixture locator only; neither ambient input nor acquisition grant."""
+    if arguments == ['.', BILLING_ACQUISITION_REQUIRED]:
+        return '.', None
+    if len(arguments) == 1 and arguments[0] in UNITS:
+        return arguments[0], None
+    if (len(arguments) == 3 and arguments[0] == '.'
+            and arguments[1] == '--billing-fixture-manifest'):
+        manifest = Path(arguments[2])
+        if manifest.is_absolute() and '..' not in manifest.parts and '\x00' not in str(manifest):
+            return '.', manifest
+    raise Refusal('invalid explicit full-suite input')
+
+
 def main():
-    if len(sys.argv) != 2:
-        raise Refusal('exactly one deployable required')
-    unit = sys.argv[1]
+    unit, billing_fixture_manifest = parse_entrypoint(sys.argv[1:])
     check_context(ROOT, unit, Path.cwd())
-    rows = inventory(ROOT)
-    members = members_for(rows, unit)
-    suites = plan(unit, members)
     temp_value = os.environ.get('TMPDIR')
     if not temp_value:
         raise Refusal('owned private TMPDIR required')
@@ -626,18 +725,39 @@ def main():
     head = subprocess.run(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'],
                           capture_output=True, check=True).stdout.decode().strip()
     document = {'schema': 'MaintainedFullSuiteExecution/v1', 'head': head, 'unit': unit,
-                'membership': rows, 'suite_plan': suites, 'results': [],
+                'membership': [], 'suite_plan': [], 'results': [],
                 'runtime_authorized': False, 'knowledge_admitted': False}
     if unit == '.':
         document['remaining'] = ['seven real external provider/auth/storage/image arms',
                                  'owned disposable AppE2E executor qualification',
                                  'broader disposable DB/Redis executor and namespace authority']
     try:
-        document['results'] = (run_root_suites(ROOT, suites, scratch) if unit == '.' else
+        if sys.argv[1:] == ['.', BILLING_ACQUISITION_REQUIRED]:
+            require_billing_acquisition()
+        rows = inventory(ROOT)
+        members = members_for(rows, unit)
+        suites = plan(unit, members)
+        document.update(membership=rows, suite_plan=suites)
+        document['results'] = (run_root_suites(ROOT, suites, scratch,
+                              billing_fixture_manifest=billing_fixture_manifest) if unit == '.' else
                                run_suites(ROOT, unit, suites, scratch))
         custody = scratch / 'compose-custody.json'
         if custody.is_file():
             document['compose_plugin_custody'] = json.loads(custody.read_text())
+    except DispatchFailure as error:
+        document['refusal'] = str(error)
+        document['failure_facts'] = error.failure_facts
+        document['remaining'] = ['protected fixture dispatch failure; both bounded facts retained']
+        print('FULL_DISPATCH_REFUSED:', json.dumps(error.failure_facts, sort_keys=True))
+        code = 1
+    except AcquisitionUnavailable as error:
+        document['refusal'] = str(error)
+        document['billing_fixture_acquisition'] = {
+            'verdict': 'not_measured', 'reason': str(error),
+            'suite_dispatches': 0, 'source_manifest_is_authority': False}
+        document['remaining'] = ['qualified protected Billing fixture delivery for actual CI UID/attempt']
+        print('FULL_ACQUISITION_NOT_MEASURED:', str(error))
+        code = 127
     except (Refusal, ValueError, KeyError, OSError) as error:
         document['refusal'] = str(error) if isinstance(error, Refusal) else type(error).__name__
         print('FULL_EXECUTION_REFUSED:', document['refusal'])
