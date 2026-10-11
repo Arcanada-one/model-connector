@@ -598,7 +598,7 @@ for name in missing_custody previous_drift source_drift foreign_project unhealth
   record="${state_root}/recovery-arcanada-assistant/previous"
   case "$name" in
     missing_custody) rm "$record" ;;
-    previous_drift) export RECOVERY_PREVIOUS="sha256:$(printf 'd%.0s' {1..64})" ;;
+    previous_drift) RECOVERY_PREVIOUS="sha256:$(printf 'd%.0s' {1..64})"; export RECOVERY_PREVIOUS ;;
     source_drift) sed -i "s#${assistant_head}#$(printf 'f%.0s' {1..40})#" "$record" ;;
     foreign_project) export RECOVERY_PROJECT=foreign ;;
     unhealthy) export RECOVERY_HEALTH=unhealthy ;;
