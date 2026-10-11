@@ -1,0 +1,118 @@
+{
+  "schema": "MCOfflineRawInputs/v1",
+  "status": "CANDIDATE_REQUIRES_R2_FREEZE",
+  "cases": [
+    {
+      "id": "answered",
+      "stdout": "{\"type\": \"result\", \"subtype\": \"success\", \"is_error\": false, \"result\": \"synthetic offline result\", \"usage\": {\"input_tokens\": 1, \"output_tokens\": 1}, \"total_cost_usd\": 0}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none"
+    },
+    {
+      "id": "grounding_refused",
+      "stdout": "{\"type\": \"result\", \"subtype\": \"success\", \"is_error\": false, \"result\": \"synthetic offline result\", \"usage\": {\"input_tokens\": 1, \"output_tokens\": 1}, \"total_cost_usd\": 0}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none"
+    },
+    {
+      "id": "circuit_open",
+      "stdout": "{\"type\": \"result\", \"subtype\": \"success\", \"is_error\": false, \"result\": \"synthetic offline result\", \"usage\": {\"input_tokens\": 1, \"output_tokens\": 1}, \"total_cost_usd\": 0}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "circuit"
+    },
+    {
+      "id": "provider_error",
+      "stdout": "{\"is_error\": true, \"subtype\": \"error\", \"result\": \"Synthetic upstream unavailable\"}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none"
+    },
+    {
+      "id": "error_success",
+      "stdout": "{\"is_error\": true, \"subtype\": \"success\", \"result\": \"Synthetic quota reached\"}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none"
+    },
+    {
+      "id": "missing_reason",
+      "stdout": "{\"is_error\": true, \"subtype\": \"success\"}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none"
+    },
+    {
+      "id": "malformed_errors",
+      "stdout": "{\"is_error\": true, \"errors\": [null, {}]}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none"
+    },
+    {
+      "id": "truncated_reason",
+      "stdout": "{\"is_error\": true, \"subtype\": \"success\", \"result\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none"
+    },
+    {
+      "id": "redaction",
+      "stdout": "{\"is_error\": true, \"subtype\": \"success\", \"result\": \"SYNTHETIC_SECRET_123456\"}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none"
+    },
+    {
+      "id": "timeout_after_send",
+      "stdout": "{\"type\": \"result\", \"subtype\": \"success\", \"is_error\": false, \"result\": \"synthetic offline result\", \"usage\": {\"input_tokens\": 1, \"output_tokens\": 1}, \"total_cost_usd\": 0}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "timeout"
+    },
+    {
+      "id": "transport_before_send",
+      "stdout": "{\"type\": \"result\", \"subtype\": \"success\", \"is_error\": false, \"result\": \"synthetic offline result\", \"usage\": {\"input_tokens\": 1, \"output_tokens\": 1}, \"total_cost_usd\": 0}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "before-send"
+    },
+    {
+      "id": "mismatched_id",
+      "stdout": "{\"type\": \"result\", \"subtype\": \"success\", \"is_error\": false, \"result\": \"synthetic offline result\", \"usage\": {\"input_tokens\": 1, \"output_tokens\": 1}, \"total_cost_usd\": 0}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "wrong-read-id"
+    },
+    {
+      "id": "missing_row",
+      "stdout": "{\"type\": \"result\", \"subtype\": \"success\", \"is_error\": false, \"result\": \"synthetic offline result\", \"usage\": {\"input_tokens\": 1, \"output_tokens\": 1}, \"total_cost_usd\": 0}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "delete-row"
+    },
+    {
+      "id": "persistence_failure",
+      "stdout": "{\"type\": \"result\", \"subtype\": \"success\", \"is_error\": false, \"result\": \"synthetic offline result\", \"usage\": {\"input_tokens\": 1, \"output_tokens\": 1}, \"total_cost_usd\": 0}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "read-only-transaction"
+    },
+    {
+      "id": "unauthorized_retry",
+      "stdout": "{\"type\": \"result\", \"subtype\": \"success\", \"is_error\": false, \"result\": \"synthetic offline result\", \"usage\": {\"input_tokens\": 1, \"output_tokens\": 1}, \"total_cost_usd\": 0}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "second-attempt"
+    },
+    {
+      "id": "crashed_ledger",
+      "stdout": "{\"type\": \"result\", \"subtype\": \"success\", \"is_error\": false, \"result\": \"synthetic offline result\", \"usage\": {\"input_tokens\": 1, \"output_tokens\": 1}, \"total_cost_usd\": 0}",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "crashed-ledger"
+    }
+  ]
+}

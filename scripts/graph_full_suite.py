@@ -452,6 +452,18 @@ def run_root_suites(root, suites, scratch, executor=execute):
         code = result['exit_code']
         result.update(members=members, raw_log=str(scratch / (name + '.log')),
                       verdict='not_measured' if code in (124, 127) else 'failed' if code else 'verified')
+        if code:
+            # Receive bounded failure attribution, never raw error excerpts/secrets.
+            failure_codes = []
+            for marker, label in [('permission denied','permission_denied'),
+                                  ('read-only file system','read_only_filesystem'),
+                                  ('unknown shorthand flag','docker_cli_flag'),
+                                  ('unknown flag','docker_cli_flag'),
+                                  ('cannot connect to the docker daemon','docker_api_unavailable'),
+                                  ('unknown docker command','docker_compose_unavailable'),
+                                  ('invalid mount config','docker_mount_invalid')]:
+                if marker in raw.lower(): failure_codes.append(label)
+            result['failure_codes'] = sorted(set(failure_codes))
         if not code:
             try:
                 counts = parser(raw)

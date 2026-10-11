@@ -286,7 +286,7 @@ jobs:
               rows[-1]['results']=[]
               for r in doc.get('results',[]):
                   summary={k:r.get(k) for k in ('suite','verdict','exit_code','counts')}
-                  summary['executions']=[{k:e.get(k) for k in ('members','verdict','exit_code','counts','reason')} for e in r.get('executions',[])]
+                  summary['executions']=[{k:e.get(k) for k in ('members','verdict','exit_code','counts','reason','failure_codes')} for e in r.get('executions',[])]
                   rows[-1]['results'].append(summary)
           target=Path(os.environ['RUNNER_TEMP'])/'mc-full-diagnostics.json'
           target.write_text(json.dumps({'schema':'MCFullDiagnostics/v1','github_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'executions':rows},indent=2))
