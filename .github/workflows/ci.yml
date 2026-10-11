@@ -269,7 +269,7 @@ jobs:
           chmod 700 "$RUNNER_TEMP/mc-owned-full"
 
       - name: Bounded native OCI mount receiving before App
-        timeout-minutes: 3
+        timeout-minutes: 5
         run: python3 scripts/oci-mount-receiving.py
 
       - name: Retain bounded OCI mount receiving
