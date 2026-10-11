@@ -11,7 +11,7 @@ import sys
 import tempfile
 
 
-def command(argv, log, timeout=10):
+def command(argv, log, timeout=6):
     def limit(): resource.setrlimit(resource.RLIMIT_FSIZE, (128 * 1024, 128 * 1024))
     with log.open('xb') as output:
         try:
@@ -46,17 +46,17 @@ def restrictions(obj, owner, name, head, image, src, deps):
 def main():
     if os.getuid() == 0: raise ValueError("nonroot executor required")
     root = Path.cwd()
-    head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], timeout=5).decode().strip()
+    head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], timeout=3).decode().strip()
     image = subprocess.check_output(['docker', 'image', 'inspect', 'model-connector-e2e:latest',
-                                     '--format', '{{.Id}}'], timeout=5).decode().strip()
+                                     '--format', '{{.Id}}'], timeout=3).decode().strip()
     if not __import__('re').fullmatch(r'sha256:[a-f0-9]{64}', image):
         raise ValueError('immutable cached image absent')
     owned = Path(tempfile.mkdtemp(prefix='mc-oci-receiving-', dir=os.environ['RUNNER_TEMP']))
-    source = subprocess.check_output(['git', 'show', head + ':scripts/app-e2e-reconcile.py'], timeout=5)
+    source = subprocess.check_output(['git', 'show', head + ':scripts/app-e2e-reconcile.py'], timeout=3)
     helper = owned / 'reconcile.py'; helper.write_bytes(source)
     spec = importlib.util.spec_from_file_location('owned_reconcile', helper)
     reconcile = importlib.util.module_from_spec(spec); spec.loader.exec_module(reconcile)
-    snapshot_raw = subprocess.check_output(['git', 'show', head + ':scripts/app-e2e-snapshot.py'], timeout=5)
+    snapshot_raw = subprocess.check_output(['git', 'show', head + ':scripts/app-e2e-snapshot.py'], timeout=3)
     snapshot_path = owned / 'snapshot.py'; snapshot_path.write_bytes(snapshot_raw)
     spec = importlib.util.spec_from_file_location('owned_snapshot', snapshot_path)
     snapshot = importlib.util.module_from_spec(spec); spec.loader.exec_module(snapshot)
@@ -97,7 +97,7 @@ def main():
                 except (ValueError, KeyError, TypeError): pass
         cleanup = reconcile.reconcile(case)
         rows.append({'variant':variant,'phase':phase,'exit_code':code,
-                     'failure_codes':labels,'raw_sha256':hashlib.sha256(raw).hexdigest(),
+                     'failure_codes':labels,'mount_destination_seen':b'/work/node_modules' in raw,'raw_sha256':hashlib.sha256(raw).hexdigest(),
                      'received':code == 0 and raw.strip() == b'MC_OCI_RECEIVED' and receiving,
                      'restrictions_verified':receiving,
                      'projection_unchanged':before_source == snapshot.inventory(src) and before_deps == snapshot.inventory(deps),
@@ -114,6 +114,7 @@ def main():
         target.write_text(json.dumps(result,indent=2)); print(target.read_text()); return 1
     old_red = (rows[0]['phase'] == 'start' and rows[0]['exit_code'] == 125
                and 'read_only_filesystem' in rows[0]['failure_codes']
+               and rows[0]['mount_destination_seen']
                and rows[0]['restrictions_verified'])
     result['hypothesis'] = 'SUPPORTED' if old_red else 'REFUTED' if rows[0]['received'] else 'NOT_MEASURED'
     target.write_text(json.dumps(result,indent=2)); print(target.read_text())
