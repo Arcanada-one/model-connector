@@ -569,7 +569,31 @@ cmd_build() {
   compose_env "$1"; set_compose_argv "$1"
   "$DOCKER" "${COMPOSE_ARGV[@]}" build
 }
-cmd_up()    { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" up -d; }
+# build snapshots these existing apps; up must not bypass that recovery boundary.
+# This checks broker-derived custody only, never a caller-supplied image identity.
+require_recovery_before_up() {
+  local svc="$1" observed live health project service container started previous
+  recovery_record
+  observed="$(recovery_identity "$svc")" || die 'activation live identity unavailable'
+  IFS='|' read -r live health project service container started <<< "$observed"
+  [[ "$live" == "$RECOVERY_IMAGE" && "$health" == healthy &&
+     "$project" == "${PROJECT[$svc]}" && "$service" == "${ROLLBACK_SERVICES[$svc]}" &&
+     "$container" == "$RECOVERY_CONTAINER" && "$started" == "$RECOVERY_STARTED" ]] ||
+    die 'activation recovery identity refused'
+  [[ "$(head_sha "$svc")" == "$RECOVERY_PREPARING_SOURCE" ]] ||
+    die 'activation recovery source changed'
+  previous="$("$DOCKER" image inspect "${IMAGE[$svc]}:previous" --format '{{.Id}}' 2>/dev/null)" ||
+    die 'activation recovery image unavailable'
+  [[ "$previous" == "$RECOVERY_IMAGE" ]] || die 'activation recovery image changed'
+  [[ "$(recovery_identity "$svc")" == "$observed" ]] ||
+    die 'activation live identity changed'
+}
+cmd_up() {
+  require_checkout "$1"
+  case "$1" in muneral|arcanada-assistant) require_recovery_before_up "$1" ;; esac
+  compose_env "$1"; set_compose_argv "$1"
+  "$DOCKER" "${COMPOSE_ARGV[@]}" up -d
+}
 cmd_ps()    { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" ps; }
 cmd_logs() {
   local n="${2:-100}"

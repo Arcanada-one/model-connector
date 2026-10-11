@@ -54,7 +54,7 @@ chmod 0755 "$broker"
 
 # Count only assertions that reached their existing successful completion.
 # The fixed inventory is reviewed source; never infer success from exit zero alone.
-readonly expected_pass_count=66
+readonly expected_pass_count=74
 readonly pass_inventory="${fixture_dir}/passed-controls"
 : >"$pass_inventory"
 record_pass() {
@@ -585,6 +585,42 @@ expect_pass recovery_muneral_build_preserves_live muneral build
 expect_pass recovery_muneral_rollback_only_app muneral rollback
 grep -Fq 'up -d --force-recreate --no-deps --no-build --pull never muneral-api' "$ASSISTANT_DOCKER_LOG"
 ! grep -Eq 'up .* (postgres|redis)( |$)' "$ASSISTANT_DOCKER_LOG"
+export RECOVERY_PROJECT=arcanada-assistant RECOVERY_SERVICE=assistant
+
+# Activation requires the exact previously armed live recovery snapshot.
+# These drive real main/up dispatch; no native Docker or production is involved.
+for name in missing_custody previous_drift source_drift foreign_project unhealthy interleaving; do
+  export RECOVERY_PROJECT=arcanada-assistant RECOVERY_SERVICE=assistant RECOVERY_HEALTH=healthy
+  export RECOVERY_PREVIOUS="$RECOVERY_IMAGE" RECOVERY_LATEST="$RECOVERY_IMAGE" RECOVERY_INTERLEAVE=0
+  rm -f "$RECOVERY_STATE"
+  : > "$RECOVERY_INSPECT_COUNT"
+  "$broker" arcanada-assistant tag-rotate >"${fixture_dir}/activation-arm.out" 2>&1
+  record="${state_root}/recovery-arcanada-assistant/previous"
+  case "$name" in
+    missing_custody) rm "$record" ;;
+    previous_drift) export RECOVERY_PREVIOUS="sha256:$(printf 'd%.0s' {1..64})" ;;
+    source_drift) sed -i "s#${assistant_head}#$(printf 'f%.0s' {1..40})#" "$record" ;;
+    foreign_project) export RECOVERY_PROJECT=foreign ;;
+    unhealthy) export RECOVERY_HEALTH=unhealthy ;;
+    interleaving) : > "$RECOVERY_INSPECT_COUNT"; export RECOVERY_INTERLEAVE=1 ;;
+  esac
+  : > "$ASSISTANT_DOCKER_LOG"
+  expect_fail "activation_$name" arcanada-assistant up
+  ! grep -Eq 'compose .* up -d' "$ASSISTANT_DOCKER_LOG"
+done
+for svc in arcanada-assistant muneral; do
+  export RECOVERY_HEALTH=healthy RECOVERY_PREVIOUS="$RECOVERY_IMAGE" RECOVERY_LATEST="$RECOVERY_IMAGE" RECOVERY_INTERLEAVE=0
+  case "$svc" in
+    arcanada-assistant) export RECOVERY_PROJECT=arcanada-assistant RECOVERY_SERVICE=assistant ;;
+    muneral) export RECOVERY_PROJECT=muneral RECOVERY_SERVICE=muneral-api ;;
+  esac
+  rm -f "$RECOVERY_STATE"
+  : > "$RECOVERY_INSPECT_COUNT"
+  "$broker" "$svc" tag-rotate >"${fixture_dir}/activation-arm-$svc.out" 2>&1
+  : > "$ASSISTANT_DOCKER_LOG"
+  expect_pass "activation_${svc}_armed" "$svc" up
+  grep -Fq ' up -d' "$ASSISTANT_DOCKER_LOG"
+done
 export RECOVERY_PROJECT=arcanada-assistant RECOVERY_SERVICE=assistant
 
 # The repository is PRIVATE, so `sync` must demand a fetch credential on stdin
