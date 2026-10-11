@@ -4,7 +4,12 @@
 # own broker can rewrite the rules it is bound by.
 set -euo pipefail
 IFS=$'\n\t'
-[[ "$(id -u)" -eq 0 ]] || { echo 'must run as root' >&2; exit 1; }
+# Keep identity and utility selection independent of caller-owned PATH entries.
+# The invoking root process must still provide a clean shell environment:
+# this does not attest BASH_ENV, exported functions or native caller authority.
+readonly PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+[[ "$(/usr/bin/id -u)" -eq 0 ]] || { echo 'must run as root' >&2; exit 1; }
 # Restore a retained reviewed broker generation without touching sudoers,
 # service state, images or daemon. Root custody/review still applies.
 if [[ $# -eq 2 && "$1" == --restore ]]; then

@@ -53,6 +53,7 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 deploy/test_billing_installer.py
           PYTHONDONTWRITEBYTECODE=1 python3 -B deploy/test_prime_native_capture.py
           PYTHONDONTWRITEBYTECODE=1 python3 -B deploy/test_prime_first_install.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -B deploy/test_broker_caller_environment.py
           PYTHONDONTWRITEBYTECODE=1 python3 -B deploy/test_prime_candidate_receiving.py
           PYTHONDONTWRITEBYTECODE=1 python3 -B deploy/tests/test_bench_monetary_manifest.py
           bash -n deploy/deploy.sh deploy/deploy.test.sh

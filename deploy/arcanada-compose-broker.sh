@@ -35,6 +35,10 @@
 # job-scoped token that expires beats a file that does not.
 set -euo pipefail
 IFS=$'\n\t'
+# External utility lookup is part of the privileged caller contract. A caller
+# may not substitute its own stat/install/hash utilities through PATH.
+readonly PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
 umask 022
 readonly STATE_ROOT=/var/lib/arcanada-deploy
 readonly ENV_ROOT=/etc/arcanada/deploy-env
