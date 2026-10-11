@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "noEmit": true,
+    "incremental": false,
+    "allowJs": true,
+    "checkJs": true,
+    "declaration": false
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "include": [
+    "eslint.config.mjs",
+    "vitest.config.ts"
+  ]
+}

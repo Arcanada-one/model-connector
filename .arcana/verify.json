@@ -1,9 +1,54 @@
 {
   "schema": "VerifyProfile/v1",
   "deployables": {
-    ".": {"full_test": ["bash", "scripts/graph-full-suite.sh", "."]},
-    "packages/sdk-python": {"full_test": ["bash", "../../scripts/graph-full-suite.sh", "packages/sdk-python"]},
-    "packages/sdk-ts": {"full_test": ["bash", "../../scripts/graph-full-suite.sh", "packages/sdk-ts"]},
-    "watcher": {"full_test": ["bash", "../scripts/graph-full-suite.sh", "watcher"]}
+    ".": {
+      "full_test": [
+        "bash",
+        "scripts/graph-full-suite.sh",
+        "."
+      ],
+      "tsconfig": [
+        "tsconfig.build.json",
+        "tsconfig.ci.json",
+        "tsconfig.json",
+        "tsconfig.test.json",
+        "tsconfig.tooling.json"
+      ],
+      "tsconfig_postbuild": {
+        "build": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.build.json"
+        ],
+        "outputs": [
+          "dist"
+        ],
+        "tsconfig": [
+          "tsconfig.canary.json"
+        ]
+      }
+    },
+    "packages/sdk-python": {
+      "full_test": [
+        "bash",
+        "../../scripts/graph-full-suite.sh",
+        "packages/sdk-python"
+      ]
+    },
+    "packages/sdk-ts": {
+      "full_test": [
+        "bash",
+        "../../scripts/graph-full-suite.sh",
+        "packages/sdk-ts"
+      ]
+    },
+    "watcher": {
+      "full_test": [
+        "bash",
+        "../scripts/graph-full-suite.sh",
+        "watcher"
+      ]
+    }
   }
 }

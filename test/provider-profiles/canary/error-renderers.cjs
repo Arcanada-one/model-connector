@@ -11,38 +11,57 @@ const {
 const { providerKeyContext } = require('../../../dist/src/policy/provider-key.context');
 const { DeepSeekConnector } = require('../../../dist/src/connectors/deepseek/deepseek.connector');
 const { JevConnector } = require('../../../dist/src/connectors/jev/jev.connector');
+// Typed test-only exposure of the real protected adapter methods.
+class AzureProbe extends AzureOpenAiConnector {
+  /** @param {number} status @param {string} body */
+  formatProbe(status, body) { return super.formatHttpErrorMessage(status, body); }
+}
+class PerplexityProbe extends PerplexityConnector {
+  /** @param {number} status @param {string} body @param {Headers} headers */
+  parseProbe(status, body, headers) { return super.parseHttpError(status, body, headers); }
+}
+class DeepSeekProbe extends DeepSeekConnector {
+  /** @param {Response} response */
+  readJson(response) { return super.readResponseJson(response); }
+}
+class JevProbe extends JevConnector {
+  /** @param {Response} response */
+  readJson(response) { return super.readResponseJson(response); }
+}
 const secret = ['synthetic', 'canary', 'credential'].join('-');
 providerKeyContext.run({ provider: 'deepseek', apiKey: secret }, () => {
-  const azure = new AzureOpenAiConnector();
-  const perplexity = new PerplexityConnector();
+  const azure = new AzureProbe();
+  const perplexity = new PerplexityProbe();
   for (let offset = 480; offset <= 520; offset++) {
     const body = 'x'.repeat(offset) + secret;
     const expected = ('x'.repeat(offset) + '[REDACTED]').slice(0, 500);
-    assert.equal(azure.formatHttpErrorMessage(401, body), expected);
+    assert.equal(azure.formatProbe(401, body), expected);
     assert.equal(
-      azure.formatHttpErrorMessage(401, JSON.stringify({ error: { code: secret, message: body } })),
+      azure.formatProbe(401, JSON.stringify({ error: { code: secret, message: body } })),
       '[REDACTED]: ' + 'x'.repeat(offset) + '[REDACTED]',
     );
     for (const status of [401, 403, 422, 429, 500])
-      assert.equal(perplexity.parseHttpError(status, body, new Headers()).message, expected);
+      assert.equal(perplexity.parseProbe(status, body, new Headers()).message, expected);
     assert.equal(
-      perplexity.parseHttpError(422, JSON.stringify({ detail: secret }), new Headers()).details,
+      perplexity.parseProbe(422, JSON.stringify({ detail: secret }), new Headers()).details,
       '[REDACTED]',
     );
   }
 });
 async function checkJsonReaders() {
-  for (const [provider, connector] of [
-    ['deepseek', new DeepSeekConnector()],
-    ['typesafe-jev', new JevConnector()],
-  ]) {
+  /** @type {Array<[string, DeepSeekProbe | JevProbe]>} */
+  const readers = [
+    ['deepseek', new DeepSeekProbe()],
+    ['typesafe-jev', new JevProbe()],
+  ];
+  for (const [provider, connector] of readers) {
     await providerKeyContext.run({ provider, apiKey: secret }, async () => {
       for (let attempt = 0; attempt < 2; attempt++) {
-        await assert.rejects(connector.readResponseJson(new Response(secret)), {
+        await assert.rejects(connector.readJson(new Response(secret)), {
           name: 'SyntaxError', message: 'Invalid upstream JSON response',
         });
       }
-      assert.deepEqual(await connector.readResponseJson(new Response(JSON.stringify({ echo: secret }))), {
+      assert.deepEqual(await connector.readJson(new Response(JSON.stringify({ echo: secret }))), {
         echo: '[REDACTED]',
       });
     });

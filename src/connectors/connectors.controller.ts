@@ -26,7 +26,7 @@ import {
   imageGenerateRequestSchema,
   ImageGenerateRequestDto,
 } from './dto/execute.dto';
-import { CatalogFiltersSchema } from './dto/catalog.dto';
+import { CatalogFiltersSchema, type CatalogFilters } from './dto/catalog.dto';
 import { ImageGenerationService } from './image-generation/image-generation.service';
 import { IMAGE_CAPABILITIES } from './image-generation/capabilities';
 import { CascadeRouterService } from './cascade/cascade-router.service';
@@ -131,11 +131,26 @@ export class ConnectorsController {
         HttpStatus.BAD_REQUEST,
       );
     }
+    // A finite validated payload boundary; future schema keys require an explicit review.
+    const filters: CatalogFilters = {
+      free: parsed.data.free,
+      cheap: parsed.data.cheap,
+      capability: parsed.data.capability,
+      modality: parsed.data.modality,
+      connector: parsed.data.connector,
+      tag: parsed.data.tag,
+      group: parsed.data.group,
+    } satisfies Record<keyof CatalogFilters, unknown>;
+    if (filters.capability === undefined) delete filters.capability;
+    if (filters.modality === undefined) delete filters.modality;
+    if (filters.connector === undefined) delete filters.connector;
+    if (filters.tag === undefined) delete filters.tag;
+    if (filters.group === undefined) delete filters.group;
     // CONN-1665 — discovery mirrors enforcement: filter by the caller's policy.
     const apiKeyId = req.apiKey?.id;
     return apiKeyId
-      ? this.connectorsService.getCatalog(parsed.data, apiKeyId)
-      : this.connectorsService.getCatalog(parsed.data);
+      ? this.connectorsService.getCatalog(filters, apiKeyId)
+      : this.connectorsService.getCatalog(filters);
   }
 
   @Get('connectors/:name/status')

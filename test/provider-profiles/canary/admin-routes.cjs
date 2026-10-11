@@ -72,6 +72,7 @@ async function main() {
     const probes = [];
     for (const id of ['a', 'b']) {
       for (const route of ['policy', 'usage']) {
+        /** @type {Response} */
         const response = await fetch(`${base}/admin/keys/canary-${id}/${route}`, {
           headers: { 'x-admin-token': process.env.ADMIN_TOKEN },
         });
