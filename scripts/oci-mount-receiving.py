@@ -56,6 +56,18 @@ print(json.dumps({"schema":"PrimePythonExecutableBytes/v1","requested_path":"/us
 """
 
 
+def exact_prime_missing_reference(code, raw):
+    """Only one bounded Docker missing-image envelope proves frozen-reference absence."""
+    import re
+    if type(code) is not int or code != 1:
+        return None
+    # inspect may print an empty JSON result before its daemon error. No arbitrary
+    # extra text, mixed permission/timeout error or second reference is accepted.
+    match = re.fullmatch(rb'\s*(?:\[\]\s*)?(?:Error response from daemon: |Error: )?No such image: ([^\s]+)\s*', raw)
+    accepted = {PRIME_BASE.encode(): 'literal', PRIME_BASE.removeprefix('library/').encode(): 'docker_hub_familiar'}
+    return accepted.get(match.group(1)) if match else None
+
+
 def prime_python_probe(owned, head, reconcile):
     # Globals reused from the reviewed existing OCI module: command, json, hashlib,
     # secrets, Path. All native stdout/stderr are finite private capture files.
@@ -71,13 +83,14 @@ def prime_python_probe(owned, head, reconcile):
         result["image_inspect_exit"] = code
         result['image_inspect_raw_sha256'] = hashlib.sha256(raw).hexdigest()
         result['image_inspect_requested_reference_seen'] = PRIME_BASE.encode() in raw
+        missing_binding = exact_prime_missing_reference(code, raw)
+        result['image_inspect_missing_reference_binding'] = missing_binding
         result['image_inspect_failure_codes'] = labels + (
             ['image_missing'] if b'no such image' in raw.lower() else [])
         if code:
             # Acquire only this frozen public base, in the existing CI probe.
             # Unknown daemon/permission/timeout failures never trigger acquisition.
-            absent = (code == 1 and b'no such image' in raw.lower()
-                      and PRIME_BASE.encode() in raw)
+            absent = missing_binding is not None
             if not absent:
                 result["reason"] = "PINNED_BASE_CACHE_LOOKUP_FAILED"; return result
             pull, pull_raw, _ = command(

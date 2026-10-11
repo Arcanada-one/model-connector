@@ -504,6 +504,10 @@ def run_root_suites(root, suites, scratch, executor=execute):
                                 and received.get('failure_code') in ('docker_absent','timeout','invalid_json','config_nonzero','compose_plugin_unavailable','compose_cli_flag','compose_permission_denied','semantic_assertion','UNKNOWN')
                                 and (received.get('exit_code') is None or type(received.get('exit_code')) is int)):
                             result['failure_receiving'] = {key: received.get(key) for key in ('phase','exit_code','failure_code')}
+                            if re.fullmatch(r'[a-f0-9]{64}', str(received.get('stderr_sha256', ''))):
+                                result['failure_receiving']['stderr_sha256'] = received['stderr_sha256']
+                            if received.get('rejected_flag') in ('--project-directory', '-f', '--format'):
+                                result['failure_receiving']['rejected_flag'] = received['rejected_flag']
                     except (ValueError, TypeError): pass
         if not code:
             try:

@@ -81,6 +81,31 @@ class Controls(unittest.TestCase):
                     self.assertEqual(command.call_args_list[1].kwargs['timeout'],90)
                     self.assertNotIn('bounded acquisition output',json.dumps(received))
 
+    def test_prime_missing_reference_familiar_equivalence_and_negative_controls(self):
+        spec=importlib.util.spec_from_file_location('prime_reference_probe',ROOT/'scripts/oci-mount-receiving.py')
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        literal=('Error: No such image: '+probe.PRIME_BASE).encode()
+        familiar=('Error: No such image: '+probe.PRIME_BASE.removeprefix('library/')).encode()
+        self.assertEqual(probe.exact_prime_missing_reference(1,literal),'literal')
+        self.assertEqual(probe.exact_prime_missing_reference(1,familiar),'docker_hub_familiar')
+        self.assertEqual(probe.exact_prime_missing_reference(1,b'[]\n'+familiar.replace(b'Error:',b'Error response from daemon:')),'docker_hub_familiar')
+        for code,raw in [(0,familiar),(True,familiar),(124,familiar),(125,familiar),
+                (1,familiar+b' permission denied'),(1,familiar+b' cannot connect'),(1,familiar+b' i/o timeout'),(1,familiar+b' operation not permitted'),
+                (1,familiar+b'0'),(1,familiar.replace(b'node:24',b'node:25')),
+                (1,familiar.replace(b'node:24',b'foreign/node:24')),
+                (1,b'No such image: node:24'),(1,literal+b'\n'+familiar)]:
+            with self.subTest(code=code,raw=raw):self.assertIsNone(probe.exact_prime_missing_reference(code,raw))
+        # Actual familiar spelling must trigger only the same frozen pull argv, once.
+        class Reconcile:
+            def reconcile(self, case):raise AssertionError('no container created')
+        owned=self.root/'familiar';owned.mkdir()
+        with patch.object(probe,'command',side_effect=[(1,familiar,[]),(1,b'bounded refusal',[])]) as cmd:
+            received=probe.prime_python_probe(owned,'head',Reconcile())
+        self.assertEqual(cmd.call_count,2)
+        self.assertEqual(cmd.call_args_list[1].args[0],['docker','image','pull','--platform=linux/amd64',probe.PRIME_BASE])
+        self.assertEqual(received['image_inspect_missing_reference_binding'],'docker_hub_familiar')
+        self.assertIsNone(received['python'])
+
     def test_compose_real_child_taxonomy_never_prints_private_stderr(self):
         binary=self.root/'bin';binary.mkdir()
         docker=binary/'docker'

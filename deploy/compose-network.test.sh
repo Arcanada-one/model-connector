@@ -2,6 +2,8 @@
 set -euo pipefail
 python3 - <<'PY'
 import json
+import hashlib
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -9,6 +11,8 @@ import tempfile
 phase = 'config_invocation'
 exit_code = None
 config_failure = 'config_nonzero'
+stderr_sha256 = None
+rejected_flag = None
 try:
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
@@ -17,10 +21,19 @@ try:
         (root / '.env').write_text('')
         result = subprocess.run(['docker', 'compose', '--project-directory', str(root),
                                  '-f', str(root / 'docker-compose.yml'), 'config', '--format', 'json'],
-                                capture_output=True, text=True, timeout=30)
+                                capture_output=True, timeout=30)
         exit_code = result.returncode
+        raw = result.stderr[:128 * 1024]
+        stderr_sha256 = hashlib.sha256(raw).hexdigest()
+        # Preserve private evidence, never print arbitrary stderr or a parsed untrusted flag.
+        with tempfile.NamedTemporaryFile(prefix='mc-compose-stderr-', suffix='.log', delete=False) as log:
+            log.write(raw)
+        flags = re.findall(r'unknown (?:shorthand )?flag:?\s*[\"\']?(-{1,2}[a-z-]+)(?=\s|[\"\':]|$)', result.stderr.decode(errors='replace').lower())
+        if len(flags) == 1 and flags[0] in ('--project-directory', '-f', '--format'):
+            rejected_flag = flags[0]
+
         # Fixed taxonomy only; arbitrary stderr never reaches the public receipt.
-        error_text = result.stderr.lower()
+        error_text = result.stderr.decode(errors='replace').lower()
         if 'is not a docker command' in error_text or 'unknown docker command' in error_text:
             config_failure = 'compose_plugin_unavailable'
         elif 'unknown flag' in error_text or 'unknown shorthand flag' in error_text:
@@ -52,6 +65,6 @@ except Exception as error:
             'invalid_json' if isinstance(error, json.JSONDecodeError) else
             config_failure if phase == 'config_invocation' and exit_code not in (None, 0) else
             'semantic_assertion' if isinstance(error, (AssertionError, KeyError, TypeError)) else 'UNKNOWN')
-    print('COMPOSE_FAILURE_RECEIVING=' + json.dumps({'phase':phase,'exit_code':exit_code,'failure_code':code}))
+    print('COMPOSE_FAILURE_RECEIVING=' + json.dumps({'phase':phase,'exit_code':exit_code,'failure_code':code,'stderr_sha256':stderr_sha256,'rejected_flag':rejected_flag}))
     raise SystemExit('REFUSED native Compose consumer network contract') from None
 PY
