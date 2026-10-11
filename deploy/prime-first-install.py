@@ -9,6 +9,8 @@ import re
 import runpy
 import stat
 import socket
+import selectors
+import signal
 import subprocess
 import sys
 import time
@@ -68,13 +70,91 @@ def store(path,data):
 class Native:
     def __init__(self): self.deadline=time.monotonic()+60
     def call(self,argv,env=None):
-        remaining=self.deadline-time.monotonic()
-        if remaining<=0: raise Refusal('deadline')
+        """Bounded Linux capture; group custody ends at leader reap.
+
+        Reuses process_observation.run's waitid/WNOWAIT receiving pattern.
+        No escaped-descendant, host-failure or sandbox guarantee is made.
+        """
+        started=time.monotonic(); end=min(self.deadline,started+15)
+        reserve=1.0
+        if end-started<=reserve: raise Refusal('deadline')
+        if not hasattr(os,'WNOWAIT'): raise Refusal('native_unsupported')
+        proc=None; selector=None; reason=None; cleanup=True; complete=False
+        buffers={'stdout':bytearray(),'stderr':bytearray()}
+        self.last_observation={'stdout_bytes':0,'stderr_bytes':0,
+                               'escaped_descendants':'NOT_MEASURED',
+                               'cleanup_scope':'owned_group_signals_and_leader_reap'}
+        def drain(until):
+            nonlocal reason
+            while selector.get_map() and time.monotonic()<until:
+                for key,_ in selector.select(min(.02,max(0,until-time.monotonic()))):
+                    try: block=os.read(key.fileobj.fileno(),8192)
+                    except BlockingIOError: continue
+                    if not block:
+                        selector.unregister(key.fileobj);continue
+                    remaining=65536-len(buffers[key.data])
+                    buffers[key.data].extend(block[:remaining])
+                    if len(block)>remaining:
+                        reason='native_capture_limit';return
+                return
         try:
-            r=subprocess.run(argv,env=env or ENV,capture_output=True,text=True,timeout=min(15,remaining))
-        except (OSError,subprocess.TimeoutExpired): raise Refusal('native_unknown') from None
-        if r.returncode or len(r.stdout)>65536: raise Refusal('native_refused')
-        return r.stdout.strip()
+            proc=subprocess.Popen(argv,env=env or ENV,stdin=subprocess.DEVNULL,
+                                  stdout=subprocess.PIPE,stderr=subprocess.PIPE,
+                                  start_new_session=True)
+            selector=selectors.DefaultSelector()
+            for name,pipe in [('stdout',proc.stdout),('stderr',proc.stderr)]:
+                os.set_blocking(pipe.fileno(),False)
+                selector.register(pipe,selectors.EVENT_READ,name)
+            while reason is None:
+                drain(end-reserve)
+                info=os.waitid(os.P_PID,proc.pid,os.WEXITED|os.WNOHANG|os.WNOWAIT)
+                if reason is not None: break
+                if info is not None: break
+                if not selector.get_map(): time.sleep(min(.01,max(0,end-reserve-time.monotonic())))
+                if time.monotonic()>=end-reserve:
+                    reason='native_timeout';break
+        except (OSError,ValueError,RuntimeError,subprocess.SubprocessError):
+            reason='native_capture_unknown'
+        finally:
+            if proc is not None:
+                # Never poll/wait before the final group signal: reserve PID/PGID.
+                for sig in (signal.SIGTERM,signal.SIGKILL):
+                    try: os.killpg(proc.pid,sig)
+                    except ProcessLookupError: pass
+                    except OSError: cleanup=False
+                    if sig==signal.SIGTERM:
+                        time.sleep(min(.05,max(0,end-time.monotonic())))
+                if not cleanup:
+                    # Only the unreaped directly owned child; never a foreign PID.
+                    try: proc.kill()
+                    except OSError: cleanup=False
+                try: proc.wait(timeout=max(.001,min(.5,end-time.monotonic())))
+                except (OSError,subprocess.TimeoutExpired): cleanup=False
+                if selector is not None:
+                    try:
+                        while selector.get_map() and time.monotonic()<end:
+                            drain(end)
+                            if reason=='native_capture_limit': break
+                    except (OSError,ValueError,RuntimeError):
+                        reason=reason or 'native_capture_unknown'
+                    if selector.get_map(): reason=reason or 'native_capture_incomplete'
+                    complete=not bool(selector.get_map()) and reason!='native_capture_limit'
+                    try: selector.close()
+                    except OSError: cleanup=False
+                for pipe in (proc.stdout,proc.stderr):
+                    if pipe is not None: pipe.close()
+            elif selector is not None: selector.close()
+        self.last_observation.update(stdout_bytes=len(buffers['stdout']),
+                                     stderr_bytes=len(buffers['stderr']),
+                                     capture_complete=complete,
+                                     leader_reaped=proc is not None and proc.returncode is not None,
+                                     cleanup='PASS' if cleanup and proc is not None else 'NOT_MEASURED',
+                                     duration_seconds=time.monotonic()-started)
+        if not cleanup: raise Refusal('native_cleanup_unknown')
+        if reason is not None: raise Refusal(reason)
+        if proc is None or proc.returncode!=0: raise Refusal('native_refused')
+        try: return buffers['stdout'].decode('utf-8').strip()
+        except UnicodeError: raise Refusal('native_encoding') from None
     def project(self):
         raw=self.call(['/usr/bin/docker','ps','-aq','--no-trunc','--filter','label=com.docker.compose.project=prime'])
         ids=raw.splitlines() if raw else []
