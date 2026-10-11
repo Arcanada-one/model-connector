@@ -70,6 +70,13 @@ describe('{{NAME}}Connector', () => {
   // --- Request body ---
 
   describe('buildRequestBody', () => {
+    it('rejects content blocks before any upstream call', async () => {
+      const result = await connector.execute({ prompt: [{ type: 'text', text: 'hello' }] });
+      expect(result.success).toBe(false);
+      expect(result.error?.message).toContain('requires string prompt');
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
     it('should build messages from prompt', async () => {
       mockOk(chatResponse);
       await connector.execute({ prompt: 'reply with ok only' });

@@ -257,7 +257,10 @@ jobs:
       # Remaining external arms still refuse; a green smoke cannot clear them.
       - name: Prepare maintained FULL runner
         run: |
-          corepack enable
+          mkdir -p "$RUNNER_TEMP/mc-owned-full/bin"
+          chmod 700 "$RUNNER_TEMP/mc-owned-full"
+          corepack enable --install-directory "$RUNNER_TEMP/mc-owned-full/bin"
+          echo "$RUNNER_TEMP/mc-owned-full/bin" >> "$GITHUB_PATH"
           corepack pnpm install --frozen-lockfile --ignore-scripts
           DATABASE_URL=postgresql://dummy:dummy@127.0.0.1:5432/dummy corepack pnpm exec prisma generate
           mkdir -p "$RUNNER_TEMP/mc-owned-full"
