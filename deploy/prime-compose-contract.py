@@ -52,8 +52,15 @@ def check(config, image, port):
         raise Refusal("rendered_contract_differs")
 
 
+class SafeParser(argparse.ArgumentParser):
+    def error(self, message):
+        # argparse otherwise repeats arbitrary caller values in stderr.
+        print('{"verdict":"REFUSE","scope":"configuration_only","runtime_authorized":false}')
+        raise SystemExit(1)
+
+
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = SafeParser(description=__doc__)
     parser.add_argument("--expected-image", required=True)
     parser.add_argument("--expected-port", type=int, required=True)
     args = parser.parse_args()
@@ -64,7 +71,7 @@ def main():
         config = json.loads(raw, object_pairs_hook=pairs,
                             parse_constant=lambda _: (_ for _ in ()).throw(Refusal("nonfinite_number")))
         check(config, args.expected_image, args.expected_port)
-    except (ValueError, UnicodeError, OSError):
+    except (ValueError, UnicodeError, OSError, RecursionError):
         # Input/configuration may contain secrets; never echo values or exceptions.
         print('{"verdict":"REFUSE","scope":"configuration_only","runtime_authorized":false}')
         return 1

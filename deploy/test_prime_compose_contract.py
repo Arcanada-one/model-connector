@@ -64,15 +64,17 @@ class ContractTests(unittest.TestCase):
 
     def test_transport_and_argument_refusals(self):
         for raw in ['{', '{"secret":"fixture-private-never-output"}',
-                    '{"name":"prime","name":"prime"}', ' ' * 65537, '{"cpus":NaN}']:
+                    '{"name":"prime","name":"prime"}', ' ' * 65537, '{"cpus":NaN}', '[' * 2000 + ']' * 2000]:
             with self.subTest(raw_kind=raw[:10]):
                 r=self.run_check(raw=raw)
                 self.assertEqual(r.returncode,1)
                 self.assertNotIn('fixture-private',r.stdout+r.stderr)
         for image in ['x:latest','ghcr.io/foreign/private@sha256:'+'a'*64]:
             self.assertEqual(self.run_check(CONFIG,image=image).returncode,1)
-        for port in ['80','65536']:
-            self.assertEqual(self.run_check(CONFIG,port=port).returncode,1)
+        for port in ['80','65536','fixture-private-invalid-port']:
+            r=self.run_check(CONFIG,port=port)
+            self.assertEqual(r.returncode,1)
+            self.assertNotIn("fixture-private", r.stdout+r.stderr)
 
 
 if __name__=='__main__': unittest.main()
