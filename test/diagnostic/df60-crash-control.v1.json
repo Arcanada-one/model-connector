@@ -1,0 +1,29 @@
+{
+  "schema": "MCIndependentCrashControlSource/v1",
+  "task": "df60c2c7-643a-4ff7-a92d-3951b73a2e2e",
+  "status": "SOURCE_ONLY_NOT_FROZEN",
+  "candidate": {
+    "path": "test/diagnostic/df60-crashed-ledger.py",
+    "sha256": "f73e71c06980493ab0e2d25448cca9420128d778e9c29e2c5b18a82fe0014c51"
+  },
+  "independent_control": {
+    "path": "dev-tools/df60-crash-control.py",
+    "sha256": "326837cbf10434f7ce5bb827747b367a905ffdb926f68ee284abc461299608db",
+    "origin": "SCI independent control received 2026-10-11 08:37 UTC"
+  },
+  "required_boundary": {
+    "child_visible": [
+      "one prepared instrument variant",
+      "exact immutable ledger dependency",
+      "own fresh SQLite custody"
+    ],
+    "excluded": [
+      "independent control/comparator",
+      "oracle/criteria",
+      "other variant",
+      "packet parent directory"
+    ],
+    "execution": "Separate existing authorized executor after exact R2 freeze and resource admission; this source manifest grants none."
+  },
+  "measurement_executed": false
+}
