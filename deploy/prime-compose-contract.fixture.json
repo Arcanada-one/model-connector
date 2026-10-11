@@ -1,0 +1,64 @@
+{
+  "name": "prime",
+  "networks": {
+    "health": {
+      "name": "prime_health",
+      "ipam": {},
+      "internal": true
+    }
+  },
+  "services": {
+    "health": {
+      "cap_drop": [
+        "ALL"
+      ],
+      "cpus": 0.25,
+      "command": null,
+      "entrypoint": null,
+      "environment": {
+        "PRIME_BIND_HOST": "0.0.0.0"
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8080/health').then(r=\u003e{if(r.status!==200)process.exit(1)}).catch(()=\u003eprocess.exit(1))"
+        ],
+        "timeout": "5s",
+        "interval": "30s",
+        "retries": 3,
+        "start_period": "5s"
+      },
+      "image": "ghcr.io/arcanada-one/vocatlas-factory@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "init": true,
+      "labels": {
+        "org.arcanada.authority": "process-health-only",
+        "org.arcanada.service": "prime-agent"
+      },
+      "mem_limit": "134217728",
+      "networks": {
+        "health": null
+      },
+      "pids_limit": 32,
+      "ports": [
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 8080,
+          "published": "18993",
+          "protocol": "tcp"
+        }
+      ],
+      "read_only": true,
+      "restart": "unless-stopped",
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "tmpfs": [
+        "/tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777"
+      ],
+      "user": "1000:1000"
+    }
+  }
+}
