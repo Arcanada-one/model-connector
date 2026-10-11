@@ -29,6 +29,22 @@ class Controls(unittest.TestCase):
         for unit in subject.UNITS[1:]:
             (self.root / unit).mkdir(parents=True)
 
+    def test_native_oci_exception_reconciles_and_preserves_unknown_custody(self):
+        spec=importlib.util.spec_from_file_location('oci_exception_probe',ROOT/'scripts/oci-mount-receiving.py')
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        def source(argv, **kwargs):
+            if argv[:3] == ['git','rev-parse','HEAD']: return b'a'*40
+            if argv[0] == 'docker': return b'sha256:'+b'b'*64
+            return (ROOT/argv[-1].split(':',1)[1]).read_bytes()
+        with patch.dict(os.environ, {'RUNNER_TEMP':str(self.root)}), patch.object(probe.subprocess,'check_output',side_effect=source), patch.object(probe,'command',side_effect=PermissionError('synthetic command denial')), patch.object(probe.subprocess,'run',side_effect=PermissionError('synthetic inventory denial')):
+            self.assertEqual(probe.main(),1)
+        receipt=json.loads((self.root/'mc-oci-mount-receiving.json').read_text())
+        self.assertEqual(receipt['hypothesis'],'NOT_MEASURED')
+        self.assertEqual(receipt['results'][0]['cleanup_exit_code'],127)
+        case=next(self.root.glob('mc-oci-receiving-*/old_missing'))
+        self.assertTrue((case/'app.intent.json').exists())
+        self.assertEqual(json.loads((case/'cleanup.json').read_text())['verdict'],'UNKNOWN')
+
     def test_native_oci_restrictions_refuse_weakened_container(self):
         import copy
         spec=importlib.util.spec_from_file_location('oci_probe',ROOT/'scripts/oci-mount-receiving.py')
