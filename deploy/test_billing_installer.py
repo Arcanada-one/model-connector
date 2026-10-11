@@ -55,6 +55,18 @@ sys.exit(subprocess.call(['/usr/bin/install']+out))
             p = self.bin / name
             p.write_text(code)
             p.chmod(0o755)
+        # Production now fixes utility lookup and the identity executable. Only
+        # this owned copy maps them to the existing root-metadata simulators.
+        identity = self.root / 'usr/bin/id'
+        identity.parent.mkdir(parents=True, exist_ok=True)
+        identity.write_bytes((self.bin / 'id').read_bytes())
+        identity.chmod(0o755)
+        fixed_path = 'readonly PATH=' + ':'.join(
+            [str(self.root / 'usr/sbin'), str(self.root / 'usr/bin'), '/sbin', '/bin'])
+        copied = self.script.read_text()
+        self.assertEqual(copied.count(fixed_path), 1)
+        copied = copied.replace(fixed_path, 'readonly PATH=' + str(self.bin) + ':/usr/bin:/bin')
+        self.script.write_text(copied)
         self.env = dict(os.environ, PATH=str(self.bin) + ':/usr/bin:/bin', FIXTURE_ROOT=str(self.root))
         self.sha = hashlib.sha256((self.source / 'arcanada-compose-broker.sh').read_bytes()).hexdigest()
 
