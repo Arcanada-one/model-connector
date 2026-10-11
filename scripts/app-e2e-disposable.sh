@@ -8,7 +8,7 @@ for f in .env .env.local .env.integration .env.test; do
 done
 docker info >/dev/null 2>&1 || { echo 'APP_E2E_REFUSED: Docker API unavailable'; exit 127; }
 # Never pull or build; capacity/image readiness is a separately owned precondition.
-for image in postgres:16 redis:7 node:22-slim; do
+for image in postgres:16 redis:7 model-connector-e2e:latest; do
   docker image inspect "$image" --format '{{.Id}}' || exit 127
 done
 HEAD=$(git rev-parse HEAD)
@@ -29,5 +29,5 @@ for attempt in $(seq 1 30); do
 done
 # Read-only exact source/dependencies. No host ports, inherited env, Docker socket,
 # host credentials, image entrypoint or provider keys enter the application.
-timeout --signal=TERM --kill-after=10s 180s docker run --rm --pull=never --name "$OWN-app" --network "$OWN" --cpus=1.5 --memory=2g --read-only --tmpfs /tmp:rw,size=256m --cap-drop=ALL --security-opt=no-new-privileges -v "$ROOT:/work:ro" -w /work --entrypoint /bin/sh node:22-slim -c 'env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/tmp TMPDIR=/tmp NODE_ENV=test DATABASE_URL=postgresql://test:test@mc-pg:5432/connector_test REDIS_HOST=mc-redis REDIS_PORT=6379 REDIS_PREFIX=mc-app-e2e STT_PROVIDER_GROQ_ENABLED=false MC_DISPOSABLE_APP_E2E=1 MC_NO_EGRESS=1 /bin/sh -ec "node node_modules/prisma/build/index.js migrate deploy; node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts --reporter=json --outputFile=/tmp/app-result.json; echo APP_E2E_RESULT_BEGIN; cat /tmp/app-result.json; echo APP_E2E_RESULT_END"'
+timeout --signal=TERM --kill-after=10s 180s docker run --rm --pull=never --name "$OWN-app" --network "$OWN" --cpus=1.5 --memory=2g --read-only --tmpfs /tmp:rw,size=256m,mode=1777 --cap-drop=ALL --security-opt=no-new-privileges -v "$ROOT:/work:ro" -w /work --entrypoint /bin/sh model-connector-e2e:latest -c 'env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/tmp TMPDIR=/tmp NODE_ENV=test DATABASE_URL=postgresql://test:test@mc-pg:5432/connector_test REDIS_HOST=mc-redis REDIS_PORT=6379 REDIS_PREFIX=mc-app-e2e STT_PROVIDER_GROQ_ENABLED=false MC_DISPOSABLE_APP_E2E=1 MC_NO_EGRESS=1 /bin/sh -ec "node node_modules/prisma/build/index.js migrate deploy; node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts --reporter=json --outputFile=/tmp/app-result.json; echo APP_E2E_RESULT_BEGIN; cat /tmp/app-result.json; echo APP_E2E_RESULT_END"'
 echo "APP_E2E_SOURCE_HEAD=$HEAD"

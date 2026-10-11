@@ -258,7 +258,8 @@ jobs:
       - name: Prepare maintained FULL runner
         run: |
           corepack enable
-          corepack pnpm install --frozen-lockfile
+          corepack pnpm install --frozen-lockfile --ignore-scripts
+          DATABASE_URL=postgresql://dummy:dummy@127.0.0.1:5432/dummy corepack pnpm exec prisma generate
           mkdir -p "$RUNNER_TEMP/mc-owned-full"
           chmod 700 "$RUNNER_TEMP/mc-owned-full"
 
