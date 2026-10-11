@@ -81,6 +81,26 @@ class Controls(unittest.TestCase):
                     self.assertEqual(command.call_args_list[1].kwargs['timeout'],90)
                     self.assertNotIn('bounded acquisition output',json.dumps(received))
 
+    def test_compose_real_child_taxonomy_never_prints_private_stderr(self):
+        binary=self.root/'bin';binary.mkdir()
+        docker=binary/'docker'
+        for message, expected in [
+            ('compose is not a docker command','compose_plugin_unavailable'),
+            ('unknown flag: --format','compose_cli_flag'),
+            ('permission denied','compose_permission_denied')]:
+            with self.subTest(expected=expected):
+                docker.write_text('#!/bin/sh\necho "'+message+' SYNTHETIC_PRIVATE_VALUE" >&2\nexit 125\n')
+                docker.chmod(0o700)
+                result=subprocess.run(['/bin/bash',str(ROOT/'deploy/compose-network.test.sh')],
+                    cwd=ROOT,env={'PATH':str(binary)+os.pathsep+os.defpath,'HOME':str(self.root)},
+                    capture_output=True,text=True,timeout=5)
+                self.assertEqual(result.returncode,1)
+                line=next(x for x in result.stdout.splitlines() if x.startswith('COMPOSE_FAILURE_RECEIVING='))
+                received=json.loads(line.split('=',1)[1])
+                self.assertEqual(received['failure_code'],expected)
+                self.assertEqual(received['exit_code'],125)
+                self.assertNotIn('SYNTHETIC_PRIVATE_VALUE',result.stdout+result.stderr)
+
     def test_compose_extra_private_field_never_reaches_public_projection(self):
         suites=self.root_dispatch_fixture(['deploy/compose-network.test.sh'])
         payload={'phase':'config_parse','exit_code':0,'failure_code':'invalid_json','extra':'SYNTHETIC_PRIVATE_VALUE'}
