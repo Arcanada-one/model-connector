@@ -24,6 +24,14 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."   # repo root == the broker checkout
 
+# Explicit reviewed broker-only source request uses the existing root run-deploy
+# capability and exits before any Model Connector env/image/container changes.
+# Never select this mode from a runner-controlled argument or environment.
+if [[ -e deploy/broker-install-only.request || -L deploy/broker-install-only.request ]]; then
+  [[ -f deploy/broker-install-main.sh && ! -L deploy/broker-install-main.sh ]] || exit 1
+  exec /usr/bin/bash deploy/broker-install-main.sh
+fi
+
 if [[ ! -f .env ]]; then
   echo "FATAL: .env missing. The broker installs it on sync; run sync first." >&2
   exit 1
