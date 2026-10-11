@@ -1,17 +1,17 @@
 {
   "schema": "CanaryPlan/v2",
-  "id": "mc203-profile-boundaries-a1fe547d1ea5",
+  "id": "mc203-profile-boundaries-7b08b52866a8",
   "environment": "owned-local-synthetic-no-live-services",
   "owner": "MC-KEYS",
   "producer_repository": "/home/dev/orca/workspaces/model-connector/mc-keys-profile-caps-20261008",
   "read_only": false,
   "subject": {
     "schema": "GitCanarySubject/v1",
-    "commit": "a1fe547d1ea50e7a704d04b175e060121773fd74",
-    "tree": "14216d7d1e9efcbd12d28af7e238f25943419a39",
+    "commit": "7b08b52866a83bd4deb6fae7d9447ad5ad90d1fb",
+    "tree": "9d2b67b98dc8e73309d734a317edc2feec870172",
     "evidence": {
-      "path": "/home/dev/aup/mc-keys-work/20261011/profile-boundary-source.json",
-      "sha256": "1ccc987323cbc2a9db8350942e14527b2786f8a074b8523e6bbaa7e9e9d1e6b9",
+      "path": "SOURCE.json",
+      "sha256": "d2b7b2f004ab1b24d10f1ff491f12e2562a03ecc42d15936d3103b5acb3eb0eb",
       "source_field": "commit"
     }
   },
