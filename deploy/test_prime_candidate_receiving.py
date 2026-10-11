@@ -38,4 +38,19 @@ class CandidateReceivingTests(unittest.TestCase):
                 r=copy.deepcopy(self.record);change(r)
                 with self.assertRaises(m.Refusal):self.check(r)
 
+    def test_malformed_boolean_and_collection_types_refuse(self):
+        cases=[('State','Running',v) for v in ['false',1,[],{}]]
+        cases += [('HostConfig','ReadonlyRootfs',v) for v in ['false',1,[],{}]]
+        cases += [('HostConfig','Privileged',v) for v in [0,'',None]]
+        cases += [('HostConfig','CapAdd',v) for v in ['',{},False]]
+        cases += [('HostConfig','PortBindings',v) for v in ['',[],None]]
+        cases += [('HostConfig','Binds',v) for v in ['',{},False]]
+        for section,key,value in cases:
+            with self.subTest(section=section,key=key,value=value):
+                r=copy.deepcopy(self.record);r['containerInspect'][section][key]=value
+                with self.assertRaises(m.Refusal):self.check(r)
+        for value in ['',{},None,False]:
+            r=copy.deepcopy(self.record);r['containerInspect']['Mounts']=value
+            with self.assertRaises(m.Refusal):self.check(r)
+
 if __name__=='__main__':unittest.main()
