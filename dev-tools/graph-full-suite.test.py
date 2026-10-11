@@ -29,13 +29,51 @@ class Controls(unittest.TestCase):
         for unit in subject.UNITS[1:]:
             (self.root / unit).mkdir(parents=True)
 
+    def test_compose_extra_private_field_never_reaches_public_projection(self):
+        suites=self.root_dispatch_fixture(['deploy/compose-network.test.sh'])
+        payload={'phase':'config_parse','exit_code':0,'failure_code':'invalid_json','extra':'SYNTHETIC_PRIVATE_VALUE'}
+        def child(*args):return {'argv':args[0],'exit_code':1,'output':'COMPOSE_FAILURE_RECEIVING='+json.dumps(payload)+'\n','duration_s':0}
+        with patch.object(subject.shutil,'which',return_value='/fixture/runner'):
+            result=subject.run_root_suites(self.root,suites,self.root,child)
+        received=result[0]['executions'][0]['failure_receiving']
+        self.assertEqual(set(received),{'phase','exit_code','failure_code'})
+        self.assertNotIn('SYNTHETIC_PRIVATE_VALUE',json.dumps(received))
+
+    def test_native_oci_helper_ignores_real_git_replacement_and_ambient_git_dir(self):
+        spec=importlib.util.spec_from_file_location('oci_git_probe',ROOT/'scripts/oci-mount-receiving.py')
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        root=self.root/'git-fixture';root.mkdir()
+        subprocess.run(['git','init','-q',str(root)],check=True)
+        helper=root/'helper.py';helper.write_text('original immutable bytes')
+        subprocess.run(['git','add','helper.py'],cwd=root,check=True)
+        args=['git','-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm']
+        subprocess.run(args+['original'],cwd=root,check=True)
+        original=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root).decode().strip()
+        helper.write_text('substituted bytes')
+        subprocess.run(['git','add','helper.py'],cwd=root,check=True);subprocess.run(args+['replacement'],cwd=root,check=True)
+        replacement=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root).decode().strip()
+        subprocess.run(['git','replace',original,replacement],cwd=root,check=True)
+        self.assertEqual(subprocess.check_output(['git','show',original+':helper.py'],cwd=root),b'substituted bytes')
+        with patch.dict(os.environ,{'GIT_DIR':'/nonexistent/foreign','GIT_CONFIG_COUNT':'1','GIT_CONFIG_KEY_0':'core.worktree','GIT_CONFIG_VALUE_0':'/foreign'}):
+            raw,binding=probe.helper_binding(root,original,'helper.py')
+        self.assertEqual(raw,b'original immutable bytes');self.assertEqual(binding['mode'],'100644')
+
     def test_native_oci_exception_reconciles_and_preserves_unknown_custody(self):
         spec=importlib.util.spec_from_file_location('oci_exception_probe',ROOT/'scripts/oci-mount-receiving.py')
         probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
         def source(argv, **kwargs):
-            if argv[:3] == ['git','rev-parse','HEAD']: return b'a'*40
+            import hashlib
+            if 'rev-parse' in argv: return b'a'*40
             if argv[0] == 'docker': return b'sha256:'+b'b'*64
-            return (ROOT/argv[-1].split(':',1)[1]).read_bytes()
+            if 'ls-tree' in argv:
+                name=argv[-1];raw=(ROOT/name).read_bytes()
+                blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()
+                return ('100644 blob '+blob+'\t'+name+'\0').encode()
+            if 'cat-file' in argv:
+                for name in ['scripts/app-e2e-reconcile.py','scripts/app-e2e-snapshot.py']:
+                    raw=(ROOT/name).read_bytes()
+                    if hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==argv[-1]:return raw
+            raise AssertionError('unknown immutable prelude')
         with patch.dict(os.environ, {'RUNNER_TEMP':str(self.root)}), patch.object(probe.subprocess,'check_output',side_effect=source), patch.object(probe,'command',side_effect=PermissionError('synthetic command denial')), patch.object(probe.subprocess,'run',side_effect=PermissionError('synthetic inventory denial')):
             self.assertEqual(probe.main(),1)
         receipt=json.loads((self.root/'mc-oci-mount-receiving.json').read_text())

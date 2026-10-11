@@ -502,7 +502,7 @@ def run_root_suites(root, suites, scratch, executor=execute):
                         if (received.get('phase') in ('config_invocation','config_parse','network_identity','service_membership','alias','ports')
                                 and received.get('failure_code') in ('docker_absent','timeout','invalid_json','config_nonzero','semantic_assertion','UNKNOWN')
                                 and (received.get('exit_code') is None or type(received.get('exit_code')) is int)):
-                            result['failure_receiving'] = received
+                            result['failure_receiving'] = {key: received.get(key) for key in ('phase','exit_code','failure_code')}
                     except (ValueError, TypeError): pass
         if not code:
             try:

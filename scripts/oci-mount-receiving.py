@@ -43,20 +43,40 @@ def restrictions(obj, owner, name, head, image, src, deps):
             == {(str(src),'/work',False),(str(deps),'/work/node_modules',False)})
 
 
+def git(root, *arguments):
+    # Same protected Git environment as Program native_projection.git.
+    environment = {'PATH':'/usr/bin:/bin','HOME':'/nonexistent',
+        'GIT_CONFIG_NOSYSTEM':'1','GIT_CONFIG_GLOBAL':'/dev/null',
+        'GIT_NO_REPLACE_OBJECTS':'1','GIT_TERMINAL_PROMPT':'0'}
+    return subprocess.check_output(['/usr/bin/git','--no-optional-locks','-c','core.fsmonitor=false',
+        '-c','core.hooksPath=/dev/null',*arguments],cwd=root,env=environment,timeout=3)
+
+
+def helper_binding(root, head, name):
+    entries=git(root,'ls-tree','-z',head,'--',name).split(b'\0')[:-1]
+    if len(entries)!=1: raise ValueError('helper source membership absent')
+    metadata,path=entries[0].decode().split('\t');mode,kind,blob=metadata.split()
+    if path!=name or mode!='100644' or kind!='blob': raise ValueError('helper Git mode/type refused')
+    raw=git(root,'cat-file','blob',blob)
+    if hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()!=blob:
+        raise ValueError('helper Git object digest mismatch')
+    return raw,{'path':name,'mode':mode,'git_blob':blob,'sha256':hashlib.sha256(raw).hexdigest()}
+
+
 def main():
     if os.getuid() == 0: raise ValueError("nonroot executor required")
     root = Path.cwd()
-    head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], timeout=3).decode().strip()
+    head = git(root,'rev-parse','HEAD').decode().strip()
     image = subprocess.check_output(['docker', 'image', 'inspect', 'model-connector-e2e:latest',
                                      '--format', '{{.Id}}'], timeout=3).decode().strip()
     if not __import__('re').fullmatch(r'sha256:[a-f0-9]{64}', image):
         raise ValueError('immutable cached image absent')
     owned = Path(tempfile.mkdtemp(prefix='mc-oci-receiving-', dir=os.environ['RUNNER_TEMP']))
-    source = subprocess.check_output(['git', 'show', head + ':scripts/app-e2e-reconcile.py'], timeout=3)
+    source, reconcile_binding = helper_binding(root,head,'scripts/app-e2e-reconcile.py')
     helper = owned / 'reconcile.py'; helper.write_bytes(source)
     spec = importlib.util.spec_from_file_location('owned_reconcile', helper)
     reconcile = importlib.util.module_from_spec(spec); spec.loader.exec_module(reconcile)
-    snapshot_raw = subprocess.check_output(['git', 'show', head + ':scripts/app-e2e-snapshot.py'], timeout=3)
+    snapshot_raw, snapshot_binding = helper_binding(root,head,'scripts/app-e2e-snapshot.py')
     snapshot_path = owned / 'snapshot.py'; snapshot_path.write_bytes(snapshot_raw)
     spec = importlib.util.spec_from_file_location('owned_snapshot', snapshot_path)
     snapshot = importlib.util.module_from_spec(spec); spec.loader.exec_module(snapshot)
@@ -114,6 +134,7 @@ def main():
                      'cleanup_exit_code':cleanup,'primary_exception':primary_exception})
         if cleanup or code == 124 or primary_exception: break
     result = {'schema':'MCNativeOCIMountReceiving/v1','head':head,'image_id':image,
+              'source_bindings':[reconcile_binding,snapshot_binding],
               'reconcile_sha256':hashlib.sha256(source).hexdigest(),
               'snapshot_sha256':hashlib.sha256(snapshot_raw).hexdigest(),'results':rows,
               'app_executions':0,'provider_calls':0}
