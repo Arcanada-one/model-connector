@@ -3,6 +3,7 @@
  * Parent SCI owns reserve/abort/settle; INFRA owns physical namespace/store admission.
  */
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { open } from 'node:fs/promises';
 
 export function validateAccountingIdentity(apiKeyId: string, requestId: string) {
   const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
@@ -55,3 +56,44 @@ export async function readIndependentAccounting(apiKeyId: string, requestId: str
     await reader.$disconnect();
   }
 }
+
+/** Closed raw SQL child entry. The deadline is inherited, never renewed per phase.
+ * This event-loop cutoff terminates async connect/disconnect stalls as well as
+ * query stalls. It is not an external CPU-stall/descendant guardian deadline.
+ * It does not prove namespace/store drain: the existing SCI/INFRA parent must
+ * independently receive those facts and retain reserve on timeout/lost ACK.
+ */
+export async function accountingChildMain(args: string[]) {
+  if (args.length !== 3) throw new Error('DIAG SQL child arity refused');
+  const [apiKeyId, requestId, deadline] = args;
+  validateAccountingIdentity(apiKeyId, requestId);
+  if (!/^[0-9]{13}$/.test(deadline)) throw new Error('DIAG SQL deadline refused');
+  const remaining = Number(deadline) - Date.now();
+  if (!Number.isSafeInteger(remaining) || remaining <= 0 || remaining > 40000)
+    throw new Error('DIAG SQL deadline refused');
+  // Arm once, before output acquisition or Prisma construction. A stalled
+  // disconnect cannot cancel or reset this timer; no incomplete output is PASS.
+  const cutoff = setTimeout(() => {
+    process.stderr.write('DIAG SQL child deadline; parent must retain reserve and drain\n');
+    process.exit(124);
+  }, remaining);
+  try {
+    const output = await open('/diag-output/accounting.json', 'wx', 0o600);
+    try {
+      // readIndependentAccounting resolves only AFTER its finally disconnect.
+      const record = await readIndependentAccounting(apiKeyId, requestId);
+      await output.writeFile(JSON.stringify(record) + '\n');
+      await output.sync();
+    } finally {
+      await output.close();
+    }
+  } finally {
+    clearTimeout(cutoff);
+  }
+}
+
+if (require.main === module)
+  accountingChildMain(process.argv.slice(2)).catch(() => {
+    process.stderr.write('DIAG SQL child refused; no admission or settlement asserted\n');
+    process.exitCode = 1;
+  });
