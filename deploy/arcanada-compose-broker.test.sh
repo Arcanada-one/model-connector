@@ -606,7 +606,10 @@ for name in missing_custody previous_drift source_drift foreign_project unhealth
   esac
   : > "$ASSISTANT_DOCKER_LOG"
   expect_fail "activation_$name" arcanada-assistant up
-  ! grep -Eq 'compose .* up -d' "$ASSISTANT_DOCKER_LOG"
+  if grep -Eq 'compose .* up -d' "$ASSISTANT_DOCKER_LOG"; then
+    echo "FAIL: activation_$name mutated before refusal" >&2
+    exit 1
+  fi
 done
 for svc in arcanada-assistant muneral; do
   export RECOVERY_HEALTH=healthy RECOVERY_PREVIOUS="$RECOVERY_IMAGE" RECOVERY_LATEST="$RECOVERY_IMAGE" RECOVERY_INTERLEAVE=0
