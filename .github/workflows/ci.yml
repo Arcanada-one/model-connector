@@ -267,6 +267,22 @@ jobs:
           DATABASE_URL=postgresql://dummy:dummy@127.0.0.1:5432/dummy corepack pnpm exec prisma generate
           mkdir -p "$RUNNER_TEMP/mc-owned-full"
           chmod 700 "$RUNNER_TEMP/mc-owned-full"
+          python3 - <<'PYTHON'
+          import os, stat, tempfile
+          from pathlib import Path
+          base=Path.home()
+          info=base.lstat()
+          if base.is_symlink() or not base.is_absolute() or not stat.S_ISDIR(info.st_mode) or info.st_uid!=os.geteuid():
+              raise SystemExit('FULL_CUSTODY_REFUSED: home identity')
+          owned=Path(tempfile.mkdtemp(prefix='mcf-',dir=base))
+          # Root scratch plus the longest maintained BENCH fixture socket must fit sun_path.
+          if len(os.fsencode(str(owned/'mc-full-.-XXXXXXXX'/'bench-composition-XXXXXX'/'custody.sock')))>=108:
+              raise SystemExit('FULL_CUSTODY_REFUSED: socket path capacity; custody retained')
+          if stat.S_IMODE(owned.lstat().st_mode)!=0o700:
+              raise SystemExit('FULL_CUSTODY_REFUSED: private directory mode')
+          with open(os.environ['GITHUB_ENV'],'a') as output:
+              output.write('MC_FULL_TMPDIR='+str(owned)+'\n')
+          PYTHON
 
       - name: Bounded native OCI mount receiving before App
         timeout-minutes: 5
@@ -284,7 +300,7 @@ jobs:
 
       - name: Maintained root FULL
         env:
-          TMPDIR: ${{ runner.temp }}/mc-owned-full
+          TMPDIR: ${{ env.MC_FULL_TMPDIR }}
         run: bash scripts/graph-full-suite.sh .
 
       - name: Receive bounded FULL diagnostics
@@ -294,7 +310,7 @@ jobs:
           import json, os
           from pathlib import Path
           rows=[]
-          for path in Path(os.environ['RUNNER_TEMP'], 'mc-owned-full').glob('mc-full-*/execution.json'):
+          for path in Path(os.environ.get('MC_FULL_TMPDIR', os.environ['RUNNER_TEMP']+'/mc-owned-full')).glob('mc-full-*/execution.json'):
               doc=json.loads(path.read_text())
               rows.append({k:doc.get(k) for k in ('schema','head','unit','exit_code','remaining','refusal')})
               rows[-1]['results']=[]
