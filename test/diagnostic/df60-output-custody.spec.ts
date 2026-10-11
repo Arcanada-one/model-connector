@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { homedir } from 'node:os';
 import { describe, it, expect, vi } from 'vitest';
 const state = vi.hoisted(() => ({ entries: 0, connects: 0 }));
 vi.mock('../../src/prisma/prisma.service', () => ({
@@ -21,7 +22,7 @@ vi.mock('./df60-composition', () => ({
 import { main } from './df60-raw-cli';
 describe('output custody before App and DB entry (synthetic controls only)', () => {
   it.each([true, false])('occupied=%s preserves history and controls entry', async (occupied) => {
-    const dir = await mkdtemp('/home/dev/mc-diag-output-');
+    const dir = await mkdtemp(join(homedir(), 'mc-diag-output-'));
     const old = { DATABASE_URL: process.env.DATABASE_URL, MC_NO_EGRESS: process.env.MC_NO_EGRESS };
     state.entries = 0;
     state.connects = 0;
