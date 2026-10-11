@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 
 HERE=Path(__file__).parent
@@ -47,6 +48,13 @@ class Tests(unittest.TestCase):
         attempt=self.e.arm(SHA);self.native.ids=[CID]
         self.native.row=[CID,IID,'prime','health',attempt,','.join([str(self.compose),str(self.e.private/'attempt.json')])]
         self.e.bind(attempt);return attempt
+    def test_real_broker_generic_actuators_refused(self):
+        for verb in ['up','build','pull','migrate','logs','registry-login','registry-logout','run-deploy','env-get','prune','promote','rollback']:
+            with self.subTest(verb=verb):
+                r=subprocess.run(['bash',str(HERE/'arcanada-compose-broker.sh'),'prime',verb],capture_output=True,text=True,timeout=2)
+                self.assertNotEqual(r.returncode,0)
+                self.assertIn('generic activation refused',r.stderr)
+
     def test_owned_first_rollback(self):
         attempt=self.bound();self.e.rollback(attempt)
         effects=[v for v in self.native.calls if 'stop' in v or 'rm' in v]
