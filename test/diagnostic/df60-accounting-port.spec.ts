@@ -39,6 +39,8 @@ describe('actual child deadline controls with synthetic SQL/output, no native re
     ).outputText;
     const fixture = `
       const mode = ${JSON.stringify(mode)};
+      // Freeze only synthetic boundary input; real stall/cutoff timers remain live.
+      if(mode === 'boundary') { const now = Date.now(); Date.now = () => now; }
       const hold = () => new Promise(() => { setInterval(() => {}, 1000); });
       const marker = x => process.stderr.write(x + '\\n');
       class Reader {
@@ -94,11 +96,17 @@ describe('actual child deadline controls with synthetic SQL/output, no native re
     expect(JSON.parse(result.stdout).accountingAdmission).toBe('NOT_MEASURED');
     expect(JSON.parse(result.stdout).settlementMicrousd).toBeNull();
   });
-  it.each([-1, 40001])('refuses invalid inherited deadline %s before entry', (offset) => {
-    const result = child('positive', offset);
+  it.each([-1, 0, 40001])('refuses invalid inherited deadline %s before entry', (offset) => {
+    const result = child('boundary', offset);
     expect(result.status).toBe(1);
     expect(result.stderr).not.toContain('CONSTRUCT');
     expect(result.stderr).not.toContain('OUTPUT_ACQUIRED');
+  });
+  it('accepts the exact 40000ms ceiling with the same fixed boundary clock', () => {
+    const result = child('boundary', 40000);
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain('CONSTRUCT');
+    expect(result.stderr).toContain('OUTPUT_ACQUIRED');
   });
   it('occupied output refuses before Prisma construction', () => {
     const result = child('collision', 1000);
