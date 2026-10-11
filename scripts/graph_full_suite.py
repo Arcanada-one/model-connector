@@ -459,6 +459,19 @@ def failure_labels(raw):
         ('composition_socket_invalid', 'socket_path_capacity'), ('socket_path_too_long', 'socket_path_capacity')) if marker in raw.lower()})
 
 
+def stage_compose_plugin(root, home):
+    import importlib.util
+    path = checked_file(root, 'scripts/compose-plugin-custody.py')
+    spec = importlib.util.spec_from_file_location('compose_custody', path)
+    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+    receipt = module.stage(home)
+    receipt['producer_source_sha256'] = hashlib.sha256(path.read_bytes()).hexdigest()
+    with (home.parent / 'compose-custody.json').open('x') as output:
+        json.dump(receipt, output)
+    (home.parent / 'compose-custody.json').chmod(0o600)
+    return receipt
+
+
 def run_root_suites(root, suites, scratch, executor=execute):
     """Dispatch ordinary local groups; preserve every held member without spawning it."""
     members = [n for suite in suites for n in suite['members']]
@@ -473,6 +486,8 @@ def run_root_suites(root, suites, scratch, executor=execute):
             if suite['suite'] == 'maintained-regression':
                 root_regression_command(root, member)
     env = clean_environment(scratch, root)
+    if 'deploy/compose-network.test.sh' in members:
+        stage_compose_plugin(root, Path(env['HOME']))
     deadline = time.monotonic() + 900
     results = []
     def run(argv, members, name, parser):
@@ -620,6 +635,9 @@ def main():
     try:
         document['results'] = (run_root_suites(ROOT, suites, scratch) if unit == '.' else
                                run_suites(ROOT, unit, suites, scratch))
+        custody = scratch / 'compose-custody.json'
+        if custody.is_file():
+            document['compose_plugin_custody'] = json.loads(custody.read_text())
     except (Refusal, ValueError, KeyError, OSError) as error:
         document['refusal'] = str(error) if isinstance(error, Refusal) else type(error).__name__
         print('FULL_EXECUTION_REFUSED:', document['refusal'])

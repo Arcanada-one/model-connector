@@ -128,6 +128,8 @@ class Controls(unittest.TestCase):
 
     def test_compose_extra_private_field_never_reaches_public_projection(self):
         suites=self.root_dispatch_fixture(['deploy/compose-network.test.sh'])
+        custody=patch.object(subject, 'stage_compose_plugin')
+        custody.start();self.addCleanup(custody.stop)
         payload={'phase':'config_parse','exit_code':0,'failure_code':'invalid_json','extra':'SYNTHETIC_PRIVATE_VALUE'}
         def child(*args):return {'argv':args[0],'exit_code':1,'output':'COMPOSE_FAILURE_RECEIVING='+json.dumps(payload)+'\n','duration_s':0}
         with patch.object(subject.shutil,'which',return_value='/fixture/runner'):

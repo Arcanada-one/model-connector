@@ -323,7 +323,7 @@ jobs:
           rows=[]
           for path in Path(os.environ.get('MC_FULL_TMPDIR', os.environ['RUNNER_TEMP']+'/mc-owned-full')).glob('mc-full-*/execution.json'):
               doc=json.loads(path.read_text())
-              rows.append({k:doc.get(k) for k in ('schema','head','unit','exit_code','remaining','refusal')})
+              rows.append({k:doc.get(k) for k in ('schema','head','unit','exit_code','remaining','refusal','compose_plugin_custody')})
               rows[-1]['results']=[]
               for r in doc.get('results',[]):
                   summary={k:r.get(k) for k in ('suite','verdict','exit_code','counts')}
