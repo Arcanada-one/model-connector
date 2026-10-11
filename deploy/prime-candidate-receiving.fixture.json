@@ -1,0 +1,100 @@
+{
+  "sourceRevision": "9698882acaebab38f532a49d37b0da5f04d99598",
+  "imageId": "sha256:0d6e3df74166b67008b8163d78f759f1244488e0f90e67f409b25321d00e5dfe",
+  "start": 1791700742.5343614,
+  "runtime_authorized": false,
+  "provider_authorized": false,
+  "imageTeardown": "PRESERVED_CANDIDATE",
+  "imageInspect": {
+    "Id": "sha256:0d6e3df74166b67008b8163d78f759f1244488e0f90e67f409b25321d00e5dfe",
+    "Os": "linux",
+    "Architecture": "amd64",
+    "Config": {
+      "User": "1000:1000",
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "NODE_VERSION=24.21.0",
+        "YARN_VERSION=1.22.22",
+        "PRIME_SOURCE_REVISION=9698882acaebab38f532a49d37b0da5f04d99598"
+      ],
+      "Entrypoint": [
+        "docker-entrypoint.sh"
+      ],
+      "Cmd": [
+        "node",
+        "tools/prime_service.mjs"
+      ],
+      "WorkingDir": "/app",
+      "Labels": {
+        "org.opencontainers.image.revision": "9698882acaebab38f532a49d37b0da5f04d99598"
+      },
+      "ArgsEscaped": true
+    }
+  },
+  "containerId": "ba52c70c8b319326cffb43cd471d597d22aac74440f5df70cc8b9a554336ee0c",
+  "containerInspect": {
+    "Id": "ba52c70c8b319326cffb43cd471d597d22aac74440f5df70cc8b9a554336ee0c",
+    "Image": "sha256:0d6e3df74166b67008b8163d78f759f1244488e0f90e67f409b25321d00e5dfe",
+    "Config": {
+      "User": "1000:1000"
+    },
+    "State": {
+      "Running": true
+    },
+    "HostConfig": {
+      "NetworkMode": "none",
+      "ReadonlyRootfs": true,
+      "Privileged": false,
+      "CapAdd": null,
+      "CapDrop": [
+        "ALL"
+      ],
+      "SecurityOpt": [
+        "no-new-privileges"
+      ],
+      "PortBindings": {},
+      "Binds": null,
+      "Memory": 134217728,
+      "NanoCpus": 250000000,
+      "PidsLimit": 32,
+      "Tmpfs": {
+        "/tmp": "rw,noexec,nosuid,nodev,size=16m,mode=1777"
+      }
+    },
+    "Mounts": []
+  },
+  "http": [
+    {
+      "path": "/health",
+      "status": 200,
+      "body": {
+        "status": "ok",
+        "version": "9698882acaebab38f532a49d37b0da5f04d99598",
+        "service": "prime-agent",
+        "scope": "process_liveness",
+        "runtime_authorized": false
+      }
+    },
+    {
+      "path": "/ready",
+      "status": 503,
+      "body": {
+        "status": "paused",
+        "version": "9698882acaebab38f532a49d37b0da5f04d99598",
+        "service": "prime-agent",
+        "runtime_authorized": false,
+        "knowledge_admitted": false,
+        "dependencies": {
+          "database": "NOT_MEASURED",
+          "native_admission": "NOT_MEASURED",
+          "budget_accounting": "NOT_MEASURED",
+          "credential_custody": "NOT_MEASURED",
+          "restore": "NOT_MEASURED"
+        }
+      }
+    }
+  ],
+  "verdict": "MEASURED",
+  "containerTeardown": "PASS",
+  "end": 1791700747.3710897
+}
