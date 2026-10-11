@@ -92,4 +92,9 @@ class Controls(unittest.TestCase):
             digest=hashlib.sha256((owned/'custody.json').read_bytes()).hexdigest()
             (owned/'dependencies/packages/sdk-ts/source.ts').chmod(0o700)
             with self.assertRaisesRegex(ValueError,'workspace'):m.verify(owned,digest)
+    def test_git_tree_cannot_masquerade_as_subject_commit(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);head=self.fixture(root);owned=root/'owned';owned.mkdir()
+            tree=subprocess.check_output(['git','rev-parse',head+'^{tree}'],cwd=root).decode().strip()
+            with self.assertRaisesRegex(ValueError,'nonexact'):m.export(root,tree,owned)
 if __name__=='__main__':unittest.main()

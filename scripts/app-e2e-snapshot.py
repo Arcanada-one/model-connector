@@ -84,7 +84,7 @@ def workspace_bindings(source, head, git):
 def export(root, head, owned):
     def git(*args):
         return subprocess.check_output(['git', '-c', f'safe.directory={root}', '-C', str(root), *args])
-    if git('rev-parse', head).decode().strip() != head:
+    if git('rev-parse', head).decode().strip() != head or git('cat-file', '-t', head).strip() != b'commit':
         raise ValueError('nonexact source head')
     source = owned / 'source'; source.mkdir(mode=0o700)
     archive = owned / 'source.tar'
@@ -144,6 +144,11 @@ def export(root, head, owned):
     if before != after or before != inventory(root / 'node_modules', inputs):
         raise ValueError('dependency bytes changed during custody transfer')
     record = {'schema': 'MCAppE2ECustody/v1', 'head': head,
+              'source_tree_oid': git('rev-parse', head+'^{tree}').decode().strip(),
+              'workspace_declaration': ({'path':'pnpm-workspace.yaml',
+                  'git_blob':git('rev-parse', head+':pnpm-workspace.yaml').decode().strip(),
+                  'sha256':file_digest(source/'pnpm-workspace.yaml')} if (source/'pnpm-workspace.yaml').exists() else None),
+              'lock_blob_oid':git('rev-parse', head+':pnpm-lock.yaml').decode().strip(),
               'source_archive_sha256': hashlib.sha256(archive.read_bytes()).hexdigest(),
               'source_inventory': inventory(source),
               'lock_sha256': hashlib.sha256((source / 'pnpm-lock.yaml').read_bytes()).hexdigest(),
