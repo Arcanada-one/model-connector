@@ -16,6 +16,7 @@ readonly REQUEST="$ROOT/deploy/broker-install-only.request"
 IFS=: read -r action expected extra < "$REQUEST"
 [[ -z "${extra:-}" && "$expected" =~ ^[0-9a-f]{64}$ ]] || exit 1
 case "$action" in install|restore) ;; *) exit 1 ;; esac
+[[ "$(wc -c < "$REQUEST")" -eq $((${#action} + ${#expected} + 2)) ]] || exit 1
 /usr/bin/git -C "$ROOT" ls-files --error-unmatch -- deploy/broker-install-only.request deploy/broker-install-main.sh deploy/deploy.sh deploy/install-arcanada-compose-broker.sh deploy/arcanada-compose-broker.sh >/dev/null
 head="$(/usr/bin/git -C "$ROOT" rev-parse HEAD)"
 [[ "$head" =~ ^[0-9a-f]{40}$ ]] || exit 1

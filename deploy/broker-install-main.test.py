@@ -31,6 +31,8 @@ class StockMainRoute(unittest.TestCase):
   helper=self.root/'deploy/broker-install-main.sh';helper.unlink();helper.symlink_to(self.root/'absent');self.assertNotEqual(self.run_route().returncode,0);self.assertFalse(self.called.exists())
  def test_wrong_source_pin_refuses(self):
   self.request.write_text('install:'+'0'*64+'\n');self.commit_request();self.assertNotEqual(self.run_route().returncode,0);self.assertFalse(self.called.exists())
+ def test_trailing_bytes_refuse(self):
+  self.request.write_text('install:'+self.sha+'\nextra');self.commit_request();self.assertNotEqual(self.run_route().returncode,0);self.assertFalse(self.called.exists())
  def test_unknown_action_refuses(self):
   self.request.write_text('grant:'+self.sha+'\n');self.commit_request();self.assertNotEqual(self.run_route().returncode,0);self.assertFalse(self.called.exists())
  def test_actual_unprivileged_caller_refuses(self):
