@@ -70,7 +70,25 @@ def prime_python_probe(owned, head, reconcile):
         code, raw, labels = command(["docker","image","inspect",PRIME_BASE],case/"image.log",timeout=6)
         result["image_inspect_exit"] = code
         if code:
-            result["reason"] = "PINNED_BASE_CACHE_LOOKUP_FAILED"; return result
+            # Acquire only this frozen public base, in the existing CI probe.
+            # Unknown daemon/permission/timeout failures never trigger acquisition.
+            absent = (code == 1 and b'no such image' in raw.lower()
+                      and PRIME_BASE.encode() in raw)
+            if not absent:
+                result["reason"] = "PINNED_BASE_CACHE_LOOKUP_FAILED"; return result
+            pull, pull_raw, _ = command(
+                ["docker", "image", "pull", "--platform=linux/amd64", PRIME_BASE],
+                case/"acquire.log", timeout=90)
+            result.update(acquisition_exit=pull,
+                          acquisition_raw_sha256=hashlib.sha256(pull_raw).hexdigest(),
+                          acquisition_platform="linux/amd64")
+            if pull:
+                result["reason"] = "PINNED_BASE_ACQUISITION_FAILED"; return result
+            code, raw, _ = command(["docker", "image", "inspect", PRIME_BASE],
+                                   case/"acquired-image.log", timeout=6)
+            result["acquired_image_inspect_exit"] = code
+            if code:
+                result["reason"] = "PINNED_BASE_ACQUIRED_LOOKUP_FAILED"; return result
         objects = json.loads(raw)
         if len(objects)!=1: raise ValueError("image ambiguity")
         obj=objects[0]; image=obj["Id"]
@@ -170,7 +188,8 @@ def main():
     spec = importlib.util.spec_from_file_location('owned_snapshot', snapshot_path)
     snapshot = importlib.util.module_from_spec(spec); spec.loader.exec_module(snapshot)
     prime = prime_python_probe(owned,head,reconcile)
-    prime['producer_source_sha256'] = '752e3c40a554e8fc3bc317caef5aff3d511e0643ab465914792822c5799dbb89'
+    prime['upstream_source_sha256'] = '752e3c40a554e8fc3bc317caef5aff3d511e0643ab465914792822c5799dbb89'
+    prime['producer_source_sha256'] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     prime['source_bindings'] = [reconcile_binding,snapshot_binding]
     (Path(os.environ['RUNNER_TEMP'])/'prime-base-python-receiving.json').write_text(json.dumps(prime,indent=2))
     if prime.get('cleanup_exit_code') not in (None,0):
