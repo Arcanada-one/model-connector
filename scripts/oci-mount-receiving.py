@@ -43,6 +43,84 @@ def restrictions(obj, owner, name, head, image, src, deps):
             == {(str(src),'/work',False),(str(deps),'/work/node_modules',False)})
 
 
+# Source handoff: integrate this function into existing scripts/oci-mount-receiving.py.
+# Uses its existing bounded command and exact-head reconcile module; no separate job/helper.
+PRIME_BASE = "library/node:24@sha256:9af606de2e947cfb3f276633b7c5130c4cd22365aa10f5a647b7675d5cfce0c0"
+PRIME_SOURCE = "e89329d0b099471f19de7c16e59f87cdc46f70a2"
+PYTHON_READBACK = r"""import hashlib,json,os,pathlib,stat,sys
+p=pathlib.Path(sys.executable).resolve(strict=True)
+with p.open("rb") as f:
+ before=os.fstat(f.fileno()); data=f.read(32*1024*1024+1); after=os.fstat(f.fileno())
+if not stat.S_ISREG(before.st_mode) or len(data)>32*1024*1024 or (before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns)!=(after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns) or len(data)!=before.st_size or os.geteuid()!=1000: sys.exit(42)
+print(json.dumps({"schema":"PrimePythonExecutableBytes/v1","requested_path":"/usr/bin/python3","sys_executable":sys.executable,"real_path":str(p),"python_version":list(sys.version_info[:3]),"bytes":len(data),"sha256":hashlib.sha256(data).hexdigest(),"euid":os.geteuid()},sort_keys=True))
+"""
+
+
+def prime_python_probe(owned, head, reconcile):
+    # Globals reused from the reviewed existing OCI module: command, json, hashlib,
+    # secrets, Path. All native stdout/stderr are finite private capture files.
+    case = owned / "prime-python"; case.mkdir(mode=0o700)
+    result = {"schema":"PrimeBasePythonReceiving/v1","executor_head":head,
+              "prime_source":PRIME_SOURCE,"requested_image":PRIME_BASE,
+              "probe_code_sha256":hashlib.sha256(PYTHON_READBACK.encode()).hexdigest(),
+              "verdict":"NOT_MEASURED","python":None,"cleanup_exit_code":None,
+              "runtime_authorized":False,"deployment_authorized":False}
+    intent = False; primary = None; image = None; owner = None; name = None
+    try:
+        code, raw, labels = command(["docker","image","inspect",PRIME_BASE],case/"image.log",timeout=6)
+        result["image_inspect_exit"] = code
+        if code:
+            result["reason"] = "PINNED_BASE_CACHE_LOOKUP_FAILED"; return result
+        objects = json.loads(raw)
+        if len(objects)!=1: raise ValueError("image ambiguity")
+        obj=objects[0]; image=obj["Id"]
+        if not __import__("re").fullmatch(r"sha256:[a-f0-9]{64}",image) or obj["Os"]!="linux" or obj["Architecture"]!="amd64": raise ValueError("image identity/platform")
+        digest=PRIME_BASE.split("@",1)[1]
+        accepted={"node@"+digest,"library/node@"+digest,"docker.io/library/node@"+digest}
+        if not accepted.intersection(obj.get("RepoDigests") or []): raise ValueError("requested digest missing")
+        result.update(image_id=image,image_os="linux",image_architecture="amd64",repo_digest=digest)
+        owner="mc-prime-python-"+secrets.token_hex(16); name=owner+"-app"
+        reconcile.write(case/"app.intent.json",{"role":"app","owner":owner,"head":head,"name":name,"state":"in_flight"});intent=True
+        argv=["docker","create","--pull=never","--name",name,"--cidfile",str(case/"app.cid"),
+              "--label","mc-run="+owner,"--label","mc-role=app","--label","mc-head="+head,
+              "--user","1000:1000","--network=none","--cpus=.25","--memory=128m","--pids-limit=32",
+              "--read-only","--cap-drop=ALL","--security-opt=no-new-privileges",
+              "--entrypoint","/usr/bin/python3",image,"-I","-B","-c",PYTHON_READBACK]
+        code,raw,labels=command(argv,case/"create.log",timeout=6)
+        cid=(case/"app.cid").read_text().strip() if (case/"app.cid").exists() else ""
+        reconcile.write(case/"app.response.json",{"code":code,"id":cid})
+        result["create_exit"]=code
+        if code or not __import__("re").fullmatch(r"[a-f0-9]{64}",cid):
+            result["reason"]="CONTAINER_CREATE_NOT_MEASURED";return result
+        code,raw,labels=command(["docker","start","-a",cid],case/"start.log",timeout=6)
+        result.update(start_exit=code,failure_codes=labels,start_raw_sha256=hashlib.sha256(raw).hexdigest())
+        if code: result["reason"]="PYTHON_EXECUTION_NOT_MEASURED";return result
+        measured=json.loads(raw)
+        # No report accepts a checksum without exact executable/path/user/version bindings.
+        required={"schema","requested_path","sys_executable","real_path","python_version","bytes","sha256","euid"}
+        if set(measured)!=required or measured["schema"]!="PrimePythonExecutableBytes/v1" or measured["requested_path"]!="/usr/bin/python3" or measured["sys_executable"]!="/usr/bin/python3" or not measured["real_path"].startswith("/usr/") or measured["euid"]!=1000 or not isinstance(measured["bytes"],int) or measured["bytes"]<=0 or measured["bytes"]>32*1024*1024 or not __import__("re").fullmatch(r"[a-f0-9]{64}",measured["sha256"]): raise ValueError("python binding")
+        if not isinstance(measured["python_version"],list) or len(measured["python_version"])!=3 or any(type(v)!=int for v in measured["python_version"]) or measured["python_version"][0]!=3:raise ValueError("version")
+        code,inspect_raw,_=command(["docker","inspect",cid],case/"inspect.log",timeout=6)
+        if code:raise ValueError("inspection unavailable")
+        inspected=json.loads(inspect_raw)
+        if len(inspected)!=1:raise ValueError("inspection ambiguity")
+        obj=inspected[0]; config=obj["Config"];host=obj["HostConfig"]
+        expected={"mc-run":owner,"mc-role":"app","mc-head":head}
+        if obj["Id"]!=cid or obj["Name"].lstrip("/")!=name or obj["Image"]!=image or any(config.get("Labels",{}).get(k)!=v for k,v in expected.items()) or config["User"]!="1000:1000" or host["NetworkMode"]!="none" or host["ReadonlyRootfs"] is not True or "ALL" not in host["CapDrop"] or "no-new-privileges" not in host["SecurityOpt"] or host.get("PortBindings") or host["PidsLimit"]!=32 or obj["Mounts"]:raise ValueError("container restrictions")
+        result.update(python=measured,restrictions_verified=True,verdict="MEASURED_PENDING_CLEANUP")
+    except (OSError,ValueError,KeyError,TypeError,__import__("subprocess").SubprocessError):
+        primary="receiving_exception";result.update(reason=primary,verdict="NOT_MEASURED")
+    finally:
+        if intent:
+            try: result["cleanup_exit_code"]=reconcile.reconcile(case)
+            except (OSError,ValueError,KeyError,TypeError,__import__("subprocess").SubprocessError):result["cleanup_exit_code"]=127
+            if result["cleanup_exit_code"]!=0:result.update(reason="CLEANUP_UNKNOWN",verdict="NOT_MEASURED")
+            elif result["verdict"]=="MEASURED_PENDING_CLEANUP":result["verdict"]="VERIFIED_EXECUTABLE_BYTES_ONLY"
+        # On any refusal retain private logs/intents, no cache pull or retry.
+        (case/"receipt.json").write_text(json.dumps(result,sort_keys=True,indent=2)+"\n")
+    return result
+
+
 def git(root, *arguments):
     # Same protected Git environment as Program native_projection.git.
     environment = {'PATH':'/usr/bin:/bin','HOME':'/nonexistent',
@@ -80,6 +158,12 @@ def main():
     snapshot_path = owned / 'snapshot.py'; snapshot_path.write_bytes(snapshot_raw)
     spec = importlib.util.spec_from_file_location('owned_snapshot', snapshot_path)
     snapshot = importlib.util.module_from_spec(spec); spec.loader.exec_module(snapshot)
+    prime = prime_python_probe(owned,head,reconcile)
+    prime['producer_source_sha256'] = '752e3c40a554e8fc3bc317caef5aff3d511e0643ab465914792822c5799dbb89'
+    prime['source_bindings'] = [reconcile_binding,snapshot_binding]
+    (Path(os.environ['RUNNER_TEMP'])/'prime-base-python-receiving.json').write_text(json.dumps(prime,indent=2))
+    if prime.get('cleanup_exit_code') not in (None,0):
+        return 1
     rows = []
     for variant in ('old_missing', 'new_generated'):
         case = owned / variant; case.mkdir(mode=0o700)

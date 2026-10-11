@@ -269,7 +269,7 @@ jobs:
           chmod 700 "$RUNNER_TEMP/mc-owned-full"
 
       - name: Bounded native OCI mount receiving before App
-        timeout-minutes: 2
+        timeout-minutes: 3
         run: python3 scripts/oci-mount-receiving.py
 
       - name: Retain bounded OCI mount receiving
@@ -277,7 +277,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mc-oci-mount-receiving
-          path: ${{ runner.temp }}/mc-oci-mount-receiving.json
+          path: |
+            ${{ runner.temp }}/mc-oci-mount-receiving.json
+            ${{ runner.temp }}/prime-base-python-receiving.json
           if-no-files-found: error
 
       - name: Maintained root FULL

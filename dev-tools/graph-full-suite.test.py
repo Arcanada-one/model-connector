@@ -74,7 +74,7 @@ class Controls(unittest.TestCase):
                     raw=(ROOT/name).read_bytes()
                     if hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==argv[-1]:return raw
             raise AssertionError('unknown immutable prelude')
-        with patch.dict(os.environ, {'RUNNER_TEMP':str(self.root)}), patch.object(probe.subprocess,'check_output',side_effect=source), patch.object(probe,'command',side_effect=PermissionError('synthetic command denial')), patch.object(probe.subprocess,'run',side_effect=PermissionError('synthetic inventory denial')):
+        with patch.dict(os.environ, {'RUNNER_TEMP':str(self.root)}), patch.object(probe.subprocess,'check_output',side_effect=source), patch.object(probe,'prime_python_probe',return_value={'verdict':'NOT_MEASURED','cleanup_exit_code':None}), patch.object(probe,'command',side_effect=PermissionError('synthetic command denial')), patch.object(probe.subprocess,'run',side_effect=PermissionError('synthetic inventory denial')):
             self.assertEqual(probe.main(),1)
         receipt=json.loads((self.root/'mc-oci-mount-receiving.json').read_text())
         self.assertEqual(receipt['hypothesis'],'NOT_MEASURED')
