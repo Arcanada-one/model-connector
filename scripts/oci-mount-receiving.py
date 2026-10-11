@@ -69,6 +69,10 @@ def prime_python_probe(owned, head, reconcile):
     try:
         code, raw, labels = command(["docker","image","inspect",PRIME_BASE],case/"image.log",timeout=6)
         result["image_inspect_exit"] = code
+        result['image_inspect_raw_sha256'] = hashlib.sha256(raw).hexdigest()
+        result['image_inspect_requested_reference_seen'] = PRIME_BASE.encode() in raw
+        result['image_inspect_failure_codes'] = labels + (
+            ['image_missing'] if b'no such image' in raw.lower() else [])
         if code:
             # Acquire only this frozen public base, in the existing CI probe.
             # Unknown daemon/permission/timeout failures never trigger acquisition.

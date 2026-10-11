@@ -455,7 +455,8 @@ def failure_labels(raw):
         ('unknown docker command', 'docker_compose_unavailable'), ('invalid mount config', 'docker_mount_invalid'),
         ('expected', 'assertion_mismatch'), ('cannot find module', 'module_absent'),
         ('failed to resolve', 'module_resolution'), ('econnrefused', 'connection_refused'),
-        ('timeout', 'timeout'), ('syntaxerror', 'syntax_error')) if marker in raw.lower()})
+        ('timeout', 'timeout'), ('syntaxerror', 'syntax_error'),
+        ('composition_socket_invalid', 'socket_path_capacity'), ('socket_path_too_long', 'socket_path_capacity')) if marker in raw.lower()})
 
 
 def run_root_suites(root, suites, scratch, executor=execute):
@@ -500,7 +501,7 @@ def run_root_suites(root, suites, scratch, executor=execute):
                     try:
                         received = json.loads(records[0])
                         if (received.get('phase') in ('config_invocation','config_parse','network_identity','service_membership','alias','ports')
-                                and received.get('failure_code') in ('docker_absent','timeout','invalid_json','config_nonzero','semantic_assertion','UNKNOWN')
+                                and received.get('failure_code') in ('docker_absent','timeout','invalid_json','config_nonzero','compose_plugin_unavailable','compose_cli_flag','compose_permission_denied','semantic_assertion','UNKNOWN')
                                 and (received.get('exit_code') is None or type(received.get('exit_code')) is int)):
                             result['failure_receiving'] = {key: received.get(key) for key in ('phase','exit_code','failure_code')}
                     except (ValueError, TypeError): pass

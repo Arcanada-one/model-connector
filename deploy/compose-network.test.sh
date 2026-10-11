@@ -8,6 +8,7 @@ import tempfile
 
 phase = 'config_invocation'
 exit_code = None
+config_failure = 'config_nonzero'
 try:
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
@@ -18,6 +19,14 @@ try:
                                  '-f', str(root / 'docker-compose.yml'), 'config', '--format', 'json'],
                                 capture_output=True, text=True, timeout=30)
         exit_code = result.returncode
+        # Fixed taxonomy only; arbitrary stderr never reaches the public receipt.
+        error_text = result.stderr.lower()
+        if 'is not a docker command' in error_text or 'unknown docker command' in error_text:
+            config_failure = 'compose_plugin_unavailable'
+        elif 'unknown flag' in error_text or 'unknown shorthand flag' in error_text:
+            config_failure = 'compose_cli_flag'
+        elif 'permission denied' in error_text:
+            config_failure = 'compose_permission_denied'
         assert result.returncode == 0
         phase = 'config_parse'
         config = json.loads(result.stdout)
@@ -41,7 +50,7 @@ except Exception as error:
     code = ('docker_absent' if isinstance(error, FileNotFoundError) else
             'timeout' if isinstance(error, subprocess.TimeoutExpired) else
             'invalid_json' if isinstance(error, json.JSONDecodeError) else
-            'config_nonzero' if phase == 'config_invocation' and exit_code not in (None, 0) else
+            config_failure if phase == 'config_invocation' and exit_code not in (None, 0) else
             'semantic_assertion' if isinstance(error, (AssertionError, KeyError, TypeError)) else 'UNKNOWN')
     print('COMPOSE_FAILURE_RECEIVING=' + json.dumps({'phase':phase,'exit_code':exit_code,'failure_code':code}))
     raise SystemExit('REFUSED native Compose consumer network contract') from None
