@@ -53,6 +53,24 @@ else
   install -m 0600 -o root -g root "$transaction_src" "$pending"
   mv -T "$pending" "$helper"
 fi
+# C07 helpers are immutable, root-only, published before the broker.
+prime_src="$(dirname "$src")/prime-first-install.py"
+prime_sha="$(sed -n 's/^readonly PRIME_TRANSACTION_SHA=//p' "$src")"
+checker_src="$(dirname "$src")/prime-compose-contract.py"
+checker_sha="$(sed -n "s/^CHECKER_SHA = '\([0-9a-f]*\)'/\1/p" "$prime_src")"
+for entry in "$prime_sha:$prime_src" "$checker_sha:$checker_src"; do
+  hash="${entry%%:*}"; source_file="${entry#*:}"
+  [[ "$hash" =~ ^[0-9a-f]{64}$ && "$(sha256sum "$source_file" | cut -d' ' -f1)" == "$hash" ]] || exit 1
+  target="$helper_root/$hash.py"
+  if [[ -e "$target" || -L "$target" ]]; then
+    [[ -f "$target" && ! -L "$target" && "$(stat -c '%U:%G:%a' "$target")" == root:root:600 ]] || exit 1
+    [[ "$(sha256sum "$target" | cut -d' ' -f1)" == "$hash" ]] || exit 1
+  else
+    prime_pending="$(mktemp "$helper_root/.prime.XXXXXXXX")"
+    install -m 0600 -o root -g root "$source_file" "$prime_pending"
+    mv -T "$prime_pending" "$target"
+  fi
+done
 # Retain the exact prior reviewed code before the final publication boundary.
 old_broker=/usr/local/sbin/arcanada-compose-broker
 if [[ -e "$old_broker" || -L "$old_broker" ]]; then
