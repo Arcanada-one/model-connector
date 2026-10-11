@@ -305,7 +305,8 @@ class Controls(unittest.TestCase):
         self.assertEqual(report['results'][1]['executions'][0]['counts']['passed'], 1)
         self.assertEqual(report['results'][0]['held_members'], ['test/app.e2e-spec.ts'])
         self.assertEqual(report['exit_code'], 127)
-        self.assertEqual(len(list(temp.glob('mc-full-*/*.log'))), 1)
+        self.assertEqual(len(list(temp.glob('mc-full-*/*.log'))), 2)
+        self.assertTrue(list(temp.glob('mc-full-*/root-app-e2e.log')))
 
     def root_dispatch_fixture(self, members):
         for member in members:
@@ -347,7 +348,8 @@ class Controls(unittest.TestCase):
                 'PROVIDER_API_KEY': 'sentinel-secret', 'DATABASE_URL': 'sentinel-secret',
                 'MC_ALLOW_LIVE': '1', 'NODE_OPTIONS': 'sentinel-secret'}):
             result = subject.run_root_suites(self.root, suites, self.root, self.root_child(calls))
-        self.assertEqual(len(calls), 3)
+        self.assertEqual(len(calls), 4)
+        self.assertIn(['bash', 'scripts/app-e2e-disposable.sh'], calls)
         self.assertEqual(sorted(n for r in result for n in r['members']), sorted(members))
         held = [n for r in result for n in r.get('held_members', [])]
         self.assertEqual(set(held), {'src/auth/live.integration.spec.ts', 'test/app.e2e-spec.ts'})
@@ -406,10 +408,27 @@ class Controls(unittest.TestCase):
                     return {'argv': argv, 'exit_code': code, 'output': 'fixture failure', 'duration_s': 0}
                 with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
                     result = subject.run_root_suites(self.root, subject.plan('.', members), scratch, child)
-                self.assertEqual(len(calls), 1)
+                self.assertEqual(len(calls), 2)
+                self.assertIn(['bash', 'scripts/app-e2e-disposable.sh'], calls)
                 self.assertEqual(result[1]['held_members'], ['scripts/b.test.sh'])
                 self.assertEqual(result[1]['executions'][0]['exit_code'], code)
                 self.assertEqual(subject.execution_code(result), 1 if code == 9 else 124)
+
+    def test_app_result_requires_all_three_real_assertions(self):
+        document = {'success': True, 'numTotalTests': 3, 'numPassedTests': 3,
+                    'numFailedTests': 0, 'testResults': [{
+                        'name': '/work/test/app.e2e-spec.ts',
+                        'assertionResults': [{'status': 'passed'}] * 3}]}
+        def render(d):
+            return 'APP_E2E_RESULT_BEGIN\n' + json.dumps(d) + 'APP_E2E_RESULT_END'
+        self.assertEqual(subject.app_e2e_counts(render(document), ['test/app.e2e-spec.ts']),
+                         {'passed': 3, 'failed': 0, 'skipped': 0})
+        skipped = json.loads(json.dumps(document))
+        skipped['numPassedTests'] = 2
+        skipped['testResults'][0]['assertionResults'][2]['status'] = 'pending'
+        for raw in ['', render(document) * 2, render(skipped)]:
+            with self.subTest(raw=raw), self.assertRaises(subject.Refusal):
+                subject.app_e2e_counts(raw, ['test/app.e2e-spec.ts'])
 
     def test_root_maintained_regression_commands_and_real_count_parsers(self):
         members = ['scripts/a.test.sh', 'scripts/a.test.mjs', 'dev-tools/a.spec.bats', 'dev-tools/test_a.py']
