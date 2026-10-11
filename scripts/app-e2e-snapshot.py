@@ -107,6 +107,12 @@ def export(root, head, owned):
         if any(m.issym() or m.islnk() or m.name.startswith('/') or '..' in Path(m.name).parts for m in stream.getmembers()):
             raise ValueError('source archive indirection')
         stream.extractall(source, filter='data')
+    # Nested Docker binds require an existing destination in a read-only parent.
+    # This generated support directory is not represented as a Git source byte.
+    mountpoint = source / 'node_modules'
+    if os.path.lexists(mountpoint):
+        raise ValueError('Git source occupies generated dependency mountpoint')
+    mountpoint.mkdir(mode=0o755)
     # The export is private but readable by the same UID as the qualified dependencies.
     custody_stat = (root / 'node_modules').stat()
     bindings = workspace_bindings(source, head, git)
@@ -151,6 +157,8 @@ def export(root, head, owned):
               'lock_blob_oid':git('rev-parse', head+':pnpm-lock.yaml').decode().strip(),
               'source_archive_sha256': hashlib.sha256(archive.read_bytes()).hexdigest(),
               'source_inventory': inventory(source),
+              'generated_support': [{'path': 'node_modules', 'type': 'directory',
+                  'mode': 0o755, 'purpose': 'read-only nested dependency bind destination'}],
               'lock_sha256': hashlib.sha256((source / 'pnpm-lock.yaml').read_bytes()).hexdigest(),
               'dependency_inventory': after, 'workspace_bindings': bindings,
               'limits': {'bytes': MAX_BYTES, 'entries': MAX_ENTRIES, 'single_file_bytes': MAX_FILE_BYTES}}

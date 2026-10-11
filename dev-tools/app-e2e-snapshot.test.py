@@ -17,6 +17,26 @@ class Controls(unittest.TestCase):
             owned=root/'owned';owned.mkdir();m.export(root,head,owned)
             self.assertEqual((owned/'source/app.ts').read_text(),'original')
             self.assertFalse((owned/'source/ignored.env').exists())
+    def test_generated_mountpoint_is_empty_recorded_and_drift_bound(self):
+        import json, hashlib
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);head=self.fixture(root);owned=root/'owned';owned.mkdir();m.export(root,head,owned)
+            mount=owned/'source/node_modules'
+            self.assertTrue(mount.is_dir());self.assertEqual(list(mount.iterdir()),[])
+            record=json.loads((owned/'custody.json').read_text())
+            self.assertEqual(record['generated_support'][0]['path'],'node_modules')
+            digest=hashlib.sha256((owned/'custody.json').read_bytes()).hexdigest()
+            m.verify(owned,digest)
+            (mount/'poison').write_text('unrecorded')
+            with self.assertRaisesRegex(ValueError,'source changed'):m.verify(owned,digest)
+    def test_tracked_mountpoint_cannot_be_overwritten(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);self.fixture(root)
+            subprocess.run(['git','add','node_modules'],cwd=root,check=True,capture_output=True)
+            subprocess.run(['git','-c','user.name=Arcanada','-c','user.email=dev@veritasarcana.ai','commit','-qm','occupied'],cwd=root,check=True,capture_output=True)
+            head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root).decode().strip()
+            owned=root/'owned';owned.mkdir()
+            with self.assertRaisesRegex(ValueError,'occupies generated'):m.export(root,head,owned)
     def test_dependency_symlink_escape_refuses(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);head=self.fixture(root);(root/'node_modules/escape').symlink_to(root/'app.ts')
