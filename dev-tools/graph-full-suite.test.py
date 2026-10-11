@@ -29,6 +29,28 @@ class Controls(unittest.TestCase):
         for unit in subject.UNITS[1:]:
             (self.root / unit).mkdir(parents=True)
 
+    def test_native_oci_actual_runtime_refusal_and_negative_controls(self):
+        import copy
+        spec=importlib.util.spec_from_file_location('oci_refusal_probe',ROOT/'scripts/oci-mount-receiving.py')
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        # Actual head048 run38127694196 artifact11697694259, old_missing row.
+        row={'variant':'old_missing','phase':'start','exit_code':1,
+             'failure_codes':['read_only_filesystem','oci_runtime'],
+             'mount_destination_seen':True,'received':False,
+             'restrictions_verified':True,'primary_exception':None}
+        self.assertTrue(probe.old_mount_refusal(row))
+        legacy=copy.deepcopy(row);legacy['exit_code']=125
+        self.assertTrue(probe.old_mount_refusal(legacy))
+        for field,value in [('variant','new_generated'),('phase','create'),
+                ('exit_code',0),('exit_code',124),('exit_code',127),('exit_code',True),
+                ('failure_codes',[]),('failure_codes',['oci_runtime']),
+                ('failure_codes',['read_only_filesystem']),
+                ('mount_destination_seen',False),('restrictions_verified',False),
+                ('received',True),('primary_exception','receiving_exception')]:
+            with self.subTest(field=field,value=value):
+                refused=copy.deepcopy(row);refused[field]=value
+                self.assertFalse(probe.old_mount_refusal(refused))
+
     def test_compose_extra_private_field_never_reaches_public_projection(self):
         suites=self.root_dispatch_fixture(['deploy/compose-network.test.sh'])
         payload={'phase':'config_parse','exit_code':0,'failure_code':'invalid_json','extra':'SYNTHETIC_PRIVATE_VALUE'}

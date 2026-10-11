@@ -141,6 +141,17 @@ def helper_binding(root, head, name):
     return raw,{'path':name,'mode':mode,'git_blob':blob,'sha256':hashlib.sha256(raw).hexdigest()}
 
 
+def old_mount_refusal(row):
+    # docker start -a reports the observed runtime mount refusal as 1; some
+    # Docker versions report 125. Neither status alone establishes the cause.
+    return (row['variant'] == 'old_missing' and row['phase'] == 'start'
+        and type(row['exit_code']) is int and row['exit_code'] in (1, 125)
+        and {'read_only_filesystem', 'oci_runtime'}.issubset(row['failure_codes'])
+        and row['mount_destination_seen'] is True
+        and row['restrictions_verified'] is True and row['received'] is False
+        and row['primary_exception'] is None)
+
+
 def main():
     if os.getuid() == 0: raise ValueError("nonroot executor required")
     root = Path.cwd()
@@ -227,10 +238,7 @@ def main():
     if len(rows) != 2:
         result['hypothesis'] = 'NOT_MEASURED'
         target.write_text(json.dumps(result,indent=2)); print(target.read_text()); return 1
-    old_red = (rows[0]['phase'] == 'start' and rows[0]['exit_code'] == 125
-               and 'read_only_filesystem' in rows[0]['failure_codes']
-               and rows[0]['mount_destination_seen']
-               and rows[0]['restrictions_verified'])
+    old_red = old_mount_refusal(rows[0])
     result['hypothesis'] = 'SUPPORTED' if old_red else 'REFUTED' if rows[0]['received'] else 'NOT_MEASURED'
     target.write_text(json.dumps(result,indent=2)); print(target.read_text())
     return 0 if old_red and rows[1]['received'] and all(r['cleanup_exit_code']==0 and r['projection_unchanged'] for r in rows) else 1
