@@ -3,9 +3,17 @@ import { Test } from '@nestjs/testing';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from '../src/app.module';
 
-// E2E tests require Redis + PostgreSQL — skip in CI without infra
-// Run locally with: DATABASE_URL=... REDIS_HOST=... pnpm test:e2e
-describe.skip('App E2E (requires infra)', () => {
+// Only the maintained isolated executor enables this suite. Default runs stay offline.
+const isolated = process.env.MC_DISPOSABLE_APP_E2E === '1';
+if (
+  isolated &&
+  (process.env.REDIS_HOST !== 'mc-redis' ||
+    !process.env.DATABASE_URL?.startsWith('postgresql://test:test@mc-pg:5432/connector_test') ||
+    process.env.MC_NO_EGRESS !== '1')
+) {
+  throw new Error('AppE2E refused: disposable service identities/no-egress guard absent');
+}
+describe.runIf(isolated)('App E2E (requires infra)', () => {
   let app: NestFastifyApplication;
 
   beforeAll(async () => {

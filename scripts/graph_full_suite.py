@@ -410,6 +410,17 @@ def render_authored_template(root, scratch, members, env=None):
             'target': target, 'config': config}
 
 
+def app_e2e_counts(raw, members):
+    begin, end = 'APP_E2E_RESULT_BEGIN\n', 'APP_E2E_RESULT_END'
+    if raw.count(begin) != 1 or raw.count(end) != 1:
+        raise Refusal('missing or duplicate AppE2E exact execution result')
+    payload = raw.split(begin, 1)[1].split(end, 1)[0]
+    counts = vitest_counts(json.loads(payload), members, Path('/work'))
+    if counts != {'passed': 3, 'failed': 0, 'skipped': 0}:
+        raise Refusal('AppE2E exact maintained assertions not all executed')
+    return counts
+
+
 def run_root_suites(root, suites, scratch, executor=execute):
     """Dispatch ordinary local groups; preserve every held member without spawning it."""
     members = [n for suite in suites for n in suite['members']]
@@ -455,8 +466,14 @@ def run_root_suites(root, suites, scratch, executor=execute):
         name, members = suite['suite'], suite['members']
         row = {'suite': name, 'members': members, 'executions': []}
         if name == 'maintained-app-e2e':
-            row.update(verdict='not_measured', reason='unconditional AppE2E skip; no execution grant',
-                       held_members=members)
+            # This maintained executor refuses absent Docker/cached images and
+            # only launches owned stores on an internal network, never providers.
+            result = run(['bash', 'scripts/app-e2e-disposable.sh'], members,
+                         'root-app-e2e', lambda raw: app_e2e_counts(raw, members))
+            row['executions'].append(result)
+            row['verdict'] = result['verdict']
+            if result['verdict'] != 'verified':
+                row['held_members'] = members
         elif name == 'maintained-authored-template':
             rendered = render_authored_template(root, scratch, members, env)
             target, config = rendered.pop('target'), rendered.pop('config')
@@ -538,7 +555,7 @@ def main():
                 'runtime_authorized': False, 'knowledge_admitted': False}
     if unit == '.':
         document['remaining'] = ['seven real external provider/auth/storage/image arms',
-                                 'unconditional AppE2E skip',
+                                 'owned disposable AppE2E executor qualification',
                                  'broader disposable DB/Redis executor and namespace authority']
     try:
         document['results'] = (run_root_suites(ROOT, suites, scratch) if unit == '.' else

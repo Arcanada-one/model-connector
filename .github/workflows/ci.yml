@@ -253,6 +253,20 @@ jobs:
           fi
           echo "Connectors guard OK: 401"
 
+      # This is the actual declared root FULL command, not smoke evidence.
+      # Remaining external arms still refuse; a green smoke cannot clear them.
+      - name: Prepare maintained FULL runner
+        run: |
+          corepack enable
+          corepack pnpm install --frozen-lockfile
+          mkdir -p "$RUNNER_TEMP/mc-owned-full"
+          chmod 700 "$RUNNER_TEMP/mc-owned-full"
+
+      - name: Maintained root FULL
+        env:
+          TMPDIR: ${{ runner.temp }}/mc-owned-full
+        run: bash scripts/graph-full-suite.sh .
+
       - name: Cleanup
         if: always()
         run: docker rm -f mc-e2e || true
