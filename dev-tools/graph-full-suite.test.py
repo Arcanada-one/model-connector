@@ -29,6 +29,21 @@ class Controls(unittest.TestCase):
         for unit in subject.UNITS[1:]:
             (self.root / unit).mkdir(parents=True)
 
+    def test_native_oci_restrictions_refuse_weakened_container(self):
+        import copy
+        spec=importlib.util.spec_from_file_location('oci_probe',ROOT/'scripts/oci-mount-receiving.py')
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        obj={'Name':'/owned','Image':'sha256:pin','Config':{'Labels':{'mc-run':'owner','mc-role':'app','mc-head':'head'},'User':str(os.getuid())+':'+str(os.getgid())},
+             'HostConfig':{'NetworkMode':'none','ReadonlyRootfs':True,'CapDrop':['ALL'],'SecurityOpt':['no-new-privileges'],'PortBindings':{},'PidsLimit':32},
+             'Mounts':[{'Source':'/source','Destination':'/work','RW':False},{'Source':'/deps','Destination':'/work/node_modules','RW':False}]}
+        def check(row):return probe.restrictions(row,'owner','owned','head','sha256:pin',Path('/source'),Path('/deps'))
+        self.assertTrue(check(obj))
+        for key,value in [('NetworkMode','host'),('ReadonlyRootfs',False),('PortBindings',{'3900/tcp':[{}]}),('CapDrop',[]),('SecurityOpt',[])]:
+            changed=copy.deepcopy(obj);changed['HostConfig'][key]=value;self.assertFalse(check(changed))
+        changed=copy.deepcopy(obj);changed['Mounts'][0]['RW']=True;self.assertFalse(check(changed))
+        changed=copy.deepcopy(obj);changed['Config']['User']='0:0';self.assertFalse(check(changed))
+        changed=copy.deepcopy(obj);changed['Config']['Labels']['mc-run']='foreign';self.assertFalse(check(changed))
+
     def test_failure_receiving_preserves_member_without_raw_error_or_foreign_path(self):
         report=self.root/'result.json'
         report.write_text(json.dumps({'testResults':[
