@@ -5,7 +5,8 @@
       "full_test": [
         "bash",
         "scripts/graph-full-suite.sh",
-        "."
+        ".",
+        "--require-billing-fixture-acquisition"
       ],
       "tsconfig": [
         "tsconfig.build.json",
