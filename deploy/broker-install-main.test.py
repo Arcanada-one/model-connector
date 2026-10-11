@@ -19,6 +19,10 @@ class StockMainRoute(unittest.TestCase):
   r=self.run_route();self.assertEqual(r.returncode,0);self.assertIn(b'BROKER_STOCK_MAIN_install_PASS',r.stdout);self.assertFalse((self.root/'.env').exists());self.assertEqual(self.called.read_bytes(),b'x')
  def test_restore_uses_stock_retained_generation(self):
   self.request.write_text('restore:'+self.sha+'\n');self.commit_request();r=self.run_route();self.assertEqual(r.returncode,0);self.assertIn(b'BROKER_STOCK_MAIN_restore_PASS',r.stdout)
+ def test_status_query_failure_refuses_before_installer(self):
+  shim=self.root/'git-shim';shim.write_text('#!/bin/bash\nif [[ "${3:-}" == status ]]; then exit 128; fi\nexec /usr/bin/git "$@"\n');shim.chmod(0o700)
+  recipe=self.root/'deploy/broker-install-main.sh';recipe.write_text(recipe.read_text().replace('/usr/bin/git -C',str(shim)+' -C'));self.git('add','deploy/broker-install-main.sh');self.git('-c','user.name=Arcanada','-c','user.email=test@example.invalid','commit','-qm','owned status failure fixture');self.git('update-ref','refs/remotes/origin/main','HEAD')
+  r=self.run_route();self.assertNotEqual(r.returncode,0);self.assertIn(b'REFUSED_STATUS_QUERY',r.stderr);self.assertFalse(self.called.exists())
  def test_dirty_source_refuses(self):
   self.broker.write_text('changed\n');self.assertNotEqual(self.run_route().returncode,0);self.assertFalse(self.called.exists())
  def test_unreachable_main_refuses(self):

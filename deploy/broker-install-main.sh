@@ -21,7 +21,8 @@ case "$action" in install|restore) ;; *) exit 1 ;; esac
 head="$(/usr/bin/git -C "$ROOT" rev-parse HEAD)"
 [[ "$head" =~ ^[0-9a-f]{40}$ ]] || exit 1
 /usr/bin/git -C "$ROOT" merge-base --is-ancestor "$head" origin/main || exit 1
-[[ -z "$(/usr/bin/git -C "$ROOT" status --porcelain --untracked-files=no)" ]] || exit 1
+status="$(/usr/bin/git -C "$ROOT" status --porcelain --untracked-files=no)" || { echo 'BROKER_MAIN_INSTALL_REFUSED_STATUS_QUERY' >&2; exit 1; }
+[[ -z "$status" ]] || exit 1
 /usr/bin/git -C "$ROOT" ls-files -v | /usr/bin/awk '/^[a-zS]/ { bad=1 } END { exit bad }'
 # All invoked code is fixed, clean, root-owned main checkout content.
 readonly INSTALLER="$ROOT/deploy/install-arcanada-compose-broker.sh"
