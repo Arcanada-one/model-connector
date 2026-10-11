@@ -429,8 +429,71 @@ read_fetch_credential() {
   export GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0
 }
 
+# Tracked drift: any difference between the checkout and its HEAD in the index or the worktree, plus
+# tracked paths whose changes git has been told to ignore (assume-unchanged / skip-worktree). Untracked files
+# are not drift here; `clean` below owns them. Prints sanitized metadata only: path, status letters and a
+# sha256 of the worktree bytes, never content.
+# Returns 0 = exactly clean, 1 = drift measured, 2 = a query FAILED. A failed query is not a clean tree: every
+# git answer is captured to a file and its exit code checked before it is parsed.
+tracked_drift_report() {
+  local dir="$1" svc="$2" n=0 entry xy path hash flag rc=0 i=0 q_status q_files
+  local -a fields=()
+  q_status="$(mktemp)" && q_files="$(mktemp)" || return 2
+  "$GIT" -C "$dir" status --porcelain -z --untracked-files=no >"$q_status" 2>/dev/null || rc=2
+  "$GIT" -C "$dir" ls-files -v -z >"$q_files" 2>/dev/null || rc=2
+  if ((rc == 0)); then
+    "$GIT" -C "$dir" diff --cached --quiet 2>/dev/null || rc=$?   # 1 = staged changes, anything else = query failure
+    if ((rc == 1)); then
+      printf 'BROKER_SYNC_DRIFT service=%s status=index sha256=unmeasured path=-\n' "$svc" >&2
+      n=$((n + 1)); rc=0
+    elif ((rc != 0)); then
+      rc=2
+    fi
+  fi
+  if ((rc != 0)); then rm -f -- "$q_status" "$q_files"; return 2; fi
+  while IFS= read -r -d '' entry; do fields+=("$entry"); done <"$q_status"
+  while ((i < ${#fields[@]})); do
+    entry="${fields[$i]}"; xy="${entry:0:2}"; path="${entry:3}"
+    # rename/copy records carry the origin path as a second NUL field
+    if [[ "${xy:0:1}" == [RC] || "${xy:1:1}" == [RC] ]]; then i=$((i + 1)); fi
+    i=$((i + 1))
+    if [[ -f "$dir/$path" && ! -L "$dir/$path" ]]; then hash="$(sha256sum -- "$dir/$path" | cut -d' ' -f1)"
+    else hash='absent-or-not-a-regular-file'; fi
+    printf 'BROKER_SYNC_DRIFT service=%s status=%q sha256=%s path=%q\n' "$svc" "$xy" "$hash" "$path" >&2
+    n=$((n + 1))
+  done
+  while IFS= read -r -d '' entry; do
+    flag="${entry:0:1}"; path="${entry:2}"
+    if [[ "$flag" == [a-z] || "$flag" == S ]]; then
+      printf 'BROKER_SYNC_DRIFT service=%s status=hidden:%s sha256=unmeasured path=%q\n' "$svc" "$flag" "$path" >&2
+      n=$((n + 1))
+    fi
+  done <"$q_files"
+  rm -f -- "$q_status" "$q_files"
+  ((n == 0)) || return 1
+}
+
+# Runs the report and turns its verdict into the sync decision. $3 names the phase for the message.
+require_clean_tracked_state() {
+  local dir="$1" svc="$2" phase="$3" rc=0
+  tracked_drift_report "$dir" "$svc" || rc=$?
+  case "$rc" in
+    0) ;;
+    1) printf 'BROKER_SYNC_REFUSED_DRIFT service=%s phase=%s: tracked files differ from HEAD; bytes preserved, nothing changed\n' "$svc" "$phase" >&2
+       exit 1 ;;
+    *) printf 'BROKER_SYNC_REFUSED_QUERY service=%s phase=%s: a git state query failed; a failed query is not a clean tree; nothing changed\n' "$svc" "$phase" >&2
+       exit 1 ;;
+  esac
+}
+
 # Fetch main, then refuse anything not already an ancestor of origin/main.
 # A SHA that only exists on a branch, or was force-pushed away, must not deploy.
+#
+# The checkout is custody, not scratch: a tracked file that differs from HEAD is somebody's bytes. Sync
+# REFUSES such drift before it touches anything (no checkout, no clean, no env install), leaves the bytes where
+# they are, and fails the deploy loudly. It never discards a tracked edit; clearing one is a separate, reviewed,
+# per-path action. After the checkout the exact commit and a fully clean tracked state are verified before
+# BROKER_SYNC_PASS is printed.
 cmd_sync() {
   local svc="$1" sha="$2" dir
   dir="$(checkout_dir "$svc")"
@@ -439,6 +502,7 @@ cmd_sync() {
     install -d -m 0755 -o root -g root "$STATE_ROOT"
     "$GIT" clone --quiet "${REPOS[$svc]}" "$dir"
   fi
+  require_clean_tracked_state "$dir" "$svc" before-checkout
   "$GIT" -C "$dir" fetch --quiet origin main
   "$GIT" -C "$dir" cat-file -e "${sha}^{commit}" 2>/dev/null || die 'sha not found after fetch'
   "$GIT" -C "$dir" merge-base --is-ancestor "$sha" origin/main ||
@@ -448,6 +512,8 @@ cmd_sync() {
   # every deploy into a cold install. Everything else untracked goes.
   "$GIT" -C "$dir" clean -qxdff -e node_modules
   install_env "$svc"
+  [[ "$(head_sha "$svc")" == "$sha" ]] || die 'BROKER_SYNC_FAILED_VERIFY: HEAD is not the requested sha'
+  require_clean_tracked_state "$dir" "$svc" after-checkout
   printf 'BROKER_SYNC_PASS service=%s sha=%s\n' "$svc" "$(head_sha "$svc")"
 }
 

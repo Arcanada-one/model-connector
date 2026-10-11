@@ -426,3 +426,147 @@ echo 'All aggregate readback broker cases passed.'
 expect_fail billing_atomic_check_unregistered billing-arcana atomic-check "$muneral_head"
 expect_fail billing_atomic_deploy_unregistered billing-arcana atomic-deploy "$muneral_head"
 expect_fail billing_legacy_sync_unregistered billing-arcana sync "$muneral_head"
+
+# ---------------------------------------------------------------------------
+# sync must REFUSE tracked drift (never discard it) and verify an exact clean tracked state after the checkout.
+# The case that matters: a tracked file changed locally and identical in the old and new commit.
+sync_origin="${fixture_dir}/sync-origin.git"
+sync_seed="${fixture_dir}/sync-seed"
+git init -q --bare -b main "$sync_origin"
+git init -q -b main "$sync_seed"
+mkdir -p "${sync_seed}/alloy"
+printf '%s\n' 'reviewed config' >"${sync_seed}/alloy/config.alloy"
+printf '%s\n' 'compose' >"${sync_seed}/docker-compose.yml"
+printf '%s\n' 'one' >"${sync_seed}/other.txt"
+git_t() { git -c user.email=t@example.invalid -c user.name=t "$@"; }
+git_t -C "$sync_seed" add -A
+git_t -C "$sync_seed" commit -q -m c1
+sync_c1="$(git -C "$sync_seed" rev-parse HEAD)"
+printf '%s\n' 'two' >"${sync_seed}/other.txt"
+git_t -C "$sync_seed" commit -q -am c2
+sync_c2="$(git -C "$sync_seed" rev-parse HEAD)"
+git -C "$sync_seed" push -q "$sync_origin" main
+printf '%s\n' 'ENV=1' >"${env_root}/arcanada-assistant.env"
+
+# The `$broker` copy above had GIT replaced by a fake; sync needs the real git.
+real_broker="${fixture_dir}/broker-real-git"
+sed "s#^readonly GIT=.*#readonly GIT='$(command -v git)'#" "$broker" >"$real_broker"
+chmod 0755 "$real_broker"
+sync_dir="${state_root}/arcanada-assistant"
+sync_out="${fixture_dir}/sync.out"
+
+# Fresh checkout at c1 (clean).
+sync_reset() {
+  rm -rf -- "$sync_dir"
+  git clone -q "$sync_origin" "$sync_dir"
+  git -C "$sync_dir" checkout -q --detach "$sync_c1"
+}
+sync_rc() { "$real_broker" arcanada-assistant sync "$sync_c2" >"$sync_out" 2>&1 && echo 0 || echo "$?"; }
+expect_refused_drift() {
+  local name="$1"
+  if [ "$(sync_rc)" = 0 ]; then echo "FAIL: ${name}: drift was not refused" >&2; exit 1; fi
+  grep -Fq 'BROKER_SYNC_REFUSED_DRIFT service=arcanada-assistant' "$sync_out" || {
+    echo "FAIL: ${name}: no BROKER_SYNC_REFUSED_DRIFT line" >&2; sed -n '1,20p' "$sync_out" >&2; exit 1; }
+  if grep -Fq 'BROKER_SYNC_PASS' "$sync_out"; then echo "FAIL: ${name}: PASS printed" >&2; exit 1; fi
+  if grep -Fq 'LOCAL ROLLBACK EDIT' "$sync_out"; then echo "FAIL: ${name}: file content leaked" >&2; exit 1; fi
+  [ "$(git -C "$sync_dir" rev-parse HEAD)" = "$sync_c1" ] || { echo "FAIL: ${name}: HEAD moved" >&2; exit 1; }
+  echo "PASS: ${name}"
+}
+
+# RED: unstaged tracked edit in a file identical across c1/c2 (the case --force destroyed). Bytes preserved,
+# metadata sanitized (a sha256, the path, status letters), untracked files untouched because nothing ran.
+sync_reset
+printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${sync_dir}/alloy/config.alloy"
+printf '%s\n' 'untracked custody' >"${sync_dir}/stray.txt"
+expected_hash="$(sha256sum "${sync_dir}/alloy/config.alloy" | cut -d' ' -f1)"
+expect_refused_drift sync_refuses_unstaged_tracked_drift
+grep -Fq "sha256=${expected_hash}" "$sync_out" && grep -Fq 'path=alloy/config.alloy' "$sync_out" ||
+  { echo 'FAIL: drift metadata lacks the path or digest' >&2; exit 1; }
+[ "$(cat "${sync_dir}/alloy/config.alloy")" = 'LOCAL ROLLBACK EDIT' ] || { echo 'FAIL: drift bytes were not preserved' >&2; exit 1; }
+[ -f "${sync_dir}/stray.txt" ] || { echo 'FAIL: refusal ran clean' >&2; exit 1; }
+
+# RED: index-only drift (staged, worktree equals index).
+sync_reset
+printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${sync_dir}/alloy/config.alloy"
+git -C "$sync_dir" add alloy/config.alloy
+expect_refused_drift sync_refuses_staged_tracked_drift
+git -C "$sync_dir" diff --cached --quiet && { echo 'FAIL: staged change was dropped' >&2; exit 1; }
+[ "$(cat "${sync_dir}/alloy/config.alloy")" = 'LOCAL ROLLBACK EDIT' ] || { echo 'FAIL: staged worktree bytes lost' >&2; exit 1; }
+
+# RED: drift in a file that also differs between c1 and c2.
+sync_reset
+printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${sync_dir}/other.txt"
+expect_refused_drift sync_refuses_drift_in_a_changed_file
+
+# RED: drift hidden from `git status` by assume-unchanged.
+sync_reset
+git -C "$sync_dir" update-index --assume-unchanged alloy/config.alloy
+printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${sync_dir}/alloy/config.alloy"
+expect_refused_drift sync_refuses_assume_unchanged_hidden_edit
+
+# RED: a failed query is not a clean tree. A git shim fails ONE subcommand; the checkout is dirty, which the
+# failed query would otherwise hide. Nothing may move: no fetch, checkout, clean or env.
+shim_dir="${fixture_dir}/gitshim"
+mkdir -p "$shim_dir"
+cat >"${shim_dir}/git" <<SH
+#!/usr/bin/env bash
+# Fails the subcommand named in FAIL_GIT (optionally only when FAIL_GIT_ARG appears) with FAIL_GIT_RC.
+real='$(command -v git)'
+for a in "\$@"; do
+  if [ "\$a" = "\${FAIL_GIT:-}" ] && { [ -z "\${FAIL_GIT_ARG:-}" ] || [[ " \$* " == *" \${FAIL_GIT_ARG} "* ]]; }; then
+    echo "shim: injected failure for \$a" >&2
+    exit "\${FAIL_GIT_RC:-1}"
+  fi
+done
+exec "\$real" "\$@"
+SH
+chmod 0755 "${shim_dir}/git"
+shim_broker="${fixture_dir}/broker-shim-git"
+sed "s#^readonly GIT=.*#readonly GIT='${shim_dir}/git'#" "$broker" >"$shim_broker"
+chmod 0755 "$shim_broker"
+expect_refused_query() {
+  local name="$1" sub="$2" arg="$3" rc="$4"
+  sync_reset
+  printf '%s\n' 'LOCAL ROLLBACK EDIT' >"${sync_dir}/alloy/config.alloy"
+  printf '%s\n' 'untracked custody' >"${sync_dir}/stray.txt"
+  if FAIL_GIT="$sub" FAIL_GIT_ARG="$arg" FAIL_GIT_RC="$rc" "$shim_broker" arcanada-assistant sync "$sync_c2" >"$sync_out" 2>&1; then
+    echo "FAIL: ${name}: a failed query was accepted" >&2; exit 1
+  fi
+  grep -Fq 'BROKER_SYNC_REFUSED_QUERY service=arcanada-assistant' "$sync_out" || {
+    echo "FAIL: ${name}: no BROKER_SYNC_REFUSED_QUERY line" >&2; sed -n '1,20p' "$sync_out" >&2; exit 1; }
+  if grep -Fq 'BROKER_SYNC_PASS' "$sync_out"; then echo "FAIL: ${name}: PASS printed" >&2; exit 1; fi
+  [ "$(git -C "$sync_dir" rev-parse HEAD)" = "$sync_c1" ] || { echo "FAIL: ${name}: HEAD moved" >&2; exit 1; }
+  [ "$(cat "${sync_dir}/alloy/config.alloy")" = 'LOCAL ROLLBACK EDIT' ] || { echo "FAIL: ${name}: bytes lost" >&2; exit 1; }
+  [ -f "${sync_dir}/stray.txt" ] || { echo "FAIL: ${name}: clean ran" >&2; exit 1; }
+  echo "PASS: ${name}"
+}
+expect_refused_query sync_refuses_when_status_query_fails status '' 1
+expect_refused_query sync_refuses_when_status_query_dies status '' 128
+expect_refused_query sync_refuses_when_ls_files_query_fails ls-files '' 1
+expect_refused_query sync_refuses_when_hidden_flag_ls_files_fails ls-files -v 1
+expect_refused_query sync_refuses_when_diff_cached_exits_128 diff --cached 128
+expect_refused_query sync_refuses_when_diff_cached_exits_2 diff --cached 2
+# The shim itself is transparent when nothing is injected: a clean tree still syncs through it.
+sync_reset
+if ! "$shim_broker" arcanada-assistant sync "$sync_c2" >"$sync_out" 2>&1; then
+  echo 'FAIL: the git shim is not transparent' >&2; sed -n '1,20p' "$sync_out" >&2; exit 1
+fi
+echo 'PASS: git_shim_is_transparent_and_clean_sync_passes'
+
+# The global force behaviour is gone.
+if grep -Eq 'checkout[^#]*--force|reset --hard' "$subject"; then
+  echo 'FAIL: sync still force-discards tracked edits' >&2
+  exit 1
+fi
+echo 'PASS: sync_has_no_force_or_reset'
+
+# GREEN: a clean tree syncs, stray untracked files go, and the exact tracked state is verified.
+sync_reset
+printf '%s\n' 'untracked' >"${sync_dir}/stray.txt"
+[ "$(sync_rc)" = 0 ] || { echo 'FAIL: clean sync failed' >&2; sed -n '1,20p' "$sync_out" >&2; exit 1; }
+grep -Fq "BROKER_SYNC_PASS service=arcanada-assistant sha=${sync_c2}" "$sync_out" || { echo 'FAIL: no PASS line' >&2; exit 1; }
+[ "$(git -C "$sync_dir" rev-parse HEAD)" = "$sync_c2" ] || { echo 'FAIL: HEAD is not c2' >&2; exit 1; }
+[ -z "$(git -C "$sync_dir" status --porcelain --untracked-files=no)" ] || { echo 'FAIL: tracked state not clean' >&2; exit 1; }
+[ ! -e "${sync_dir}/stray.txt" ] || { echo 'FAIL: untracked file survived clean' >&2; exit 1; }
+[ "$(cat "${sync_dir}/other.txt")" = two ] || { echo 'FAIL: checkout did not land c2' >&2; exit 1; }
+echo 'PASS: sync_clean_tree_syncs_and_verifies'
