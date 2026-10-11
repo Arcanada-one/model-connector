@@ -43,7 +43,9 @@ export async function runComposedDiagnostic(
     );
     return {
       ...observation,
-      guardRuntimeConfig: { ...guardConfig },
+      guardRuntimeConfig: moduleRef
+        ? { ...moduleRef.get<OutputGuardRuntimeConfig>(OUTPUT_GUARD_CONFIG) }
+        : null,
       groundingObservation: fixture.request.output_format
         ? classifyLocalGrounding(fixture.request, observation.response.structured)
         : null,

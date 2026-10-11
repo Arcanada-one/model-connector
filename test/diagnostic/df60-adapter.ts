@@ -5,12 +5,12 @@ import { ClaudeCodeConnector } from '../../src/connectors/claude-code/claude-cod
 import { ProcessTimeoutError, SpawnResult } from '../../src/connectors/base-cli.connector';
 import { ConnectorsService } from '../../src/connectors/connectors.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import type { ConnectorRequest } from '../../src/connectors/interfaces/connector.interface';
+import type { ServiceExecuteRequest } from '../../src/connectors/connectors.service';
 import type { Prisma } from '@prisma/client';
 
 export interface RawCase {
   id: string;
-  request: ConnectorRequest;
+  request: ServiceExecuteRequest & { prompt: string };
   stdout: string;
   stderr: string;
   exitCode: number;
