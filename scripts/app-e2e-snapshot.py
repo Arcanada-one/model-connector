@@ -81,6 +81,13 @@ def workspace_bindings(source, head, git):
     return bindings
 
 
+def dependency_mountpoint(source):
+    mountpoint = source / 'node_modules'
+    if os.path.lexists(mountpoint):
+        raise ValueError('Git source occupies generated dependency mountpoint')
+    mountpoint.mkdir(mode=0o755)
+
+
 def export(root, head, owned):
     def git(*args):
         return subprocess.check_output(['git', '-c', f'safe.directory={root}', '-C', str(root), *args])
@@ -109,10 +116,7 @@ def export(root, head, owned):
         stream.extractall(source, filter='data')
     # Nested Docker binds require an existing destination in a read-only parent.
     # This generated support directory is not represented as a Git source byte.
-    mountpoint = source / 'node_modules'
-    if os.path.lexists(mountpoint):
-        raise ValueError('Git source occupies generated dependency mountpoint')
-    mountpoint.mkdir(mode=0o755)
+    dependency_mountpoint(source)
     # The export is private but readable by the same UID as the qualified dependencies.
     custody_stat = (root / 'node_modules').stat()
     bindings = workspace_bindings(source, head, git)

@@ -29,6 +29,17 @@ class Controls(unittest.TestCase):
         for unit in subject.UNITS[1:]:
             (self.root / unit).mkdir(parents=True)
 
+    def test_failure_receiving_preserves_member_without_raw_error_or_foreign_path(self):
+        report=self.root/'result.json'
+        report.write_text(json.dumps({'testResults':[
+            {'name':str(self.root/'foreign.spec.ts'), 'assertionResults':[{'status':'failed','failureMessages':['secret']}]},
+            {'name':str(self.root/'owned.spec.ts'), 'assertionResults':[{'status':'failed','failureMessages':['Expected SYNTHETIC_SECRET to equal private']}]}
+        ]}))
+        result=subject.failed_vitest_receiving(report,['owned.spec.ts'],self.root)
+        self.assertEqual(result['first_failures'][0]['member'],'owned.spec.ts')
+        self.assertEqual(result['first_failures'][0]['failure_codes'],['assertion_mismatch'])
+        self.assertNotIn('SECRET',json.dumps(result));self.assertNotIn('foreign',json.dumps(result))
+
     def test_exact_native_cwd_contract_and_traversal(self):
         profile = json.loads((ROOT / '.arcana/verify.json').read_text())
         for unit in subject.UNITS:

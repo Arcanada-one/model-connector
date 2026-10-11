@@ -421,6 +421,43 @@ def app_e2e_counts(raw, members):
     return counts
 
 
+def failed_vitest_receiving(report, members, root):
+    """Receive bounded member/index/status facts; never publish arbitrary messages."""
+    if report.is_symlink() or not report.is_file() or report.stat().st_size > 32 * 1024 * 1024:
+        return {'phase': 'report_absent_or_oversized'}
+    try:
+        doc = json.loads(report.read_text())
+        rows = doc.get('testResults', [])
+        failures = []
+        allowed = {str((root / name).resolve()): name for name in members}
+        for row in rows:
+            member = allowed.get(str(Path(row.get('name', '')).resolve()))
+            if member is None:
+                continue
+            for index, assertion in enumerate(row.get('assertionResults', [])):
+                if assertion.get('status') == 'failed':
+                    failures.append({'member': member, 'assertion_index': index,
+                                     'failure_codes': failure_labels(' '.join(assertion.get('failureMessages', [])))})
+                    if len(failures) == 3: break
+            if len(failures) == 3: break
+        return {'phase': 'assertions' if failures else 'report_without_member_failure',
+                'first_failures': failures,
+                'report_sha256': hashlib.sha256(report.read_bytes()).hexdigest()}
+    except (OSError, ValueError, TypeError, KeyError):
+        return {'phase': 'report_invalid'}
+
+
+def failure_labels(raw):
+    return sorted({label for marker, label in (
+        ('permission denied', 'permission_denied'), ('read-only file system', 'read_only_filesystem'),
+        ('unknown shorthand flag', 'docker_cli_flag'), ('unknown flag', 'docker_cli_flag'),
+        ('cannot connect to the docker daemon', 'docker_api_unavailable'),
+        ('unknown docker command', 'docker_compose_unavailable'), ('invalid mount config', 'docker_mount_invalid'),
+        ('expected', 'assertion_mismatch'), ('cannot find module', 'module_absent'),
+        ('failed to resolve', 'module_resolution'), ('econnrefused', 'connection_refused'),
+        ('timeout', 'timeout'), ('syntaxerror', 'syntax_error')) if marker in raw.lower()})
+
+
 def run_root_suites(root, suites, scratch, executor=execute):
     """Dispatch ordinary local groups; preserve every held member without spawning it."""
     members = [n for suite in suites for n in suite['members']]
@@ -454,16 +491,9 @@ def run_root_suites(root, suites, scratch, executor=execute):
                       verdict='not_measured' if code in (124, 127) else 'failed' if code else 'verified')
         if code:
             # Receive bounded failure attribution, never raw error excerpts/secrets.
-            failure_codes = []
-            for marker, label in [('permission denied','permission_denied'),
-                                  ('read-only file system','read_only_filesystem'),
-                                  ('unknown shorthand flag','docker_cli_flag'),
-                                  ('unknown flag','docker_cli_flag'),
-                                  ('cannot connect to the docker daemon','docker_api_unavailable'),
-                                  ('unknown docker command','docker_compose_unavailable'),
-                                  ('invalid mount config','docker_mount_invalid')]:
-                if marker in raw.lower(): failure_codes.append(label)
-            result['failure_codes'] = sorted(set(failure_codes))
+            result['failure_codes'] = failure_labels(raw)
+            phases = re.findall(r'^APP_E2E_PHASE=(snapshot|network_create|postgres_create|redis_create|stores_ready|app_dispatch|post_custody)$', raw, re.MULTILINE)
+            if phases: result['failure_receiving'] = {'phase': phases[-1]}
         if not code:
             try:
                 counts = parser(raw)
@@ -514,8 +544,11 @@ def run_root_suites(root, suites, scratch, executor=execute):
                 if name == 'maintained-integration':
                     argv += ['--config', 'vitest.integration.config.ts']
                 argv += ['--reporter=json', '--outputFile=' + str(report), *selected]
-                row['executions'].append(run(argv, selected, 'root-' + str(index),
-                    lambda raw: vitest_counts(json.loads(report.read_text()), selected, root)))
+                execution = run(argv, selected, 'root-' + str(index),
+                    lambda raw: vitest_counts(json.loads(report.read_text()), selected, root))
+                if execution['exit_code']:
+                    execution['failure_receiving'] = failed_vitest_receiving(report, selected, root)
+                row['executions'].append(execution)
             row['verdict'] = ('failed' if any(r['verdict'] == 'failed' for r in row['executions']) else
                               'not_measured' if held or not row['executions'] or any(r['verdict'] != 'verified' for r in row['executions']) else 'verified')
         elif name == 'maintained-regression':
