@@ -8,6 +8,7 @@ export default defineConfig({
       'test/diagnostic/df60-grounding.spec.ts',
       'test/diagnostic/df60-raw-cli.spec.ts',
       'test/diagnostic/df60-output-custody.spec.ts',
+      'test/diagnostic/df60-accounting-port.spec.ts',
     ],
   },
 });
