@@ -11,8 +11,10 @@ permissions:
 
 jobs:
   public-surface:
-    uses: Arcanada-one/datarim/.github/workflows/public-surface-lint.yml@main
+    uses: Arcanada-one/datarim/.github/workflows/public-surface-lint.yml@4846e68c953af9c05c1a1717a1a3c61aa32a9d53
     with:
+      # Pin the linter checkout as well as the reusable workflow definition.
+      datarim_ref: '4846e68c953af9c05c1a1717a1a3c61aa32a9d53'
       paths: 'README.md CHANGELOG.md docs packages'
       # CONN-0228: consumer-scoped regex override — the framework milestone
       # pattern false-positives on the public model name `BGE-M3`. See
