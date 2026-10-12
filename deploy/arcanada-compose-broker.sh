@@ -894,7 +894,14 @@ cmd_run_deploy() {
   script="$dir/${SCRIPT[$svc]}"
   [[ -f "$script" && ! -L "$script" ]] || die 'deploy script missing or not a regular file'
   compose_env "$svc"
-  ( cd "$dir" && bash "$script" )
+  case "$svc" in
+    model-connector)
+      # This fixed main installer route needs no caller environment. Bind the
+      # interpreter and discard Bash startup hooks/functions before it starts.
+      ( cd "$dir" && /usr/bin/env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin HOME=/root LANG=C /usr/bin/bash --noprofile --norc "$script" )
+      ;;
+    *) ( cd "$dir" && bash "$script" ) ;;
+  esac
   printf 'BROKER_RUN_DEPLOY_PASS service=%s\n' "$svc"
 }
 

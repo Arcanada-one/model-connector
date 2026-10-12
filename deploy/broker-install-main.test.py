@@ -41,4 +41,39 @@ class StockMainRoute(unittest.TestCase):
   self.request.write_text('grant:'+self.sha+'\n');self.commit_request();self.assertNotEqual(self.run_route().returncode,0);self.assertFalse(self.called.exists())
  def test_actual_unprivileged_caller_refuses(self):
   script=self.root/'actual.sh';script.write_text(SOURCE);r=subprocess.run(['/usr/bin/bash',str(script)],capture_output=True,timeout=2);self.assertNotEqual(r.returncode,0);self.assertIn(b'REFUSED_ACTOR',r.stderr);self.assertFalse(self.called.exists())
+class FixedDeployEnvironment(unittest.TestCase):
+ def setUp(self):
+  self.temp=tempfile.TemporaryDirectory(prefix='owned-deploy-env-');self.root=Path(self.temp.name)
+  self.marker=self.root/'startup-called';self.child=self.root/'child.sh'
+  self.child.write_text('printf "PATH=%s\\nHOME=%s\\nLANG=%s\\nTAINT=%s\\n" "$PATH" "${HOME-}" "${LANG-}" "${CALLER_TAINT-}"\n')
+  self.startup=self.root/'startup.sh';self.startup.write_text('printf x >> "'+str(self.marker)+'"\n')
+  raw=Path(__file__).with_name('arcanada-compose-broker.sh').read_text()
+  self.function=raw.split('cmd_run_deploy() {',1)[1].split('\n}\n',1)[0]
+ def tearDown(self):self.temp.cleanup()
+ def run_function(self,service='model-connector',old=False,missing=False):
+  function=self.function
+  if old:
+   start=function.index('  case "$svc" in\n')
+   end=function.index('\n  esac',start)+len('\n  esac')
+   function=function[:start]+'  ( cd "$dir" && bash "$script" )'+function[end:]
+  script='declare -A SCRIPT=([model-connector]=child.sh [other]=child.sh)\n'
+  script+='require_checkout() { :; }; compose_env() { export CALLER_TAINT=from_compose; }; checkout_dir() { printf "%s" "'+str(self.root)+'"; }; die() { exit 9; };\n'
+  script+='cmd_run_deploy() {'+function+'\n}\ncmd_run_deploy '+service+'\n'
+  if missing:self.child.unlink()
+  # Startup input belongs only to the child. The fixture's parent Bash has a
+  # clean environment, matching the separately qualified broker entry point.
+  script='export BASH_ENV="'+str(self.startup)+'"\n'+script
+  env={'PATH':'/usr/bin:/bin','HOME':str(self.root),'LANG':'C','CALLER_TAINT':'from_caller'}
+  return subprocess.run(['/usr/bin/bash','--noprofile','--norc','-c',script],env=env,capture_output=True,timeout=3)
+ def test_old_child_startup_hook_is_real_red_control(self):
+  r=self.run_function(old=True);self.assertEqual(r.returncode,0);self.assertTrue(self.marker.exists());self.assertIn(b'TAINT=from_compose',r.stdout)
+ def test_current_child_has_fixed_environment_without_startup_hook(self):
+  r=self.run_function();self.assertEqual(r.returncode,0);self.assertFalse(self.marker.exists())
+  for field in (b'PATH=/usr/sbin:/usr/bin:/sbin:/bin',b'HOME=/root',b'LANG=C',b'TAINT=\n'):self.assertIn(field,r.stdout)
+ def test_unrelated_service_environment_is_preserved(self):
+  r=self.run_function(service='other');self.assertEqual(r.returncode,0);self.assertTrue(self.marker.exists());self.assertIn(b'TAINT=from_compose',r.stdout)
+ def test_missing_script_refuses_before_child(self):
+  r=self.run_function(missing=True);self.assertEqual(r.returncode,9);self.assertFalse(self.marker.exists())
+ def test_symlink_script_refuses_before_child(self):
+  self.child.unlink();self.child.symlink_to(self.startup);r=self.run_function();self.assertEqual(r.returncode,9);self.assertFalse(self.marker.exists())
 if __name__=='__main__':unittest.main()
