@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Actual deploy entrypoint under command fixtures: no Docker or provider execution.
 set -euo pipefail
+passed=0
+assert_absent() {
+  local status=0
+  /usr/bin/grep -Eq "$@" || status=$?
+  [[ "$status" -eq 1 ]] || { echo 'FAIL forbidden output or unreadable fixture' >&2; exit 1; }
+}
 subject="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/deploy.sh"
 fixture="$(mktemp -d)"
 trap 'rm -rf -- "${fixture}"' EXIT
@@ -38,19 +44,21 @@ export COMMANDS="$fixture/commands"
 if FAIL_BUILD=1 bash "$fixture/repo/deploy/deploy.sh" >"$fixture/fail-output" 2>&1; then
   echo 'FAIL build failure accepted' >&2; exit 1
 fi
-if rg -q ' up | down|exec ' "$COMMANDS"; then
-  echo 'FAIL failed build changed runtime' >&2; exit 1
-fi
+assert_absent ' up | down|exec ' "$COMMANDS"
+passed=$((passed + 1))
 : >"$COMMANDS"
 bash "$fixture/repo/deploy/deploy.sh" >"$fixture/pass-output" 2>&1
 mapfile -t commands <"$COMMANDS"
 [[ "${commands[0]}" == 'compose -f docker-compose.yml -f docker-compose.codex.yml build' ]]
 [[ "${commands[1]}" == 'compose -f docker-compose.yml -f docker-compose.codex.yml up -d --no-build' ]]
-! rg -q ' down| logs' "$COMMANDS"
+assert_absent ' down| logs' "$COMMANDS"
+passed=$((passed + 1))
 : >"$COMMANDS"
 if FAIL_HEALTH=1 bash "$fixture/repo/deploy/deploy.sh" >"$fixture/health-output" 2>&1; then
   echo 'FAIL health failure accepted' >&2; exit 1
 fi
-! rg -q ' logs' "$COMMANDS"
-! rg -q 'fixture-secret-never-log' "$fixture/fail-output" "$fixture/pass-output" "$fixture/health-output"
+assert_absent ' logs' "$COMMANDS"
+assert_absent 'fixture-secret-never-log' "$fixture/fail-output" "$fixture/pass-output" "$fixture/health-output"
+passed=$((passed + 1))
 echo 'PASS deploy build-first, failed-build preserves runtime, health failure no logs'
+printf '%s tests passed\n' "$passed"
