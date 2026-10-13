@@ -56,6 +56,14 @@ export class AuthService {
     for (const key of keys) {
       const match = await compare(rawKey, key.keyHash);
       if (match) {
+        // bcrypt yields after findMany's active-row snapshot. A different replica
+        // may revoke/delete the key while it is being verified. Fence admission
+        // against the current authoritative row before caching the identity.
+        const current = await this.prisma.apiKey.findUnique({
+          where: { id: key.id },
+          select: { active: true },
+        });
+        if (!current?.active) return null;
         const identity = { id: key.id, name: key.name };
         this.verifyCache.set(cacheKey, {
           identity,

@@ -347,6 +347,36 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
     expect((await call('a', 'deepseek')).statusCode).toBeGreaterThanOrEqual(400);
     expect(sent).toEqual([]);
   });
+  it.each(['deepseek', 'typesafe-jev'])(
+    'cold auth key revoked after active-row snapshot refuses %s with zero dispatch',
+    async (provider) => {
+      rows['key-a'].policy = profile('a', provider);
+      // Another replica revokes after the active-row query but before bcrypt
+      // completes. The returned snapshot stays active; authoritative DB does not.
+      vi.spyOn(prisma.apiKey, 'findMany').mockImplementationOnce(async () => {
+        const snapshot = { ...rows['key-a'] };
+        rows['key-a'].active = false;
+        return [snapshot] as never;
+      });
+      const refused = await call('a', provider);
+      expect({
+        status: refused.statusCode,
+        outbound: sent.length,
+        recorded: records.length,
+      }).toEqual({
+        status: 401,
+        outbound: 0,
+        recorded: 0,
+      });
+      // The HTTP/provider fixture is still usable for an independent valid key.
+      rows['key-b'].policy = profile('b', provider);
+      expect((await call('b', provider)).statusCode).toBe(201);
+      expect(sent).toHaveLength(1);
+      expect(sent[0].authorization).toBe(
+        provider === 'deepseek' ? 'Bearer synthetic-DEEPSEEK-B-1' : 'Bearer synthetic-TYPESAFE-B-1',
+      );
+    },
+  );
   it('warm auth-cache key revoked from a different process returns 401 and sends nothing', async () => {
     rows['key-a'].policy = profile('a', 'deepseek');
     expect((await call('a', 'deepseek')).statusCode).toBe(201);
