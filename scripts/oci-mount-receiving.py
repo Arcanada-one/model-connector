@@ -1,4 +1,7 @@
-"""Bounded same-job OCI receiving probe; no App, stores, network or provider access."""
+"""Bounded same-job OCI probe; no application, store or provider dispatch.
+
+Optional immutable base-image acquisition may contact the container registry.
+"""
 import hashlib
 import importlib.util
 import json

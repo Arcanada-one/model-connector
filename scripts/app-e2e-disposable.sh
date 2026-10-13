@@ -65,7 +65,7 @@ REDIS_ID=$(create_owned redis "$OWN-redis" timeout 5s docker run -d --cidfile "$
 printf 'APP_E2E_OWNED_IDS=%s %s %s\n' "$NET_ID" "$PG_ID" "$REDIS_ID"
 echo APP_E2E_PHASE=stores_ready
 for attempt in $(seq 1 30); do
-  if timeout 1s docker exec "$PG_ID" pg_isready -U test -d connector_test >/dev/null && timeout 1s docker exec "$REDIS_ID" redis-cli ping | test "$(cat)" = PONG; then break; fi
+  if timeout 1s docker exec "$PG_ID" pg_isready -h 127.0.0.1 -U test -d connector_test >/dev/null && timeout 1s docker exec "$REDIS_ID" redis-cli ping | test "$(cat)" = PONG; then break; fi
   [[ $attempt != 30 ]] || { echo 'APP_E2E_REFUSED: stores not ready'; exit 127; }
   sleep 1
 done

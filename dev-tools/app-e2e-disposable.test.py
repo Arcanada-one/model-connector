@@ -18,13 +18,23 @@ elif a[:2]==['network','create'] or a[:1]==['run']:
  assert len(intents)==1 and json.loads(intents[0].read_text())['state']=='in_flight'
  if mode=='foreign-collision' or mode=='foreign-collision-'+role:
   s['f'*64]={'Id':'f'*64,'Name':name,'Labels':{'mc-run':'foreign','mc-role':role}};save();sys.exit(1)
- if role=='app':print('APP_E2E_RESULT_BEGIN');print('{}');print('APP_E2E_RESULT_END');sys.exit(0)
+ if role=='app':
+  if mode=='unix-init-ready' and not json.loads((root/'readiness.json').read_text())['tcp_ready']:sys.exit(27)
+  print('APP_E2E_RESULT_BEGIN');print('{}');print('APP_E2E_RESULT_END');sys.exit(0)
  identity={'network':'c','pg':'d','redis':'e'}[role]*64
  obj={'Id':identity,'Name':name,'Labels':labels(),'Config':{'Labels':labels()}};s[identity]=obj;save()
  if mode in ('lost-'+role,'lost-hidden'):sys.exit(124)
  print(identity)
 elif a[:2]==['network','inspect'] and '--format' in a:print('true')
 elif a[:1]==['inspect'] or a[:2]==['network','inspect']:print(json.dumps([s[a[-1]]]))
+elif a[:1]==['exec'] and 'pg_isready' in a:
+ if mode=='unix-init-ready':
+  ready=root/'readiness.json';observation=json.loads(ready.read_text()) if ready.exists() else {'checks':0,'tcp_ready':False}
+  if '-h' not in a:
+   ready.write_text(json.dumps(observation));sys.exit(0)
+  assert a[a.index('-h')+1]=='127.0.0.1'
+  observation['checks']+=1;observation['tcp_ready']=observation['checks']>=2;ready.write_text(json.dumps(observation))
+  sys.exit(0 if observation['tcp_ready'] else 1)
 elif a[:1]==['exec'] and 'redis-cli' in a:print('PONG')
 elif a[:1]==['ps'] or a[:2]==['network','ls']:
  if mode=='unknown':sys.exit(124)
@@ -47,14 +57,20 @@ class Controls(unittest.TestCase):
    stub=root/'bin/docker';stub.write_text(STUB);stub.chmod(0o700)
    r=subprocess.run(['bash','runner.sh'],cwd=root,env={'PATH':str(root/'bin')+':'+os.defpath,'HOME':str(root),'TMPDIR':str(root),'TEST_ROOT':str(root),'MODE':mode},capture_output=True,text=True,timeout=15)
    state=json.loads((root/'state.json').read_text());retained=list(root.glob('mc-app-cid.*'))
-   if mode in ('positive','lost-network','lost-pg','lost-redis'):
-    self.assertEqual(r.returncode,0 if mode=='positive' else 124,r.stdout+r.stderr)
+   if mode in ('positive','unix-init-ready','lost-network','lost-pg','lost-redis'):
+    self.assertEqual(r.returncode,0 if mode in ('positive','unix-init-ready') else 124,r.stdout+r.stderr)
     self.assertEqual(state,{});self.assertFalse(retained);self.assertIn('CLEANUP_FAILED=0',r.stdout)
    else:
     self.assertNotEqual(r.returncode,0);self.assertTrue(retained);self.assertIn('CLEANUP_FAILED=1',r.stdout)
     self.assertEqual(json.loads((retained[0]/'cleanup.json').read_text())['verdict'],'UNKNOWN')
    calls=[json.loads(x) for x in (root/'trace').read_text().splitlines()]
    self.assertFalse(any(x[-1]=='f'*64 and (x[0]=='rm' or x[:2]==['network','rm']) for x in calls))
+   if mode=='unix-init-ready':
+    ready_calls=[a for a in calls if 'pg_isready' in a]
+    self.assertEqual(len(ready_calls),2)
+    self.assertTrue(all(a[a.index('-h')+1]=='127.0.0.1' for a in ready_calls))
+ def test_waits_for_tcp_after_unix_init_server_reports_ready(self):
+  self.run_case('unix-init-ready')
  def test_lost_response_network_and_stores_reconcile_exclusive_ownership(self):
   for mode in ('positive','lost-network','lost-pg','lost-redis'):
    with self.subTest(mode=mode):self.run_case(mode)

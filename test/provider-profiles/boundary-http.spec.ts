@@ -325,6 +325,55 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
     expect((await call('a', 'typesafe-jev')).statusCode).toBe(201);
     expect(sent[0].authorization).toBe('Bearer synthetic-TYPESAFE-A-1');
   });
+  it.each(['typesafe-jev', 'deepseek'])(
+    'pins the first registered %s binding when both are available',
+    async (provider) => {
+      const policy = profile('a', provider);
+      const bindings = policy.providerKeys![provider];
+      if (!Array.isArray(bindings)) throw new Error('fixture');
+      const secondRef = `a-${provider}-second`;
+      bindings.push({ credentialRef: secondRef, version: '1' });
+      rows['key-a'].policy = policy;
+      const prefix = provider === 'typesafe-jev' ? 'TYPESAFE' : 'DEEPSEEK';
+      const reg = registry();
+      reg[secondRef] = {
+        ...reg[`a-${provider}`],
+        versions: { '1': `${prefix}_API_KEY_A_2` },
+      };
+      vi.stubEnv('PROVIDER_CREDENTIAL_REGISTRY', JSON.stringify(reg));
+      vi.stubEnv(`${prefix}_API_KEY_A_2`, `synthetic-${prefix}-A-2`);
+      expect((await call('a', provider)).statusCode).toBe(201);
+      expect(sent.map((s) => s.authorization)).toEqual([`Bearer synthetic-${prefix}-A-1`]);
+      expect(records).toHaveLength(1);
+      expect(records[0]).toMatchObject({
+        upstreamCredentialRef: `a-${provider}`,
+        upstreamCredentialVersion: '1',
+      });
+    },
+  );
+  it.each(['typesafe-jev', 'deepseek'])(
+    'refuses a missing first %s binding even when its own second binding is available',
+    async (provider) => {
+      const policy = profile('a', provider);
+      const bindings = policy.providerKeys![provider];
+      if (!Array.isArray(bindings)) throw new Error('fixture');
+      const secondRef = `a-${provider}-second`;
+      bindings.push({ credentialRef: secondRef, version: '1' });
+      rows['key-a'].policy = policy;
+      const prefix = provider === 'typesafe-jev' ? 'TYPESAFE' : 'DEEPSEEK';
+      const reg = registry();
+      reg[secondRef] = {
+        ...reg[`a-${provider}`],
+        versions: { '1': `${prefix}_API_KEY_A_2` },
+      };
+      vi.stubEnv('PROVIDER_CREDENTIAL_REGISTRY', JSON.stringify(reg));
+      vi.stubEnv(`${prefix}_API_KEY_A_1`, '');
+      vi.stubEnv(`${prefix}_API_KEY_A_2`, `synthetic-${prefix}-A-2`);
+      expect((await call('a', provider)).statusCode).toBeGreaterThanOrEqual(400);
+      expect(sent).toEqual([]);
+      expect(records).toEqual([]);
+    },
+  );
   it('refuses a missing Prime credential with zero shared fallback calls', async () => {
     rows['key-a'].policy = profile('a', 'typesafe-jev');
     vi.stubEnv('TYPESAFE_API_KEY_A_1', '');

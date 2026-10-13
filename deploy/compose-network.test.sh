@@ -25,8 +25,9 @@ try:
         exit_code = result.returncode
         raw = result.stderr[:128 * 1024]
         stderr_sha256 = hashlib.sha256(raw).hexdigest()
-        # Preserve private evidence, never print arbitrary stderr or a parsed untrusted flag.
-        with tempfile.NamedTemporaryFile(prefix='mc-compose-stderr-', suffix='.log', delete=False) as log:
+        # Bound private capture to this command; retain only the hash and taxonomy.
+        # Never print arbitrary stderr or a parsed untrusted flag.
+        with tempfile.NamedTemporaryFile(dir=root, prefix='mc-compose-stderr-', suffix='.log') as log:
             log.write(raw)
         flags = re.findall(r'unknown (?:shorthand )?flag:?\s*[\"\']?(-{1,2}[a-z-]+)(?=\s|[\"\':]|$)', result.stderr.decode(errors='replace').lower())
         if len(flags) == 1 and flags[0] in ('--project-directory', '-f', '--format'):
