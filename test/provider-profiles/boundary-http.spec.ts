@@ -353,10 +353,10 @@ describe('dedicated provider profiles through real MC HTTP and adapters', () => 
       rows['key-a'].policy = profile('a', provider);
       // Another replica revokes after the active-row query but before bcrypt
       // completes. The returned snapshot stays active; authoritative DB does not.
-      vi.spyOn(prisma.apiKey, 'findMany').mockImplementationOnce(async () => {
+      vi.spyOn(prisma.apiKey, 'findMany').mockImplementationOnce(() => {
         const snapshot = { ...rows['key-a'] };
         rows['key-a'].active = false;
-        return [snapshot] as never;
+        return Promise.resolve([snapshot]) as never;
       });
       const refused = await call('a', provider);
       expect({
