@@ -8,9 +8,13 @@ import {
   Param,
   Post,
   Query,
+  Res,
+  Optional,
+  Inject,
   Req,
 } from '@nestjs/common';
-import { FastifyRequest } from 'fastify';
+import { FastifyRequest, FastifyReply } from 'fastify';
+import { STRICT_CHAT_BOUNDARY, StrictChatService } from './strict-chat/service';
 import { ConnectorsService } from './connectors.service';
 import { ConnectorResponse } from './interfaces/connector.interface';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
@@ -86,6 +90,7 @@ export class ConnectorsController {
     private readonly connectorsService: ConnectorsService,
     private readonly imageGenerationService: ImageGenerationService,
     private readonly cascadeRouterService: CascadeRouterService,
+    @Optional() @Inject(STRICT_CHAT_BOUNDARY) private readonly strictChat?: StrictChatService,
   ) {}
 
   @Get('connectors')
@@ -136,6 +141,74 @@ export class ConnectorsController {
   @Get('connectors/:name/status')
   async getStatus(@Param('name') name: string) {
     return this.connectorsService.getStatus(name);
+  }
+
+  /** Source-only optional boundary; no module binds the token by default. */
+  @Get('connectors/intents/:intentId')
+  async strictIntentStatus(@Param('intentId') intent: string, @Req() req: AuthenticatedRequest) {
+    if (!this.strictChat || !req.apiKey?.id)
+      throw new HttpException({ error: 'strict_chat_unavailable' }, HttpStatus.SERVICE_UNAVAILABLE);
+    try {
+      return await this.strictChat.status(req.apiKey.id, intent);
+    } catch {
+      throw new HttpException({ error: 'strict_chat_refused' }, HttpStatus.FORBIDDEN);
+    }
+  }
+
+  @Post('connectors/:name/chat/completions')
+  async strictChatStream(
+    @Param('name') name: string,
+    @Body() body: unknown,
+    @Req() req: AuthenticatedRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    if (!this.strictChat || !req.apiKey?.id)
+      throw new HttpException({ error: 'strict_chat_unavailable' }, HttpStatus.SERVICE_UNAVAILABLE);
+    const abort = new AbortController();
+    const closed = () => abort.abort();
+    reply.raw.once('close', closed);
+    let streaming = false;
+    const sink = async (event: string, signal: AbortSignal) => {
+      if (signal.aborted || abort.signal.aborted) throw new Error('strict-caller-closed');
+      if (!streaming) {
+        reply.hijack();
+        reply.raw.writeHead(200, {
+          'content-type': 'text/event-stream',
+          'cache-control': 'no-store',
+        });
+        streaming = true;
+      }
+      if (!reply.raw.write(event))
+        await new Promise<void>((resolve, reject) => {
+          const cleanup = () => {
+            reply.raw.off('drain', ready);
+            signal.removeEventListener('abort', cancel);
+          };
+          const ready = () => {
+            cleanup();
+            resolve();
+          };
+          const cancel = () => {
+            cleanup();
+            reject(new Error('strict-caller-closed'));
+          };
+          reply.raw.once('drain', ready);
+          signal.addEventListener('abort', cancel, { once: true });
+          if (signal.aborted) cancel();
+        });
+    };
+    try {
+      await this.strictChat.execute(name, req.apiKey.id, body, sink, abort.signal);
+      if (streaming) reply.raw.end();
+    } catch {
+      if (streaming) {
+        if (!reply.raw.destroyed)
+          reply.raw.end('event: error\ndata: {"error":"strict_chat_incomplete"}\n\n');
+      } else reply.status(HttpStatus.CONFLICT).send({ error: 'strict_chat_refused_or_pending' });
+    } finally {
+      reply.raw.off('close', closed);
+      abort.abort();
+    }
   }
 
   @Post('connectors/:name/execute')

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { parseDeepSeekOptions } from '../deepseek/deepseek-options';
 
 // ─── Text connector DTO (existing) ────────────────────────────────────────────
 
@@ -113,6 +114,15 @@ export const executeRequestSchema = z
   .object(executeRequestBaseShape)
   .superRefine(schemaSizeRefine)
   .superRefine(measurementRefine)
+  .superRefine((val, ctx) => {
+    if (val.connector === 'deepseek' && !parseDeepSeekOptions(val).success) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['extra'],
+        message: 'Invalid DeepSeek thinking/effort options',
+      });
+    }
+  })
   .superRefine((val, ctx) => {
     const hasConnector = val.connector != null && val.connector !== '';
     const hasProfile = val.profile != null;

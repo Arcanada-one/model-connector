@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "declaration": false,
+    "incremental": false,
+    "types": ["node"]
+  },
+  "include": ["rate-limit-ci-report.mjs", "rate-limit-ci-report.test.mjs"],
+  "exclude": ["../node_modules"]
+}

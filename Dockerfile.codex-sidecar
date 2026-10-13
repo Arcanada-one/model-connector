@@ -17,7 +17,7 @@ ARG CODEX_VERSION=0.142.5
 ARG COSIGN_VERSION=2.4.1
 
 # ---------- builder: download + verify Codex binary + cosign ----------
-FROM alpine:3.20 AS builder
+FROM alpine:3.24 AS builder
 ARG CODEX_RELEASE_TAG
 ARG CODEX_VERSION
 ARG COSIGN_VERSION
@@ -57,7 +57,7 @@ RUN tar xzf ${CODEX_ASSET}.tar.gz \
 RUN /tmp/build/codex --version | grep -q "${CODEX_VERSION}"
 
 # ---------- runtime: minimal image with Codex + Vault CLI + entrypoint ----------
-FROM alpine:3.20 AS runtime
+FROM alpine:3.24 AS runtime
 ARG CODEX_RELEASE_TAG
 ARG CODEX_VERSION
 ARG VAULT_VERSION=1.18.2

@@ -33,10 +33,12 @@ import { KEY_RATE_LIMIT_REDIS_CLIENT, IKeyRateLimitRedis } from './key-rate-limi
  *
  * ## Limit freshness: 10s, and why not the existing auth cache
  * `AuthService` caches verified keys for 5 minutes. Carrying the limit on that
- * cache would have been free — and wrong: there is no admin endpoint to UPDATE
- * `rateLimit` (src/admin/admin.service.ts:38 writes it on create only), so the
- * only way to change a live key's limit is to write the row, and a 5-minute
- * blind spot on a control you reach for DURING an incident is not acceptable.
+ * cache would have been free — and wrong: when this was written there was no
+ * admin endpoint to UPDATE `rateLimit`, so the only way to change a live key's
+ * limit was to write the row, and a 5-minute blind spot on a control you reach
+ * for DURING an incident is not acceptable. (A2-319 added
+ * `PATCH /admin/keys/:id/rate-limit`, which invalidates this cache on write;
+ * the 10s TTL remains the bound for a row edited by hand.)
  * This service therefore reads the column itself behind its own 10-second TTL
  * cache: the DB stays the authority, staleness is bounded at 10s, and an
  * attacker cannot turn the limiter into a query-per-request DB amplifier.
@@ -111,6 +113,16 @@ export class KeyRateLimitService {
   /** Test/admin seam: drop the cached limits so the next read hits Postgres. */
   flushLimitCache(): void {
     this.limitCache.clear();
+  }
+
+  /**
+   * A2-319 — drop ONE key's cached limit. Called by the admin write path
+   * (`PATCH /admin/keys/:id/rate-limit`) so a changed limit is in force on the
+   * very next request instead of after up to {@link LIMIT_CACHE_TTL_MS}. The
+   * 10s bound still covers the only other writer: a hand-edited row.
+   */
+  invalidateLimit(keyId: string): void {
+    this.limitCache.delete(keyId);
   }
 
   /**

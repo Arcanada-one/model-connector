@@ -132,7 +132,14 @@ export function normalizeDecision(request: DecisionRequest, input: unknown): Dec
           return result;
         const selected = probabilities[a.data.choice];
         if (Object.values(probabilities).some((p) => p > selected + 1e-5)) return result;
-        if (a.data.confidence !== undefined && Math.abs(a.data.confidence - selected) > 1e-5)
+        // Provider confidence is distance above the uniform baseline, not selected probability.
+        // https://docs.typesafe.ai/confidence#choice
+        const uniform = 1 / keys.length;
+        const expectedConfidence = (selected - uniform) / (1 - uniform);
+        if (
+          a.data.confidence !== undefined &&
+          Math.abs(a.data.confidence - expectedConfidence) > 1e-5
+        )
           return result;
       }
       answers[name] = {

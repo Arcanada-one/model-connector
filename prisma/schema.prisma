@@ -84,6 +84,7 @@ model ApiKey {
   creditsBalance    CreditsBalance?
   creditsLedger     CreditsLedger[]
   requestIntents    RequestIntent[]
+  strictSupplierIntents StrictSupplierIntent[]
   createdAt         DateTime           @default(now())
 }
 
@@ -624,4 +625,55 @@ model RequestIntent {
   @@unique([apiKeyId, intentKey])
   @@index([state, expiresAt])
   @@map("request_intent")
+}
+
+/// Independent BENCH token budget, preserving original campaign lineage.
+model BenchCampaign {
+  campaign String @id
+  originalLedgerSha256 String @unique @map("original_ledger_sha256")
+  journalId String @unique @map("journal_id")
+  sequence BigInt
+  inputTokens BigInt @map("input_tokens")
+  outputTokens BigInt @map("output_tokens")
+  headSha256 String @map("head_sha256")
+  reservations BenchReservation[]
+  @@map("bench_campaign")
+}
+
+/// An immutable actual-send reservation. No refund/release transition exists.
+model BenchReservation {
+  campaign String
+  attempt String
+  nonce String
+  sequence BigInt
+  grantSha256 String @map("grant_sha256")
+  request Json
+  previousHeadSha256 String @map("previous_head_sha256")
+  headSha256 String @map("head_sha256")
+  verdict String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  owner BenchCampaign @relation(fields: [campaign], references: [campaign])
+  @@id([campaign, attempt])
+  @@unique([campaign, nonce])
+  @@unique([campaign, sequence])
+  @@map("bench_reservation")
+}
+
+/// Additive strict supplier exposure. Never swept/released as customer credit.
+/// Protected response/continuation is never stored; only an allowlisted receipt.
+model StrictSupplierIntent {
+  apiKeyId String @map("api_key_id")
+  apiKey ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Restrict)
+  intentKey String @map("intent_key")
+  attempt String
+  generation BigInt
+  digest String
+  model String
+  connector String
+  state String
+  exposure Json
+  receipt Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  @@id([apiKeyId,intentKey])
+  @@map("strict_supplier_intent")
 }

@@ -1,0 +1,11 @@
+{
+  "stage": "route-membership preparation",
+  "outcome": "refused ambiguous static/parameter match",
+  "method": "POST",
+  "path": "/admin/credits/reconcile",
+  "matches": [
+    "route:POST /admin/credits/:apiKeyId",
+    "route:POST /admin/credits/reconcile"
+  ],
+  "correction": "select declared literal route before matching parameter route; no claims on dispatch beyond actual fixture observations"
+}

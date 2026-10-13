@@ -7,7 +7,16 @@ import { DecisionService } from './decision.service';
 import { JevConnector } from './jev.connector';
 import { ConnectorsModule } from '../connectors.module';
 import { PolicyService } from '../../policy/policy.service';
-import { request, nativeResponse } from './decision.fixture';
+import { request, nativeResponse as historicalNativeResponse } from './decision.fixture';
+
+// Keep the historical fixture immutable; use the documented provider confidence.
+const nativeResponse = {
+  ...historicalNativeResponse,
+  answers: {
+    ...historicalNativeResponse.answers,
+    tier: { ...historicalNativeResponse.answers.tier, confidence: 0.6 },
+  },
+};
 import type { ApiKeyPolicy } from '../../policy/policy.schema';
 
 // Real public service -> real policy choke point -> real native adapter -> synthetic transport.
@@ -59,7 +68,7 @@ describe('decision consumer wiring', () => {
       status: 'observed',
       action: 'none',
       observedModel: 'jev-fixture-version',
-      answers: { tier: { confidence: 0.8 }, risk: { noul: 0.6996 } },
+      answers: { tier: { confidence: 0.6 }, risk: { noul: 0.6996 } },
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(prisma.request.create).toHaveBeenCalled();

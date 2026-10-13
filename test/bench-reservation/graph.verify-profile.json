@@ -1,0 +1,12 @@
+{
+  "schema": "VerifyProfile/v1",
+  "note": "Use actual repository tsconfig for application source and dedicated real fixture tsconfig for BENCH test files; no stubs, disabled verifier or exemptions. Fixture paths are declared separately from production environment.",
+  "deployables": {
+    ".": {
+      "tsconfig_test": "test/bench-reservation/tsconfig.json"
+    }
+  },
+  "env_declaration_files": [
+    "test/bench-reservation/.env.example"
+  ]
+}

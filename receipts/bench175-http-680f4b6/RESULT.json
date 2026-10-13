@@ -1,0 +1,692 @@
+{
+ "base_url": "http://127.0.0.1:38093",
+ "captured_at_utc": "2026-10-04T03:15:46Z",
+ "card": "AUP-GRAPH-008",
+ "contract_ref": "contracts/graph-verified-change/observed-edges-and-deploy-gate.v1.json",
+ "counters": {
+  "failed": 0,
+  "not_measured": 0,
+  "verified": 34
+ },
+ "entity_verdicts": [
+  {
+   "entity": "route:DELETE /admin/keys/:id",
+   "probe_ids": [
+    "actual-route-1"
+   ],
+   "reason": "actual-route-1: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /admin/credits/:apiKeyId",
+   "probe_ids": [
+    "actual-route-2"
+   ],
+   "reason": "actual-route-2: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /admin/credits/:apiKeyId/history",
+   "probe_ids": [
+    "actual-route-3"
+   ],
+   "reason": "actual-route-3: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /admin/keys",
+   "probe_ids": [
+    "actual-route-4"
+   ],
+   "reason": "actual-route-4: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /connectors",
+   "probe_ids": [
+    "actual-route-5"
+   ],
+   "reason": "actual-route-5: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /connectors/:name/status",
+   "probe_ids": [
+    "actual-route-6"
+   ],
+   "reason": "actual-route-6: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /connectors/catalog",
+   "probe_ids": [
+    "actual-route-7"
+   ],
+   "reason": "actual-route-7: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /connectors/image/capabilities",
+   "probe_ids": [
+    "actual-route-8"
+   ],
+   "reason": "actual-route-8: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /health",
+   "probe_ids": [
+    "actual-route-9"
+   ],
+   "reason": "actual-route-9: status 200 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /health/connectors",
+   "probe_ids": [
+    "actual-route-10"
+   ],
+   "reason": "actual-route-10: status 200 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /health/metrics",
+   "probe_ids": [
+    "actual-route-11"
+   ],
+   "reason": "actual-route-11: status 200 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /health/ready",
+   "probe_ids": [
+    "actual-route-12"
+   ],
+   "reason": "actual-route-12: status 200 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /jobs/:id",
+   "probe_ids": [
+    "actual-route-13"
+   ],
+   "reason": "actual-route-13: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /v1/models",
+   "probe_ids": [
+    "actual-route-14"
+   ],
+   "reason": "actual-route-14: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /v1/speech/stt/jobs/:id",
+   "probe_ids": [
+    "actual-route-15"
+   ],
+   "reason": "actual-route-15: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:PATCH /admin/keys/:id/policy",
+   "probe_ids": [
+    "actual-route-16"
+   ],
+   "reason": "actual-route-16: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /admin/circuit-breaker/reset",
+   "probe_ids": [
+    "actual-route-17"
+   ],
+   "reason": "actual-route-17: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /admin/credits/:apiKeyId",
+   "probe_ids": [
+    "actual-route-18"
+   ],
+   "reason": "actual-route-18: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /admin/credits/:apiKeyId/gift",
+   "probe_ids": [
+    "actual-route-19"
+   ],
+   "reason": "actual-route-19: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /admin/credits/holds/sweep",
+   "probe_ids": [
+    "actual-route-20"
+   ],
+   "reason": "actual-route-20: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /admin/credits/reconcile",
+   "probe_ids": [
+    "actual-route-21"
+   ],
+   "reason": "actual-route-21: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /admin/keys",
+   "probe_ids": [
+    "actual-route-22"
+   ],
+   "reason": "actual-route-22: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /connectors/:name/execute",
+   "probe_ids": [
+    "actual-route-23"
+   ],
+   "reason": "actual-route-23: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /execute",
+   "probe_ids": [
+    "actual-route-24"
+   ],
+   "reason": "actual-route-24: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /images/generate",
+   "probe_ids": [
+    "actual-route-25"
+   ],
+   "reason": "actual-route-25: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /internal/credits/:apiKeyId/payment",
+   "probe_ids": [
+    "actual-route-26"
+   ],
+   "reason": "actual-route-26: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /internal/credits/:apiKeyId/reverse",
+   "probe_ids": [
+    "actual-route-27"
+   ],
+   "reason": "actual-route-27: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /internal/watcher/circuit-breaker/reset",
+   "probe_ids": [
+    "actual-route-28"
+   ],
+   "reason": "actual-route-28: status 403 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /v1/chat/completions",
+   "probe_ids": [
+    "actual-route-29"
+   ],
+   "reason": "actual-route-29: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /v1/prompt-cache/prewarm",
+   "probe_ids": [
+    "actual-route-30"
+   ],
+   "reason": "actual-route-30: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /v1/speech/stt",
+   "probe_ids": [
+    "actual-route-31"
+   ],
+   "reason": "actual-route-31: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /v1/speech/stt/async",
+   "probe_ids": [
+    "actual-route-32"
+   ],
+   "reason": "actual-route-32: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /v1/speech/tts",
+   "probe_ids": [
+    "actual-route-33"
+   ],
+   "reason": "actual-route-33: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:POST /v1/speech/vad",
+   "probe_ids": [
+    "actual-route-34"
+   ],
+   "reason": "actual-route-34: status 401 is neither 404 nor 405: the route is served by the resident version",
+   "verdict": "verified"
+  }
+ ],
+ "environment": "owned-source-only-no-provider",
+ "model": "claude-opus-5",
+ "mutating_owner": "BENCH existing31a owned loopback fixture",
+ "phase": "pre",
+ "plan": {
+  "digest": "sha256:93e25ddc5a50c30f620b6c33962e776bc0e23d6618736afa1c5dc94ccefd9579",
+  "id": "BENCH175-actual-HTTP-680f4b6",
+  "path": "PLAN.json"
+ },
+ "probes": [
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 49,
+   "id": "actual-route-1",
+   "method": "DELETE",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/admin/keys/owned-fixture"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 3,
+   "id": "actual-route-2",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/admin/credits/owned-fixture"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-3",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/admin/credits/owned-fixture/history"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-4",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/admin/keys"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-5",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/connectors"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-6",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/connectors/owned-fixture/status"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-7",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/connectors/catalog"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-8",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/connectors/image/capabilities"
+  },
+  {
+   "body_bytes": 344,
+   "body_sha256": "sha256:a634333758beeacdff9d28556d2ff44ca9a2ce7d2796db19699053275a2cf27e",
+   "elapsed_ms": 1,
+   "id": "actual-route-9",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 200 is neither 404 nor 405: the route is served by the resident version",
+   "status": 200,
+   "url": "http://127.0.0.1:38093/health"
+  },
+  {
+   "body_bytes": 31,
+   "body_sha256": "sha256:e00815b94ef764f37e48802ece8b759012c5bd4464c07884978406b821094162",
+   "elapsed_ms": 1,
+   "id": "actual-route-10",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 200 is neither 404 nor 405: the route is served by the resident version",
+   "status": 200,
+   "url": "http://127.0.0.1:38093/health/connectors"
+  },
+  {
+   "body_bytes": 2,
+   "body_sha256": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+   "elapsed_ms": 0,
+   "id": "actual-route-11",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 200 is neither 404 nor 405: the route is served by the resident version",
+   "status": 200,
+   "url": "http://127.0.0.1:38093/health/metrics"
+  },
+  {
+   "body_bytes": 51,
+   "body_sha256": "sha256:dc187a1c53a4abd9f61d8714f6f7c7f6530970ab6084a705ebda9bc243e8a8f8",
+   "elapsed_ms": 0,
+   "id": "actual-route-12",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 200 is neither 404 nor 405: the route is served by the resident version",
+   "status": 200,
+   "url": "http://127.0.0.1:38093/health/ready"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-13",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/jobs/owned-fixture"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-14",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/v1/models"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-15",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/v1/speech/stt/jobs/owned-fixture"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-16",
+   "method": "PATCH",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/admin/keys/owned-fixture/policy"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-17",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/admin/circuit-breaker/reset"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-18",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/admin/credits/owned-fixture"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-19",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/admin/credits/owned-fixture/gift"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-20",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/admin/credits/holds/sweep"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-21",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/admin/credits/reconcile"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-22",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/admin/keys"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-23",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/connectors/owned-fixture/execute"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-24",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/execute"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-25",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/images/generate"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-26",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/internal/credits/owned-fixture/payment"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-27",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/internal/credits/owned-fixture/reverse"
+  },
+  {
+   "body_bytes": 69,
+   "body_sha256": "sha256:320aedda22e6d46a0a925a5a64c84545a810f80700f5e82e9559a7b324208b1f",
+   "elapsed_ms": 0,
+   "id": "actual-route-28",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 403 is neither 404 nor 405: the route is served by the resident version",
+   "status": 403,
+   "url": "http://127.0.0.1:38093/internal/watcher/circuit-breaker/reset"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-29",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/v1/chat/completions"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-30",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/v1/prompt-cache/prewarm"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-31",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/v1/speech/stt"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-32",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/v1/speech/stt/async"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-33",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/v1/speech/tts"
+  },
+  {
+   "body_bytes": 74,
+   "body_sha256": "sha256:25ff01eb256f5bc0b1b2c98afb58b7a779e2cc41d3826937ddcfbd569ceb0eaf",
+   "elapsed_ms": 0,
+   "id": "actual-route-34",
+   "method": "POST",
+   "outcome": "verified",
+   "reason": "status 401 is neither 404 nor 405: the route is served by the resident version",
+   "status": 401,
+   "url": "http://127.0.0.1:38093/v1/speech/vad"
+  }
+ ],
+ "producer": {
+  "tool": "tools/graph/deploy_gate.py",
+  "version": "1.0.0"
+ },
+ "provisional_until_fable_review": true,
+ "read_only": false,
+ "resident_version": null,
+ "rules": [
+  "C3 a probe that could not run is not_measured, never verified",
+  "C4 probes are read-only unless the plan declares mutating with an owner"
+ ],
+ "schema": "CanaryResult/v1",
+ "subject": {
+  "commit": "680f4b60e782d91888596ae8abc4c88c11354779",
+  "evidence": {
+   "path": "SOURCE.json",
+   "sha256": "ead25b66bf0bd0a9c9dd81c47b50b837b95cacbeedd9dfc6ccc6000764605312",
+   "source_field": "commit"
+  },
+  "schema": "GitCanarySubject/v1",
+  "tree": "126ec7522df0eec5eb73b3010952e18a01663220"
+ }
+}

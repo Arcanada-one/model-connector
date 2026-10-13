@@ -112,7 +112,7 @@ function orderFreeFirst(entries: BuiltEntry[], paidEnabled: boolean): CascadeCan
 /**
  * Build the failover candidate list. Requested model (when it resolves to a declared
  * chat model) is promoted to the front; the free-first chain follows as fallback
- * (the Hermes use case: ask for a model, get a live free model on 429). Aliases
+ * (the gateway use case: ask for a model, get a live free model on 429). Aliases
  * (auto/failover/free) or an unknown id skip promotion and use the pure free-first chain.
  */
 export function buildFailoverCandidates(input: BuildFailoverCandidatesInput): CascadeCandidate[] {

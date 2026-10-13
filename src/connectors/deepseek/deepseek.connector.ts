@@ -1,7 +1,11 @@
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
+import { randomUUID } from 'node:crypto';
+import { deepSeekBodyOptions, parseDeepSeekOptions } from './deepseek-options';
 import {
   ConnectorCapabilities,
   ConnectorRequest,
+  ConnectorResponse,
+  classifyErrorAction,
   ProviderModelMeta,
 } from '../interfaces/connector.interface';
 
@@ -55,11 +59,9 @@ const STATIC_MODELS = ['deepseek-flash', 'deepseek-v4-pro'];
  * id the provider already discontinued once and now honours only as an undocumented
  * alias — a default that fails closed the day that alias is withdrawn.
  *
- * Note for anyone restoring non-reasoning behaviour: `deepseek-flash` cannot be made
- * non-reasoning through `effort` — the live listing advertises `supported_levels:
- * ['low','high','max']` with no "off". The `deepseek-chat` alias is, as measured above,
- * the only route to non-reasoning flash, which is why {@link RETIRED_MODEL_ALIASES}
- * documents it instead of this connector rewriting it away.
+ * Explicit non-thinking now uses `extra.thinking: { type: 'disabled' }` on the
+ * requested model, per https://api-docs.deepseek.com/guides/thinking_mode/.
+ * Omission preserves the provider default; no model alias is substituted here.
  */
 const DEFAULT_MODEL = 'deepseek-flash';
 
@@ -184,6 +186,29 @@ function withListPrice(meta: ProviderModelMeta): ProviderModelMeta {
 export class DeepSeekConnector extends BaseApiConnector {
   readonly name = 'deepseek';
 
+  async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
+    // Direct connector callers and per-connector HTTP routes must also refuse
+    // invalid options before auth, queueing, circuit state or outbound fetch.
+    if (!parseDeepSeekOptions(request).success) {
+      return {
+        id: randomUUID(),
+        connector: this.name,
+        model: request.model || DEFAULT_MODEL,
+        result: '',
+        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+        latencyMs: 0,
+        queueWaitMs: 0,
+        status: 'error',
+        error: {
+          type: 'validation_error',
+          message: 'Invalid DeepSeek thinking/effort options',
+          ...classifyErrorAction('validation_error'),
+        },
+      };
+    }
+    return super.execute(request);
+  }
+
   protected getBaseUrl(): string {
     return process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
   }
@@ -241,6 +266,7 @@ export class DeepSeekConnector extends BaseApiConnector {
       model: request.model || DEFAULT_MODEL,
       messages,
       stream: false,
+      ...deepSeekBodyOptions(request),
     };
     const extra = request.extra ?? {};
     if (extra.max_tokens != null) body.max_tokens = extra.max_tokens;

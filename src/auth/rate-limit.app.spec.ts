@@ -3,6 +3,13 @@ import { Controller, Get, Module } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { Test } from '@nestjs/testing';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { request, IncomingHttpHeaders } from 'node:http';
+import { AddressInfo } from 'node:net';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { isAbsolute, join } from 'node:path';
 
 import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
@@ -159,6 +166,7 @@ class ProbeController {
 class ProbeModule {}
 
 let app: NestFastifyApplication;
+let port: number;
 let redis: FakeRedis;
 let rateLimit: KeyRateLimitService;
 
@@ -172,6 +180,63 @@ beforeAll(async () => {
   );
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
+  await app.listen(0, '127.0.0.1');
+  port = (app.getHttpServer().address() as AddressInfo).port;
+  // Source-only, explicit opt-in to the existing official HTTP producer.
+  // No copied controller, provider path, live identity or store is introduced.
+  if (process.env.BENCH_PROBE_HTTP_CANARY_DIR) {
+    const directory = process.env.BENCH_PROBE_HTTP_CANARY_DIR!;
+    const producer = process.env.BENCH_PROBE_HTTP_PRODUCER!;
+    const python = process.env.BENCH_PROBE_HTTP_PYTHON!;
+    for (const path of [directory, producer, python]) expect(isAbsolute(path)).toBe(true);
+    expect(createHash('sha256').update(readFileSync(producer)).digest('hex')).toBe(
+      process.env.BENCH_PROBE_HTTP_PRODUCER_SHA256,
+    );
+    const plan = JSON.parse(readFileSync(join(directory, 'PLAN.json'), 'utf8'));
+    expect(plan.schema).toBe('CanaryPlan/v1');
+    expect(plan.api_key_env).toBeUndefined();
+    const routes = [
+      ['/probe/abort', 401],
+      ['/probe/execute', 401],
+      ['/probe/health', 200],
+      ['/probe/metrics', 401],
+    ];
+    expect(
+      plan.probes.map((p: { method: string; path: string; expect: { status_in: number[] } }) => [
+        p.method,
+        p.path,
+        p.expect.status_in,
+      ]),
+    ).toEqual(routes.map(([path, status]) => ['GET', path, [status]]));
+    await promisify(execFile)(
+      python,
+      [
+        '-B',
+        producer,
+        'canary',
+        '--plan',
+        'PLAN.json',
+        '--subject-repo',
+        process.cwd(),
+        '--phase',
+        'pre',
+        '--base-url',
+        `http://127.0.0.1:${port}`,
+        '--timeout',
+        '1',
+        '--out',
+        'RESULT.json',
+      ],
+      { cwd: directory, timeout: 10000, maxBuffer: 1048576 },
+    );
+    const result = JSON.parse(readFileSync(join(directory, 'RESULT.json'), 'utf8'));
+    expect(result.schema).toBe('CanaryResult/v1');
+    expect(result.source_binding_errors ?? []).toEqual([]);
+    expect(result.counters).toEqual({ verified: 4, failed: 0, not_measured: 0 });
+    expect(
+      result.probes.map((p: { method: string; status: number }) => [p.method, p.status]),
+    ).toEqual(routes.map(([, status]) => ['GET', status]));
+  }
   redis = moduleRef.get(KEY_RATE_LIMIT_REDIS_CLIENT);
   rateLimit = moduleRef.get(KeyRateLimitService);
 });
@@ -194,11 +259,53 @@ afterEach(() => {
   process.env = { ...OLD_ENV };
 });
 
-function get(path: string, token?: string) {
-  return app.inject({
-    method: 'GET',
-    url: path,
-    ...(token ? { headers: { authorization: `Bearer ${token}` } } : {}),
+function get(
+  path: string,
+  token?: string,
+): Promise<{
+  statusCode: number;
+  headers: IncomingHttpHeaders;
+  json: () => Record<string, unknown>;
+}> {
+  return new Promise((resolve, reject) => {
+    const req = request(
+      {
+        hostname: '127.0.0.1',
+        port,
+        method: 'GET',
+        path: path.startsWith('/') ? path : `/${path}`,
+        agent: false,
+        headers: token ? { authorization: `Bearer ${token}` } : {},
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        let size = 0;
+        res.on('data', (chunk: Buffer) => {
+          size += chunk.length;
+          if (size > 65536) req.destroy(new Error('owned fixture response oversized'));
+          else chunks.push(chunk);
+        });
+        res.on('error', reject);
+        res.on('end', () => {
+          clearTimeout(deadline);
+          if (!res.complete || res.statusCode === undefined) {
+            reject(new Error('owned fixture incomplete response'));
+            return;
+          }
+          resolve({
+            statusCode: res.statusCode,
+            headers: res.headers,
+            json: () => JSON.parse(Buffer.concat(chunks).toString('utf8')),
+          });
+        });
+      },
+    );
+    const deadline = setTimeout(() => req.destroy(new Error('owned fixture deadline')), 2000);
+    req.on('error', (error) => {
+      clearTimeout(deadline);
+      reject(error);
+    });
+    req.end();
   });
 }
 

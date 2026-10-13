@@ -6,7 +6,7 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
     # Security fixes for TRANSITIVE packages (e.g. nanoid via postcss) cannot be
     # applied by editing package.json — they need the lockfile refreshed. Without
     # allowing indirect updates the scheduled runs simply fail, as six arcanadas
@@ -22,7 +22,7 @@ updates:
     directory: "/packages/sdk-ts"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
     # Security fixes for TRANSITIVE packages (e.g. nanoid via postcss) cannot be
     # applied by editing package.json — they need the lockfile refreshed. Without
     # allowing indirect updates the scheduled runs simply fail, as six arcanadas
@@ -38,7 +38,7 @@ updates:
     directory: "/packages/sdk-python"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     # Security fixes for TRANSITIVE packages (e.g. nanoid via postcss) cannot be
     # applied by editing package.json — they need the lockfile refreshed. Without
     # allowing indirect updates the scheduled runs simply fail, as six arcanadas
@@ -54,7 +54,7 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     groups:
       # Grouped so routine upkeep arrives as few reviewable PRs, while
       # majors stay separate — a batched major bump hides breakage.
@@ -64,7 +64,7 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
     # Base images are where OS-level CVEs accumulate, and a digest-pinned FROM
     # cannot rot visibly -- nobody reads a sha256 and notices it is a year old.
     groups:
