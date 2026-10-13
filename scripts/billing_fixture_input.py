@@ -72,6 +72,49 @@ def _object(raw):
         raise InputRefused('protected fixture input refused') from None
 
 
+
+def receive_descriptor_catalogue(root, sealed_input):
+    """Adapt INFRA SealedInputLease's exact catalogue, never a path/CI grant.
+
+    The genuine supplier receives/authenticates its channel before this call.
+    Its existing revalidate() checks the sealed FD bytes. This portion only
+    reconciles those entries with MC's original15 module pins. It cannot return
+    BillingFixtureLease or a filesystem manifest and creates no private files.
+    """
+    try:
+        raw = (root / 'test/fixtures/billing-3a-module-pins.json').read_bytes()
+        if hashlib.sha256(raw).hexdigest() != PINS_SHA256:
+            raise InputRefused('protected descriptor catalogue refused')
+        pins = _object(raw)
+        if type(pins) is not dict or len(pins) != 15:
+            raise InputRefused('protected descriptor catalogue refused')
+        expected = {'files': 15, 'runtime_authorized': False,
+                    'transport_registered': False, 'filesystem_published': False}
+        def observe():
+            observation = sealed_input.revalidate()
+            if (type(observation) is not dict or observation != expected
+                    or type(observation['files']) is not int
+                    or any(type(observation[key]) is not bool for key in
+                           ('runtime_authorized', 'transport_registered', 'filesystem_published'))):
+                raise InputRefused('protected descriptor catalogue refused')
+        observe()
+        entries = sealed_input.entries
+        if type(entries) is not dict or set(entries) != set(pins):
+            raise InputRefused('protected descriptor catalogue refused')
+        for name, entry in entries.items():
+            if (type(entry) is not tuple or len(entry) != 3
+                    or type(entry[0]) is not int or entry[0] < 3
+                    or entry[1] != pins[name]
+                    or type(entry[2]) is not int or not 0 <= entry[2] <= 1000000):
+                raise InputRefused('protected descriptor catalogue refused')
+        observe()
+        return {'schema': 'BillingDescriptorCatalogueReceiving/v1',
+                'modules': 15, 'pins_sha256': PINS_SHA256,
+                'runtime_authorized': False, 'path_lease_available': False}
+    except (AttributeError, OSError, ValueError, TypeError, KeyError):
+        raise InputRefused('protected descriptor catalogue refused') from None
+
+
 def receive(root, acquisition_manifest):
     """Validate source custody only; an input manifest is not acquisition authority."""
     try:

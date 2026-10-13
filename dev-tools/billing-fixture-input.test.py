@@ -9,7 +9,7 @@ import tempfile
 import subprocess
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('billing_input', ROOT / 'scripts/billing_fixture_input.py')
@@ -131,6 +131,55 @@ class Controls(unittest.TestCase):
         self.assertNotIn('private', str(error.exception))
         for fd in opened:
             with self.assertRaises(OSError): os.fstat(fd)
+
+    def descriptor_fixture(self):
+        pins = {'module' + str(i) + '.py': hashlib.sha256(str(i).encode()).hexdigest()
+                for i in range(15)}
+        raw = json.dumps(pins).encode()
+        (self.root / 'test/fixtures/billing-3a-module-pins.json').write_bytes(raw)
+        return pins, hashlib.sha256(raw).hexdigest()
+
+    def test_descriptor_catalogue_receiving_is_never_path_authority(self):
+        import types
+        pins, digest = self.descriptor_fixture()
+        upstream = types.SimpleNamespace(entries={name: (10+i, value, i+1)
+            for i,(name,value) in enumerate(pins.items())}, revalidate=Mock(return_value={
+            'files': 15, 'runtime_authorized': False, 'transport_registered': False,
+            'filesystem_published': False}))
+        with patch.object(subject, 'PINS_SHA256', digest):
+            result = subject.receive_descriptor_catalogue(self.root, upstream)
+        self.assertFalse(result['runtime_authorized']); self.assertFalse(result['path_lease_available'])
+        self.assertNotIn('source_directory', result); self.assertNotIn('entries', result)
+        self.assertEqual(upstream.revalidate.call_count, 2)
+        self.assertEqual(set(upstream.entries), set(pins))
+
+    def test_descriptor_catalogue_missing_extra_wrong_hash_and_size_refuse(self):
+        import types
+        pins,digest = self.descriptor_fixture()
+        valid = {name: (10+i,value,i+1) for i,(name,value) in enumerate(pins.items())}
+        key = next(iter(valid))
+        mutations = [{}, {**valid, 'foreign.py': (90,'a'*64,1)},
+                     {**valid,key:(10,'a'*64,1)}, {**valid,key:(10,pins[key],1000001)}]
+        for entries in mutations:
+            upstream = types.SimpleNamespace(entries=entries,revalidate=Mock(return_value={
+                'files':15,'runtime_authorized':False,'transport_registered':False,
+                'filesystem_published':False}))
+            with self.subTest(entries=len(entries)), patch.object(subject,'PINS_SHA256',digest), \
+                 self.assertRaises(subject.InputRefused):
+                subject.receive_descriptor_catalogue(self.root,upstream)
+
+    def test_descriptor_revalidation_loss_and_authority_claim_refuse(self):
+        import types
+        pins,digest=self.descriptor_fixture()
+        expected={'files':15,'runtime_authorized':False,'transport_registered':False,
+                  'filesystem_published':False}
+        for answers in [[{**expected,'runtime_authorized':True}],
+                        [expected,ValueError('private supplier failure')]]:
+            upstream=types.SimpleNamespace(entries={name:(10+i,value,1)
+                for i,(name,value) in enumerate(pins.items())},revalidate=Mock(side_effect=answers))
+            with patch.object(subject,'PINS_SHA256',digest),self.assertRaises(subject.InputRefused) as error:
+                subject.receive_descriptor_catalogue(self.root,upstream)
+            self.assertNotIn('private',str(error.exception))
 
     def test_exact_source_binds_only_explicit_clean_copy(self):
         clean = {'HOME': '/private', 'PATH': '/usr/bin:/bin'}

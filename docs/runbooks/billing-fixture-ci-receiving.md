@@ -62,3 +62,22 @@ These descriptors remain exclusively consumer-owned. The identity precheck is
 not a synchronization primitive or proof against arbitrary concurrent close/reuse
 of the same inode; no foreign code is authorized to mutate the retained FD table.
 The provider's real descendant/custodian lifetime remains separately required.
+
+## Descriptor catalogue adapter portion
+
+`receive_descriptor_catalogue(root, sealed_input)` reconciles INFRA's existing
+`SealedInputLease.entries` and `revalidate()` API with the exact original fifteen
+module names/digests pinned by MC. It checks before and after receiving, preserves
+supplier FD ownership, writes no files and returns only a source receiving
+receipt with runtime_authorized and path_lease_available false. That receipt is
+not BillingFixtureLease, a manifest, registered transport or native admission.
+
+This implements the catalogue consumer portion. The registered acquire operation
+and genuine UID1001 immutable path-custodian lease remain missing independently.
+The original INFRA owner must invoke receive_billing_descriptors with its actual
+protected connected channel, kernel-bound peer UID/PID/start, exact attempt,
+monotonic total deadline and cleanup reserve, using the admitted current consumer
+digest. Only its registered custodian may compose the returned sealed descriptors
+with the immutable protected path/manifest lifetime. MC's required acquisition
+still refuses until that genuine adapter is supplied. No descriptor receipt or
+synthetic offline source is a substitute for the original protected fifteen bytes.
