@@ -106,7 +106,7 @@ class Controls(unittest.TestCase):
             with self.assertRaises(subject.Refusal): subject.parse_entrypoint(argv)
         with patch.dict(os.environ, {'BILLING_CUSTODIAN_SOURCE': '/foreign',
                 'BILLING_FIXTURE_ADAPTER_READY': '1'}), self.assertRaises(subject.AcquisitionUnavailable):
-            subject.require_billing_acquisition()
+            subject.require_billing_acquisition(self.root, "a" * 40)
 
     def test_maintained_ci_missing_adapter_records_nm_without_suite_dispatch(self):
         scratch = self.root / 'private'; scratch.mkdir(mode=0o700)
@@ -372,7 +372,8 @@ class Controls(unittest.TestCase):
         for unit in subject.UNITS:
             argv = profile['deployables'][unit]['full_test']
             self.assertEqual((ROOT / unit / argv[1]).resolve(), ROOT / 'scripts/graph-full-suite.sh')
-            self.assertEqual(argv[-1], unit)
+            expected_tail = [unit, subject.BILLING_ACQUISITION_REQUIRED] if unit == "." else [unit]
+            self.assertEqual(argv[2:], expected_tail)
             self.assertNotIn('full_test_timeout_seconds', profile['deployables'][unit])
             subject.check_context(self.root, unit, self.root / unit)
         for unit, cwd in [('watcher', self.root), ('../escape', self.root),

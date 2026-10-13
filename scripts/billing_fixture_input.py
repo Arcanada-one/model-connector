@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import stat
+import errno
 
 REVISION = '3a169ddfd2efd1af6ca160247430ffab41df0c64'
 REPOSITORY = 'Arcanada-one/arcanada-workspace'
@@ -16,6 +17,13 @@ PINS_SHA256 = '3fa89a10c8f98d86b872912befd3b945fb9d8a11dfc220e42348fe09fe9ff486'
 
 class InputRefused(Exception):
     """Generic refusal, without private source or credential excerpts."""
+
+
+class CleanupRefused(InputRefused):
+    """Sanitized unresolved descriptor cleanup; never retry lost numeric FDs."""
+    def __init__(self, facts):
+        super().__init__('protected fixture cleanup unknown')
+        self.cleanup_facts = facts
 
 
 def _protected(path):
@@ -127,11 +135,16 @@ class SourceCustody:
                 if (not directory and before.st_nlink != 1) or self._stamp(before) != self.entries[-1][2]:
                     raise InputRefused('protected fixture input refused')
             self.revalidate()
-        except OSError:
-            self.release()
-            raise InputRefused('protected fixture input refused') from None
-        except BaseException:
-            self.release()
+        except BaseException as error:
+            try:
+                self.release()
+            except CleanupRefused as cleanup:
+                category = ('OSError' if isinstance(error, OSError) else
+                            'InputRefused' if isinstance(error, InputRefused) else 'BaseException')
+                cleanup.acquisition_failure = {'kind': 'acquisition', 'class': category, 'status': 'refused'}
+                raise cleanup from None
+            if isinstance(error, OSError):
+                raise InputRefused('protected fixture input refused') from None
             raise
 
     @staticmethod
@@ -156,5 +169,22 @@ class SourceCustody:
         if self.closed: return
         self.closed = True
         entries, self.entries = self.entries, []
-        for _, fd, _ in reversed(entries):
-            os.close(fd)
+        failures = []
+        for _, fd, stamp in reversed(entries):
+            try:
+                # Lost/reused numbers are not authority to close another FD.
+                info = os.fstat(fd)
+                # Content/link metadata can change on the same retained inode;
+                # it is the dispatch revalidator's concern, not FD reuse.
+                if (not isinstance(stamp, tuple) or len(stamp) != 8
+                        or (info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode)) !=
+                           (stamp[0], stamp[1], stat.S_IFMT(stamp[2]))):
+                    failures.append({'status': 'unknown', 'reason': 'descriptor_identity_changed'})
+                    continue
+                os.close(fd)
+            except OSError as error:
+                reason = 'descriptor_missing' if error.errno == errno.EBADF else 'descriptor_close_error'
+                failures.append({'status': 'unknown', 'reason': reason})
+                # Never retry this number: close can release it even on error.
+        if failures:
+            raise CleanupRefused(failures) from None

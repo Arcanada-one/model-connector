@@ -4,6 +4,7 @@ import importlib.util
 import hashlib
 import json
 import os
+import errno
 import tempfile
 import subprocess
 import sys
@@ -52,6 +53,49 @@ class Controls(unittest.TestCase):
         self.assertTrue((self.source / 'journal.py').is_file())
         with self.assertRaises(subject.InputRefused): custody.revalidate()
 
+    def test_closed_descriptor_does_not_stop_remaining_owned_drain(self):
+        custody = subject.SourceCustody(self.root, self.manifest)
+        fds = [fd for _, fd, _ in custody.entries]
+        os.close(fds[-1])
+        with self.assertRaises(subject.CleanupRefused) as error:
+            custody.release()
+        self.assertEqual(error.exception.cleanup_facts,
+                         [{'status': 'unknown', 'reason': 'descriptor_missing'}])
+        for fd in fds:
+            with self.assertRaises(OSError): os.fstat(fd)
+        custody.release()  # closed custody cannot retry lost descriptor numbers
+
+    def test_reused_descriptor_is_not_closed(self):
+        custody = subject.SourceCustody(self.root, self.manifest)
+        fd = custody.entries[-1][1]
+        foreign = os.open('/dev/null', os.O_RDONLY)
+        try:
+            os.dup2(foreign, fd)
+            with self.assertRaises(subject.CleanupRefused) as error:
+                custody.release()
+            self.assertEqual(error.exception.cleanup_facts,
+                             [{'status': 'unknown', 'reason': 'descriptor_identity_changed'}])
+            os.fstat(fd); custody.release(); os.fstat(fd)
+        finally:
+            os.close(fd); os.close(foreign)
+
+    def test_close_error_after_release_is_not_retried_and_other_fds_drain(self):
+        custody = subject.SourceCustody(self.root, self.manifest)
+        fds = [fd for _, fd, _ in custody.entries]
+        real = os.close
+        calls = []
+        def interrupted(fd):
+            calls.append(fd); real(fd)
+            if fd == fds[-1]: raise OSError(errno.EINTR, 'private cleanup excerpt')
+        with patch.object(subject.os, 'close', side_effect=interrupted), \
+             self.assertRaises(subject.CleanupRefused) as error:
+            custody.release()
+        self.assertEqual(calls, list(reversed(fds)))
+        self.assertNotIn('private', str(error.exception))
+        for fd in fds:
+            with self.assertRaises(OSError): os.fstat(fd)
+        custody.release()
+
     def test_retained_custody_rejects_same_bytes_replacement(self):
         custody = subject.SourceCustody(self.root, self.manifest)
         self.addCleanup(custody.release)
@@ -68,6 +112,23 @@ class Controls(unittest.TestCase):
         with patch.object(subject.os, 'open', side_effect=failing):
             with self.assertRaises(subject.InputRefused): subject.SourceCustody(self.root, self.manifest)
         self.assertTrue(opened)
+        for fd in opened:
+            with self.assertRaises(OSError): os.fstat(fd)
+
+    def test_partial_acquire_and_cleanup_failure_keep_both_facts(self):
+        real = os.open
+        opened = []
+        def failing(path, flags, *args, **kwargs):
+            if path == self.source:
+                os.close(opened[0])
+                raise OSError('private acquisition excerpt')
+            fd = real(path, flags, *args, **kwargs); opened.append(fd); return fd
+        with patch.object(subject.os, 'open', side_effect=failing), \
+             self.assertRaises(subject.CleanupRefused) as error:
+            subject.SourceCustody(self.root, self.manifest)
+        self.assertEqual(error.exception.acquisition_failure['class'], 'OSError')
+        self.assertEqual(error.exception.cleanup_facts[0]['reason'], 'descriptor_missing')
+        self.assertNotIn('private', str(error.exception))
         for fd in opened:
             with self.assertRaises(OSError): os.fstat(fd)
 

@@ -5,6 +5,8 @@ unmeasured. No environment flag changes that disposition. The other declarations
 exercise their complete existing offline/owned-loopback contracts, not production.
 """
 from pathlib import Path
+from abc import ABC, abstractmethod
+from enum import Enum
 import hashlib
 import importlib.util
 import json
@@ -39,7 +41,7 @@ class AcquisitionUnavailable(Exception):
     """No installed authorized producer/receiver adapter for this CI attempt."""
 
 
-def require_billing_acquisition():
+def require_billing_acquisition(root, head):
     # There is no registered protected transport on the measured maintained CI
     # callsite. A local manifest or environment flag cannot supply that authority.
     raise AcquisitionUnavailable('billing_fixture_acquisition_adapter_not_supplied')
@@ -76,6 +78,102 @@ def child_failure_fact(error=None, result=None):
         if type(result) is dict: status = result.get('exit_code')
     if type(status) is not int or not -255 <= status <= 255: status = None
     return {'kind': kind, 'class': category, 'status': status}
+
+
+
+class BillingCleanupStatus(Enum):
+    VERIFIED = "verified"
+    UNKNOWN = "unknown"
+
+
+class BillingFixtureLease(ABC):
+    """Owner-authenticated path lifetime, not a manifest or descriptor receipt.
+
+    No concrete registered provider is installed here. The eventual static
+    adapter must validate its current source/UID/job/attempt admission and retain
+    the immutable path through child execution. Test doubles grant no authority.
+    """
+    @abstractmethod
+    def revalidate(self, root, head, consumer_uid):
+        """Return the same absolute protected manifest while admission is valid."""
+
+    @abstractmethod
+    def release(self):
+        """Return VERIFIED only after measured owned-descendant closure/cleanup.
+
+        Return UNKNOWN or raise when closure/cleanup cannot be established.
+        Revalidation must bind held ancestor/manifest dev/inode/hash, current
+        head/UID/job/attempt and immutable mount lifetime, not pathname alone.
+        """
+
+
+class AcquisitionFailure(Refusal):
+    def __init__(self, execution, phase, error):
+        super().__init__('protected fixture acquisition lifecycle failed')
+        self.failure_facts = {
+            'execution': execution,
+            'acquisition': {'phase': phase, **child_failure_fact(error=error)}}
+
+
+def run_with_billing_acquisition(root, head, action):
+    """Retain the genuine provider lease around planning and every child call."""
+    lease = require_billing_acquisition(root, head)
+    if not isinstance(lease, BillingFixtureLease):
+        raise AcquisitionUnavailable('billing_fixture_acquisition_contract_refused')
+    failure = None
+    result = None
+    phase = 'pre_dispatch'
+    try:
+        manifest = lease.revalidate(root, head, os.geteuid())
+        if (type(manifest) is not type(Path()) or not manifest.is_absolute()
+                or '..' in manifest.parts or '\x00' in str(manifest)):
+            raise Refusal('protected fixture lease manifest refused')
+
+        def revalidate():
+            if lease.revalidate(root, head, os.geteuid()) != manifest:
+                raise Refusal('protected fixture lease manifest changed')
+
+        def guarded_executor(*args, **kwargs):
+            revalidate()
+            child = None
+            value = None
+            try:
+                value = execute(*args, **kwargs)
+            except BaseException as error:
+                child = child_failure_fact(error=error)
+            try:
+                revalidate()
+            except BaseException as error:
+                raise AcquisitionFailure(child or child_failure_fact(result=value),
+                                         'post_dispatch', error) from None
+            if child is not None:
+                raise AcquisitionFailure(child, 'child', RuntimeError()) from None
+            return value
+
+        phase = 'execution'
+        result = action(manifest, guarded_executor)
+    except BaseException as error:
+        failure = error
+    try:
+        if lease.release() is not BillingCleanupStatus.VERIFIED:
+            raise Refusal('protected fixture cleanup unknown')
+    except BaseException as error:
+        facts = (failure.failure_facts if isinstance(failure, (AcquisitionFailure, DispatchFailure, SourceCleanupFailure))
+                 else child_failure_fact(error=failure) if failure is not None
+                 else child_failure_fact(result=result))
+        raise AcquisitionFailure(facts, 'release', error) from None
+    if failure is not None:
+        if isinstance(failure, (AcquisitionFailure, DispatchFailure, SourceCleanupFailure)):
+            raise failure from None
+        raise AcquisitionFailure(child_failure_fact(error=failure), phase, failure) from None
+    return result
+
+
+
+class SourceCleanupFailure(Refusal):
+    def __init__(self, execution, cleanup):
+        super().__init__('protected fixture source cleanup unknown')
+        self.failure_facts = {'execution': execution, 'source_cleanup': cleanup}
 
 
 def checked_file(root, relative):
@@ -534,6 +632,7 @@ def run_root_suites(root, suites, scratch, executor=execute, *, billing_fixture_
     receiver = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(receiver)
     custody = None
+    failure, result = None, None
     try:
         custody = receiver.SourceCustody(root, billing_fixture_manifest)
         def guarded_executor(*args, **kwargs):
@@ -542,7 +641,9 @@ def run_root_suites(root, suites, scratch, executor=execute, *, billing_fixture_
             try:
                 result = executor(*args, **kwargs)
             except BaseException as error:
-                child_fact = child_failure_fact(error=error)
+                child_fact = (error.failure_facts
+                    if isinstance(error, (AcquisitionFailure, DispatchFailure, SourceCleanupFailure))
+                    else child_failure_fact(error=error))
             try:
                 custody.revalidate()
             except receiver.InputRefused:
@@ -553,13 +654,30 @@ def run_root_suites(root, suites, scratch, executor=execute, *, billing_fixture_
                 raise DispatchFailure(child_fact,
                     {'kind': 'post_dispatch', 'class': None, 'status': 'verified'}) from None
             return result
-        return _run_root_suites(root, suites, scratch, guarded_executor,
+        result = _run_root_suites(root, suites, scratch, guarded_executor,
             billing_fixture_manifest=billing_fixture_manifest)
-    except receiver.InputRefused:
-        raise Refusal('protected fixture input refused') from None
-    finally:
-        if custody is not None:
+    except receiver.InputRefused as error:
+        cleanup_type = getattr(receiver, 'CleanupRefused', ())
+        failure = (SourceCleanupFailure(error.acquisition_failure, error.cleanup_facts)
+                   if isinstance(error, cleanup_type) and hasattr(error, 'acquisition_failure')
+                   else Refusal('protected fixture input refused'))
+    except BaseException as error:
+        failure = error
+    if custody is not None:
+        try:
             custody.release()
+        except BaseException as error:
+            prior = (failure.failure_facts
+                if isinstance(failure, (AcquisitionFailure, DispatchFailure, SourceCleanupFailure))
+                else child_failure_fact(error=failure) if failure is not None
+                else child_failure_fact(result=result))
+            cleanup_type = getattr(receiver, 'CleanupRefused', ())
+            cleanup = (error.cleanup_facts if isinstance(error, cleanup_type)
+                       else [child_failure_fact(error=error)])
+            raise SourceCleanupFailure(prior, cleanup) from None
+    if failure is not None:
+        raise failure from None
+    return result
 
 
 def _run_root_suites(root, suites, scratch, executor=execute, *, billing_fixture_manifest=None):
@@ -732,19 +850,21 @@ def main():
                                  'owned disposable AppE2E executor qualification',
                                  'broader disposable DB/Redis executor and namespace authority']
     try:
-        if sys.argv[1:] == ['.', BILLING_ACQUISITION_REQUIRED]:
-            require_billing_acquisition()
-        rows = inventory(ROOT)
-        members = members_for(rows, unit)
-        suites = plan(unit, members)
-        document.update(membership=rows, suite_plan=suites)
-        document['results'] = (run_root_suites(ROOT, suites, scratch,
-                              billing_fixture_manifest=billing_fixture_manifest) if unit == '.' else
-                               run_suites(ROOT, unit, suites, scratch))
+        def dispatch(manifest, executor=execute):
+            rows = inventory(ROOT)
+            members = members_for(rows, unit)
+            suites = plan(unit, members)
+            document.update(membership=rows, suite_plan=suites)
+            return (run_root_suites(ROOT, suites, scratch, executor,
+                                   billing_fixture_manifest=manifest) if unit == '.' else
+                    run_suites(ROOT, unit, suites, scratch))
+        document['results'] = (run_with_billing_acquisition(ROOT, head, dispatch)
+            if sys.argv[1:] == ['.', BILLING_ACQUISITION_REQUIRED]
+            else dispatch(billing_fixture_manifest))
         custody = scratch / 'compose-custody.json'
         if custody.is_file():
             document['compose_plugin_custody'] = json.loads(custody.read_text())
-    except DispatchFailure as error:
+    except (DispatchFailure, AcquisitionFailure, SourceCleanupFailure) as error:
         document['refusal'] = str(error)
         document['failure_facts'] = error.failure_facts
         document['remaining'] = ['protected fixture dispatch failure; both bounded facts retained']
