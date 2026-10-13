@@ -395,6 +395,62 @@ expect_fail argana_has_no_root_deploy_script argana run-deploy
 expect_message argana_has_no_root_deploy_script \
   'service has no deploy script: argana'
 
+# Assistant rollback must preserve the existing image and recreate ONLY the
+# application. Postgres/Redis retain their volumes and running ownership.
+assistant_checkout="${state_root}/arcanada-assistant"
+mkdir -p "$assistant_checkout"
+git -C "$assistant_checkout" init -q
+git -C "$assistant_checkout" -c user.email=t@example.invalid -c user.name=t \
+  commit -q --allow-empty -m 'assistant fixture head'
+assistant_head="$(git -C "$assistant_checkout" rev-parse HEAD)"
+printf '%s\n' 'services: {}' >"${assistant_checkout}/docker-compose.yml"
+printf '%s\n' 'FIXTURE_ONLY=1' >"${env_root}/arcanada-assistant.env"
+fake_docker_assistant="${bin_root}/docker-assistant"
+export ASSISTANT_DOCKER_LOG="${fixture_dir}/assistant-docker.log"
+export ASSISTANT_PREVIOUS_PRESENT=1
+cat >"$fake_docker_assistant" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >>"${ASSISTANT_DOCKER_LOG}"
+if [[ "${1:-}" == image && "${2:-}" == inspect ]]; then
+  if [[ "${3:-}" == arcanada-assistant-assistant:previous && "$ASSISTANT_PREVIOUS_PRESENT" != 1 ]]; then
+    exit 1
+  fi
+  if [[ "${4:-}" == --format ]]; then printf '%s\n' 'sha256:fixture-assistant-image'; fi
+fi
+SH
+chmod 0755 "$fake_docker_assistant"
+sed -i -e "s#^readonly DOCKER=.*#readonly DOCKER='${fake_docker_assistant}'#" "$broker"
+: >"$ASSISTANT_DOCKER_LOG"
+expect_pass assistant_release_tag_is_checkout_head arcanada-assistant tag-release
+expect_message assistant_release_tag_is_checkout_head "arcanada-assistant-assistant:${assistant_head}"
+grep -Fxq "tag arcanada-assistant-assistant:latest arcanada-assistant-assistant:${assistant_head}" "$ASSISTANT_DOCKER_LOG"
+expect_pass assistant_image_id_is_checkout_tag arcanada-assistant image-id
+expect_message assistant_image_id_is_checkout_tag 'sha256:fixture-assistant-image'
+grep -Fxq "image inspect arcanada-assistant-assistant:${assistant_head} --format {{.Id}}" "$ASSISTANT_DOCKER_LOG"
+expect_pass assistant_preserves_previous_image arcanada-assistant tag-rotate
+grep -Fxq 'tag arcanada-assistant-assistant:latest arcanada-assistant-assistant:previous' "$ASSISTANT_DOCKER_LOG"
+: >"$ASSISTANT_DOCKER_LOG"
+expect_pass assistant_rollback_recreates_only_assistant arcanada-assistant rollback
+expected_calls="$(printf '%s\n' 'image inspect arcanada-assistant-assistant:previous' 'tag arcanada-assistant-assistant:previous arcanada-assistant-assistant:latest' "compose -p arcanada-assistant -f ${assistant_checkout}/docker-compose.yml up -d --force-recreate assistant")"
+[[ "$(cat "$ASSISTANT_DOCKER_LOG")" == "$expected_calls" ]] || {
+  echo 'FAIL: Assistant rollback image/order/service scope differs' >&2
+  exit 1
+}
+export ASSISTANT_PREVIOUS_PRESENT=0
+: >"$ASSISTANT_DOCKER_LOG"
+expect_fail assistant_missing_previous_refuses arcanada-assistant rollback
+expect_message assistant_missing_previous_refuses 'no :previous image'
+[[ "$(cat "$ASSISTANT_DOCKER_LOG")" == 'image inspect arcanada-assistant-assistant:previous' ]]
+export ASSISTANT_PREVIOUS_PRESENT=1
+: >"$ASSISTANT_DOCKER_LOG"
+expect_fail assistant_rollback_rejects_caller_service arcanada-assistant rollback postgres
+expect_message assistant_rollback_rejects_caller_service 'rollback takes no arguments'
+[[ ! -s "$ASSISTANT_DOCKER_LOG" ]]
+expect_fail unmapped_rollback_stays_refused muneral rollback
+expect_message unmapped_rollback_stays_refused 'service has no rollback recipe: muneral'
+[[ ! -s "$ASSISTANT_DOCKER_LOG" ]]
+
 # The repository is PRIVATE, so `sync` must demand a fetch credential on stdin
 # BEFORE it touches the network. The fake git makes the difference visible: if
 # the AUTH row were missing, sync would fall through to a clone, and the case
