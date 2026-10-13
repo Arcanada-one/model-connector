@@ -91,9 +91,11 @@ export class PrimeExposureEnvelope {
     try {
       const page = spendPageSchema.parse(raw);
       const observedAt = Date.parse(page.observedAt);
+      const currentTime = now.getTime();
       if (
-        now.getTime() - observedAt > 60_000 ||
-        observedAt > now.getTime() + 5_000 ||
+        !Number.isFinite(currentTime) ||
+        currentTime - observedAt > 60_000 ||
+        observedAt > currentTime + 5_000 ||
         page.ledgerId !== this.authority.ledgerId ||
         page.accountId !== this.authority.accountId ||
         page.ownerProfileId !== this.authority.ownerProfileId ||
@@ -154,6 +156,10 @@ export class PrimeExposureEnvelope {
   }
 
   exposure(from: Date, to: Date, runId?: string): bigint {
+    const fromTime = from.getTime();
+    const toTime = to.getTime();
+    if (!Number.isFinite(fromTime) || !Number.isFinite(toTime) || fromTime >= toTime)
+      throw new ProfileSpendError('prime_envelope_window_unavailable');
     const unique = new Map<string, EnvelopeHold & { carry: boolean }>();
     for (const hold of [...this.direct, ...this.mc.values()]) {
       const previous = unique.get(hold.physicalId);
@@ -177,7 +183,7 @@ export class PrimeExposureEnvelope {
       const at = Date.parse(hold.admittedAt);
       if (
         (!runId || hold.runId === runId) &&
-        ((at >= from.getTime() && at < to.getTime()) || (at < from.getTime() && hold.carry))
+        ((at >= fromTime && at < toTime) || (at < fromTime && hold.carry))
       )
         sum += BigInt(hold.heldNano);
     }
