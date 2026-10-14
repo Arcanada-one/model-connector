@@ -39,6 +39,9 @@ const HTTP_ERROR_STATUS: Record<string, HttpStatus> = {
   queue_timeout: HttpStatus.SERVICE_UNAVAILABLE,
   unsupported_modality: HttpStatus.BAD_REQUEST,
   validation_error: HttpStatus.BAD_REQUEST,
+  // ARAS-0058 — an exhausted MC account balance is a caller billing outcome,
+  // not an upstream outage. Keep it distinct from the generic 502 fallback.
+  credit_depleted: HttpStatus.PAYMENT_REQUIRED,
   // CONN-1665 — per-key access policy denial / server-side policy misconfiguration.
   policy_violation: HttpStatus.FORBIDDEN,
   config_error: HttpStatus.INTERNAL_SERVER_ERROR,

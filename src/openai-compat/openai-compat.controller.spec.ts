@@ -110,6 +110,26 @@ describe('OpenAiCompatController.chatCompletions', () => {
     });
   });
 
+  it('credit_depleted abort → 402 with an actionable OpenAI error code', async () => {
+    const message =
+      'Insufficient credits: spendable balance 0 USD does not cover the estimated 0.01 USD for this request. Top up the account to continue.';
+    const { controller } = makeController({
+      complete: () =>
+        Promise.reject(new FailoverAbortError('openrouter', 'model', 'credit_depleted', message)),
+    });
+
+    const error = await controller.chatCompletions(body(), undefined, req).then(
+      () => null,
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(HttpException);
+    expect((error as HttpException).getStatus()).toBe(HttpStatus.PAYMENT_REQUIRED);
+    expect((error as HttpException).getResponse()).toEqual({
+      error: { message, type: 'credit_depleted', code: 'credit_depleted' },
+    });
+  });
+
   it('upstream rate_limited response → 429', async () => {
     const limited: ConnectorResponse = {
       ...success(),

@@ -1,0 +1,62 @@
+{
+  "exemptions": [
+    {
+      "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+      "code": "SPEC_HARNESS_ROUTE_NOT_SHIPPED",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by the cited spec run"
+    },
+    {
+      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "code": "SPEC_HARNESS_ROUTE_NOT_SHIPPED",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by the cited spec run"
+    },
+    {
+      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "code": "SPEC_HARNESS_ROUTE_NOT_SHIPPED",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by the cited spec run"
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "code": "SPEC_HARNESS_ROUTE_NOT_SHIPPED",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by the cited spec run"
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "code": "SPEC_HARNESS_ROUTE_NOT_SHIPPED",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by the cited spec run"
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+      "code": "SPEC_HARNESS_ROUTE_NOT_SHIPPED",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by the cited spec run"
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
+      "code": "SPEC_HARNESS_ROUTE_NOT_SHIPPED",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by the cited spec run"
+    }
+  ],
+  "evidence_ref": {
+    "task_id": "4d578a20-6df5-41ad-abfe-b07ecc202c13",
+    "activity_comment_ids": [
+      "67968f95-8e51-450d-bafd-04694e3b21f7",
+      "42aa74e0-1666-4f65-85ac-5000c2a5165b"
+    ],
+    "content_sha256": "63f538ae355083c4a093318c50a9e9faa30a0ef4146c131b17b74b31bdb63bad",
+    "description": "route-sample-spec-run-8882944.md; 3 declared spec files executed at source head 8882944, 31 tests passed, exit 0"
+  }
+}
