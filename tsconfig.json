@@ -24,6 +24,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test", "**/*.sync-conflict-*"]
+  "include": ["src/**/*", "test/bench-reservation/boundary-http.spec.ts"],
+  "exclude": ["node_modules", "dist", "**/*.sync-conflict-*"]
 }
