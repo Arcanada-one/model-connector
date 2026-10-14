@@ -53,9 +53,25 @@ export const PROVIDER_CREDENTIAL_MANIFEST = {
       'Docker auth volumes cursor-auth (~/.cursor) and cursor-config (~/.config/cursor), or CURSOR_API_KEY',
     probe: 'cursor-agent status (local status command; no generation)',
   },
+  groq: {
+    required: false,
+    source: 'GROQ_API_KEY (protected deployment environment)',
+    probe: 'GET https://api.groq.com/openai/v1/models with the configured credential',
+  },
+  gemini: {
+    required: false,
+    source: 'Gemini CLI auth profile in the process HOME',
+    probe: 'gemini auth status (local status command; no generation)',
+  },
+  'gemini-api': {
+    required: false,
+    source: 'GEMINI_API_KEY (protected deployment environment)',
+    probe: 'GET {GEMINI_API_BASE_URL}/models with x-goog-api-key; no generation',
+  },
 } as const;
 
 type ManifestConnector = keyof typeof PROVIDER_CREDENTIAL_MANIFEST;
+type HttpManifestConnector = 'openrouter' | 'deepseek' | 'groq' | 'gemini-api';
 
 export interface CredentialHealthDeps {
   env: NodeJS.ProcessEnv;
@@ -85,10 +101,15 @@ const runtimeDeps: CredentialHealthDeps = {
 };
 
 function credentialFor(
-  connector: 'openrouter' | 'deepseek',
+  connector: HttpManifestConnector,
   env: NodeJS.ProcessEnv,
 ): string | undefined {
-  const sharedName = connector === 'openrouter' ? 'OPENROUTER_API_KEY' : 'DEEPSEEK_API_KEY';
+  const sharedName = {
+    openrouter: 'OPENROUTER_API_KEY',
+    deepseek: 'DEEPSEEK_API_KEY',
+    groq: 'GROQ_API_KEY',
+    'gemini-api': 'GEMINI_API_KEY',
+  }[connector];
   return env[sharedName]?.trim() || undefined;
 }
 
@@ -96,13 +117,15 @@ async function probeHttpCredential(
   url: string,
   credential: string | undefined,
   fetchImpl: typeof fetch,
+  headerName = 'Authorization',
+  headerValue = (value: string) => `Bearer ${value}`,
 ): Promise<CredentialProbeState> {
   if (!credential) return 'missing';
   let response: Response | undefined;
   try {
     response = await fetchImpl(url, {
       method: 'GET',
-      headers: { Authorization: `Bearer ${credential}` },
+      headers: { [headerName]: headerValue(credential) },
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
     });
     return response.ok
@@ -120,7 +143,7 @@ async function probeHttpCredential(
 function commandState(
   code: number,
   stdout: string,
-  kind: 'claude' | 'cursor',
+  kind: 'claude' | 'cursor' | 'gemini',
 ): CredentialProbeState {
   if (code < 0) return 'unavailable';
   if (code !== 0) return 'missing';
@@ -168,7 +191,10 @@ export class ProviderCredentialHealthService implements ProviderCredentialHealth
     const measured = this.peek(connector);
     if (measured) return measured;
     const hasCredential =
-      connector === 'openrouter' || connector === 'deepseek'
+      connector === 'openrouter' ||
+      connector === 'deepseek' ||
+      connector === 'groq' ||
+      connector === 'gemini-api'
         ? this.httpCredentials(connector).length > 0
         : false;
     return {
@@ -255,7 +281,12 @@ export class ProviderCredentialHealthService implements ProviderCredentialHealth
   }
 
   private httpCredentials(connector: ManifestConnector): string[] {
-    if (connector === 'deepseek' || connector === 'openrouter') {
+    if (
+      connector === 'deepseek' ||
+      connector === 'openrouter' ||
+      connector === 'groq' ||
+      connector === 'gemini-api'
+    ) {
       const shared = credentialFor(connector, this.deps.env);
       return shared ? [shared] : [];
     }
@@ -263,35 +294,63 @@ export class ProviderCredentialHealthService implements ProviderCredentialHealth
   }
 
   private async probeHttp(
-    connector: 'deepseek' | 'openrouter',
+    connector: HttpManifestConnector,
     credential: string,
   ): Promise<CredentialProbeState> {
-    const url =
-      connector === 'deepseek'
-        ? `${(this.deps.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/+$/, '')}/models`
-        : 'https://openrouter.ai/api/v1/models';
-    return probeHttpCredential(url, credential, this.deps.fetchImpl);
+    if (connector === 'deepseek') {
+      const url = `${(this.deps.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/+$/, '')}/models`;
+      return probeHttpCredential(url, credential, this.deps.fetchImpl);
+    }
+    if (connector === 'openrouter') {
+      return probeHttpCredential(
+        'https://openrouter.ai/api/v1/models',
+        credential,
+        this.deps.fetchImpl,
+      );
+    }
+    if (connector === 'groq') {
+      return probeHttpCredential(
+        'https://api.groq.com/openai/v1/models',
+        credential,
+        this.deps.fetchImpl,
+      );
+    }
+    const base = (
+      this.deps.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta'
+    ).replace(/\/+$/, '');
+    return probeHttpCredential(
+      `${base}/models`,
+      credential,
+      this.deps.fetchImpl,
+      'x-goog-api-key',
+      (value) => value,
+    );
   }
 
   private async probe(
     connector: ManifestConnector,
     credentials: string[],
   ): Promise<CredentialProbeState> {
-    if (connector === 'deepseek' || connector === 'openrouter') {
+    if (
+      connector === 'deepseek' ||
+      connector === 'openrouter' ||
+      connector === 'groq' ||
+      connector === 'gemini-api'
+    ) {
       if (!credentials.length) return 'missing';
       return this.probeHttp(connector, credentials[0]);
     }
     const binary =
       connector === 'claude-code'
         ? this.deps.env.CLAUDE_BINARY_PATH || 'claude'
-        : this.deps.env.CURSOR_BINARY_PATH || 'cursor-agent';
-    const args = connector === 'claude-code' ? ['auth', 'status'] : ['status'];
+        : connector === 'cursor'
+          ? this.deps.env.CURSOR_BINARY_PATH || 'cursor-agent'
+          : 'gemini';
+    const args = connector === 'cursor' ? ['status'] : ['auth', 'status'];
     const command = await this.deps.runCommand(binary, args);
-    return commandState(
-      command.code,
-      command.stdout,
-      connector === 'claude-code' ? 'claude' : 'cursor',
-    );
+    const kind =
+      connector === 'claude-code' ? 'claude' : connector === 'cursor' ? 'cursor' : 'gemini';
+    return commandState(command.code, command.stdout, kind);
   }
 }
 

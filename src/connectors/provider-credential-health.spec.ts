@@ -29,7 +29,7 @@ describe('ProviderCredentialHealthService', () => {
 
   it('authenticates OpenRouter from its configured deployment key with a non-generative GET', async () => {
     const secret = 'synthetic-private-test-key';
-    const fetchImpl = vi.fn(async () => new Response(null, { status: 200 }));
+    const fetchImpl = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
     const d = deps({
       env: { OPENROUTER_API_KEY: secret },
       fetchImpl,
@@ -173,5 +173,43 @@ describe('ProviderCredentialHealthService', () => {
     );
 
     await expect(service.check('cursor')).resolves.toMatchObject({ state: 'missing' });
+  });
+
+  it('keeps Groq out of failover until its API credential passes a models probe', async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => new Response(null, { status: 401 }));
+    const service = new ProviderCredentialHealthService(
+      deps({ env: { GROQ_API_KEY: 'synthetic-groq-key' }, fetchImpl }),
+    );
+
+    await expect(service.check('groq')).resolves.toMatchObject({ state: 'rejected' });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'https://api.groq.com/openai/v1/models',
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  it('requires Gemini CLI auth status before admitting the CLI failover connector', async () => {
+    const runCommand = vi.fn(async () => ({ code: 0, stdout: 'Not logged in' }));
+    const service = new ProviderCredentialHealthService(deps({ runCommand }));
+
+    await expect(service.check('gemini')).resolves.toMatchObject({ state: 'missing' });
+    expect(runCommand).toHaveBeenCalledWith('gemini', ['auth', 'status']);
+  });
+
+  it('probes Gemini API keys with x-goog-api-key and no generation request', async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
+    const service = new ProviderCredentialHealthService(
+      deps({ env: { GEMINI_API_KEY: 'synthetic-gemini-key' }, fetchImpl }),
+    );
+
+    await expect(service.check('gemini-api')).resolves.toMatchObject({ state: 'ready' });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'https://generativelanguage.googleapis.com/v1beta/models',
+      expect.objectContaining({
+        method: 'GET',
+        headers: { 'x-goog-api-key': 'synthetic-gemini-key' },
+      }),
+    );
+    expect(String(fetchImpl.mock.calls[0][0])).not.toContain('generateContent');
   });
 });
