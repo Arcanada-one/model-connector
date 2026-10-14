@@ -156,6 +156,14 @@
       "owner": "MC-KEYS",
       "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed). Tracked test-only route/source verifier coverage debt: Muneral 325ab7a5.",
       "muneral_task_id": "325ab7a5"
+    },
+    {
+      "code": "VERIFIER_DEBT",
+      "entity": "code_unit:.github/workflows/governance.yml",
+      "expires_at_utc": "2026-10-20T00:00:00Z",
+      "muneral_task_id": "8466b22b",
+      "owner": "VER",
+      "reason": "The isolated python3 -S workflow verifier lacks PyYAML, so governance.yml cannot be parsed by that verifier in this environment; tracked by VER under Muneral item 8466b22b through 2026-10-20."
     }
   ]
 }
