@@ -1,0 +1,8 @@
+{
+  "captured_at_utc": "2026-10-14T06:33:14.898Z",
+  "commit": "4679d8f640047099485eebf71c62a5da3fcfb57f",
+  "dirty": false,
+  "producer": "MC-KEYS isolated candidate canary; source identity read from Git",
+  "schema": "MeasuredGitSource/v1",
+  "tree": "730d4bed6a8cb65b33a6c92888f490691c1b7980"
+}
