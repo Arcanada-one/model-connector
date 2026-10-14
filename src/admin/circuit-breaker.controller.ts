@@ -24,7 +24,10 @@ export class CircuitBreakerAdminController {
   reset(@Body() body: unknown) {
     let data: ReturnType<typeof ResetCircuitBreakerSchema.parse>;
     try {
-      data = ResetCircuitBreakerSchema.parse(body);
+      // Preserve the documented bodyless reset-all operation. Nest supplies
+      // `undefined` when a POST has no JSON body, while Zod's object schema
+      // expects an object.
+      data = ResetCircuitBreakerSchema.parse(body ?? {});
     } catch (error) {
       if (error instanceof ZodError) throw new BadRequestException(error.issues);
       throw error;
