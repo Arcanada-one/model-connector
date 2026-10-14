@@ -1,0 +1,8 @@
+{
+  "schema": "MeasuredGitSource/v1",
+  "captured_at_utc": "2026-10-14T07:03:29Z",
+  "commit": "c4e6a3cec324bd2a5f3c0da985c21494c5c0f9ed",
+  "tree": "2ffebdae2fbd2f57b2d341f268f1037638886a1b",
+  "dirty": false,
+  "producer": "MC-KEYS isolated candidate canary; source identity read explicitly from the Model Connector clone"
+}

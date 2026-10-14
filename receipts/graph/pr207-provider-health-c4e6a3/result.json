@@ -1,0 +1,259 @@
+{
+  "schema": "CanaryResult/v1",
+  "captured_at_utc": "2026-10-14T07:03:29Z",
+  "environment": "Isolated PostgreSQL 16 and Redis; isolated HOME; loopback-only fake DeepSeek; non-loopback fetch blocked.",
+  "phase": "post",
+  "read_only": false,
+  "mutating_owner": "MC-KEYS candidate-local probe; temporary client key created then revoked",
+  "plan": {
+    "id": "mc-pr207-provider-health-c4e6a3",
+    "path": "plan.json"
+  },
+  "model": "deepseek-flash via loopback-only fake DeepSeek",
+  "resident_version": "c4e6a3cec324bd2a5f3c0da985c21494c5c0f9ed",
+  "source_run_sha256": "1e2aab18fb8ab15a036cba9031d8c51f188d9f5a414caaa6459e03c76d76bf0d",
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "c4e6a3cec324bd2a5f3c0da985c21494c5c0f9ed",
+    "tree": "2ffebdae2fbd2f57b2d341f268f1037638886a1b",
+    "evidence": {
+      "path": "source.json",
+      "sha256": "9e7d1adab4c82f24e5dccd74658a0bc4e6fee4c62c6706dcce377264e29e577f",
+      "source_field": "commit"
+    }
+  },
+  "observed": {
+    "health": {
+      "http_status": 200,
+      "liveness_status": "ok",
+      "providers": [
+        {
+          "connector": "cursor",
+          "required": false,
+          "state": "unavailable"
+        },
+        {
+          "connector": "claude-code",
+          "required": false,
+          "state": "unavailable"
+        },
+        {
+          "connector": "gemini",
+          "required": false,
+          "state": "unavailable"
+        },
+        {
+          "connector": "gemini-api",
+          "required": false,
+          "state": "missing"
+        },
+        {
+          "connector": "openrouter",
+          "required": false,
+          "state": "missing"
+        },
+        {
+          "connector": "groq",
+          "required": false,
+          "state": "missing"
+        },
+        {
+          "connector": "deepseek",
+          "required": true,
+          "state": "ready"
+        }
+      ]
+    },
+    "readiness": {
+      "http_status": 200,
+      "status": "degraded",
+      "checks": {
+        "database": "ok",
+        "requiredProviders": "ok",
+        "optionalProviders": "error"
+      },
+      "providers": [
+        {
+          "connector": "cursor",
+          "required": false,
+          "state": "unavailable"
+        },
+        {
+          "connector": "claude-code",
+          "required": false,
+          "state": "unavailable"
+        },
+        {
+          "connector": "gemini",
+          "required": false,
+          "state": "unavailable"
+        },
+        {
+          "connector": "gemini-api",
+          "required": false,
+          "state": "missing"
+        },
+        {
+          "connector": "openrouter",
+          "required": false,
+          "state": "missing"
+        },
+        {
+          "connector": "groq",
+          "required": false,
+          "state": "missing"
+        },
+        {
+          "connector": "deepseek",
+          "required": true,
+          "state": "ready"
+        }
+      ]
+    },
+    "catalog": {
+      "http_status": 200,
+      "model_count": 41,
+      "visible_owners": [
+        "anthropic",
+        "bedrock",
+        "cerebras",
+        "cloudflare-workers-ai",
+        "codex",
+        "cohere",
+        "deepseek",
+        "fireworks",
+        "grok",
+        "huggingface",
+        "mistral",
+        "openai",
+        "openmodel",
+        "orq",
+        "perplexity",
+        "together",
+        "vertex-generative"
+      ],
+      "unavailable_managed_connectors": [
+        "openrouter",
+        "claude-code",
+        "cursor",
+        "groq",
+        "gemini",
+        "gemini-api"
+      ],
+      "excluded_unavailable_connectors": [
+        "openrouter",
+        "claude-code",
+        "cursor",
+        "groq",
+        "gemini",
+        "gemini-api"
+      ],
+      "owners_outside_managed_canary_scope": [
+        "anthropic",
+        "bedrock",
+        "cerebras",
+        "cloudflare-workers-ai",
+        "codex",
+        "cohere",
+        "fireworks",
+        "grok",
+        "huggingface",
+        "mistral",
+        "openai",
+        "openmodel",
+        "orq",
+        "perplexity",
+        "together",
+        "vertex-generative"
+      ]
+    },
+    "failover": {
+      "http_status": 201,
+      "returned_model": "deepseek-flash",
+      "error_code": null,
+      "candidate_count": 1,
+      "candidate_names": "deepseek:deepseek-flash",
+      "only_deepseek_candidate": true,
+      "blocked_egress_delta": 0,
+      "synthetic_chat_posts": 1
+    },
+    "cleanup": {
+      "revoke_http_status": 204,
+      "readback_http_status": 200,
+      "active": false,
+      "temporary_key_revoked": true
+    }
+  },
+  "probes": [
+    {
+      "id": "get-health-cold-process",
+      "kind": "http",
+      "method": "GET",
+      "path": "/health",
+      "status": 200,
+      "outcome": "verified",
+      "reason": "Process liveness returned 200 and per-provider status rows; required DeepSeek ready, optional uncredentialed connectors unavailable or missing."
+    },
+    {
+      "id": "get-health-ready-cold-process",
+      "kind": "http",
+      "method": "GET",
+      "path": "/health/ready",
+      "status": 200,
+      "outcome": "verified",
+      "reason": "Readiness actively checked credentials; required provider and database passed while optional provider gaps produced degraded status."
+    },
+    {
+      "id": "get-model-catalog",
+      "kind": "http",
+      "method": "GET",
+      "path": "/v1/models",
+      "status": 200,
+      "outcome": "verified",
+      "reason": "The catalog returned 41 models and excluded all six unavailable managed connectors; other provider families were outside this canary scope."
+    },
+    {
+      "id": "post-chat-failover",
+      "kind": "http",
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "status": 201,
+      "outcome": "verified",
+      "reason": "Authenticated request selected exactly one candidate (deepseek:deepseek-flash); one loopback fake-provider POST and zero blocked non-loopback egress attempts."
+    }
+  ],
+  "entity_verdicts": [
+    {
+      "entity": "route:GET /health",
+      "probe_ids": [
+        "get-health-cold-process"
+      ],
+      "verdict": "verified",
+      "reason": "Process liveness returned 200 and per-provider status rows; required DeepSeek ready, optional uncredentialed connectors unavailable or missing."
+    },
+    {
+      "entity": "route:GET /health/ready",
+      "probe_ids": [
+        "get-health-ready-cold-process"
+      ],
+      "verdict": "verified",
+      "reason": "Readiness actively checked credentials; required provider and database passed while optional provider gaps produced degraded status."
+    },
+    {
+      "entity": "route:GET /v1/models",
+      "probe_ids": [
+        "get-model-catalog"
+      ],
+      "verdict": "verified",
+      "reason": "The catalog returned 41 models and excluded all six unavailable managed connectors; other provider families were outside this canary scope."
+    },
+    {
+      "entity": "route:POST /v1/chat/completions",
+      "probe_ids": [
+        "post-chat-failover"
+      ],
+      "verdict": "verified",
+      "reason": "Authenticated request selected exactly one candidate (deepseek:deepseek-flash); one loopback fake-provider POST and zero blocked non-loopback egress attempts."
+    }
+  ]
+}
