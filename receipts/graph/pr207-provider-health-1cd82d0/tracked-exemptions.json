@@ -148,6 +148,51 @@
       "owner": "MC-KEYS",
       "expires_at_utc": "2026-10-28T00:00:00Z",
       "reason": "The exact base full suite and candidate full suite both exit 1 and share credit-gate, aborted-attempt-intent-path and cascade.module.di failures, tracked by Muneral 14d5ee02-ecb8-4d76-a6cb-a69dd0beb8ca. The candidate-only prompt-cache full-suite failure is not attributed to this change: interleaved focused measurement is 1/10 threshold failures on base versus 0/10 on PR; base p95 crossed to 24.999546 ms while PR max was 5.068388 ms. The base-only base-cli failure also shows full-suite failures are not identical; see full-suite-comparison.json. This is a temporary tracked baseline hold, not a pass."
+    },
+    {
+      "entity": "route:GET /keyed",
+      "code": "VERIFIER_DEBT",
+      "owner": "VERIFIER",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "Test-only NestJS harness controller is declared and mounted only inside a *.app.spec.ts Test.createTestingModule fixture, not in the production AppModule; exact verifier v1.4.1 parity at base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 reproduces the same UNREGISTERED_CONTROLLER. Fixture source: src/admin/admin-rate-limit.app.spec.ts:135-145; src/auth/rate-limit.app.spec.ts:115-145. Verifier-classification defect tracked in Muneral 325ab7a5-8bd0-4acc-9761-7ac4ddd93bf8, owner VERIFIER, expiry 2026-10-28. Parity evidence: MC task 0a3f80e9 comment 78631315-6a80-4a75-b6bc-34f2c464adbc.",
+      "muneral_task_id": "325ab7a5-8bd0-4acc-9761-7ac4ddd93bf8",
+      "evidence": "Exact base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 route verifier parity; Muneral task 0a3f80e9 comment 78631315-6a80-4a75-b6bc-34f2c464adbc"
+    },
+    {
+      "entity": "route:GET /probe/abort",
+      "code": "VERIFIER_DEBT",
+      "owner": "VERIFIER",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "Test-only NestJS harness controller is declared and mounted only inside a *.app.spec.ts Test.createTestingModule fixture, not in the production AppModule; exact verifier v1.4.1 parity at base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 reproduces the same UNREGISTERED_CONTROLLER. Fixture source: src/admin/admin-rate-limit.app.spec.ts:135-145; src/auth/rate-limit.app.spec.ts:115-145. Verifier-classification defect tracked in Muneral 325ab7a5-8bd0-4acc-9761-7ac4ddd93bf8, owner VERIFIER, expiry 2026-10-28. Parity evidence: MC task 0a3f80e9 comment 78631315-6a80-4a75-b6bc-34f2c464adbc.",
+      "muneral_task_id": "325ab7a5-8bd0-4acc-9761-7ac4ddd93bf8",
+      "evidence": "Exact base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 route verifier parity; Muneral task 0a3f80e9 comment 78631315-6a80-4a75-b6bc-34f2c464adbc"
+    },
+    {
+      "entity": "route:GET /probe/execute",
+      "code": "VERIFIER_DEBT",
+      "owner": "VERIFIER",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "Test-only NestJS harness controller is declared and mounted only inside a *.app.spec.ts Test.createTestingModule fixture, not in the production AppModule; exact verifier v1.4.1 parity at base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 reproduces the same UNREGISTERED_CONTROLLER. Fixture source: src/admin/admin-rate-limit.app.spec.ts:135-145; src/auth/rate-limit.app.spec.ts:115-145. Verifier-classification defect tracked in Muneral 325ab7a5-8bd0-4acc-9761-7ac4ddd93bf8, owner VERIFIER, expiry 2026-10-28. Parity evidence: MC task 0a3f80e9 comment 78631315-6a80-4a75-b6bc-34f2c464adbc.",
+      "muneral_task_id": "325ab7a5-8bd0-4acc-9761-7ac4ddd93bf8",
+      "evidence": "Exact base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 route verifier parity; Muneral task 0a3f80e9 comment 78631315-6a80-4a75-b6bc-34f2c464adbc"
+    },
+    {
+      "entity": "route:GET /probe/health",
+      "code": "VERIFIER_DEBT",
+      "owner": "VERIFIER",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "Test-only NestJS harness controller is declared and mounted only inside a *.app.spec.ts Test.createTestingModule fixture, not in the production AppModule; exact verifier v1.4.1 parity at base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 reproduces the same UNREGISTERED_CONTROLLER. Fixture source: src/admin/admin-rate-limit.app.spec.ts:135-145; src/auth/rate-limit.app.spec.ts:115-145. Verifier-classification defect tracked in Muneral 325ab7a5-8bd0-4acc-9761-7ac4ddd93bf8, owner VERIFIER, expiry 2026-10-28. Parity evidence: MC task 0a3f80e9 comment 78631315-6a80-4a75-b6bc-34f2c464adbc.",
+      "muneral_task_id": "325ab7a5-8bd0-4acc-9761-7ac4ddd93bf8",
+      "evidence": "Exact base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 route verifier parity; Muneral task 0a3f80e9 comment 78631315-6a80-4a75-b6bc-34f2c464adbc"
+    },
+    {
+      "entity": "route:GET /probe/metrics",
+      "code": "VERIFIER_DEBT",
+      "owner": "VERIFIER",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "Test-only NestJS harness controller is declared and mounted only inside a *.app.spec.ts Test.createTestingModule fixture, not in the production AppModule; exact verifier v1.4.1 parity at base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 reproduces the same UNREGISTERED_CONTROLLER. Fixture source: src/admin/admin-rate-limit.app.spec.ts:135-145; src/auth/rate-limit.app.spec.ts:115-145. Verifier-classification defect tracked in Muneral 325ab7a5-8bd0-4acc-9761-7ac4ddd93bf8, owner VERIFIER, expiry 2026-10-28. Parity evidence: MC task 0a3f80e9 comment 78631315-6a80-4a75-b6bc-34f2c464adbc.",
+      "muneral_task_id": "325ab7a5-8bd0-4acc-9761-7ac4ddd93bf8",
+      "evidence": "Exact base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 route verifier parity; Muneral task 0a3f80e9 comment 78631315-6a80-4a75-b6bc-34f2c464adbc"
     }
   ]
 }
