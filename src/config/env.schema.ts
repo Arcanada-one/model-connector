@@ -141,6 +141,8 @@ export const envSchema = z
     // inspect it. The OpenRouter connector also reads it directly from process.env
     // (pre-schema path) — this declaration brings it into the validated schema.
     OPENROUTER_API_KEY: z.string().optional(),
+    // DeepSeek's API connector and credential probe read this protected runtime key.
+    DEEPSEEK_API_KEY: z.string().optional(),
     OPENROUTER_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     GROQ_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
     GROK_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).default(10),
