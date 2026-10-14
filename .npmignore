@@ -9,6 +9,8 @@ coverage/
 
 # Test sources are not part of the packaged runtime application.
 test/
+**/*.spec.ts
+**/*.test.ts
 
 # SDK build/dev artefacts (CONN-0093)
 packages/sdk-ts/dist/

@@ -32,6 +32,15 @@ describe('CircuitBreakerAdminController', () => {
       });
     });
 
+    it('should reset all connectors when the request body is omitted', () => {
+      mockConnectorsService.resetCircuitBreaker.mockReturnValue([]);
+
+      const result = controller.reset(undefined);
+
+      expect(mockConnectorsService.resetCircuitBreaker).toHaveBeenCalledWith(undefined, undefined);
+      expect(result).toEqual({ reset: [], count: 0 });
+    });
+
     it('should reset specific connector and model', () => {
       mockConnectorsService.resetCircuitBreaker.mockReturnValue([
         { connector: 'openrouter', model: 'gpt-oss-20b:free', previousState: 'half_open' },
