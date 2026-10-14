@@ -33,7 +33,9 @@ class Controls(unittest.TestCase):
         profile = json.loads((ROOT / '.arcana/verify.json').read_text())
         for unit in subject.UNITS:
             argv = profile['deployables'][unit]['full_test']
-            self.assertEqual((ROOT / unit / argv[1]).resolve(), ROOT / 'scripts/graph-full-suite.sh')
+            self.assertEqual(
+                (ROOT / unit / argv[1]).resolve(), ROOT / 'scripts/graph-full-suite-isolated.sh'
+            )
             self.assertEqual(argv[-1], unit)
             self.assertNotIn('full_test_timeout_seconds', profile['deployables'][unit])
             subject.check_context(self.root, unit, self.root / unit)
@@ -288,6 +290,34 @@ class Controls(unittest.TestCase):
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn('FULL_FALLBACK_TEST_REFUSED: invalid source/path/environment', result.stderr)
                 self.assertEqual(list(self.root.rglob('execution.json')), [])
+
+    def test_isolated_entrypoint_provisions_private_tmpdir_and_preserves_exit_status(self):
+        scripts = self.root / 'scripts'
+        scripts.mkdir()
+        (scripts / 'graph-full-suite-isolated.sh').write_bytes(
+            (ROOT / 'scripts/graph-full-suite-isolated.sh').read_bytes())
+        runner = scripts / 'graph-full-suite.sh'
+        runner.write_text(
+            '#!/usr/bin/env bash\n'
+            '[[ "$1" == . ]] || exit 9\n'
+            'printf "%s\\n%s\\n%s\\n" "$TMPDIR" "$HOME" "$(stat -c %a "$TMPDIR")"\n'
+            '[[ -z "${FIXTURE_SECRET:-}" ]] || exit 10\n'
+            'exit 23\n'
+        )
+        result = subprocess.run(
+            ['bash', 'scripts/graph-full-suite-isolated.sh', '.'],
+            cwd=self.root,
+            env={'PATH': os.defpath, 'HOME': str(self.root), 'FIXTURE_SECRET': 'must-not-leak'},
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        self.assertEqual(result.returncode, 23, result.stdout + result.stderr)
+        tempdir, home, mode = result.stdout.strip().splitlines()
+        self.assertEqual(mode, '700')
+        self.assertEqual(Path(home).parent, Path(tempdir))
+        self.assertFalse(Path(tempdir).exists())
+        self.assertNotIn('must-not-leak', result.stdout + result.stderr)
 
     def test_actual_root_entrypoint_dispatches_local_regression_retains_app_hold(self):
         self.root_entrypoint_fixture()
