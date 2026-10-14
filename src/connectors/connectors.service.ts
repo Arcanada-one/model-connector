@@ -290,15 +290,28 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     policy: ApiKeyPolicy | null,
   ): Promise<boolean> {
     const envName = this.policyService.resolveProviderKeyEnv(policy, connector);
+    const credentialName =
+      envName ??
+      (connector === 'openrouter'
+        ? 'OPENROUTER_API_KEY'
+        : connector === 'deepseek'
+          ? 'DEEPSEEK_API_KEY'
+          : undefined);
+    if (credentialName && !process.env[credentialName]?.trim()) return false;
     if (envName) {
-      return Boolean(process.env[envName]?.trim());
+      const credential = process.env[envName]?.trim();
+      if (!credential) return false;
+      if (!this.providerCredentialHealth.isManaged(connector)) return true;
+      const measured = await this.providerCredentialHealth.checkCredential(connector, credential);
+      return measured?.state === 'ready';
     }
-    if (connector === 'openrouter') return Boolean(process.env.OPENROUTER_API_KEY?.trim());
-    if (connector === 'deepseek') return Boolean(process.env.DEEPSEEK_API_KEY?.trim());
     if (!this.providerCredentialHealth.isManaged(connector)) return true;
-    const measured = this.providerCredentialHealth.peek(connector)?.state;
-    // An absent measurement or a transient probe outage is not proof of bad credentials.
-    return measured !== 'missing' && measured !== 'rejected';
+    // A cold process must probe before its first dispatch. Treating an empty
+    // cache as ready allowed unauthenticated providers into failover; treating
+    // it as unavailable permanently rejected valid providers after a restart.
+    // The health service single-flights and caches this non-generative check.
+    const measured = await this.providerCredentialHealth.check(connector);
+    return measured?.state === 'ready';
   }
 
   async canUseForPolicy(connector: string, policy: ApiKeyPolicy | null): Promise<boolean> {
@@ -318,8 +331,11 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
   private async canAdvertiseForPolicy(name: string, policy: ApiKeyPolicy | null): Promise<boolean> {
     if (!this.canRead(name)) return false;
     const envName = this.policyService.resolveProviderKeyEnv(policy, name);
-    if (envName) return Boolean(process.env[envName]?.trim());
-    return this.canAdvertise(name);
+    if (envName && !process.env[envName]?.trim()) return false;
+    if (this.providerCredentialHealth.isManaged(name)) {
+      return this.isCredentialReadyForPolicy(name, policy);
+    }
+    return envName ? true : this.canAdvertise(name);
   }
 
   /**
@@ -416,8 +432,9 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
    * (fail-closed). A malformed stored policy exposes nothing.
    */
   async listCapabilitiesForKey(apiKeyId?: string): Promise<ConnectorCapabilities[]> {
-    // Resolve the key binding before constructing the public catalog. Catalog
-    // requests read cached auth measurements and never probe upstream inline.
+    // Resolve the key binding before constructing the public catalog. The
+    // selected profile credential may need a bounded, non-generative auth
+    // probe; the health service single-flights and caches it.
     let policy: ApiKeyPolicy | null;
     if (apiKeyId) {
       try {

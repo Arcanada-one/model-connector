@@ -230,7 +230,7 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
     expect(resp.status).toBe('success');
   });
 
-  it('cold process allows a credential-backed CLI dispatch before its background auth probe runs', async () => {
+  it('cold process probes CLI auth before the first dispatch and allows a valid credential', async () => {
     const runCommand = vi.fn(async () => ({ code: 0, stdout: '{"loggedIn":true}' }));
     const providerCredentialHealth = new ProviderCredentialHealthService({
       env: {},
@@ -252,7 +252,126 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
 
     expect(response.status).toBe('success');
     expect(claude.calls).toBe(1);
-    expect(runCommand).not.toHaveBeenCalled();
+    expect(runCommand).toHaveBeenCalledTimes(1);
+    expect(runCommand).toHaveBeenCalledWith('claude', ['auth', 'status']);
+  });
+
+  it('cold process refuses a failed CLI auth probe before dispatch', async () => {
+    const runCommand = vi.fn(async () => ({
+      code: 0,
+      stdout: '{"loggedIn":false,"authMethod":"oauth_token"}',
+    }));
+    const providerCredentialHealth = new ProviderCredentialHealthService({
+      env: {},
+      fetchImpl: vi.fn(async () => new Response(null, { status: 200 })),
+      runCommand,
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const claude = new FakeConnector('claude-code', 'claude-model', () =>
+      ok('claude-code', 'claude-model'),
+    );
+    const { service } = buildStack([claude], { providerCredentialHealth });
+
+    const response = await service.execute(
+      'claude-code',
+      { prompt: 'first cold-start dispatch', model: 'claude-model' },
+      API_KEY_ID,
+    );
+
+    expect(response.status).toBe('error');
+    expect(response.error?.type).toBe('config_error');
+    expect(runCommand).toHaveBeenCalledTimes(1);
+    expect(claude.calls).toBe(0);
+  });
+
+  it('does not report a configured required provider that is not registered', async () => {
+    const providerCredentialHealth = new ProviderCredentialHealthService({
+      env: { DEEPSEEK_API_KEY: 'synthetic-deepseek-key' },
+      fetchImpl: vi.fn(async () => new Response(null, { status: 200 })),
+      runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const { service } = buildStack([], { providerCredentialHealth });
+
+    expect(service.getProviderCredentialStatus()).toEqual([]);
+  });
+
+  it('probes the exact mapped OpenRouter credential and never falls back to a shared key', async () => {
+    process.env.OPENROUTER_API_KEY = 'synthetic-shared-good-key';
+    process.env.OPENROUTER_API_KEY_EMAIL_AGENT = 'synthetic-dedicated-invalid-key';
+    const fetchImpl = vi.fn<typeof fetch>(async (_input, init) => {
+      const authorization = new Headers(init?.headers).get('authorization');
+      return new Response(null, {
+        status: authorization === 'Bearer synthetic-dedicated-invalid-key' ? 401 : 200,
+      });
+    });
+    const providerCredentialHealth = new ProviderCredentialHealthService({
+      env: { OPENROUTER_API_KEY: 'synthetic-shared-good-key' },
+      fetchImpl,
+      runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const openrouter = new FakeConnector('openrouter', 'free-model', () =>
+      ok('openrouter', 'free-model'),
+    );
+    const { service } = buildStack([openrouter], {
+      policy: {
+        policyVersion: 1,
+        providers: ['openrouter'],
+        providerKeys: { openrouter: 'OPENROUTER_API_KEY_EMAIL_AGENT' },
+      },
+      providerCredentialHealth,
+    });
+
+    const visible = await service.listCapabilitiesForKey(API_KEY_ID);
+    const response = await service.execute(
+      'openrouter',
+      { prompt: 'probe exact provider binding', model: 'free-model' },
+      API_KEY_ID,
+    );
+
+    expect(visible).toEqual([]);
+    expect(response.error?.type).toBe('config_error');
+    expect(openrouter.calls).toBe(0);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(new Headers(fetchImpl.mock.calls[0][1]?.headers).get('authorization')).toBe(
+      'Bearer synthetic-dedicated-invalid-key',
+    );
+  });
+
+  it('probes and advertises a valid profile-only OpenRouter key without a shared key', async () => {
+    delete process.env.OPENROUTER_API_KEY;
+    process.env.OPENROUTER_API_KEY_EMAIL_AGENT = 'synthetic-dedicated-valid-key';
+    const fetchImpl = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
+    const providerCredentialHealth = new ProviderCredentialHealthService({
+      env: {},
+      fetchImpl,
+      runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const openrouter = new FakeConnector('openrouter', 'free-model', () =>
+      ok('openrouter', 'free-model'),
+    );
+    const { service } = buildStack([openrouter], {
+      policy: {
+        policyVersion: 1,
+        providers: ['openrouter'],
+        providerKeys: { openrouter: 'OPENROUTER_API_KEY_EMAIL_AGENT' },
+      },
+      providerCredentialHealth,
+    });
+
+    const visible = await service.listCapabilitiesForKey(API_KEY_ID);
+    const response = await service.execute(
+      'openrouter',
+      { prompt: 'valid profile key', model: 'free-model' },
+      API_KEY_ID,
+    );
+
+    expect(visible.map((item) => item.name)).toEqual(['openrouter']);
+    expect(response.status).toBe('success');
+    expect(openrouter.seenOverrides).toEqual(['synthetic-dedicated-valid-key']);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   describe('precedence matrix: per-key policy AND global PROVIDER_ACCESS', () => {
