@@ -813,6 +813,40 @@ def execution_code(results):
             127 if any(r['verdict'] == 'not_measured' for r in results) else 0)
 
 
+def private_temp_root():
+    """Use an explicitly supplied private TMPDIR or create one under the system temp root."""
+    if 'TMPDIR' in os.environ:
+        value = os.environ['TMPDIR']
+        if not value:
+            raise Refusal('owned private TMPDIR required')
+        candidate = Path(value)
+        info = candidate.lstat()
+        if (candidate.is_symlink() or not stat.S_ISDIR(info.st_mode)
+                or info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) & 0o077):
+            raise Refusal('owned private TMPDIR required')
+        return candidate
+
+    # The graph verifier deliberately supplies a clean environment. A missing
+    # TMPDIR therefore means this runner must create its own private workspace.
+    parent = Path(tempfile.gettempdir())
+    for part in (parent, *parent.parents):
+        if part.is_symlink():
+            raise Refusal('safe system temporary root required')
+    info = parent.lstat()
+    mode = stat.S_IMODE(info.st_mode)
+    shared_sticky_parent = bool(mode & stat.S_ISVTX and mode & stat.S_IWOTH)
+    if (not stat.S_ISDIR(info.st_mode)
+            or (info.st_uid != os.geteuid() and not shared_sticky_parent)):
+        raise Refusal('safe system temporary root required')
+    candidate = Path(tempfile.mkdtemp(prefix='mc-private-tmp-', dir=parent))
+    os.chmod(candidate, 0o700)
+    info = candidate.lstat()
+    if (candidate.is_symlink() or not stat.S_ISDIR(info.st_mode)
+            or info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o700):
+        raise Refusal('owned private TMPDIR required')
+    return candidate
+
+
 def parse_entrypoint(arguments):
     """Explicit fixture locator only; neither ambient input nor acquisition grant."""
     if arguments == ['.', BILLING_ACQUISITION_REQUIRED]:
@@ -830,14 +864,7 @@ def parse_entrypoint(arguments):
 def main():
     unit, billing_fixture_manifest = parse_entrypoint(sys.argv[1:])
     check_context(ROOT, unit, Path.cwd())
-    temp_value = os.environ.get('TMPDIR')
-    if not temp_value:
-        raise Refusal('owned private TMPDIR required')
-    temp = Path(temp_value)
-    info = temp.lstat()
-    if (temp.is_symlink() or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid()
-            or stat.S_IMODE(info.st_mode) & 0o077):
-        raise Refusal('owned private TMPDIR required')
+    temp = private_temp_root()
     scratch = Path(tempfile.mkdtemp(prefix='mc-full-' + unit.replace('/', '-') + '-', dir=temp))
     os.chmod(scratch, 0o700)
     head = subprocess.run(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'],

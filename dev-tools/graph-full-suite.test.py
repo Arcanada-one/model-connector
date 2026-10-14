@@ -3,6 +3,8 @@ from pathlib import Path
 import importlib.util
 import json
 import os
+import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -608,7 +610,7 @@ class Controls(unittest.TestCase):
         subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture',
                         '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture'], check=True)
 
-    def test_actual_root_entrypoint_refuses_missing_empty_public_and_symlink_tmpdir(self):
+    def test_actual_root_entrypoint_refuses_empty_public_and_symlink_tmpdir(self):
         self.root_entrypoint_fixture()
         public = self.root / 'public'
         public.mkdir(mode=0o755)
@@ -617,16 +619,41 @@ class Controls(unittest.TestCase):
         private.mkdir(mode=0o700)
         link = self.root / 'link'
         link.symlink_to(private, target_is_directory=True)
-        for value in [None, '', str(public), str(link)]:
+        for value in ['', str(public), str(link)]:
             env = {'PATH': os.defpath, 'HOME': str(self.root)}
-            if value is not None:
-                env['TMPDIR'] = value
+            env['TMPDIR'] = value
             with self.subTest(TMPDIR=value):
                 result = subprocess.run(['bash', 'scripts/graph-full-suite.sh', '.'], cwd=self.root,
                                         env=env, capture_output=True, text=True, timeout=10)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn('FULL_FALLBACK_TEST_REFUSED: invalid source/path/environment', result.stderr)
                 self.assertEqual(list(self.root.rglob('execution.json')), [])
+
+    def test_actual_root_entrypoint_creates_private_tmpdir_when_environment_is_clean(self):
+        self.root_entrypoint_fixture()
+        result = subprocess.run(['bash', 'scripts/graph-full-suite.sh', '.'], cwd=self.root,
+                                env={'PATH': os.defpath, 'HOME': str(self.root)},
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 127, result.stderr)
+        self.assertIn('FULL_FALLBACK_TEST_NOT_MEASURED: complete maintained obligations not executed',
+                      result.stdout)
+        line = next(line for line in result.stdout.splitlines()
+                    if line.startswith('Full-suite evidence: '))
+        evidence = Path(line.removeprefix('Full-suite evidence: '))
+        private_root = evidence.parents[1]
+        try:
+            info = private_root.lstat()
+            self.assertFalse(private_root.is_symlink())
+            self.assertTrue(stat.S_ISDIR(info.st_mode))
+            self.assertEqual(info.st_uid, os.geteuid())
+            self.assertEqual(stat.S_IMODE(info.st_mode), 0o700)
+            self.assertTrue(evidence.is_file())
+            report = json.loads(evidence.read_text())
+            self.assertEqual(report['exit_code'], 127)
+            self.assertEqual([r['verdict'] for r in report['results']], ['not_measured', 'verified'])
+            self.assertEqual(report['results'][1]['executions'][0]['counts']['passed'], 1)
+        finally:
+            shutil.rmtree(private_root)
 
     def test_actual_root_entrypoint_dispatches_local_regression_retains_app_hold(self):
         self.root_entrypoint_fixture()
