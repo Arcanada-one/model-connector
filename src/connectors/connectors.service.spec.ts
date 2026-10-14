@@ -14,6 +14,7 @@ import {
 import type { CatalogRepositoryLike, ModelCatalogRow } from './catalog.repository';
 import type { ICatalogRedis } from './catalog-redis.token';
 import { ClaudeCodeConnector } from './claude-code/claude-code.connector';
+import { ProviderCredentialHealthService } from './provider-credential-health';
 
 // CONN-0245 — DB-as-source-of-truth catalog: builds a narrow CatalogRepository
 // mock whose `findAll()` returns rows equivalent to a given entry list (via
@@ -131,6 +132,45 @@ describe('ConnectorsService', () => {
   it('should register and get a connector', () => {
     service.register(mockConnector);
     expect(service.get('test')).toBe(mockConnector);
+  });
+
+  it('hides an unauthenticated advertised provider from /v1/models and failover candidates', async () => {
+    const credentialHealth = new ProviderCredentialHealthService({
+      env: {},
+      fetchImpl: vi.fn(async () => new Response(null, { status: 200 })),
+      runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const gatedService = new ConnectorsService(
+      mockQueue as unknown as Queue,
+      mockPrisma as unknown as PrismaService,
+      mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+      new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+      emptyModalityCatalog,
+      noopCatalogRepo,
+      noopCatalogRedis,
+      undefined,
+      undefined,
+      undefined,
+      credentialHealth,
+    );
+    gatedService.register({
+      ...mockConnector,
+      name: 'openrouter',
+      getCapabilities: () => ({
+        name: 'openrouter',
+        type: 'api',
+        models: ['synthetic/model'],
+        supportsStreaming: false,
+        supportsJsonSchema: false,
+        supportsTools: false,
+        maxTimeout: 10_000,
+      }),
+    });
+    await credentialHealth.check('openrouter');
+
+    expect(await gatedService.listCapabilitiesForKey()).toEqual([]);
+    expect(gatedService.canUse('openrouter')).toBe(false);
   });
 
   it('persists the CLI failure subtype and cause through execute and the Request write', async () => {

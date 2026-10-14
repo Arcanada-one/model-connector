@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Res } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import { Public } from '../auth/public.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { MetricsService } from '../metrics/metrics.service';
@@ -15,16 +16,21 @@ export class HealthController {
 
   @Get()
   @Public()
-  health() {
+  async health(@Res({ passthrough: true }) reply: FastifyReply) {
+    const providers = await this.connectorsService.checkProviderCredentials();
+    const requiredUnavailable = providers.some((provider) => provider.required && provider.state !== 'ready');
+    const optionalUnavailable = providers.some((provider) => !provider.required && provider.state !== 'ready');
+    const status = requiredUnavailable ? 'error' : optionalUnavailable ? 'degraded' : 'ok';
+    reply.statusCode = requiredUnavailable ? 503 : 200;
     // A2-228: `build` names the commit this process was built from. Measurements taken through
     // this service record it, so a number can never again be attributed to the wrong binary —
     // see src/health/build-info.ts for why `sha: null` is not_measured rather than a pass.
-    return { status: 'ok', timestamp: new Date().toISOString(), build: buildInfo() };
+    return { status, timestamp: new Date().toISOString(), build: buildInfo(), providers };
   }
 
   @Get('ready')
   @Public()
-  async ready() {
+  async ready(@Res({ passthrough: true }) reply: FastifyReply) {
     const checks: Record<string, 'ok' | 'error'> = {};
 
     try {
@@ -34,8 +40,19 @@ export class HealthController {
       checks.database = 'error';
     }
 
-    const allOk = Object.values(checks).every((v) => v === 'ok');
-    return { status: allOk ? 'ok' : 'degraded', checks };
+    const providers = await this.connectorsService.checkProviderCredentials();
+    const requiredUnavailable = providers.some((provider) => provider.required && provider.state !== 'ready');
+    const optionalUnavailable = providers.some((provider) => !provider.required && provider.state !== 'ready');
+    checks.requiredProviders = requiredUnavailable ? 'error' : 'ok';
+    checks.optionalProviders = optionalUnavailable ? 'error' : 'ok';
+
+    reply.statusCode = requiredUnavailable ? 503 : 200;
+    const status = requiredUnavailable
+      ? 'error'
+      : checks.database === 'error' || optionalUnavailable
+        ? 'degraded'
+        : 'ok';
+    return { status, checks, providers };
   }
 
   @Get('metrics')

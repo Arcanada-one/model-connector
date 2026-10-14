@@ -16,6 +16,7 @@ describe('HealthController', () => {
     listNames: vi.fn().mockReturnValue(['claude-code', 'cursor']),
     getStatus: vi.fn(),
     get: vi.fn(),
+    checkProviderCredentials: vi.fn().mockResolvedValue([]),
   };
 
   let controller: HealthController;
@@ -29,17 +30,21 @@ describe('HealthController', () => {
     vi.clearAllMocks();
   });
 
-  it('should return ok for health', () => {
-    const result = controller.health();
+  const mockReply = () => ({ statusCode: 200 });
+
+  it('should return ok for health', async () => {
+    const reply = mockReply();
+    const result = await controller.health(reply as never);
     expect(result.status).toBe('ok');
     expect(result.timestamp).toBeDefined();
+    expect(reply.statusCode).toBe(200);
   });
 
   // A2-228: without this, a client measuring through the service cannot tell which build answered
   // it — which is how A2-221 recorded 36 calls against a month-old binary and said only which
   // address it had called.
-  it('names the build it was made from, or says it cannot', () => {
-    const result = controller.health();
+  it('names the build it was made from, or says it cannot', async () => {
+    const result = await controller.health(mockReply() as never);
     expect(result.build).toBeDefined();
     expect(result.build).toHaveProperty('sha');
     expect(result.build).toHaveProperty('source');
@@ -47,16 +52,65 @@ describe('HealthController', () => {
 
   it('should return ready when DB is available', async () => {
     mockPrisma.$queryRaw.mockResolvedValue([{ 1: 1 }]);
-    const result = await controller.ready();
+    const reply = mockReply();
+    const result = await controller.ready(reply as never);
     expect(result.status).toBe('ok');
     expect(result.checks.database).toBe('ok');
+    expect(reply.statusCode).toBe(200);
   });
 
   it('should return degraded when DB is down', async () => {
     mockPrisma.$queryRaw.mockRejectedValue(new Error('connection refused'));
-    const result = await controller.ready();
+    const result = await controller.ready(mockReply() as never);
     expect(result.status).toBe('degraded');
     expect(result.checks.database).toBe('error');
+  });
+
+  it('degrades but stays HTTP 200 when optional providers have no credential', async () => {
+    mockConnectors.checkProviderCredentials.mockResolvedValue([
+      { connector: 'openrouter', required: false, state: 'missing' },
+    ]);
+    const reply = mockReply();
+
+    const result = await controller.health(reply as never);
+
+    expect(result.status).toBe('degraded');
+    expect(result.providers[0].connector).toBe('openrouter');
+    expect(reply.statusCode).toBe(200);
+  });
+
+  it('fails health with HTTP 503 when the required DeepSeek credential is missing', async () => {
+    mockConnectors.checkProviderCredentials.mockResolvedValue([
+      { connector: 'deepseek', required: true, state: 'missing' },
+    ]);
+    const reply = mockReply();
+
+    const result = await controller.health(reply as never);
+
+    expect(result.status).toBe('error');
+    expect(reply.statusCode).toBe(503);
+  });
+
+  it('fails readiness with HTTP 503 only for a missing required provider', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([{ 1: 1 }]);
+    mockConnectors.checkProviderCredentials.mockResolvedValue([
+      { connector: 'openrouter', required: false, state: 'missing' },
+      { connector: 'deepseek', required: true, state: 'ready' },
+    ]);
+    const reply = mockReply();
+
+    const result = await controller.ready(reply as never);
+
+    expect(result.status).toBe('degraded');
+    expect(reply.statusCode).toBe(200);
+
+    mockConnectors.checkProviderCredentials.mockResolvedValue([
+      { connector: 'deepseek', required: true, state: 'rejected' },
+    ]);
+    const failedReply = mockReply();
+    const failed = await controller.ready(failedReply as never);
+    expect(failed.status).toBe('error');
+    expect(failedReply.statusCode).toBe(503);
   });
 
   it('should return metrics from /health/metrics', () => {

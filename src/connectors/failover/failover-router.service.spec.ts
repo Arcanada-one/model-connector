@@ -51,10 +51,15 @@ const CAPS = [
   caps('groq', 'llama-3.3-70b-versatile', true),
 ];
 
-function makeService(execImpl: (connector: string) => Promise<ConnectorResponse>) {
+function makeService(
+  execImpl: (connector: string) => Promise<ConnectorResponse>,
+  unavailable: string[] = [],
+) {
   const execute = vi.fn((connector: string) => execImpl(connector));
   const mockConnectors = {
     listCapabilities: vi.fn(() => CAPS),
+    checkProviderCredentials: vi.fn(async () => []),
+    canUse: vi.fn((connector: string) => !unavailable.includes(connector)),
     execute,
     // CONN-1665 — failover consults the per-key policy before dispatch; these
     // tests exercise legacy (policy-less) keys.
@@ -111,5 +116,26 @@ describe('FailoverRouterService.complete', () => {
   it('all providers 429 → FailoverExhaustedError', async () => {
     const { service } = makeService((c) => Promise.resolve(rateLimited(c, 'x')));
     await expect(service.complete({ prompt: 'ping' }, 'k')).rejects.toThrow(FailoverExhaustedError);
+  });
+
+  it('does not include a credential-failing provider in failover candidates', async () => {
+    const openrouter = caps('openrouter', 'meta-llama/llama-4-maverick', true);
+    const execute = vi.fn(async (connector: string) => success(connector, 'model'));
+    const mockConnectors = {
+      listCapabilities: vi.fn(() => [...CAPS, openrouter]),
+      checkProviderCredentials: vi.fn(async () => []),
+      canUse: vi.fn((connector: string) => connector !== 'openrouter'),
+      execute,
+      getKeyPolicy: vi.fn(async () => null),
+      isCandidateAllowedByPolicy: vi.fn(async () => true),
+    };
+    const service = new FailoverRouterService(
+      mockConnectors as unknown as ConstructorParameters<typeof FailoverRouterService>[0],
+    );
+
+    await service.complete({ prompt: 'ping' }, 'key-1');
+
+    expect(mockConnectors.canUse).toHaveBeenCalledWith('openrouter');
+    expect(execute).not.toHaveBeenCalledWith('openrouter', expect.anything(), expect.anything());
   });
 });

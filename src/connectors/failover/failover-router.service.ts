@@ -73,8 +73,16 @@ export class FailoverRouterService {
     opts: FailoverOptions = {},
   ): Promise<ConnectorResponse> {
     const cfg = this.readConfig();
+    // A cold process has no cached credential verdict yet. Probe advertised
+    // connectors before building the chain so no unauthenticated hop is tried.
+    await this.connectorsService.checkProviderCredentials();
     let candidates = buildFailoverCandidates({
-      capabilities: this.connectorsService.listCapabilities(),
+      // Refuse a provider whose credential probe is missing/rejected before it
+      // can become a dispatch candidate. `canUse` remains the shared gate for
+      // ProviderAccess and credential readiness.
+      capabilities: this.connectorsService
+        .listCapabilities()
+        .filter((capability) => this.connectorsService.canUse(capability.name)),
       requestedModel: opts.requestedModel,
       providerOrder: cfg.providerOrder,
       deepseekModel: cfg.deepseekModel,

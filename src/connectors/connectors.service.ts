@@ -75,6 +75,11 @@ import {
   type FirstDispatchObservationV0,
   type FirstDispatchReservationV0,
 } from './first-dispatch-observation';
+import {
+  ProviderCredentialHealthService,
+  type ProviderCredentialHealthLike,
+  type ProviderCredentialHealth,
+} from './provider-credential-health';
 
 // CONN-0238 — capability mask for non-chat families surfaced via a chat connector.
 const NO_CAPS = {
@@ -208,6 +213,14 @@ export class ConnectorsService {
     // those manual constructions keep working; when absent, spend is simply
     // not settled.
     private readonly billing?: BillingService,
+    // Provider auth health is appended to preserve positional test constructions.
+    @Inject(ProviderCredentialHealthService)
+    private readonly providerCredentialHealth: ProviderCredentialHealthLike = {
+      isReady: () => true,
+      isRequired: () => false,
+      check: async () => null,
+      checkAdvertised: async () => [],
+    },
   ) {}
 
   // CONN-0244 — per-provider access (READ = catalog-visible, USE = routable).
@@ -225,7 +238,21 @@ export class ConnectorsService {
 
   /** MC will route traffic through this provider (cascade / execute). */
   canUse(name: string): boolean {
-    return this.getAccess(name).use;
+    return this.getAccess(name).use && this.providerCredentialHealth.isReady(name);
+  }
+
+  /** Probe only catalog-visible connectors and always include required providers. */
+  async checkProviderCredentials(force = false): Promise<ProviderCredentialHealth[]> {
+    const candidates = this.listNames().filter(
+      (name) => this.canRead(name) || this.providerCredentialHealth.isRequired(name),
+    );
+    if (!candidates.includes('deepseek')) candidates.push('deepseek');
+    return this.providerCredentialHealth.checkAdvertised(candidates, force);
+  }
+
+  /** Credential-failing connectors must not be returned by the public model catalog. */
+  private canAdvertise(name: string): boolean {
+    return this.canRead(name) && this.providerCredentialHealth.isReady(name);
   }
 
   /**
@@ -322,7 +349,12 @@ export class ConnectorsService {
    * (fail-closed). A malformed stored policy exposes nothing.
    */
   async listCapabilitiesForKey(apiKeyId?: string): Promise<ConnectorCapabilities[]> {
-    const all = this.listCapabilities();
+    // Resolve the initial probe before constructing the public catalog; an
+    // empty cache is not evidence that a connector has valid credentials.
+    await this.checkProviderCredentials();
+    // Keep unauthenticated providers out of the public /v1/models surface even
+    // when an API-key policy would otherwise allow their model names.
+    const all = this.listCapabilities().filter((caps) => this.providerCredentialHealth.isReady(caps.name));
     if (!apiKeyId) return all;
     let policy: ApiKeyPolicy | null;
     try {
@@ -401,6 +433,7 @@ export class ConnectorsService {
       // USE gate: read-only providers stay visible but are marked not-routable below.
       const access = this.getAccess(connector.name);
       if (!access.read) continue;
+      const credentialHealth = await this.providerCredentialHealth.check(connector.name);
       const routable = access.use;
       const caps = connector.getCapabilities();
       let status: ConnectorStatus;
@@ -479,7 +512,12 @@ export class ConnectorsService {
             ...(present.endpoint ? { endpoint: present.endpoint } : {}),
           },
           // CONN-0244 — a read-only provider (routable=false) is never `available` for routing.
-          available: routable && present.executableHere && reachable && !modelBreakerOpen,
+          available:
+            routable &&
+            present.executableHere &&
+            reachable &&
+            !modelBreakerOpen &&
+            (!credentialHealth || credentialHealth.state === 'ready'),
         };
 
         entries.push(entry);
@@ -515,7 +553,7 @@ export class ConnectorsService {
         const cached = await this.catalogRedis.get(cacheKey);
         if (cached) {
           const response = JSON.parse(cached) as CatalogResponse;
-          const models = response.models.filter((entry) => this.canRead(entry.connector));
+          const models = response.models.filter((entry) => this.canAdvertise(entry.connector));
           return this.applyPolicyToCatalog({ ...response, models, count: models.length }, apiKeyId);
         }
       } catch {
@@ -524,7 +562,7 @@ export class ConnectorsService {
     }
 
     const rows = await this.catalogRepo.findAll();
-    const visibleRows = rows.filter((row) => this.canRead(row.connector));
+    const visibleRows = rows.filter((row) => this.canAdvertise(row.connector));
     const entries = visibleRows
       .map((row) => rowToEntry(row))
       .filter((entry) => entryMatchesFilters(entry, filters));
