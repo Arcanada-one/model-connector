@@ -15,7 +15,7 @@
     {
       "auth": "admin-token",
       "entities": [
-        "route:DELETE /admin/keys:id",
+        "route:DELETE /admin/keys/:id",
         "code_unit:src/admin/admin.controller.ts"
       ],
       "expect": {
@@ -43,7 +43,7 @@
     {
       "auth": "admin-token",
       "entities": [
-        "route:GET /admin/keys:id",
+        "route:GET /admin/keys/:id",
         "code_unit:src/admin/admin.controller.ts"
       ],
       "expect": {
@@ -71,7 +71,7 @@
     {
       "auth": "client-key",
       "entities": [
-        "route:GET /connectors/openrouter/status",
+        "route:GET /connectors/:name/status",
         "code_unit:src/connectors/connectors.controller.ts"
       ],
       "expect": {
@@ -113,7 +113,7 @@
     {
       "auth": "client-key",
       "entities": [
-        "route:GET /connectors/intents/00000000-0000-4000-8000-000000000001",
+        "route:GET /connectors/intents/:intentId",
         "code_unit:src/connectors/connectors.controller.ts"
       ],
       "expect": {
@@ -141,7 +141,7 @@
     {
       "auth": "admin-token",
       "entities": [
-        "route:PATCH /admin/keys:id/policy",
+        "route:PATCH /admin/keys/:id/policy",
         "code_unit:src/admin/admin.controller.ts"
       ],
       "expect": {
@@ -155,7 +155,7 @@
     {
       "auth": "admin-token",
       "entities": [
-        "route:PATCH /admin/keys:id/rate-limit",
+        "route:PATCH /admin/keys/:id/rate-limit",
         "code_unit:src/admin/admin.controller.ts"
       ],
       "expect": {
@@ -184,7 +184,7 @@
       "auth": "admin-token",
       "entities": [
         "route:POST /admin/keys",
-        "code_unit:src/admin/admin.controller.ts"
+        "code_unit:src/openai-compat/openai-compat.controller.ts"
       ],
       "expect": {
         "route_reached": true
@@ -197,7 +197,7 @@
     {
       "auth": "client-key",
       "entities": [
-        "route:POST /connectors/openrouter/chat/completions",
+        "route:POST /connectors/:name/chat/completions",
         "code_unit:src/connectors/connectors.controller.ts"
       ],
       "expect": {
@@ -211,7 +211,7 @@
     {
       "auth": "client-key",
       "entities": [
-        "route:POST /connectors/openrouter/execute",
+        "route:POST /connectors/:name/execute",
         "code_unit:src/connectors/connectors.controller.ts"
       ],
       "expect": {

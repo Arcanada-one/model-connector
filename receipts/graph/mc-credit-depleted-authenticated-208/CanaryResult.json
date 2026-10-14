@@ -39,10 +39,9 @@
         "route-02",
         "route-03",
         "route-10",
-        "route-11",
-        "route-13"
+        "route-11"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -50,7 +49,7 @@
       "probe_ids": [
         "route-12"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -66,24 +65,25 @@
         "route-16",
         "route-17"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
       "entity": "code_unit:src/openai-compat/openai-compat.controller.ts",
       "probe_ids": [
         "route-09",
+        "route-13",
         "route-18"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
-      "entity": "route:DELETE /admin/keys:id",
+      "entity": "route:DELETE /admin/keys/:id",
       "probe_ids": [
         "route-01"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -91,15 +91,15 @@
       "probe_ids": [
         "route-02"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
-      "entity": "route:GET /admin/keys:id",
+      "entity": "route:GET /admin/keys/:id",
       "probe_ids": [
         "route-03"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -107,7 +107,15 @@
       "probe_ids": [
         "route-04"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /connectors/:name/status",
+      "probe_ids": [
+        "route-05"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -115,7 +123,7 @@
       "probe_ids": [
         "route-06"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -123,23 +131,15 @@
       "probe_ids": [
         "route-07"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
-      "entity": "route:GET /connectors/intents/00000000-0000-4000-8000-000000000001",
+      "entity": "route:GET /connectors/intents/:intentId",
       "probe_ids": [
         "route-08"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
-      "verdict": "verified"
-    },
-    {
-      "entity": "route:GET /connectors/openrouter/status",
-      "probe_ids": [
-        "route-05"
-      ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -147,23 +147,23 @@
       "probe_ids": [
         "route-09"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
-      "entity": "route:PATCH /admin/keys:id/policy",
+      "entity": "route:PATCH /admin/keys/:id/policy",
       "probe_ids": [
         "route-10"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
-      "entity": "route:PATCH /admin/keys:id/rate-limit",
+      "entity": "route:PATCH /admin/keys/:id/rate-limit",
       "probe_ids": [
         "route-11"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -171,7 +171,7 @@
       "probe_ids": [
         "route-12"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -179,23 +179,23 @@
       "probe_ids": [
         "route-13"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
-      "entity": "route:POST /connectors/openrouter/chat/completions",
+      "entity": "route:POST /connectors/:name/chat/completions",
       "probe_ids": [
         "route-14"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
-      "entity": "route:POST /connectors/openrouter/execute",
+      "entity": "route:POST /connectors/:name/execute",
       "probe_ids": [
         "route-15"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -203,7 +203,7 @@
       "probe_ids": [
         "route-16"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -211,7 +211,7 @@
       "probe_ids": [
         "route-17"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     },
     {
@@ -219,7 +219,7 @@
       "probe_ids": [
         "route-18"
       ],
-      "reason": "Every cited authenticated HTTP observation is recorded; downstream 503s are retained as measured outcomes.",
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
       "verdict": "verified"
     }
   ],
@@ -228,7 +228,7 @@
   "mutating_owner": "MC-KEYS",
   "phase": "post",
   "plan": {
-    "digest": "82790639b00b5c2898f9e0082df6402ee91fde104682672bcd2533a5876d45b5",
+    "digest": "60beee2365e0c6df2a05b627e4b7a795f2a7637323738fffd623759d92130d0b",
     "id": "mc-credit-depleted-authenticated-routes-208-2d73da5b",
     "path": "CanaryPlan.json"
   },
