@@ -318,7 +318,7 @@ class Controls(unittest.TestCase):
         self.assertEqual(mode, '700')
         self.assertEqual(Path(home).parent.parent, self.root / 'node_modules/.cache/graph-full-suite/runs')
         self.assertFalse(Path(tempdir).exists())
-        self.assertEqual(Path(tempdir).parent, self.root.parent)
+        self.assertEqual(Path(tempdir).parent, Path('/tmp'))
         self.assertNotIn('must-not-leak', result.stdout + result.stderr)
 
     def test_actual_root_entrypoint_dispatches_local_regression_retains_app_hold(self):
@@ -357,7 +357,8 @@ class Controls(unittest.TestCase):
             self.assertNotIn('NODE_OPTIONS', env)
             if argv[0] == 'pnpm':
                 output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
-                members = argv[argv.index('--outputFile=' + output) + 1:]
+                members = [a for a in argv[argv.index('--outputFile=' + output) + 1:]
+                           if not a.startswith('-')]
                 document = {'numTotalTests': len(members),
                             'numPassedTests': len(members) if status == 'passed' else 0,
                             'numFailedTests': 0,
@@ -380,6 +381,8 @@ class Controls(unittest.TestCase):
                 'MC_ALLOW_LIVE': '1', 'NODE_OPTIONS': 'sentinel-secret'}):
             result = subject.run_root_suites(self.root, suites, self.root, self.root_child(calls))
         self.assertEqual(len(calls), 3)
+        full_vitest_calls = [args for args in calls if args[0] == 'pnpm' and '--maxWorkers=4' in args]
+        self.assertEqual(len(full_vitest_calls), 1)
         self.assertEqual(sorted(n for r in result for n in r['members']), sorted(members))
         held = [n for r in result for n in r.get('held_members', [])]
         self.assertEqual(set(held), {'src/auth/live.integration.spec.ts', 'test/app.e2e-spec.ts'})
