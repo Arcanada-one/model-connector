@@ -1,28 +1,12 @@
 {
-  "captured_at_utc": "2026-10-14T04:59:05.206229+00:00",
+  "captured_at_utc": "2026-10-14T05:17:35.814986+00:00",
   "card": "AUP-GRAPH-008",
   "controls": {
-    "database": {
-      "api_key_columns": [
-        "id",
-        "name",
-        "keyHash",
-        "rateLimit",
-        "active",
-        "createdAt",
-        "policy"
-      ],
-      "plaintext_secret_columns": 0
-    },
     "positive_balance": {
       "http_status": 503,
       "upstream_chat_posts": 1
     },
     "route_count": 18,
-    "secret_scan": {
-      "authorization_header_logged": false,
-      "raw_mc_key_pattern_found": false
-    },
     "zero_balance": {
       "error_code": "credit_depleted",
       "http_status": 402,
@@ -249,8 +233,8 @@
   "mutating_owner": "MC-KEYS",
   "phase": "post",
   "plan": {
-    "digest": "56e93976a05eff450fbb10334b8331773fb3edffef428f23fd3ebbc859d771d1",
-    "id": "mc-credit-depleted-authenticated-routes-209-574a789e",
+    "digest": "ed85af6157ba60ab684314a91d3ed1e34aeff260a0fb534e546838efeca643f8",
+    "id": "mc-credit-depleted-authenticated-routes-209-71a4b5b3",
     "path": "CanaryPlan.json"
   },
   "probes": [
@@ -262,7 +246,7 @@
       "method": "POST",
       "outcome": "verified",
       "path": "/admin/keys",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 201
     },
     {
@@ -273,7 +257,7 @@
       "method": "GET",
       "outcome": "verified",
       "path": "/admin/keys",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 200
     },
     {
@@ -284,7 +268,7 @@
       "method": "GET",
       "outcome": "verified",
       "path": "/admin/keys/:id",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 200
     },
     {
@@ -295,7 +279,7 @@
       "method": "GET",
       "outcome": "verified",
       "path": "/connectors",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 200
     },
     {
@@ -306,7 +290,7 @@
       "method": "GET",
       "outcome": "verified",
       "path": "/connectors/openrouter/status",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 200
     },
     {
@@ -317,7 +301,7 @@
       "method": "GET",
       "outcome": "verified",
       "path": "/connectors/catalog",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 200
     },
     {
@@ -328,7 +312,7 @@
       "method": "GET",
       "outcome": "verified",
       "path": "/connectors/image/capabilities",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 200
     },
     {
@@ -339,7 +323,7 @@
       "method": "GET",
       "outcome": "verified",
       "path": "/connectors/intents/:intentId",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 503
     },
     {
@@ -350,7 +334,7 @@
       "method": "GET",
       "outcome": "verified",
       "path": "/v1/models",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 200
     },
     {
@@ -361,7 +345,7 @@
       "method": "PATCH",
       "outcome": "verified",
       "path": "/admin/keys/:id/policy",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 200
     },
     {
@@ -372,7 +356,7 @@
       "method": "PATCH",
       "outcome": "verified",
       "path": "/admin/keys/:id/rate-limit",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 200
     },
     {
@@ -383,7 +367,7 @@
       "method": "POST",
       "outcome": "verified",
       "path": "/admin/circuit-breaker/reset",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 200
     },
     {
@@ -394,7 +378,7 @@
       "method": "POST",
       "outcome": "verified",
       "path": "/connectors/openrouter/chat/completions",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 503
     },
     {
@@ -405,7 +389,7 @@
       "method": "POST",
       "outcome": "verified",
       "path": "/connectors/openrouter/execute",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 503
     },
     {
@@ -416,7 +400,7 @@
       "method": "POST",
       "outcome": "verified",
       "path": "/execute",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 503
     },
     {
@@ -427,7 +411,7 @@
       "method": "POST",
       "outcome": "verified",
       "path": "/images/generate",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 503
     },
     {
@@ -439,7 +423,7 @@
       "method": "POST",
       "outcome": "verified",
       "path": "/v1/chat/completions",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 402,
       "upstream_chat_posts": 0
     },
@@ -451,7 +435,7 @@
       "method": "DELETE",
       "outcome": "verified",
       "path": "/admin/keys/:id",
-      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "reason": "authenticated request reached route; fresh status recorded at updated mainline head; downstream status retained exactly",
       "status": 204
     },
     {
@@ -473,16 +457,16 @@
     "version": "1"
   },
   "read_only": false,
-  "resident_version": "574a789e463b9dd992e30b03d4ce89619db829a4",
+  "resident_version": "71a4b5b3b4e0d32b90a076f9777247fa4193cc5e",
   "schema": "CanaryResult/v1",
   "subject": {
-    "commit": "574a789e463b9dd992e30b03d4ce89619db829a4",
+    "commit": "71a4b5b3b4e0d32b90a076f9777247fa4193cc5e",
     "evidence": {
       "path": "MeasuredGitSource.json",
-      "sha256": "677a9d7c789aaba01d6bd7039c13e6d1a41ab6afcf02817e63238b82b95c42f5",
+      "sha256": "8d8a97f0b7647fdf8a5bbd431f01700847c2cb4e4e5b6a3388481b3615ee570e",
       "source_field": "commit"
     },
     "schema": "GitCanarySubject/v1",
-    "tree": "dde597b224441ebe7a08f98704bc6a638e730f28"
+    "tree": "5547eb848938b89076210dd5b5073f6d862cc14c"
   }
 }

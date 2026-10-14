@@ -9,7 +9,7 @@
     "sha256": "239b965d9c26da81631a08052c123b6917643fef56ce6106cfd33a4cf1bb738a",
     "tool": "MC-KEYS local authenticated HTTP harness"
   },
-  "id": "mc-credit-depleted-authenticated-routes-209-574a789e",
+  "id": "mc-credit-depleted-authenticated-routes-209-71a4b5b3",
   "owner": "MC-KEYS",
   "probes": [
     {
@@ -287,13 +287,13 @@
   "read_only": false,
   "schema": "CanaryPlan/v1",
   "subject": {
-    "commit": "574a789e463b9dd992e30b03d4ce89619db829a4",
+    "commit": "71a4b5b3b4e0d32b90a076f9777247fa4193cc5e",
     "evidence": {
       "path": "MeasuredGitSource.json",
-      "sha256": "677a9d7c789aaba01d6bd7039c13e6d1a41ab6afcf02817e63238b82b95c42f5",
+      "sha256": "8d8a97f0b7647fdf8a5bbd431f01700847c2cb4e4e5b6a3388481b3615ee570e",
       "source_field": "commit"
     },
     "schema": "GitCanarySubject/v1",
-    "tree": "dde597b224441ebe7a08f98704bc6a638e730f28"
+    "tree": "5547eb848938b89076210dd5b5073f6d862cc14c"
   }
 }
