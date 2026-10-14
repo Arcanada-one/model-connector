@@ -294,6 +294,7 @@ class Controls(unittest.TestCase):
     def test_isolated_entrypoint_provisions_private_tmpdir_and_preserves_exit_status(self):
         scripts = self.root / 'scripts'
         scripts.mkdir()
+        (self.root / 'node_modules').mkdir()
         (scripts / 'graph-full-suite-isolated.sh').write_bytes(
             (ROOT / 'scripts/graph-full-suite-isolated.sh').read_bytes())
         runner = scripts / 'graph-full-suite.sh'
@@ -316,7 +317,8 @@ class Controls(unittest.TestCase):
         tempdir, home, mode = result.stdout.strip().splitlines()
         self.assertEqual(mode, '700')
         self.assertEqual(Path(home).parent, Path(tempdir))
-        self.assertFalse(Path(tempdir).exists())
+        self.assertTrue(Path(tempdir).is_dir())
+        self.assertEqual(Path(tempdir).parent, self.root / 'node_modules/.cache/graph-full-suite/runs')
         self.assertNotIn('must-not-leak', result.stdout + result.stderr)
 
     def test_actual_root_entrypoint_dispatches_local_regression_retains_app_hold(self):

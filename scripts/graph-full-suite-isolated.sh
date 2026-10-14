@@ -15,14 +15,15 @@ esac
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd -P)
-PRIVATE_TMP=$(mktemp -d /tmp/model-connector-full-suite.XXXXXXXX)
-cleanup() {
-  rm -rf -- "$PRIVATE_TMP"
-}
-trap cleanup EXIT
-trap 'exit 129' HUP
-trap 'exit 130' INT
-trap 'exit 143' TERM
+if [[ -L "$REPO_ROOT/node_modules" || ! -d "$REPO_ROOT/node_modules" ]]; then
+  echo 'FULL_FALLBACK_TEST_REFUSED: owned node_modules directory required' >&2
+  exit 1
+fi
+CACHE_ROOT="$REPO_ROOT/node_modules/.cache/graph-full-suite"
+RUNS_DIR="$CACHE_ROOT/runs"
+mkdir -p "$RUNS_DIR" "$CACHE_ROOT/pip-cache"
+chmod 700 "$CACHE_ROOT" "$RUNS_DIR" "$CACHE_ROOT/pip-cache"
+PRIVATE_TMP=$(mktemp -d "$RUNS_DIR/run.XXXXXXXX")
 chmod 700 "$PRIVATE_TMP"
 mkdir -m 700 "$PRIVATE_TMP/home"
 
@@ -31,8 +32,8 @@ SYSTEM_PYTHON=$(PATH="$SYSTEM_PATH" command -v python3)
 PYTHON_PATH=$SYSTEM_PATH
 if [[ "$1" == 'packages/sdk-python' ]] && ! env -i PATH="$SYSTEM_PATH" "$SYSTEM_PYTHON" -c 'import pytest, pytest_asyncio' >/dev/null 2>&1; then
   VENV="$PRIVATE_TMP/python-sdk"
-  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$PRIVATE_TMP" PATH="$SYSTEM_PATH" PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_INPUT=1 "$SYSTEM_PYTHON" -m venv "$VENV"
-  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$PRIVATE_TMP" PATH="$SYSTEM_PATH" PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_INPUT=1 "$VENV/bin/python" -m pip install -e "$REPO_ROOT/packages/sdk-python[dev]"
+  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$PRIVATE_TMP" PATH="$SYSTEM_PATH" PIP_CACHE_DIR="$CACHE_ROOT/pip-cache" PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_INPUT=1 "$SYSTEM_PYTHON" -m venv "$VENV"
+  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$PRIVATE_TMP" PATH="$SYSTEM_PATH" PIP_CACHE_DIR="$CACHE_ROOT/pip-cache" PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_INPUT=1 "$VENV/bin/python" -m pip install -e "$REPO_ROOT/packages/sdk-python[dev]"
   PYTHON_PATH="$VENV/bin:$SYSTEM_PATH"
 fi
 
