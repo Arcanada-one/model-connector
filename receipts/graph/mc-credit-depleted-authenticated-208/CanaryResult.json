@@ -1,0 +1,471 @@
+{
+  "captured_at_utc": "2026-10-14T04:23:56.624089+00:00",
+  "card": "AUP-GRAPH-008",
+  "controls": {
+    "database": {
+      "api_key_columns": [
+        "id",
+        "name",
+        "keyHash",
+        "rateLimit",
+        "active",
+        "createdAt",
+        "policy"
+      ],
+      "plaintext_secret_columns": 0
+    },
+    "positive_balance": {
+      "http_status": 503,
+      "is_credit_depleted": false,
+      "upstream_chat_posts": 1,
+      "upstream_transport": "synthetic no-egress fetch shim",
+      "meaning": "positive-balance control did not receive 402; synthetic upstream response was observed"
+    },
+    "route_count": 18,
+    "secret_scan": {
+      "authorization_header_logged": false,
+      "raw_mc_key_pattern_found": false
+    },
+    "zero_balance": {
+      "error_code": "credit_depleted",
+      "http_status": 502,
+      "upstream_chat_posts": 0,
+      "meaning": "pre-fix PR208 behavior; PR209 control returns 402"
+    }
+  },
+  "counters": {
+    "failed": 0,
+    "not_measured": 0,
+    "verified": 22
+  },
+  "entity_verdicts": [
+    {
+      "entity": "code_unit:src/admin/admin.controller.ts",
+      "probe_ids": [
+        "route-01",
+        "route-02",
+        "route-03",
+        "route-10",
+        "route-11"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "code_unit:src/admin/circuit-breaker.controller.ts",
+      "probe_ids": [
+        "route-12"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.controller.ts",
+      "probe_ids": [
+        "route-04",
+        "route-05",
+        "route-06",
+        "route-07",
+        "route-08",
+        "route-14",
+        "route-15",
+        "route-16",
+        "route-17"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-compat.controller.ts",
+      "probe_ids": [
+        "route-09",
+        "route-13",
+        "route-18"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:DELETE /admin/keys/:id",
+      "probe_ids": [
+        "route-01"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /admin/keys",
+      "probe_ids": [
+        "route-02"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /admin/keys/:id",
+      "probe_ids": [
+        "route-03"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /connectors",
+      "probe_ids": [
+        "route-04"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /connectors/:name/status",
+      "probe_ids": [
+        "route-05"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /connectors/catalog",
+      "probe_ids": [
+        "route-06"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /connectors/image/capabilities",
+      "probe_ids": [
+        "route-07"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /connectors/intents/:intentId",
+      "probe_ids": [
+        "route-08"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /v1/models",
+      "probe_ids": [
+        "route-09"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:PATCH /admin/keys/:id/policy",
+      "probe_ids": [
+        "route-10"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:PATCH /admin/keys/:id/rate-limit",
+      "probe_ids": [
+        "route-11"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /admin/circuit-breaker/reset",
+      "probe_ids": [
+        "route-12"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /admin/keys",
+      "probe_ids": [
+        "route-13"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /connectors/:name/chat/completions",
+      "probe_ids": [
+        "route-14"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /connectors/:name/execute",
+      "probe_ids": [
+        "route-15"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /execute",
+      "probe_ids": [
+        "route-16"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /images/generate",
+      "probe_ids": [
+        "route-17"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /v1/chat/completions",
+      "probe_ids": [
+        "route-18"
+      ],
+      "reason": "Authenticated HTTP route/control observations are recorded; downstream statuses are retained exactly.",
+      "verdict": "verified"
+    }
+  ],
+  "environment": "isolated PostgreSQL 16 + isolated Redis, loopback only, Node fetch no-egress shim",
+  "model": "none: no provider credential or model response used",
+  "mutating_owner": "MC-KEYS",
+  "phase": "post",
+  "plan": {
+    "digest": "60beee2365e0c6df2a05b627e4b7a795f2a7637323738fffd623759d92130d0b",
+    "id": "mc-credit-depleted-authenticated-routes-208-2d73da5b",
+    "path": "CanaryPlan.json"
+  },
+  "probes": [
+    {
+      "auth": "admin-token",
+      "executed": true,
+      "id": "route-13",
+      "kind": "http",
+      "method": "POST",
+      "outcome": "verified",
+      "path": "/admin/keys",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 201
+    },
+    {
+      "auth": "admin-token",
+      "executed": true,
+      "id": "route-02",
+      "kind": "http",
+      "method": "GET",
+      "outcome": "verified",
+      "path": "/admin/keys",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 200
+    },
+    {
+      "auth": "admin-token",
+      "executed": true,
+      "id": "route-03",
+      "kind": "http",
+      "method": "GET",
+      "outcome": "verified",
+      "path": "/admin/keys/:id",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 200
+    },
+    {
+      "auth": "client-key",
+      "executed": true,
+      "id": "route-04",
+      "kind": "http",
+      "method": "GET",
+      "outcome": "verified",
+      "path": "/connectors",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 200
+    },
+    {
+      "auth": "client-key",
+      "executed": true,
+      "id": "route-05",
+      "kind": "http",
+      "method": "GET",
+      "outcome": "verified",
+      "path": "/connectors/openrouter/status",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 200
+    },
+    {
+      "auth": "client-key",
+      "executed": true,
+      "id": "route-06",
+      "kind": "http",
+      "method": "GET",
+      "outcome": "verified",
+      "path": "/connectors/catalog",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 200
+    },
+    {
+      "auth": "client-key",
+      "executed": true,
+      "id": "route-07",
+      "kind": "http",
+      "method": "GET",
+      "outcome": "verified",
+      "path": "/connectors/image/capabilities",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 200
+    },
+    {
+      "auth": "client-key",
+      "executed": true,
+      "id": "route-08",
+      "kind": "http",
+      "method": "GET",
+      "outcome": "verified",
+      "path": "/connectors/intents/:intentId",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 503
+    },
+    {
+      "auth": "client-key",
+      "executed": true,
+      "id": "route-09",
+      "kind": "http",
+      "method": "GET",
+      "outcome": "verified",
+      "path": "/v1/models",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 200
+    },
+    {
+      "auth": "admin-token",
+      "executed": true,
+      "id": "route-10",
+      "kind": "http",
+      "method": "PATCH",
+      "outcome": "verified",
+      "path": "/admin/keys/:id/policy",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 200
+    },
+    {
+      "auth": "admin-token",
+      "executed": true,
+      "id": "route-11",
+      "kind": "http",
+      "method": "PATCH",
+      "outcome": "verified",
+      "path": "/admin/keys/:id/rate-limit",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 200
+    },
+    {
+      "auth": "admin-token",
+      "executed": true,
+      "id": "route-12",
+      "kind": "http",
+      "method": "POST",
+      "outcome": "verified",
+      "path": "/admin/circuit-breaker/reset",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 200
+    },
+    {
+      "auth": "client-key",
+      "executed": true,
+      "id": "route-14",
+      "kind": "http",
+      "method": "POST",
+      "outcome": "verified",
+      "path": "/connectors/openrouter/chat/completions",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 503
+    },
+    {
+      "auth": "client-key",
+      "executed": true,
+      "id": "route-15",
+      "kind": "http",
+      "method": "POST",
+      "outcome": "verified",
+      "path": "/connectors/openrouter/execute",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 503
+    },
+    {
+      "auth": "client-key",
+      "executed": true,
+      "id": "route-16",
+      "kind": "http",
+      "method": "POST",
+      "outcome": "verified",
+      "path": "/execute",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 503
+    },
+    {
+      "auth": "client-key",
+      "executed": true,
+      "id": "route-17",
+      "kind": "http",
+      "method": "POST",
+      "outcome": "verified",
+      "path": "/images/generate",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 503
+    },
+    {
+      "auth": "client-key",
+      "credit_error_code": "credit_depleted",
+      "executed": true,
+      "id": "route-18",
+      "kind": "http",
+      "method": "POST",
+      "outcome": "verified",
+      "path": "/v1/chat/completions",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 502,
+      "upstream_chat_posts": 0
+    },
+    {
+      "auth": "admin-token",
+      "executed": true,
+      "id": "route-01",
+      "kind": "http",
+      "method": "DELETE",
+      "outcome": "verified",
+      "path": "/admin/keys/:id",
+      "reason": "authenticated request reached route; HTTP status recorded; no 401/403/404/405",
+      "status": 204
+    }
+  ],
+  "producer": {
+    "sha256": "239b965d9c26da81631a08052c123b6917643fef56ce6106cfd33a4cf1bb738a",
+    "tool": "MC-KEYS authenticated local HTTP harness",
+    "version": "1"
+  },
+  "read_only": false,
+  "resident_version": "2d73da5bff0d47e212420313224da2a3f2b6cd21",
+  "schema": "CanaryResult/v1",
+  "subject": {
+    "commit": "2d73da5bff0d47e212420313224da2a3f2b6cd21",
+    "evidence": {
+      "path": "MeasuredGitSource.json",
+      "sha256": "4ca76729eab02d3a094c305952c1e10cfcea82a01cefa30094e5b693b69589bf",
+      "source_field": "commit"
+    },
+    "schema": "GitCanarySubject/v1",
+    "tree": "a1dbf3eafbedd811f0e0de33ba1e8a6bf8ebeb59"
+  },
+  "evidence_refs": [
+    {
+      "system": "Muneral CONTENT",
+      "task_id": "4d578a20-6df5-41ad-abfe-b07ecc202c13",
+      "comment_id": "66b9300e-2787-40d1-a10f-bda6c7faa638",
+      "report_sha256": "70d47931cd3f9f862ded78076d1909795189df916d82fb3fc587a7200a7bf57c",
+      "readback": "GET /tasks/{taskId}/activity returned exact body"
+    }
+  ]
+}

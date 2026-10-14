@@ -1,0 +1,11 @@
+{
+  "captured_at_utc": "2026-10-14T04:23:56.624089+00:00",
+  "commit": "2d73da5bff0d47e212420313224da2a3f2b6cd21",
+  "dirty": false,
+  "producer": {
+    "tool": "MC-KEYS local git source measurement",
+    "version": "1"
+  },
+  "schema": "MeasuredGitSource/v1",
+  "tree": "a1dbf3eafbedd811f0e0de33ba1e8a6bf8ebeb59"
+}
