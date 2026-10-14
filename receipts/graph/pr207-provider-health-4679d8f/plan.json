@@ -1,0 +1,7 @@
+{
+  "environment": "Isolated PostgreSQL 16 and Redis; isolated HOME; loopback-only fake DeepSeek; non-loopback fetch blocked.",
+  "id": "mc-pr207-provider-health-4679d8f",
+  "limitations": "Six managed connectors tested absent/unavailable. Other visible model owners are outside this canary scope.",
+  "schema": "CanaryPlan/v1",
+  "scope": "Four HTTP routes affected by provider credential readiness, catalog filtering, and failover filtering."
+}

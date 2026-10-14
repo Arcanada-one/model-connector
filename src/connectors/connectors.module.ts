@@ -43,6 +43,7 @@ import { CatalogRefreshService } from './catalog-refresh.service';
 import { CATALOG_REDIS_PROVIDER } from './catalog-redis.provider';
 // CONN-0245-EXT — provider READ/USE access.
 import { ProviderAccessService } from './provider-access.service';
+import { ProviderCredentialHealthService } from './provider-credential-health';
 // CONN-1665 — per-API-key access policy.
 import { PolicyModule } from '../policy/policy.module';
 
@@ -94,6 +95,7 @@ import { PolicyModule } from '../policy/policy.module';
     CatalogRefreshService,
     CATALOG_REDIS_PROVIDER,
     ProviderAccessService,
+    { provide: ProviderCredentialHealthService, useFactory: () => new ProviderCredentialHealthService() },
   ],
   exports: [ConnectorsService, CatalogRepository, ProviderAccessService, DecisionService],
 })

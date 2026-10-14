@@ -1,0 +1,39 @@
+{
+  "schema": "CanaryPlan/v1",
+  "id": "pr207-health-ready-ff431-unavailable",
+  "environment": "candidate-local NestJS HTTP controller; loopback only; injected DB-ok and required DeepSeek-unavailable state; provider egress disabled",
+  "owner": "MC-KEYS",
+  "read_only": true,
+  "base_url": "http://127.0.0.1:44321",
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "ff4311405175dd38aee216a8cf36a969f62dc9c1",
+    "tree": "d77fb8c694921f99ee2c3e8b9484190657b5f216",
+    "evidence": {
+      "path": "source-evidence.json",
+      "sha256": "7cd0ba01c4215bd9f290919af874a43a181f5d3ea12c5528b6ed5548d02a7577",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "id": "health-ready-required-unavailable",
+      "method": "GET",
+      "path": "/health/ready",
+      "entities": [
+        "route:GET /health/ready",
+        "code_unit:src/health/health.controller.ts"
+      ],
+      "expect": {
+        "status_in": [
+          200
+        ],
+        "json_has": [
+          "status",
+          "checks",
+          "providers"
+        ]
+      }
+    }
+  ]
+}

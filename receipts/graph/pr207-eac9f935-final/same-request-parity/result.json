@@ -1,0 +1,137 @@
+{
+  "captured_at_utc": "2026-10-14T12:52:18.352Z",
+  "harness_sha256": "bdd50f99dbaf9d328496cd6105e4076f1633dc35887f47689f3887cd6adfad00",
+  "plan_digest": "sha256:25123adc5744ba537482d43e9e72e2c58e611ba9c7376fffa9b097e02868195e",
+  "plan_ref": "plan.json",
+  "request_plan": {
+    "auth_header_names": [
+      "Authorization",
+      "X-Admin-Token",
+      "X-Watcher-Repair-Token"
+    ],
+    "content_type": "application/json",
+    "noegress_shim_sha256": "c7da1d7f7701c03d37c175d36f5c007714538ba369bfea90aa18b76d866cc808",
+    "probes": [
+      {
+        "body_sha256": null,
+        "id": "route-6c3c9563ecfe-authorized",
+        "method": "GET",
+        "path": "/connectors/intents/canary"
+      },
+      {
+        "body_sha256": "d923d32e7064d5ac155b4c4e06492bc6303336956c2d30414b43ba6feaed32d5",
+        "id": "route-d5430ba59c42-authorized",
+        "method": "POST",
+        "path": "/connectors/deepseek/chat/completions"
+      },
+      {
+        "body_sha256": "d923d32e7064d5ac155b4c4e06492bc6303336956c2d30414b43ba6feaed32d5",
+        "id": "route-7dd41765b35c-authorized",
+        "method": "POST",
+        "path": "/v1/speech/stt"
+      },
+      {
+        "body_sha256": "d923d32e7064d5ac155b4c4e06492bc6303336956c2d30414b43ba6feaed32d5",
+        "id": "route-5b74b3d2e5a3-authorized",
+        "method": "POST",
+        "path": "/v1/speech/stt/async"
+      }
+    ],
+    "schema": "SameRequestParityPlan/v1"
+  },
+  "runs": {
+    "candidate": [
+      {
+        "body_bytes": 35,
+        "body_sha256": "c166baa5636ec66da43122cf38bbde84f874dffe708df05a4a515b50a6aa43f2",
+        "error_code": null,
+        "id": "route-6c3c9563ecfe-authorized",
+        "matched_status_and_body_sha256": true,
+        "status": 503
+      },
+      {
+        "body_bytes": 35,
+        "body_sha256": "c166baa5636ec66da43122cf38bbde84f874dffe708df05a4a515b50a6aa43f2",
+        "error_code": null,
+        "id": "route-d5430ba59c42-authorized",
+        "matched_status_and_body_sha256": true,
+        "status": 503
+      },
+      {
+        "body_bytes": 88,
+        "body_sha256": "c9677e51dc8dfa675f8a69af9b775454f9df8aa368a9c142eb37a625e37154c6",
+        "error_code": null,
+        "id": "route-7dd41765b35c-authorized",
+        "matched_status_and_body_sha256": true,
+        "status": 500
+      },
+      {
+        "body_bytes": 94,
+        "body_sha256": "830e65b26eafb50a0d7a59b51300c7e5009a7974e9ef0e92f52d8797a81924af",
+        "error_code": null,
+        "id": "route-5b74b3d2e5a3-authorized",
+        "matched_status_and_body_sha256": true,
+        "status": 500
+      }
+    ],
+    "main": [
+      {
+        "body_bytes": 35,
+        "body_sha256": "c166baa5636ec66da43122cf38bbde84f874dffe708df05a4a515b50a6aa43f2",
+        "error_code": null,
+        "id": "route-6c3c9563ecfe-authorized",
+        "matched_status_and_body_sha256": true,
+        "status": 503
+      },
+      {
+        "body_bytes": 35,
+        "body_sha256": "c166baa5636ec66da43122cf38bbde84f874dffe708df05a4a515b50a6aa43f2",
+        "error_code": null,
+        "id": "route-d5430ba59c42-authorized",
+        "matched_status_and_body_sha256": true,
+        "status": 503
+      },
+      {
+        "body_bytes": 88,
+        "body_sha256": "c9677e51dc8dfa675f8a69af9b775454f9df8aa368a9c142eb37a625e37154c6",
+        "error_code": null,
+        "id": "route-7dd41765b35c-authorized",
+        "matched_status_and_body_sha256": true,
+        "status": 500
+      },
+      {
+        "body_bytes": 94,
+        "body_sha256": "830e65b26eafb50a0d7a59b51300c7e5009a7974e9ef0e92f52d8797a81924af",
+        "error_code": null,
+        "id": "route-5b74b3d2e5a3-authorized",
+        "matched_status_and_body_sha256": true,
+        "status": 500
+      }
+    ]
+  },
+  "schema": "SameRequestParityResult/v1",
+  "shim_sha256": "c7da1d7f7701c03d37c175d36f5c007714538ba369bfea90aa18b76d866cc808",
+  "source_runs": {
+    "candidate": {
+      "base_url": "http://127.0.0.1:13901",
+      "build": "candidate-local source-bound route/process measurement",
+      "commit": "eac9f9354f742ea628a4378b725fd28e3c4b79f9",
+      "tree": "d51dbdc39c4ca4bed9be183764fd3b05f01d122f"
+    },
+    "main": {
+      "base_url": "http://127.0.0.1:13902",
+      "build_command": "nice -n 10 pnpm build",
+      "build_exit_code": 0,
+      "commit": "bb70aae82e78678dfb4e8f13621582ae6bd8cf74",
+      "swc_files": 607,
+      "tree": "99ef95dff2efdf40afc17851441322b94c45907f",
+      "typescript_issues": 0
+    }
+  },
+  "subjects": {
+    "candidate": "eac9f9354f742ea628a4378b725fd28e3c4b79f9",
+    "candidate_tree": "d51dbdc39c4ca4bed9be183764fd3b05f01d122f",
+    "main": "bb70aae82e78678dfb4e8f13621582ae6bd8cf74",
+    "main_tree": "99ef95dff2efdf40afc17851441322b94c45907f"
+  }
+}

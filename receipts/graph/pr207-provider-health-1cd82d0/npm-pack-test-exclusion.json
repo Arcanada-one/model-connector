@@ -1,0 +1,11 @@
+{
+  "package": "model-connector",
+  "filename": "model-connector-0.2.0.tgz",
+  "file_count": 908,
+  "target_test_files": {
+    "test/app.e2e-spec.ts": false,
+    "test/bench-reservation/bootstrap-source.spec.ts": false
+  },
+  "test_prefix_files": [],
+  "files_json_sha256": "21b3391dbfe63c067bb0190385b53bfea7b2c473a974b21159eb0d990df3857a"
+}

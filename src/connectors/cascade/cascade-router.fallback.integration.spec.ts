@@ -64,6 +64,8 @@ function makeRouter(
     execute: vi.fn(() => Promise.resolve(responses[idx++] ?? err('server_error'))),
     // CONN-0244 — cascade filters candidates by canUse; fully-routable in these tests.
     canUse: vi.fn(() => true),
+    // Provider health is ready in this offline routing fixture.
+    canUseForPolicy: vi.fn(async () => true),
     // These fallback fixtures use legacy policy-less keys, as the unit harness does.
     getKeyPolicy: vi.fn(async (): Promise<ApiKeyPolicy | null> => null),
     isCandidateAllowedByPolicy: vi.fn(async () => true),

@@ -484,6 +484,12 @@ def run_root_suites(root, suites, scratch, executor=execute):
                 argv = ['pnpm', 'exec', 'vitest', 'run']
                 if name == 'maintained-integration':
                     argv += ['--config', 'vitest.integration.config.ts']
+                else:
+                    # The graph runner can execute on hosts with far more
+                    # visible CPUs than the CI container actually receives.
+                    # Bound worker fan-out so module-bootstrap suites remain
+                    # measurable under the same small-runner resource envelope.
+                    argv += ['--maxWorkers=4']
                 argv += ['--reporter=json', '--outputFile=' + str(report), *selected]
                 row['executions'].append(run(argv, selected, 'root-' + str(index),
                     lambda raw: vitest_counts(json.loads(report.read_text()), selected, root)))

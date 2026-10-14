@@ -1,0 +1,1341 @@
+{
+  "base_url": "http://127.0.0.1:13901",
+  "captured_at_utc": "2026-10-14T12:41:53Z",
+  "contract_ref": "contracts/graph-verified-change/change-admission-receipt.v1.json",
+  "counters": {
+    "failed": 4,
+    "not_measured": 0,
+    "verified": 66
+  },
+  "entity_verdicts": [
+    {
+      "entity": "route:DELETE /admin/keys/:id",
+      "probe_ids": [
+        "route-2e3b23d8ad2c-authorized",
+        "route-2e3b23d8ad2c-unauthenticated"
+      ],
+      "reason": "route-2e3b23d8ad2c-authorized: expected route response observed; route-2e3b23d8ad2c-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /admin/credits/:apiKeyId",
+      "probe_ids": [
+        "route-c399ae0012d2-authorized",
+        "route-c399ae0012d2-unauthenticated"
+      ],
+      "reason": "route-c399ae0012d2-authorized: expected route response observed; route-c399ae0012d2-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /admin/credits/:apiKeyId/history",
+      "probe_ids": [
+        "route-b2c0a7107d44-authorized",
+        "route-b2c0a7107d44-unauthenticated"
+      ],
+      "reason": "route-b2c0a7107d44-authorized: expected route response observed; route-b2c0a7107d44-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /admin/keys",
+      "probe_ids": [
+        "route-a0898f6815f1-authorized",
+        "route-a0898f6815f1-unauthenticated"
+      ],
+      "reason": "route-a0898f6815f1-authorized: expected route response observed; route-a0898f6815f1-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /admin/keys/:id",
+      "probe_ids": [
+        "route-f26922a0cb4e-authorized",
+        "route-f26922a0cb4e-unauthenticated"
+      ],
+      "reason": "route-f26922a0cb4e-authorized: expected route response observed; route-f26922a0cb4e-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /connectors",
+      "probe_ids": [
+        "route-669a221af384-authorized",
+        "route-669a221af384-unauthenticated"
+      ],
+      "reason": "route-669a221af384-authorized: expected route response observed; route-669a221af384-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /connectors/:name/status",
+      "probe_ids": [
+        "route-79e6c9aab35a-authorized",
+        "route-79e6c9aab35a-unauthenticated"
+      ],
+      "reason": "route-79e6c9aab35a-authorized: expected route response observed; route-79e6c9aab35a-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /connectors/catalog",
+      "probe_ids": [
+        "route-707ce3b9d304-authorized",
+        "route-707ce3b9d304-unauthenticated"
+      ],
+      "reason": "route-707ce3b9d304-authorized: expected route response observed; route-707ce3b9d304-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /connectors/image/capabilities",
+      "probe_ids": [
+        "route-3dd000e75039-authorized",
+        "route-3dd000e75039-unauthenticated"
+      ],
+      "reason": "route-3dd000e75039-authorized: expected route response observed; route-3dd000e75039-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /connectors/intents/:intentId",
+      "probe_ids": [
+        "route-6c3c9563ecfe-authorized",
+        "route-6c3c9563ecfe-unauthenticated"
+      ],
+      "reason": "route-6c3c9563ecfe-authorized: HTTP 503 outside expected class; route-6c3c9563ecfe-unauthenticated: expected route response observed",
+      "verdict": "failed"
+    },
+    {
+      "entity": "route:GET /health",
+      "probe_ids": [
+        "route-53a91d5638ac-authorized",
+        "route-53a91d5638ac-unauthenticated"
+      ],
+      "reason": "route-53a91d5638ac-authorized: expected route response observed; route-53a91d5638ac-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /health/connectors",
+      "probe_ids": [
+        "route-b494b3edf2d8-authorized",
+        "route-b494b3edf2d8-unauthenticated"
+      ],
+      "reason": "route-b494b3edf2d8-authorized: expected route response observed; route-b494b3edf2d8-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /health/metrics",
+      "probe_ids": [
+        "route-80e3aaec48df-authorized",
+        "route-80e3aaec48df-unauthenticated"
+      ],
+      "reason": "route-80e3aaec48df-authorized: expected route response observed; route-80e3aaec48df-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /health/ready",
+      "probe_ids": [
+        "route-c79a3bd9616a-authorized",
+        "route-c79a3bd9616a-unauthenticated"
+      ],
+      "reason": "route-c79a3bd9616a-authorized: expected route response observed; route-c79a3bd9616a-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /v1/models",
+      "probe_ids": [
+        "route-515ef068736f-authorized",
+        "route-515ef068736f-unauthenticated"
+      ],
+      "reason": "route-515ef068736f-authorized: expected route response observed; route-515ef068736f-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:GET /v1/speech/stt/jobs/:id",
+      "probe_ids": [
+        "route-2174cf37dd75-authorized",
+        "route-2174cf37dd75-unauthenticated"
+      ],
+      "reason": "route-2174cf37dd75-authorized: expected route response observed; route-2174cf37dd75-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:PATCH /admin/keys/:id/policy",
+      "probe_ids": [
+        "route-590a3218f5ea-authorized",
+        "route-590a3218f5ea-unauthenticated"
+      ],
+      "reason": "route-590a3218f5ea-authorized: expected route response observed; route-590a3218f5ea-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:PATCH /admin/keys/:id/rate-limit",
+      "probe_ids": [
+        "route-41a09eb58037-authorized",
+        "route-41a09eb58037-unauthenticated"
+      ],
+      "reason": "route-41a09eb58037-authorized: expected route response observed; route-41a09eb58037-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /admin/circuit-breaker/reset",
+      "probe_ids": [
+        "route-cf68693ac354-authorized",
+        "route-cf68693ac354-unauthenticated"
+      ],
+      "reason": "route-cf68693ac354-authorized: expected route response observed; route-cf68693ac354-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /admin/credits/:apiKeyId",
+      "probe_ids": [
+        "route-0e5f1760eee0-authorized",
+        "route-0e5f1760eee0-unauthenticated"
+      ],
+      "reason": "route-0e5f1760eee0-authorized: expected route response observed; route-0e5f1760eee0-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /admin/credits/:apiKeyId/gift",
+      "probe_ids": [
+        "route-91c1cae2c2ac-authorized",
+        "route-91c1cae2c2ac-unauthenticated"
+      ],
+      "reason": "route-91c1cae2c2ac-authorized: expected route response observed; route-91c1cae2c2ac-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /admin/credits/holds/sweep",
+      "probe_ids": [
+        "route-a0cf69cfc97a-authorized",
+        "route-a0cf69cfc97a-unauthenticated"
+      ],
+      "reason": "route-a0cf69cfc97a-authorized: expected route response observed; route-a0cf69cfc97a-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /admin/credits/reconcile",
+      "probe_ids": [
+        "route-f8ae90b50f2b-authorized",
+        "route-f8ae90b50f2b-unauthenticated"
+      ],
+      "reason": "route-f8ae90b50f2b-authorized: expected route response observed; route-f8ae90b50f2b-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /admin/keys",
+      "probe_ids": [
+        "route-7b97ca44e1f8-authorized",
+        "route-7b97ca44e1f8-unauthenticated"
+      ],
+      "reason": "route-7b97ca44e1f8-authorized: expected route response observed; route-7b97ca44e1f8-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /connectors/:name/chat/completions",
+      "probe_ids": [
+        "route-d5430ba59c42-authorized",
+        "route-d5430ba59c42-unauthenticated"
+      ],
+      "reason": "route-d5430ba59c42-authorized: HTTP 503 outside expected class; route-d5430ba59c42-unauthenticated: expected route response observed",
+      "verdict": "failed"
+    },
+    {
+      "entity": "route:POST /connectors/:name/execute",
+      "probe_ids": [
+        "route-09ba78f8e95a-authorized",
+        "route-09ba78f8e95a-unauthenticated"
+      ],
+      "reason": "route-09ba78f8e95a-authorized: expected route response observed; route-09ba78f8e95a-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /execute",
+      "probe_ids": [
+        "route-574352edb9b3-authorized",
+        "route-574352edb9b3-unauthenticated"
+      ],
+      "reason": "route-574352edb9b3-authorized: expected route response observed; route-574352edb9b3-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /images/generate",
+      "probe_ids": [
+        "route-ac7f34de6f28-authorized",
+        "route-ac7f34de6f28-unauthenticated"
+      ],
+      "reason": "route-ac7f34de6f28-authorized: expected route response observed; route-ac7f34de6f28-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /internal/watcher/circuit-breaker/reset",
+      "probe_ids": [
+        "route-1827006fc006-authorized",
+        "route-1827006fc006-unauthenticated"
+      ],
+      "reason": "route-1827006fc006-authorized: expected route response observed; route-1827006fc006-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /v1/chat/completions",
+      "probe_ids": [
+        "route-a55c3d7107b7-authorized",
+        "route-a55c3d7107b7-unauthenticated"
+      ],
+      "reason": "route-a55c3d7107b7-authorized: expected route response observed; route-a55c3d7107b7-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /v1/prompt-cache/prewarm",
+      "probe_ids": [
+        "route-1e621d19a939-authorized",
+        "route-1e621d19a939-unauthenticated"
+      ],
+      "reason": "route-1e621d19a939-authorized: expected route response observed; route-1e621d19a939-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /v1/speech/stt",
+      "probe_ids": [
+        "route-7dd41765b35c-authorized",
+        "route-7dd41765b35c-unauthenticated"
+      ],
+      "reason": "route-7dd41765b35c-authorized: HTTP 500 outside expected class; route-7dd41765b35c-unauthenticated: expected route response observed",
+      "verdict": "failed"
+    },
+    {
+      "entity": "route:POST /v1/speech/stt/async",
+      "probe_ids": [
+        "route-5b74b3d2e5a3-authorized",
+        "route-5b74b3d2e5a3-unauthenticated"
+      ],
+      "reason": "route-5b74b3d2e5a3-authorized: HTTP 500 outside expected class; route-5b74b3d2e5a3-unauthenticated: expected route response observed",
+      "verdict": "failed"
+    },
+    {
+      "entity": "route:POST /v1/speech/tts",
+      "probe_ids": [
+        "route-b7b24bc43408-authorized",
+        "route-b7b24bc43408-unauthenticated"
+      ],
+      "reason": "route-b7b24bc43408-authorized: expected route response observed; route-b7b24bc43408-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    },
+    {
+      "entity": "route:POST /v1/speech/vad",
+      "probe_ids": [
+        "route-46b9af8c4306-authorized",
+        "route-46b9af8c4306-unauthenticated"
+      ],
+      "reason": "route-46b9af8c4306-authorized: expected route response observed; route-46b9af8c4306-unauthenticated: expected route response observed",
+      "verdict": "verified"
+    }
+  ],
+  "environment": "candidate-local",
+  "head_sha": "eac9f9354f742ea628a4378b725fd28e3c4b79f9",
+  "model": "route-sweep/1.1.0",
+  "mutating_owner": "route-sweep operator; disposable candidate-local instance",
+  "phase": "pre",
+  "plan": {
+    "digest": "sha256:a1e0098f17875ff760ffcaf17d907052fb229e1b3e0aa0438baf93f4fdfe374c",
+    "id": "route-sweep-eac9f9354f74",
+    "path": "plan.json"
+  },
+  "probes": [
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 70.349,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-2e3b23d8ad2c-authorized",
+      "kind": "http",
+      "method": "DELETE",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 204,
+      "url": "http://127.0.0.1:13901/admin/keys/37318fdf-3b7d-42f3-b36e-ba3d111fbc0e"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 44.461,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-2e3b23d8ad2c-unauthenticated",
+      "kind": "http",
+      "method": "DELETE",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/keys/37318fdf-3b7d-42f3-b36e-ba3d111fbc0e"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 48.933,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-c399ae0012d2-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/admin/credits/357b2728-413e-44b8-a75d-5f5eaf91c8ac"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 27.129,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-c399ae0012d2-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/credits/357b2728-413e-44b8-a75d-5f5eaf91c8ac"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 36.514,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-b2c0a7107d44-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/admin/credits/357b2728-413e-44b8-a75d-5f5eaf91c8ac/history"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 31.063,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-b2c0a7107d44-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/credits/357b2728-413e-44b8-a75d-5f5eaf91c8ac/history"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 43.02,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-a0898f6815f1-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/admin/keys"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 43.596,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-a0898f6815f1-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/keys"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 32.988,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-f26922a0cb4e-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/admin/keys/357b2728-413e-44b8-a75d-5f5eaf91c8ac"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 31.218,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-f26922a0cb4e-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/keys/357b2728-413e-44b8-a75d-5f5eaf91c8ac"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 120.345,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-669a221af384-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/connectors"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 32.946,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-669a221af384-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/connectors"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 42.829,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-79e6c9aab35a-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/connectors/deepseek/status"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 42.912,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-79e6c9aab35a-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/connectors/deepseek/status"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 52.344,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-707ce3b9d304-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/connectors/catalog"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 57.038,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-707ce3b9d304-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/connectors/catalog"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 37.113,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-3dd000e75039-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/connectors/image/capabilities"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 25.504,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-3dd000e75039-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/connectors/image/capabilities"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 43.368,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-6c3c9563ecfe-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "5xx",
+      "outcome": "failed",
+      "reason": "HTTP 503 outside expected class",
+      "status": 503,
+      "url": "http://127.0.0.1:13901/connectors/intents/canary"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 40.774,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-6c3c9563ecfe-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/connectors/intents/canary"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 39.761,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-53a91d5638ac-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/health"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 41.057,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-53a91d5638ac-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/health"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 44.073,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-b494b3edf2d8-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/health/connectors"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 36.272,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-b494b3edf2d8-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/health/connectors"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 36.386,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-80e3aaec48df-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/health/metrics"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 34.794,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-80e3aaec48df-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/health/metrics"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 43.915,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-c79a3bd9616a-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/health/ready"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 42.227,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-c79a3bd9616a-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/health/ready"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 43.385,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-515ef068736f-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/v1/models"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 41.393,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-515ef068736f-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/v1/models"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 44.798,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-2174cf37dd75-authorized",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/v1/speech/stt/jobs/c2568508-3dd3-4cb9-bf06-ad9de952946e"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 59.197,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-2174cf37dd75-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/v1/speech/stt/jobs/c2568508-3dd3-4cb9-bf06-ad9de952946e"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 41.889,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-590a3218f5ea-authorized",
+      "kind": "http",
+      "method": "PATCH",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/admin/keys/c2568508-3dd3-4cb9-bf06-ad9de952946e/policy"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 41.926,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-590a3218f5ea-unauthenticated",
+      "kind": "http",
+      "method": "PATCH",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/keys/c2568508-3dd3-4cb9-bf06-ad9de952946e/policy"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 42.339,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-41a09eb58037-authorized",
+      "kind": "http",
+      "method": "PATCH",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/admin/keys/c2568508-3dd3-4cb9-bf06-ad9de952946e/rate-limit"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 41.199,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-41a09eb58037-unauthenticated",
+      "kind": "http",
+      "method": "PATCH",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/keys/c2568508-3dd3-4cb9-bf06-ad9de952946e/rate-limit"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 42.274,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-cf68693ac354-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/admin/circuit-breaker/reset"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 38.849,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-cf68693ac354-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/circuit-breaker/reset"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 43.433,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-0e5f1760eee0-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/admin/credits/357b2728-413e-44b8-a75d-5f5eaf91c8ac"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 41.273,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-0e5f1760eee0-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/credits/357b2728-413e-44b8-a75d-5f5eaf91c8ac"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 43.065,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-91c1cae2c2ac-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/admin/credits/357b2728-413e-44b8-a75d-5f5eaf91c8ac/gift"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 40.37,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-91c1cae2c2ac-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/credits/357b2728-413e-44b8-a75d-5f5eaf91c8ac/gift"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 43.97,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-a0cf69cfc97a-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/admin/credits/holds/sweep"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 36.76,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-a0cf69cfc97a-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/credits/holds/sweep"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 31.943,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-f8ae90b50f2b-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/admin/credits/reconcile"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 29.033,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-f8ae90b50f2b-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/credits/reconcile"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 26.998,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-7b97ca44e1f8-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/admin/keys"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 25.85,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-7b97ca44e1f8-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/admin/keys"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 29.557,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-d5430ba59c42-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "5xx",
+      "outcome": "failed",
+      "reason": "HTTP 503 outside expected class",
+      "status": 503,
+      "url": "http://127.0.0.1:13901/connectors/deepseek/chat/completions"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 28.038,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-d5430ba59c42-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/connectors/deepseek/chat/completions"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 31.48,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-09ba78f8e95a-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/connectors/deepseek/execute"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 27.061,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-09ba78f8e95a-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/connectors/deepseek/execute"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 36.72,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-574352edb9b3-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/execute"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 32.227,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-574352edb9b3-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/execute"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 27.307,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-ac7f34de6f28-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/images/generate"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 36.337,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-ac7f34de6f28-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/images/generate"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 25.952,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-1827006fc006-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "2xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 200,
+      "url": "http://127.0.0.1:13901/internal/watcher/circuit-breaker/reset"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 27.562,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-1827006fc006-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 403,
+      "url": "http://127.0.0.1:13901/internal/watcher/circuit-breaker/reset"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 30.136,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-a55c3d7107b7-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/v1/chat/completions"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 25.603,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-a55c3d7107b7-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/v1/chat/completions"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 25.947,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-1e621d19a939-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/v1/prompt-cache/prewarm"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 26.847,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-1e621d19a939-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/v1/prompt-cache/prewarm"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 25.827,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-7dd41765b35c-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "5xx",
+      "outcome": "failed",
+      "reason": "HTTP 500 outside expected class",
+      "status": 500,
+      "url": "http://127.0.0.1:13901/v1/speech/stt"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 42.691,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-7dd41765b35c-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/v1/speech/stt"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 42.199,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-5b74b3d2e5a3-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "5xx",
+      "outcome": "failed",
+      "reason": "HTTP 500 outside expected class",
+      "status": 500,
+      "url": "http://127.0.0.1:13901/v1/speech/stt/async"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 25.956,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-5b74b3d2e5a3-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/v1/speech/stt/async"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 30.136,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-b7b24bc43408-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/v1/speech/tts"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 46.826,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-b7b24bc43408-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/v1/speech/tts"
+    },
+    {
+      "auth_mode": "authorized",
+      "elapsed_ms": 37.067,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-46b9af8c4306-authorized",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 400,
+      "url": "http://127.0.0.1:13901/v1/speech/vad"
+    },
+    {
+      "auth_mode": "unauthenticated",
+      "elapsed_ms": 24.615,
+      "executed": true,
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-46b9af8c4306-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "observed_class": "4xx",
+      "outcome": "verified",
+      "reason": "expected route response observed",
+      "status": 401,
+      "url": "http://127.0.0.1:13901/v1/speech/vad"
+    }
+  ],
+  "producer": {
+    "tool": "tools/canary/route_sweep.py",
+    "version": "1.1.0"
+  },
+  "read_only": false,
+  "resident_version": null,
+  "rules": [
+    "Any HTTP 5xx fails the probe and every entity it cites.",
+    "An entity is included only when the plan issued at least one request for it.",
+    "This records route reachability; it does not prove business behavior."
+  ],
+  "schema": "CanaryResult/v1",
+  "subject": {
+    "commit": "eac9f9354f742ea628a4378b725fd28e3c4b79f9",
+    "evidence": {
+      "path": "source-evidence.json",
+      "sha256": "569bd24462866792a18bdbc65fd57df971f27285ba68cd699938e0ad00724558",
+      "source_field": "commit"
+    },
+    "schema": "GitCanarySubject/v1",
+    "tree": "d51dbdc39c4ca4bed9be183764fd3b05f01d122f"
+  }
+}

@@ -47,7 +47,8 @@ export function deriveTier(input: TierInput): TierResult {
 
 export interface EntryToRowOptions {
   /**
-   * CONN-0244's `ProviderAccess.use` (== `ConnectorsService.canUse(connector)`)
+   * CONN-0244's global `ProviderAccess.use` (==
+   * `ConnectorsService.isGloballyRoutable(connector)`)
    * for this entry's connector. Defaults to true (fail-open) so callers that
    * don't yet model access — e.g. tests predating CONN-0245-EXT — keep prior
    * behavior unchanged. NOT ANDed with `executableHere` here — that stays a

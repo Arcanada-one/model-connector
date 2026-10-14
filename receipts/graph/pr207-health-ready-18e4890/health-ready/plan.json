@@ -1,0 +1,43 @@
+{
+  "schema": "CanaryPlan/v1",
+  "id": "mc-pr207-health-ready-required-provider-unavailable-18e4890",
+  "environment": "candidate-local",
+  "base_url": "http://127.0.0.1:13900",
+  "owner": "MC-KEYS; disposable candidate-local instance",
+  "read_only": true,
+  "read_only_declared": true,
+  "mutating_owner": null,
+  "head_sha": "18e489033ed879849877aca629807a5367856b63",
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "18e489033ed879849877aca629807a5367856b63",
+    "tree": "ebc2b418cc7e1a83716bfd8c2311f432db5906aa",
+    "evidence": {
+      "path": "source-evidence.json",
+      "sha256": "b2d9271c4f57dfa55f5ed692ce957f3971c53820e8211f2df6169d941081d8fa",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "id": "health-ready-required-provider-unavailable",
+      "method": "GET",
+      "path": "/health/ready",
+      "expect": {
+        "status_in": [
+          200
+        ],
+        "route_present": true,
+        "json_has": [
+          "status",
+          "checks",
+          "providers"
+        ]
+      },
+      "entities": [
+        "route:GET /health/ready"
+      ],
+      "mutating": false
+    }
+  ]
+}

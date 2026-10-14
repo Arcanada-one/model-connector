@@ -1,0 +1,46 @@
+{
+  "schema": "RouteBaselineParity/v1",
+  "base_commit": "bb70aae82e78678dfb4e8f13621582ae6bd8cf74",
+  "candidate_measurement_commit": "6862c1ecf0fa02c99242cd0f64302ea7a0e3a897",
+  "current_candidate_route_canary_commit": "1cd82d06dafd12be32368750611538542ae14111",
+  "evidence_task": "0a3f80e9-6deb-4dc6-9301-d723a26b72f5",
+  "source_activity_comment": "9d35b079-8a90-4037-9070-ff62e0a77d66",
+  "routes": [
+    {
+      "entity": "route:GET /connectors/intents/:intentId",
+      "base_status": 503,
+      "base_body_code": "strict_chat_unavailable",
+      "candidate_status": 503,
+      "candidate_body_code": "strict_chat_unavailable",
+      "baseline_task": "709559c4-2ff7-4e2a-a69e-3b5de1dd2ce7"
+    },
+    {
+      "entity": "route:POST /connectors/:name/chat/completions",
+      "base_status": 503,
+      "base_body_code": "strict_chat_unavailable",
+      "base_concrete_route": "POST /connectors/deepseek/chat/completions",
+      "candidate_status": 503,
+      "candidate_body_code": "strict_chat_unavailable",
+      "baseline_task": "709559c4-2ff7-4e2a-a69e-3b5de1dd2ce7"
+    },
+    {
+      "entity": "route:POST /v1/speech/stt",
+      "base_status": 500,
+      "base_body_code": "stt_provider_failed",
+      "base_cause": "FST_INVALID_MULTIPART_CONTENT_TYPE; error text: the request is not multipart",
+      "candidate_status": 500,
+      "candidate_body_code": "stt_provider_failed",
+      "baseline_task": "cb07a5b3-0bc0-46b1-a3d7-9de4e9d60f86"
+    },
+    {
+      "entity": "route:POST /v1/speech/stt/async",
+      "base_status": 500,
+      "base_body_code": "stt_provider_failed",
+      "base_cause": "FST_INVALID_MULTIPART_CONTENT_TYPE; error text: the request is not multipart",
+      "candidate_status": 500,
+      "candidate_body_code": "stt_provider_failed",
+      "baseline_task": "cb07a5b3-0bc0-46b1-a3d7-9de4e9d60f86"
+    }
+  ],
+  "note": "Both source candidate and base parity probes were isolated/no-egress. CanaryResult rows retain their observed failed verdict; only the separately listed tracked exemptions bind the known baseline to its Muneral issue."
+}

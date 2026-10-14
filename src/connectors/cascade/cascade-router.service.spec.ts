@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CascadeRouterService } from './cascade-router.service';
 import { CascadeExhaustedError, CascadeBudgetExceededError } from './cascade.errors';
+import type { ApiKeyPolicy } from '../../policy/policy.schema';
 
 // Mock getConfig to control env
 vi.mock('../../config/env.schema', () => ({
@@ -59,9 +60,11 @@ function makeMockConnectorsService(
       return Promise.resolve(item ?? makeErrorResponse('server_error'));
     }),
     canUse: vi.fn((connector: string) => canUse(connector)),
+    // Credential eligibility is evaluated for the caller's exact policy.
+    canUseForPolicy: vi.fn(async (connector: string) => canUse(connector)),
     // CONN-1665 — cascade consults the per-key policy before dispatch; these
     // tests exercise legacy (policy-less) keys.
-    getKeyPolicy: vi.fn(async () => null),
+    getKeyPolicy: vi.fn(async (): Promise<ApiKeyPolicy | null> => null),
     isCandidateAllowedByPolicy: vi.fn(async () => true),
   };
 }
@@ -128,6 +131,34 @@ describe('CascadeRouterService (T1-T7)', () => {
       expect.anything(),
       expect.anything(),
     );
+  });
+
+  it('uses the caller provider-key mapping even when the shared OpenRouter key is absent', async () => {
+    const mockService = makeMockConnectorsService(
+      [makeSuccessResponse('openrouter', 'meta-llama/llama-4-maverick')],
+      () => false,
+    );
+    mockService.canUseForPolicy.mockImplementation(async (connector) => connector === 'openrouter');
+    mockService.getKeyPolicy.mockResolvedValue({
+      policyVersion: 1,
+      providers: ['openrouter'],
+      providerKeys: { openrouter: 'OPENROUTER_API_KEY_PRIME' },
+    });
+    const router = new CascadeRouterService(
+      mockService as unknown as ConstructorParameters<typeof CascadeRouterService>[0],
+      makeMockMetrics() as unknown as ConstructorParameters<typeof CascadeRouterService>[1],
+    );
+
+    const result = await router.execute('low-reasoning', { prompt: 'hello' }, 'key-prime');
+
+    expect(result.status).toBe('success');
+    expect(mockService.canUseForPolicy).toHaveBeenCalledWith(
+      'openrouter',
+      expect.objectContaining({
+        providerKeys: { openrouter: 'OPENROUTER_API_KEY_PRIME' },
+      }),
+    );
+    expect(mockService.execute).toHaveBeenCalledWith('openrouter', expect.anything(), 'key-prime');
   });
 
   it('CONN-0244: deep free chain advances through several rate-limited rungs to a later success', async () => {

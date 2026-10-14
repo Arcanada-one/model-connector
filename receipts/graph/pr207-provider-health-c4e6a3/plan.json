@@ -1,0 +1,7 @@
+{
+  "schema": "CanaryPlan/v1",
+  "id": "mc-pr207-provider-health-c4e6a3",
+  "scope": "Cold-process provider readiness, liveness/readiness semantics, catalog filtering and failover filtering.",
+  "environment": "Isolated PostgreSQL 16 and Redis; isolated HOME; loopback-only fake DeepSeek; non-loopback fetch blocked.",
+  "limitations": "Six managed connectors were tested absent or unavailable. Other visible provider families were outside this canary scope. No live provider credentials or production system were used."
+}

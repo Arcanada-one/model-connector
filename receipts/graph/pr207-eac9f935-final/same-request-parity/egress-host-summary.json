@@ -1,0 +1,57 @@
+{
+  "measurements": {
+    "candidate": {
+      "host_counts": {
+        "100.90.7.20:8300": 14,
+        "api.anthropic.com:443": 14,
+        "api.cerebra": 14,
+        "api.cloudflare.com:443": 14,
+        "api.cohere.com:443": 14,
+        "api.firework": 14,
+        "api.groq.com:443": 17,
+        "api.mi": 17,
+        "api.openai.com:443": 17,
+        "api.openmodel.ai:443": 17,
+        "api.orq.ai:443": 17,
+        "api.perplexity.ai:443": 14,
+        "api.together.xyz:443": 14,
+        "api.x.ai:443": 17,
+        "generativelanguage.googleapi": 17,
+        "ollama.com:443": 17,
+        "openrouter.ai:443": 17,
+        "router.huggingface.co:443": 14,
+        "u": 10
+      },
+      "observed_attempts": 289,
+      "scope": "process-lifetime aggregate; includes startup refreshes; the timestamp-free log does not permit per-request attribution"
+    },
+    "main": {
+      "host_counts": {
+        "100.90.7.20:8300": 2,
+        "api.anthropic.com:443": 2,
+        "api.cerebra": 2,
+        "api.cloudflare.com:443": 2,
+        "api.cohere.com:443": 2,
+        "api.firework": 2,
+        "api.groq.com:443": 3,
+        "api.mi": 3,
+        "api.openai.com:443": 3,
+        "api.openmodel.ai:443": 3,
+        "api.orq.ai:443": 3,
+        "api.perplexity.ai:443": 2,
+        "api.together.xyz:443": 2,
+        "api.x.ai:443": 3,
+        "generativelanguage.googleapi": 3,
+        "ollama.com:443": 3,
+        "openrouter.ai:443": 3,
+        "router.huggingface.co:443": 2,
+        "u": 1
+      },
+      "observed_attempts": 46,
+      "scope": "process-lifetime aggregate; includes startup refreshes; the timestamp-free log does not permit per-request attribution"
+    }
+  },
+  "network_calls_reached_external_socket": false,
+  "schema": "NoEgressHostSummary/v1",
+  "shim_sha256": "c7da1d7f7701c03d37c175d36f5c007714538ba369bfea90aa18b76d866cc808"
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "RouteSampleSpecRun/v1",
+  "captured_at_utc": "2026-10-14T07:03:29Z",
+  "source_commit": "c4e6a3cec324bd2a5f3c0da985c21494c5c0f9ed",
+  "source_tree": "2ffebdae2fbd2f57b2d341f268f1037638886a1b",
+  "scope": "Seven test-harness route declarations across three *.spec.ts files; five unique method/path pairs. These controllers are only mounted by their tests and are not mounted by the production AppModule.",
+  "runs": [
+    {
+      "command": "nice -n 10 pnpm exec vitest run src/admin/admin-rate-limit.app.spec.ts src/auth/rate-limit.app.spec.ts",
+      "result": "PASS",
+      "files": 2,
+      "tests_passed": 25,
+      "tests_failed": 0
+    },
+    {
+      "command": "DATABASE_URL='postgresql://dev@127.0.0.1:15582/mc_candidate?schema=public' REDIS_HOST=127.0.0.1 REDIS_PORT=16389 REDIS_PREFIX='pr207-route-spec-20261014:' nice -n 10 pnpm exec vitest run --config vitest.integration.config.ts src/auth/rate-limit.integration.spec.ts",
+      "result": "PASS",
+      "files": 1,
+      "tests_passed": 6,
+      "tests_failed": 0
+    }
+  ],
+  "route_declarations": [
+    {
+      "method": "GET",
+      "path": "/keyed",
+      "declared_in": "src/admin/admin-rate-limit.app.spec.ts"
+    },
+    {
+      "method": "GET",
+      "path": "/probe/execute",
+      "declared_in": "src/auth/rate-limit.app.spec.ts"
+    },
+    {
+      "method": "GET",
+      "path": "/probe/metrics",
+      "declared_in": "src/auth/rate-limit.app.spec.ts"
+    },
+    {
+      "method": "GET",
+      "path": "/probe/health",
+      "declared_in": "src/auth/rate-limit.app.spec.ts"
+    },
+    {
+      "method": "GET",
+      "path": "/probe/abort",
+      "declared_in": "src/auth/rate-limit.app.spec.ts"
+    },
+    {
+      "method": "GET",
+      "path": "/probe/execute",
+      "declared_in": "src/auth/rate-limit.integration.spec.ts"
+    },
+    {
+      "method": "GET",
+      "path": "/probe/abort",
+      "declared_in": "src/auth/rate-limit.integration.spec.ts"
+    }
+  ],
+  "source_file_sha256": {
+    "src/admin/admin-rate-limit.app.spec.ts": "af4721da32d4160e5cd6018df60ee5146ddce5e67d13530a62c937a119f5c769",
+    "src/auth/rate-limit.app.spec.ts": "a037917ecd0c28c560d304cbc1b4ea67c55289c60f95371687785e3cabaafbb2",
+    "src/auth/rate-limit.integration.spec.ts": "4cafcbfdcd8785c25b1eb58e801de160025a6afb0aee7e500efcdf8b577cac3e"
+  },
+  "infrastructure": "The integration suite used only the candidate-local PostgreSQL 16 and Redis instances on loopback ports 15582 and 16389; a private Redis prefix isolated its keys. No provider or egress calls."
+}

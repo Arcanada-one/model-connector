@@ -1,0 +1,12 @@
+{
+  "schema": "MeasuredGitSource/v1",
+  "captured_at_utc": "2026-10-14T13:22:00Z",
+  "commit": "b292de6549887faf9d7f159975a60ce0b137c875",
+  "tree": "ad69d15b455e52a07a3aafff1b12d4caad3f22f3",
+  "dirty": false,
+  "repository_path": "/home/dev/.worktrees/model-connector/MC207-reviewfix-20261014",
+  "producer": {
+    "tool": "git rev-parse on exact candidate",
+    "version": "1"
+  }
+}

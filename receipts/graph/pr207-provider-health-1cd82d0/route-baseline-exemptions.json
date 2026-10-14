@@ -1,0 +1,41 @@
+{
+  "schema": "TrackedVerifierExemptions/v1",
+  "exemptions": [
+    {
+      "entity": "route:GET /connectors/intents/:intentId",
+      "code": "BASELINE_DEBT",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "Candidate-local no-egress probe returned 503 strict_chat_unavailable; exact base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 returned the identical status and body under the same probe. This is tracked as a baseline contract/defect; route remains failed in the CanaryResult.",
+      "muneral_task_id": "709559c4-2ff7-4e2a-a69e-3b5de1dd2ce7",
+      "evidence": "Base/candidate parity is in Muneral 0a3f80e9-6deb-4dc6-9301-d723a26b72f5; candidate head route result is result.json."
+    },
+    {
+      "entity": "route:POST /connectors/:name/chat/completions",
+      "code": "BASELINE_DEBT",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "Candidate-local no-egress probe returned 503 strict_chat_unavailable; exact base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 returned the identical status and body under the same probe. This is tracked as a baseline contract/defect; route remains failed in the CanaryResult.",
+      "muneral_task_id": "709559c4-2ff7-4e2a-a69e-3b5de1dd2ce7",
+      "evidence": "Base/candidate parity is in Muneral 0a3f80e9-6deb-4dc6-9301-d723a26b72f5; candidate head route result is result.json."
+    },
+    {
+      "entity": "route:POST /v1/speech/stt",
+      "code": "BASELINE_DEBT",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "Candidate-local multipart probe returned HTTP 500 for FST_INVALID_MULTIPART_CONTENT_TYPE; exact base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 returned the same HTTP 500 for the same request. Tracked as measured baseline defect; route remains failed in the CanaryResult.",
+      "muneral_task_id": "cb07a5b3-0bc0-46b1-a3d7-9de4e9d60f86",
+      "evidence": "Base/candidate parity is in Muneral 0a3f80e9-6deb-4dc6-9301-d723a26b72f5; candidate head route result is result.json."
+    },
+    {
+      "entity": "route:POST /v1/speech/stt/async",
+      "code": "BASELINE_DEBT",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "Candidate-local multipart probe returned HTTP 500 for FST_INVALID_MULTIPART_CONTENT_TYPE; exact base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 returned the same HTTP 500 for the same request. Tracked as measured baseline defect; route remains failed in the CanaryResult.",
+      "muneral_task_id": "cb07a5b3-0bc0-46b1-a3d7-9de4e9d60f86",
+      "evidence": "Base/candidate parity is in Muneral 0a3f80e9-6deb-4dc6-9301-d723a26b72f5; candidate head route result is result.json."
+    }
+  ]
+}

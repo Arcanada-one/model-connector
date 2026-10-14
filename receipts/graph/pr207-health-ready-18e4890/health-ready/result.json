@@ -1,0 +1,64 @@
+{
+ "base_url": "http://127.0.0.1:13900",
+ "captured_at_utc": "2026-10-14T12:21:56Z",
+ "card": "AUP-GRAPH-008",
+ "contract_ref": "contracts/graph-verified-change/observed-edges-and-deploy-gate.v1.json",
+ "counters": {
+  "failed": 0,
+  "not_measured": 0,
+  "verified": 1
+ },
+ "entity_verdicts": [
+  {
+   "entity": "route:GET /health/ready",
+   "probe_ids": [
+    "health-ready-required-provider-unavailable"
+   ],
+   "reason": "health-ready-required-provider-unavailable: status 200 is neither 404 nor 405: the route is served by the resident version; key `status` present; key `checks` present; key `providers` present",
+   "verdict": "verified"
+  }
+ ],
+ "environment": "candidate-local",
+ "model": "claude-opus-5",
+ "phase": "pre",
+ "plan": {
+  "digest": "sha256:e7e928216c336d18f571cbae10c10fb93154509f1954fe96b07a65b04e4a578a",
+  "id": "mc-pr207-health-ready-required-provider-unavailable-18e4890",
+  "path": "plan.json"
+ },
+ "probes": [
+  {
+   "body_bytes": 818,
+   "body_sha256": "sha256:ee1abe7c7903c23a5f3fdcfc6ccf312e1c639597a4aca0e7df3c36b75b2fed6c",
+   "elapsed_ms": 69,
+   "id": "health-ready-required-provider-unavailable",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "status 200 is neither 404 nor 405: the route is served by the resident version; key `status` present; key `checks` present; key `providers` present",
+   "status": 200,
+   "url": "http://127.0.0.1:13900/health/ready"
+  }
+ ],
+ "producer": {
+  "tool": "tools/graph/deploy_gate.py",
+  "version": "1.0.0"
+ },
+ "provisional_until_fable_review": true,
+ "read_only": true,
+ "resident_version": null,
+ "rules": [
+  "C3 a probe that could not run is not_measured, never verified",
+  "C4 probes are read-only unless the plan declares mutating with an owner"
+ ],
+ "schema": "CanaryResult/v1",
+ "subject": {
+  "commit": "18e489033ed879849877aca629807a5367856b63",
+  "evidence": {
+   "path": "source-evidence.json",
+   "sha256": "b2d9271c4f57dfa55f5ed692ce957f3971c53820e8211f2df6169d941081d8fa",
+   "source_field": "commit"
+  },
+  "schema": "GitCanarySubject/v1",
+  "tree": "ebc2b418cc7e1a83716bfd8c2311f432db5906aa"
+ }
+}
