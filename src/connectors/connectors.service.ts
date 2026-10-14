@@ -3,6 +3,8 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  OnModuleDestroy,
+  OnModuleInit,
   NotFoundException,
   Logger,
 } from '@nestjs/common';
@@ -140,9 +142,10 @@ export const RETRYABLE_ERRORS = new Set([
 type FirstDispatchFailureStage = 'connector_or_response_processing' | 'observation_finalize';
 
 @Injectable()
-export class ConnectorsService {
+export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ConnectorsService.name);
   private connectors = new Map<string, IConnector>();
+  private providerCredentialRefreshTimer?: NodeJS.Timeout;
 
   constructor(
     @InjectQueue('connector-jobs') private readonly jobQueue: Queue,
@@ -216,12 +219,33 @@ export class ConnectorsService {
     // Provider auth health is appended to preserve positional test constructions.
     @Inject(ProviderCredentialHealthService)
     private readonly providerCredentialHealth: ProviderCredentialHealthLike = {
+      isManaged: () => false,
       isReady: () => true,
       isRequired: () => false,
+      peek: () => null,
+      status: () => null,
       check: async () => null,
+      checkCredential: async () => null,
       checkAdvertised: async () => [],
     },
   ) {}
+
+  onModuleInit(): void {
+    const refresh = () => {
+      void this.checkProviderCredentials(true).catch(() => {
+        this.logger.warn('provider credential refresh failed: reason=unexpected');
+      });
+    };
+    // Credential checks run off the public request path. Single-flight and TTL
+    // caching in ProviderCredentialHealthService bound outbound work per binding.
+    refresh();
+    this.providerCredentialRefreshTimer = setInterval(refresh, 30_000);
+    this.providerCredentialRefreshTimer.unref();
+  }
+
+  onModuleDestroy(): void {
+    if (this.providerCredentialRefreshTimer) clearInterval(this.providerCredentialRefreshTimer);
+  }
 
   // CONN-0244 — per-provider access (READ = catalog-visible, USE = routable).
   // CONN-0245-EXT — delegates to ProviderAccessService: DB state if the
@@ -238,21 +262,64 @@ export class ConnectorsService {
 
   /** MC will route traffic through this provider (cascade / execute). */
   canUse(name: string): boolean {
-    return this.getAccess(name).use && this.providerCredentialHealth.isReady(name);
+    if (!this.getAccess(name).use) return false;
+    if (name === 'openrouter') return Boolean(process.env.OPENROUTER_API_KEY?.trim());
+    if (name === 'deepseek') return Boolean(process.env.DEEPSEEK_API_KEY?.trim());
+    if (!this.providerCredentialHealth.isManaged(name)) return true;
+    const measured = this.providerCredentialHealth.peek(name)?.state;
+    return measured !== 'missing' && measured !== 'rejected';
   }
 
   /** Probe only catalog-visible connectors and always include required providers. */
   async checkProviderCredentials(force = false): Promise<ProviderCredentialHealth[]> {
-    const candidates = this.listNames().filter(
-      (name) => this.canRead(name) || this.providerCredentialHealth.isRequired(name),
-    );
-    if (!candidates.includes('deepseek')) candidates.push('deepseek');
+    const candidates = this.listNames().filter((name) => this.canRead(name));
     return this.providerCredentialHealth.checkAdvertised(candidates, force);
+  }
+
+  /** Return the last background credential measurements without probing on a client request. */
+  getProviderCredentialStatus(): ProviderCredentialHealth[] {
+    return this.listNames()
+      .filter((name) => this.canRead(name) && this.providerCredentialHealth.isManaged(name))
+      .map((name) => this.providerCredentialHealth.status(name))
+      .filter((result): result is ProviderCredentialHealth => result !== null);
+  }
+
+  /** Check the exact credential binding selected by a caller's saved policy. */
+  async isCredentialReadyForPolicy(
+    connector: string,
+    policy: ApiKeyPolicy | null,
+  ): Promise<boolean> {
+    const envName = this.policyService.resolveProviderKeyEnv(policy, connector);
+    if (envName) {
+      return Boolean(process.env[envName]?.trim());
+    }
+    if (connector === 'openrouter') return Boolean(process.env.OPENROUTER_API_KEY?.trim());
+    if (connector === 'deepseek') return Boolean(process.env.DEEPSEEK_API_KEY?.trim());
+    if (!this.providerCredentialHealth.isManaged(connector)) return true;
+    const measured = this.providerCredentialHealth.peek(connector)?.state;
+    // An absent measurement or a transient probe outage is not proof of bad credentials.
+    return measured !== 'missing' && measured !== 'rejected';
+  }
+
+  async canUseForPolicy(connector: string, policy: ApiKeyPolicy | null): Promise<boolean> {
+    return this.getAccess(connector).use && this.isCredentialReadyForPolicy(connector, policy);
   }
 
   /** Credential-failing connectors must not be returned by the public model catalog. */
   private canAdvertise(name: string): boolean {
-    return this.canRead(name) && this.providerCredentialHealth.isReady(name);
+    if (!this.canRead(name)) return false;
+    if (name === 'openrouter') return Boolean(process.env.OPENROUTER_API_KEY?.trim());
+    if (name === 'deepseek') return Boolean(process.env.DEEPSEEK_API_KEY?.trim());
+    return (
+      !this.providerCredentialHealth.isManaged(name) || this.providerCredentialHealth.isReady(name)
+    );
+  }
+
+  private async canAdvertiseForPolicy(name: string, policy: ApiKeyPolicy | null): Promise<boolean> {
+    if (!this.canRead(name)) return false;
+    const envName = this.policyService.resolveProviderKeyEnv(policy, name);
+    if (envName) return Boolean(process.env[envName]?.trim());
+    return this.canAdvertise(name);
   }
 
   /**
@@ -349,19 +416,25 @@ export class ConnectorsService {
    * (fail-closed). A malformed stored policy exposes nothing.
    */
   async listCapabilitiesForKey(apiKeyId?: string): Promise<ConnectorCapabilities[]> {
-    // Resolve the initial probe before constructing the public catalog; an
-    // empty cache is not evidence that a connector has valid credentials.
-    await this.checkProviderCredentials();
-    // Keep unauthenticated providers out of the public /v1/models surface even
-    // when an API-key policy would otherwise allow their model names.
-    const all = this.listCapabilities().filter((caps) => this.providerCredentialHealth.isReady(caps.name));
-    if (!apiKeyId) return all;
+    // Resolve the key binding before constructing the public catalog. Catalog
+    // requests read cached auth measurements and never probe upstream inline.
     let policy: ApiKeyPolicy | null;
-    try {
-      policy = await this.policyService.getPolicyForKey(apiKeyId);
-    } catch {
-      return [];
+    if (apiKeyId) {
+      try {
+        policy = await this.policyService.getPolicyForKey(apiKeyId);
+      } catch {
+        return [];
+      }
+    } else {
+      policy = null;
     }
+    // Profile overrides are checked against that exact binding. A different
+    // client's provider key or the shared key cannot make this provider visible.
+    const all: ConnectorCapabilities[] = [];
+    for (const caps of this.listCapabilities()) {
+      if (await this.canAdvertiseForPolicy(caps.name, policy)) all.push(caps);
+    }
+    if (!apiKeyId) return all;
     if (!policy) return all;
 
     const out: ConnectorCapabilities[] = [];
@@ -547,13 +620,27 @@ export class ConnectorsService {
   async getCatalog(filters: CatalogFilters, apiKeyId?: string): Promise<CatalogResponse> {
     const cacheEnabled = this.isCatalogCacheEnabled();
     const cacheKey = this.catalogCacheKey(filters);
+    let policy: ApiKeyPolicy | null = null;
+    if (apiKeyId) {
+      try {
+        policy = await this.policyService.getPolicyForKey(apiKeyId);
+      } catch {
+        return { models: [], generatedAt: new Date().toISOString(), count: 0 };
+      }
+    }
 
     if (cacheEnabled && this.catalogRedis) {
       try {
         const cached = await this.catalogRedis.get(cacheKey);
         if (cached) {
           const response = JSON.parse(cached) as CatalogResponse;
-          const models = response.models.filter((entry) => this.canAdvertise(entry.connector));
+          const visible = await Promise.all(
+            response.models.map(async (entry) => ({
+              entry,
+              visible: await this.canAdvertiseForPolicy(entry.connector, policy),
+            })),
+          );
+          const models = visible.filter((item) => item.visible).map((item) => item.entry);
           return this.applyPolicyToCatalog({ ...response, models, count: models.length }, apiKeyId);
         }
       } catch {
@@ -562,7 +649,13 @@ export class ConnectorsService {
     }
 
     const rows = await this.catalogRepo.findAll();
-    const visibleRows = rows.filter((row) => this.canAdvertise(row.connector));
+    const visibility = await Promise.all(
+      rows.map(async (row) => ({
+        row,
+        visible: await this.canAdvertiseForPolicy(row.connector, policy),
+      })),
+    );
+    const visibleRows = visibility.filter((item) => item.visible).map((item) => item.row);
     const entries = visibleRows
       .map((row) => rowToEntry(row))
       .filter((entry) => entryMatchesFilters(entry, filters));
@@ -627,7 +720,11 @@ export class ConnectorsService {
     // narrowing never reads as health (INFRA-0384). Defense-in-depth behind the
     // admin guard — this is the layer that catches narrowing applied OUT of band.
     if (apiKeyId) this.alarmShowcaseNarrowing(apiKeyId, response.models.length, models.length);
-    return { ...response, models, count: models.length };
+    const credentialReadyModels = models.map((entry) => {
+      const envName = this.policyService.resolveProviderKeyEnv(policy, entry.connector);
+      return envName && process.env[envName]?.trim() ? { ...entry, available: true } : entry;
+    });
+    return { ...response, models: credentialReadyModels, count: credentialReadyModels.length };
   }
 
   /** CONN-1674 — warn when a showcase key's policy trims the catalog past the
@@ -822,11 +919,26 @@ export class ConnectorsService {
   ): Promise<ConnectorResponse> {
     const connector = this.get(connectorName);
 
+    let policy: ApiKeyPolicy | null;
+    try {
+      policy = await this.policyService.getPolicyForKey(apiKeyId);
+    } catch (err) {
+      if (err instanceof InvalidStoredPolicyError) {
+        return this.policyErrorResponse(
+          connectorName,
+          request.model,
+          'config_error',
+          'The access policy stored for this API key is invalid; contact the administrator.',
+        );
+      }
+      throw err;
+    }
+
     // CONN-0244 — USE gate (single choke-point for ALL routing: direct /execute, universal
     // /execute, and every cascade candidate route through here). A read-only provider is never
     // routed to — reject before any outbound call so a provider the operator marked not-routable
     // (e.g. paid OpenModel) cannot burn money. Permanent (non-retryable) so the cascade advances.
-    if (!this.canUse(connectorName)) {
+    if (!this.getAccess(connectorName).use) {
       const action = classifyErrorAction('provider_not_routable');
       return {
         id: '',
@@ -868,22 +980,6 @@ export class ConnectorsService {
     // every failover/cascade candidate all route through here). AND semantics:
     // the global gate above already denied non-routable providers; a per-key
     // policy can only NARROW further, never widen past a global deny.
-    let policy: ApiKeyPolicy | null;
-    try {
-      policy = await this.policyService.getPolicyForKey(apiKeyId);
-    } catch (err) {
-      if (err instanceof InvalidStoredPolicyError) {
-        // Fail closed. Details (incl. the key id) are logged by PolicyService;
-        // the client-facing message stays generic.
-        return this.policyErrorResponse(
-          connectorName,
-          request.model,
-          'config_error',
-          'The access policy stored for this API key is invalid; contact the administrator.',
-        );
-      }
-      throw err;
-    }
     if (policy) {
       if (!this.policyService.isProviderAllowed(policy, connectorName)) {
         return this.policyErrorResponse(
@@ -893,6 +989,27 @@ export class ConnectorsService {
           `Provider '${connectorName}' is not permitted by this API key's access policy.`,
         );
       }
+    }
+
+    const profileKeyName = this.policyService.resolveProviderKeyEnv(policy, connectorName);
+    if (profileKeyName && !process.env[profileKeyName]?.trim()) {
+      return this.policyErrorResponse(
+        connectorName,
+        request.model,
+        'config_error',
+        `Provider key alias for '${connectorName}' is not configured on the server; contact the administrator.`,
+      );
+    }
+    if (!(await this.isCredentialReadyForPolicy(connectorName, policy))) {
+      return this.policyErrorResponse(
+        connectorName,
+        request.model,
+        'config_error',
+        `No provider credential is configured for '${connectorName}'.`,
+      );
+    }
+
+    if (policy) {
       if (policy.models && policy.models.mode !== 'all') {
         if (!request.model) {
           return this.policyErrorResponse(

@@ -125,6 +125,7 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
 
   beforeEach(() => {
     for (const k of touchedEnv) envBackup[k] = process.env[k];
+    process.env.OPENROUTER_API_KEY = 'synthetic-shared-test-key';
   });
   afterEach(() => {
     for (const k of touchedEnv) {
@@ -264,6 +265,44 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
   });
 
   describe('provider-key override (ALS across the whole retry loop)', () => {
+    it('legacy policy without providerKeys does not advertise or call OpenRouter when the shared key is absent', async () => {
+      delete process.env.OPENROUTER_API_KEY;
+      const openrouter = new FakeConnector('openrouter', 'free-model', () =>
+        ok('openrouter', 'free-model'),
+      );
+      const { service } = buildStack([openrouter], { policy: { policyVersion: 1 } });
+
+      const visible = await service.listCapabilitiesForKey(API_KEY_ID);
+      const response = await service.execute(
+        'openrouter',
+        { prompt: 'hi', model: 'free-model' },
+        API_KEY_ID,
+      );
+
+      expect(visible).toEqual([]);
+      expect(response.error?.type).toBe('config_error');
+      expect(openrouter.calls).toBe(0);
+    });
+
+    it('profile catalog visibility uses only that profile env binding when shared is absent', async () => {
+      delete process.env.OPENROUTER_API_KEY;
+      process.env.OPENROUTER_API_KEY_EMAIL_AGENT = 'synthetic-dedicated-test-key';
+      const openrouter = new FakeConnector('openrouter', 'free-model', () =>
+        ok('openrouter', 'free-model'),
+      );
+      const { service } = buildStack([openrouter], {
+        policy: {
+          policyVersion: 1,
+          providers: ['openrouter'],
+          providerKeys: { openrouter: 'OPENROUTER_API_KEY_EMAIL_AGENT' },
+        },
+      });
+
+      const visible = await service.listCapabilitiesForKey(API_KEY_ID);
+
+      expect(visible.map((capability) => capability.name)).toEqual(['openrouter']);
+    });
+
     it('policy providerKeys.openrouter → connector sees the override on EVERY attempt', async () => {
       process.env.OPENROUTER_API_KEY = 'shared-key-value';
       process.env.OPENROUTER_API_KEY_EMAIL_AGENT = 'dedicated-key-value';
@@ -324,12 +363,14 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
         },
       });
 
+      const visible = await service.listCapabilitiesForKey(API_KEY_ID);
       const resp = await service.execute(
         'openrouter',
         { prompt: 'hi', model: 'free-model' },
         API_KEY_ID,
       );
 
+      expect(visible).toEqual([]);
       expect(resp.error?.type).toBe('config_error');
       // Fail LOUD, no silent fallback to the shared env key: the request never ran.
       expect(openrouter.calls).toBe(0);
@@ -381,6 +422,24 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
   });
 
   describe('failover candidate filtering (attribution before dispatch)', () => {
+    it('does not put OpenRouter in failover when this key has no mapping and the default is absent', async () => {
+      delete process.env.OPENROUTER_API_KEY;
+      const openrouter = new FakeConnector('openrouter', 'or-free', () =>
+        ok('openrouter', 'or-free'),
+      );
+      const groq = new FakeConnector('groq', 'llama', () => ok('groq', 'llama'));
+      const { service } = buildStack([openrouter, groq], { policy: { policyVersion: 1 } });
+      const failover = new FailoverRouterService(service);
+
+      const response = await failover.complete({ prompt: 'hi' }, API_KEY_ID, {
+        requestedModel: 'auto',
+      });
+
+      expect(response.connector).toBe('groq');
+      expect(openrouter.calls).toBe(0);
+      expect(groq.calls).toBe(1);
+    });
+
     it('policy filters candidates; fully-emptied list → explicit policy_violation abort', async () => {
       const openrouter = new FakeConnector('openrouter', 'or-free', () =>
         ok('openrouter', 'or-free'),

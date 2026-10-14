@@ -62,9 +62,10 @@ export class CascadeRouterService {
         lowReasoningOrder: config.CASCADE_LOW_REASONING_ORDER,
         paidEnabled: config.CASCADE_PAID_ENABLED,
       });
-      // CONN-0244 — drop candidates whose provider is not routable (PROVIDER_ACCESS use=false),
-      // so a read-only provider never appears in the cascade even if it is listed in the order.
-      return candidates.filter((c) => this.connectorsService.canUse(c.connector));
+      // Routability is filtered in execute(), after loading the caller's key
+      // policy. A provider may be available through that key's mapped secret
+      // even when the process-wide default credential is absent.
+      return candidates;
     }
     throw new Error(`Unknown cascade profile: "${profile}"`);
   }
@@ -118,6 +119,24 @@ export class CascadeRouterService {
         'The access policy stored for this API key is invalid; contact the administrator.',
       );
     }
+
+    // Apply the global access gate and this client's exact credential binding
+    // before dispatch. This preserves profile-specific credentials without
+    // allowing a missing binding to fall back to the shared process key.
+    const routable: CascadeCandidate[] = [];
+    for (const candidate of candidates) {
+      if (await this.connectorsService.canUseForPolicy(candidate.connector, policy)) {
+        routable.push(candidate);
+      }
+    }
+    candidates = routable;
+    if (candidates.length === 0) {
+      return this.policyDenialResponse(
+        'config_error',
+        'No provider credentials are configured for this request.',
+      );
+    }
+
     if (policy) {
       const filtered: CascadeCandidate[] = [];
       for (const c of candidates) {

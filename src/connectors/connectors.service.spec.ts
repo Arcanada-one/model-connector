@@ -173,6 +173,34 @@ describe('ConnectorsService', () => {
     expect(gatedService.canUse('openrouter')).toBe(false);
   });
 
+  it('does not probe an unregistered required provider', async () => {
+    const credentialHealth = new ProviderCredentialHealthService({
+      env: {},
+      fetchImpl: vi.fn(async () => new Response(null, { status: 200 })),
+      runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const checkAdvertised = vi.spyOn(credentialHealth, 'checkAdvertised');
+    const gatedService = new ConnectorsService(
+      mockQueue as unknown as Queue,
+      mockPrisma as unknown as PrismaService,
+      mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+      new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+      emptyModalityCatalog,
+      noopCatalogRepo,
+      noopCatalogRedis,
+      undefined,
+      undefined,
+      undefined,
+      credentialHealth,
+    );
+    gatedService.register(mockConnector);
+
+    await gatedService.checkProviderCredentials();
+
+    expect(checkAdvertised).toHaveBeenCalledWith(['test'], false);
+  });
+
   it('persists the CLI failure subtype and cause through execute and the Request write', async () => {
     class FailingClaude extends ClaudeCodeConnector {
       protected override async spawnProcess() {

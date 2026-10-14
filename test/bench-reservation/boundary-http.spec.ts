@@ -111,7 +111,10 @@ async function start(omitHealth = false, omitConnectors = false) {
       { provide: AdminService, useValue: empty },
       { provide: BillingService, useValue: empty },
       { provide: BillingReconcilerService, useValue: empty },
-      { provide: ConnectorsService, useValue: { listNames: () => [] } },
+      {
+        provide: ConnectorsService,
+        useValue: { listNames: () => [], getProviderCredentialStatus: () => [] },
+      },
       { provide: ImageGenerationService, useValue: empty },
       { provide: CascadeRouterService, useValue: empty },
       { provide: FailoverRouterService, useValue: empty },

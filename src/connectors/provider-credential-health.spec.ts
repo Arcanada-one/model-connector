@@ -45,6 +45,43 @@ describe('ProviderCredentialHealthService', () => {
       'https://openrouter.ai/api/v1/models',
       expect.objectContaining({ method: 'GET' }),
     );
+    expect(service.isReady('openrouter')).toBe(true);
+  });
+
+  it('does not treat another client profile binding as the shared OpenRouter credential', async () => {
+    const profileKey = 'synthetic-profile-only-key';
+    const fetchImpl = vi.fn(async () => new Response(null, { status: 200 }));
+    const service = new ProviderCredentialHealthService(
+      deps({ env: { OPENROUTER_API_KEY_PRIME: profileKey }, fetchImpl }),
+    );
+
+    await expect(service.check('openrouter')).resolves.toMatchObject({ state: 'missing' });
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(service.isReady('openrouter')).toBe(false);
+
+    await expect(service.checkCredential('openrouter', profileKey)).resolves.toMatchObject({
+      state: 'ready',
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(service.status('openrouter'))).not.toContain(profileKey);
+  });
+
+  it('single-flights concurrent checks for the same credential', async () => {
+    const fetchImpl = vi.fn(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return new Response(null, { status: 200 });
+    });
+    const service = new ProviderCredentialHealthService(
+      deps({ env: { OPENROUTER_API_KEY: 'synthetic-concurrent-key' }, fetchImpl }),
+    );
+
+    const results = await Promise.all(
+      Array.from({ length: 50 }, () => service.check('openrouter', true)),
+    );
+
+    expect(results).toHaveLength(50);
+    expect(results.every((result) => result?.state === 'ready')).toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   it('distinguishes an invalid upstream credential and does not issue a generation request', async () => {
@@ -73,6 +110,26 @@ describe('ProviderCredentialHealthService', () => {
     });
   });
 
+  it('honors the configured DeepSeek base URL', async () => {
+    const fetchImpl = vi.fn(async () => new Response(null, { status: 200 }));
+    const service = new ProviderCredentialHealthService(
+      deps({
+        env: {
+          DEEPSEEK_API_KEY: 'synthetic-deepseek-key',
+          DEEPSEEK_BASE_URL: 'http://127.0.0.1:45123/',
+        },
+        fetchImpl,
+      }),
+    );
+
+    await service.check('deepseek');
+
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'http://127.0.0.1:45123/models',
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   it('uses Claude Code auth status JSON and treats no login as missing', async () => {
     const runCommand = vi.fn(async () => ({ code: 0, stdout: '{"authMethod":"none"}' }));
     const service = new ProviderCredentialHealthService(deps({ runCommand }));
@@ -95,6 +152,19 @@ describe('ProviderCredentialHealthService', () => {
 
     expect(results.map((result) => result.state)).toEqual(['ready', 'ready']);
     expect(JSON.stringify(results)).not.toContain('private@example.test');
+  });
+
+  it('does not treat Claude authMethod as logged in when loggedIn is explicitly false', async () => {
+    const service = new ProviderCredentialHealthService(
+      deps({
+        runCommand: vi.fn(async () => ({
+          code: 0,
+          stdout: '{"loggedIn":false,"authMethod":"oauth_token"}',
+        })),
+      }),
+    );
+
+    await expect(service.check('claude-code')).resolves.toMatchObject({ state: 'missing' });
   });
 
   it('fails closed when Cursor reports unauthenticated', async () => {

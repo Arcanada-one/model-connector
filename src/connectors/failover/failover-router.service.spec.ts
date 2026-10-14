@@ -60,6 +60,7 @@ function makeService(
     listCapabilities: vi.fn(() => CAPS),
     checkProviderCredentials: vi.fn(async () => []),
     canUse: vi.fn((connector: string) => !unavailable.includes(connector)),
+    canUseForPolicy: vi.fn(async (connector: string) => !unavailable.includes(connector)),
     execute,
     // CONN-1665 — failover consults the per-key policy before dispatch; these
     // tests exercise legacy (policy-less) keys.
@@ -125,6 +126,7 @@ describe('FailoverRouterService.complete', () => {
       listCapabilities: vi.fn(() => [...CAPS, openrouter]),
       checkProviderCredentials: vi.fn(async () => []),
       canUse: vi.fn((connector: string) => connector !== 'openrouter'),
+      canUseForPolicy: vi.fn(async (connector: string) => connector !== 'openrouter'),
       execute,
       getKeyPolicy: vi.fn(async () => null),
       isCandidateAllowedByPolicy: vi.fn(async () => true),
@@ -135,7 +137,7 @@ describe('FailoverRouterService.complete', () => {
 
     await service.complete({ prompt: 'ping' }, 'key-1');
 
-    expect(mockConnectors.canUse).toHaveBeenCalledWith('openrouter');
+    expect(mockConnectors.canUseForPolicy).toHaveBeenCalledWith('openrouter', null);
     expect(execute).not.toHaveBeenCalledWith('openrouter', expect.anything(), expect.anything());
   });
 });

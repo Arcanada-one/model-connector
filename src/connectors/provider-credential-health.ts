@@ -1,4 +1,5 @@
 import { execFile as execFileCallback } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { promisify } from 'node:util';
 
 const execFile = promisify(execFileCallback);
@@ -16,22 +17,30 @@ export interface ProviderCredentialHealth {
 }
 
 export interface ProviderCredentialHealthLike {
+  isManaged(connector: string): boolean;
   isReady(connector: string): boolean;
   isRequired(connector: string): boolean;
+  peek(connector: string): ProviderCredentialHealth | null;
+  status(connector: string): ProviderCredentialHealth | null;
   check(connector: string, force?: boolean): Promise<ProviderCredentialHealth | null>;
+  checkCredential(
+    connector: string,
+    credential: string,
+    force?: boolean,
+  ): Promise<ProviderCredentialHealth | null>;
   checkAdvertised(connectors: string[], force?: boolean): Promise<ProviderCredentialHealth[]>;
 }
 
 export const PROVIDER_CREDENTIAL_MANIFEST = {
   deepseek: {
     required: true,
-    source: 'DEEPSEEK_API_KEY (protected deployment environment)',
-    probe: 'GET https://api.deepseek.com/models with the configured credential',
+    source: 'DEEPSEEK_API_KEY or DEEPSEEK_API_KEY_* (protected deployment environment)',
+    probe: 'GET {DEEPSEEK_BASE_URL}/models with each configured credential binding',
   },
   openrouter: {
     required: false,
-    source: 'Vault-managed deployment secret → OPENROUTER_API_KEY',
-    probe: 'GET https://openrouter.ai/api/v1/models with the selected configured credential',
+    source: 'Vault-managed deployment secret → OPENROUTER_API_KEY or OPENROUTER_API_KEY_*',
+    probe: 'GET https://openrouter.ai/api/v1/models with each configured credential binding',
   },
   'claude-code': {
     required: false,
@@ -118,8 +127,8 @@ function commandState(
   if (kind === 'claude') {
     try {
       const parsed = JSON.parse(stdout) as { authMethod?: unknown; loggedIn?: unknown };
-      return parsed.loggedIn === true ||
-        (typeof parsed.authMethod === 'string' && parsed.authMethod !== 'none')
+      if (typeof parsed.loggedIn === 'boolean') return parsed.loggedIn ? 'ready' : 'missing';
+      return typeof parsed.authMethod === 'string' && parsed.authMethod !== 'none'
         ? 'ready'
         : 'missing';
     } catch {
@@ -132,10 +141,8 @@ function commandState(
 }
 
 export class ProviderCredentialHealthService implements ProviderCredentialHealthLike {
-  private readonly cache = new Map<
-    ManifestConnector,
-    { result: ProviderCredentialHealth; at: number }
-  >();
+  private readonly cache = new Map<string, { result: ProviderCredentialHealth; at: number }>();
+  private readonly inFlight = new Map<string, Promise<ProviderCredentialHealth>>();
 
   constructor(private readonly deps: CredentialHealthDeps = runtimeDeps) {}
 
@@ -145,7 +152,32 @@ export class ProviderCredentialHealthService implements ProviderCredentialHealth
 
   isReady(connector: string): boolean {
     if (!this.isManaged(connector)) return true;
-    return this.cache.get(connector)?.result.state === 'ready';
+    return this.peek(connector)?.state === 'ready';
+  }
+
+  peek(connector: string): ProviderCredentialHealth | null {
+    if (!this.isManaged(connector)) return null;
+    const key = this.cacheKey(connector, this.httpCredentials(connector));
+    const cached = this.cache.get(key);
+    if (!cached || this.deps.now().getTime() - cached.at >= CACHE_TTL_MS) return null;
+    return cached.result;
+  }
+
+  status(connector: string): ProviderCredentialHealth | null {
+    if (!this.isManaged(connector)) return null;
+    const measured = this.peek(connector);
+    if (measured) return measured;
+    const hasCredential =
+      connector === 'openrouter' || connector === 'deepseek'
+        ? this.httpCredentials(connector).length > 0
+        : false;
+    return {
+      connector,
+      required: PROVIDER_CREDENTIAL_MANIFEST[connector].required,
+      state: hasCredential ? 'unavailable' : 'missing',
+      source: PROVIDER_CREDENTIAL_MANIFEST[connector].source,
+      checkedAt: this.deps.now().toISOString(),
+    };
   }
 
   isRequired(connector: string): boolean {
@@ -154,20 +186,65 @@ export class ProviderCredentialHealthService implements ProviderCredentialHealth
 
   async check(connector: string, force = false): Promise<ProviderCredentialHealth | null> {
     if (!this.isManaged(connector)) return null;
-    const now = this.deps.now();
-    const cached = this.cache.get(connector);
-    if (!force && cached && now.getTime() - cached.at < CACHE_TTL_MS) return cached.result;
+    const credentials = this.httpCredentials(connector);
+    const cacheKey = this.cacheKey(connector, credentials);
+    return this.checkCached(connector, cacheKey, force, () => this.probe(connector, credentials));
+  }
 
-    const result = await this.probe(connector);
-    const health: ProviderCredentialHealth = {
-      connector,
-      required: PROVIDER_CREDENTIAL_MANIFEST[connector].required,
-      state: result,
-      source: PROVIDER_CREDENTIAL_MANIFEST[connector].source,
-      checkedAt: now.toISOString(),
-    };
-    this.cache.set(connector, { result: health, at: now.getTime() });
-    return health;
+  async checkCredential(
+    connector: string,
+    credential: string,
+    force = false,
+  ): Promise<ProviderCredentialHealth | null> {
+    if (connector !== 'deepseek' && connector !== 'openrouter') return null;
+    const value = credential.trim();
+    if (!value) {
+      return this.checkCached(
+        connector,
+        `${connector}:missing-profile`,
+        force,
+        async () => 'missing',
+      );
+    }
+    return this.checkCached(connector, this.cacheKey(connector, [value]), force, () =>
+      this.probeHttp(connector, value),
+    );
+  }
+
+  private cacheKey(connector: ManifestConnector, credentials: string[]): string {
+    const fingerprint = createHash('sha256').update(credentials.join('\0')).digest('hex');
+    return `${connector}:${fingerprint}`;
+  }
+
+  private async checkCached(
+    connector: ManifestConnector,
+    cacheKey: string,
+    force: boolean,
+    probe: () => Promise<CredentialProbeState>,
+  ): Promise<ProviderCredentialHealth> {
+    const now = this.deps.now();
+    const cached = this.cache.get(cacheKey);
+    if (!force && cached && now.getTime() - cached.at < CACHE_TTL_MS) return cached.result;
+    const current = this.inFlight.get(cacheKey);
+    if (current) return current;
+
+    const pending = probe().then((state) => {
+      const health: ProviderCredentialHealth = {
+        connector,
+        required: PROVIDER_CREDENTIAL_MANIFEST[connector].required,
+        state,
+        source: PROVIDER_CREDENTIAL_MANIFEST[connector].source,
+        checkedAt: this.deps.now().toISOString(),
+      };
+      this.cache.set(cacheKey, { result: health, at: this.deps.now().getTime() });
+      return health;
+    });
+    this.inFlight.set(cacheKey, pending);
+    try {
+      return await pending;
+    } finally {
+      if (this.inFlight.get(cacheKey) === pending) this.inFlight.delete(cacheKey);
+    }
   }
 
   async checkAdvertised(connectors: string[], force = false): Promise<ProviderCredentialHealth[]> {
@@ -177,14 +254,32 @@ export class ProviderCredentialHealthService implements ProviderCredentialHealth
     );
   }
 
-  private async probe(connector: ManifestConnector): Promise<CredentialProbeState> {
+  private httpCredentials(connector: ManifestConnector): string[] {
     if (connector === 'deepseek' || connector === 'openrouter') {
-      const credential = credentialFor(connector, this.deps.env);
-      const url =
-        connector === 'deepseek'
-          ? 'https://api.deepseek.com/models'
-          : 'https://openrouter.ai/api/v1/models';
-      return probeHttpCredential(url, credential, this.deps.fetchImpl);
+      const shared = credentialFor(connector, this.deps.env);
+      return shared ? [shared] : [];
+    }
+    return [];
+  }
+
+  private async probeHttp(
+    connector: 'deepseek' | 'openrouter',
+    credential: string,
+  ): Promise<CredentialProbeState> {
+    const url =
+      connector === 'deepseek'
+        ? `${(this.deps.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/+$/, '')}/models`
+        : 'https://openrouter.ai/api/v1/models';
+    return probeHttpCredential(url, credential, this.deps.fetchImpl);
+  }
+
+  private async probe(
+    connector: ManifestConnector,
+    credentials: string[],
+  ): Promise<CredentialProbeState> {
+    if (connector === 'deepseek' || connector === 'openrouter') {
+      if (!credentials.length) return 'missing';
+      return this.probeHttp(connector, credentials[0]);
     }
     const binary =
       connector === 'claude-code'
@@ -200,4 +295,9 @@ export class ProviderCredentialHealthService implements ProviderCredentialHealth
   }
 }
 
-export const __INTERNALS__ = { commandState, credentialFor, probeHttpCredential, CACHE_TTL_MS };
+export const __INTERNALS__ = {
+  commandState,
+  credentialFor,
+  probeHttpCredential,
+  CACHE_TTL_MS,
+};

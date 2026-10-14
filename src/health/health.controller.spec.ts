@@ -16,7 +16,7 @@ describe('HealthController', () => {
     listNames: vi.fn().mockReturnValue(['claude-code', 'cursor']),
     getStatus: vi.fn(),
     get: vi.fn(),
-    checkProviderCredentials: vi.fn().mockResolvedValue([]),
+    getProviderCredentialStatus: vi.fn().mockReturnValue([]),
   };
 
   let controller: HealthController;
@@ -66,34 +66,35 @@ describe('HealthController', () => {
     expect(result.checks.database).toBe('error');
   });
 
-  it('degrades but stays HTTP 200 when optional providers have no credential', async () => {
-    mockConnectors.checkProviderCredentials.mockResolvedValue([
+  it('keeps liveness ok and reports optional providers without credentials', async () => {
+    mockConnectors.getProviderCredentialStatus.mockReturnValue([
       { connector: 'openrouter', required: false, state: 'missing' },
     ]);
     const reply = mockReply();
 
     const result = await controller.health(reply as never);
 
-    expect(result.status).toBe('degraded');
+    expect(result.status).toBe('ok');
     expect(result.providers[0].connector).toBe('openrouter');
     expect(reply.statusCode).toBe(200);
   });
 
-  it('fails health with HTTP 503 when the required DeepSeek credential is missing', async () => {
-    mockConnectors.checkProviderCredentials.mockResolvedValue([
+  it('keeps process liveness HTTP 200 when the required DeepSeek credential is missing', async () => {
+    mockConnectors.getProviderCredentialStatus.mockReturnValue([
       { connector: 'deepseek', required: true, state: 'missing' },
     ]);
     const reply = mockReply();
 
     const result = await controller.health(reply as never);
 
-    expect(result.status).toBe('error');
-    expect(reply.statusCode).toBe(503);
+    expect(result.status).toBe('ok');
+    expect(result.providers[0].state).toBe('missing');
+    expect(reply.statusCode).toBe(200);
   });
 
   it('fails readiness with HTTP 503 only for a missing required provider', async () => {
     mockPrisma.$queryRaw.mockResolvedValue([{ 1: 1 }]);
-    mockConnectors.checkProviderCredentials.mockResolvedValue([
+    mockConnectors.getProviderCredentialStatus.mockReturnValue([
       { connector: 'openrouter', required: false, state: 'missing' },
       { connector: 'deepseek', required: true, state: 'ready' },
     ]);
@@ -104,13 +105,52 @@ describe('HealthController', () => {
     expect(result.status).toBe('degraded');
     expect(reply.statusCode).toBe(200);
 
-    mockConnectors.checkProviderCredentials.mockResolvedValue([
+    mockConnectors.getProviderCredentialStatus.mockReturnValue([
       { connector: 'deepseek', required: true, state: 'rejected' },
     ]);
     const failedReply = mockReply();
     const failed = await controller.ready(failedReply as never);
     expect(failed.status).toBe('error');
     expect(failedReply.statusCode).toBe(503);
+  });
+
+  it('keeps liveness HTTP 200 and reports a transient provider state without source details', async () => {
+    mockConnectors.getProviderCredentialStatus.mockReturnValue([
+      {
+        connector: 'deepseek',
+        required: true,
+        state: 'unavailable',
+        source: 'internal-only-source',
+        checkedAt: '2026-10-14T00:00:00.000Z',
+      },
+    ]);
+    const reply = mockReply();
+
+    const result = await controller.health(reply as never);
+
+    expect(result.status).toBe('ok');
+    expect(reply.statusCode).toBe(200);
+    expect(result.providers[0].state).toBe('unavailable');
+    expect(JSON.stringify(result)).not.toContain('internal-only-source');
+  });
+
+  it('degrades readiness without failing HTTP when the required provider is transiently unavailable', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([{ 1: 1 }]);
+    mockConnectors.getProviderCredentialStatus.mockReturnValue([
+      {
+        connector: 'deepseek',
+        required: true,
+        state: 'unavailable',
+        checkedAt: '2026-10-14T00:00:00.000Z',
+      },
+    ]);
+    const reply = mockReply();
+
+    const result = await controller.ready(reply as never);
+
+    expect(result.status).toBe('degraded');
+    expect(result.checks.requiredProviders).toBe('ok');
+    expect(reply.statusCode).toBe(200);
   });
 
   it('should return metrics from /health/metrics', () => {

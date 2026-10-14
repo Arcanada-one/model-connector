@@ -9,7 +9,11 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConnectorsService } from '../connectors.service';
-import { ConnectorRequest, ConnectorResponse } from '../interfaces/connector.interface';
+import {
+  ConnectorCapabilities,
+  ConnectorRequest,
+  ConnectorResponse,
+} from '../interfaces/connector.interface';
 import { buildFailoverCandidates } from './failover.candidates';
 import { runFailoverChain } from './failover.chain';
 import { FailoverAbortError } from './failover.errors';
@@ -73,23 +77,6 @@ export class FailoverRouterService {
     opts: FailoverOptions = {},
   ): Promise<ConnectorResponse> {
     const cfg = this.readConfig();
-    // A cold process has no cached credential verdict yet. Probe advertised
-    // connectors before building the chain so no unauthenticated hop is tried.
-    await this.connectorsService.checkProviderCredentials();
-    let candidates = buildFailoverCandidates({
-      // Refuse a provider whose credential probe is missing/rejected before it
-      // can become a dispatch candidate. `canUse` remains the shared gate for
-      // ProviderAccess and credential readiness.
-      capabilities: this.connectorsService
-        .listCapabilities()
-        .filter((capability) => this.connectorsService.canUse(capability.name)),
-      requestedModel: opts.requestedModel,
-      providerOrder: cfg.providerOrder,
-      deepseekModel: cfg.deepseekModel,
-      paidEnabled: cfg.paidEnabled,
-      allowFreeDowngrade: cfg.allowFreeDowngrade,
-    });
-
     // CONN-1665 — filter candidates by the caller's per-key policy BEFORE
     // dispatch. The execute() choke point remains the hard guarantee; this
     // filter exists so an all-denied chain surfaces an explicit
@@ -108,6 +95,20 @@ export class FailoverRouterService {
         'The access policy stored for this API key is invalid; contact the administrator.',
       );
     }
+    const eligibleCapabilities: ConnectorCapabilities[] = [];
+    for (const capability of this.connectorsService.listCapabilities()) {
+      if (await this.connectorsService.canUseForPolicy(capability.name, policy)) {
+        eligibleCapabilities.push(capability);
+      }
+    }
+    let candidates = buildFailoverCandidates({
+      capabilities: eligibleCapabilities,
+      requestedModel: opts.requestedModel,
+      providerOrder: cfg.providerOrder,
+      deepseekModel: cfg.deepseekModel,
+      paidEnabled: cfg.paidEnabled,
+      allowFreeDowngrade: cfg.allowFreeDowngrade,
+    });
     if (policy) {
       const filtered: CascadeCandidate[] = [];
       for (const c of candidates) {
