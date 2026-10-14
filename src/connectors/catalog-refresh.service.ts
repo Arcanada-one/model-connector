@@ -120,7 +120,7 @@ export class CatalogRefreshService implements OnModuleInit {
         const rows = rowsByConnector.get(entry.connector) ?? [];
         rows.push(
           entryToRow(entry, {
-            useEnabled: this.connectorsService.canUse(entry.connector),
+            useEnabled: this.connectorsService.isGloballyRoutable(entry.connector),
           }),
         );
         rowsByConnector.set(entry.connector, rows);
