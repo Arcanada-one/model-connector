@@ -5,7 +5,7 @@
 // House pattern: real ConnectorsService wired with FakeConnector (see
 // openai-compat.failover.integration.spec.ts).
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ConnectorsService } from './connectors.service';
 import { PolicyService } from '../policy/policy.service';
 import { getProviderKeyOverride, providerKeyContext } from '../policy/provider-key.context';
@@ -20,6 +20,7 @@ import {
 import type { ApiKeyPolicy } from '../policy/policy.schema';
 import { FailoverRouterService } from './failover/failover-router.service';
 import { FailoverAbortError } from './failover/failover.errors';
+import { ProviderCredentialHealthService } from './provider-credential-health';
 
 class FakeConnector implements IConnector {
   public calls = 0;
@@ -75,6 +76,7 @@ interface StackOptions {
   policy?: ApiKeyPolicy | null;
   /** (connector → model → tier) rows the fake catalog serves. */
   tiers?: Record<string, Record<string, 'free' | 'paid' | 'unknown'>>;
+  providerCredentialHealth?: ProviderCredentialHealthService;
 }
 
 const API_KEY_ID = 'policy-key-1';
@@ -114,6 +116,8 @@ function buildStack(connectors: FakeConnector[], opts: StackOptions = {}) {
     undefined,
     undefined,
     policyService,
+    undefined,
+    opts.providerCredentialHealth,
   );
   for (const c of connectors) service.register(c);
   return { service, policyService };
@@ -224,6 +228,31 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
     const { service } = buildStack([groq], { policy: null });
     const resp = await service.execute('groq', { prompt: 'hi', model: 'llama' }, API_KEY_ID);
     expect(resp.status).toBe('success');
+  });
+
+  it('cold process allows a credential-backed CLI dispatch before its background auth probe runs', async () => {
+    const runCommand = vi.fn(async () => ({ code: 0, stdout: '{"loggedIn":true}' }));
+    const providerCredentialHealth = new ProviderCredentialHealthService({
+      env: {},
+      fetchImpl: vi.fn(async () => new Response(null, { status: 200 })),
+      runCommand,
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const claude = new FakeConnector('claude-code', 'claude-model', () =>
+      ok('claude-code', 'claude-model'),
+    );
+    const { service } = buildStack([claude], { providerCredentialHealth });
+
+    expect(providerCredentialHealth.peek('claude-code')).toBeNull();
+    const response = await service.execute(
+      'claude-code',
+      { prompt: 'first cold-start dispatch', model: 'claude-model' },
+      API_KEY_ID,
+    );
+
+    expect(response.status).toBe('success');
+    expect(claude.calls).toBe(1);
+    expect(runCommand).not.toHaveBeenCalled();
   });
 
   describe('precedence matrix: per-key policy AND global PROVIDER_ACCESS', () => {
