@@ -1,0 +1,152 @@
+{
+  "exemptions": [
+    {
+      "code": "VERIFIER_DEBT",
+      "entity": "code_unit:.github/workflows/ci.yml",
+      "expires_at_utc": "2026-10-20T00:00:00Z",
+      "owner": "VER",
+      "reason": "Workflow/shell verifier closure remains not measured; tracked with owner VER and expiry 2026-10-20 under Muneral item 8466b22b."
+    },
+    {
+      "code": "VERIFIER_DEBT",
+      "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
+      "expires_at_utc": "2026-10-20T00:00:00Z",
+      "owner": "VER",
+      "reason": "Workflow/shell verifier closure remains not measured; tracked with owner VER and expiry 2026-10-20 under Muneral item 8466b22b."
+    },
+    {
+      "code": "VERIFIER_DEBT",
+      "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "expires_at_utc": "2026-10-20T00:00:00Z",
+      "owner": "VER",
+      "reason": "Workflow/shell verifier closure remains not measured; tracked with owner VER and expiry 2026-10-20 under Muneral item 8466b22b."
+    },
+    {
+      "code": "VERIFIER_DEBT",
+      "entity": "code_unit:.github/workflows/public-surface.yml",
+      "expires_at_utc": "2026-10-20T00:00:00Z",
+      "owner": "VER",
+      "reason": "Workflow/shell verifier closure remains not measured; tracked with owner VER and expiry 2026-10-20 under Muneral item 8466b22b."
+    },
+    {
+      "code": "VERIFIER_DEBT",
+      "entity": "code_unit:.github/workflows/publish-sdks.yml",
+      "expires_at_utc": "2026-10-20T00:00:00Z",
+      "owner": "VER",
+      "reason": "Workflow/shell verifier closure remains not measured; tracked with owner VER and expiry 2026-10-20 under Muneral item 8466b22b."
+    },
+    {
+      "code": "VERIFIER_DEBT",
+      "entity": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "expires_at_utc": "2026-10-20T00:00:00Z",
+      "owner": "VER",
+      "reason": "Workflow/shell verifier closure remains not measured; tracked with owner VER and expiry 2026-10-20 under Muneral item 8466b22b."
+    },
+    {
+      "code": "TEST_SOURCE",
+      "entity": "code_unit:test/app.e2e-spec.ts",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "owner": "MC-KEYS",
+      "reason": "Test-only source excluded from production TypeScript build and Docker runtime image; verified absent from npm pack --dry-run output (receipts/graph/pr207-provider-health-1cd82d0/npm-pack-test-exclusion.json) and Dockerfile copies only dist, scripts, package metadata, Prisma assets. Not a claim that the source itself was type-checked."
+    },
+    {
+      "code": "TEST_SOURCE",
+      "entity": "code_unit:test/bench-reservation/bootstrap-source.spec.ts",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "owner": "MC-KEYS",
+      "reason": "Test-only source excluded from production TypeScript build and Docker runtime image; verified absent from npm pack --dry-run output (receipts/graph/pr207-provider-health-1cd82d0/npm-pack-test-exclusion.json) and Dockerfile copies only dist, scripts, package metadata, Prisma assets. Not a claim that the source itself was type-checked."
+    },
+    {
+      "code": "BASELINE_DEBT",
+      "entity": "deployable_unit:.",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "owner": "MC-KEYS",
+      "reason": "The exact base full suite and candidate full suite both exit 1 and share credit-gate, aborted-attempt-intent-path and cascade.module.di failures, tracked by Muneral 14d5ee02-ecb8-4d76-a6cb-a69dd0beb8ca. The candidate-only prompt-cache full-suite failure is not attributed to this change: interleaved focused measurement is 1/10 threshold failures on base versus 0/10 on PR; base p95 crossed to 24.999546 ms while PR max was 5.068388 ms. The base-only base-cli failure also shows full-suite failures are not identical; see full-suite-comparison.json. This is a temporary tracked baseline hold, not a pass."
+    },
+    {
+      "code": "BASELINE_DEBT",
+      "entity": "route:GET /connectors/intents/:intentId",
+      "evidence": "receipts/graph/pr207-eac9f935-final/same-request-parity/result.json",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "muneral_task_id": "709559c4-2ff7-4e2a-a69e-3b5de1dd2ce7",
+      "owner": "MC-KEYS",
+      "reason": "Exact same-request no-egress parity plan sha256:25123adc5744ba537482d43e9e72e2c58e611ba9c7376fffa9b097e02868195e: candidate eac9f9354f742ea628a4378b725fd28e3c4b79f9 and base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 both returned HTTP 503; response byte count and SHA-256 matched exactly. Four of four requests matched status and response hash. Tracked baseline debt in 709559c4-2ff7-4e2a-a69e-3b5de1dd2ce7; this route remains non-verified, not pass."
+    },
+    {
+      "code": "BASELINE_DEBT",
+      "entity": "route:POST /connectors/:name/chat/completions",
+      "evidence": "receipts/graph/pr207-eac9f935-final/same-request-parity/result.json",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "muneral_task_id": "709559c4-2ff7-4e2a-a69e-3b5de1dd2ce7",
+      "owner": "MC-KEYS",
+      "reason": "Exact same-request no-egress parity plan sha256:25123adc5744ba537482d43e9e72e2c58e611ba9c7376fffa9b097e02868195e: candidate eac9f9354f742ea628a4378b725fd28e3c4b79f9 and base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 both returned HTTP 503; response byte count and SHA-256 matched exactly. Four of four requests matched status and response hash. Tracked baseline debt in 709559c4-2ff7-4e2a-a69e-3b5de1dd2ce7; this route remains non-verified, not pass."
+    },
+    {
+      "code": "BASELINE_DEBT",
+      "entity": "route:POST /v1/speech/stt",
+      "evidence": "receipts/graph/pr207-eac9f935-final/same-request-parity/result.json",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "muneral_task_id": "cb07a5b3-0bc0-46b1-a3d7-9de4e9d60f86",
+      "owner": "MC-KEYS",
+      "reason": "Exact same-request no-egress parity plan sha256:25123adc5744ba537482d43e9e72e2c58e611ba9c7376fffa9b097e02868195e: candidate eac9f9354f742ea628a4378b725fd28e3c4b79f9 and base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 both returned HTTP 500; response byte count and SHA-256 matched exactly. Four of four requests matched status and response hash. Tracked baseline debt in cb07a5b3-0bc0-46b1-a3d7-9de4e9d60f86; this route remains non-verified, not pass."
+    },
+    {
+      "code": "BASELINE_DEBT",
+      "entity": "route:POST /v1/speech/stt/async",
+      "evidence": "receipts/graph/pr207-eac9f935-final/same-request-parity/result.json",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "muneral_task_id": "cb07a5b3-0bc0-46b1-a3d7-9de4e9d60f86",
+      "owner": "MC-KEYS",
+      "reason": "Exact same-request no-egress parity plan sha256:25123adc5744ba537482d43e9e72e2c58e611ba9c7376fffa9b097e02868195e: candidate eac9f9354f742ea628a4378b725fd28e3c4b79f9 and base bb70aae82e78678dfb4e8f13621582ae6bd8cf74 both returned HTTP 500; response byte count and SHA-256 matched exactly. Four of four requests matched status and response hash. Tracked baseline debt in cb07a5b3-0bc0-46b1-a3d7-9de4e9d60f86; this route remains non-verified, not pass."
+    },
+    {
+      "code": "TEST_SOURCE",
+      "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "owner": "MC-KEYS",
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    },
+    {
+      "code": "TEST_SOURCE",
+      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "owner": "MC-KEYS",
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    },
+    {
+      "code": "TEST_SOURCE",
+      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "owner": "MC-KEYS",
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    },
+    {
+      "code": "TEST_SOURCE",
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "owner": "MC-KEYS",
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    },
+    {
+      "code": "TEST_SOURCE",
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "owner": "MC-KEYS",
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    },
+    {
+      "code": "TEST_SOURCE",
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "owner": "MC-KEYS",
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    },
+    {
+      "code": "TEST_SOURCE",
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "owner": "MC-KEYS",
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    }
+  ]
+}
