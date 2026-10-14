@@ -27,21 +27,11 @@ describe('ProviderCredentialHealthService', () => {
     expect(d.fetchImpl).not.toHaveBeenCalled();
   });
 
-  it('authenticates OpenRouter using a registered profile credential with a non-generative GET', async () => {
+  it('authenticates OpenRouter from its configured deployment key with a non-generative GET', async () => {
     const secret = 'synthetic-private-test-key';
     const fetchImpl = vi.fn(async () => new Response(null, { status: 200 }));
     const d = deps({
-      env: {
-        PROVIDER_CREDENTIAL_REGISTRY: JSON.stringify({
-          prime: {
-            provider: 'openrouter',
-            profileId: 'prime-critic',
-            clientKeyIds: ['client-a'],
-            versions: { v1: 'OPENROUTER_API_KEY_PRIME' },
-          },
-        }),
-        OPENROUTER_API_KEY_PRIME: secret,
-      },
+      env: { OPENROUTER_API_KEY: secret },
       fetchImpl,
     });
     const service = new ProviderCredentialHealthService(d);
@@ -94,7 +84,10 @@ describe('ProviderCredentialHealthService', () => {
   it('accepts authenticated Claude and Cursor status probes without exposing command output', async () => {
     const runCommand = vi
       .fn()
-      .mockResolvedValueOnce({ code: 0, stdout: '{"authMethod":"claude.ai","email":"private@example.test"}' })
+      .mockResolvedValueOnce({
+        code: 0,
+        stdout: '{"authMethod":"claude.ai","email":"private@example.test"}',
+      })
       .mockResolvedValueOnce({ code: 0, stdout: 'Authenticated as private@example.test' });
     const service = new ProviderCredentialHealthService(deps({ runCommand }));
 

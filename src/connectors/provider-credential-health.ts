@@ -1,6 +1,5 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
-import { validateCredentialRegistry } from '../policy/credential-registry';
 
 const execFile = promisify(execFileCallback);
 const PROBE_TIMEOUT_MS = 5_000;
@@ -31,8 +30,7 @@ export const PROVIDER_CREDENTIAL_MANIFEST = {
   },
   openrouter: {
     required: false,
-    source:
-      'Vault arcanada/shared/tokens/openrouter-master#api_key → OPENROUTER_API_KEY; profile versions use PROVIDER_CREDENTIAL_REGISTRY',
+    source: 'Vault-managed deployment secret → OPENROUTER_API_KEY',
     probe: 'GET https://openrouter.ai/api/v1/models with the selected configured credential',
   },
   'claude-code': {
@@ -42,7 +40,8 @@ export const PROVIDER_CREDENTIAL_MANIFEST = {
   },
   cursor: {
     required: false,
-    source: 'Docker auth volumes cursor-auth (~/.cursor) and cursor-config (~/.config/cursor), or CURSOR_API_KEY',
+    source:
+      'Docker auth volumes cursor-auth (~/.cursor) and cursor-config (~/.config/cursor), or CURSOR_API_KEY',
     probe: 'cursor-agent status (local status command; no generation)',
   },
 } as const;
@@ -76,25 +75,12 @@ const runtimeDeps: CredentialHealthDeps = {
   now: () => new Date(),
 };
 
-function credentialFor(connector: 'openrouter' | 'deepseek', env: NodeJS.ProcessEnv): string | undefined {
+function credentialFor(
+  connector: 'openrouter' | 'deepseek',
+  env: NodeJS.ProcessEnv,
+): string | undefined {
   const sharedName = connector === 'openrouter' ? 'OPENROUTER_API_KEY' : 'DEEPSEEK_API_KEY';
-  const shared = env[sharedName]?.trim();
-  if (shared) return shared;
-
-  try {
-    const registry = validateCredentialRegistry(env.PROVIDER_CREDENTIAL_REGISTRY ?? '{}');
-    for (const entry of Object.values(registry)) {
-      if (entry.provider !== connector) continue;
-      for (const envName of Object.values(entry.versions)) {
-        const value = env[envName]?.trim();
-        if (value) return value;
-      }
-    }
-  } catch {
-    // Environment validation reports malformed registry data at boot. Health
-    // must still fail closed without echoing parser details or env contents.
-  }
-  return undefined;
+  return env[sharedName]?.trim() || undefined;
 }
 
 async function probeHttpCredential(
@@ -110,7 +96,11 @@ async function probeHttpCredential(
       headers: { Authorization: `Bearer ${credential}` },
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
     });
-    return response.ok ? 'ready' : response.status === 401 || response.status === 403 ? 'rejected' : 'unavailable';
+    return response.ok
+      ? 'ready'
+      : response.status === 401 || response.status === 403
+        ? 'rejected'
+        : 'unavailable';
   } catch {
     return 'unavailable';
   } finally {
@@ -118,13 +108,18 @@ async function probeHttpCredential(
   }
 }
 
-function commandState(code: number, stdout: string, kind: 'claude' | 'cursor'): CredentialProbeState {
+function commandState(
+  code: number,
+  stdout: string,
+  kind: 'claude' | 'cursor',
+): CredentialProbeState {
   if (code < 0) return 'unavailable';
   if (code !== 0) return 'missing';
   if (kind === 'claude') {
     try {
       const parsed = JSON.parse(stdout) as { authMethod?: unknown; loggedIn?: unknown };
-      return parsed.loggedIn === true || (typeof parsed.authMethod === 'string' && parsed.authMethod !== 'none')
+      return parsed.loggedIn === true ||
+        (typeof parsed.authMethod === 'string' && parsed.authMethod !== 'none')
         ? 'ready'
         : 'missing';
     } catch {
@@ -137,7 +132,10 @@ function commandState(code: number, stdout: string, kind: 'claude' | 'cursor'): 
 }
 
 export class ProviderCredentialHealthService implements ProviderCredentialHealthLike {
-  private readonly cache = new Map<ManifestConnector, { result: ProviderCredentialHealth; at: number }>();
+  private readonly cache = new Map<
+    ManifestConnector,
+    { result: ProviderCredentialHealth; at: number }
+  >();
 
   constructor(private readonly deps: CredentialHealthDeps = runtimeDeps) {}
 
@@ -174,23 +172,31 @@ export class ProviderCredentialHealthService implements ProviderCredentialHealth
 
   async checkAdvertised(connectors: string[], force = false): Promise<ProviderCredentialHealth[]> {
     const names = [...new Set(connectors)].filter((name) => this.isManaged(name));
-    return Promise.all(names.map((name) => this.check(name, force) as Promise<ProviderCredentialHealth>));
+    return Promise.all(
+      names.map((name) => this.check(name, force) as Promise<ProviderCredentialHealth>),
+    );
   }
 
   private async probe(connector: ManifestConnector): Promise<CredentialProbeState> {
     if (connector === 'deepseek' || connector === 'openrouter') {
       const credential = credentialFor(connector, this.deps.env);
-      const url = connector === 'deepseek'
-        ? 'https://api.deepseek.com/models'
-        : 'https://openrouter.ai/api/v1/models';
+      const url =
+        connector === 'deepseek'
+          ? 'https://api.deepseek.com/models'
+          : 'https://openrouter.ai/api/v1/models';
       return probeHttpCredential(url, credential, this.deps.fetchImpl);
     }
-    const binary = connector === 'claude-code'
-      ? (this.deps.env.CLAUDE_BINARY_PATH || 'claude')
-      : (this.deps.env.CURSOR_BINARY_PATH || 'cursor-agent');
+    const binary =
+      connector === 'claude-code'
+        ? this.deps.env.CLAUDE_BINARY_PATH || 'claude'
+        : this.deps.env.CURSOR_BINARY_PATH || 'cursor-agent';
     const args = connector === 'claude-code' ? ['auth', 'status'] : ['status'];
     const command = await this.deps.runCommand(binary, args);
-    return commandState(command.code, command.stdout, connector === 'claude-code' ? 'claude' : 'cursor');
+    return commandState(
+      command.code,
+      command.stdout,
+      connector === 'claude-code' ? 'claude' : 'cursor',
+    );
   }
 }
 
