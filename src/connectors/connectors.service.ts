@@ -333,6 +333,10 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     if (!this.canRead(name)) return false;
     const envName = this.policyService.resolveProviderKeyEnv(policy, name);
     if (envName && !process.env[envName]?.trim()) return false;
+    // Legacy/unmapped keys must still be backed by the shared credential for
+    // providers that require one. A profile binding above is deliberately
+    // evaluated independently, so another key's env cannot make this visible.
+    if (!envName && !(await this.isCredentialReadyForPolicy(name, policy))) return false;
     if (this.providerCredentialHealth.isManaged(name)) {
       return this.isCredentialReadyForPolicy(name, policy);
     }
@@ -718,9 +722,18 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     } catch {
       return { ...response, models: [], count: 0 };
     }
-    if (!policy) return response;
+    const visible = await Promise.all(
+      response.models.map(async (entry) => ({
+        entry,
+        visible: await this.canAdvertiseForPolicy(entry.connector, policy),
+      })),
+    );
+    const visibleModels = visible.filter((item) => item.visible).map((item) => item.entry);
+    if (!policy) {
+      return { ...response, models: visibleModels, count: visibleModels.length };
+    }
 
-    const models = response.models.filter((entry) => {
+    const models = visibleModels.filter((entry) => {
       if (!this.policyService.isProviderAllowed(policy, entry.connector)) return false;
       if (!policy.models || policy.models.mode === 'all') return true;
       if (policy.models.mode === 'list') return (policy.models.list ?? []).includes(entry.model);

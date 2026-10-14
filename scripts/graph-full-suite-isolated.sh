@@ -26,18 +26,30 @@ chmod 700 "$CACHE_ROOT" "$RUNS_DIR" "$CACHE_ROOT/pip-cache"
 PRIVATE_TMP=$(mktemp -d "$RUNS_DIR/run.XXXXXXXX")
 chmod 700 "$PRIVATE_TMP"
 mkdir -m 700 "$PRIVATE_TMP/home"
+# Keep runtime-created Unix socket names below the platform's 108-byte limit.
+# The verifier cache path is intentionally deep; using it as TMPDIR made the
+# BENCH composition fixtures reject otherwise valid socket paths. Preserve
+# their execution reports in PRIVATE_TMP after the run, then remove this short,
+# task-owned temporary directory.
+EXEC_TMP=$(mktemp -d "$(dirname -- "$REPO_ROOT")/.mcgs.XXXXXXXX")
+chmod 700 "$EXEC_TMP"
+trap 'rm -rf -- "$EXEC_TMP"' EXIT
 
 SYSTEM_PATH=$PATH
 SYSTEM_PYTHON=$(PATH="$SYSTEM_PATH" command -v python3)
 PYTHON_PATH=$SYSTEM_PATH
 if [[ "$1" == 'packages/sdk-python' ]] && ! env -i PATH="$SYSTEM_PATH" "$SYSTEM_PYTHON" -c 'import pytest, pytest_asyncio' >/dev/null 2>&1; then
   VENV="$PRIVATE_TMP/python-sdk"
-  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$PRIVATE_TMP" PATH="$SYSTEM_PATH" PIP_CACHE_DIR="$CACHE_ROOT/pip-cache" PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_INPUT=1 "$SYSTEM_PYTHON" -m venv "$VENV"
-  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$PRIVATE_TMP" PATH="$SYSTEM_PATH" PIP_CACHE_DIR="$CACHE_ROOT/pip-cache" PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_INPUT=1 "$VENV/bin/python" -m pip install -e "$REPO_ROOT/packages/sdk-python[dev]"
+  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$SYSTEM_PATH" PIP_CACHE_DIR="$CACHE_ROOT/pip-cache" PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_INPUT=1 "$SYSTEM_PYTHON" -m venv "$VENV"
+  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$SYSTEM_PATH" PIP_CACHE_DIR="$CACHE_ROOT/pip-cache" PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_INPUT=1 "$VENV/bin/python" -m pip install -e "$REPO_ROOT/packages/sdk-python[dev]"
   PYTHON_PATH="$VENV/bin:$SYSTEM_PATH"
 fi
 
 set +e
-env -i HOME="$PRIVATE_TMP/home" TMPDIR="$PRIVATE_TMP" PATH="$PYTHON_PATH" CI=1 PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 bash "$SCRIPT_DIR/graph-full-suite.sh" "$1"
+env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 bash "$SCRIPT_DIR/graph-full-suite.sh" "$1"
 status=$?
+shopt -s nullglob
+for artifact in "$EXEC_TMP"/mc-full-*; do
+  cp -a -- "$artifact" "$PRIVATE_TMP/"
+done
 exit "$status"

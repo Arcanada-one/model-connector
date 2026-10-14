@@ -316,9 +316,9 @@ class Controls(unittest.TestCase):
         self.assertEqual(result.returncode, 23, result.stdout + result.stderr)
         tempdir, home, mode = result.stdout.strip().splitlines()
         self.assertEqual(mode, '700')
-        self.assertEqual(Path(home).parent, Path(tempdir))
-        self.assertTrue(Path(tempdir).is_dir())
-        self.assertEqual(Path(tempdir).parent, self.root / 'node_modules/.cache/graph-full-suite/runs')
+        self.assertEqual(Path(home).parent.parent, self.root / 'node_modules/.cache/graph-full-suite/runs')
+        self.assertFalse(Path(tempdir).exists())
+        self.assertEqual(Path(tempdir).parent, self.root.parent)
         self.assertNotIn('must-not-leak', result.stdout + result.stderr)
 
     def test_actual_root_entrypoint_dispatches_local_regression_retains_app_hold(self):

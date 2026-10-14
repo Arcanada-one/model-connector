@@ -61,6 +61,7 @@ function makeService(
     checkProviderCredentials: vi.fn(async () => []),
     canUse: vi.fn((connector: string) => !unavailable.includes(connector)),
     canUseForPolicy: vi.fn(async (connector: string) => !unavailable.includes(connector)),
+    isGloballyRoutable: vi.fn(() => true),
     execute,
     // CONN-1665 — failover consults the per-key policy before dispatch; these
     // tests exercise legacy (policy-less) keys.
@@ -127,6 +128,7 @@ describe('FailoverRouterService.complete', () => {
       checkProviderCredentials: vi.fn(async () => []),
       canUse: vi.fn((connector: string) => connector !== 'openrouter'),
       canUseForPolicy: vi.fn(async (connector: string) => connector !== 'openrouter'),
+      isGloballyRoutable: vi.fn(() => true),
       execute,
       getKeyPolicy: vi.fn(async () => null),
       isCandidateAllowedByPolicy: vi.fn(async () => true),
