@@ -34,10 +34,18 @@ const validEntry = {
   available: true,
 };
 
+const schemaAccepts = (parse: () => unknown): boolean => {
+  try {
+    parse();
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 describe('CatalogModelEntrySchema', () => {
   it('accepts a valid free model entry', () => {
-    const result = CatalogModelEntrySchema.safeParse(validEntry);
-    expect(result.success).toBe(true);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(validEntry))).toBe(true);
   });
 
   it('preserves validated snapshot provenance and legacy-null identity', () => {
@@ -59,40 +67,38 @@ describe('CatalogModelEntrySchema', () => {
       freshness: 'unknown',
     });
 
-    expect(current).toMatchObject({
-      snapshotId: 'snapshot-1',
-      contentFingerprint: 'a'.repeat(64),
-      observedAt,
-      source: 'provider-api',
-      freshness: 'fresh',
-    });
+    expect(current.snapshotId).toBe('snapshot-1');
+    expect(current.contentFingerprint).toBe('a'.repeat(64));
+    expect(current.observedAt).toBe(observedAt);
+    expect(current.source).toBe('provider-api');
+    expect(current.freshness).toBe('fresh');
     expect(legacy.snapshotId).toBeNull();
     expect(legacy.contentFingerprint).toBeNull();
   });
 
   it('rejects fabricated provenance values and malformed fingerprints', () => {
     expect(
-      CatalogModelEntrySchema.safeParse({
-        ...validEntry,
-        snapshotId: 'snapshot-1',
-        contentFingerprint: 'not-a-sha256',
-        observedAt: new Date().toISOString(),
-        source: 'guessed',
-        freshness: 'probably-fresh',
-      }).success,
+      schemaAccepts(() =>
+        CatalogModelEntrySchema.parse({
+          ...validEntry,
+          snapshotId: 'snapshot-1',
+          contentFingerprint: 'not-a-sha256',
+          observedAt: new Date().toISOString(),
+          source: 'guessed',
+          freshness: 'probably-fresh',
+        }),
+      ),
     ).toBe(false);
   });
 
   it('accepts a paid model with priceMultiplier > 0', () => {
     const entry = { ...validEntry, free: false, cheap: false, priceMultiplier: 2 };
-    const result = CatalogModelEntrySchema.safeParse(entry);
-    expect(result.success).toBe(true);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(true);
   });
 
   it('accepts null priceMultiplier (unknown price)', () => {
     const entry = { ...validEntry, priceMultiplier: null };
-    const result = CatalogModelEntrySchema.safeParse(entry);
-    expect(result.success).toBe(true);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(true);
   });
 
   it('accepts non-null rateLimits when connector exposes them', () => {
@@ -100,8 +106,7 @@ describe('CatalogModelEntrySchema', () => {
       ...validEntry,
       rateLimits: { requestsPerMinute: 60, tokensPerMinute: 100_000 },
     };
-    const result = CatalogModelEntrySchema.safeParse(entry);
-    expect(result.success).toBe(true);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(true);
   });
 
   it('accepts partial rateLimits with null fields', () => {
@@ -109,20 +114,17 @@ describe('CatalogModelEntrySchema', () => {
       ...validEntry,
       rateLimits: { requestsPerMinute: null, tokensPerMinute: 100_000 },
     };
-    const result = CatalogModelEntrySchema.safeParse(entry);
-    expect(result.success).toBe(true);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(true);
   });
 
   it('rejects missing required connector field', () => {
     const { connector: _omit, ...entry } = validEntry;
-    const result = CatalogModelEntrySchema.safeParse(entry);
-    expect(result.success).toBe(false);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(false);
   });
 
   it('rejects missing routing field', () => {
     const { routing: _omit, ...entry } = validEntry;
-    const result = CatalogModelEntrySchema.safeParse(entry);
-    expect(result.success).toBe(false);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(false);
   });
 
   it('rejects negative rateLimits values', () => {
@@ -130,8 +132,7 @@ describe('CatalogModelEntrySchema', () => {
       ...validEntry,
       rateLimits: { requestsPerMinute: -1, tokensPerMinute: 100 },
     };
-    const result = CatalogModelEntrySchema.safeParse(entry);
-    expect(result.success).toBe(false);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(false);
   });
 
   it('rejects zero rateLimits values (must be positive when present)', () => {
@@ -139,8 +140,7 @@ describe('CatalogModelEntrySchema', () => {
       ...validEntry,
       rateLimits: { requestsPerMinute: 0, tokensPerMinute: 100 },
     };
-    const result = CatalogModelEntrySchema.safeParse(entry);
-    expect(result.success).toBe(false);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(false);
   });
 });
 
@@ -152,85 +152,75 @@ describe('CatalogResponseSchema', () => {
   };
 
   it('accepts a valid response', () => {
-    const result = CatalogResponseSchema.safeParse(validResponse);
-    expect(result.success).toBe(true);
+    expect(schemaAccepts(() => CatalogResponseSchema.parse(validResponse))).toBe(true);
   });
 
   it('accepts empty models array', () => {
-    const result = CatalogResponseSchema.safeParse({ ...validResponse, models: [], count: 0 });
-    expect(result.success).toBe(true);
+    expect(
+      schemaAccepts(() => CatalogResponseSchema.parse({ ...validResponse, models: [], count: 0 })),
+    ).toBe(true);
   });
 
   it('rejects non-ISO-8601 generatedAt', () => {
-    const result = CatalogResponseSchema.safeParse({
-      ...validResponse,
-      generatedAt: 'not-a-date',
-    });
-    expect(result.success).toBe(false);
+    expect(
+      schemaAccepts(() =>
+        CatalogResponseSchema.parse({
+          ...validResponse,
+          generatedAt: 'not-a-date',
+        }),
+      ),
+    ).toBe(false);
   });
 
   it('rejects negative count', () => {
-    const result = CatalogResponseSchema.safeParse({ ...validResponse, count: -1 });
-    expect(result.success).toBe(false);
+    expect(schemaAccepts(() => CatalogResponseSchema.parse({ ...validResponse, count: -1 }))).toBe(
+      false,
+    );
   });
 });
 
 describe('CatalogFiltersSchema', () => {
   it('parses free=true', () => {
-    const result = CatalogFiltersSchema.safeParse({ free: 'true' });
-    expect(result.success).toBe(true);
-    expect(result.data?.free).toBe(true);
+    expect(CatalogFiltersSchema.parse({ free: 'true' }).free).toBe(true);
   });
 
   it('parses free=1', () => {
-    const result = CatalogFiltersSchema.safeParse({ free: '1' });
-    expect(result.success).toBe(true);
-    expect(result.data?.free).toBe(true);
+    expect(CatalogFiltersSchema.parse({ free: '1' }).free).toBe(true);
   });
 
   it('parses free="" (empty string = flag present)', () => {
-    const result = CatalogFiltersSchema.safeParse({ free: '' });
-    expect(result.success).toBe(true);
-    expect(result.data?.free).toBe(true);
+    expect(CatalogFiltersSchema.parse({ free: '' }).free).toBe(true);
   });
 
   it('parses free=false as false', () => {
-    const result = CatalogFiltersSchema.safeParse({ free: 'false' });
-    expect(result.success).toBe(true);
-    expect(result.data?.free).toBe(false);
+    expect(CatalogFiltersSchema.parse({ free: 'false' }).free).toBe(false);
   });
 
   it('parses absent free as false', () => {
-    const result = CatalogFiltersSchema.safeParse({});
-    expect(result.success).toBe(true);
-    expect(result.data?.free).toBe(false);
+    expect(CatalogFiltersSchema.parse({}).free).toBe(false);
   });
 
   it('parses cheap=true', () => {
-    const result = CatalogFiltersSchema.safeParse({ cheap: 'true' });
-    expect(result.success).toBe(true);
-    expect(result.data?.cheap).toBe(true);
+    expect(CatalogFiltersSchema.parse({ cheap: 'true' }).cheap).toBe(true);
   });
 
   it('parses valid capability filter values', () => {
     for (const cap of CAPABILITY_FILTER_VALUES) {
-      const result = CatalogFiltersSchema.safeParse({ capability: cap });
-      expect(result.success, `capability=${cap}`).toBe(true);
-      expect(result.data?.capability).toBe(cap);
+      expect(CatalogFiltersSchema.parse({ capability: cap }).capability).toBe(cap);
     }
   });
 
   it('rejects unknown capability value', () => {
-    const result = CatalogFiltersSchema.safeParse({ capability: 'supportsUnicorns' });
-    expect(result.success).toBe(false);
+    expect(
+      schemaAccepts(() => CatalogFiltersSchema.parse({ capability: 'supportsUnicorns' })),
+    ).toBe(false);
   });
 
   it('parses empty filters object (no active filters)', () => {
-    const result = CatalogFiltersSchema.safeParse({});
-    expect(result.success).toBe(true);
-    expect(result.data?.free).toBe(false);
-    expect(result.data?.cheap).toBe(false);
-    expect(result.data?.capability).toBeUndefined();
+    const result = CatalogFiltersSchema.parse({});
+    expect(result.free).toBe(false);
+    expect(result.cheap).toBe(false);
+    expect(result.capability).toBeUndefined();
   });
 });
 
@@ -239,24 +229,24 @@ describe('CatalogFiltersSchema', () => {
 describe('CatalogModelEntrySchema — modality + tags (CONN-0232)', () => {
   it('rejects an entry missing modality', () => {
     const { modality: _omit, ...rest } = validEntry;
-    expect(CatalogModelEntrySchema.safeParse(rest).success).toBe(false);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(rest))).toBe(false);
   });
 
   it('rejects an entry missing tags', () => {
     const { tags: _omit, ...rest } = validEntry;
-    expect(CatalogModelEntrySchema.safeParse(rest).success).toBe(false);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(rest))).toBe(false);
   });
 
   it('accepts every modality enum value', () => {
     for (const m of MODEL_MODALITY_VALUES) {
       const entry = { ...validEntry, modality: m };
-      expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+      expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(true);
     }
   });
 
   it('rejects an unknown modality', () => {
     const entry = { ...validEntry, modality: 'telepathy' };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(false);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(false);
   });
 
   it('accepts an optional routing.endpoint (honest non-chat path)', () => {
@@ -265,7 +255,7 @@ describe('CatalogModelEntrySchema — modality + tags (CONN-0232)', () => {
       modality: 'image_generation' as const,
       routing: { connector: 'vertex', model: 'vertex:imagen-4', endpoint: '/images/generate' },
     };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(true);
   });
 });
 
@@ -279,12 +269,12 @@ describe('CONN-0238 — modality enum additions', () => {
 
   it('accepts a video modality entry', () => {
     const entry = { ...validEntry, modality: 'video' as const };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(true);
   });
 
   it('accepts a moderation modality entry', () => {
     const entry = { ...validEntry, modality: 'moderation' as const };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(true);
   });
 });
 
@@ -303,10 +293,9 @@ describe('CONN-0238 — pricing / contextWindow / maxOutputTokens fields', () =>
       contextWindow: 131072,
       maxOutputTokens: 32768,
     };
-    const result = CatalogModelEntrySchema.safeParse(entry);
-    expect(result.success).toBe(true);
-    expect(result.data?.pricing?.inputPerMTok).toBe(0.59);
-    expect(result.data?.contextWindow).toBe(131072);
+    const result = CatalogModelEntrySchema.parse(entry);
+    expect(result.pricing?.inputPerMTok).toBe(0.59);
+    expect(result.contextWindow).toBe(131072);
   });
 
   it('accepts null pricing fields (price unknown / non-token unit)', () => {
@@ -314,12 +303,12 @@ describe('CONN-0238 — pricing / contextWindow / maxOutputTokens fields', () =>
       ...validEntry,
       pricing: { inputPerMTok: null, outputPerMTok: null, unit: 'per_1m_tokens' },
     };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(true);
   });
 
   it('rejects a non-positive contextWindow', () => {
     const entry = { ...validEntry, contextWindow: 0 };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(false);
+    expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(false);
   });
 });
 
@@ -389,25 +378,24 @@ describe('buildDerivedTags (CONN-0232)', () => {
 
 describe('CatalogFiltersSchema — type/modality/connector/tag/group (CONN-0232)', () => {
   it('parses a valid modality filter', () => {
-    const result = CatalogFiltersSchema.safeParse({ modality: 'image_generation' });
-    expect(result.success).toBe(true);
-    expect(result.data?.modality).toBe('image_generation');
+    expect(CatalogFiltersSchema.parse({ modality: 'image_generation' }).modality).toBe(
+      'image_generation',
+    );
   });
 
   it('rejects an unknown modality filter', () => {
-    expect(CatalogFiltersSchema.safeParse({ modality: 'nope' }).success).toBe(false);
+    expect(schemaAccepts(() => CatalogFiltersSchema.parse({ modality: 'nope' }))).toBe(false);
   });
 
   it('parses connector / tag / group filters', () => {
-    const result = CatalogFiltersSchema.safeParse({
+    const result = CatalogFiltersSchema.parse({
       connector: 'groq',
       tag: 'cost:free',
       group: 'cost',
     });
-    expect(result.success).toBe(true);
-    expect(result.data?.connector).toBe('groq');
-    expect(result.data?.tag).toBe('cost:free');
-    expect(result.data?.group).toBe('cost');
+    expect(result.connector).toBe('groq');
+    expect(result.tag).toBe('cost:free');
+    expect(result.group).toBe('cost');
   });
 });
 

@@ -1,8 +1,17 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { Public } from '../auth/public.decorator';
 import { AdminGuard } from './admin.guard';
 import { ResetCircuitBreakerSchema } from './dto';
 import { ConnectorsService } from '../connectors/connectors.service';
+import { ZodError } from 'zod';
 
 @Controller('admin/circuit-breaker')
 @UseGuards(AdminGuard)
@@ -13,11 +22,15 @@ export class CircuitBreakerAdminController {
   @Post('reset')
   @HttpCode(HttpStatus.OK)
   reset(@Body() body: unknown) {
-    const parsed = ResetCircuitBreakerSchema.safeParse(body);
-    const connector = parsed.success ? parsed.data.connector : undefined;
-    const model = parsed.success ? parsed.data.model : undefined;
+    let data: ReturnType<typeof ResetCircuitBreakerSchema.parse>;
+    try {
+      data = ResetCircuitBreakerSchema.parse(body);
+    } catch (error) {
+      if (error instanceof ZodError) throw new BadRequestException(error.issues);
+      throw error;
+    }
 
-    const results = this.connectorsService.resetCircuitBreaker(connector, model);
+    const results = this.connectorsService.resetCircuitBreaker(data.connector, data.model);
 
     return {
       reset: results,

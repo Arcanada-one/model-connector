@@ -14,6 +14,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { FastifyRequest, FastifyReply } from 'fastify';
+import { ZodError } from 'zod';
 import { STRICT_CHAT_BOUNDARY, StrictChatService } from './strict-chat/service';
 import { ConnectorsService } from './connectors.service';
 import { ConnectorResponse } from './interfaces/connector.interface';
@@ -124,18 +125,23 @@ export class ConnectorsController {
     const { type, ...rest } = rawQuery;
     const normalizedQuery =
       type !== undefined && rest.modality === undefined ? { ...rest, modality: type } : rawQuery;
-    const parsed = CatalogFiltersSchema.safeParse(normalizedQuery);
-    if (!parsed.success) {
-      throw new HttpException(
-        { error: 'validation_error', details: parsed.error.flatten() },
-        HttpStatus.BAD_REQUEST,
-      );
+    let filters: ReturnType<typeof CatalogFiltersSchema.parse>;
+    try {
+      filters = CatalogFiltersSchema.parse(normalizedQuery);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        throw new HttpException(
+          { error: 'validation_error', details: error.flatten() },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      throw error;
     }
     // CONN-1665 — discovery mirrors enforcement: filter by the caller's policy.
     const apiKeyId = req.apiKey?.id;
     return apiKeyId
-      ? this.connectorsService.getCatalog(parsed.data, apiKeyId)
-      : this.connectorsService.getCatalog(parsed.data);
+      ? this.connectorsService.getCatalog(filters, apiKeyId)
+      : this.connectorsService.getCatalog(filters);
   }
 
   @Get('connectors/:name/status')
