@@ -14,7 +14,13 @@
       ],
       "plaintext_secret_columns": 0
     },
-    "positive_balance": null,
+    "positive_balance": {
+      "http_status": 503,
+      "is_credit_depleted": false,
+      "upstream_chat_posts": 1,
+      "upstream_transport": "synthetic no-egress fetch shim",
+      "meaning": "positive-balance control did not receive 402; synthetic upstream response was observed"
+    },
     "route_count": 18,
     "secret_scan": {
       "authorization_header_logged": false,
@@ -23,7 +29,8 @@
     "zero_balance": {
       "error_code": "credit_depleted",
       "http_status": 502,
-      "upstream_chat_posts": 0
+      "upstream_chat_posts": 0,
+      "meaning": "pre-fix PR208 behavior; PR209 control returns 402"
     }
   },
   "counters": {
@@ -451,5 +458,14 @@
     },
     "schema": "GitCanarySubject/v1",
     "tree": "a1dbf3eafbedd811f0e0de33ba1e8a6bf8ebeb59"
-  }
+  },
+  "evidence_refs": [
+    {
+      "system": "Muneral CONTENT",
+      "task_id": "4d578a20-6df5-41ad-abfe-b07ecc202c13",
+      "comment_id": "66b9300e-2787-40d1-a10f-bda6c7faa638",
+      "report_sha256": "70d47931cd3f9f862ded78076d1909795189df916d82fb3fc587a7200a7bf57c",
+      "readback": "GET /tasks/{taskId}/activity returned exact body"
+    }
+  ]
 }
