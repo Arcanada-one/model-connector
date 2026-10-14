@@ -313,7 +313,7 @@ jobs:
       - name: Prepare isolated Python SDK test interpreter
         run: |
           python3 -m venv "$RUNNER_TEMP/mc-sdk-python-tests"
-          "$RUNNER_TEMP/mc-sdk-python-tests/bin/python" -m pip install --disable-pip-version-check --no-input 'packages/sdk-python[dev]'
+          "$RUNNER_TEMP/mc-sdk-python-tests/bin/python" -m pip install --disable-pip-version-check --no-input 'PyYAML==6.0.2' 'packages/sdk-python[dev]'
           echo "$RUNNER_TEMP/mc-sdk-python-tests/bin" >> "$GITHUB_PATH"
 
       - name: Maintained root FULL
