@@ -47,14 +47,16 @@
       "entity": "code_unit:test/app.e2e-spec.ts",
       "expires_at_utc": "2026-10-28T00:00:00Z",
       "owner": "MC-KEYS",
-      "reason": "Test-only source excluded from production TypeScript build and Docker runtime image; verified absent from npm pack --dry-run output (receipts/graph/pr207-provider-health-1cd82d0/npm-pack-test-exclusion.json) and Dockerfile copies only dist, scripts, package metadata, Prisma assets. Not a claim that the source itself was type-checked."
+      "reason": "Test-only source excluded from production TypeScript build and Docker runtime image; verified absent from npm pack --dry-run output (receipts/graph/pr207-provider-health-1cd82d0/npm-pack-test-exclusion.json) and Dockerfile copies only dist, scripts, package metadata, Prisma assets. Not a claim that the source itself was type-checked. Tracked test-only route/source verifier coverage debt: Muneral 325ab7a5.",
+      "muneral_task_id": "325ab7a5"
     },
     {
       "code": "TEST_SOURCE",
       "entity": "code_unit:test/bench-reservation/bootstrap-source.spec.ts",
       "expires_at_utc": "2026-10-28T00:00:00Z",
       "owner": "MC-KEYS",
-      "reason": "Test-only source excluded from production TypeScript build and Docker runtime image; verified absent from npm pack --dry-run output (receipts/graph/pr207-provider-health-1cd82d0/npm-pack-test-exclusion.json) and Dockerfile copies only dist, scripts, package metadata, Prisma assets. Not a claim that the source itself was type-checked."
+      "reason": "Test-only source excluded from production TypeScript build and Docker runtime image; verified absent from npm pack --dry-run output (receipts/graph/pr207-provider-health-1cd82d0/npm-pack-test-exclusion.json) and Dockerfile copies only dist, scripts, package metadata, Prisma assets. Not a claim that the source itself was type-checked. Tracked test-only route/source verifier coverage debt: Muneral 325ab7a5.",
+      "muneral_task_id": "325ab7a5"
     },
     {
       "code": "BASELINE_DEBT",
@@ -104,49 +106,56 @@
       "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
       "expires_at_utc": "2026-10-28T00:00:00Z",
       "owner": "MC-KEYS",
-      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed). Tracked test-only route/source verifier coverage debt: Muneral 325ab7a5.",
+      "muneral_task_id": "325ab7a5"
     },
     {
       "code": "TEST_SOURCE",
       "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
       "expires_at_utc": "2026-10-28T00:00:00Z",
       "owner": "MC-KEYS",
-      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed). Tracked test-only route/source verifier coverage debt: Muneral 325ab7a5.",
+      "muneral_task_id": "325ab7a5"
     },
     {
       "code": "TEST_SOURCE",
       "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
       "expires_at_utc": "2026-10-28T00:00:00Z",
       "owner": "MC-KEYS",
-      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed). Tracked test-only route/source verifier coverage debt: Muneral 325ab7a5.",
+      "muneral_task_id": "325ab7a5"
     },
     {
       "code": "TEST_SOURCE",
       "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
       "expires_at_utc": "2026-10-28T00:00:00Z",
       "owner": "MC-KEYS",
-      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed). Tracked test-only route/source verifier coverage debt: Muneral 325ab7a5.",
+      "muneral_task_id": "325ab7a5"
     },
     {
       "code": "TEST_SOURCE",
       "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
       "expires_at_utc": "2026-10-28T00:00:00Z",
       "owner": "MC-KEYS",
-      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed). Tracked test-only route/source verifier coverage debt: Muneral 325ab7a5.",
+      "muneral_task_id": "325ab7a5"
     },
     {
       "code": "TEST_SOURCE",
       "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
       "expires_at_utc": "2026-10-28T00:00:00Z",
       "owner": "MC-KEYS",
-      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed). Tracked test-only route/source verifier coverage debt: Muneral 325ab7a5.",
+      "muneral_task_id": "325ab7a5"
     },
     {
       "code": "TEST_SOURCE",
       "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
       "expires_at_utc": "2026-10-28T00:00:00Z",
       "owner": "MC-KEYS",
-      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+      "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed). Tracked test-only route/source verifier coverage debt: Muneral 325ab7a5.",
+      "muneral_task_id": "325ab7a5"
     }
   ]
 }
