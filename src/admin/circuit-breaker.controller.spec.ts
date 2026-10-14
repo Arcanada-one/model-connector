@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CircuitBreakerAdminController } from './circuit-breaker.controller';
 import { ConnectorsService } from '../connectors/connectors.service';
+import { BadRequestException } from '@nestjs/common';
 
 const mockConnectorsService = {
   resetCircuitBreaker: vi.fn(),
@@ -57,6 +58,11 @@ describe('CircuitBreakerAdminController', () => {
       const result = controller.reset({});
 
       expect(result).toEqual({ reset: [], count: 0 });
+    });
+
+    it('rejects malformed reset filters before resetting any connector', () => {
+      expect(() => controller.reset({ connector: '' })).toThrow(BadRequestException);
+      expect(mockConnectorsService.resetCircuitBreaker).not.toHaveBeenCalled();
     });
   });
 });
