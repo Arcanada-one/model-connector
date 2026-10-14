@@ -1,0 +1,39 @@
+{
+  "exemptions": [
+    {
+      "entity": "route:GET /keyed",
+      "code": "TEST_SOURCE",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    },
+    {
+      "entity": "route:GET /probe/abort",
+      "code": "TEST_SOURCE",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    },
+    {
+      "entity": "route:GET /probe/execute",
+      "code": "TEST_SOURCE",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    },
+    {
+      "entity": "route:GET /probe/health",
+      "code": "TEST_SOURCE",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    },
+    {
+      "entity": "route:GET /probe/metrics",
+      "code": "TEST_SOURCE",
+      "owner": "MC-KEYS",
+      "expires_at_utc": "2026-10-28T00:00:00Z",
+      "reason": "test-only harness controllers declared in *.spec.ts; not part of the deployable surface; exercised by receipts/graph/pr207-provider-health-c4e6a3/route-sample-spec-run.json (25 app/unit tests and 6 isolated PostgreSQL/Redis integration tests passed)."
+    }
+  ]
+}
