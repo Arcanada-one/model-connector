@@ -269,6 +269,110 @@ describe('ConnectorsService', () => {
     }
   });
 
+  it.each([
+    ['HTTP 429', async () => new Response(null, { status: 429 })],
+    ['HTTP 5xx', async () => new Response(null, { status: 503 })],
+    [
+      'timeout',
+      async () => {
+        throw new Error('synthetic timeout');
+      },
+    ],
+  ])(
+    'keeps legacy unmapped OpenRouter dispatch eligible after a shared-key %s probe',
+    async (_label, fetchResponse) => {
+      const previousShared = process.env.OPENROUTER_API_KEY;
+      const previousProfile = process.env.OPENROUTER_API_KEY_EMAIL_AGENT;
+      process.env.OPENROUTER_API_KEY = 'synthetic-shared-openrouter-key';
+      delete process.env.OPENROUTER_API_KEY_EMAIL_AGENT;
+      const health = new ProviderCredentialHealthService({
+        env: { OPENROUTER_API_KEY: 'synthetic-shared-openrouter-key' },
+        fetchImpl: vi.fn(fetchResponse),
+        runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+        now: () => new Date('2026-10-14T00:00:00.000Z'),
+      });
+      const checkSpy = vi.spyOn(health, 'check');
+      const policyService = {
+        getPolicyForKey: vi.fn(),
+        isProviderAllowed: vi.fn(() => true),
+        isModelAllowed: vi.fn(() => ({ allowed: true })),
+        getTier: vi.fn(),
+        resolveProviderKeyEnv: vi.fn(() => null),
+        invalidateKey: vi.fn(),
+      };
+      const gatedService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        noopCatalogRepo,
+        null,
+        undefined,
+        policyService,
+        undefined,
+        health,
+      );
+
+      try {
+        await expect(gatedService.isCredentialReadyForPolicy('openrouter', null)).resolves.toBe(
+          true,
+        );
+        expect(checkSpy).toHaveBeenCalledWith('openrouter');
+        await expect(health.status('openrouter')).toMatchObject({ state: 'unavailable' });
+      } finally {
+        if (previousShared === undefined) delete process.env.OPENROUTER_API_KEY;
+        else process.env.OPENROUTER_API_KEY = previousShared;
+        if (previousProfile === undefined) delete process.env.OPENROUTER_API_KEY_EMAIL_AGENT;
+        else process.env.OPENROUTER_API_KEY_EMAIL_AGENT = previousProfile;
+      }
+    },
+  );
+
+  it('does not probe the shared OpenRouter path when an unmapped legacy key has no shared credential', async () => {
+    const previousShared = process.env.OPENROUTER_API_KEY;
+    delete process.env.OPENROUTER_API_KEY;
+    const health = new ProviderCredentialHealthService({
+      // This sentinel makes removal of the service-level shared-key guard observable.
+      env: { OPENROUTER_API_KEY: 'synthetic-health-only-key' },
+      fetchImpl: vi.fn(async () => new Response(null, { status: 200 })),
+      runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const checkSpy = vi.spyOn(health, 'check');
+    const policyService = {
+      getPolicyForKey: vi.fn(),
+      isProviderAllowed: vi.fn(() => true),
+      isModelAllowed: vi.fn(() => ({ allowed: true })),
+      getTier: vi.fn(),
+      resolveProviderKeyEnv: vi.fn(() => null),
+      invalidateKey: vi.fn(),
+    };
+    const gatedService = new ConnectorsService(
+      mockQueue as unknown as Queue,
+      mockPrisma as unknown as PrismaService,
+      mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+      new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+      emptyModalityCatalog,
+      noopCatalogRepo,
+      null,
+      undefined,
+      policyService,
+      undefined,
+      health,
+    );
+
+    try {
+      await expect(gatedService.isCredentialReadyForPolicy('openrouter', null)).resolves.toBe(
+        false,
+      );
+      expect(checkSpy).not.toHaveBeenCalled();
+    } finally {
+      if (previousShared === undefined) delete process.env.OPENROUTER_API_KEY;
+      else process.env.OPENROUTER_API_KEY = previousShared;
+    }
+  });
+
   it.each([401, 403])(
     'still blocks a rejected profile credential after HTTP %s',
     async (status) => {

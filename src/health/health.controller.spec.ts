@@ -93,7 +93,7 @@ describe('HealthController', () => {
     expect(reply.statusCode).toBe(200);
   });
 
-  it('probes providers and fails readiness for a non-ready required provider', async () => {
+  it('fails readiness only for missing or rejected required provider credentials', async () => {
     mockPrisma.$queryRaw.mockResolvedValue([{ 1: 1 }]);
     mockConnectors.checkProviderCredentials.mockResolvedValue([]);
     mockConnectors.getProviderCredentialStatus.mockReturnValue([
@@ -121,9 +121,9 @@ describe('HealthController', () => {
     ]);
     const unavailableReply = mockReply();
     const unavailable = await controller.ready(unavailableReply as never);
-    expect(unavailable.status).toBe('error');
-    expect(unavailable.checks.requiredProviders).toBe('error');
-    expect(unavailableReply.statusCode).toBe(503);
+    expect(unavailable.status).toBe('degraded');
+    expect(unavailable.checks.requiredProviders).toBe('ok');
+    expect(unavailableReply.statusCode).toBe(200);
   });
 
   it('keeps liveness HTTP 200 and reports a transient provider state without source details', async () => {

@@ -54,7 +54,8 @@ export class HealthController {
     await this.connectorsService.checkProviderCredentials();
     const providers = this.connectorsService.getProviderCredentialStatus();
     const requiredUnavailable = providers.some(
-      (provider) => provider.required && provider.state !== 'ready',
+      (provider) =>
+        provider.required && (provider.state === 'missing' || provider.state === 'rejected'),
     );
     const optionalUnavailable = providers.some(
       (provider) => !provider.required && provider.state !== 'ready',
