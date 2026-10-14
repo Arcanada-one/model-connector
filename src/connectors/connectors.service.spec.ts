@@ -173,6 +173,147 @@ describe('ConnectorsService', () => {
     expect(gatedService.canUse('openrouter')).toBe(false);
   });
 
+  it.each([429, 500, 503])(
+    'does not treat a transient HTTP %s models-probe failure as a missing profile credential',
+    async (status) => {
+      const previous = process.env.OPENROUTER_API_KEY_PRIME;
+      process.env.OPENROUTER_API_KEY_PRIME = 'synthetic-prime-key';
+      const health = new ProviderCredentialHealthService({
+        env: {},
+        fetchImpl: vi.fn(async () => new Response(null, { status })),
+        runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+        now: () => new Date('2026-10-14T00:00:00.000Z'),
+      });
+      const policy = { providerKeys: { openrouter: 'OPENROUTER_API_KEY_PRIME' } } as never;
+      const policyService = {
+        getPolicyForKey: vi.fn(),
+        isProviderAllowed: vi.fn(() => true),
+        isModelAllowed: vi.fn(() => ({ allowed: true })),
+        getTier: vi.fn(),
+        resolveProviderKeyEnv: vi.fn(() => 'OPENROUTER_API_KEY_PRIME'),
+        invalidateKey: vi.fn(),
+      };
+      const gatedService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        noopCatalogRepo,
+        null,
+        undefined,
+        policyService,
+        undefined,
+        health,
+      );
+
+      try {
+        await expect(gatedService.isCredentialReadyForPolicy('openrouter', policy)).resolves.toBe(
+          true,
+        );
+        await expect(gatedService.canUseForPolicy('openrouter', policy)).resolves.toBe(true);
+        expect(await health.checkCredential('openrouter', 'synthetic-prime-key')).toMatchObject({
+          state: 'unavailable',
+        });
+      } finally {
+        if (previous === undefined) delete process.env.OPENROUTER_API_KEY_PRIME;
+        else process.env.OPENROUTER_API_KEY_PRIME = previous;
+      }
+    },
+  );
+
+  it('does not treat a timed-out models probe as a missing profile credential', async () => {
+    const previous = process.env.OPENROUTER_API_KEY_PRIME;
+    process.env.OPENROUTER_API_KEY_PRIME = 'synthetic-prime-key';
+    const health = new ProviderCredentialHealthService({
+      env: {},
+      fetchImpl: vi.fn(async () => {
+        throw new Error('synthetic timeout');
+      }),
+      runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const policy = { providerKeys: { openrouter: 'OPENROUTER_API_KEY_PRIME' } } as never;
+    const policyService = {
+      getPolicyForKey: vi.fn(),
+      isProviderAllowed: vi.fn(() => true),
+      isModelAllowed: vi.fn(() => ({ allowed: true })),
+      getTier: vi.fn(),
+      resolveProviderKeyEnv: vi.fn(() => 'OPENROUTER_API_KEY_PRIME'),
+      invalidateKey: vi.fn(),
+    };
+    const gatedService = new ConnectorsService(
+      mockQueue as unknown as Queue,
+      mockPrisma as unknown as PrismaService,
+      mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+      new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+      emptyModalityCatalog,
+      noopCatalogRepo,
+      null,
+      undefined,
+      policyService,
+      undefined,
+      health,
+    );
+
+    try {
+      await expect(gatedService.isCredentialReadyForPolicy('openrouter', policy)).resolves.toBe(
+        true,
+      );
+      expect(await health.checkCredential('openrouter', 'synthetic-prime-key')).toMatchObject({
+        state: 'unavailable',
+      });
+    } finally {
+      if (previous === undefined) delete process.env.OPENROUTER_API_KEY_PRIME;
+      else process.env.OPENROUTER_API_KEY_PRIME = previous;
+    }
+  });
+
+  it.each([401, 403])(
+    'still blocks a rejected profile credential after HTTP %s',
+    async (status) => {
+      const previous = process.env.OPENROUTER_API_KEY_PRIME;
+      process.env.OPENROUTER_API_KEY_PRIME = 'synthetic-prime-key';
+      const health = new ProviderCredentialHealthService({
+        env: {},
+        fetchImpl: vi.fn(async () => new Response(null, { status })),
+        runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+        now: () => new Date('2026-10-14T00:00:00.000Z'),
+      });
+      const policy = { providerKeys: { openrouter: 'OPENROUTER_API_KEY_PRIME' } } as never;
+      const policyService = {
+        getPolicyForKey: vi.fn(),
+        isProviderAllowed: vi.fn(() => true),
+        isModelAllowed: vi.fn(() => ({ allowed: true })),
+        getTier: vi.fn(),
+        resolveProviderKeyEnv: vi.fn(() => 'OPENROUTER_API_KEY_PRIME'),
+        invalidateKey: vi.fn(),
+      };
+      const gatedService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        noopCatalogRepo,
+        null,
+        undefined,
+        policyService,
+        undefined,
+        health,
+      );
+
+      try {
+        await expect(gatedService.isCredentialReadyForPolicy('openrouter', policy)).resolves.toBe(
+          false,
+        );
+      } finally {
+        if (previous === undefined) delete process.env.OPENROUTER_API_KEY_PRIME;
+        else process.env.OPENROUTER_API_KEY_PRIME = previous;
+      }
+    },
+  );
+
   it('does not probe an unregistered required provider', async () => {
     const credentialHealth = new ProviderCredentialHealthService({
       env: {},
@@ -1215,6 +1356,111 @@ describe('ConnectorsService', () => {
         ...overrides,
       };
     }
+
+    it('does not turn an offline model available just because a profile credential is configured', async () => {
+      const previous = process.env.OPENROUTER_API_KEY_PRIME;
+      process.env.OPENROUTER_API_KEY_PRIME = 'synthetic-prime-key';
+      const policy = { providerKeys: { openrouter: 'OPENROUTER_API_KEY_PRIME' } } as never;
+      const policyService = {
+        getPolicyForKey: vi.fn(async () => policy),
+        isProviderAllowed: vi.fn(() => true),
+        isModelAllowed: vi.fn(() => ({ allowed: true })),
+        getTier: vi.fn(),
+        resolveProviderKeyEnv: vi.fn(() => 'OPENROUTER_API_KEY_PRIME'),
+        invalidateKey: vi.fn(),
+      };
+      const credentialHealth = {
+        isManaged: vi.fn(() => true),
+        isReady: vi.fn(() => false),
+        isRequired: vi.fn(() => false),
+        peek: vi.fn(() => null),
+        status: vi.fn(() => null),
+        check: vi.fn(),
+        checkCredential: vi.fn(async () => ({
+          connector: 'openrouter',
+          required: false,
+          state: 'ready' as const,
+          source: 'test',
+          checkedAt: '2026-10-14T00:00:00.000Z',
+        })),
+        checkAdvertised: vi.fn(),
+      };
+      const entry = makeChatEntry({ connector: 'openrouter', model: 'synthetic/offline' });
+      const unavailableEntry = makeChatEntry({
+        connector: 'openrouter',
+        model: 'synthetic/breaker-open',
+        available: false,
+      });
+      const dbService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        repoFromEntries([entry, unavailableEntry]),
+        null,
+        undefined,
+        policyService,
+        undefined,
+        credentialHealth,
+      );
+
+      try {
+        const result = await dbService.getCatalog(noFilters, 'prime-key-id');
+        expect(result.models.map(({ model, available }) => ({ model, available }))).toEqual([
+          { model: 'synthetic/offline', available: true },
+          { model: 'synthetic/breaker-open', available: false },
+        ]);
+      } finally {
+        if (previous === undefined) delete process.env.OPENROUTER_API_KEY_PRIME;
+        else process.env.OPENROUTER_API_KEY_PRIME = previous;
+      }
+    });
+
+    it('keeps a mapped model visible when its credential probe is temporarily unavailable', async () => {
+      const previous = process.env.OPENROUTER_API_KEY_PRIME;
+      process.env.OPENROUTER_API_KEY_PRIME = 'synthetic-prime-key';
+      const policy = { providerKeys: { openrouter: 'OPENROUTER_API_KEY_PRIME' } } as never;
+      const policyService = {
+        getPolicyForKey: vi.fn(async () => policy),
+        isProviderAllowed: vi.fn(() => true),
+        isModelAllowed: vi.fn(() => ({ allowed: true })),
+        getTier: vi.fn(),
+        resolveProviderKeyEnv: vi.fn(() => 'OPENROUTER_API_KEY_PRIME'),
+        invalidateKey: vi.fn(),
+      };
+      const credentialHealth = new ProviderCredentialHealthService({
+        env: {},
+        fetchImpl: vi.fn(async () => new Response(null, { status: 503 })),
+        runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+        now: () => new Date('2026-10-14T00:00:00.000Z'),
+      });
+      const dbService = new ConnectorsService(
+        mockQueue as unknown as Queue,
+        mockPrisma as unknown as PrismaService,
+        mockMetrics as unknown as import('../metrics/metrics.service').MetricsService,
+        new OutputGuardMiddleware({ enabled: true, maxRetries: 3, timeoutMs: 30_000 }),
+        emptyModalityCatalog,
+        repoFromEntries([
+          makeChatEntry({ connector: 'openrouter', model: 'synthetic/openrouter' }),
+        ]),
+        null,
+        undefined,
+        policyService,
+        undefined,
+        credentialHealth,
+      );
+
+      try {
+        const result = await dbService.getCatalog(noFilters, 'prime-key-id');
+        expect(result.models).toMatchObject([
+          { connector: 'openrouter', model: 'synthetic/openrouter', available: true },
+        ]);
+      } finally {
+        if (previous === undefined) delete process.env.OPENROUTER_API_KEY_PRIME;
+        else process.env.OPENROUTER_API_KEY_PRIME = previous;
+      }
+    });
 
     it('reads from the repo and maps rows to CatalogModelEntry[] — does NOT call any connector', async () => {
       const connector = {

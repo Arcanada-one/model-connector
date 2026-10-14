@@ -1,5 +1,8 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 const execFile = promisify(execFileCallback);
@@ -61,7 +64,7 @@ export const PROVIDER_CREDENTIAL_MANIFEST = {
   gemini: {
     required: false,
     source: 'Gemini CLI auth profile in the process HOME',
-    probe: 'gemini auth status (local status command; no generation)',
+    probe: 'inspect selected Gemini CLI OAuth profile files; no command or generation',
   },
   'gemini-api': {
     required: false,
@@ -143,7 +146,7 @@ async function probeHttpCredential(
 function commandState(
   code: number,
   stdout: string,
-  kind: 'claude' | 'cursor' | 'gemini',
+  kind: 'claude' | 'cursor',
 ): CredentialProbeState {
   if (code < 0) return 'unavailable';
   if (code !== 0) return 'missing';
@@ -161,6 +164,49 @@ function commandState(
   if (/not\s+authenticated|not\s+logged\s+in|unauthenticated/i.test(stdout)) return 'missing';
   if (/authenticated|logged\s+in/i.test(stdout)) return 'ready';
   return 'unavailable';
+}
+
+async function geminiCliCredentialState(
+  env: NodeJS.ProcessEnv,
+  now: Date,
+): Promise<CredentialProbeState> {
+  const cliHome = env.GEMINI_CLI_HOME?.trim() || env.HOME || homedir();
+  const profileDir = join(cliHome, '.gemini');
+  let settingsText: string;
+  let credentialsText: string;
+  try {
+    [settingsText, credentialsText] = await Promise.all([
+      readFile(join(profileDir, 'settings.json'), 'utf8'),
+      readFile(join(profileDir, 'oauth_creds.json'), 'utf8'),
+    ]);
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === 'ENOENT' ? 'missing' : 'unavailable';
+  }
+
+  try {
+    const settings = JSON.parse(settingsText) as {
+      selectedAuthType?: unknown;
+      security?: { auth?: { selectedType?: unknown } };
+    };
+    const credentials = JSON.parse(credentialsText) as {
+      access_token?: unknown;
+      refresh_token?: unknown;
+      expiry_date?: unknown;
+    };
+    const authType = settings.selectedAuthType ?? settings.security?.auth?.selectedType;
+    if (authType !== 'oauth-personal') return 'missing';
+
+    const hasRefreshToken =
+      typeof credentials.refresh_token === 'string' && credentials.refresh_token.trim().length > 0;
+    const hasUnexpiredAccessToken =
+      typeof credentials.access_token === 'string' &&
+      credentials.access_token.trim().length > 0 &&
+      typeof credentials.expiry_date === 'number' &&
+      credentials.expiry_date > now.getTime();
+    return hasRefreshToken || hasUnexpiredAccessToken ? 'ready' : 'missing';
+  } catch {
+    return 'unavailable';
+  }
 }
 
 export class ProviderCredentialHealthService implements ProviderCredentialHealthLike {
@@ -340,16 +386,16 @@ export class ProviderCredentialHealthService implements ProviderCredentialHealth
       if (!credentials.length) return 'missing';
       return this.probeHttp(connector, credentials[0]);
     }
+    if (connector === 'gemini') {
+      return geminiCliCredentialState(this.deps.env, this.deps.now());
+    }
     const binary =
       connector === 'claude-code'
         ? this.deps.env.CLAUDE_BINARY_PATH || 'claude'
-        : connector === 'cursor'
-          ? this.deps.env.CURSOR_BINARY_PATH || 'cursor-agent'
-          : 'gemini';
+        : this.deps.env.CURSOR_BINARY_PATH || 'cursor-agent';
     const args = connector === 'cursor' ? ['status'] : ['auth', 'status'];
     const command = await this.deps.runCommand(binary, args);
-    const kind =
-      connector === 'claude-code' ? 'claude' : connector === 'cursor' ? 'cursor' : 'gemini';
+    const kind = connector === 'claude-code' ? 'claude' : 'cursor';
     return commandState(command.code, command.stdout, kind);
   }
 }

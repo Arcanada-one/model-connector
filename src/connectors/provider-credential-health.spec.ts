@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   ProviderCredentialHealthService,
   type CredentialHealthDeps,
@@ -188,12 +191,50 @@ describe('ProviderCredentialHealthService', () => {
     );
   });
 
-  it('requires Gemini CLI auth status before admitting the CLI failover connector', async () => {
-    const runCommand = vi.fn(async () => ({ code: 0, stdout: 'Not logged in' }));
-    const service = new ProviderCredentialHealthService(deps({ runCommand }));
+  it('checks the selected Gemini CLI OAuth profile without invoking a prompt or generation', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'mc-gemini-auth-'));
+    const geminiDir = join(home, '.gemini');
+    await mkdir(geminiDir);
+    await writeFile(
+      join(geminiDir, 'settings.json'),
+      JSON.stringify({ selectedAuthType: 'oauth-personal' }),
+    );
+    await writeFile(
+      join(geminiDir, 'oauth_creds.json'),
+      JSON.stringify({
+        access_token: 'synthetic-access-token',
+        refresh_token: 'synthetic-refresh-token',
+        expiry_date: 1,
+      }),
+    );
+    const runCommand = vi.fn(async () => ({ code: 0, stdout: 'This must not be invoked' }));
+    const service = new ProviderCredentialHealthService(deps({ env: { HOME: home }, runCommand }));
 
-    await expect(service.check('gemini')).resolves.toMatchObject({ state: 'missing' });
-    expect(runCommand).toHaveBeenCalledWith('gemini', ['auth', 'status']);
+    try {
+      await expect(service.check('gemini')).resolves.toMatchObject({ state: 'ready' });
+      expect(runCommand).not.toHaveBeenCalled();
+    } finally {
+      await rm(home, { recursive: true, force: true });
+    }
+  });
+
+  it('reports Gemini CLI auth missing when the selected OAuth profile has no saved credential', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'mc-gemini-auth-'));
+    const geminiDir = join(home, '.gemini');
+    await mkdir(geminiDir);
+    await writeFile(
+      join(geminiDir, 'settings.json'),
+      JSON.stringify({ selectedAuthType: 'oauth-personal' }),
+    );
+    const runCommand = vi.fn(async () => ({ code: 0, stdout: 'Not logged in' }));
+    const service = new ProviderCredentialHealthService(deps({ env: { HOME: home }, runCommand }));
+
+    try {
+      await expect(service.check('gemini')).resolves.toMatchObject({ state: 'missing' });
+      expect(runCommand).not.toHaveBeenCalled();
+    } finally {
+      await rm(home, { recursive: true, force: true });
+    }
   });
 
   it('probes Gemini API keys with x-goog-api-key and no generation request', async () => {

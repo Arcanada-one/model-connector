@@ -95,8 +95,20 @@ export class FailoverRouterService {
         'The access policy stored for this API key is invalid; contact the administrator.',
       );
     }
+    const capabilities = this.connectorsService.listCapabilities();
+    const globallyRoutableCapabilities = capabilities.filter((capability) =>
+      this.connectorsService.isGloballyRoutable(capability.name),
+    );
+    if (capabilities.length > 0 && globallyRoutableCapabilities.length === 0) {
+      throw new FailoverAbortError(
+        'none',
+        opts.requestedModel ?? 'auto',
+        'provider_not_routable',
+        'No provider is currently enabled for routing.',
+      );
+    }
     const eligibleCapabilities: ConnectorCapabilities[] = [];
-    for (const capability of this.connectorsService.listCapabilities()) {
+    for (const capability of globallyRoutableCapabilities) {
       if (await this.connectorsService.canUseForPolicy(capability.name, policy)) {
         eligibleCapabilities.push(capability);
       }

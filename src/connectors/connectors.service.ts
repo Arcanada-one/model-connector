@@ -260,14 +260,17 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     return this.getAccess(name).read;
   }
 
+  /** Global provider policy gate, separate from per-key credential readiness. */
+  isGloballyRoutable(name: string): boolean {
+    return this.getAccess(name).use;
+  }
+
   /** MC will route traffic through this provider (cascade / execute). */
   canUse(name: string): boolean {
-    if (!this.getAccess(name).use) return false;
-    if (name === 'openrouter') return Boolean(process.env.OPENROUTER_API_KEY?.trim());
-    if (name === 'deepseek') return Boolean(process.env.DEEPSEEK_API_KEY?.trim());
+    if (!this.isGloballyRoutable(name)) return false;
     if (!this.providerCredentialHealth.isManaged(name)) return true;
-    const measured = this.providerCredentialHealth.peek(name)?.state;
-    return measured !== 'missing' && measured !== 'rejected';
+    const state = this.providerCredentialHealth.status(name)?.state;
+    return state !== 'missing' && state !== 'rejected';
   }
 
   /** Probe only catalog-visible connectors and always include required providers. */
@@ -303,7 +306,7 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       if (!credential) return false;
       if (!this.providerCredentialHealth.isManaged(connector)) return true;
       const measured = await this.providerCredentialHealth.checkCredential(connector, credential);
-      return measured?.state === 'ready';
+      return measured !== null && measured?.state !== 'missing' && measured?.state !== 'rejected';
     }
     if (!this.providerCredentialHealth.isManaged(connector)) return true;
     // A cold process must probe before its first dispatch. Treating an empty
@@ -311,21 +314,19 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     // it as unavailable permanently rejected valid providers after a restart.
     // The health service single-flights and caches this non-generative check.
     const measured = await this.providerCredentialHealth.check(connector);
-    return measured?.state === 'ready';
+    return measured !== null && measured.state !== 'missing' && measured.state !== 'rejected';
   }
 
   async canUseForPolicy(connector: string, policy: ApiKeyPolicy | null): Promise<boolean> {
-    return this.getAccess(connector).use && this.isCredentialReadyForPolicy(connector, policy);
+    return this.isGloballyRoutable(connector) && this.isCredentialReadyForPolicy(connector, policy);
   }
 
   /** Credential-failing connectors must not be returned by the public model catalog. */
   private canAdvertise(name: string): boolean {
     if (!this.canRead(name)) return false;
-    if (name === 'openrouter') return Boolean(process.env.OPENROUTER_API_KEY?.trim());
-    if (name === 'deepseek') return Boolean(process.env.DEEPSEEK_API_KEY?.trim());
-    return (
-      !this.providerCredentialHealth.isManaged(name) || this.providerCredentialHealth.isReady(name)
-    );
+    if (!this.providerCredentialHealth.isManaged(name)) return true;
+    const state = this.providerCredentialHealth.status(name)?.state;
+    return state !== 'missing' && state !== 'rejected';
   }
 
   private async canAdvertiseForPolicy(name: string, policy: ApiKeyPolicy | null): Promise<boolean> {
@@ -523,7 +524,6 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       // USE gate: read-only providers stay visible but are marked not-routable below.
       const access = this.getAccess(connector.name);
       if (!access.read) continue;
-      const credentialHealth = await this.providerCredentialHealth.check(connector.name);
       const routable = access.use;
       const caps = connector.getCapabilities();
       let status: ConnectorStatus;
@@ -601,13 +601,10 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
             model,
             ...(present.endpoint ? { endpoint: present.endpoint } : {}),
           },
-          // CONN-0244 — a read-only provider (routable=false) is never `available` for routing.
-          available:
-            routable &&
-            present.executableHere &&
-            reachable &&
-            !modelBreakerOpen &&
-            (!credentialHealth || credentialHealth.state === 'ready'),
+          // Credential availability is key-specific and enforced on the request path. This
+          // persisted snapshot describes only route, execution, connector health and breaker
+          // state, so a mapped client key can be evaluated independently of a shared key.
+          available: routable && present.executableHere && reachable && !modelBreakerOpen,
         };
 
         entries.push(entry);
@@ -739,7 +736,13 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     if (apiKeyId) this.alarmShowcaseNarrowing(apiKeyId, response.models.length, models.length);
     const credentialReadyModels = models.map((entry) => {
       const envName = this.policyService.resolveProviderKeyEnv(policy, entry.connector);
-      return envName && process.env[envName]?.trim() ? { ...entry, available: true } : entry;
+      if (!envName) return entry;
+      return {
+        ...entry,
+        // A profile key may replace the shared credential, but it cannot
+        // override the catalog's independent route/breaker/health decision.
+        available: entry.available && Boolean(process.env[envName]?.trim()),
+      };
     });
     return { ...response, models: credentialReadyModels, count: credentialReadyModels.length };
   }
