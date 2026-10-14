@@ -17,6 +17,7 @@ describe('HealthController', () => {
     getStatus: vi.fn(),
     get: vi.fn(),
     getProviderCredentialStatus: vi.fn().mockReturnValue([]),
+    checkProviderCredentials: vi.fn().mockResolvedValue([]),
   };
 
   let controller: HealthController;
@@ -92,8 +93,9 @@ describe('HealthController', () => {
     expect(reply.statusCode).toBe(200);
   });
 
-  it('fails readiness with HTTP 503 only for a missing required provider', async () => {
+  it('probes providers and fails readiness for a non-ready required provider', async () => {
     mockPrisma.$queryRaw.mockResolvedValue([{ 1: 1 }]);
+    mockConnectors.checkProviderCredentials.mockResolvedValue([]);
     mockConnectors.getProviderCredentialStatus.mockReturnValue([
       { connector: 'openrouter', required: false, state: 'missing' },
       { connector: 'deepseek', required: true, state: 'ready' },
@@ -104,6 +106,7 @@ describe('HealthController', () => {
 
     expect(result.status).toBe('degraded');
     expect(reply.statusCode).toBe(200);
+    expect(mockConnectors.checkProviderCredentials).toHaveBeenCalledTimes(1);
 
     mockConnectors.getProviderCredentialStatus.mockReturnValue([
       { connector: 'deepseek', required: true, state: 'rejected' },
@@ -112,6 +115,15 @@ describe('HealthController', () => {
     const failed = await controller.ready(failedReply as never);
     expect(failed.status).toBe('error');
     expect(failedReply.statusCode).toBe(503);
+
+    mockConnectors.getProviderCredentialStatus.mockReturnValue([
+      { connector: 'deepseek', required: true, state: 'unavailable' },
+    ]);
+    const unavailableReply = mockReply();
+    const unavailable = await controller.ready(unavailableReply as never);
+    expect(unavailable.status).toBe('error');
+    expect(unavailable.checks.requiredProviders).toBe('error');
+    expect(unavailableReply.statusCode).toBe(503);
   });
 
   it('keeps liveness HTTP 200 and reports a transient provider state without source details', async () => {
@@ -134,12 +146,12 @@ describe('HealthController', () => {
     expect(JSON.stringify(result)).not.toContain('internal-only-source');
   });
 
-  it('degrades readiness without failing HTTP when the required provider is transiently unavailable', async () => {
+  it('degrades optional transient provider failures without failing HTTP', async () => {
     mockPrisma.$queryRaw.mockResolvedValue([{ 1: 1 }]);
     mockConnectors.getProviderCredentialStatus.mockReturnValue([
       {
-        connector: 'deepseek',
-        required: true,
+        connector: 'openrouter',
+        required: false,
         state: 'unavailable',
         checkedAt: '2026-10-14T00:00:00.000Z',
       },
@@ -150,6 +162,7 @@ describe('HealthController', () => {
 
     expect(result.status).toBe('degraded');
     expect(result.checks.requiredProviders).toBe('ok');
+    expect(result.checks.optionalProviders).toBe('error');
     expect(reply.statusCode).toBe(200);
   });
 

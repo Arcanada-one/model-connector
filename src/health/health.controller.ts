@@ -49,10 +49,12 @@ export class HealthController {
       checks.database = 'error';
     }
 
+    // Readiness must not classify a cold process from an empty credential cache.
+    // These probes are non-generative and single-flighted/cached by the connector service.
+    await this.connectorsService.checkProviderCredentials();
     const providers = this.connectorsService.getProviderCredentialStatus();
     const requiredUnavailable = providers.some(
-      (provider) =>
-        provider.required && (provider.state === 'missing' || provider.state === 'rejected'),
+      (provider) => provider.required && provider.state !== 'ready',
     );
     const optionalUnavailable = providers.some(
       (provider) => !provider.required && provider.state !== 'ready',
