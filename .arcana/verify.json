@@ -1,7 +1,7 @@
 {
   "schema": "VerifyProfile/v1",
   "deployables": {
-    ".": {"full_test": ["bash", "scripts/graph-full-suite.sh", "."]},
+    ".": {"full_test": ["bash", "scripts/graph-full-suite.sh", "."], "tsconfig_test": "test/bench-reservation/tsconfig.json"},
     "packages/sdk-python": {"full_test": ["bash", "../../scripts/graph-full-suite.sh", "packages/sdk-python"]},
     "packages/sdk-ts": {"full_test": ["bash", "../../scripts/graph-full-suite.sh", "packages/sdk-ts"]},
     "watcher": {"full_test": ["bash", "../scripts/graph-full-suite.sh", "watcher"]}

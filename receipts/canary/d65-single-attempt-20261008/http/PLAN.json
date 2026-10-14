@@ -1,0 +1,560 @@
+{
+  "schema": "CanaryPlan/v1",
+  "id": "d65-full-owned-refusal-boundary",
+  "environment": "arcana-devs-owned-synthetic-http-fixture",
+  "base_url": "http://127.0.0.1:9",
+  "owner": "AGENT-AUTH d65e81e5-6dbf-4951-bf98-a36a9d34e672",
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "4dae16907563985e3b596bee70b5b2c6ebab14c5",
+    "tree": "666661c3f6eea6a7c179115f1b02e3bc3645ca61",
+    "evidence": {
+      "path": "source-evidence.json",
+      "sha256": "ac2d643db4a8fafb2a17a374b5a3958921ac11bcb35ba2a85eaeaf8f951f4f03",
+      "source_field": "commit"
+    }
+  },
+  "purpose": "Owned actual controller/guard refusal and public-health HTTP; inert dependencies, no deployed/provider/DB/billing/real key proof.",
+  "probes": [
+    {
+      "id": "owned-boundary-01",
+      "method": "DELETE",
+      "path": "/admin/keys/owned-fixture",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:DELETE /admin/keys/:id"
+      ]
+    },
+    {
+      "id": "owned-boundary-02",
+      "method": "GET",
+      "path": "/admin/credits/owned-fixture",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /admin/credits/:apiKeyId"
+      ]
+    },
+    {
+      "id": "owned-boundary-03",
+      "method": "GET",
+      "path": "/admin/credits/owned-fixture/history",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /admin/credits/:apiKeyId/history"
+      ]
+    },
+    {
+      "id": "owned-boundary-04",
+      "method": "GET",
+      "path": "/admin/keys",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /admin/keys"
+      ]
+    },
+    {
+      "id": "owned-boundary-05",
+      "method": "GET",
+      "path": "/connectors",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /connectors"
+      ]
+    },
+    {
+      "id": "owned-boundary-06",
+      "method": "GET",
+      "path": "/connectors/owned-fixture/status",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /connectors/:name/status"
+      ]
+    },
+    {
+      "id": "owned-boundary-07",
+      "method": "GET",
+      "path": "/connectors/catalog",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /connectors/catalog"
+      ]
+    },
+    {
+      "id": "owned-boundary-08",
+      "method": "GET",
+      "path": "/connectors/image/capabilities",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /connectors/image/capabilities"
+      ]
+    },
+    {
+      "id": "owned-boundary-09",
+      "method": "GET",
+      "path": "/connectors/intents/owned-fixture",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /connectors/intents/:intentId"
+      ]
+    },
+    {
+      "id": "owned-boundary-10",
+      "method": "GET",
+      "path": "/health",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          200
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /health"
+      ]
+    },
+    {
+      "id": "owned-boundary-11",
+      "method": "GET",
+      "path": "/health/connectors",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          200
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /health/connectors"
+      ]
+    },
+    {
+      "id": "owned-boundary-12",
+      "method": "GET",
+      "path": "/health/metrics",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          200
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /health/metrics"
+      ]
+    },
+    {
+      "id": "owned-boundary-13",
+      "method": "GET",
+      "path": "/health/ready",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          200
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /health/ready"
+      ]
+    },
+    {
+      "id": "owned-boundary-14",
+      "method": "GET",
+      "path": "/jobs/owned-fixture",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /jobs/:id"
+      ]
+    },
+    {
+      "id": "owned-boundary-15",
+      "method": "GET",
+      "path": "/v1/models",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /v1/models"
+      ]
+    },
+    {
+      "id": "owned-boundary-16",
+      "method": "GET",
+      "path": "/v1/speech/stt/jobs/owned-fixture",
+      "mutating": false,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:GET /v1/speech/stt/jobs/:id"
+      ]
+    },
+    {
+      "id": "owned-boundary-17",
+      "method": "PATCH",
+      "path": "/admin/keys/owned-fixture/policy",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:PATCH /admin/keys/:id/policy"
+      ]
+    },
+    {
+      "id": "owned-boundary-18",
+      "method": "POST",
+      "path": "/admin/circuit-breaker/reset",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/circuit-breaker/reset"
+      ]
+    },
+    {
+      "id": "owned-boundary-19",
+      "method": "POST",
+      "path": "/admin/credits/owned-fixture",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/credits/:apiKeyId"
+      ]
+    },
+    {
+      "id": "owned-boundary-20",
+      "method": "POST",
+      "path": "/admin/credits/owned-fixture/gift",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/credits/:apiKeyId/gift"
+      ]
+    },
+    {
+      "id": "owned-boundary-21",
+      "method": "POST",
+      "path": "/admin/credits/holds/sweep",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/credits/holds/sweep"
+      ]
+    },
+    {
+      "id": "owned-boundary-22",
+      "method": "POST",
+      "path": "/admin/credits/reconcile",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/credits/reconcile"
+      ]
+    },
+    {
+      "id": "owned-boundary-23",
+      "method": "POST",
+      "path": "/admin/keys",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /admin/keys"
+      ]
+    },
+    {
+      "id": "owned-boundary-24",
+      "method": "POST",
+      "path": "/connectors/owned-fixture/execute",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /connectors/:name/execute"
+      ]
+    },
+    {
+      "id": "owned-boundary-25",
+      "method": "POST",
+      "path": "/connectors/owned-fixture/chat/completions",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /connectors/:name/chat/completions"
+      ]
+    },
+    {
+      "id": "owned-boundary-26",
+      "method": "POST",
+      "path": "/execute",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /execute"
+      ]
+    },
+    {
+      "id": "owned-boundary-27",
+      "method": "POST",
+      "path": "/images/generate",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /images/generate"
+      ]
+    },
+    {
+      "id": "owned-boundary-28",
+      "method": "POST",
+      "path": "/internal/credits/owned-fixture/payment",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /internal/credits/:apiKeyId/payment"
+      ]
+    },
+    {
+      "id": "owned-boundary-29",
+      "method": "POST",
+      "path": "/internal/credits/owned-fixture/reverse",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /internal/credits/:apiKeyId/reverse"
+      ]
+    },
+    {
+      "id": "owned-boundary-30",
+      "method": "POST",
+      "path": "/internal/watcher/circuit-breaker/reset",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          403
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /internal/watcher/circuit-breaker/reset"
+      ]
+    },
+    {
+      "id": "owned-boundary-31",
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/chat/completions"
+      ]
+    },
+    {
+      "id": "owned-boundary-32",
+      "method": "POST",
+      "path": "/v1/prompt-cache/prewarm",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/prompt-cache/prewarm"
+      ]
+    },
+    {
+      "id": "owned-boundary-33",
+      "method": "POST",
+      "path": "/v1/speech/stt",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/speech/stt"
+      ]
+    },
+    {
+      "id": "owned-boundary-34",
+      "method": "POST",
+      "path": "/v1/speech/stt/async",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/speech/stt/async"
+      ]
+    },
+    {
+      "id": "owned-boundary-35",
+      "method": "POST",
+      "path": "/v1/speech/tts",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/speech/tts"
+      ]
+    },
+    {
+      "id": "owned-boundary-36",
+      "method": "POST",
+      "path": "/v1/speech/vad",
+      "mutating": true,
+      "expect": {
+        "status_in": [
+          401
+        ],
+        "route_present": true
+      },
+      "entities": [
+        "route:POST /v1/speech/vad"
+      ]
+    }
+  ]
+}
