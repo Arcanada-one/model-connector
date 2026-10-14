@@ -1,0 +1,60 @@
+{
+  "schema": "FullSuiteBaseComparison/v1",
+  "base": {
+    "schema": "MaintainedFullSuiteMeasurement/v1",
+    "command": "nice -n 10 bash scripts/graph-full-suite-isolated.sh .",
+    "commit": "bb70aae82e78678dfb4e8f13621582ae6bd8cf74",
+    "exit_code": 1,
+    "vitest": {
+      "numTotalTestSuites": 818,
+      "numFailedTestSuites": 9,
+      "numTotalTests": 3599,
+      "numPassedTests": 3591,
+      "numFailedTests": 3,
+      "numPendingTests": 5
+    },
+    "failed_tests": [
+      {
+        "test_file": "src/billing/credit-gate.spec.ts",
+        "title": "credit gate at the dispatch choke point refuses the call when the balance cannot cover the estimate",
+        "failure_message_available": false
+      },
+      {
+        "test_file": "src/connectors/aborted-attempt-intent-path.spec.ts",
+        "title": "A2-299b / DEC-AUP-0050 R2 \u2014 the INTENT path charges the customer nothing settles the intent at ZERO and leaves the customer balance untouched",
+        "failure_message_available": false
+      },
+      {
+        "test_file": "src/connectors/base-cli.connector.spec.ts",
+        "title": "BaseCliConnector semaphore concurrency should report queued jobs in getStatus()",
+        "failure_message_available": false
+      }
+    ],
+    "raw_vitest_json_sha256": "7076072893aa17b25f61bdcdd1ad8ad21642fa4335f61b10f14271e506e0c70b",
+    "artifact_path": "durable evidence external to repository at the time of run"
+  },
+  "candidate": {
+    "schema": "MaintainedFullSuiteMeasurement/v1",
+    "command": "nice -n 10 bash scripts/graph-full-suite-isolated.sh .",
+    "commit": "1cd82d06dafd12be32368750611538542ae14111",
+    "exit_code": 1,
+    "vitest": {
+      "passed_tests": 3632,
+      "failed_tests": 3,
+      "failed_suites": 8
+    },
+    "failed_test_files": [
+      "src/billing/credit-gate.spec.ts",
+      "src/connectors/aborted-attempt-intent-path.spec.ts",
+      "src/prompt-cache/prompt-cache-policy.spec.ts",
+      "src/connectors/cascade/cascade.module.di.spec.ts"
+    ],
+    "artifact_path": "candidate maintained-vitest.json was consumed by verifier; raw temporary result is no longer present in the durable workspace"
+  },
+  "common_failure_test_files": [
+    "src/billing/credit-gate.spec.ts",
+    "src/connectors/aborted-attempt-intent-path.spec.ts",
+    "src/connectors/cascade/cascade.module.di.spec.ts"
+  ],
+  "classification": "Three common failures are bound to Muneral baseline task 14d5ee02-ecb8-4d76-a6cb-a69dd0beb8ca. Prompt-cache failure in the single candidate full-suite run is not attributed to the PR: the focused interleaved experiment recorded one threshold failure on base and zero on PR, with base p95 reaching 24.999546 ms and PR max 5.068388 ms. Base also had a base-cli failure absent from the candidate run. Full-suite results are not identical; do not infer that every full-suite failure is shared."
+}

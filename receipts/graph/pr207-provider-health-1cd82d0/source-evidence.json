@@ -1,0 +1,11 @@
+{
+  "captured_at_utc": "2026-10-14T08:49:52Z",
+  "commit": "1cd82d06dafd12be32368750611538542ae14111",
+  "dirty": false,
+  "producer": {
+    "tool": "tools/canary/route_sweep.py",
+    "version": "1.1.0"
+  },
+  "schema": "MeasuredGitSource/v1",
+  "tree": "0c1906882d8085c6dfc6e9820d9d2af99016be46"
+}
