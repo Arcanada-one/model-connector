@@ -13,6 +13,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { Public } from '../auth/public.decorator';
+import { ZodError } from 'zod';
 import { AdminGuard } from './admin.guard';
 import { AdminService } from './admin.service';
 import { CreateKeySchema, SetKeyPolicySchema, SetKeyRateLimitSchema } from './dto';
@@ -26,11 +27,14 @@ export class AdminController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() body: unknown) {
-    const result = CreateKeySchema.safeParse(body);
-    if (!result.success) {
-      throw new BadRequestException(result.error.issues);
+    let data: ReturnType<typeof CreateKeySchema.parse>;
+    try {
+      data = CreateKeySchema.parse(body);
+    } catch (error) {
+      if (error instanceof ZodError) throw new BadRequestException(error.issues);
+      throw error;
     }
-    return this.adminService.createKey(result.data.name, result.data.rateLimit, result.data.policy);
+    return this.adminService.createKey(data.name, data.rateLimit, data.policy);
   }
 
   @Get()
@@ -52,13 +56,16 @@ export class AdminController {
    */
   @Patch(':id/rate-limit')
   async setRateLimit(@Param('id') id: string, @Body() body: unknown, @Req() req: { ip?: string }) {
-    const result = SetKeyRateLimitSchema.safeParse(body);
-    if (!result.success) {
-      throw new BadRequestException(result.error.issues);
+    let data: ReturnType<typeof SetKeyRateLimitSchema.parse>;
+    try {
+      data = SetKeyRateLimitSchema.parse(body);
+    } catch (error) {
+      if (error instanceof ZodError) throw new BadRequestException(error.issues);
+      throw error;
     }
-    return this.adminService.setKeyRateLimit(id, result.data.rateLimit, {
-      actor: result.data.actor,
-      reason: result.data.reason,
+    return this.adminService.setKeyRateLimit(id, data.rateLimit, {
+      actor: data.actor,
+      reason: data.reason,
       sourceIp: req.ip,
     });
   }
@@ -71,11 +78,14 @@ export class AdminController {
    */
   @Patch(':id/policy')
   async setPolicy(@Param('id') id: string, @Body() body: unknown) {
-    const result = SetKeyPolicySchema.safeParse(body);
-    if (!result.success) {
-      throw new BadRequestException(result.error.issues);
+    let data: ReturnType<typeof SetKeyPolicySchema.parse>;
+    try {
+      data = SetKeyPolicySchema.parse(body);
+    } catch (error) {
+      if (error instanceof ZodError) throw new BadRequestException(error.issues);
+      throw error;
     }
-    return this.adminService.setKeyPolicy(id, result.data.policy);
+    return this.adminService.setKeyPolicy(id, data.policy);
   }
 
   @Delete(':id')

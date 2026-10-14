@@ -208,32 +208,34 @@ describe('executeRequestSchema first-dispatch measurement contract', () => {
 describe('imageGenerateRequestSchema', () => {
   describe('maxBudgetUsd validation (G2)', () => {
     it('accepts $0.01 (positive budget)', () => {
-      const result = imageGenerateRequestSchema.safeParse({
-        prompt: 'test',
-        maxBudgetUsd: 0.01,
-      });
-      expect(result.success).toBe(true);
+      expect(() =>
+        imageGenerateRequestSchema.parse({
+          prompt: 'test',
+          maxBudgetUsd: 0.01,
+        }),
+      ).not.toThrow();
     });
 
     it('rejects $0 (zero budget is not a valid limit)', () => {
-      const result = imageGenerateRequestSchema.safeParse({
-        prompt: 'test',
-        maxBudgetUsd: 0,
-      });
-      expect(result.success).toBe(false);
+      expect(() =>
+        imageGenerateRequestSchema.parse({
+          prompt: 'test',
+          maxBudgetUsd: 0,
+        }),
+      ).toThrow();
     });
 
     it('rejects negative budget', () => {
-      const result = imageGenerateRequestSchema.safeParse({
-        prompt: 'test',
-        maxBudgetUsd: -1,
-      });
-      expect(result.success).toBe(false);
+      expect(() =>
+        imageGenerateRequestSchema.parse({
+          prompt: 'test',
+          maxBudgetUsd: -1,
+        }),
+      ).toThrow();
     });
 
     it('accepts absent maxBudgetUsd (optional field)', () => {
-      const result = imageGenerateRequestSchema.safeParse({ prompt: 'test' });
-      expect(result.success).toBe(true);
+      expect(() => imageGenerateRequestSchema.parse({ prompt: 'test' })).not.toThrow();
     });
   });
 });

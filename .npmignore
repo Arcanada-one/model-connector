@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.env
+.env.integration
+*.js.map
+coverage/
+.swc/
+*.sync-conflict-*
+
+# Test sources are not part of the packaged runtime application.
+test/
+**/*.spec.ts
+**/*.test.ts
+
+# SDK build/dev artefacts (CONN-0093)
+packages/sdk-ts/dist/
+packages/sdk-python/.venv/
+packages/sdk-python/dist/
+packages/sdk-python/build/
+packages/sdk-python/*.egg-info/
+packages/sdk-python/.pytest_cache/
+packages/sdk-python/arcanada_model_connector/__pycache__/
+packages/sdk-python/tests/__pycache__/

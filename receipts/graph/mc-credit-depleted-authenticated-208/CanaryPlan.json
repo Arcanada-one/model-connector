@@ -1,0 +1,280 @@
+{
+  "base_url": "http://127.0.0.1:40073",
+  "environment": "isolated PostgreSQL 16 + isolated Redis, loopback only, Node fetch no-egress shim",
+  "execution": {
+    "admin_credential": "ephemeral; not persisted or emitted",
+    "client_credential": "ephemeral; not persisted or emitted",
+    "provider_credentials": "absent",
+    "provider_egress": "global fetch intercepted by no-egress shim",
+    "sha256": "239b965d9c26da81631a08052c123b6917643fef56ce6106cfd33a4cf1bb738a",
+    "tool": "MC-KEYS local authenticated HTTP harness"
+  },
+  "id": "mc-credit-depleted-authenticated-routes-208-2d73da5b",
+  "owner": "MC-KEYS",
+  "probes": [
+    {
+      "auth": "admin-token",
+      "entities": [
+        "route:DELETE /admin/keys/:id",
+        "code_unit:src/admin/admin.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-01",
+      "method": "DELETE",
+      "mutating": true,
+      "path": "/admin/keys/:id"
+    },
+    {
+      "auth": "admin-token",
+      "entities": [
+        "route:GET /admin/keys",
+        "code_unit:src/admin/admin.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-02",
+      "method": "GET",
+      "mutating": false,
+      "path": "/admin/keys"
+    },
+    {
+      "auth": "admin-token",
+      "entities": [
+        "route:GET /admin/keys/:id",
+        "code_unit:src/admin/admin.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-03",
+      "method": "GET",
+      "mutating": false,
+      "path": "/admin/keys/:id"
+    },
+    {
+      "auth": "client-key",
+      "entities": [
+        "route:GET /connectors",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-04",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors"
+    },
+    {
+      "auth": "client-key",
+      "entities": [
+        "route:GET /connectors/:name/status",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-05",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/openrouter/status"
+    },
+    {
+      "auth": "client-key",
+      "entities": [
+        "route:GET /connectors/catalog",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-06",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/catalog"
+    },
+    {
+      "auth": "client-key",
+      "entities": [
+        "route:GET /connectors/image/capabilities",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-07",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/image/capabilities"
+    },
+    {
+      "auth": "client-key",
+      "entities": [
+        "route:GET /connectors/intents/:intentId",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-08",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/intents/:intentId"
+    },
+    {
+      "auth": "client-key",
+      "entities": [
+        "route:GET /v1/models",
+        "code_unit:src/openai-compat/openai-compat.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-09",
+      "method": "GET",
+      "mutating": false,
+      "path": "/v1/models"
+    },
+    {
+      "auth": "admin-token",
+      "entities": [
+        "route:PATCH /admin/keys/:id/policy",
+        "code_unit:src/admin/admin.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-10",
+      "method": "PATCH",
+      "mutating": true,
+      "path": "/admin/keys/:id/policy"
+    },
+    {
+      "auth": "admin-token",
+      "entities": [
+        "route:PATCH /admin/keys/:id/rate-limit",
+        "code_unit:src/admin/admin.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-11",
+      "method": "PATCH",
+      "mutating": true,
+      "path": "/admin/keys/:id/rate-limit"
+    },
+    {
+      "auth": "admin-token",
+      "entities": [
+        "route:POST /admin/circuit-breaker/reset",
+        "code_unit:src/admin/circuit-breaker.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-12",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/circuit-breaker/reset"
+    },
+    {
+      "auth": "admin-token",
+      "entities": [
+        "route:POST /admin/keys",
+        "code_unit:src/openai-compat/openai-compat.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-13",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/keys"
+    },
+    {
+      "auth": "client-key",
+      "entities": [
+        "route:POST /connectors/:name/chat/completions",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-14",
+      "method": "POST",
+      "mutating": true,
+      "path": "/connectors/openrouter/chat/completions"
+    },
+    {
+      "auth": "client-key",
+      "entities": [
+        "route:POST /connectors/:name/execute",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-15",
+      "method": "POST",
+      "mutating": true,
+      "path": "/connectors/openrouter/execute"
+    },
+    {
+      "auth": "client-key",
+      "entities": [
+        "route:POST /execute",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-16",
+      "method": "POST",
+      "mutating": true,
+      "path": "/execute"
+    },
+    {
+      "auth": "client-key",
+      "entities": [
+        "route:POST /images/generate",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-17",
+      "method": "POST",
+      "mutating": true,
+      "path": "/images/generate"
+    },
+    {
+      "auth": "client-key",
+      "entities": [
+        "route:POST /v1/chat/completions",
+        "code_unit:src/openai-compat/openai-compat.controller.ts"
+      ],
+      "expect": {
+        "route_reached": true
+      },
+      "id": "route-18",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/chat/completions"
+    }
+  ],
+  "read_only": false,
+  "schema": "CanaryPlan/v1",
+  "subject": {
+    "commit": "2d73da5bff0d47e212420313224da2a3f2b6cd21",
+    "evidence": {
+      "path": "MeasuredGitSource.json",
+      "sha256": "4ca76729eab02d3a094c305952c1e10cfcea82a01cefa30094e5b693b69589bf",
+      "source_field": "commit"
+    },
+    "schema": "GitCanarySubject/v1",
+    "tree": "a1dbf3eafbedd811f0e0de33ba1e8a6bf8ebeb59"
+  }
+}
