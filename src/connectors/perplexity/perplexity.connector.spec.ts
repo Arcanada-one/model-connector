@@ -149,7 +149,7 @@ const validationFixture = {
 };
 
 function okResponse(body: unknown) {
-  return { ok: true, status: 200, json: async () => body };
+  return new Response(JSON.stringify(body), { status: 200 });
 }
 
 function errorResponse(status: number, body: unknown, headers: Record<string, string> = {}) {

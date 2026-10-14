@@ -44,6 +44,16 @@ export class AdminController {
     return this.adminService.getKey(id);
   }
 
+  @Get(':id/policy')
+  async getPolicy(@Param('id') id: string) {
+    return this.adminService.getKeyPolicy(id);
+  }
+
+  @Get(':id/usage')
+  async getUsage(@Param('id') id: string) {
+    return this.adminService.getKeyUsage(id);
+  }
+
   /**
    * A2-319 — change `rateLimit` of an existing key (requests per 60s window).
    * Body `{ rateLimit, actor, reason? }`; in force on the next request. The

@@ -14,7 +14,7 @@ describe('AzureOpenAiConnector', () => {
     process.env.AZURE_OPENAI_DEPLOYMENT = 'chat deployment/blue';
     process.env.AZURE_OPENAI_API_KEY = 'fixture-key-not-a-secret';
     delete process.env.AZURE_OPENAI_API_VERSION;
-    fetchSpy = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => completion });
+    fetchSpy = vi.fn().mockResolvedValue(new Response(JSON.stringify(completion), { status: 200 }));
     vi.stubGlobal('fetch', fetchSpy);
   });
 

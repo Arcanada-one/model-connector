@@ -57,6 +57,12 @@ model Request {
   errorMessage String?
   apiKeyId     String
   apiKey       ApiKey   @relation(fields: [apiKeyId], references: [id])
+  // Secret-free dedicated provider attribution. Historical/shared rows stay unknown.
+  upstreamCredentialRef     String?
+  upstreamCredentialVersion String?
+  providerProfileId         String?
+  providerProfileRevision   String?
+  accountingBucket          String?
   // CONN-0089 output-guard middleware envelope (nullable for backward-compat)
   repairReport Json?
   createdAt    DateTime @default(now())
@@ -64,6 +70,8 @@ model Request {
   @@index([connector, createdAt])
   @@index([apiKeyId, createdAt])
   @@index([status])
+  @@index([upstreamCredentialRef, createdAt])
+  @@index([accountingBucket, createdAt])
 }
 
 model ApiKey {

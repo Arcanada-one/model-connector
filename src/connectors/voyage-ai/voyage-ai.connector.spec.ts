@@ -37,11 +37,7 @@ describe('VoyageAiConnector (AU-023)', () => {
   });
 
   function mockOk(body: unknown): void {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve(body),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
   }
 
   function mockError(status: number, body: string): void {
@@ -150,9 +146,9 @@ describe('VoyageAiConnector (AU-023)', () => {
       expect(response.model).toBe('voyage-4-large');
       expect(response.structured).toEqual(embeddingsFixture.data);
       expect(response.result).toBe(JSON.stringify(embeddingsFixture.data));
-      expect((response.structured as Array<{ index: number }>).map((entry) => entry.index)).toEqual([
-        0, 1,
-      ]);
+      expect((response.structured as Array<{ index: number }>).map((entry) => entry.index)).toEqual(
+        [0, 1],
+      );
       expect(response.usage).toEqual({
         inputTokens: 8,
         outputTokens: 0,
@@ -246,10 +242,7 @@ describe('VoyageAiConnector (AU-023)', () => {
         },
         '1,000',
       ],
-      [
-        { prompt: 'x', extra: { operation: 'rerank', documents: ['one'], topK: 2 } },
-        'topK',
-      ],
+      [{ prompt: 'x', extra: { operation: 'rerank', documents: ['one'], topK: 2 } }, 'topK'],
       [
         {
           prompt: 'x',
@@ -319,10 +312,12 @@ describe('VoyageAiConnector (AU-023)', () => {
         'rerank-2.5',
         'rerank-2.5-lite',
       ]);
-      expect(capabilities.modelMeta?.filter((model) => model.modality === 'embedding')).toHaveLength(
-        6,
+      expect(
+        capabilities.modelMeta?.filter((model) => model.modality === 'embedding'),
+      ).toHaveLength(6);
+      expect(capabilities.modelMeta?.filter((model) => model.modality === 'rerank')).toHaveLength(
+        2,
       );
-      expect(capabilities.modelMeta?.filter((model) => model.modality === 'rerank')).toHaveLength(2);
     });
 
     it('does not expose dynamic discovery, multimodal, contextualized, batch, or Jina claims', () => {

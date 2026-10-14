@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { spendContextSchema } from '../../billing/profile-spend/policy';
 import { parseDeepSeekOptions } from '../deepseek/deepseek-options';
 
 // ─── Text connector DTO (existing) ────────────────────────────────────────────
@@ -62,6 +63,7 @@ const executeRequestBaseShape = {
   responseFormat: z.object({ type: z.enum(['json_object', 'text']) }).optional(),
   timeout: z.number().int().min(5_000).max(600_000).optional(),
   extra: z.record(z.string(), z.unknown()).optional(),
+  spendContext: spendContextSchema.optional(),
   // CONN-0223 — cascade profile: mutually exclusive with connector.
   profile: z.enum(['low-reasoning']).optional(),
   // CONN-0089 output-guard: opt-in structured-output validate-and-repair

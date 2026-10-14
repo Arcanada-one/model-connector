@@ -3,12 +3,14 @@ from pathlib import Path
 import importlib.util
 import json
 import os
+import shutil
+import stat
 import subprocess
 import sys
 import tempfile
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('full_suite', ROOT / 'scripts/graph_full_suite.py')
@@ -17,6 +19,165 @@ spec.loader.exec_module(subject)
 
 
 class Controls(unittest.TestCase):
+    def test_explicit_fixture_manifest_entrypoint_is_typed_and_root_only(self):
+        self.assertEqual(subject.parse_entrypoint(['.']), ('.', None))
+        self.assertEqual(subject.parse_entrypoint(['.', '--billing-fixture-manifest', '/private/input.json']),
+                         ('.', Path('/private/input.json')))
+        for argv in [[], ['.', '--billing-fixture-manifest'],
+                     ['.', '--billing-fixture-manifest', 'relative'],
+                     ['.', '--billing-fixture-manifest', '/private/../input.json'],
+                     ['.', '--billing-fixture-manifest', '/private/\x00input'],
+                     ['watcher', '--billing-fixture-manifest', '/private/input.json'],
+                     ['.', '--foreign', '/private/input.json'],
+                     ['.', '--billing-fixture-manifest', '/private/input.json', '--extra']]:
+            with self.subTest(argv=argv), self.assertRaises(subject.Refusal):
+                subject.parse_entrypoint(argv)
+
+    def test_explicit_missing_input_refuses_before_root_child_dispatch(self):
+        calls = []
+        suites = self.root_dispatch_fixture(['src/a.spec.ts'])
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'), self.assertRaises(subject.Refusal):
+            subject.run_root_suites(self.root, suites, self.root, self.root_child(calls),
+                billing_fixture_manifest=self.root / 'absent-protected-input.json')
+        self.assertEqual(calls, [])
+
+    def test_dispatch_custody_checks_before_after_and_releases_on_child_failure(self):
+        import types
+        custody = Mock()
+        receiver = types.SimpleNamespace(SourceCustody=Mock(return_value=custody),
+                                         InputRefused=type('InputRefused', (Exception,), {}))
+        loader = types.SimpleNamespace(exec_module=lambda module: None)
+        spec = types.SimpleNamespace(loader=loader)
+        calls = []
+        def child(*args, **kwargs):
+            calls.append('dispatch')
+            raise RuntimeError('synthetic child failure')
+        def body(root, suites, scratch, executor, **kwargs):
+            return executor('synthetic')
+        with patch.object(subject.importlib.util, 'spec_from_file_location', return_value=spec), \
+             patch.object(subject.importlib.util, 'module_from_spec', return_value=receiver), \
+             patch.object(subject, '_run_root_suites', side_effect=body):
+            with self.assertRaises(subject.DispatchFailure) as raised:
+                subject.run_root_suites(self.root, [], self.root, child,
+                    billing_fixture_manifest=self.root / 'input')
+        self.assertEqual(raised.exception.failure_facts['child']['class'], 'RuntimeError')
+        self.assertEqual(raised.exception.failure_facts['custody']['status'], 'verified')
+        self.assertEqual(calls, ['dispatch'])
+        self.assertEqual(custody.revalidate.call_count, 2)
+        custody.release.assert_called_once_with()
+
+    def test_dispatch_custody_failed_precheck_makes_zero_child_calls(self):
+        import types
+        error = type('InputRefused', (Exception,), {})
+        custody = Mock(); custody.revalidate.side_effect = error()
+        receiver = types.SimpleNamespace(SourceCustody=Mock(return_value=custody), InputRefused=error)
+        spec = types.SimpleNamespace(loader=types.SimpleNamespace(exec_module=lambda module: None))
+        child = Mock()
+        def body(root, suites, scratch, executor, **kwargs): return executor('synthetic')
+        with patch.object(subject.importlib.util, 'spec_from_file_location', return_value=spec), \
+             patch.object(subject.importlib.util, 'module_from_spec', return_value=receiver), \
+             patch.object(subject, '_run_root_suites', side_effect=body):
+            with self.assertRaises(subject.Refusal):
+                subject.run_root_suites(self.root, [], self.root, child,
+                    billing_fixture_manifest=self.root / 'input')
+        child.assert_not_called(); custody.release.assert_called_once_with()
+
+    def test_post_dispatch_custody_loss_refuses_successful_child(self):
+        import types
+        error = type('InputRefused', (Exception,), {})
+        custody = Mock(); custody.revalidate.side_effect = [None, error()]
+        receiver = types.SimpleNamespace(SourceCustody=Mock(return_value=custody), InputRefused=error)
+        spec = types.SimpleNamespace(loader=types.SimpleNamespace(exec_module=lambda module: None))
+        child = Mock(return_value={'exit_code': 0})
+        def body(root, suites, scratch, executor, **kwargs): return executor('synthetic')
+        with patch.object(subject.importlib.util, 'spec_from_file_location', return_value=spec), \
+             patch.object(subject.importlib.util, 'module_from_spec', return_value=receiver), \
+             patch.object(subject, '_run_root_suites', side_effect=body):
+            with self.assertRaises(subject.DispatchFailure) as raised:
+                subject.run_root_suites(self.root, [], self.root, child,
+                    billing_fixture_manifest=self.root / 'input')
+        self.assertEqual(raised.exception.failure_facts['child']['status'], 0)
+        self.assertEqual(raised.exception.failure_facts['custody']['status'], 'refused')
+        child.assert_called_once(); custody.release.assert_called_once_with()
+
+    def test_required_ci_acquisition_cannot_be_replaced_by_manifest_or_ambient_flag(self):
+        flag = subject.BILLING_ACQUISITION_REQUIRED
+        self.assertEqual(subject.parse_entrypoint(['.', flag]), ('.', None))
+        for argv in [['watcher', flag], ['.', flag, '--billing-fixture-manifest', '/private/input'],
+                     ['.', flag, '--adapter-ready'], ['.', '--adapter-ready']]:
+            with self.assertRaises(subject.Refusal): subject.parse_entrypoint(argv)
+        with patch.dict(os.environ, {'BILLING_CUSTODIAN_SOURCE': '/foreign',
+                'BILLING_FIXTURE_ADAPTER_READY': '1'}), self.assertRaises(subject.AcquisitionUnavailable):
+            subject.require_billing_acquisition(self.root, "a" * 40)
+
+    def test_maintained_ci_missing_adapter_records_nm_without_suite_dispatch(self):
+        scratch = self.root / 'private'; scratch.mkdir(mode=0o700)
+        with patch.object(subject.sys, 'argv', ['runner', '.', subject.BILLING_ACQUISITION_REQUIRED]), \
+             patch.object(subject, 'check_context'), patch.object(subject, 'inventory', return_value=[]), \
+             patch.object(subject, 'members_for', return_value=[]), patch.object(subject, 'plan', return_value=[]), \
+             patch.object(subject.subprocess, 'run', return_value=Mock(stdout=b'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')), \
+             patch.dict(os.environ, {'TMPDIR': str(scratch)}), \
+             patch.object(subject, 'run_root_suites', side_effect=AssertionError('suite dispatch must not occur')) as dispatch:
+            self.assertEqual(subject.main(), 127)
+        dispatch.assert_not_called()
+        docs = list(scratch.glob('mc-full-*/execution.json'))
+        self.assertEqual(len(docs), 1)
+        doc = json.loads(docs[0].read_text())
+        self.assertEqual(doc['results'], [])
+        self.assertEqual(doc['billing_fixture_acquisition']['suite_dispatches'], 0)
+        self.assertEqual(doc['refusal'], 'billing_fixture_acquisition_adapter_not_supplied')
+
+    def test_combined_child_and_post_custody_failures_preserve_safe_facts(self):
+        import types, traceback
+        error = type('InputRefused', (Exception,), {})
+        custody = Mock(); custody.revalidate.side_effect = [None, error('private custody excerpt')]
+        receiver = types.SimpleNamespace(SourceCustody=Mock(return_value=custody), InputRefused=error)
+        spec = types.SimpleNamespace(loader=types.SimpleNamespace(exec_module=lambda module: None))
+        child = Mock(side_effect=RuntimeError('private child excerpt'))
+        def body(root, suites, scratch, executor, **kwargs): return executor('synthetic')
+        with patch.object(subject.importlib.util, 'spec_from_file_location', return_value=spec), \
+             patch.object(subject.importlib.util, 'module_from_spec', return_value=receiver), \
+             patch.object(subject, '_run_root_suites', side_effect=body):
+            with self.assertRaises(subject.Refusal) as raised:
+                subject.run_root_suites(self.root, [], self.root, child,
+                    billing_fixture_manifest=self.root / 'input')
+        self.assertEqual(raised.exception.failure_facts, {
+            'child': {'kind': 'exception', 'class': 'RuntimeError', 'status': None},
+            'custody': {'kind': 'post_dispatch', 'class': 'InputRefused', 'status': 'refused'}})
+        rendered = ''.join(traceback.format_exception(raised.exception))
+        self.assertNotIn('private child excerpt', rendered)
+        self.assertNotIn('private custody excerpt', rendered)
+        child.assert_called_once(); custody.release.assert_called_once_with()
+
+    def test_child_failure_facts_keep_bounded_status_without_private_fields(self):
+        private = 'private credential excerpt'
+        failed = subprocess.CalledProcessError(17, [private], output=private, stderr=private)
+        self.assertEqual(subject.child_failure_fact(error=failed),
+            {'kind': 'exception', 'class': 'CalledProcessError', 'status': 17})
+        arbitrary = type(private, (Exception,), {})(private)
+        self.assertEqual(subject.child_failure_fact(error=arbitrary),
+            {'kind': 'exception', 'class': 'Exception', 'status': None})
+        self.assertEqual(subject.child_failure_fact(result={'exit_code': 42, 'output': private}),
+            {'kind': 'returned', 'class': None, 'status': 42})
+        for value in [private, True, 1000000]:
+            self.assertIsNone(subject.child_failure_fact(result={'exit_code': value})['status'])
+
+    def test_main_records_both_dispatch_facts_in_bounded_receipt(self):
+        scratch = self.root / 'private'; scratch.mkdir(mode=0o700)
+        facts = {'child': {'kind': 'exception', 'class': 'CalledProcessError', 'status': 17},
+                 'custody': {'kind': 'post_dispatch', 'class': 'InputRefused', 'status': 'refused'}}
+        failure = subject.DispatchFailure(facts['child'], facts['custody'])
+        with patch.object(subject.sys, 'argv', ['runner', '.']), \
+             patch.object(subject, 'check_context'), patch.object(subject, 'inventory', return_value=[]), \
+             patch.object(subject, 'members_for', return_value=[]), patch.object(subject, 'plan', return_value=[]), \
+             patch.object(subject.subprocess, 'run', return_value=Mock(stdout=b'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')), \
+             patch.dict(os.environ, {'TMPDIR': str(scratch)}), \
+             patch.object(subject, 'run_root_suites', side_effect=failure):
+            self.assertEqual(subject.main(), 1)
+        doc = json.loads(next(scratch.glob('mc-full-*/execution.json')).read_text())
+        self.assertEqual(doc['failure_facts'], facts)
+        self.assertEqual(doc['refusal'], 'protected fixture dispatch failed')
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -29,12 +190,192 @@ class Controls(unittest.TestCase):
         for unit in subject.UNITS[1:]:
             (self.root / unit).mkdir(parents=True)
 
+    def test_native_oci_actual_runtime_refusal_and_negative_controls(self):
+        import copy
+        spec=importlib.util.spec_from_file_location('oci_refusal_probe',ROOT/'scripts/oci-mount-receiving.py')
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        # Actual head048 run38127694196 artifact11697694259, old_missing row.
+        row={'variant':'old_missing','phase':'start','exit_code':1,
+             'failure_codes':['read_only_filesystem','oci_runtime'],
+             'mount_destination_seen':True,'received':False,
+             'restrictions_verified':True,'primary_exception':None}
+        self.assertTrue(probe.old_mount_refusal(row))
+        legacy=copy.deepcopy(row);legacy['exit_code']=125
+        self.assertTrue(probe.old_mount_refusal(legacy))
+        for field,value in [('variant','new_generated'),('phase','create'),
+                ('exit_code',0),('exit_code',124),('exit_code',127),('exit_code',True),
+                ('failure_codes',[]),('failure_codes',['oci_runtime']),
+                ('failure_codes',['read_only_filesystem']),
+                ('mount_destination_seen',False),('restrictions_verified',False),
+                ('received',True),('primary_exception','receiving_exception')]:
+            with self.subTest(field=field,value=value):
+                refused=copy.deepcopy(row);refused[field]=value
+                self.assertFalse(probe.old_mount_refusal(refused))
+
+    def test_prime_base_acquisition_is_exact_bounded_and_refuses_unknown_failures(self):
+        spec=importlib.util.spec_from_file_location('prime_acquisition_probe',ROOT/'scripts/oci-mount-receiving.py')
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        missing=('Error: No such image: '+probe.PRIME_BASE).encode()
+        class Reconcile:
+            def reconcile(self, case): raise AssertionError('no container created')
+        scenarios=[(1,missing,0,1,'PINNED_BASE_ACQUIRED_LOOKUP_FAILED',3),
+                   (1,missing,1,None,'PINNED_BASE_ACQUISITION_FAILED',2),
+                   (1,missing,124,None,'PINNED_BASE_ACQUISITION_FAILED',2),
+                   (124,missing,None,None,'PINNED_BASE_CACHE_LOOKUP_FAILED',1),
+                   (1,b'permission denied',None,None,'PINNED_BASE_CACHE_LOOKUP_FAILED',1),
+                   (1,b'No such image: foreign:latest',None,None,'PINNED_BASE_CACHE_LOOKUP_FAILED',1)]
+        for index,(initial,raw,pull,reinspect,reason,count) in enumerate(scenarios):
+            with self.subTest(index=index):
+                owned=self.root/str(index);owned.mkdir()
+                answers=[(initial,raw,[])]
+                if count>1:answers.append((pull,b'bounded acquisition output',[]))
+                if count>2:answers.append((reinspect,b'absent after acquisition',[]))
+                with patch.object(probe,'command',side_effect=answers) as command:
+                    received=probe.prime_python_probe(owned,'head',Reconcile())
+                self.assertEqual(received['reason'],reason)
+                self.assertEqual(received['verdict'],'NOT_MEASURED')
+                self.assertIsNone(received['python'])
+                self.assertEqual(command.call_count,count)
+                if count>1:
+                    self.assertEqual(command.call_args_list[1].args[0],
+                        ['docker','image','pull','--platform=linux/amd64',probe.PRIME_BASE])
+                    self.assertEqual(command.call_args_list[1].kwargs['timeout'],90)
+                    self.assertNotIn('bounded acquisition output',json.dumps(received))
+
+    def test_prime_missing_reference_familiar_equivalence_and_negative_controls(self):
+        spec=importlib.util.spec_from_file_location('prime_reference_probe',ROOT/'scripts/oci-mount-receiving.py')
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        literal=('Error: No such image: '+probe.PRIME_BASE).encode()
+        familiar=('Error: No such image: '+probe.PRIME_BASE.removeprefix('library/')).encode()
+        self.assertEqual(probe.exact_prime_missing_reference(1,literal),'literal')
+        self.assertEqual(probe.exact_prime_missing_reference(1,familiar),'docker_hub_familiar')
+        self.assertEqual(probe.exact_prime_missing_reference(1,b'[]\n'+familiar.replace(b'Error:',b'Error response from daemon:')),'docker_hub_familiar')
+        for code,raw in [(0,familiar),(True,familiar),(124,familiar),(125,familiar),
+                (1,familiar+b' permission denied'),(1,familiar+b' cannot connect'),(1,familiar+b' i/o timeout'),(1,familiar+b' operation not permitted'),
+                (1,familiar+b'0'),(1,familiar.replace(b'node:24',b'node:25')),
+                (1,familiar.replace(b'node:24',b'foreign/node:24')),
+                (1,b'No such image: node:24'),(1,literal+b'\n'+familiar)]:
+            with self.subTest(code=code,raw=raw):self.assertIsNone(probe.exact_prime_missing_reference(code,raw))
+        # Actual familiar spelling must trigger only the same frozen pull argv, once.
+        class Reconcile:
+            def reconcile(self, case):raise AssertionError('no container created')
+        owned=self.root/'familiar';owned.mkdir()
+        with patch.object(probe,'command',side_effect=[(1,familiar,[]),(1,b'bounded refusal',[])]) as cmd:
+            received=probe.prime_python_probe(owned,'head',Reconcile())
+        self.assertEqual(cmd.call_count,2)
+        self.assertEqual(cmd.call_args_list[1].args[0],['docker','image','pull','--platform=linux/amd64',probe.PRIME_BASE])
+        self.assertEqual(received['image_inspect_missing_reference_binding'],'docker_hub_familiar')
+        self.assertIsNone(received['python'])
+
+    def test_compose_real_child_taxonomy_never_prints_private_stderr(self):
+        binary=self.root/'bin';binary.mkdir()
+        docker=binary/'docker'
+        for message, expected in [
+            ('compose is not a docker command','compose_plugin_unavailable'),
+            ('unknown flag: --format','compose_cli_flag'),
+            ('permission denied','compose_permission_denied')]:
+            with self.subTest(expected=expected):
+                docker.write_text('#!/bin/sh\necho "'+message+' SYNTHETIC_PRIVATE_VALUE" >&2\nexit 125\n')
+                docker.chmod(0o700)
+                result=subprocess.run(['/bin/bash',str(ROOT/'deploy/compose-network.test.sh')],
+                    cwd=ROOT,env={'PATH':str(binary)+os.pathsep+os.defpath,'HOME':str(self.root)},
+                    capture_output=True,text=True,timeout=5)
+                self.assertEqual(result.returncode,1)
+                line=next(x for x in result.stdout.splitlines() if x.startswith('COMPOSE_FAILURE_RECEIVING='))
+                received=json.loads(line.split('=',1)[1])
+                self.assertEqual(received['failure_code'],expected)
+                self.assertEqual(received['exit_code'],125)
+                self.assertNotIn('SYNTHETIC_PRIVATE_VALUE',result.stdout+result.stderr)
+
+    def test_compose_extra_private_field_never_reaches_public_projection(self):
+        suites=self.root_dispatch_fixture(['deploy/compose-network.test.sh'])
+        custody=patch.object(subject, 'stage_compose_plugin')
+        custody.start();self.addCleanup(custody.stop)
+        payload={'phase':'config_parse','exit_code':0,'failure_code':'invalid_json','extra':'SYNTHETIC_PRIVATE_VALUE'}
+        def child(*args):return {'argv':args[0],'exit_code':1,'output':'COMPOSE_FAILURE_RECEIVING='+json.dumps(payload)+'\n','duration_s':0}
+        with patch.object(subject.shutil,'which',return_value='/fixture/runner'):
+            result=subject.run_root_suites(self.root,suites,self.root,child)
+        received=result[0]['executions'][0]['failure_receiving']
+        self.assertEqual(set(received),{'phase','exit_code','failure_code'})
+        self.assertNotIn('SYNTHETIC_PRIVATE_VALUE',json.dumps(received))
+
+    def test_native_oci_helper_ignores_real_git_replacement_and_ambient_git_dir(self):
+        spec=importlib.util.spec_from_file_location('oci_git_probe',ROOT/'scripts/oci-mount-receiving.py')
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        root=self.root/'git-fixture';root.mkdir()
+        subprocess.run(['git','init','-q',str(root)],check=True)
+        helper=root/'helper.py';helper.write_text('original immutable bytes')
+        subprocess.run(['git','add','helper.py'],cwd=root,check=True)
+        args=['git','-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm']
+        subprocess.run(args+['original'],cwd=root,check=True)
+        original=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root).decode().strip()
+        helper.write_text('substituted bytes')
+        subprocess.run(['git','add','helper.py'],cwd=root,check=True);subprocess.run(args+['replacement'],cwd=root,check=True)
+        replacement=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root).decode().strip()
+        subprocess.run(['git','replace',original,replacement],cwd=root,check=True)
+        self.assertEqual(subprocess.check_output(['git','show',original+':helper.py'],cwd=root),b'substituted bytes')
+        with patch.dict(os.environ,{'GIT_DIR':'/nonexistent/foreign','GIT_CONFIG_COUNT':'1','GIT_CONFIG_KEY_0':'core.worktree','GIT_CONFIG_VALUE_0':'/foreign'}):
+            raw,binding=probe.helper_binding(root,original,'helper.py')
+        self.assertEqual(raw,b'original immutable bytes');self.assertEqual(binding['mode'],'100644')
+
+    def test_native_oci_exception_reconciles_and_preserves_unknown_custody(self):
+        spec=importlib.util.spec_from_file_location('oci_exception_probe',ROOT/'scripts/oci-mount-receiving.py')
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        def source(argv, **kwargs):
+            import hashlib
+            if 'rev-parse' in argv: return b'a'*40
+            if argv[0] == 'docker': return b'sha256:'+b'b'*64
+            if 'ls-tree' in argv:
+                name=argv[-1];raw=(ROOT/name).read_bytes()
+                blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()
+                return ('100644 blob '+blob+'\t'+name+'\0').encode()
+            if 'cat-file' in argv:
+                for name in ['scripts/app-e2e-reconcile.py','scripts/app-e2e-snapshot.py']:
+                    raw=(ROOT/name).read_bytes()
+                    if hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==argv[-1]:return raw
+            raise AssertionError('unknown immutable prelude')
+        with patch.dict(os.environ, {'RUNNER_TEMP':str(self.root)}), patch.object(probe.subprocess,'check_output',side_effect=source), patch.object(probe,'prime_python_probe',return_value={'verdict':'NOT_MEASURED','cleanup_exit_code':None}), patch.object(probe,'command',side_effect=PermissionError('synthetic command denial')), patch.object(probe.subprocess,'run',side_effect=PermissionError('synthetic inventory denial')):
+            self.assertEqual(probe.main(),1)
+        receipt=json.loads((self.root/'mc-oci-mount-receiving.json').read_text())
+        self.assertEqual(receipt['hypothesis'],'NOT_MEASURED')
+        self.assertEqual(receipt['results'][0]['cleanup_exit_code'],127)
+        case=next(self.root.glob('mc-oci-receiving-*/old_missing'))
+        self.assertTrue((case/'app.intent.json').exists())
+        self.assertEqual(json.loads((case/'cleanup.json').read_text())['verdict'],'UNKNOWN')
+
+    def test_native_oci_restrictions_refuse_weakened_container(self):
+        import copy
+        spec=importlib.util.spec_from_file_location('oci_probe',ROOT/'scripts/oci-mount-receiving.py')
+        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
+        obj={'Name':'/owned','Image':'sha256:pin','Config':{'Labels':{'mc-run':'owner','mc-role':'app','mc-head':'head'},'User':str(os.getuid())+':'+str(os.getgid())},
+             'HostConfig':{'NetworkMode':'none','ReadonlyRootfs':True,'CapDrop':['ALL'],'SecurityOpt':['no-new-privileges'],'PortBindings':{},'PidsLimit':32},
+             'Mounts':[{'Source':'/source','Destination':'/work','RW':False},{'Source':'/deps','Destination':'/work/node_modules','RW':False}]}
+        def check(row):return probe.restrictions(row,'owner','owned','head','sha256:pin',Path('/source'),Path('/deps'))
+        self.assertTrue(check(obj))
+        for key,value in [('NetworkMode','host'),('ReadonlyRootfs',False),('PortBindings',{'3900/tcp':[{}]}),('CapDrop',[]),('SecurityOpt',[])]:
+            changed=copy.deepcopy(obj);changed['HostConfig'][key]=value;self.assertFalse(check(changed))
+        changed=copy.deepcopy(obj);changed['Mounts'][0]['RW']=True;self.assertFalse(check(changed))
+        changed=copy.deepcopy(obj);changed['Config']['User']='0:0';self.assertFalse(check(changed))
+        changed=copy.deepcopy(obj);changed['Config']['Labels']['mc-run']='foreign';self.assertFalse(check(changed))
+
+    def test_failure_receiving_preserves_member_without_raw_error_or_foreign_path(self):
+        report=self.root/'result.json'
+        report.write_text(json.dumps({'testResults':[
+            {'name':str(self.root/'foreign.spec.ts'), 'assertionResults':[{'status':'failed','failureMessages':['secret']}]},
+            {'name':str(self.root/'owned.spec.ts'), 'assertionResults':[{'status':'failed','failureMessages':['Expected SYNTHETIC_SECRET to equal private']}]}
+        ]}))
+        result=subject.failed_vitest_receiving(report,['owned.spec.ts'],self.root)
+        self.assertEqual(result['first_failures'][0]['member'],'owned.spec.ts')
+        self.assertEqual(result['first_failures'][0]['failure_codes'],['assertion_mismatch'])
+        self.assertNotIn('SECRET',json.dumps(result));self.assertNotIn('foreign',json.dumps(result))
+
     def test_exact_native_cwd_contract_and_traversal(self):
         profile = json.loads((ROOT / '.arcana/verify.json').read_text())
         for unit in subject.UNITS:
             argv = profile['deployables'][unit]['full_test']
             self.assertEqual((ROOT / unit / argv[1]).resolve(), ROOT / 'scripts/graph-full-suite.sh')
-            self.assertEqual(argv[-1], unit)
+            expected_tail = [unit, subject.BILLING_ACQUISITION_REQUIRED] if unit == "." else [unit]
+            self.assertEqual(argv[2:], expected_tail)
             self.assertNotIn('full_test_timeout_seconds', profile['deployables'][unit])
             subject.check_context(self.root, unit, self.root / unit)
         for unit, cwd in [('watcher', self.root), ('../escape', self.root),
@@ -269,7 +610,7 @@ class Controls(unittest.TestCase):
         subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture',
                         '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture'], check=True)
 
-    def test_actual_root_entrypoint_refuses_missing_empty_public_and_symlink_tmpdir(self):
+    def test_actual_root_entrypoint_refuses_empty_public_and_symlink_tmpdir(self):
         self.root_entrypoint_fixture()
         public = self.root / 'public'
         public.mkdir(mode=0o755)
@@ -278,16 +619,41 @@ class Controls(unittest.TestCase):
         private.mkdir(mode=0o700)
         link = self.root / 'link'
         link.symlink_to(private, target_is_directory=True)
-        for value in [None, '', str(public), str(link)]:
+        for value in ['', str(public), str(link)]:
             env = {'PATH': os.defpath, 'HOME': str(self.root)}
-            if value is not None:
-                env['TMPDIR'] = value
+            env['TMPDIR'] = value
             with self.subTest(TMPDIR=value):
                 result = subprocess.run(['bash', 'scripts/graph-full-suite.sh', '.'], cwd=self.root,
                                         env=env, capture_output=True, text=True, timeout=10)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn('FULL_FALLBACK_TEST_REFUSED: invalid source/path/environment', result.stderr)
                 self.assertEqual(list(self.root.rglob('execution.json')), [])
+
+    def test_actual_root_entrypoint_creates_private_tmpdir_when_environment_is_clean(self):
+        self.root_entrypoint_fixture()
+        result = subprocess.run(['bash', 'scripts/graph-full-suite.sh', '.'], cwd=self.root,
+                                env={'PATH': os.defpath, 'HOME': str(self.root)},
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 127, result.stderr)
+        self.assertIn('FULL_FALLBACK_TEST_NOT_MEASURED: complete maintained obligations not executed',
+                      result.stdout)
+        line = next(line for line in result.stdout.splitlines()
+                    if line.startswith('Full-suite evidence: '))
+        evidence = Path(line.removeprefix('Full-suite evidence: '))
+        private_root = evidence.parents[1]
+        try:
+            info = private_root.lstat()
+            self.assertFalse(private_root.is_symlink())
+            self.assertTrue(stat.S_ISDIR(info.st_mode))
+            self.assertEqual(info.st_uid, os.geteuid())
+            self.assertEqual(stat.S_IMODE(info.st_mode), 0o700)
+            self.assertTrue(evidence.is_file())
+            report = json.loads(evidence.read_text())
+            self.assertEqual(report['exit_code'], 127)
+            self.assertEqual([r['verdict'] for r in report['results']], ['not_measured', 'verified'])
+            self.assertEqual(report['results'][1]['executions'][0]['counts']['passed'], 1)
+        finally:
+            shutil.rmtree(private_root)
 
     def test_actual_root_entrypoint_dispatches_local_regression_retains_app_hold(self):
         self.root_entrypoint_fixture()
@@ -305,7 +671,8 @@ class Controls(unittest.TestCase):
         self.assertEqual(report['results'][1]['executions'][0]['counts']['passed'], 1)
         self.assertEqual(report['results'][0]['held_members'], ['test/app.e2e-spec.ts'])
         self.assertEqual(report['exit_code'], 127)
-        self.assertEqual(len(list(temp.glob('mc-full-*/*.log'))), 1)
+        self.assertEqual(len(list(temp.glob('mc-full-*/*.log'))), 2)
+        self.assertTrue(list(temp.glob('mc-full-*/root-app-e2e.log')))
 
     def root_dispatch_fixture(self, members):
         for member in members:
@@ -347,7 +714,8 @@ class Controls(unittest.TestCase):
                 'PROVIDER_API_KEY': 'sentinel-secret', 'DATABASE_URL': 'sentinel-secret',
                 'MC_ALLOW_LIVE': '1', 'NODE_OPTIONS': 'sentinel-secret'}):
             result = subject.run_root_suites(self.root, suites, self.root, self.root_child(calls))
-        self.assertEqual(len(calls), 3)
+        self.assertEqual(len(calls), 4)
+        self.assertIn(['bash', 'scripts/app-e2e-disposable.sh'], calls)
         self.assertEqual(sorted(n for r in result for n in r['members']), sorted(members))
         held = [n for r in result for n in r.get('held_members', [])]
         self.assertEqual(set(held), {'src/auth/live.integration.spec.ts', 'test/app.e2e-spec.ts'})
@@ -406,10 +774,27 @@ class Controls(unittest.TestCase):
                     return {'argv': argv, 'exit_code': code, 'output': 'fixture failure', 'duration_s': 0}
                 with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
                     result = subject.run_root_suites(self.root, subject.plan('.', members), scratch, child)
-                self.assertEqual(len(calls), 1)
+                self.assertEqual(len(calls), 2)
+                self.assertIn(['bash', 'scripts/app-e2e-disposable.sh'], calls)
                 self.assertEqual(result[1]['held_members'], ['scripts/b.test.sh'])
                 self.assertEqual(result[1]['executions'][0]['exit_code'], code)
                 self.assertEqual(subject.execution_code(result), 1 if code == 9 else 124)
+
+    def test_app_result_requires_all_three_real_assertions(self):
+        document = {'success': True, 'numTotalTests': 3, 'numPassedTests': 3,
+                    'numFailedTests': 0, 'testResults': [{
+                        'name': '/work/test/app.e2e-spec.ts',
+                        'assertionResults': [{'status': 'passed'}] * 3}]}
+        def render(d):
+            return 'APP_E2E_RESULT_BEGIN\n' + json.dumps(d) + 'APP_E2E_RESULT_END'
+        self.assertEqual(subject.app_e2e_counts(render(document), ['test/app.e2e-spec.ts']),
+                         {'passed': 3, 'failed': 0, 'skipped': 0})
+        skipped = json.loads(json.dumps(document))
+        skipped['numPassedTests'] = 2
+        skipped['testResults'][0]['assertionResults'][2]['status'] = 'pending'
+        for raw in ['', render(document) * 2, render(skipped)]:
+            with self.subTest(raw=raw), self.assertRaises(subject.Refusal):
+                subject.app_e2e_counts(raw, ['test/app.e2e-spec.ts'])
 
     def test_root_maintained_regression_commands_and_real_count_parsers(self):
         members = ['scripts/a.test.sh', 'scripts/a.test.mjs', 'dev-tools/a.spec.bats', 'dev-tools/test_a.py']

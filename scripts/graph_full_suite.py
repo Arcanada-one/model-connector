@@ -5,7 +5,10 @@ unmeasured. No environment flag changes that disposition. The other declarations
 exercise their complete existing offline/owned-loopback contracts, not production.
 """
 from pathlib import Path
+from abc import ABC, abstractmethod
+from enum import Enum
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -31,8 +34,146 @@ OFFLINE_INTEGRATION = frozenset({
 })
 
 
+BILLING_ACQUISITION_REQUIRED = '--require-billing-fixture-acquisition'
+
+
+class AcquisitionUnavailable(Exception):
+    """No installed authorized producer/receiver adapter for this CI attempt."""
+
+
+def require_billing_acquisition(root, head):
+    # There is no registered protected transport on the measured maintained CI
+    # callsite. A local manifest or environment flag cannot supply that authority.
+    raise AcquisitionUnavailable('billing_fixture_acquisition_adapter_not_supplied')
+
+
 class Refusal(Exception):
     """Invalid source, membership, path or execution result."""
+
+
+class DispatchFailure(Refusal):
+    """Bounded public facts; never retain private exception messages in the result."""
+    def __init__(self, child, custody):
+        super().__init__('protected fixture dispatch failed')
+        self.failure_facts = {'child': child, 'custody': custody}
+
+
+def child_failure_fact(error=None, result=None):
+    status = None
+    if error is not None:
+        # Canonical categories only: arbitrary exception class names can carry data.
+        category = 'Exception' if isinstance(error, Exception) else 'BaseException'
+        for known in (subprocess.TimeoutExpired, subprocess.CalledProcessError,
+                      TimeoutError, RuntimeError, ValueError, TypeError,
+                      KeyError, AssertionError, OSError, KeyboardInterrupt, SystemExit):
+            if isinstance(error, known):
+                category = known.__name__
+                break
+        if isinstance(error, subprocess.CalledProcessError): status = error.returncode
+        if isinstance(error, subprocess.TimeoutExpired): status = 124
+        if isinstance(error, SystemExit): status = error.code
+        kind = 'exception'
+    else:
+        category, kind = None, 'returned'
+        if type(result) is dict: status = result.get('exit_code')
+    if type(status) is not int or not -255 <= status <= 255: status = None
+    return {'kind': kind, 'class': category, 'status': status}
+
+
+
+class BillingCleanupStatus(Enum):
+    VERIFIED = "verified"
+    UNKNOWN = "unknown"
+
+
+class BillingFixtureLease(ABC):
+    """Owner-authenticated path lifetime, not a manifest or descriptor receipt.
+
+    No concrete registered provider is installed here. The eventual static
+    adapter must validate its current source/UID/job/attempt admission and retain
+    the immutable path through child execution. Test doubles grant no authority.
+    """
+    @abstractmethod
+    def revalidate(self, root, head, consumer_uid):
+        """Return the same absolute protected manifest while admission is valid."""
+
+    @abstractmethod
+    def release(self):
+        """Return VERIFIED only after measured owned-descendant closure/cleanup.
+
+        Return UNKNOWN or raise when closure/cleanup cannot be established.
+        Revalidation must bind held ancestor/manifest dev/inode/hash, current
+        head/UID/job/attempt and immutable mount lifetime, not pathname alone.
+        """
+
+
+class AcquisitionFailure(Refusal):
+    def __init__(self, execution, phase, error):
+        super().__init__('protected fixture acquisition lifecycle failed')
+        self.failure_facts = {
+            'execution': execution,
+            'acquisition': {'phase': phase, **child_failure_fact(error=error)}}
+
+
+def run_with_billing_acquisition(root, head, action):
+    """Retain the genuine provider lease around planning and every child call."""
+    lease = require_billing_acquisition(root, head)
+    if not isinstance(lease, BillingFixtureLease):
+        raise AcquisitionUnavailable('billing_fixture_acquisition_contract_refused')
+    failure = None
+    result = None
+    phase = 'pre_dispatch'
+    try:
+        manifest = lease.revalidate(root, head, os.geteuid())
+        if (type(manifest) is not type(Path()) or not manifest.is_absolute()
+                or '..' in manifest.parts or '\x00' in str(manifest)):
+            raise Refusal('protected fixture lease manifest refused')
+
+        def revalidate():
+            if lease.revalidate(root, head, os.geteuid()) != manifest:
+                raise Refusal('protected fixture lease manifest changed')
+
+        def guarded_executor(*args, **kwargs):
+            revalidate()
+            child = None
+            value = None
+            try:
+                value = execute(*args, **kwargs)
+            except BaseException as error:
+                child = child_failure_fact(error=error)
+            try:
+                revalidate()
+            except BaseException as error:
+                raise AcquisitionFailure(child or child_failure_fact(result=value),
+                                         'post_dispatch', error) from None
+            if child is not None:
+                raise AcquisitionFailure(child, 'child', RuntimeError()) from None
+            return value
+
+        phase = 'execution'
+        result = action(manifest, guarded_executor)
+    except BaseException as error:
+        failure = error
+    try:
+        if lease.release() is not BillingCleanupStatus.VERIFIED:
+            raise Refusal('protected fixture cleanup unknown')
+    except BaseException as error:
+        facts = (failure.failure_facts if isinstance(failure, (AcquisitionFailure, DispatchFailure, SourceCleanupFailure))
+                 else child_failure_fact(error=failure) if failure is not None
+                 else child_failure_fact(result=result))
+        raise AcquisitionFailure(facts, 'release', error) from None
+    if failure is not None:
+        if isinstance(failure, (AcquisitionFailure, DispatchFailure, SourceCleanupFailure)):
+            raise failure from None
+        raise AcquisitionFailure(child_failure_fact(error=failure), phase, failure) from None
+    return result
+
+
+
+class SourceCleanupFailure(Refusal):
+    def __init__(self, execution, cleanup):
+        super().__init__('protected fixture source cleanup unknown')
+        self.failure_facts = {'execution': execution, 'source_cleanup': cleanup}
 
 
 def checked_file(root, relative):
@@ -145,7 +286,7 @@ def plan(unit, members):
     return suites
 
 
-def clean_environment(scratch, unit_root):
+def clean_environment(scratch, unit_root, *, billing_fixture_manifest=None):
     # No inherited tokens, flags, URLs, NODE_OPTIONS, PYTHONPATH or agent hooks.
     env = {'PATH': os.environ.get('PATH', os.defpath), 'HOME': str(scratch / 'home'),
            'TMPDIR': str(scratch), 'CI': '1', 'NO_COLOR': '1', 'FORCE_COLOR': '0',
@@ -154,6 +295,16 @@ def clean_environment(scratch, unit_root):
     if any(not Path(part).is_absolute() for part in env['PATH'].split(os.pathsep)):
         raise Refusal('relative PATH entry')
     (scratch / 'home').mkdir(mode=0o700)
+    if billing_fixture_manifest is not None:
+        # Explicit protected input only; never inherit a source locator or grant.
+        import importlib.util
+        path = checked_file(ROOT, 'scripts/billing_fixture_input.py')
+        spec = importlib.util.spec_from_file_location('billing_fixture_input', path)
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        try:
+            env = module.bind_clean_environment(ROOT, env, billing_fixture_manifest)
+        except module.InputRefused:
+            raise Refusal('protected fixture input refused') from None
     return env
 
 
@@ -410,7 +561,126 @@ def render_authored_template(root, scratch, members, env=None):
             'target': target, 'config': config}
 
 
-def run_root_suites(root, suites, scratch, executor=execute):
+def app_e2e_counts(raw, members):
+    begin, end = 'APP_E2E_RESULT_BEGIN\n', 'APP_E2E_RESULT_END'
+    if raw.count(begin) != 1 or raw.count(end) != 1:
+        raise Refusal('missing or duplicate AppE2E exact execution result')
+    payload = raw.split(begin, 1)[1].split(end, 1)[0]
+    counts = vitest_counts(json.loads(payload), members, Path('/work'))
+    if counts != {'passed': 3, 'failed': 0, 'skipped': 0}:
+        raise Refusal('AppE2E exact maintained assertions not all executed')
+    return counts
+
+
+def failed_vitest_receiving(report, members, root):
+    """Receive bounded member/index/status facts; never publish arbitrary messages."""
+    if report.is_symlink() or not report.is_file() or report.stat().st_size > 32 * 1024 * 1024:
+        return {'phase': 'report_absent_or_oversized'}
+    try:
+        doc = json.loads(report.read_text())
+        rows = doc.get('testResults', [])
+        failures = []
+        allowed = {str((root / name).resolve()): name for name in members}
+        for row in rows:
+            member = allowed.get(str(Path(row.get('name', '')).resolve()))
+            if member is None:
+                continue
+            for index, assertion in enumerate(row.get('assertionResults', [])):
+                if assertion.get('status') == 'failed':
+                    failures.append({'member': member, 'assertion_index': index,
+                                     'failure_codes': failure_labels(' '.join(assertion.get('failureMessages', [])))})
+                    if len(failures) == 3: break
+            if len(failures) == 3: break
+        return {'phase': 'assertions' if failures else 'report_without_member_failure',
+                'first_failures': failures,
+                'report_sha256': hashlib.sha256(report.read_bytes()).hexdigest()}
+    except (OSError, ValueError, TypeError, KeyError):
+        return {'phase': 'report_invalid'}
+
+
+def failure_labels(raw):
+    return sorted({label for marker, label in (
+        ('permission denied', 'permission_denied'), ('read-only file system', 'read_only_filesystem'),
+        ('unknown shorthand flag', 'docker_cli_flag'), ('unknown flag', 'docker_cli_flag'),
+        ('cannot connect to the docker daemon', 'docker_api_unavailable'),
+        ('unknown docker command', 'docker_compose_unavailable'), ('invalid mount config', 'docker_mount_invalid'),
+        ('expected', 'assertion_mismatch'), ('cannot find module', 'module_absent'),
+        ('failed to resolve', 'module_resolution'), ('econnrefused', 'connection_refused'),
+        ('timeout', 'timeout'), ('syntaxerror', 'syntax_error'),
+        ('composition_socket_invalid', 'socket_path_capacity'), ('socket_path_too_long', 'socket_path_capacity')) if marker in raw.lower()})
+
+
+def stage_compose_plugin(root, home):
+    import importlib.util
+    path = checked_file(root, 'scripts/compose-plugin-custody.py')
+    spec = importlib.util.spec_from_file_location('compose_custody', path)
+    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+    receipt = module.stage(home)
+    receipt['producer_source_sha256'] = hashlib.sha256(path.read_bytes()).hexdigest()
+    with (home.parent / 'compose-custody.json').open('x') as output:
+        json.dump(receipt, output)
+    (home.parent / 'compose-custody.json').chmod(0o600)
+    return receipt
+
+
+def run_root_suites(root, suites, scratch, executor=execute, *, billing_fixture_manifest=None):
+    """Keep borrowed input custody across dispatch and release on every exit."""
+    if billing_fixture_manifest is None:
+        return _run_root_suites(root, suites, scratch, executor)
+    spec = importlib.util.spec_from_file_location('billing_dispatch_custody',
+        checked_file(ROOT, 'scripts/billing_fixture_input.py'))
+    receiver = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(receiver)
+    custody = None
+    failure, result = None, None
+    try:
+        custody = receiver.SourceCustody(root, billing_fixture_manifest)
+        def guarded_executor(*args, **kwargs):
+            custody.revalidate()
+            result, child_fact = None, None
+            try:
+                result = executor(*args, **kwargs)
+            except BaseException as error:
+                child_fact = (error.failure_facts
+                    if isinstance(error, (AcquisitionFailure, DispatchFailure, SourceCleanupFailure))
+                    else child_failure_fact(error=error))
+            try:
+                custody.revalidate()
+            except receiver.InputRefused:
+                raise DispatchFailure(child_fact or child_failure_fact(result=result),
+                    {'kind': 'post_dispatch', 'class': 'InputRefused',
+                     'status': 'refused'}) from None
+            if child_fact is not None:
+                raise DispatchFailure(child_fact,
+                    {'kind': 'post_dispatch', 'class': None, 'status': 'verified'}) from None
+            return result
+        result = _run_root_suites(root, suites, scratch, guarded_executor,
+            billing_fixture_manifest=billing_fixture_manifest)
+    except receiver.InputRefused as error:
+        cleanup_type = getattr(receiver, 'CleanupRefused', ())
+        failure = (SourceCleanupFailure(error.acquisition_failure, error.cleanup_facts)
+                   if isinstance(error, cleanup_type) and hasattr(error, 'acquisition_failure')
+                   else Refusal('protected fixture input refused'))
+    except BaseException as error:
+        failure = error
+    if custody is not None:
+        try:
+            custody.release()
+        except BaseException as error:
+            prior = (failure.failure_facts
+                if isinstance(failure, (AcquisitionFailure, DispatchFailure, SourceCleanupFailure))
+                else child_failure_fact(error=failure) if failure is not None
+                else child_failure_fact(result=result))
+            cleanup_type = getattr(receiver, 'CleanupRefused', ())
+            cleanup = (error.cleanup_facts if isinstance(error, cleanup_type)
+                       else [child_failure_fact(error=error)])
+            raise SourceCleanupFailure(prior, cleanup) from None
+    if failure is not None:
+        raise failure from None
+    return result
+
+
+def _run_root_suites(root, suites, scratch, executor=execute, *, billing_fixture_manifest=None):
     """Dispatch ordinary local groups; preserve every held member without spawning it."""
     members = [n for suite in suites for n in suite['members']]
     expected = {r['suite']: r['members'] for r in plan('.', members)}
@@ -423,7 +693,9 @@ def run_root_suites(root, suites, scratch, executor=execute):
             checked_file(root, member)
             if suite['suite'] == 'maintained-regression':
                 root_regression_command(root, member)
-    env = clean_environment(scratch, root)
+    env = clean_environment(scratch, root, billing_fixture_manifest=billing_fixture_manifest)
+    if 'deploy/compose-network.test.sh' in members:
+        stage_compose_plugin(root, Path(env['HOME']))
     deadline = time.monotonic() + 900
     results = []
     def run(argv, members, name, parser):
@@ -441,6 +713,25 @@ def run_root_suites(root, suites, scratch, executor=execute):
         code = result['exit_code']
         result.update(members=members, raw_log=str(scratch / (name + '.log')),
                       verdict='not_measured' if code in (124, 127) else 'failed' if code else 'verified')
+        if code:
+            # Receive bounded failure attribution, never raw error excerpts/secrets.
+            result['failure_codes'] = failure_labels(raw)
+            phases = re.findall(r'^APP_E2E_PHASE=(snapshot|network_create|postgres_create|redis_create|stores_ready|app_dispatch|post_custody)$', raw, re.MULTILINE)
+            if phases: result['failure_receiving'] = {'phase': phases[-1]}
+            if members == ['deploy/compose-network.test.sh']:
+                records = re.findall(r'^COMPOSE_FAILURE_RECEIVING=(.*)$', raw, re.MULTILINE)
+                if len(records) == 1:
+                    try:
+                        received = json.loads(records[0])
+                        if (received.get('phase') in ('config_invocation','config_parse','network_identity','service_membership','alias','ports')
+                                and received.get('failure_code') in ('docker_absent','timeout','invalid_json','config_nonzero','compose_plugin_unavailable','compose_cli_flag','compose_permission_denied','semantic_assertion','UNKNOWN')
+                                and (received.get('exit_code') is None or type(received.get('exit_code')) is int)):
+                            result['failure_receiving'] = {key: received.get(key) for key in ('phase','exit_code','failure_code')}
+                            if re.fullmatch(r'[a-f0-9]{64}', str(received.get('stderr_sha256', ''))):
+                                result['failure_receiving']['stderr_sha256'] = received['stderr_sha256']
+                            if received.get('rejected_flag') in ('--project-directory', '-f', '--format'):
+                                result['failure_receiving']['rejected_flag'] = received['rejected_flag']
+                    except (ValueError, TypeError): pass
         if not code:
             try:
                 counts = parser(raw)
@@ -455,8 +746,14 @@ def run_root_suites(root, suites, scratch, executor=execute):
         name, members = suite['suite'], suite['members']
         row = {'suite': name, 'members': members, 'executions': []}
         if name == 'maintained-app-e2e':
-            row.update(verdict='not_measured', reason='unconditional AppE2E skip; no execution grant',
-                       held_members=members)
+            # This maintained executor refuses absent Docker/cached images and
+            # only launches owned stores on an internal network, never providers.
+            result = run(['bash', 'scripts/app-e2e-disposable.sh'], members,
+                         'root-app-e2e', lambda raw: app_e2e_counts(raw, members))
+            row['executions'].append(result)
+            row['verdict'] = result['verdict']
+            if result['verdict'] != 'verified':
+                row['held_members'] = members
         elif name == 'maintained-authored-template':
             rendered = render_authored_template(root, scratch, members, env)
             target, config = rendered.pop('target'), rendered.pop('config')
@@ -485,8 +782,11 @@ def run_root_suites(root, suites, scratch, executor=execute):
                 if name == 'maintained-integration':
                     argv += ['--config', 'vitest.integration.config.ts']
                 argv += ['--reporter=json', '--outputFile=' + str(report), *selected]
-                row['executions'].append(run(argv, selected, 'root-' + str(index),
-                    lambda raw: vitest_counts(json.loads(report.read_text()), selected, root)))
+                execution = run(argv, selected, 'root-' + str(index),
+                    lambda raw: vitest_counts(json.loads(report.read_text()), selected, root))
+                if execution['exit_code']:
+                    execution['failure_receiving'] = failed_vitest_receiving(report, selected, root)
+                row['executions'].append(execution)
             row['verdict'] = ('failed' if any(r['verdict'] == 'failed' for r in row['executions']) else
                               'not_measured' if held or not row['executions'] or any(r['verdict'] != 'verified' for r in row['executions']) else 'verified')
         elif name == 'maintained-regression':
@@ -513,37 +813,101 @@ def execution_code(results):
             127 if any(r['verdict'] == 'not_measured' for r in results) else 0)
 
 
+def private_temp_root():
+    """Use an explicitly supplied private TMPDIR or create one under the system temp root."""
+    if 'TMPDIR' in os.environ:
+        value = os.environ['TMPDIR']
+        if not value:
+            raise Refusal('owned private TMPDIR required')
+        candidate = Path(value)
+        info = candidate.lstat()
+        if (candidate.is_symlink() or not stat.S_ISDIR(info.st_mode)
+                or info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) & 0o077):
+            raise Refusal('owned private TMPDIR required')
+        return candidate
+
+    # The graph verifier deliberately supplies a clean environment. A missing
+    # TMPDIR therefore means this runner must create its own private workspace.
+    parent = Path(tempfile.gettempdir())
+    for part in (parent, *parent.parents):
+        if part.is_symlink():
+            raise Refusal('safe system temporary root required')
+    info = parent.lstat()
+    mode = stat.S_IMODE(info.st_mode)
+    shared_sticky_parent = bool(mode & stat.S_ISVTX and mode & stat.S_IWOTH)
+    if (not stat.S_ISDIR(info.st_mode)
+            or (info.st_uid != os.geteuid() and not shared_sticky_parent)):
+        raise Refusal('safe system temporary root required')
+    candidate = Path(tempfile.mkdtemp(prefix='mc-private-tmp-', dir=parent))
+    os.chmod(candidate, 0o700)
+    info = candidate.lstat()
+    if (candidate.is_symlink() or not stat.S_ISDIR(info.st_mode)
+            or info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o700):
+        raise Refusal('owned private TMPDIR required')
+    return candidate
+
+
+def parse_entrypoint(arguments):
+    """Explicit fixture locator only; neither ambient input nor acquisition grant."""
+    if arguments == ['.', BILLING_ACQUISITION_REQUIRED]:
+        return '.', None
+    if len(arguments) == 1 and arguments[0] in UNITS:
+        return arguments[0], None
+    if (len(arguments) == 3 and arguments[0] == '.'
+            and arguments[1] == '--billing-fixture-manifest'):
+        manifest = Path(arguments[2])
+        if manifest.is_absolute() and '..' not in manifest.parts and '\x00' not in str(manifest):
+            return '.', manifest
+    raise Refusal('invalid explicit full-suite input')
+
+
 def main():
-    if len(sys.argv) != 2:
-        raise Refusal('exactly one deployable required')
-    unit = sys.argv[1]
+    unit, billing_fixture_manifest = parse_entrypoint(sys.argv[1:])
     check_context(ROOT, unit, Path.cwd())
-    rows = inventory(ROOT)
-    members = members_for(rows, unit)
-    suites = plan(unit, members)
-    temp_value = os.environ.get('TMPDIR')
-    if not temp_value:
-        raise Refusal('owned private TMPDIR required')
-    temp = Path(temp_value)
-    info = temp.lstat()
-    if (temp.is_symlink() or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid()
-            or stat.S_IMODE(info.st_mode) & 0o077):
-        raise Refusal('owned private TMPDIR required')
+    temp = private_temp_root()
     scratch = Path(tempfile.mkdtemp(prefix='mc-full-' + unit.replace('/', '-') + '-', dir=temp))
     os.chmod(scratch, 0o700)
     head = subprocess.run(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'],
                           capture_output=True, check=True).stdout.decode().strip()
     document = {'schema': 'MaintainedFullSuiteExecution/v1', 'head': head, 'unit': unit,
-                'membership': rows, 'suite_plan': suites, 'results': [],
+                'membership': [], 'suite_plan': [], 'results': [],
                 'runtime_authorized': False, 'knowledge_admitted': False}
     if unit == '.':
         document['remaining'] = ['seven real external provider/auth/storage/image arms',
-                                 'unconditional AppE2E skip',
+                                 'owned disposable AppE2E executor qualification',
                                  'broader disposable DB/Redis executor and namespace authority']
     try:
-        document['results'] = (run_root_suites(ROOT, suites, scratch) if unit == '.' else
-                               run_suites(ROOT, unit, suites, scratch))
-    except (Refusal, ValueError, KeyError, OSError):
+        def dispatch(manifest, executor=execute):
+            rows = inventory(ROOT)
+            members = members_for(rows, unit)
+            suites = plan(unit, members)
+            document.update(membership=rows, suite_plan=suites)
+            return (run_root_suites(ROOT, suites, scratch, executor,
+                                   billing_fixture_manifest=manifest) if unit == '.' else
+                    run_suites(ROOT, unit, suites, scratch))
+        document['results'] = (run_with_billing_acquisition(ROOT, head, dispatch)
+            if sys.argv[1:] == ['.', BILLING_ACQUISITION_REQUIRED]
+            else dispatch(billing_fixture_manifest))
+        custody = scratch / 'compose-custody.json'
+        if custody.is_file():
+            document['compose_plugin_custody'] = json.loads(custody.read_text())
+    except (DispatchFailure, AcquisitionFailure, SourceCleanupFailure) as error:
+        document['refusal'] = str(error)
+        document['failure_facts'] = error.failure_facts
+        document['remaining'] = ['protected fixture dispatch failure; both bounded facts retained']
+        print('FULL_DISPATCH_REFUSED:', json.dumps(error.failure_facts, sort_keys=True))
+        code = 1
+    except AcquisitionUnavailable as error:
+        document['refusal'] = str(error)
+        document['billing_fixture_acquisition'] = {
+            'verdict': 'not_measured', 'reason': str(error),
+            'suite_dispatches': 0, 'source_manifest_is_authority': False}
+        document['remaining'] = ['qualified protected Billing fixture delivery for actual CI UID/attempt']
+        print('FULL_ACQUISITION_NOT_MEASURED:', str(error))
+        code = 127
+    except (Refusal, ValueError, KeyError, OSError) as error:
+        document['refusal'] = str(error) if isinstance(error, Refusal) else type(error).__name__
+        print('FULL_EXECUTION_REFUSED:', document['refusal'])
         document['remaining'] = ['invalid or absent execution evidence; inspect private raw suite files']
         code = 1
     else:

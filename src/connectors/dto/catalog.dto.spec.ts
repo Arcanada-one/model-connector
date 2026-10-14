@@ -59,28 +59,25 @@ describe('CatalogModelEntrySchema', () => {
       freshness: 'unknown',
     });
 
-    expect(current).toMatchObject({
-      snapshotId: 'snapshot-1',
-      contentFingerprint: 'a'.repeat(64),
-      observedAt,
-      source: 'provider-api',
-      freshness: 'fresh',
-    });
+    expect(current.snapshotId).toBe('snapshot-1');
+    expect(current.contentFingerprint).toBe('a'.repeat(64));
+    expect(current.observedAt).toBe(observedAt);
+    expect(current.source).toBe('provider-api');
+    expect(current.freshness).toBe('fresh');
     expect(legacy.snapshotId).toBeNull();
     expect(legacy.contentFingerprint).toBeNull();
   });
 
   it('rejects fabricated provenance values and malformed fingerprints', () => {
-    expect(
-      CatalogModelEntrySchema.safeParse({
-        ...validEntry,
-        snapshotId: 'snapshot-1',
-        contentFingerprint: 'not-a-sha256',
-        observedAt: new Date().toISOString(),
-        source: 'guessed',
-        freshness: 'probably-fresh',
-      }).success,
-    ).toBe(false);
+    const result = CatalogModelEntrySchema.safeParse({
+      ...validEntry,
+      snapshotId: 'snapshot-1',
+      contentFingerprint: 'not-a-sha256',
+      observedAt: new Date().toISOString(),
+      source: 'guessed',
+      freshness: 'probably-fresh',
+    });
+    expect(result.success).toBe(false);
   });
 
   it('accepts a paid model with priceMultiplier > 0', () => {
@@ -239,24 +236,28 @@ describe('CatalogFiltersSchema', () => {
 describe('CatalogModelEntrySchema — modality + tags (CONN-0232)', () => {
   it('rejects an entry missing modality', () => {
     const { modality: _omit, ...rest } = validEntry;
-    expect(CatalogModelEntrySchema.safeParse(rest).success).toBe(false);
+    const result = CatalogModelEntrySchema.safeParse(rest);
+    expect(result.success).toBe(false);
   });
 
   it('rejects an entry missing tags', () => {
     const { tags: _omit, ...rest } = validEntry;
-    expect(CatalogModelEntrySchema.safeParse(rest).success).toBe(false);
+    const result = CatalogModelEntrySchema.safeParse(rest);
+    expect(result.success).toBe(false);
   });
 
   it('accepts every modality enum value', () => {
     for (const m of MODEL_MODALITY_VALUES) {
       const entry = { ...validEntry, modality: m };
-      expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+      const result = CatalogModelEntrySchema.safeParse(entry);
+      expect(result.success).toBe(true);
     }
   });
 
   it('rejects an unknown modality', () => {
     const entry = { ...validEntry, modality: 'telepathy' };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(false);
+    const result = CatalogModelEntrySchema.safeParse(entry);
+    expect(result.success).toBe(false);
   });
 
   it('accepts an optional routing.endpoint (honest non-chat path)', () => {
@@ -265,7 +266,8 @@ describe('CatalogModelEntrySchema — modality + tags (CONN-0232)', () => {
       modality: 'image_generation' as const,
       routing: { connector: 'vertex', model: 'vertex:imagen-4', endpoint: '/images/generate' },
     };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+    const result = CatalogModelEntrySchema.safeParse(entry);
+    expect(result.success).toBe(true);
   });
 });
 
@@ -279,12 +281,14 @@ describe('CONN-0238 — modality enum additions', () => {
 
   it('accepts a video modality entry', () => {
     const entry = { ...validEntry, modality: 'video' as const };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+    const result = CatalogModelEntrySchema.safeParse(entry);
+    expect(result.success).toBe(true);
   });
 
   it('accepts a moderation modality entry', () => {
     const entry = { ...validEntry, modality: 'moderation' as const };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+    const result = CatalogModelEntrySchema.safeParse(entry);
+    expect(result.success).toBe(true);
   });
 });
 
@@ -314,12 +318,14 @@ describe('CONN-0238 — pricing / contextWindow / maxOutputTokens fields', () =>
       ...validEntry,
       pricing: { inputPerMTok: null, outputPerMTok: null, unit: 'per_1m_tokens' },
     };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(true);
+    const result = CatalogModelEntrySchema.safeParse(entry);
+    expect(result.success).toBe(true);
   });
 
   it('rejects a non-positive contextWindow', () => {
     const entry = { ...validEntry, contextWindow: 0 };
-    expect(CatalogModelEntrySchema.safeParse(entry).success).toBe(false);
+    const result = CatalogModelEntrySchema.safeParse(entry);
+    expect(result.success).toBe(false);
   });
 });
 
@@ -395,7 +401,8 @@ describe('CatalogFiltersSchema — type/modality/connector/tag/group (CONN-0232)
   });
 
   it('rejects an unknown modality filter', () => {
-    expect(CatalogFiltersSchema.safeParse({ modality: 'nope' }).success).toBe(false);
+    const result = CatalogFiltersSchema.safeParse({ modality: 'nope' });
+    expect(result.success).toBe(false);
   });
 
   it('parses connector / tag / group filters', () => {

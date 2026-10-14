@@ -8,6 +8,8 @@ export default defineConfig({
     include: [
       'src/**/*.spec.ts',
       'test/watcher/**/*.spec.ts',
+      'test/provider-profiles/**/*.spec.ts',
+      'test/diagnostic/**/*.spec.ts',
       'scripts/**/*.spec.mjs',
       'test/bench-reservation/boundary-http.spec.ts',
       'test/bench-reservation/bootstrap-source.spec.ts',

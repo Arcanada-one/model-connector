@@ -8,12 +8,14 @@ describe('AuthService', () => {
   const mockPrisma = {
     apiKey: {
       findMany: vi.fn(),
+      findUnique: vi.fn().mockResolvedValue({ active: true }),
     },
   };
 
   beforeEach(() => {
     service = new AuthService(mockPrisma as unknown as PrismaService);
     vi.clearAllMocks();
+    mockPrisma.apiKey.findUnique.mockReset().mockResolvedValue({ active: true });
   });
 
   it('should return key info for valid key', async () => {
@@ -41,6 +43,34 @@ describe('AuthService', () => {
     mockPrisma.apiKey.findMany.mockResolvedValue([]);
     const result = await service.validateKey('any-key');
     expect(result).toBeNull();
+  });
+
+  it.each([{ active: false }, null])(
+    'does not admit a cold key revoked/deleted after the active-row snapshot (%j)',
+    async (current) => {
+      const keyHash = await hash('revoked-cold', 4);
+      mockPrisma.apiKey.findMany.mockResolvedValue([
+        { id: 'key-1', name: 'agent', keyHash, active: true },
+      ]);
+      mockPrisma.apiKey.findUnique.mockResolvedValue(current);
+      expect(await service.validateKey('revoked-cold')).toBeNull();
+      expect(await service.validateKey('revoked-cold')).toBeNull();
+      expect(mockPrisma.apiKey.findMany).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  it('does not cache/admit a cold key if the authoritative recheck fails', async () => {
+    const keyHash = await hash('cold-store-failure', 4);
+    mockPrisma.apiKey.findMany.mockResolvedValue([
+      { id: 'key-1', name: 'agent', keyHash, active: true },
+    ]);
+    mockPrisma.apiKey.findUnique.mockRejectedValueOnce(new Error('synthetic store unavailable'));
+    await expect(service.validateKey('cold-store-failure')).rejects.toThrow(
+      'synthetic store unavailable',
+    );
+    mockPrisma.apiKey.findMany.mockResolvedValue([]);
+    expect(await service.validateKey('cold-store-failure')).toBeNull();
+    expect(mockPrisma.apiKey.findMany).toHaveBeenCalledTimes(2);
   });
 
   // CONN-1668: validateKey ran an O(N) bcryptjs sweep on the event loop for

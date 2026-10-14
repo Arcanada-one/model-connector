@@ -22,6 +22,11 @@ export interface ProviderKeyOverride {
   provider: string;
   /** The resolved API key VALUE (read from process.env[<policy env name>]). */
   apiKey: string;
+  credentialRef?: string;
+  credentialVersion?: string;
+  profileId?: string;
+  profileRevision?: string;
+  accountingBucket?: string;
 }
 
 export const providerKeyContext = new AsyncLocalStorage<ProviderKeyOverride>();
@@ -34,4 +39,20 @@ export function getProviderKeyOverride(provider: string): string | null {
   const store = providerKeyContext.getStore();
   if (!store || store.provider !== provider) return null;
   return store.apiKey;
+}
+
+/** Never let a dedicated upstream echo its credential into output or telemetry. */
+export function redactProviderSecrets<T>(value: T): T {
+  const secret = providerKeyContext.getStore()?.apiKey;
+  if (!secret) return value;
+  const visit = (v: unknown): unknown => {
+    if (typeof v === 'string') return v.split(secret).join('[REDACTED]');
+    if (Array.isArray(v)) return v.map(visit);
+    if (v && typeof v === 'object')
+      return Object.fromEntries(
+        Object.entries(v).map(([k, x]) => [k.split(secret).join('[REDACTED]'), visit(x)]),
+      );
+    return v;
+  };
+  return visit(value) as T;
 }

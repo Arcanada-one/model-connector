@@ -64,11 +64,7 @@ describe('OpenRouterConnector', () => {
   };
 
   function mockOk(body: unknown) {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve(body),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
   }
 
   // --- Usage detail (CONN-0274) ---
@@ -375,11 +371,9 @@ describe('OpenRouterConnector', () => {
           },
         ],
       };
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(modelsApiFixture),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify(modelsApiFixture), { status: 200 }),
+      );
 
       const result = await connector.refreshCatalogModels();
       expect(result).toMatchObject({ status: 'success', source: 'provider-api' });
@@ -402,11 +396,9 @@ describe('OpenRouterConnector', () => {
           { id: 'another/model', pricing: null }, // null pricing
         ],
       };
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(modelsApiFixture),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify(modelsApiFixture), { status: 200 }),
+      );
 
       await connector.refreshFreeModels();
       const caps = connector.getCapabilities();
@@ -431,11 +423,9 @@ describe('OpenRouterConnector', () => {
   // Per-model pricing/context come from the live /models entries.
   describe('CONN-0238 — all-340 + per-model free/pricing/context', () => {
     function mockModelsOk() {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(OPENROUTER_MODELS_FIXTURE),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify(OPENROUTER_MODELS_FIXTURE), { status: 200 }),
+      );
     }
     const metaFor = (caps: ReturnType<OpenRouterConnector['getCapabilities']>, id: string) =>
       (caps.modelMeta ?? []).find((m) => m.id === id);

@@ -44,6 +44,9 @@ export class {{NAME}}Connector extends BaseApiConnector {
   }
 
   protected buildRequestBody(request: ConnectorRequest): unknown {
+    if (typeof request.prompt !== 'string') {
+      throw new Error('{{NAME_LOWER}} connector requires string prompt');
+    }
     const messages: Array<{ role: string; content: string }> = [];
 
     if (request.systemPrompt) {

@@ -278,6 +278,42 @@ describe('ConnectorsController', () => {
       expect(mockService.getCatalog).toHaveBeenCalledOnce();
     });
 
+    it('forwards finite validated catalog fields and the caller key without unknown inputs', async () => {
+      await controller.getCatalog(
+        {
+          free: '1',
+          cheap: '',
+          capability: 'supportsTools',
+          type: 'chat',
+          connector: 'deepseek',
+          tag: 'cost:free',
+          group: 'cost',
+          unknownField: 'not-forwarded',
+        },
+        authenticatedRequest('catalog-client-a'),
+      );
+      expect(mockService.getCatalog).toHaveBeenCalledWith(
+        {
+          free: true,
+          cheap: true,
+          capability: 'supportsTools',
+          modality: 'chat',
+          connector: 'deepseek',
+          tag: 'cost:free',
+          group: 'cost',
+        },
+        'catalog-client-a',
+      );
+      const [filters] = vi.mocked(mockService.getCatalog).mock.calls[0];
+      expect(Object.hasOwn(filters, 'unknownField')).toBe(false);
+    });
+
+    it('keeps absent optional catalog fields absent after validation', async () => {
+      await controller.getCatalog({}, catalogReq);
+      const [filters] = vi.mocked(mockService.getCatalog).mock.calls[0];
+      expect(filters).toStrictEqual({ free: false, cheap: false });
+    });
+
     it('passes free=true filter through to service', async () => {
       await controller.getCatalog({ free: 'true' }, catalogReq);
       expect(mockService.getCatalog).toHaveBeenCalledWith(expect.objectContaining({ free: true }));

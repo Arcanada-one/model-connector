@@ -1,0 +1,357 @@
+{
+  "schema": "MCOfflineRawInputs/v1",
+  "status": "CANDIDATE_REQUIRES_R2_FREEZE",
+  "cases": [
+    {
+      "id": "answered",
+      "stdout": "{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,\"result\":\"{\\\"status\\\":\\\"answered\\\",\\\"claims\\\":[{\\\"source_id\\\":\\\"diag-local-source-r1\\\",\\\"key\\\":\\\"colour\\\",\\\"value\\\":\\\"blue\\\"}],\\\"reason\\\":null}\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0,\"structured_output\":{\"status\":\"answered\",\"claims\":[{\"source_id\":\"diag-local-source-r1\",\"key\":\"colour\",\"value\":\"blue\"}],\"reason\":null}}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": [],
+        "output_format": "json",
+        "schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "claims",
+            "reason"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "answered",
+                "refused"
+              ]
+            },
+            "reason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "claims": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "source_id",
+                  "key",
+                  "value"
+                ],
+                "properties": {
+                  "source_id": {
+                    "type": "string"
+                  },
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "input_sha256": "792f9000c2b15a2a0d894f01f54dcc39eef0bb5ff89bf6a37b05d87eb78b37d5",
+      "stdout_sha256": "d88a2dab4613aa8f79046ca9f18775654e274d377bbe359d18035fb894bfa382"
+    },
+    {
+      "id": "grounding_refused",
+      "stdout": "{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,\"result\":\"{\\\"status\\\":\\\"refused\\\",\\\"claims\\\":[],\\\"reason\\\":\\\"NO_SUPPORTING_REVISION\\\"}\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0,\"structured_output\":{\"status\":\"refused\",\"claims\":[],\"reason\":\"NO_SUPPORTING_REVISION\"}}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"price\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": [],
+        "output_format": "json",
+        "schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "claims",
+            "reason"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "answered",
+                "refused"
+              ]
+            },
+            "reason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "claims": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "source_id",
+                  "key",
+                  "value"
+                ],
+                "properties": {
+                  "source_id": {
+                    "type": "string"
+                  },
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "input_sha256": "4f33de08e06f8442292946f6b586e794f20089fd50d57d42ed9f7d01bdbefde4",
+      "stdout_sha256": "b6e1dc76303e8359b2c24cabae1b724ede2aa518daab6ce92b4039d0700b1692"
+    },
+    {
+      "id": "circuit_open",
+      "stdout": "{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,\"result\":\"{\\\"status\\\":\\\"answered\\\",\\\"claims\\\":[{\\\"source_id\\\":\\\"diag-local-source-r1\\\",\\\"key\\\":\\\"colour\\\",\\\"value\\\":\\\"blue\\\"}],\\\"reason\\\":null}\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0,\"structured_output\":{\"status\":\"answered\",\"claims\":[{\"source_id\":\"diag-local-source-r1\",\"key\":\"colour\",\"value\":\"blue\"}],\"reason\":null}}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "circuit",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "eb2f827750886f1b80c6142343f071ce2c07cb3fb4aeebe98f0536364009a1c3",
+      "stdout_sha256": "d88a2dab4613aa8f79046ca9f18775654e274d377bbe359d18035fb894bfa382"
+    },
+    {
+      "id": "provider_error",
+      "stdout": "{\"type\":\"result\",\"is_error\":true,\"subtype\":\"error\",\"result\":\"Synthetic upstream unavailable\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "e210d312bab72b388af257d249035e60831e248b92d801831df169420930b0a6",
+      "stdout_sha256": "95b05066c96431b3659d9e10cb57d25fb2e2e9efdec0dc037652f4a0e8dc28d7"
+    },
+    {
+      "id": "error_success",
+      "stdout": "{\"type\":\"result\",\"is_error\":true,\"subtype\":\"success\",\"result\":\"Synthetic quota reached\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "65ea7871f80c482b19543943355a5fb7b365fe6d08dce4dd21c9355b100260c7",
+      "stdout_sha256": "fc5ad54b51136b35030aae269d3f9de9a11ebd78cfc2fa904c512e645f52e131"
+    },
+    {
+      "id": "missing_reason",
+      "stdout": "{\"type\":\"result\",\"is_error\":true,\"subtype\":\"success\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "acbca95f0d7740fffc0d4c41af1f44464269c583049e7bfc51d7fae9f208d4f0",
+      "stdout_sha256": "97ecd305ffe5f26ef8104f02742474a1a8e1fae2c58278b8a589a1f0d155b96a"
+    },
+    {
+      "id": "malformed_errors",
+      "stdout": "{\"type\":\"result\",\"is_error\":true,\"errors\":[null,{}],\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "c0e2eb72e918e4dcb3633d0e328463557f17c4a04e2225af7f171343fcf44bab",
+      "stdout_sha256": "1d61faeb21ca7c62f35431dc162262b2f0266bd6bf1c2d63ea9807997621becd"
+    },
+    {
+      "id": "truncated_reason",
+      "stdout": "{\"type\":\"result\",\"is_error\":true,\"subtype\":\"success\",\"result\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "e4fef228119ccece5b402b2114d9d87cff5b31f8e1e436bdcd5dd02fbedd5294",
+      "stdout_sha256": "2634bee9758a0ad1fa750dba68cb15b5f11b40b4fc3e04a94b842d6c42da43db"
+    },
+    {
+      "id": "redaction",
+      "stdout": "{\"type\":\"result\",\"is_error\":true,\"subtype\":\"success\",\"result\":\"SYNTHETIC_SECRET_123456\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "none",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "92a5fa8ed5e5fa46bf5aa7ef70d490d132b7bc4da802b1865ffbdc839262ce5b",
+      "stdout_sha256": "ff360af10714ba33597e807fa80543149f3cd39337b092c965620ea4cdeb8371"
+    },
+    {
+      "id": "timeout_after_send",
+      "stdout": "{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,\"result\":\"{\\\"status\\\":\\\"answered\\\",\\\"claims\\\":[{\\\"source_id\\\":\\\"diag-local-source-r1\\\",\\\"key\\\":\\\"colour\\\",\\\"value\\\":\\\"blue\\\"}],\\\"reason\\\":null}\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0,\"structured_output\":{\"status\":\"answered\",\"claims\":[{\"source_id\":\"diag-local-source-r1\",\"key\":\"colour\",\"value\":\"blue\"}],\"reason\":null}}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "timeout",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "7266c4602335fadb042e4616c223bb77e8cbb8414efe3d7c3a9e69bfbf8849e4",
+      "stdout_sha256": "d88a2dab4613aa8f79046ca9f18775654e274d377bbe359d18035fb894bfa382"
+    },
+    {
+      "id": "transport_before_send",
+      "stdout": "{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,\"result\":\"{\\\"status\\\":\\\"answered\\\",\\\"claims\\\":[{\\\"source_id\\\":\\\"diag-local-source-r1\\\",\\\"key\\\":\\\"colour\\\",\\\"value\\\":\\\"blue\\\"}],\\\"reason\\\":null}\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0,\"structured_output\":{\"status\":\"answered\",\"claims\":[{\"source_id\":\"diag-local-source-r1\",\"key\":\"colour\",\"value\":\"blue\"}],\"reason\":null}}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "before-send",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "fbc60c579012ef9f5d757187de45b5795e7b7a0c5c0b406c38bd7a973d91440f",
+      "stdout_sha256": "d88a2dab4613aa8f79046ca9f18775654e274d377bbe359d18035fb894bfa382"
+    },
+    {
+      "id": "mismatched_id",
+      "stdout": "{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,\"result\":\"{\\\"status\\\":\\\"answered\\\",\\\"claims\\\":[{\\\"source_id\\\":\\\"diag-local-source-r1\\\",\\\"key\\\":\\\"colour\\\",\\\"value\\\":\\\"blue\\\"}],\\\"reason\\\":null}\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0,\"structured_output\":{\"status\":\"answered\",\"claims\":[{\"source_id\":\"diag-local-source-r1\",\"key\":\"colour\",\"value\":\"blue\"}],\"reason\":null}}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "wrong-read-id",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "7a9f6ecf75f9ecc03555dedb9a474cf69538fa2a44e2ed4f811b7a04df8c4fbe",
+      "stdout_sha256": "d88a2dab4613aa8f79046ca9f18775654e274d377bbe359d18035fb894bfa382"
+    },
+    {
+      "id": "missing_row",
+      "stdout": "{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,\"result\":\"{\\\"status\\\":\\\"answered\\\",\\\"claims\\\":[{\\\"source_id\\\":\\\"diag-local-source-r1\\\",\\\"key\\\":\\\"colour\\\",\\\"value\\\":\\\"blue\\\"}],\\\"reason\\\":null}\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0,\"structured_output\":{\"status\":\"answered\",\"claims\":[{\"source_id\":\"diag-local-source-r1\",\"key\":\"colour\",\"value\":\"blue\"}],\"reason\":null}}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "delete-row",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "6a863f2a9205d798c9a11f05028666694696fa9401aef2a3097e9206877414b7",
+      "stdout_sha256": "d88a2dab4613aa8f79046ca9f18775654e274d377bbe359d18035fb894bfa382"
+    },
+    {
+      "id": "persistence_failure",
+      "stdout": "{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,\"result\":\"{\\\"status\\\":\\\"answered\\\",\\\"claims\\\":[{\\\"source_id\\\":\\\"diag-local-source-r1\\\",\\\"key\\\":\\\"colour\\\",\\\"value\\\":\\\"blue\\\"}],\\\"reason\\\":null}\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0,\"structured_output\":{\"status\":\"answered\",\"claims\":[{\"source_id\":\"diag-local-source-r1\",\"key\":\"colour\",\"value\":\"blue\"}],\"reason\":null}}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "read-only-transaction",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "1eb8eab648375d8d3593f4628c4ea61c799fa2c5a207b0d689a18feff8c8e27f",
+      "stdout_sha256": "d88a2dab4613aa8f79046ca9f18775654e274d377bbe359d18035fb894bfa382"
+    },
+    {
+      "id": "unauthorized_retry",
+      "stdout": "{\"type\":\"result\",\"is_error\":true,\"subtype\":\"error\",\"result\":\"Synthetic upstream unavailable\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "second-attempt",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 1,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "bc2b93072f28ec944e30341f3e5240f84a3398ccbe16fd50413e2e64a242e12c",
+      "stdout_sha256": "95b05066c96431b3659d9e10cb57d25fb2e2e9efdec0dc037652f4a0e8dc28d7"
+    },
+    {
+      "id": "crashed_ledger",
+      "stdout": "{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,\"result\":\"{\\\"status\\\":\\\"answered\\\",\\\"claims\\\":[{\\\"source_id\\\":\\\"diag-local-source-r1\\\",\\\"key\\\":\\\"colour\\\",\\\"value\\\":\\\"blue\\\"}],\\\"reason\\\":null}\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"total_cost_usd\":0,\"structured_output\":{\"status\":\"answered\",\"claims\":[{\"source_id\":\"diag-local-source-r1\",\"key\":\"colour\",\"value\":\"blue\"}],\"reason\":null}}\n",
+      "stderr": "",
+      "exitCode": 0,
+      "fault": "crashed-ledger",
+      "request": {
+        "prompt": "{\"fixture_only\":true,\"source\":{\"fixture_only\":true,\"id\":\"diag-local-source-r1\",\"subject\":\"fixture-object\",\"assertions\":[{\"key\":\"colour\",\"value\":\"blue\"}]},\"requested_key\":\"colour\"}",
+        "model": "diag-offline-fixture-model",
+        "maxRetries": 0,
+        "timeout": 1000,
+        "tools": []
+      },
+      "input_sha256": "9f92883a1b672c5d6af283283b2f3d599f95fd9b13b84af018213946798440ab",
+      "stdout_sha256": "d88a2dab4613aa8f79046ca9f18775654e274d377bbe359d18035fb894bfa382"
+    }
+  ],
+  "receiving_status": "V2_INPUT_BOUND_SOURCE_ONLY_NOT_FROZEN"
+}

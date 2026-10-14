@@ -42,11 +42,7 @@ describe('{{NAME}}Connector', () => {
   };
 
   function mockOk(body: unknown) {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve(body),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
   }
 
   // --- URL building ---
@@ -74,6 +70,14 @@ describe('{{NAME}}Connector', () => {
   // --- Request body ---
 
   describe('buildRequestBody', () => {
+    it('rejects content blocks before any upstream call', async () => {
+      const result = await connector.execute({ prompt: [{ type: 'text', text: 'hello' }] });
+      expect(result.status).toBe('error');
+      expect(result.error?.type).toBe('unsupported_modality');
+      expect(result.error?.message).toBe("Connector '{{NAME_LOWER}}' does not accept ContentBlock[] prompts");
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
     it('should build messages from prompt', async () => {
       mockOk(chatResponse);
       await connector.execute({ prompt: 'reply with ok only' });

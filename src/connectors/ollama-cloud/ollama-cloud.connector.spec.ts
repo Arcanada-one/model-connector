@@ -18,11 +18,7 @@ describe('OllamaCloudConnector', () => {
   });
 
   function ok(body: unknown): void {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve(body),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
   }
 
   it('sends non-streaming chat only to the hosted API with bearer auth', async () => {
@@ -106,10 +102,7 @@ describe('OllamaCloudConnector', () => {
 
     expect(fetchSpy.mock.calls[0][0]).toBe('https://ollama.com/api/tags');
     expect(fetchSpy.mock.calls[0][1].headers.Authorization).toBe('Bearer ollama-test-key');
-    expect(connector.getCapabilities().models).toEqual([
-      'gpt-oss:120b',
-      'qwen3-coder:480b',
-    ]);
+    expect(connector.getCapabilities().models).toEqual(['gpt-oss:120b', 'qwen3-coder:480b']);
   });
 
   it('keeps an honest empty model fallback and Cloud-only capabilities', async () => {

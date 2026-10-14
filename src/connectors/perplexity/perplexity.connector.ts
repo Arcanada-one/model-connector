@@ -1,3 +1,4 @@
+import { redactProviderSecrets } from '../../policy/provider-key.context';
 import { BaseApiConnector, ParsedApiOutput, ParsedHttpError } from '../base-api.connector';
 import {
   ConnectorCapabilities,
@@ -141,6 +142,7 @@ export class PerplexityConnector extends BaseApiConnector {
   }
 
   protected parseHttpError(status: number, text: string, headers: Headers): ParsedHttpError {
+    text = redactProviderSecrets(text);
     let body: unknown;
     try {
       body = JSON.parse(text);
