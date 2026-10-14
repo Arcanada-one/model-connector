@@ -28,10 +28,11 @@ chmod 700 "$PRIVATE_TMP"
 mkdir -m 700 "$PRIVATE_TMP/home"
 # Keep runtime-created Unix socket names below the platform's 108-byte limit.
 # The verifier cache path is intentionally deep; using it as TMPDIR made the
-# BENCH composition fixtures reject otherwise valid socket paths. Preserve
-# their execution reports in PRIVATE_TMP after the run, then remove this short,
-# task-owned temporary directory.
-EXEC_TMP=$(mktemp -d "$(dirname -- "$REPO_ROOT")/.mcgs.XXXXXXXX")
+# BENCH composition fixtures reject otherwise valid socket paths. A sibling of
+# the checkout is still too long once graph_full_suite.py adds its own scratch
+# directory and the fixtures add their socket names, so use a private short
+# system-temp path. Preserve execution reports in PRIVATE_TMP after the run.
+EXEC_TMP=$(mktemp -d /tmp/mcgs.XXXXXXXX)
 chmod 700 "$EXEC_TMP"
 trap 'rm -rf -- "$EXEC_TMP"' EXIT
 
