@@ -49,7 +49,7 @@ Per-connector docs: `docs/connectors/<name>.md`, including [Amazon Bedrock](docs
 ### Local Development
 
 ```bash
-# Prerequisites: Node.js 22+, pnpm, PostgreSQL, Redis
+# Prerequisites: Node.js 22.23.4+, pnpm, PostgreSQL, Redis
 
 # Install dependencies
 pnpm install
@@ -620,7 +620,7 @@ pnpm db:push      # Push schema to database
 
 ## Tech Stack
 
-- **Runtime:** Node.js 22+
+- **Runtime:** Node.js 22.23.4+
 - **Framework:** NestJS + Fastify
 - **Language:** TypeScript (strict)
 - **ORM:** Prisma 7 (driver adapter pattern)

@@ -1,4 +1,6 @@
-FROM node:22-slim AS base
+# Oct 21 2026 Node.js security release. The tag names the patched line;
+# the index digest is what a rebuild actually pulls.
+FROM node:22.23.4-slim@sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
@@ -22,7 +24,7 @@ ENV NODE_ENV=production
 ARG MC_BUILD_SHA=
 ENV MC_BUILD_SHA=$MC_BUILD_SHA
 
-# Install CLI tools for connectors (glibc required — hence node:22-slim, not alpine)
+# Install CLI tools for connectors (glibc required — hence node:22.23.4-slim, not alpine)
 RUN npm install -g @anthropic-ai/claude-code @google/gemini-cli
 
 # Install Cursor CLI + keyring for persistent auth (Cursor stores tokens in OS keyring)

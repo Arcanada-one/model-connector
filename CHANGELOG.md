@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Node 22 pins were below the October 21 2026 security release.** CI, SDK publish,
+  and the production image now use Node.js 22.23.4. The production `FROM` is
+  `node:22.23.4-slim` plus its registry index digest, so a rebuild cannot float
+  back to an unpatched `node:22-slim`. The published SDK engine floor is
+  `>=22.23.4` (Node 20 is outside this release and has no patched line).
+
 - **A provider timeout was reported as a network error, and the breaker status lied after
   cooldown (A2-210).** Three defects, all of them things the service said about itself that
   were not true:

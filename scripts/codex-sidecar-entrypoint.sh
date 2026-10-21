@@ -18,7 +18,7 @@
 #   MC_USER_UID             — UID to chown the materialised blob to (default 1001).
 #                             Must match `model-connector` container's runtime user
 #                             (Dockerfile creates `connector` via `useradd -m`,
-#                             which lands at UID 1001 on node:22-slim because the
+#                             which lands at UID 1001 on node:22.23.4-slim because the
 #                             base image already occupies UID 1000 with `node`).
 #   MC_USER_GID             — GID for the same chown (default 1001).
 
@@ -203,7 +203,7 @@ fi
 
 # CONN-0068 + CONN-0080 + CONN-0217: AUTH_TARGET inherits root ownership via
 # mktemp+mv. Hand off the FILE to MC user so MC's spawned `codex` (running
-# as `connector`, UID 1001 on node:22-slim) can read it across the bind
+# as `connector`, UID 1001 on node:22.23.4-slim) can read it across the bind
 # mount. Directory ownership is left at root:MC_GID 0770 (set early, see
 # top-of-script comment) — MC traverses AND writes via the group bits
 # (required by codex CLI ≥ 0.130 in-process app-server), sidecar (root)
