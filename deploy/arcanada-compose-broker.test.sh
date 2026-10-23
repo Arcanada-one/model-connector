@@ -175,16 +175,116 @@ printf '%s\n' 'services: {}' >"${verdicus_checkout}/docker-compose.prod.yml"
 printf '%s\n' 'services: {}' >"${state_root}/muneral/docker-compose.prod.yml"
 
 fake_docker="${bin_root}/docker"
+fake_docker_state="${fixture_dir}/docker-state"
+fake_docker_log="${fixture_dir}/docker.log"
+fake_curl_log="${fixture_dir}/curl.log"
+mkdir -p "$fake_docker_state"
+: >"$fake_docker_log"
+: >"$fake_curl_log"
+export FAKE_DOCKER_STATE="$fake_docker_state" FAKE_DOCKER_LOG="$fake_docker_log"
+export FAKE_CURL_LOG="$fake_curl_log"
 cat >"$fake_docker" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
-# Report the variables the broker exported, so the tests assert the VALUE and
-# not merely that the command was reached.
-printf 'FAKE_DOCKER IMAGE_TAG=%s BUILD_SHA=%s ARGV=%s\n' \
-  "${IMAGE_TAG:-<unset>}" "${BUILD_SHA:-<unset>}" "$*"
+printf '%s\n' "$*" >>"$FAKE_DOCKER_LOG"
+ref_id() {
+  case "$1" in
+    *:latest) tag=latest ;;
+    *:previous) tag=previous ;;
+    muneral-api:*)
+      tag="release-${1#muneral-api:}"
+      [[ "${1#muneral-api:}" =~ ^[0-9a-f]{40}$ ]] || return 1
+      ;;
+    *) [[ "$1" =~ ^sha256:[a-f0-9]{64}$ ]] && { printf '%s' "$1"; return 0; } || return 1 ;;
+  esac
+  [[ -s "$FAKE_DOCKER_STATE/$tag" ]] || return 1
+  cat "$FAKE_DOCKER_STATE/$tag"
+}
+if [[ "${1:-}" == image && "${2:-}" == inspect ]]; then
+  id="$(ref_id "${3:-}")" || exit 1
+  printf '%s\n' "$id"
+  exit 0
+fi
+if [[ "${1:-}" == inspect ]]; then
+  [[ "${4:-}" == "$(cat "$FAKE_DOCKER_STATE/container")" ]] || exit 1
+  case "${3:-}" in
+    '{{.Image}}') cat "$FAKE_DOCKER_STATE/running" ;;
+    '{{.State.Running}}') cat "$FAKE_DOCKER_STATE/is-running" ;;
+    *) exit 97 ;;
+  esac
+  exit 0
+fi
+if [[ "${1:-}" == tag ]]; then
+  id="$(ref_id "${2:-}")" || exit 1
+  case "${3:-}" in
+    *:latest) tag=latest ;;
+    *:previous) tag=previous ;;
+    muneral-api:*)
+      tag="release-${3#muneral-api:}"
+      [[ "${3#muneral-api:}" =~ ^[0-9a-f]{40}$ ]] || exit 97
+      ;;
+    *) exit 97 ;;
+  esac
+  printf '%s\n' "$id" >"$FAKE_DOCKER_STATE/$tag"
+  exit 0
+fi
+if [[ "${1:-}" == compose ]]; then
+  if [[ " $* " == *" ps -q muneral-api "* ]]; then
+    cat "$FAKE_DOCKER_STATE/container"
+    exit 0
+  fi
+  if [[ " $* " == *" up -d --force-recreate muneral-api "* ]]; then
+    if [[ -n "${FAKE_DOCKER_RESTORED_IMAGE:-}" ]]; then
+      printf '%s\n' "$FAKE_DOCKER_RESTORED_IMAGE" >"$FAKE_DOCKER_STATE/running"
+    else
+      cat "$FAKE_DOCKER_STATE/latest" >"$FAKE_DOCKER_STATE/running"
+    fi
+  fi
+  printf 'FAKE_DOCKER IMAGE_TAG=%s BUILD_SHA=%s ARGV=%s\n' \
+    "${IMAGE_TAG:-<unset>}" "${BUILD_SHA:-<unset>}" "$*"
+  exit 0
+fi
+exit 0
 SH
 chmod 0755 "$fake_docker"
-sed -i -e "s#^readonly DOCKER=.*#readonly DOCKER='${fake_docker}'#" "$broker"
+fake_curl="${bin_root}/curl"
+cat >"$fake_curl" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >>"$FAKE_CURL_LOG"
+[[ "$*" == *"--max-time 5"* && "$*" == *"http://127.0.0.1:3500/health"* ]] || exit 97
+[[ -s "$FAKE_DOCKER_STATE/health-status" ]] || exit 97
+cat "$FAKE_DOCKER_STATE/health-status"
+exit "$(cat "$FAKE_DOCKER_STATE/health-exit")"
+SH
+chmod 0755 "$fake_curl"
+sed -i \
+  -e "s#^readonly DOCKER=.*#readonly DOCKER='${fake_docker}'#" \
+  -e "s#^readonly CURL=.*#readonly CURL='${fake_curl}'#" \
+  "$broker"
+
+reset_docker_fixture() {
+  local latest="$1" running="$2" previous="${3:-}"
+  printf '%s\n' "$latest" >"$fake_docker_state/latest"
+  printf '%s\n' "$running" >"$fake_docker_state/running"
+  if [[ -n "$previous" ]]; then
+    printf '%s\n' "$previous" >"$fake_docker_state/previous"
+  else
+    rm -f -- "$fake_docker_state/previous"
+  fi
+  printf '%s\n' 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
+    >"$fake_docker_state/container"
+  printf '%s\n' true >"$fake_docker_state/is-running"
+  printf '%s\n' 200 >"$fake_docker_state/health-status"
+  printf '%s\n' 0 >"$fake_docker_state/health-exit"
+  : >"$fake_docker_log"
+  : >"$fake_curl_log"
+  unset FAKE_DOCKER_RESTORED_IMAGE
+}
+fixture_live_image="sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+fixture_old_image="sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+fixture_new_image="sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+reset_docker_fixture "$fixture_live_image" "$fixture_live_image" "$fixture_old_image"
 
 expect_pass image_tag_pinned_to_checkout_head verdicus pull
 grep -Fq "IMAGE_TAG=${verdicus_head}" \
@@ -233,6 +333,102 @@ grep -Fq 'BUILD_SHA=<unset>' \
   cat "${fixture_dir}/image_tag_pinned_to_checkout_head.out" >&2
   exit 1
 }
+
+# Muneral image recovery controls use only the fake Docker and curl executables
+# installed above. Their mutable image/container state lives under fixture_dir.
+reset_docker_fixture "$fixture_live_image" "$fixture_live_image" "$fixture_old_image"
+expect_pass muneral_build_preserves_the_running_image_before_build muneral build
+[[ "$(cat "$fake_docker_state/previous")" == "$fixture_live_image" ]] || {
+  echo 'FAIL: Muneral did not preserve the running immutable image' >&2; exit 1; }
+rotate_line="$(grep -nF "tag ${fixture_live_image} muneral-api:previous" "$fake_docker_log" | cut -d: -f1)"
+build_line="$(grep -nF 'compose -p muneral' "$fake_docker_log" | grep -F ' build' | cut -d: -f1)"
+[[ -n "$rotate_line" && -n "$build_line" && "$rotate_line" -lt "$build_line" ]] || {
+  echo 'FAIL: Muneral build did not preserve before compose build' >&2; cat "$fake_docker_log" >&2; exit 1; }
+expect_message muneral_build_preserves_the_running_image_before_build \
+  'BROKER_TAG_ROTATE_PASS service=muneral'
+
+reset_docker_fixture "$fixture_new_image" "$fixture_live_image" "$fixture_old_image"
+expect_fail muneral_build_refuses_a_stale_latest_tag_before_mutation muneral build
+expect_message muneral_build_refuses_a_stale_latest_tag_before_mutation \
+  'Muneral :latest does not identify the currently running image'
+! grep -Eq '^(tag |compose .* build)' "$fake_docker_log" || {
+  echo 'FAIL: stale Muneral state was mutated or built' >&2; cat "$fake_docker_log" >&2; exit 1; }
+[[ "$(cat "$fake_docker_state/previous")" == "$fixture_old_image" ]] || {
+  echo 'FAIL: stale Muneral state changed the previous tag' >&2; exit 1; }
+
+reset_docker_fixture "$fixture_new_image" "$fixture_new_image"
+expect_fail muneral_rollback_refuses_missing_previous_before_mutation muneral rollback
+expect_message muneral_rollback_refuses_missing_previous_before_mutation \
+  'cannot resolve image identity: muneral-api:previous'
+! grep -Eq '^(tag |.* up -d --force-recreate)' "$fake_docker_log" || {
+  echo 'FAIL: missing previous image reached mutation' >&2; cat "$fake_docker_log" >&2; exit 1; }
+[[ ! -s "$fake_curl_log" ]] || { echo 'FAIL: missing previous image reached health' >&2; exit 1; }
+
+reset_docker_fixture "$fixture_new_image" "$fixture_new_image"
+printf '%s\n' 'not-an-image-id' >"$fake_docker_state/previous"
+expect_fail muneral_rollback_refuses_invalid_previous_identity muneral rollback
+expect_message muneral_rollback_refuses_invalid_previous_identity \
+  'invalid image identity: muneral-api:previous'
+! grep -Eq '^(tag |compose .* up -d --force-recreate)' "$fake_docker_log" || {
+  echo 'FAIL: invalid previous identity reached mutation' >&2; cat "$fake_docker_log" >&2; exit 1; }
+
+reset_docker_fixture "$fixture_new_image" "$fixture_new_image" "$fixture_old_image"
+expect_pass muneral_rollback_restores_and_checks_the_captured_previous_image muneral rollback
+expect_message muneral_rollback_restores_and_checks_the_captured_previous_image \
+  "BROKER_ROLLBACK_PASS service=muneral image=${fixture_old_image} health=loopback-200"
+grep -Fq 'compose -p muneral' "$fake_docker_log" &&
+  grep -Fq 'up -d --force-recreate muneral-api' "$fake_docker_log" || {
+    echo 'FAIL: rollback did not recreate only the fixed Muneral service' >&2; cat "$fake_docker_log" >&2; exit 1; }
+grep -Fq "compose -p muneral -f ${state_root}/muneral/docker-compose.prod.yml ps -q muneral-api" \
+  "$fake_docker_log" || { echo 'FAIL: broker inspected a noncanonical Muneral service route' >&2; exit 1; }
+grep -Fq 'inspect --format {{.Image}} aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
+  "$fake_docker_log" || { echo 'FAIL: broker did not inspect the fixed container image identity' >&2; exit 1; }
+grep -Fq 'http://127.0.0.1:3500/health' "$fake_curl_log" || {
+  echo 'FAIL: rollback did not use the fixed loopback health endpoint' >&2; exit 1; }
+
+reset_docker_fixture "$fixture_new_image" "$fixture_new_image" "$fixture_old_image"
+export FAKE_DOCKER_RESTORED_IMAGE="$fixture_live_image"
+expect_fail muneral_rollback_refuses_a_healthy_wrong_image muneral rollback
+expect_message muneral_rollback_refuses_a_healthy_wrong_image \
+  'Muneral container image does not match the broker-expected image'
+grep -Fq 'http://127.0.0.1:3500/health' "$fake_curl_log" || {
+  echo 'FAIL: healthy wrong-image refusal did not exercise the fake HTTP 200' >&2; exit 1; }
+! grep -Fq 'BROKER_ROLLBACK_PASS' \
+  "${fixture_dir}/muneral_rollback_refuses_a_healthy_wrong_image.out" || {
+  echo 'FAIL: rollback reported PASS for the wrong image' >&2; exit 1; }
+unset FAKE_DOCKER_RESTORED_IMAGE
+
+reset_docker_fixture "$fixture_new_image" "$fixture_new_image" "$fixture_old_image"
+printf '%s\n' 503 >"$fake_docker_state/health-status"
+printf '%s\n' 22 >"$fake_docker_state/health-exit"
+expect_fail muneral_rollback_refuses_failed_loopback_health muneral rollback
+expect_message muneral_rollback_refuses_failed_loopback_health \
+  'Muneral loopback health check failed'
+! grep -Fq 'BROKER_ROLLBACK_PASS' \
+  "${fixture_dir}/muneral_rollback_refuses_failed_loopback_health.out" || {
+  echo 'FAIL: rollback reported PASS after failed health' >&2; exit 1; }
+[[ "$(wc -l <"$fake_curl_log")" -eq 3 ]] || {
+  echo 'FAIL: health retry count was not bounded at three' >&2; exit 1; }
+
+reset_docker_fixture "$fixture_live_image" "$fixture_live_image" "$fixture_old_image"
+expect_pass muneral_tag_release_uses_only_checkout_head muneral tag-release
+expect_pass muneral_image_id_uses_only_checkout_head muneral image-id
+grep -Fq "muneral-api:${muneral_head}" "$fake_docker_log" || {
+  echo 'FAIL: Muneral release tag was not derived from checkout HEAD' >&2; cat "$fake_docker_log" >&2; exit 1; }
+expected_release_image="$(cat "$fake_docker_state/release-${muneral_head}")"
+printf '%s\n' "$expected_release_image" >"$fake_docker_state/running"
+expect_pass muneral_verify_checks_root_derived_image_and_health muneral verify
+expect_message muneral_verify_checks_root_derived_image_and_health \
+  "BROKER_VERIFY_PASS service=muneral image=${expected_release_image} health=loopback-200"
+expect_fail muneral_verify_rejects_caller_image_identity muneral verify "$fixture_old_image"
+expect_message muneral_verify_rejects_caller_image_identity 'verify takes no arguments'
+expect_fail muneral_rollback_rejects_caller_image_identity muneral rollback "$fixture_old_image"
+expect_message muneral_rollback_rejects_caller_image_identity 'rollback takes no arguments'
+
+reset_docker_fixture "$fixture_live_image" "$fixture_live_image" "$fixture_old_image"
+expect_pass other_service_tag_rotate_retains_existing_latest_recipe transcribator-api tag-rotate
+expect_message other_service_tag_rotate_retains_existing_latest_recipe \
+  'BROKER_TAG_ROTATE_PASS service=transcribator-api transcribator-api:latest -> transcribator-api:previous'
 
 # A service NOT in IMAGETAG must not have the variable exported at all —
 # otherwise the pin would leak across services and a compose file that happens
