@@ -40,8 +40,10 @@ readonly STATE_ROOT=/var/lib/arcanada-deploy
 readonly ENV_ROOT=/etc/arcanada/deploy-env
 readonly GIT=/usr/bin/git
 readonly DOCKER=/usr/bin/docker
+readonly CURL=/usr/bin/curl
 readonly PNPM=/usr/bin/pnpm
 readonly NODE=/usr/bin/node
+readonly MUNERAL_HEALTH_URL='http://127.0.0.1:3500/health'
 # Content-addressed root helper; no runner-owned import or path override.
 # shellcheck disable=SC2034 # Root installer consumes the sudoers pin from this reviewed broker.
 readonly BILLING_SUDOERS_SHA=a9668698e99a2306887687726b978b71b6a26663e49f58d74086f89f00c95508
@@ -275,14 +277,17 @@ declare -rA IMAGETAG=(
 )
 # Locally built image name for tag rotation and digest resolution.
 declare -rA IMAGE=(
+  [muneral]='muneral-api'
   [transcribator-api]='transcribator-api'
 )
 # Services to force-recreate on rollback.
 declare -rA ROLLBACK_SERVICES=(
+  [muneral]='muneral-api'
   [transcribator-api]='redis api bot worker'
 )
 # Post-deploy verification script inside the checkout.
 declare -rA VERIFY=(
+  [muneral]='@broker:muneral'
   [transcribator-api]='scripts/post-deploy-verify.sh'
 )
 # Single container to inspect for freshness / smoke checks.
@@ -518,7 +523,14 @@ cmd_sync() {
 }
 
 cmd_pull()  { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" pull; }
-cmd_build() { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" build; }
+cmd_build() {
+  require_checkout "$1"
+  # Muneral's build replaces :latest. Preserve the image actually serving the
+  # fixed Compose service first; cmd_tag_rotate refuses a missing or stale tag.
+  [[ "$1" != 'muneral' ]] || cmd_tag_rotate "$1"
+  compose_env "$1"; set_compose_argv "$1"
+  "$DOCKER" "${COMPOSE_ARGV[@]}" build
+}
 cmd_up()    { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" up -d; }
 cmd_ps()    { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" ps; }
 cmd_logs() {
@@ -558,10 +570,78 @@ cmd_migrate() {
 
 # Preserve the currently live image before a build overwrites :latest, so a
 # rollback has something to roll back to.
+IMAGE_ID_RESULT=''
+muneral_container_image() {
+  local container_id actual_image running
+  set_compose_argv muneral
+  container_id="$("$DOCKER" "${COMPOSE_ARGV[@]}" ps -q muneral-api)" ||
+    die 'cannot identify the Muneral Compose container'
+  [[ "$container_id" =~ ^[a-f0-9]{12,64}$ ]] ||
+    die 'Muneral Compose service did not resolve to exactly one container'
+  actual_image="$("$DOCKER" inspect --format '{{.Image}}' "$container_id")" ||
+    die 'cannot inspect the Muneral container image'
+  [[ "$actual_image" =~ ^sha256:[a-f0-9]{64}$ ]] ||
+    die 'Muneral container image identity is invalid'
+  running="$("$DOCKER" inspect --format '{{.State.Running}}' "$container_id")" ||
+    die 'cannot inspect the Muneral container state'
+  [[ "$running" == 'true' ]] || die 'Muneral container is not running'
+  MUNERAL_CONTAINER_ID="$container_id"
+  MUNERAL_CONTAINER_IMAGE_ID="$actual_image"
+}
+
+docker_image_id() {
+  local ref="$1" image_id
+  image_id="$("$DOCKER" image inspect "$ref" --format '{{.Id}}')" ||
+    die "cannot resolve image identity: $ref"
+  [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]] ||
+    die "invalid image identity: $ref"
+  IMAGE_ID_RESULT="$image_id"
+}
+
+muneral_health_check() {
+  local attempt status
+  for attempt in 1 2 3; do
+    if status="$("$CURL" --fail --silent --show-error --max-time 5 \
+      --output /dev/null --write-out '%{http_code}' "$MUNERAL_HEALTH_URL")"; then
+      [[ "$status" == '200' ]] && return 0
+    fi
+    if [[ "$attempt" -lt 3 ]]; then sleep 2; fi
+  done
+  die 'Muneral loopback health check failed'
+}
+
+verify_muneral_image() {
+  local expected="$1" initial_container initial_image
+  muneral_container_image
+  initial_container="$MUNERAL_CONTAINER_ID"
+  initial_image="$MUNERAL_CONTAINER_IMAGE_ID"
+  muneral_health_check
+  muneral_container_image
+  [[ "$MUNERAL_CONTAINER_ID" == "$initial_container" &&
+     "$MUNERAL_CONTAINER_IMAGE_ID" == "$initial_image" ]] ||
+    die 'Muneral container identity changed during health verification'
+  [[ "$MUNERAL_CONTAINER_IMAGE_ID" == "$expected" ]] ||
+    die 'Muneral container image does not match the broker-expected image'
+}
+
 cmd_tag_rotate() {
   local svc="$1" img
   [[ -n "${IMAGE[$svc]+set}" ]] || die "service has no local image: $svc"
   img="${IMAGE[$svc]}"
+  if [[ "$svc" == 'muneral' ]]; then
+    require_checkout "$svc"
+    muneral_container_image
+    docker_image_id "${img}:latest"
+    [[ "$MUNERAL_CONTAINER_IMAGE_ID" == "$IMAGE_ID_RESULT" ]] ||
+      die 'Muneral :latest does not identify the currently running image'
+    "$DOCKER" tag "$MUNERAL_CONTAINER_IMAGE_ID" "${img}:previous"
+    docker_image_id "${img}:previous"
+    [[ "$IMAGE_ID_RESULT" == "$MUNERAL_CONTAINER_IMAGE_ID" ]] ||
+      die 'Muneral previous image tag did not preserve the running image'
+    printf 'BROKER_TAG_ROTATE_PASS service=%s running-image-preserved=%s\n' \
+      "$svc" "$MUNERAL_CONTAINER_IMAGE_ID"
+    return 0
+  fi
   if "$DOCKER" image inspect "${img}:latest" >/dev/null 2>&1; then
     "$DOCKER" tag "${img}:latest" "${img}:previous"
     printf 'BROKER_TAG_ROTATE_PASS service=%s %s:latest -> %s:previous\n' "$svc" "$img" "$img"
@@ -594,6 +674,14 @@ cmd_verify() {
   local svc="$1" dir script expected
   [[ -n "${VERIFY[$svc]+set}" ]] || die "service has no verify script: $svc"
   require_checkout "$svc"
+  if [[ "${VERIFY[$svc]}" == '@broker:muneral' ]]; then
+    expected="$(cmd_image_id "$svc")"
+    [[ "$expected" =~ ^sha256:[a-f0-9]{64}$ ]] ||
+      die 'broker-derived Muneral image identity is invalid'
+    verify_muneral_image "$expected"
+    printf 'BROKER_VERIFY_PASS service=muneral image=%s health=loopback-200\n' "$expected"
+    return 0
+  fi
   dir="$(checkout_dir "$svc")"
   script="$dir/${VERIFY[$svc]}"
   [[ -f "$script" && ! -L "$script" ]] || die 'verify script missing or not a regular file'
@@ -640,6 +728,21 @@ cmd_rollback() {
     die "service has no rollback recipe: $svc"
   require_checkout "$svc"
   img="${IMAGE[$svc]}"
+  if [[ "$svc" == 'muneral' ]]; then
+    docker_image_id "${img}:previous"
+    local expected_previous="$IMAGE_ID_RESULT"
+    "$DOCKER" tag "$expected_previous" "${img}:latest"
+    docker_image_id "${img}:latest"
+    [[ "$IMAGE_ID_RESULT" == "$expected_previous" ]] ||
+      die 'Muneral latest tag did not select the captured previous image'
+    compose_env "$svc"; set_compose_argv "$svc"
+    IFS=' ' read -r -a services <<< "${ROLLBACK_SERVICES[$svc]}"
+    "$DOCKER" "${COMPOSE_ARGV[@]}" up -d --force-recreate "${services[@]}"
+    verify_muneral_image "$expected_previous"
+    printf 'BROKER_ROLLBACK_PASS service=muneral image=%s health=loopback-200\n' \
+      "$expected_previous"
+    return 0
+  fi
   "$DOCKER" image inspect "${img}:previous" >/dev/null 2>&1 ||
     die 'no :previous image — first deploy or pruned; cannot roll back'
   "$DOCKER" tag "${img}:previous" "${img}:latest"
