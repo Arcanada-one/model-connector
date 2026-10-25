@@ -42,6 +42,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Prisma } from '@prisma/client';
+import { observeAsync, observeSync } from '../../scripts/ci/test-phase-observation';
 
 /** 40 000 chars / 4 chars-per-token = 10 000 estimated input tokens. */
 const PROMPT = 'x'.repeat(40_000);
@@ -316,42 +317,63 @@ describe('A2-299b / DEC-AUP-0050 R2 — the INTENT path charges the customer not
    * therefore what makes `persistAndSettle` take its `intent` branch.
    */
   async function stand(opts: { estimated: boolean; openingBalance?: number }) {
-    const { validateEnv } = await import('../config/env.schema');
-    validateEnv({ ...BASE_ENV, BILLING_ENFORCED: 'true' });
+    const { validateEnv } = await observeAsync('import-env', () => import('../config/env.schema'));
+    observeSync('validate-config', () => validateEnv({ ...BASE_ENV, BILLING_ENFORCED: 'true' }));
 
-    const { ConnectorsService } = await import('./connectors.service');
-    const { BillingService } = await import('../billing/billing.service');
-    const { OutputGuardMiddleware } = await import('./output-guard/output-guard.middleware');
-    const { classifyErrorAction } = await import('./interfaces/connector.interface');
-    const intentKeys = await import('../billing/intent');
-
-    const store = memoryDb(opts.openingBalance);
-    const billing = new BillingService(store.db as never);
-
-    const service = new ConnectorsService(
-      { add: vi.fn() } as never,
-      store.db as never,
-      { record: vi.fn(), getAll: vi.fn().mockReturnValue({}) } as never,
-      new OutputGuardMiddleware({ enabled: false, maxRetries: 3, timeoutMs: 30_000 }),
-      { getEntries: () => [], getFilteredEntries: () => [] } as never,
-      {
-        findAll: vi.fn().mockResolvedValue([
-          {
-            connector: 'test',
-            model: PRICED,
-            inputPerMTok: INPUT_PER_MTOK,
-            outputPerMTok: 3.48,
-            cachedInputPerMTok: null,
-            status: 'online',
-          },
-        ]),
-      } as never,
-      null,
-      undefined,
-      undefined,
-      billing,
+    const { ConnectorsService } = await observeAsync(
+      'import-connectors',
+      () => import('./connectors.service'),
     );
-    service.register(abortedConnector(classifyErrorAction, opts.estimated) as never);
+    const { BillingService } = await observeAsync(
+      'import-billing',
+      () => import('../billing/billing.service'),
+    );
+    const { OutputGuardMiddleware } = await observeAsync(
+      'import-output-guard',
+      () => import('./output-guard/output-guard.middleware'),
+    );
+    const { classifyErrorAction } = await observeAsync(
+      'import-interface',
+      () => import('./interfaces/connector.interface'),
+    );
+    const intentKeys = await observeAsync('import-intent', () => import('../billing/intent'));
+
+    const store = observeSync('fixture-construction', () => memoryDb(opts.openingBalance));
+    const billing = observeSync(
+      'billing-construction',
+      () => new BillingService(store.db as never),
+    );
+
+    const service = observeSync(
+      'connector-construction',
+      () =>
+        new ConnectorsService(
+          { add: vi.fn() } as never,
+          store.db as never,
+          { record: vi.fn(), getAll: vi.fn().mockReturnValue({}) } as never,
+          new OutputGuardMiddleware({ enabled: false, maxRetries: 3, timeoutMs: 30_000 }),
+          { getEntries: () => [], getFilteredEntries: () => [] } as never,
+          {
+            findAll: vi.fn().mockResolvedValue([
+              {
+                connector: 'test',
+                model: PRICED,
+                inputPerMTok: INPUT_PER_MTOK,
+                outputPerMTok: 3.48,
+                cachedInputPerMTok: null,
+                status: 'online',
+              },
+            ]),
+          } as never,
+          null,
+          undefined,
+          undefined,
+          billing,
+        ),
+    );
+    observeSync('fixture-register', () =>
+      service.register(abortedConnector(classifyErrorAction, opts.estimated) as never),
+    );
     return { service, ...store, intentKeys };
   }
 
@@ -360,48 +382,52 @@ describe('A2-299b / DEC-AUP-0050 R2 — the INTENT path charges the customer not
       estimated: true,
     });
 
-    await service.execute(
-      'test',
-      { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-1' },
-      'key-1',
+    await observeAsync('memory-execute', () =>
+      service.execute(
+        'test',
+        { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-1' },
+        'key-1',
+      ),
     );
 
     // The intent branch was genuinely taken: a real intent row exists and the
     // REAL `settleIntentInTx` moved it off `held`.
-    expect(intents.size).toBe(1);
-    const intent = [...intents.values()][0];
-    expect(intent.state).toBe('completed');
-    expect(intent.clientSupplied).toBe(true);
-    expect(intent.intentKey).toBe('client-key-1');
-    expect(intent.requestId).toBe('req-1');
-    // The stored response is what makes a replay answer THIS attempt.
-    expect(intent.response).toBeDefined();
+    observeSync('money-assertions', () => {
+      expect(intents.size).toBe(1);
+      const intent = [...intents.values()][0];
+      expect(intent.state).toBe('completed');
+      expect(intent.clientSupplied).toBe(true);
+      expect(intent.intentKey).toBe('client-key-1');
+      expect(intent.requestId).toBe('req-1');
+      // The stored response is what makes a replay answer THIS attempt.
+      expect(intent.response).toBeDefined();
 
-    // R3 — our cost is on the record, and labelled as ours.
-    expect(requests).toHaveLength(1);
-    expect(requests[0].costSource).toBe('estimated-input-unbilled');
-    expect(Number(requests[0].costUsd)).toBeCloseTo(OUR_COST, 6);
+      // R3 — our cost is on the record, and labelled as ours.
+      expect(requests).toHaveLength(1);
+      expect(requests[0].costSource).toBe('estimated-input-unbilled');
+      expect(Number(requests[0].costUsd)).toBeCloseTo(OUR_COST, 6);
 
-    // R2 — and the CUSTOMER'S MONEY DID NOT MOVE. Read from the balance the
-    // real settle path wrote, not from any expression in the service.
-    expect(balances.get('key-1')!.balanceUsd).toBe(OPENING_BALANCE);
-    // The hold that was reserved before dispatch was given back in full.
-    expect(balances.get('key-1')!.heldUsd).toBe(0);
+      // R2 — and the CUSTOMER'S MONEY DID NOT MOVE. Read from the balance the
+      // real settle path wrote, not from any expression in the service.
+      expect(balances.get('key-1')!.balanceUsd).toBe(OPENING_BALANCE);
+      // The hold that was reserved before dispatch was given back in full.
+      expect(balances.get('key-1')!.heldUsd).toBe(0);
 
-    // One charge row, for zero, findable by name (R3), against the intent's
-    // own derived ledger key.
-    const charges = ledger.filter((r) => r.entryType === 'charge');
-    expect(charges).toHaveLength(1);
-    // A charge is posted as a NEGATIVE ledger entry (`chargeInTx` writes
-    // `amountUsd.negated()`), so "charged nothing" is a row of magnitude zero.
-    // Compared by magnitude so the assertion cannot pass on a sign mistake, and
-    // the CONTROL below is what proves it is not vacuous.
-    expect(Math.abs(Number(charges[0].amountUsd))).toBe(0);
-    expect(charges[0].reason).toContain('estimated-input-unbilled');
-    expect(charges[0].idempotencyKey).toBe(intentKeys.ledgerKeyForIntent(intent.id));
-    expect(charges[0].requestId).toBe('req-1');
-    // Nothing was written off, because nothing was charged.
-    expect(ledger.filter((r) => r.entryType === 'uncollectible')).toHaveLength(0);
+      // One charge row, for zero, findable by name (R3), against the intent's
+      // own derived ledger key.
+      const charges = ledger.filter((r) => r.entryType === 'charge');
+      expect(charges).toHaveLength(1);
+      // A charge is posted as a NEGATIVE ledger entry (`chargeInTx` writes
+      // `amountUsd.negated()`), so "charged nothing" is a row of magnitude zero.
+      // Compared by magnitude so the assertion cannot pass on a sign mistake, and
+      // the CONTROL below is what proves it is not vacuous.
+      expect(Math.abs(Number(charges[0].amountUsd))).toBe(0);
+      expect(charges[0].reason).toContain('estimated-input-unbilled');
+      expect(charges[0].idempotencyKey).toBe(intentKeys.ledgerKeyForIntent(intent.id));
+      expect(charges[0].requestId).toBe('req-1');
+      // Nothing was written off, because nothing was charged.
+      expect(ledger.filter((r) => r.entryType === 'uncollectible')).toHaveLength(0);
+    });
   });
 
   it('CONTROL: a provider-METERED cost on the same path DOES debit the balance', async () => {
