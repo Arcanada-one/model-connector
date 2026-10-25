@@ -1,0 +1,8 @@
+{
+  "schema": "MeasuredGitSource/v1",
+  "commit": "31d3a6e3e008acc446af1c2440a8d1a51fc392b5",
+  "tree": "fbf02a9d6b1c4a8426c2fb7cc6d0ccefeef399a8",
+  "dirty": false,
+  "captured_at_utc": "2026-10-14T09:34:06.413478+00:00",
+  "producer": "MC-KEYS exact-tree Git source capture"
+}

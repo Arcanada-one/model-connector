@@ -46,6 +46,7 @@ describe('CatalogRefreshService CONN-1646 provider-scoped cycles', () => {
     listDynamicCatalogProviderNames: ReturnType<typeof vi.fn>;
     canRead: ReturnType<typeof vi.fn>;
     canUse: ReturnType<typeof vi.fn>;
+    isGloballyRoutable: ReturnType<typeof vi.fn>;
     getStatus: ReturnType<typeof vi.fn>;
   };
   let repository: {
@@ -75,6 +76,7 @@ describe('CatalogRefreshService CONN-1646 provider-scoped cycles', () => {
       listDynamicCatalogProviderNames: vi.fn(() => Array.from(refreshResults.keys())),
       canRead: vi.fn((name: string) => readAccess[name] ?? true),
       canUse: vi.fn(() => true),
+      isGloballyRoutable: vi.fn(() => true),
       getStatus: vi.fn().mockResolvedValue({ healthy: true }),
     };
     repository = {
@@ -205,6 +207,25 @@ describe('CatalogRefreshService CONN-1646 provider-scoped cycles', () => {
       expect.objectContaining({ connector: 'groq' }),
     );
     expect(repository.markProviderStale).not.toHaveBeenCalledWith('openrouter', expect.any(Date));
+  });
+
+  it('persists global USE when shared-key readiness is false for a per-key provider binding', async () => {
+    connectors.listNames.mockReturnValue(['openrouter']);
+    // The default shared key is absent, but a client profile can still bind
+    // its own OpenRouter credential. Catalog routability must reflect the
+    // global provider policy, not this process-wide credential check.
+    connectors.canUse.mockReturnValue(false);
+    connectors.isGloballyRoutable.mockReturnValue(true);
+    entries = [entry('openrouter', 'client-bound-model')];
+
+    await service.fullRefresh();
+
+    expect(repository.applyProviderSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({
+        connector: 'openrouter',
+        rows: [expect.objectContaining({ model: 'client-bound-model', routable: true })],
+      }),
+    );
   });
 
   it('treats a successful enumeration with no assembled rows as a gap, never a removal', async () => {

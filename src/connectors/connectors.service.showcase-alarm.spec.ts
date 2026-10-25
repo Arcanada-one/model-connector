@@ -4,7 +4,7 @@
 // 998→33) — the admin write-time guard cannot see those. Observational only:
 // the alarm never alters the served response.
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Queue } from 'bullmq';
 import { ConnectorsService } from './connectors.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -88,6 +88,7 @@ function buildService(policy: ApiKeyPolicy | null) {
   const policyService = {
     getPolicyForKey: vi.fn(async () => policy),
     isProviderAllowed: () => true,
+    resolveProviderKeyEnv: () => null,
   };
   const service = new ConnectorsService(
     { add: vi.fn() } as unknown as Queue,
@@ -108,12 +109,19 @@ function buildService(policy: ApiKeyPolicy | null) {
 }
 
 const noFilters = { free: false, cheap: false, capability: undefined };
+const originalOpenRouterKey = process.env.OPENROUTER_API_KEY;
 
 describe('CONN-1674 showcase catalog narrowing alarm', () => {
   beforeEach(() => {
     process.env.PROVIDER_ACCESS = '';
+    process.env.OPENROUTER_API_KEY = 'synthetic-showcase-catalog-key';
     mockCfg.SHOWCASE_KEY_IDS = 'show-key';
     mockCfg.SHOWCASE_CATALOG_NARROW_ALARM_PCT = 0.5;
+  });
+
+  afterEach(() => {
+    if (originalOpenRouterKey === undefined) delete process.env.OPENROUTER_API_KEY;
+    else process.env.OPENROUTER_API_KEY = originalOpenRouterKey;
   });
 
   it('WARNS when a showcase key policy trims past the threshold (free-only on the public key)', async () => {

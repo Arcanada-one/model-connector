@@ -1,0 +1,1471 @@
+{
+  "auth_env_names": [
+    "MC_ROUTE_CLIENT_KEY",
+    "MC_ROUTE_ADMIN_TOKEN",
+    "MC_ROUTE_WATCHER_TOKEN"
+  ],
+  "base_url": "http://127.0.0.1:44015",
+  "classification_policy": {
+    "missing_job_404": "Retain HTTP 404 and classify not_measured because this route sweep creates no STT job fixture.",
+    "no_egress_503": "Retain the HTTP 503 and classify not_measured only for the listed no-egress/provider paths.",
+    "other_statuses": "Preserve the measured outcome, including all HTTP 500 failures."
+  },
+  "environment": "candidate-local",
+  "executor": {
+    "note": "executes both auth modes and emits the bound CanaryResult/v1",
+    "path": "tools/canary/route_sweep.py",
+    "repo": "Arcanada-one/arcanada-universal-program"
+  },
+  "head_sha": "31d3a6e3e008acc446af1c2440a8d1a51fc392b5",
+  "id": "pr207-route-classified-31d3a6e",
+  "mutating_owner": "route-sweep operator; disposable candidate-local instance",
+  "owner": "route-sweep operator; disposable candidate-local instance",
+  "probes": [
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:DELETE /admin/keys/:id"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-2e3b23d8ad2c-authorized",
+      "kind": "http",
+      "method": "DELETE",
+      "mutating": true,
+      "path": "/admin/keys/a7f6c699-0fb7-446d-9148-78cd6f8d952a",
+      "route": "/admin/keys/:id"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:DELETE /admin/keys/:id"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-2e3b23d8ad2c-unauthenticated",
+      "kind": "http",
+      "method": "DELETE",
+      "mutating": true,
+      "path": "/admin/keys/a7f6c699-0fb7-446d-9148-78cd6f8d952a",
+      "route": "/admin/keys/:id"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /admin/credits/:apiKeyId",
+        "code_unit:src/billing/credits.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-c399ae0012d2-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/admin/credits/e7712af4-07e4-40d4-a79d-268892571561",
+      "route": "/admin/credits/:apiKeyId"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /admin/credits/:apiKeyId",
+        "code_unit:src/billing/credits.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-c399ae0012d2-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/admin/credits/e7712af4-07e4-40d4-a79d-268892571561",
+      "route": "/admin/credits/:apiKeyId"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /admin/credits/:apiKeyId/history"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-b2c0a7107d44-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/admin/credits/e7712af4-07e4-40d4-a79d-268892571561/history",
+      "route": "/admin/credits/:apiKeyId/history"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /admin/credits/:apiKeyId/history"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-b2c0a7107d44-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/admin/credits/e7712af4-07e4-40d4-a79d-268892571561/history",
+      "route": "/admin/credits/:apiKeyId/history"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /admin/keys"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-a0898f6815f1-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/admin/keys",
+      "route": "/admin/keys"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /admin/keys"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-a0898f6815f1-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/admin/keys",
+      "route": "/admin/keys"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /admin/keys/:id"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-f26922a0cb4e-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/admin/keys/e7712af4-07e4-40d4-a79d-268892571561",
+      "route": "/admin/keys/:id"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /admin/keys/:id"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-f26922a0cb4e-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/admin/keys/e7712af4-07e4-40d4-a79d-268892571561",
+      "route": "/admin/keys/:id"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /connectors"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-669a221af384-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors",
+      "route": "/connectors"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /connectors"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-669a221af384-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors",
+      "route": "/connectors"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /connectors/:name/status"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-79e6c9aab35a-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/deepseek/status",
+      "route": "/connectors/:name/status"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /connectors/:name/status"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-79e6c9aab35a-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/deepseek/status",
+      "route": "/connectors/:name/status"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /connectors/catalog",
+        "code_unit:src/connectors/connectors.service.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-707ce3b9d304-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/catalog",
+      "route": "/connectors/catalog"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /connectors/catalog",
+        "code_unit:src/connectors/connectors.service.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-707ce3b9d304-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/catalog",
+      "route": "/connectors/catalog"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /connectors/image/capabilities"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-3dd000e75039-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/image/capabilities",
+      "route": "/connectors/image/capabilities"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /connectors/image/capabilities"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-3dd000e75039-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/image/capabilities",
+      "route": "/connectors/image/capabilities"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /connectors/intents/:intentId"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "503 strict_chat_unavailable under no-egress => not_measured",
+      "id": "route-6c3c9563ecfe-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/intents/canary",
+      "route": "/connectors/intents/:intentId"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /connectors/intents/:intentId"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "503 strict_chat_unavailable under no-egress => not_measured",
+      "id": "route-6c3c9563ecfe-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/connectors/intents/canary",
+      "route": "/connectors/intents/:intentId"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /health"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-53a91d5638ac-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/health",
+      "route": "/health"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /health"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-53a91d5638ac-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/health",
+      "route": "/health"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /health/connectors"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-b494b3edf2d8-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/health/connectors",
+      "route": "/health/connectors"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /health/connectors"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-b494b3edf2d8-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/health/connectors",
+      "route": "/health/connectors"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /health/metrics"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-80e3aaec48df-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/health/metrics",
+      "route": "/health/metrics"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /health/metrics"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-80e3aaec48df-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/health/metrics",
+      "route": "/health/metrics"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /health/ready",
+        "code_unit:src/health/health.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "503 required provider unavailable under no-egress => not_measured",
+      "id": "route-c79a3bd9616a-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/health/ready",
+      "route": "/health/ready"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /health/ready",
+        "code_unit:src/health/health.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "503 required provider unavailable under no-egress => not_measured",
+      "id": "route-c79a3bd9616a-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/health/ready",
+      "route": "/health/ready"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /v1/models",
+        "code_unit:src/openai-compat/openai-compat.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-515ef068736f-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/v1/models",
+      "route": "/v1/models"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /v1/models",
+        "code_unit:src/openai-compat/openai-compat.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-515ef068736f-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/v1/models",
+      "route": "/v1/models"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /v1/speech/stt/jobs/:id",
+        "code_unit:src/speech/stt/stt-async.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "404 because this sweep creates no job fixture => not_measured",
+      "id": "route-2174cf37dd75-authorized",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/v1/speech/stt/jobs/00000000-0000-0000-0000-000000000001",
+      "route": "/v1/speech/stt/jobs/:id"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:GET /v1/speech/stt/jobs/:id",
+        "code_unit:src/speech/stt/stt-async.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "404 because this sweep creates no job fixture => not_measured",
+      "id": "route-2174cf37dd75-unauthenticated",
+      "kind": "http",
+      "method": "GET",
+      "mutating": false,
+      "path": "/v1/speech/stt/jobs/00000000-0000-0000-0000-000000000001",
+      "route": "/v1/speech/stt/jobs/:id"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:PATCH /admin/keys/:id/policy"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-590a3218f5ea-authorized",
+      "kind": "http",
+      "method": "PATCH",
+      "mutating": true,
+      "path": "/admin/keys/e7712af4-07e4-40d4-a79d-268892571561/policy",
+      "route": "/admin/keys/:id/policy"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:PATCH /admin/keys/:id/policy"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-590a3218f5ea-unauthenticated",
+      "kind": "http",
+      "method": "PATCH",
+      "mutating": true,
+      "path": "/admin/keys/e7712af4-07e4-40d4-a79d-268892571561/policy",
+      "route": "/admin/keys/:id/policy"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:PATCH /admin/keys/:id/rate-limit"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-41a09eb58037-authorized",
+      "kind": "http",
+      "method": "PATCH",
+      "mutating": true,
+      "path": "/admin/keys/e7712af4-07e4-40d4-a79d-268892571561/rate-limit",
+      "route": "/admin/keys/:id/rate-limit"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:PATCH /admin/keys/:id/rate-limit"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-41a09eb58037-unauthenticated",
+      "kind": "http",
+      "method": "PATCH",
+      "mutating": true,
+      "path": "/admin/keys/e7712af4-07e4-40d4-a79d-268892571561/rate-limit",
+      "route": "/admin/keys/:id/rate-limit"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /admin/circuit-breaker/reset",
+        "code_unit:src/admin/circuit-breaker.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-cf68693ac354-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/circuit-breaker/reset",
+      "route": "/admin/circuit-breaker/reset"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /admin/circuit-breaker/reset",
+        "code_unit:src/admin/circuit-breaker.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-cf68693ac354-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/circuit-breaker/reset",
+      "route": "/admin/circuit-breaker/reset"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /admin/credits/:apiKeyId"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-0e5f1760eee0-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/credits/e7712af4-07e4-40d4-a79d-268892571561",
+      "route": "/admin/credits/:apiKeyId"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /admin/credits/:apiKeyId"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-0e5f1760eee0-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/credits/e7712af4-07e4-40d4-a79d-268892571561",
+      "route": "/admin/credits/:apiKeyId"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /admin/credits/:apiKeyId/gift"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-91c1cae2c2ac-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/credits/e7712af4-07e4-40d4-a79d-268892571561/gift",
+      "route": "/admin/credits/:apiKeyId/gift"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /admin/credits/:apiKeyId/gift"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-91c1cae2c2ac-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/credits/e7712af4-07e4-40d4-a79d-268892571561/gift",
+      "route": "/admin/credits/:apiKeyId/gift"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /admin/credits/holds/sweep"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-a0cf69cfc97a-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/credits/holds/sweep",
+      "route": "/admin/credits/holds/sweep"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /admin/credits/holds/sweep"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-a0cf69cfc97a-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/credits/holds/sweep",
+      "route": "/admin/credits/holds/sweep"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /admin/credits/reconcile"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-f8ae90b50f2b-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/credits/reconcile",
+      "route": "/admin/credits/reconcile"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /admin/credits/reconcile"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-f8ae90b50f2b-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/credits/reconcile",
+      "route": "/admin/credits/reconcile"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /admin/keys",
+        "code_unit:src/admin/admin.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-7b97ca44e1f8-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/keys",
+      "route": "/admin/keys"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /admin/keys",
+        "code_unit:src/admin/admin.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-7b97ca44e1f8-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/admin/keys",
+      "route": "/admin/keys"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /connectors/:name/chat/completions",
+        "code_unit:src/connectors/cascade/cascade-router.service.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "503 strict_chat_unavailable under no-egress => not_measured",
+      "id": "route-d5430ba59c42-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/connectors/deepseek/chat/completions",
+      "route": "/connectors/:name/chat/completions"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /connectors/:name/chat/completions",
+        "code_unit:src/connectors/cascade/cascade-router.service.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "503 strict_chat_unavailable under no-egress => not_measured",
+      "id": "route-d5430ba59c42-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/connectors/deepseek/chat/completions",
+      "route": "/connectors/:name/chat/completions"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /connectors/:name/execute",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-09ba78f8e95a-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/connectors/deepseek/execute",
+      "route": "/connectors/:name/execute"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /connectors/:name/execute",
+        "code_unit:src/connectors/connectors.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-09ba78f8e95a-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/connectors/deepseek/execute",
+      "route": "/connectors/:name/execute"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /execute"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-574352edb9b3-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/execute",
+      "route": "/execute"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /execute"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-574352edb9b3-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/execute",
+      "route": "/execute"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /images/generate"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-ac7f34de6f28-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/images/generate",
+      "route": "/images/generate"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /images/generate"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-ac7f34de6f28-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/images/generate",
+      "route": "/images/generate"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /internal/watcher/circuit-breaker/reset",
+        "code_unit:src/admin/watcher-repair.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-1827006fc006-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/internal/watcher/circuit-breaker/reset",
+      "route": "/internal/watcher/circuit-breaker/reset"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /internal/watcher/circuit-breaker/reset",
+        "code_unit:src/admin/watcher-repair.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-1827006fc006-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/internal/watcher/circuit-breaker/reset",
+      "route": "/internal/watcher/circuit-breaker/reset"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /v1/chat/completions",
+        "code_unit:src/connectors/failover/failover-router.service.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "503 failover exhausted because outbound provider access is blocked => not_measured",
+      "id": "route-a55c3d7107b7-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/chat/completions",
+      "route": "/v1/chat/completions"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /v1/chat/completions",
+        "code_unit:src/connectors/failover/failover-router.service.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "503 failover exhausted because outbound provider access is blocked => not_measured",
+      "id": "route-a55c3d7107b7-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/chat/completions",
+      "route": "/v1/chat/completions"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /v1/prompt-cache/prewarm",
+        "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-1e621d19a939-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/prompt-cache/prewarm",
+      "route": "/v1/prompt-cache/prewarm"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /v1/prompt-cache/prewarm",
+        "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-1e621d19a939-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/prompt-cache/prewarm",
+      "route": "/v1/prompt-cache/prewarm"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /v1/speech/stt"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-7dd41765b35c-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/speech/stt",
+      "route": "/v1/speech/stt"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /v1/speech/stt"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-7dd41765b35c-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/speech/stt",
+      "route": "/v1/speech/stt"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /v1/speech/stt/async"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-5b74b3d2e5a3-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/speech/stt/async",
+      "route": "/v1/speech/stt/async"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /v1/speech/stt/async"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-5b74b3d2e5a3-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/speech/stt/async",
+      "route": "/v1/speech/stt/async"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /v1/speech/tts",
+        "code_unit:src/speech/speech.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-b7b24bc43408-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/speech/tts",
+      "route": "/v1/speech/tts"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /v1/speech/tts",
+        "code_unit:src/speech/speech.controller.ts"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-b7b24bc43408-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/speech/tts",
+      "route": "/v1/speech/tts"
+    },
+    {
+      "auth_header_names": [
+        "Authorization",
+        "x-admin-token",
+        "x-watcher-repair-token"
+      ],
+      "auth_mode": "authorized",
+      "body_env_name": "MC_ROUTE_CANARY_BODY",
+      "entities": [
+        "route:POST /v1/speech/vad"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/401/403/404/405",
+      "id": "route-46b9af8c4306-authorized",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/speech/vad",
+      "route": "/v1/speech/vad"
+    },
+    {
+      "auth_header_names": [],
+      "auth_mode": "unauthenticated",
+      "body_env_name": null,
+      "entities": [
+        "route:POST /v1/speech/vad"
+      ],
+      "expect": {
+        "route_present": true
+      },
+      "expected_class": "HTTP 2xx-4xx except 3xx/404/405",
+      "id": "route-46b9af8c4306-unauthenticated",
+      "kind": "http",
+      "method": "POST",
+      "mutating": true,
+      "path": "/v1/speech/vad",
+      "route": "/v1/speech/vad"
+    }
+  ],
+  "purpose": "Candidate or base-control route sweep; mapped code_unit entities are attached only to their authenticated route probes.",
+  "read_only": false,
+  "read_only_declared": false,
+  "rules": [
+    "Retain every actual HTTP status and auth control.",
+    "Listed provider-unavailable 503s and the absent-job 404 are not_measured, never pass or fail.",
+    "All undeclared failures, especially HTTP 500, remain failed.",
+    "Authenticated mapped probes name both route and code_unit; unauthenticated probes remain route-only."
+  ],
+  "schema": "CanaryPlan/v1",
+  "subject": {
+    "commit": "31d3a6e3e008acc446af1c2440a8d1a51fc392b5",
+    "evidence": {
+      "path": "source-evidence.json",
+      "sha256": "ebbcb187723967e7730efc528ba6d2c5aaeb60acf1d23a7de3abc0c1d389c344",
+      "source_field": "commit"
+    },
+    "schema": "GitCanarySubject/v1",
+    "tree": "fbf02a9d6b1c4a8426c2fb7cc6d0ccefeef399a8"
+  }
+}

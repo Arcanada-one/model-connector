@@ -1,0 +1,1 @@
+{"schema":"MeasuredGitSource/v1","captured_at_utc":"2026-10-14T12:34:57.077006Z","producer":{"tool":"git rev-parse on exact candidate","version":"1"},"commit":"eac9f9354f742ea628a4378b725fd28e3c4b79f9","tree":"d51dbdc39c4ca4bed9be183764fd3b05f01d122f","dirty":false}

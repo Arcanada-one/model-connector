@@ -3,7 +3,7 @@
 // (DB-catalog-derived). Discovery mirrors enforcement — a client never sees a
 // model its key cannot call; under free-only, unknown-tier models are OMITTED.
 
-import { describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect } from 'vitest';
 import { ConnectorsService } from '../connectors/connectors.service';
 import { PolicyService } from '../policy/policy.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -134,6 +134,15 @@ function buildStack(connectors: FakeConnector[], opts: StackOptions = {}) {
 }
 
 describe('GET /v1/models per-key policy filter (CONN-1665)', () => {
+  const originalOpenRouterKey = process.env.OPENROUTER_API_KEY;
+  beforeEach(() => {
+    process.env.OPENROUTER_API_KEY = 'synthetic-shared-catalog-key';
+  });
+  afterEach(() => {
+    if (originalOpenRouterKey === undefined) delete process.env.OPENROUTER_API_KEY;
+    else process.env.OPENROUTER_API_KEY = originalOpenRouterKey;
+  });
+
   const req = { apiKey: { id: API_KEY_ID } } as never;
   const connectors = () => [
     new FakeConnector('openrouter', ['or-free', 'or-paid', 'or-mystery']),
@@ -149,6 +158,15 @@ describe('GET /v1/models per-key policy filter (CONN-1665)', () => {
       'or-mystery',
       'or-paid',
     ]);
+  });
+
+  it('does not list OpenRouter for a key without a provider binding when the shared key is absent', async () => {
+    delete process.env.OPENROUTER_API_KEY;
+    const { controller } = buildStack(connectors(), { policy: { policyVersion: 1 } });
+
+    const out = await controller.listModels(req);
+
+    expect(out.data.map((model) => model.id)).toEqual(['groq-model']);
   });
 
   it('providers restriction hides other providers entirely', async () => {
@@ -178,6 +196,14 @@ describe('GET /v1/models per-key policy filter (CONN-1665)', () => {
 });
 
 describe('GET /connectors/catalog per-key policy filter (CONN-1665)', () => {
+  const originalOpenRouterKey = process.env.OPENROUTER_API_KEY;
+  beforeEach(() => {
+    process.env.OPENROUTER_API_KEY = 'synthetic-shared-catalog-key';
+  });
+  afterEach(() => {
+    if (originalOpenRouterKey === undefined) delete process.env.OPENROUTER_API_KEY;
+    else process.env.OPENROUTER_API_KEY = originalOpenRouterKey;
+  });
   // CatalogFilters is the PARSED query shape: `free`/`cheap` come from
   // `flagTransform` (catalog.dto.ts:194), which turns an absent query param into
   // `false`. This is exactly what the controller hands the service for `?`-less

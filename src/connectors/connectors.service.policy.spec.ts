@@ -5,7 +5,7 @@
 // House pattern: real ConnectorsService wired with FakeConnector (see
 // openai-compat.failover.integration.spec.ts).
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ConnectorsService } from './connectors.service';
 import { PolicyService } from '../policy/policy.service';
 import { getProviderKeyOverride, providerKeyContext } from '../policy/provider-key.context';
@@ -20,6 +20,7 @@ import {
 import type { ApiKeyPolicy } from '../policy/policy.schema';
 import { FailoverRouterService } from './failover/failover-router.service';
 import { FailoverAbortError } from './failover/failover.errors';
+import { ProviderCredentialHealthService } from './provider-credential-health';
 
 class FakeConnector implements IConnector {
   public calls = 0;
@@ -75,6 +76,7 @@ interface StackOptions {
   policy?: ApiKeyPolicy | null;
   /** (connector → model → tier) rows the fake catalog serves. */
   tiers?: Record<string, Record<string, 'free' | 'paid' | 'unknown'>>;
+  providerCredentialHealth?: ProviderCredentialHealthService;
 }
 
 const API_KEY_ID = 'policy-key-1';
@@ -114,6 +116,8 @@ function buildStack(connectors: FakeConnector[], opts: StackOptions = {}) {
     undefined,
     undefined,
     policyService,
+    undefined,
+    opts.providerCredentialHealth,
   );
   for (const c of connectors) service.register(c);
   return { service, policyService };
@@ -125,6 +129,7 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
 
   beforeEach(() => {
     for (const k of touchedEnv) envBackup[k] = process.env[k];
+    process.env.OPENROUTER_API_KEY = 'synthetic-shared-test-key';
   });
   afterEach(() => {
     for (const k of touchedEnv) {
@@ -225,6 +230,150 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
     expect(resp.status).toBe('success');
   });
 
+  it('cold process probes CLI auth before the first dispatch and allows a valid credential', async () => {
+    const runCommand = vi.fn(async () => ({ code: 0, stdout: '{"loggedIn":true}' }));
+    const providerCredentialHealth = new ProviderCredentialHealthService({
+      env: {},
+      fetchImpl: vi.fn(async () => new Response(null, { status: 200 })),
+      runCommand,
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const claude = new FakeConnector('claude-code', 'claude-model', () =>
+      ok('claude-code', 'claude-model'),
+    );
+    const { service } = buildStack([claude], { providerCredentialHealth });
+
+    expect(providerCredentialHealth.peek('claude-code')).toBeNull();
+    const response = await service.execute(
+      'claude-code',
+      { prompt: 'first cold-start dispatch', model: 'claude-model' },
+      API_KEY_ID,
+    );
+
+    expect(response.status).toBe('success');
+    expect(claude.calls).toBe(1);
+    expect(runCommand).toHaveBeenCalledTimes(1);
+    expect(runCommand).toHaveBeenCalledWith('claude', ['auth', 'status']);
+  });
+
+  it('cold process refuses a failed CLI auth probe before dispatch', async () => {
+    const runCommand = vi.fn(async () => ({
+      code: 0,
+      stdout: '{"loggedIn":false,"authMethod":"oauth_token"}',
+    }));
+    const providerCredentialHealth = new ProviderCredentialHealthService({
+      env: {},
+      fetchImpl: vi.fn(async () => new Response(null, { status: 200 })),
+      runCommand,
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const claude = new FakeConnector('claude-code', 'claude-model', () =>
+      ok('claude-code', 'claude-model'),
+    );
+    const { service } = buildStack([claude], { providerCredentialHealth });
+
+    const response = await service.execute(
+      'claude-code',
+      { prompt: 'first cold-start dispatch', model: 'claude-model' },
+      API_KEY_ID,
+    );
+
+    expect(response.status).toBe('error');
+    expect(response.error?.type).toBe('config_error');
+    expect(runCommand).toHaveBeenCalledTimes(1);
+    expect(claude.calls).toBe(0);
+  });
+
+  it('does not report a configured required provider that is not registered', async () => {
+    const providerCredentialHealth = new ProviderCredentialHealthService({
+      env: { DEEPSEEK_API_KEY: 'synthetic-deepseek-key' },
+      fetchImpl: vi.fn(async () => new Response(null, { status: 200 })),
+      runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const { service } = buildStack([], { providerCredentialHealth });
+
+    expect(service.getProviderCredentialStatus()).toEqual([]);
+  });
+
+  it('probes the exact mapped OpenRouter credential and never falls back to a shared key', async () => {
+    process.env.OPENROUTER_API_KEY = 'synthetic-shared-good-key';
+    process.env.OPENROUTER_API_KEY_EMAIL_AGENT = 'synthetic-dedicated-invalid-key';
+    const fetchImpl = vi.fn<typeof fetch>(async (_input, init) => {
+      const authorization = new Headers(init?.headers).get('authorization');
+      return new Response(null, {
+        status: authorization === 'Bearer synthetic-dedicated-invalid-key' ? 401 : 200,
+      });
+    });
+    const providerCredentialHealth = new ProviderCredentialHealthService({
+      env: { OPENROUTER_API_KEY: 'synthetic-shared-good-key' },
+      fetchImpl,
+      runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const openrouter = new FakeConnector('openrouter', 'free-model', () =>
+      ok('openrouter', 'free-model'),
+    );
+    const { service } = buildStack([openrouter], {
+      policy: {
+        policyVersion: 1,
+        providers: ['openrouter'],
+        providerKeys: { openrouter: 'OPENROUTER_API_KEY_EMAIL_AGENT' },
+      },
+      providerCredentialHealth,
+    });
+
+    const visible = await service.listCapabilitiesForKey(API_KEY_ID);
+    const response = await service.execute(
+      'openrouter',
+      { prompt: 'probe exact provider binding', model: 'free-model' },
+      API_KEY_ID,
+    );
+
+    expect(visible).toEqual([]);
+    expect(response.error?.type).toBe('config_error');
+    expect(openrouter.calls).toBe(0);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(new Headers(fetchImpl.mock.calls[0][1]?.headers).get('authorization')).toBe(
+      'Bearer synthetic-dedicated-invalid-key',
+    );
+  });
+
+  it('probes and advertises a valid profile-only OpenRouter key without a shared key', async () => {
+    delete process.env.OPENROUTER_API_KEY;
+    process.env.OPENROUTER_API_KEY_EMAIL_AGENT = 'synthetic-dedicated-valid-key';
+    const fetchImpl = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
+    const providerCredentialHealth = new ProviderCredentialHealthService({
+      env: {},
+      fetchImpl,
+      runCommand: vi.fn(async () => ({ code: 0, stdout: '' })),
+      now: () => new Date('2026-10-14T00:00:00.000Z'),
+    });
+    const openrouter = new FakeConnector('openrouter', 'free-model', () =>
+      ok('openrouter', 'free-model'),
+    );
+    const { service } = buildStack([openrouter], {
+      policy: {
+        policyVersion: 1,
+        providers: ['openrouter'],
+        providerKeys: { openrouter: 'OPENROUTER_API_KEY_EMAIL_AGENT' },
+      },
+      providerCredentialHealth,
+    });
+
+    const visible = await service.listCapabilitiesForKey(API_KEY_ID);
+    const response = await service.execute(
+      'openrouter',
+      { prompt: 'valid profile key', model: 'free-model' },
+      API_KEY_ID,
+    );
+
+    expect(visible.map((item) => item.name)).toEqual(['openrouter']);
+    expect(response.status).toBe('success');
+    expect(openrouter.seenOverrides).toEqual(['synthetic-dedicated-valid-key']);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
   describe('precedence matrix: per-key policy AND global PROVIDER_ACCESS', () => {
     it('global deny (use=false) + policy allow → deny (provider_not_routable)', async () => {
       process.env.PROVIDER_ACCESS = 'openrouter:read';
@@ -264,6 +413,44 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
   });
 
   describe('provider-key override (ALS across the whole retry loop)', () => {
+    it('legacy policy without providerKeys does not advertise or call OpenRouter when the shared key is absent', async () => {
+      delete process.env.OPENROUTER_API_KEY;
+      const openrouter = new FakeConnector('openrouter', 'free-model', () =>
+        ok('openrouter', 'free-model'),
+      );
+      const { service } = buildStack([openrouter], { policy: { policyVersion: 1 } });
+
+      const visible = await service.listCapabilitiesForKey(API_KEY_ID);
+      const response = await service.execute(
+        'openrouter',
+        { prompt: 'hi', model: 'free-model' },
+        API_KEY_ID,
+      );
+
+      expect(visible).toEqual([]);
+      expect(response.error?.type).toBe('config_error');
+      expect(openrouter.calls).toBe(0);
+    });
+
+    it('profile catalog visibility uses only that profile env binding when shared is absent', async () => {
+      delete process.env.OPENROUTER_API_KEY;
+      process.env.OPENROUTER_API_KEY_EMAIL_AGENT = 'synthetic-dedicated-test-key';
+      const openrouter = new FakeConnector('openrouter', 'free-model', () =>
+        ok('openrouter', 'free-model'),
+      );
+      const { service } = buildStack([openrouter], {
+        policy: {
+          policyVersion: 1,
+          providers: ['openrouter'],
+          providerKeys: { openrouter: 'OPENROUTER_API_KEY_EMAIL_AGENT' },
+        },
+      });
+
+      const visible = await service.listCapabilitiesForKey(API_KEY_ID);
+
+      expect(visible.map((capability) => capability.name)).toEqual(['openrouter']);
+    });
+
     it('policy providerKeys.openrouter → connector sees the override on EVERY attempt', async () => {
       process.env.OPENROUTER_API_KEY = 'shared-key-value';
       process.env.OPENROUTER_API_KEY_EMAIL_AGENT = 'dedicated-key-value';
@@ -324,12 +511,14 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
         },
       });
 
+      const visible = await service.listCapabilitiesForKey(API_KEY_ID);
       const resp = await service.execute(
         'openrouter',
         { prompt: 'hi', model: 'free-model' },
         API_KEY_ID,
       );
 
+      expect(visible).toEqual([]);
       expect(resp.error?.type).toBe('config_error');
       // Fail LOUD, no silent fallback to the shared env key: the request never ran.
       expect(openrouter.calls).toBe(0);
@@ -381,6 +570,24 @@ describe('ConnectorsService per-key policy choke point (CONN-1665)', () => {
   });
 
   describe('failover candidate filtering (attribution before dispatch)', () => {
+    it('does not put OpenRouter in failover when this key has no mapping and the default is absent', async () => {
+      delete process.env.OPENROUTER_API_KEY;
+      const openrouter = new FakeConnector('openrouter', 'or-free', () =>
+        ok('openrouter', 'or-free'),
+      );
+      const groq = new FakeConnector('groq', 'llama', () => ok('groq', 'llama'));
+      const { service } = buildStack([openrouter, groq], { policy: { policyVersion: 1 } });
+      const failover = new FailoverRouterService(service);
+
+      const response = await failover.complete({ prompt: 'hi' }, API_KEY_ID, {
+        requestedModel: 'auto',
+      });
+
+      expect(response.connector).toBe('groq');
+      expect(openrouter.calls).toBe(0);
+      expect(groq.calls).toBe(1);
+    });
+
     it('policy filters candidates; fully-emptied list → explicit policy_violation abort', async () => {
       const openrouter = new FakeConnector('openrouter', 'or-free', () =>
         ok('openrouter', 'or-free'),

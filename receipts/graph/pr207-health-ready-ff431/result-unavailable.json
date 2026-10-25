@@ -1,0 +1,72 @@
+{
+ "base_url": "http://127.0.0.1:44321",
+ "captured_at_utc": "2026-10-14T11:15:13Z",
+ "card": "AUP-GRAPH-008",
+ "contract_ref": "contracts/graph-verified-change/observed-edges-and-deploy-gate.v1.json",
+ "counters": {
+  "failed": 0,
+  "not_measured": 0,
+  "verified": 1
+ },
+ "entity_verdicts": [
+  {
+   "entity": "code_unit:src/health/health.controller.ts",
+   "probe_ids": [
+    "health-ready-required-unavailable"
+   ],
+   "reason": "health-ready-required-unavailable: key `status` present; key `checks` present; key `providers` present",
+   "verdict": "verified"
+  },
+  {
+   "entity": "route:GET /health/ready",
+   "probe_ids": [
+    "health-ready-required-unavailable"
+   ],
+   "reason": "health-ready-required-unavailable: key `status` present; key `checks` present; key `providers` present",
+   "verdict": "verified"
+  }
+ ],
+ "environment": "candidate-local NestJS HTTP controller; loopback only; injected DB-ok and required DeepSeek-unavailable state; provider egress disabled",
+ "model": "claude-opus-5",
+ "phase": "pre",
+ "plan": {
+  "digest": "sha256:182022a0105fed46530a7f0f9d5f4ac759079e2926c8eff76c1cca3b439a96f7",
+  "id": "pr207-health-ready-ff431-unavailable",
+  "path": ".venv/mc207-health-canary/plan-unavailable.json"
+ },
+ "probes": [
+  {
+   "body_bytes": 175,
+   "body_sha256": "sha256:542de68782ca420a3928fb93b341b276fc2e42082fd9cf519e0d6a4b7b2a9c11",
+   "elapsed_ms": 56,
+   "id": "health-ready-required-unavailable",
+   "method": "GET",
+   "outcome": "verified",
+   "reason": "key `status` present; key `checks` present; key `providers` present",
+   "status": 200,
+   "url": "http://127.0.0.1:44321/health/ready"
+  }
+ ],
+ "producer": {
+  "tool": "tools/graph/deploy_gate.py",
+  "version": "1.0.0"
+ },
+ "provisional_until_fable_review": true,
+ "read_only": true,
+ "resident_version": null,
+ "rules": [
+  "C3 a probe that could not run is not_measured, never verified",
+  "C4 probes are read-only unless the plan declares mutating with an owner"
+ ],
+ "schema": "CanaryResult/v1",
+ "subject": {
+  "commit": "ff4311405175dd38aee216a8cf36a969f62dc9c1",
+  "evidence": {
+   "path": "source-evidence.json",
+   "sha256": "7cd0ba01c4215bd9f290919af874a43a181f5d3ea12c5528b6ed5548d02a7577",
+   "source_field": "commit"
+  },
+  "schema": "GitCanarySubject/v1",
+  "tree": "d77fb8c694921f99ee2c3e8b9484190657b5f216"
+ }
+}

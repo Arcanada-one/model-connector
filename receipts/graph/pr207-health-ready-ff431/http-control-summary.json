@@ -1,0 +1,14 @@
+{
+  "schema": "MC-HealthReadyHttpControl/v1",
+  "measured_source": "ff4311405175dd38aee216a8cf36a969f62dc9c1",
+  "route": "GET /health/ready",
+  "isolated_http_harness": true,
+  "provider_egress": "disabled",
+  "database_state": "ok",
+  "results": [
+    {"source": "prior-6decc98", "required_provider": "unavailable", "http_status": 503, "body_status": "error"},
+    {"source": "ff431140", "required_provider": "unavailable", "http_status": 200, "body_status": "degraded"},
+    {"source": "ff431140", "required_provider": "ready", "http_status": 200, "body_status": "ok"}
+  ],
+  "limitation": "Minimal NestJS HTTP controller harness with injected dependencies; not a full app, deployment, or provider measurement."
+}
