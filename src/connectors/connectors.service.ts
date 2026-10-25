@@ -1223,7 +1223,15 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     // estimated and nothing is invented: whether an attempt with no usage object
     // should be charged an estimate is the separate pricing question in
     // A2-299 (b), and this change must not pre-empt it.
-    const recovered = { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0, costUsd: 0 };
+    const recovered = {
+      inputTokens: 0,
+      outputTokens: 0,
+      cachedInputTokens: 0,
+      costUsd: 0,
+      cacheCreationInputTokens: 0,
+      ephemeral5mInputTokens: 0,
+      ephemeral1hInputTokens: 0,
+    };
     let guardReport: OutputGuardReport | null = null;
     let observationFailureStage: FirstDispatchFailureStage = 'connector_or_response_processing';
 
@@ -1279,6 +1287,14 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
         recovered.inputTokens += response.usage.inputTokens || 0;
         recovered.outputTokens += response.usage.outputTokens || 0;
         recovered.cachedInputTokens += response.usage.cachedInputTokens || 0;
+        recovered.cacheCreationInputTokens +=
+          response.usage.cacheCreationInputTokens ??
+          (response.usage.cacheCreation?.ephemeral5mInputTokens ?? 0) +
+            (response.usage.cacheCreation?.ephemeral1hInputTokens ?? 0);
+        recovered.ephemeral5mInputTokens +=
+          response.usage.cacheCreation?.ephemeral5mInputTokens ?? 0;
+        recovered.ephemeral1hInputTokens +=
+          response.usage.cacheCreation?.ephemeral1hInputTokens ?? 0;
         recovered.costUsd += response.usage.costUsd || 0;
 
         // Retry with exponential backoff + jitter
@@ -1359,6 +1375,23 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
               ? {
                   cachedInputTokens:
                     (lastAttempt.usage.cachedInputTokens ?? 0) + recovered.cachedInputTokens,
+                }
+              : {}),
+            ...(recovered.cacheCreationInputTokens > 0
+              ? {
+                  cacheCreationInputTokens:
+                    (lastAttempt.usage.cacheCreationInputTokens ??
+                      (lastAttempt.usage.cacheCreation?.ephemeral5mInputTokens ?? 0) +
+                        (lastAttempt.usage.cacheCreation?.ephemeral1hInputTokens ?? 0)) +
+                    recovered.cacheCreationInputTokens,
+                  cacheCreation: {
+                    ephemeral5mInputTokens:
+                      (lastAttempt.usage.cacheCreation?.ephemeral5mInputTokens ?? 0) +
+                      recovered.ephemeral5mInputTokens,
+                    ephemeral1hInputTokens:
+                      (lastAttempt.usage.cacheCreation?.ephemeral1hInputTokens ?? 0) +
+                      recovered.ephemeral1hInputTokens,
+                  },
                 }
               : {}),
             costUsd: lastAttempt.usage.costUsd + recovered.costUsd,
@@ -1620,6 +1653,8 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       // carries one, so the meter has to see it rather than charge every
       // prompt token at full price.
       cachedInputTokens: response.usage.cachedInputTokens,
+      cacheCreationInputTokens: response.usage.cacheCreationInputTokens,
+      cacheCreation: response.usage.cacheCreation,
       // A2-295 — an aborted attempt reports input tokens it estimated from the
       // prompt. The tariff is still the catalogue's, so the arithmetic is
       // unchanged; only the `costSource` has to say the COUNT was ours.

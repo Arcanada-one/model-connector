@@ -209,6 +209,34 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
     findPricing = vi.fn<FindPricing>().mockResolvedValue(null);
   });
 
+  it('CACHE-003b carries provider TTL usage into the request and ledger settlement', async () => {
+    findPricing = vi
+      .fn<FindPricing>()
+      .mockResolvedValue({
+        inputPerMTok: 10,
+        outputPerMTok: 50,
+        cachedInputPerMTok: 0.25,
+        cacheWrite5mPerMTok: 12.5,
+        cacheWrite1hPerMTok: 20,
+        tier: 'paid',
+      });
+    const connector = groqShapedConnector({ inputTokens: 10_000, outputTokens: 100 });
+    const response = await connector.execute({ prompt: 'fixture' });
+    response.usage.cachedInputTokens = 6_000;
+    response.usage.cacheCreationInputTokens = 3_000;
+    response.usage.cacheCreation = { ephemeral5mInputTokens: 2_000, ephemeral1hInputTokens: 1_000 };
+    vi.mocked(connector.execute).mockResolvedValue(response);
+    const measured = await buildService(connector).execute('groq', { prompt: 'fixture' }, 'key-1');
+    expect(measured.usage.costUsd).toBe(0.0615);
+    expect(created[0]).toMatchObject({
+      costSource: 'catalog',
+      inputCostUsd: 0.0565,
+      outputCostUsd: 0.005,
+    });
+    expect(Number(created[0].costUsd)).toBe(0.0615);
+    expect(Number(settled[0].amountUsd)).toBe(0.0615);
+  });
+
   it('charges real money for a priced model the connector reported as costing nothing', async () => {
     // This is the falsifier in miniature: the connector returns costUsd 0 —
     // exactly what groq.connector.ts has always returned — and the amount that
