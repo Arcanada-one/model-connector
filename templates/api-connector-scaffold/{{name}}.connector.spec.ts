@@ -42,11 +42,7 @@ describe('{{NAME}}Connector', () => {
   };
 
   function mockOk(body: unknown) {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve(body),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
   }
 
   // --- URL building ---

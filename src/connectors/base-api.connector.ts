@@ -1,3 +1,4 @@
+import { redactProviderSecrets } from '../policy/provider-key.context';
 import { randomUUID } from 'crypto';
 import { Logger } from '@nestjs/common';
 import {
@@ -225,8 +226,19 @@ export abstract class BaseApiConnector implements IConnector {
     return 'follow';
   }
 
-  protected readResponseJson(response: Response): Promise<unknown> {
-    return response.json();
+  protected async readResponseJson(response: Response): Promise<unknown> {
+    return this.parseResponseJsonText(await response.text());
+  }
+
+  /** Redact complete bodies before a JSON decoder can shorten a credential into an excerpt. */
+  protected parseResponseJsonText(text: string): unknown {
+    const sanitized = redactProviderSecrets(text);
+    try {
+      return JSON.parse(sanitized);
+    } catch {
+      // Never propagate a parser message or cause: both may contain raw body excerpts.
+      throw new SyntaxError('Invalid upstream JSON response');
+    }
   }
 
   protected readResponseError(response: Response): Promise<string> {
@@ -247,7 +259,7 @@ export abstract class BaseApiConnector implements IConnector {
 
   /** CONN-0243 — provider-specific rendering of a non-2xx response body. */
   protected formatHttpErrorMessage(_status: number, body: string): string {
-    return body.slice(0, 500);
+    return redactProviderSecrets(body).slice(0, 500);
   }
 
   /**
@@ -255,9 +267,10 @@ export abstract class BaseApiConnector implements IConnector {
    * composes {@link classifyHttpError} with {@link formatHttpErrorMessage}.
    */
   protected parseHttpError(status: number, text: string, _headers: Headers): ParsedHttpError {
+    text = redactProviderSecrets(text);
     return {
       type: this.classifyHttpError(status, text),
-      message: this.formatHttpErrorMessage(status, text),
+      message: redactProviderSecrets(this.formatHttpErrorMessage(status, text)),
     };
   }
 
@@ -532,7 +545,7 @@ export abstract class BaseApiConnector implements IConnector {
       });
 
       if (!res.ok) {
-        const text = await this.readResponseError(res);
+        const text = redactProviderSecrets(await this.readResponseError(res));
         const parsedError = this.parseHttpError(res.status, text, res.headers);
         const errorType = parsedError.type;
         const action = classifyErrorAction(errorType);
@@ -556,7 +569,7 @@ export abstract class BaseApiConnector implements IConnector {
       }
 
       const json = await this.readResponseJson(res);
-      const parsed = this.parseResponse(json, request);
+      const parsed = this.parseResponse(redactProviderSecrets(json), request);
 
       const base: ConnectorResponse = {
         id,
@@ -598,7 +611,7 @@ export abstract class BaseApiConnector implements IConnector {
         const action = classifyErrorAction('api_error');
         base.error = {
           type: 'api_error',
-          message: parsed.errorMessage || 'Unknown API error',
+          message: redactProviderSecrets(parsed.errorMessage || 'Unknown API error'),
           ...action,
         };
         modelCb.recordFailure('api_error');
@@ -620,7 +633,9 @@ export abstract class BaseApiConnector implements IConnector {
       const message = err instanceof Error ? err.message : String(err);
       const errorType = isAbort
         ? 'timeout'
-        : message.includes('SyntaxError') || message.includes('Unexpected')
+        : err instanceof SyntaxError ||
+            message.includes('SyntaxError') ||
+            message.includes('Unexpected')
           ? 'parse_error'
           : 'network_error';
       const action = classifyErrorAction(errorType);
@@ -688,7 +703,9 @@ export abstract class BaseApiConnector implements IConnector {
         status: isAbort ? 'timeout' : 'error',
         error: {
           type: errorType,
-          message: isAbort ? abortedAttemptMessage(message, timeout, request.model) : message,
+          message: redactProviderSecrets(
+            isAbort ? abortedAttemptMessage(message, timeout, request.model) : message,
+          ),
           ...action,
         },
       };

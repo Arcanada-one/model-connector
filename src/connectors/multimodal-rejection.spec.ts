@@ -49,23 +49,23 @@ describe('ARCA-0011 unsupported_modality guard (non-openrouter)', () => {
   it('openrouter accepts ContentBlock[] (supports multimodal)', async () => {
     process.env.OPENROUTER_API_KEY = 'sk-or-test-key';
     const connector = new OpenRouterConnector();
-    const fetchSpy = (await import('vitest')).vi.fn().mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      headers: { get: () => null },
-      json: async () => ({
-        id: 'gen-1',
-        model: 'anthropic/claude-sonnet-4',
-        choices: [
-          {
-            index: 0,
-            message: { role: 'assistant', content: 'A picture.' },
-            finish_reason: 'stop',
-          },
-        ],
-        usage: { prompt_tokens: 100, completion_tokens: 10, total_tokens: 110 },
-      }),
-    });
+    const fetchSpy = (await import('vitest')).vi.fn().mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          id: 'gen-1',
+          model: 'anthropic/claude-sonnet-4',
+          choices: [
+            {
+              index: 0,
+              message: { role: 'assistant', content: 'A picture.' },
+              finish_reason: 'stop',
+            },
+          ],
+          usage: { prompt_tokens: 100, completion_tokens: 10, total_tokens: 110 },
+        }),
+        { status: 200 },
+      ),
+    );
     (await import('vitest')).vi.stubGlobal('fetch', fetchSpy);
     const response = await connector.execute(multimodalRequest);
     expect(response.status).toBe('success');

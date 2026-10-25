@@ -105,11 +105,9 @@ describe('BaseApiConnector — CONN-0238 REPLACE-not-UNION + extractModels', () 
   afterEach(() => vi.restoreAllMocks());
 
   function mockModelsOk(ids: string[]) {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ data: ids.map((id) => ({ id })) }),
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: ids.map((id) => ({ id })) }), { status: 200 }),
+    );
   }
 
   it('REPLACES the static list with the live list on success (no UNION leftovers)', async () => {
@@ -150,11 +148,7 @@ describe('BaseApiConnector — CONN-0238 REPLACE-not-UNION + extractModels', () 
   });
 
   it('keeps the static list when the response has an empty data[] (no replacement)', async () => {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ data: [] }),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ data: [] }), { status: 200 }));
     await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
       status: 'failed',
       reason: 'empty',
@@ -163,11 +157,7 @@ describe('BaseApiConnector — CONN-0238 REPLACE-not-UNION + extractModels', () 
   });
 
   it('keeps the static list on garbage JSON (no data[]) — never throws', async () => {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ nope: 1 }),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ nope: 1 }), { status: 200 }));
     await expect(connector.refreshCatalogModels()).resolves.toMatchObject({
       status: 'failed',
       reason: 'empty',
@@ -176,11 +166,7 @@ describe('BaseApiConnector — CONN-0238 REPLACE-not-UNION + extractModels', () 
   });
 
   it('classifies response JSON failures as parse without exposing the error', async () => {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.reject(new SyntaxError('raw provider payload')),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response('invalid JSON fixture', { status: 200 }));
 
     await expect(connector.refreshCatalogModels()).resolves.toEqual({
       status: 'failed',
@@ -207,11 +193,9 @@ describe('BaseApiConnector', () => {
 
   describe('execute', () => {
     it('preserves legacy getHeaders behavior while allowing an async per-request override', async () => {
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ result: 'hello', tokens: 5 }),
-      });
+      fetchSpy.mockResolvedValue(
+        new Response(JSON.stringify({ result: 'hello', tokens: 5 }), { status: 200 }),
+      );
 
       await connector.execute({ prompt: 'legacy' });
       expect(fetchSpy.mock.calls[0][1].headers).toEqual({ 'Content-Type': 'application/json' });
@@ -226,11 +210,9 @@ describe('BaseApiConnector', () => {
 
     it('awaits asynchronous request headers while retaining synchronous-subclass compatibility', async () => {
       const asyncConnector = new AsyncHeadersApiConnector();
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ result: 'hello', tokens: 1 }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ result: 'hello', tokens: 1 }), { status: 200 }),
+      );
 
       await asyncConnector.execute({ prompt: 'test input' });
 
@@ -241,11 +223,9 @@ describe('BaseApiConnector', () => {
     });
 
     it('should make POST request and return success response', async () => {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ result: 'hello', tokens: 5 }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ result: 'hello', tokens: 5 }), { status: 200 }),
+      );
 
       const response = await connector.execute({ prompt: 'test input' });
 
@@ -376,11 +356,7 @@ describe('BaseApiConnector', () => {
     });
 
     it('should return error on JSON parse failure', async () => {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.reject(new SyntaxError('Unexpected token')),
-      });
+      fetchSpy.mockResolvedValueOnce(new Response('invalid JSON fixture', { status: 200 }));
 
       const response = await connector.execute({ prompt: 'garbage' });
 
@@ -446,29 +422,23 @@ describe('BaseApiConnector', () => {
       expect(blocked.error?.type).toBe('circuit_open');
 
       // model-b should still work
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ result: 'hello', tokens: 5 }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ result: 'hello', tokens: 5 }), { status: 200 }),
+      );
       const ok = await connector.execute({ prompt: 'test', model: 'model-b' });
       expect(ok.status).toBe('success');
     });
 
     it('should return per-model circuit breaker states in getStatus', async () => {
       // Make requests with two models
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ result: 'ok', tokens: 1 }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ result: 'ok', tokens: 1 }), { status: 200 }),
+      );
       await connector.execute({ prompt: 'test', model: 'gpt-4' });
 
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ result: 'ok', tokens: 1 }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ result: 'ok', tokens: 1 }), { status: 200 }),
+      );
       await connector.execute({ prompt: 'test', model: 'claude' });
 
       fetchSpy.mockResolvedValueOnce({ ok: true, status: 200 }); // health check
@@ -481,11 +451,9 @@ describe('BaseApiConnector', () => {
 
   describe('getStatus', () => {
     it('should return healthy when /health responds ok', async () => {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ status: 'ok' }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ status: 'ok' }), { status: 200 }),
+      );
 
       const status = await connector.getStatus();
 

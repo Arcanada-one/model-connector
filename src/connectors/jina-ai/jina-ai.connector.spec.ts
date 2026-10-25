@@ -45,11 +45,7 @@ describe('JinaAiConnector (AU-024)', () => {
   });
 
   function mockOk(body: unknown): void {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve(body),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
   }
 
   function mockError(status: number, body: string): void {
@@ -142,10 +138,7 @@ describe('JinaAiConnector (AU-024)', () => {
       await connector.execute({
         prompt: 'ignored when inputs are present',
         extra: {
-          inputs: [
-            { text: 'synthetic text' },
-            { image: 'https://example.invalid/synthetic.png' },
-          ],
+          inputs: [{ text: 'synthetic text' }, { image: 'https://example.invalid/synthetic.png' }],
           task: 'retrieval.passage',
           returnMultivector: true,
           returnTokenizedInput: true,
@@ -153,10 +146,7 @@ describe('JinaAiConnector (AU-024)', () => {
       });
 
       expect(JSON.parse(fetchSpy.mock.calls[0][1].body)).toEqual({
-        input: [
-          { text: 'synthetic text' },
-          { image: 'https://example.invalid/synthetic.png' },
-        ],
+        input: [{ text: 'synthetic text' }, { image: 'https://example.invalid/synthetic.png' }],
         model: 'jina-embeddings-v4',
         task: 'retrieval.passage',
         return_multivector: true,
@@ -189,9 +179,9 @@ describe('JinaAiConnector (AU-024)', () => {
       expect(JSON.parse(fetchSpy.mock.calls[0][1].body).model).toBe('jina-embeddings-v4');
       expect(response.status).toBe('success');
       expect(response.structured).toEqual(embeddingsFixture.data);
-      expect((response.structured as Array<{ index: number }>).map((entry) => entry.index)).toEqual([
-        0, 1,
-      ]);
+      expect((response.structured as Array<{ index: number }>).map((entry) => entry.index)).toEqual(
+        [0, 1],
+      );
       expect(response.usage).toEqual({
         inputTokens: 8,
         outputTokens: 0,
@@ -279,10 +269,7 @@ describe('JinaAiConnector (AU-024)', () => {
       [{ prompt: 'x', model: 'jina-reranker-v3' }, 'operation'],
       [{ prompt: 'x', extra: { inputs: [] } }, 'inputs'],
       [{ prompt: 'x', extra: { inputs: [{ audio: 'unsupported' }] } }, 'inputs'],
-      [
-        { prompt: 'x', extra: { inputs: [{ pdf: 'one' }, { pdf: 'two' }] } },
-        'PDF',
-      ],
+      [{ prompt: 'x', extra: { inputs: [{ pdf: 'one' }, { pdf: 'two' }] } }, 'PDF'],
       [{ prompt: 'x', extra: { embeddingType: 'hex' } }, 'embeddingType'],
       [{ prompt: 'x', extra: { truncate: 'yes' } }, 'truncate'],
       [{ prompt: 'x', model: 'jina-embeddings-v3', extra: { dimensions: 1025 } }, 'dimensions'],
@@ -321,10 +308,7 @@ describe('JinaAiConnector (AU-024)', () => {
         },
         'query',
       ],
-      [
-        { prompt: 'x', extra: { operation: 'rerank', documents: ['one'], topN: 2 } },
-        'topN',
-      ],
+      [{ prompt: 'x', extra: { operation: 'rerank', documents: ['one'], topN: 2 } }, 'topN'],
       [
         {
           prompt: 'x',
@@ -401,10 +385,12 @@ describe('JinaAiConnector (AU-024)', () => {
         'jina-reranker-m0',
         'jina-reranker-v3',
       ]);
-      expect(capabilities.modelMeta?.filter((model) => model.modality === 'embedding')).toHaveLength(
-        2,
+      expect(
+        capabilities.modelMeta?.filter((model) => model.modality === 'embedding'),
+      ).toHaveLength(2);
+      expect(capabilities.modelMeta?.filter((model) => model.modality === 'rerank')).toHaveLength(
+        3,
       );
-      expect(capabilities.modelMeta?.filter((model) => model.modality === 'rerank')).toHaveLength(3);
     });
 
     it('does not advertise excluded operations, dynamic registration, regions, or Pinecone', () => {

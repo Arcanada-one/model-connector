@@ -27,7 +27,7 @@ describe('GeminiApiConnector', () => {
   });
 
   function mockOk(body: unknown): void {
-    fetchSpy.mockResolvedValueOnce({ ok: true, status: 200, json: async () => body });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
   }
 
   describe('immutable generation and discovery behavior', () => {
@@ -117,9 +117,7 @@ describe('GeminiApiConnector', () => {
         model: 'models/gemini-embedding-2',
         extra: { operation: 'embeddings', input: ['alpha', 'beta'], outputDimensionality: 128 },
       });
-      expect(fetchSpy.mock.calls[0][0]).toContain(
-        '/models/gemini-embedding-2:batchEmbedContents',
-      );
+      expect(fetchSpy.mock.calls[0][0]).toContain('/models/gemini-embedding-2:batchEmbedContents');
       expect(JSON.parse(fetchSpy.mock.calls[0][1].body)).toEqual({
         model: 'models/gemini-embedding-2',
         requests: ['alpha', 'beta'].map((text) => ({
@@ -134,17 +132,82 @@ describe('GeminiApiConnector', () => {
   describe('AU-027 local validation', () => {
     it.each([
       ['missing model', { prompt: 'x', extra: { operation: 'embeddings' } }],
-      ['unsupported model', { prompt: 'x', model: 'gemini-2.5-flash', extra: { operation: 'embeddings' } }],
-      ['empty input', { prompt: '', model: 'gemini-embedding-2', extra: { operation: 'embeddings' } }],
-      ['empty batch', { prompt: 'x', model: 'gemini-embedding-2', extra: { operation: 'embeddings', input: [] } }],
-      ['mixed batch', { prompt: 'x', model: 'gemini-embedding-2', extra: { operation: 'embeddings', input: ['x', 1] } }],
-      ['empty batch member', { prompt: 'x', model: 'gemini-embedding-2', extra: { operation: 'embeddings', input: ['x', ''] } }],
-      ['invalid dimension', { prompt: 'x', model: 'gemini-embedding-2', extra: { operation: 'embeddings', outputDimensionality: 0 } }],
-      ['invalid task type', { prompt: 'x', model: 'gemini-embedding-001', extra: { operation: 'embeddings', taskType: 'CHAT' } }],
-      ['task type on v2', { prompt: 'x', model: 'gemini-embedding-2', extra: { operation: 'embeddings', taskType: 'CLUSTERING' } }],
-      ['title without retrieval document', { prompt: 'x', model: 'gemini-embedding-001', extra: { operation: 'embeddings', taskType: 'CLUSTERING', title: 'bad' } }],
-      ['multimodal field', { prompt: 'x', model: 'gemini-embedding-2', extra: { operation: 'embeddings', fileData: { uri: 'synthetic' } } }],
-      ['async batch field', { prompt: 'x', model: 'gemini-embedding-2', extra: { operation: 'embeddings', asyncBatch: true } }],
+      [
+        'unsupported model',
+        { prompt: 'x', model: 'gemini-2.5-flash', extra: { operation: 'embeddings' } },
+      ],
+      [
+        'empty input',
+        { prompt: '', model: 'gemini-embedding-2', extra: { operation: 'embeddings' } },
+      ],
+      [
+        'empty batch',
+        { prompt: 'x', model: 'gemini-embedding-2', extra: { operation: 'embeddings', input: [] } },
+      ],
+      [
+        'mixed batch',
+        {
+          prompt: 'x',
+          model: 'gemini-embedding-2',
+          extra: { operation: 'embeddings', input: ['x', 1] },
+        },
+      ],
+      [
+        'empty batch member',
+        {
+          prompt: 'x',
+          model: 'gemini-embedding-2',
+          extra: { operation: 'embeddings', input: ['x', ''] },
+        },
+      ],
+      [
+        'invalid dimension',
+        {
+          prompt: 'x',
+          model: 'gemini-embedding-2',
+          extra: { operation: 'embeddings', outputDimensionality: 0 },
+        },
+      ],
+      [
+        'invalid task type',
+        {
+          prompt: 'x',
+          model: 'gemini-embedding-001',
+          extra: { operation: 'embeddings', taskType: 'CHAT' },
+        },
+      ],
+      [
+        'task type on v2',
+        {
+          prompt: 'x',
+          model: 'gemini-embedding-2',
+          extra: { operation: 'embeddings', taskType: 'CLUSTERING' },
+        },
+      ],
+      [
+        'title without retrieval document',
+        {
+          prompt: 'x',
+          model: 'gemini-embedding-001',
+          extra: { operation: 'embeddings', taskType: 'CLUSTERING', title: 'bad' },
+        },
+      ],
+      [
+        'multimodal field',
+        {
+          prompt: 'x',
+          model: 'gemini-embedding-2',
+          extra: { operation: 'embeddings', fileData: { uri: 'synthetic' } },
+        },
+      ],
+      [
+        'async batch field',
+        {
+          prompt: 'x',
+          model: 'gemini-embedding-2',
+          extra: { operation: 'embeddings', asyncBatch: true },
+        },
+      ],
     ])('rejects %s before transport', async (_label, request) => {
       const response = await connector.execute(request as never);
       expect(response.status).toBe('error');
@@ -156,7 +219,9 @@ describe('GeminiApiConnector', () => {
     it('normalizes a finite single vector and prompt-token usage', async () => {
       mockOk(fixture('gemini-api-embed-success.synthetic.json'));
       const response = await connector.execute({
-        prompt: 'x', model: 'gemini-embedding-2', extra: { operation: 'embeddings' },
+        prompt: 'x',
+        model: 'gemini-embedding-2',
+        extra: { operation: 'embeddings' },
       });
       expect(response.status).toBe('success');
       expect(response.result).toBe('[[0.125,-0.25,0.5]]');
@@ -164,17 +229,25 @@ describe('GeminiApiConnector', () => {
         embeddings: [[0.125, -0.25, 0.5]],
         usageMetadata: { promptTokenCount: 7 },
       });
-      expect(response.usage).toEqual({ inputTokens: 7, outputTokens: 0, totalTokens: 7, costUsd: 0 });
+      expect(response.usage).toEqual({
+        inputTokens: 7,
+        outputTokens: 0,
+        totalTokens: 7,
+        costUsd: 0,
+      });
     });
 
     it('preserves ordered batch vectors', async () => {
       mockOk(fixture('gemini-api-batch-embed-success.synthetic.json'));
       const response = await connector.execute({
-        prompt: 'x', model: 'gemini-embedding-2', extra: { operation: 'embeddings', input: ['a', 'b'] },
+        prompt: 'x',
+        model: 'gemini-embedding-2',
+        extra: { operation: 'embeddings', input: ['a', 'b'] },
       });
       expect(response.status).toBe('success');
       expect((response.structured as { embeddings: number[][] }).embeddings).toEqual([
-        [0.1, 0.2], [-0.3, 0.4],
+        [0.1, 0.2],
+        [-0.3, 0.4],
       ]);
     });
 
@@ -186,8 +259,12 @@ describe('GeminiApiConnector', () => {
     ])('rejects malformed-success envelope %# as api_error', async (body) => {
       mockOk(body);
       const response = await connector.execute({
-        prompt: 'x', model: 'gemini-embedding-2',
-        extra: { operation: 'embeddings', input: 'embeddings' in (body as object) ? ['a', 'b'] : 'a' },
+        prompt: 'x',
+        model: 'gemini-embedding-2',
+        extra: {
+          operation: 'embeddings',
+          input: 'embeddings' in (body as object) ? ['a', 'b'] : 'a',
+        },
       });
       expect(response.status).toBe('error');
       expect(response.error?.type).toBe('api_error');
@@ -201,7 +278,9 @@ describe('GeminiApiConnector', () => {
         text: async () => JSON.stringify({ error: { message: `invalid ${SYNTHETIC_KEY}` } }),
       });
       const response = await connector.execute({
-        prompt: 'x', model: 'gemini-embedding-2', extra: { operation: 'embeddings' },
+        prompt: 'x',
+        model: 'gemini-embedding-2',
+        extra: { operation: 'embeddings' },
       });
       expect(response.error?.type).toBe('auth_error');
       expect(JSON.stringify(response)).not.toContain(SYNTHETIC_KEY);

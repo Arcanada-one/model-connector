@@ -93,8 +93,8 @@ describe('apiKeyPolicySchema (CONN-1665)', () => {
       }
     });
 
-    it('KEY_OVERRIDE_CAPABLE currently allows exactly openrouter', () => {
-      expect(KEY_OVERRIDE_CAPABLE).toEqual(['openrouter']);
+    it('KEY_OVERRIDE_CAPABLE advertises only adapters honoring scoped keys', () => {
+      expect(KEY_OVERRIDE_CAPABLE).toEqual(['openrouter', 'typesafe-jev', 'deepseek']);
     });
   });
 

@@ -24,7 +24,7 @@ describe('VertexGenerativeConnector', () => {
   }
 
   function ok(body: unknown) {
-    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => body });
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
   }
 
   it('uses the exact encoded regional google publisher unary endpoint', async () => {

@@ -559,7 +559,7 @@ describe('CohereConnector', () => {
 });
 
 function ok(body: unknown) {
-  return { ok: true, status: 200, json: async () => body };
+  return new Response(JSON.stringify(body), { status: 200 });
 }
 
 function providerError(status: number, message: string) {

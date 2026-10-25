@@ -50,11 +50,7 @@ describe('GrokConnector', () => {
   };
 
   function mockOk(body: unknown) {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve(body),
-    });
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(body), { status: 200 }));
   }
 
   describe('buildRequestUrl', () => {
@@ -339,11 +335,9 @@ describe('GrokConnector', () => {
   // ids only — no pricing/context, so those stay null).
   describe('refreshModels (CONN-0238 real list + per-model modality)', () => {
     function mockModelsOk() {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(GROK_MODELS_FIXTURE),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify(GROK_MODELS_FIXTURE), { status: 200 }),
+      );
     }
     const metaFor = (caps: ReturnType<GrokConnector['getCapabilities']>, id: string) =>
       (caps.modelMeta ?? []).find((m) => m.id === id);
@@ -423,11 +417,9 @@ describe('GrokConnector', () => {
     });
 
     it('leaves an id it has no published price for unpriced, never invented', async () => {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ data: [{ id: 'grok-does-not-exist-9' }] }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: [{ id: 'grok-does-not-exist-9' }] }), { status: 200 }),
+      );
       await connector.refreshModels();
       const caps = connector.getCapabilities();
       expect(metaFor(caps, 'grok-does-not-exist-9')?.pricing).toBeNull();

@@ -18,7 +18,7 @@ describe('FireworksConnector', () => {
   beforeEach(() => {
     process.env.FIREWORKS_API_KEY = 'fw_test_key';
     connector = new FireworksConnector();
-    fetchSpy = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => fixture });
+    fetchSpy = vi.fn().mockResolvedValue(new Response(JSON.stringify(fixture), { status: 200 }));
     vi.stubGlobal('fetch', fetchSpy);
   });
 
@@ -48,7 +48,12 @@ describe('FireworksConnector', () => {
     expect(body.model).toBe('accounts/fireworks/models/llama-v3p1-8b-instruct');
     expect(body).toMatchObject({ max_tokens: 64, temperature: 0.2, top_p: 0.9 });
     expect(response.result).toBe('ok');
-    expect(response.usage).toEqual({ inputTokens: 8, outputTokens: 2, totalTokens: 10, costUsd: 0 });
+    expect(response.usage).toEqual({
+      inputTokens: 8,
+      outputTokens: 2,
+      totalTokens: 10,
+      costUsd: 0,
+    });
   });
 
   it('builds system and user messages and uses the account-qualified default model', async () => {
@@ -64,11 +69,9 @@ describe('FireworksConnector', () => {
   });
 
   it('returns a safe error result when Fireworks sends no choices', async () => {
-    fetchSpy.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({ ...fixture, choices: [] }),
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ ...fixture, choices: [] }), { status: 200 }),
+    );
     expect(await connector.execute({ prompt: 'hello' })).toMatchObject({
       status: 'error',
       result: '',

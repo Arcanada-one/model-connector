@@ -8,6 +8,7 @@ describe('AuthService', () => {
   const mockPrisma = {
     apiKey: {
       findMany: vi.fn(),
+      findUnique: vi.fn().mockResolvedValue({ active: true }),
     },
   };
 
