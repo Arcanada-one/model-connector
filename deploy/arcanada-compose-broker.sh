@@ -35,6 +35,10 @@
 # job-scoped token that expires beats a file that does not.
 set -euo pipefail
 IFS=$'\n\t'
+# External utility lookup is part of the privileged caller contract. A caller
+# may not substitute its own stat/install/hash utilities through PATH.
+readonly PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
 umask 022
 readonly STATE_ROOT=/var/lib/arcanada-deploy
 readonly ENV_ROOT=/etc/arcanada/deploy-env
@@ -47,6 +51,7 @@ readonly MUNERAL_HEALTH_URL='http://127.0.0.1:3500/health'
 # Content-addressed root helper; no runner-owned import or path override.
 # shellcheck disable=SC2034 # Root installer consumes the sudoers pin from this reviewed broker.
 readonly BILLING_SUDOERS_SHA=a9668698e99a2306887687726b978b71b6a26663e49f58d74086f89f00c95508
+readonly PRIME_TRANSACTION_SHA=cd830c6c69c8d019cd97014f3031fdb40a7f06e16698efb3d643a5472bca2aee
 readonly BILLING_TRANSACTION_SHA=b2e93bfc4b371323a2eb460e1751b77d8aeb80a3fc6675e6bc995fa718dc11c3
 
 # ---------------------------------------------------------------------------
@@ -65,6 +70,7 @@ readonly BILLING_TRANSACTION_SHA=b2e93bfc4b371323a2eb460e1751b77d8aeb80a3fc6675e
 # This host also advertises "arcana-prod-host", which resolves to exactly one
 # machine; deploys that must be deterministic should target that.
 declare -rA REPOS=(
+  [prime]='https://github.com/Arcanada-one/vocatlas-factory.git'
   [model-connector]='https://github.com/Arcanada-one/model-connector.git'
   [muneral]='https://github.com/Arcanada-one/muneral.git'
   [opsbot]='https://github.com/Arcanada-one/opsbot.git'
@@ -137,6 +143,7 @@ declare -rA COMPOSE=(
 )
 # Private repositories whose fetch needs a credential on stdin.
 declare -rA AUTH=(
+  [prime]='github-token'
   [opsbot]='github-token'
   [transcribator-api]='github-token'
   [legal-arcana]='github-token'
@@ -906,6 +913,23 @@ main() {
   [[ $# -ge 2 ]] || die "$usage"
   local svc action
   svc="$(validate_service "$1")"; action="$2"; shift 2
+  # C07: no generic actuator/registry/log capability for Prime.
+  if [[ "$svc" == prime ]]; then
+    case "$action" in
+      sync) ;;
+      prime-check|prime-arm|prime-bind|prime-rollback)
+        [[ $# -eq 1 ]] || die 'Prime takes one fixed identity'
+        local helper="/usr/local/lib/arcanada-compose-broker/${PRIME_TRANSACTION_SHA}.py" parent
+        for parent in /usr /usr/local /usr/local/lib /usr/local/lib/arcanada-compose-broker; do
+          [[ -d "$parent" && ! -L "$parent" && "$(stat -c '%U' "$parent")" == root ]] || die 'unsafe Prime parent'
+          [[ $(( 8#$(stat -c '%a' "$parent") & 8#022 )) -eq 0 ]] || die 'writable Prime parent'
+        done
+        [[ -f "$helper" && ! -L "$helper" && "$(stat -c '%U:%G:%a' "$helper")" == root:root:600 ]] || die 'Prime helper custody'
+        [[ "$(sha256sum "$helper" | cut -d' ' -f1)" == "$PRIME_TRANSACTION_SHA" ]] || die 'Prime helper source'
+        exec /usr/bin/python3 -I "$helper" "${action#prime-}" "$1" ;;
+      *) die 'Prime requires owned first-install contract; generic activation refused' ;;
+    esac
+  fi
   # A future admitted Billing row may use only the protected transaction.
   # There is deliberately no Billing service row in this preparation change.
   if [[ "$svc" == billing-arcana ]]; then

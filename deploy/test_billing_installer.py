@@ -17,7 +17,8 @@ class InstallerTests(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.source = self.root / 'source'
         self.source.mkdir()
-        for name in ['billing-transaction.py', 'arcanada-compose-broker.sh', 'arcanada-compose-broker.sudoers']:
+        for name in ['billing-transaction.py', 'prime-first-install.py', 'prime-compose-contract.py',
+                     'arcanada-compose-broker.sh', 'arcanada-compose-broker.sudoers']:
             (self.source / name).write_bytes((HERE / name).read_bytes())
         for name in ['usr/local/lib', 'usr/local/sbin', 'etc/sudoers.d']:
             (self.root / name).mkdir(parents=True, exist_ok=True)
@@ -54,6 +55,18 @@ sys.exit(subprocess.call(['/usr/bin/install']+out))
             p = self.bin / name
             p.write_text(code)
             p.chmod(0o755)
+        # Production now fixes utility lookup and the identity executable. Only
+        # this owned copy maps them to the existing root-metadata simulators.
+        identity = self.root / 'usr/bin/id'
+        identity.parent.mkdir(parents=True, exist_ok=True)
+        identity.write_bytes((self.bin / 'id').read_bytes())
+        identity.chmod(0o755)
+        fixed_path = 'readonly PATH=' + ':'.join(
+            [str(self.root / 'usr/sbin'), str(self.root / 'usr/bin'), '/sbin', '/bin'])
+        copied = self.script.read_text()
+        self.assertEqual(copied.count(fixed_path), 1)
+        copied = copied.replace(fixed_path, 'readonly PATH=' + str(self.bin) + ':/usr/bin:/bin')
+        self.script.write_text(copied)
         self.env = dict(os.environ, PATH=str(self.bin) + ':/usr/bin:/bin', FIXTURE_ROOT=str(self.root))
         self.sha = hashlib.sha256((self.source / 'arcanada-compose-broker.sh').read_bytes()).hexdigest()
 
@@ -69,6 +82,11 @@ sys.exit(subprocess.call(['/usr/bin/install']+out))
         helper = self.root / 'usr/local/lib/arcanada-compose-broker' / (digest + '.py')
         self.assertEqual(helper.read_bytes(), (self.source / 'billing-transaction.py').read_bytes())
         self.assertEqual(helper.stat().st_mode & 0o777, 0o600)
+
+    def test_changed_prime_helper_refuses_before_broker_publish(self):
+        (self.source / 'prime-first-install.py').write_text('changed synthetic generation')
+        self.assertNotEqual(self.invoke().returncode, 0)
+        self.assertEqual(self.target.read_text(), 'old reviewed broker')
 
     def test_explicit_root_restore_reinstalls_exact_retained_broker(self):
         old_sha = hashlib.sha256(self.target.read_bytes()).hexdigest()
