@@ -65,6 +65,46 @@ Bats file with complete TAP accounting. These certify existing mock/owned-loopba
 contracts, never live backend or deployed watcher behavior. Missing dependencies,
 missing results, empty collection, skips, timeouts and failures remain non-success.
 
+## Python verifier environment
+
+The full-suite shell entrypoint selects `python3` from `PATH`; the Python runner
+uses that interpreter's `sys.executable` for both SDK pytest collection and
+execution. Installing pytest in a different interpreter does not satisfy this
+obligation. SDK development dependencies already declare pytest, pytest-asyncio
+and the HTTP test doubles in `packages/sdk-python/pyproject.toml`.
+
+Prepare an owned environment from the repository root before starting the native
+verifier. Use a newly created environment or a previously verified environment
+owned by the same task; do not overwrite another session's environment.
+
+```sh
+python3 -m venv packages/sdk-python/.venv
+packages/sdk-python/.venv/bin/python -m pip install './packages/sdk-python[dev]'
+export PATH="$PWD/packages/sdk-python/.venv/bin:$PATH"
+python3 -c 'import sys, pytest, pytest_asyncio; print(sys.executable, pytest.__version__, pytest_asyncio.__version__)'
+packages/sdk-python/.venv/bin/python -m pip freeze
+```
+
+Retain the installation log, Python version, resolved dependency versions and
+installation-input hashes with the native receipt. These commands install declared
+test dependencies; they do not run a provider or activate an integration. Start
+`verify.py` from the same environment. The SDK's `execution.json` must name this
+owned interpreter in both `collection_argv` and execution `argv`, with matching
+collected/executed testcase identities and zero failures or skips. A successful
+installation alone is not test evidence. Preserve a missing-pytest failure when
+recording the repaired run.
+
+For an SDK-only control, use the existing entrypoint from its declared working
+directory with the same environment and an already verified private `TMPDIR`:
+
+```sh
+(cd packages/sdk-python && bash ../../scripts/graph-full-suite.sh packages/sdk-python)
+```
+
+This control verifies the SDK unit only. It does not discharge route, contract,
+external-integration or whole-root obligations. Dependency installation and
+collection failures remain failures; no missing-runner bypass is introduced.
+
 Each invocation needs an existing owned private `TMPDIR` with mode 0700 and current
 effective UID. It creates a unique protected evidence directory and retains actual
 per-suite commands, raw logs, exit codes, collection and count evidence. Child
