@@ -973,7 +973,9 @@ try:
     require(svc.get("container_name") == "knowledge-contract-scrutator-scrutator-1")
     require(svc.get("image") == "scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547")
     require(not svc.get("network_mode") and not svc.get("privileged"))
-    for key in ("volumes", "devices", "cap_add", "security_opt", "pid", "ipc"):
+    for key in ("volumes", "volumes_from", "secrets", "configs", "devices",
+                "cap_add", "security_opt", "pid", "ipc", "build", "extends",
+                "depends_on", "links", "external_links"):
         require(not svc.get(key))
     require(svc.get("ports") == [{"mode": "ingress", "target": 8310,
         "published": "8311", "protocol": "tcp", "host_ip": "127.0.0.1"}])

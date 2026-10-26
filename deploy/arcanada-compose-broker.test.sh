@@ -924,6 +924,28 @@ grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-public-port.out"
 [[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
 echo 'PASS: kc_public_port_refused_before_up'
 unset PYTHONOPTIMIZE
+for forbidden in volumes_from secrets configs build extends; do
+  python3 - "$fake_docker_state/kc-config.json" "$forbidden" <<'PY'
+import json, sys
+p, key = sys.argv[1:]
+x = json.load(open(p))
+x["services"]["scrutator"][key] = ["shared-scrutator"]
+json.dump(x, open(p, "w"))
+PY
+  if kc_run >"${fixture_dir}/kc-forbidden-${forbidden}.out" 2>&1; then
+    echo "FAIL: ${forbidden} accepted" >&2; exit 1
+  fi
+  grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-forbidden-${forbidden}.out" || exit 1
+  [[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+  python3 - "$fake_docker_state/kc-config.json" "$forbidden" <<'PY'
+import json, sys
+p, key = sys.argv[1:]
+x = json.load(open(p))
+del x["services"]["scrutator"][key]
+json.dump(x, open(p, "w"))
+PY
+  echo "PASS: kc_${forbidden}_refused_before_up"
+done
 python3 - "$fake_docker_state/kc-config.json" <<'PY'
 import json, sys
 p = sys.argv[1]
