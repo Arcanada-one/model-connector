@@ -3,11 +3,11 @@
   "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
   "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
-  "verdict": "admitted_with_exemptions"
+  "verdict": "paused_safe"
  },
- "captured_at_utc": "2026-10-26T20:48:42Z",
+ "captured_at_utc": "2026-10-26T22:06:10Z",
  "change_set": {
-  "base": "f95b47ecc319bb91d14d14176aadb89d97db5134",
+  "base": "dcd49dd76803e39fe7f67427232bc2e5724308d8",
   "files": [
    {
     "kind": "code",
@@ -26,117 +26,35 @@
     ],
     "path": "deploy/arcanada-compose-broker.test.sh",
     "status": "M"
-   },
-   {
-    "kind": "receipt",
-    "node_id": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
-    "node_ids": [
-     "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json"
-    ],
-    "path": "receipts/graph/change-admission-kcp-0017-compose-broker.json",
-    "status": "A"
    }
   ],
-  "head": "99d198c08a615578a88390901118eee35b167bb1",
+  "head": "ed6268bf91b4a94a21152fab2f47d51bbdcb5ef6",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
- "exemptions": [
-  {
-   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
-   "entity": "code_unit:.github/workflows/ci.yml",
-   "expires_at_utc": "2026-11-09T00:00:00Z",
-   "owner": "KCP-0022",
-   "reason": "Unchanged workflow shell caller closure is unresolved by the graph verifier. Exact-head CI and focused broker tests remain separate evidence; this row does not claim caller closure."
-  },
-  {
-   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
-   "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
-   "expires_at_utc": "2026-11-09T00:00:00Z",
-   "owner": "KCP-0022",
-   "reason": "Unchanged workflow shell caller closure is unresolved by the graph verifier. Exact-head CI and focused broker tests remain separate evidence; this row does not claim caller closure."
-  },
-  {
-   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
-   "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
-   "expires_at_utc": "2026-11-09T00:00:00Z",
-   "owner": "KCP-0022",
-   "reason": "Unchanged workflow shell caller closure is unresolved by the graph verifier. Exact-head CI and focused broker tests remain separate evidence; this row does not claim caller closure."
-  },
-  {
-   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
-   "entity": "code_unit:.github/workflows/graph-admission-call.yml",
-   "expires_at_utc": "2026-11-09T00:00:00Z",
-   "owner": "KCP-0022",
-   "reason": "Unchanged workflow shell caller closure is unresolved by the graph verifier. Exact-head CI and focused broker tests remain separate evidence; this row does not claim caller closure."
-  },
-  {
-   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
-   "entity": "code_unit:.github/workflows/graph-admission.yml",
-   "expires_at_utc": "2026-11-09T00:00:00Z",
-   "owner": "KCP-0022",
-   "reason": "Unchanged workflow shell caller closure is unresolved by the graph verifier. Exact-head CI and focused broker tests remain separate evidence; this row does not claim caller closure."
-  },
-  {
-   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
-   "entity": "code_unit:.github/workflows/public-surface.yml",
-   "expires_at_utc": "2026-11-09T00:00:00Z",
-   "owner": "KCP-0022",
-   "reason": "Unchanged workflow shell caller closure is unresolved by the graph verifier. Exact-head CI and focused broker tests remain separate evidence; this row does not claim caller closure."
-  },
-  {
-   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
-   "entity": "code_unit:.github/workflows/publish-sdks.yml",
-   "expires_at_utc": "2026-11-09T00:00:00Z",
-   "owner": "KCP-0022",
-   "reason": "Unchanged workflow shell caller closure is unresolved by the graph verifier. Exact-head CI and focused broker tests remain separate evidence; this row does not claim caller closure."
-  },
-  {
-   "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
-   "entity": "code_unit:deploy/arcanada-compose-broker.sh",
-   "expires_at_utc": "2026-11-09T00:00:00Z",
-   "owner": "KCP-0017",
-   "reason": "The dynamic shell closure is not statically measured. Exact-head bash syntax, broker fixture tests and source review are separate bounded checks."
-  },
-  {
-   "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
-   "entity": "code_unit:deploy/arcanada-compose-broker.test.sh",
-   "expires_at_utc": "2026-11-09T00:00:00Z",
-   "owner": "KCP-0017",
-   "reason": "The dynamic shell closure is not statically measured. Exact-head bash syntax, broker fixture tests and source review are separate bounded checks."
-  },
-  {
-   "code": "TYPE_CHECK_NOT_MEASURED",
-   "entity": "deployable_unit:.",
-   "expires_at_utc": "2026-11-09T00:00:00Z",
-   "owner": "KCP-0017",
-   "reason": "Local TypeScript compiler is unavailable in this checkout. This shell broker change is covered by its focused shell checks; package type checking remains unmeasured."
-  }
- ],
+ "exemptions": [],
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:9b49b322b61ac97e28417dcddec75268d0a422e363f8f9b348598d6cb6695467",
-  "path": "/tmp/arcana-verify-fu77a0k7/verifier-out/graph-f95b47ecc319.json",
-  "source_commit": "f95b47ecc319bb91d14d14176aadb89d97db5134"
+  "graph_digest": "sha256:0be481c4198f86bfff4c1cde90cd38a693e3ba1d34de10806d39df175aa9bdba",
+  "path": "/tmp/arcana-verify-uwa_v7v9/verifier-out/graph-dcd49dd76803.json",
+  "source_commit": "dcd49dd76803e39fe7f67427232bc2e5724308d8"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:812b09ab21ca14bb71860a4e57d96260aa912f86b0ad3a443afb54510800d0de",
-  "path": "/tmp/arcana-verify-fu77a0k7/verifier-out/graph-head-99d198c08a61.json",
-  "source_commit": "99d198c08a615578a88390901118eee35b167bb1",
+  "graph_digest": "sha256:068bf7d863931d6e38b4744e148567a03fbdb5b31b709d0c2a68b0f39145e8c4",
+  "path": "/tmp/arcana-verify-uwa_v7v9/verifier-out/graph-head-ed6268bf91b4.json",
+  "source_commit": "ed6268bf91b4a94a21152fab2f47d51bbdcb5ef6",
   "staleness": {
-   "checked_at_utc": "2026-10-26T20:49:15Z",
-   "checked_nodes": 942,
+   "checked_at_utc": "2026-10-26T22:06:55Z",
+   "checked_nodes": 943,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
   }
  },
- "host": "dev-host",
- "host_redacted": true,
- "host_sha256": "94d61ebcb9cef1a9233ce756a8e10eb22518f4a8cf575365eb64e195dc98b525",
+ "host": "arcana-devs",
  "impact_set": {
   "deterministic_core": [
    {
@@ -208,6 +126,46 @@
      {
       "edge_type": "verifies",
       "from": "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
       "provenance": "deterministic",
       "to": "code_unit:deploy/arcanada-compose-broker.sh",
       "via": "explicit-path"
@@ -759,22 +717,21 @@
   ],
   "max_depth": 3,
   "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
-  "total": 25
+  "total": 27
  },
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
-  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 10 attached from /tmp/kcp17-broker-exemptions.json"
+  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261026T204842Z-99d198c0",
+ "receipt_id": "car-verify-20261026T220610Z-ed6268bf",
  "receipt_path": "receipts/graph/change-admission-kcp-0017-compose-broker.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
-  "path": "/home/dev/orca/workspaces/arcanada/KCP-0017-compose-broker"
+  "path": "/home/dev/orca/workspaces/arcanada/KCP-0017-auth-upgrade"
  },
  "revision_selection": {
   "base": [
@@ -804,6 +761,8 @@
    "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
    "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
    "receipt:receipts/graph/change-admission-kcp-0012-model-refresh.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json"
   ],
   "head": [
@@ -834,6 +793,7 @@
    "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
    "receipt:receipts/graph/change-admission-kcp-0012-model-refresh.json",
    "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json"
   ],
   "schema": "RevisionImpactSelection/v1",
@@ -841,7 +801,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-10-26T20:49:15Z",
+  "checked_at_utc": "2026-10-26T22:06:55Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -981,8 +941,8 @@
   },
   {
    "content_hash": {
-    "base": null,
-    "head": "sha256:d76ba21eae80e1db5db69e90d5c2756465212753e0155e4722a8c336cd136313"
+    "base": "sha256:d999084ffe09028711eec20394eba59d9d3b45163accea65ac806d94821d3a9b",
+    "head": "sha256:d999084ffe09028711eec20394eba59d9d3b45163accea65ac806d94821d3a9b"
    },
    "entity": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
    "node_type": "receipt",
@@ -993,6 +953,17 @@
     "receipt_path": "receipts/graph/change-admission-kcp-0017-compose-broker.json",
     "work_item": "KCP-0017"
    }
+  },
+  {
+   "content_hash": {
+    "base": "sha256:aa2053cbc62cdd20c055a7971b3e22385cc853d937ba33b3300e3785ca28bd33",
+    "head": "sha256:aa2053cbc62cdd20c055a7971b3e22385cc853d937ba33b3300e3785ca28bd33"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0017-readiness.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
   },
   {
    "content_hash": {
@@ -1007,7 +978,7 @@
   }
  ],
  "tree": {
-  "commit": "99d198c08a615578a88390901118eee35b167bb1",
+  "commit": "ed6268bf91b4a94a21152fab2f47d51bbdcb5ef6",
   "dirty": false
  },
  "verdicts": [
@@ -1076,7 +1047,7 @@
   },
   {
    "entity": "code_unit:deploy/arcanada-compose-broker.sh",
-   "reason": "v-shell-syntax-8674c66d1f266ea7: shell syntax/closure: not_measured; v-shell-behavior-8674c66d1f266ea7: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 1008: multiline/opaque shell statement; line 1009: dynamic command/alias/eval; line 1015: dynamic load/substitution; line 1017: dynamic command/alias/eval; line 1020: multiline/opaque shell statement; line 1021: multiline/opaque shell statement; line 1027: dynamic command/alias/eval; line 1029: dynamic load/substitution; line 1031: dynamic load/substitution; line 1033: dynamic command/alias/eval; line 1042: multiline/opaque shell statement; line 1043:",
+   "reason": "v-shell-syntax-8674c66d1f266ea7: shell syntax/closure: not_measured; v-shell-behavior-8674c66d1f266ea7: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 1006: multiline/opaque shell statement; line 1060: multiline/opaque shell statement; line 1061: dynamic command/alias/eval; line 1067: dynamic load/substitution; line 1069: dynamic command/alias/eval; line 1072: multiline/opaque shell statement; line 1073: multiline/opaque shell statement; line 1079: dynamic command/alias/eval; line 1081: dynamic load/substitution; line 1083: dynamic load/substitution; line 1085: dynamic command/alias/eval; line 1096:",
    "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
@@ -1086,7 +1057,7 @@
   },
   {
    "entity": "code_unit:deploy/arcanada-compose-broker.test.sh",
-   "reason": "v-shell-syntax-91f3f58fb7ca6124: shell syntax/closure: not_measured; v-shell-behavior-91f3f58fb7ca6124: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 129: multiline/opaque shell statement; line 131: multiline/opaque shell statement; line 133: multiline/opaque shell statement; line 134: dynamic command/alias/eval; line 135: multiline/opaque shell statement; line 136: dynamic command/alias/eval; line 140: multiline/opaque shell statement; line 146: multiline/opaque shell statement; line 148: multiline/opaque shell statement; line 149: dynamic command/alias/eval; line 167: multiline/opaque shell state",
+   "reason": "v-shell-syntax-91f3f58fb7ca6124: shell syntax/closure: not_measured; v-shell-behavior-91f3f58fb7ca6124: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 1000: heredoc data/generation closure not measured; line 1012: heredoc data/generation closure not measured; line 1021: heredoc data/generation closure not measured; line 1032: dynamic load/substitution; line 1033: dynamic command/alias/eval; line 1033: dynamic load/substitution; line 1041: dynamic load/substitution; line 1049: dynamic load/substitution; line 1060: dynamic command/alias/eval; line 1070: dynamic command/alias/eval; line 1075: dynamic l",
    "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
@@ -1144,7 +1115,7 @@
  },
  "verifiers": [
   {
-   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0017-compose-broker/tsconfig.build.json (tsc not found)",
+   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0017-auth-upgrade/tsconfig.build.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
     "deployable_unit:."
@@ -1155,12 +1126,12 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0017-compose-broker/tsconfig.ci.json (tsc not found)",
+   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0017-auth-upgrade/tsconfig.ci.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
     "deployable_unit:."
@@ -1171,12 +1142,12 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0017-compose-broker/tsconfig.json (tsc not found)",
+   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0017-auth-upgrade/tsconfig.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
     "deployable_unit:."
@@ -1187,12 +1158,12 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0017-compose-broker/tsconfig.test.json (tsc not found)",
+   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0017-auth-upgrade/tsconfig.test.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
     "deployable_unit:."
@@ -1203,8 +1174,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1219,8 +1190,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-b803fcb7f17ed923",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 2: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 7: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 12: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 13: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 14: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 14: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 1: command/process substitution closure is unresolved; job lint-and-test step 2: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 2: line 9: unsupported loader/interpreter options; job lint-and-test step 3: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 3: line 1: relative execution cwd is not declared; job lint-and-test step 4: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 4: line 1: unsupported loader/interpreter options; job lint-and-test step 4: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 5: line 1: unsupported loader/interpreter options; job lint-and-test step 5: line 2: relative execution cwd is not declared; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 13: unsupported loader/interpreter options; job lint-and-test step 6: line 14: relative execution cwd is not declared; job lint-and-test step 6: line 15: unsupported loader/interpreter options; job lint-and-test step 6: line 16: relative execution cwd is not declared; job lint-and-test step 6: line 1: unsupported loader/interpreter options; job lint-and-test step 6: line 2: unsupported loader/interpreter options; job lint-and-test step 6: line 3: relative execution cwd is not declared; job lint-and-test step 6: line 4: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 5: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 6: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 7: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: heredoc/group/function/brace expansion closure is unresolved; 44 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1235,8 +1206,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-2fe48d1021006468",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-workflow-config-2fe48d1021006468.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-workflow-config-2fe48d1021006468.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1251,8 +1222,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-6ceb21cf301c7eb2",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; job deploy step 7: command/process substitution closure is unresolved; job deploy step 8: checkout root or source-affecting workflow environment unresolved; job deploy step 8: command/process substitution closure is unresolved; job deploy step 9: checkout root or source-affecting workflow environment unresolved; job deploy step 9: line 1: wrapper execution scope/options unresolved; job network-exposure-lint: reusable/opaque shell context; 13 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1267,8 +1238,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-60a4bd100e640545",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-workflow-config-60a4bd100e640545.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-workflow-config-60a4bd100e640545.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1283,8 +1254,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-dc49cc771602c92b",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-workflow-config-dc49cc771602c92b.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-workflow-config-dc49cc771602c92b.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 13: checkout root or source-affecting workflow environment unresolved; job graph-admission step 14: checkout root or source-affecting workflow environment unresolved; job graph-admission step 15: checkout root or source-affecting workflow environment unresolved; job graph-admission step 15: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 16: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 17: checkout root or source-affecting workflow environment unresolved; job graph-admission step 17: command/process substitution closure is unresolved; job graph-admission step 18: checkout root or source-affecting workflow environment unresolved; job graph-admission step 18: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 19: checkout root or source-affecting workflow environment unresolved; job graph-admission step 19: line 11: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 1: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 20: checkout root or source-affecting workflow environment unresolved; job graph-admission step 20: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 21: checkout root or source-affecting workflow environment unresolved; job graph-admission step 21: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 22: local action/checkout path scope unresolved; job graph-admission step 23: checkout root or source-affecting workflow environment unresolved; job graph-admission step 3: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 4: command/process substitution closure is unresolved; job graph-admission step 8: checkout root or source-affecting workflow environment unresolved; job graph-admission step 8: command/process substitution closure is unresolved; job graph-admission step 9: checkout root or source-affecting workflow environment unresolved; job graph-admission step 9: command/process substitution closure is unresolved; 29 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1299,8 +1270,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-9de6bedb8518f82f",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-workflow-config-9de6bedb8518f82f.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-workflow-config-9de6bedb8518f82f.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1315,13 +1286,13 @@
    "exit_code": 1,
    "id": "v-workflow-config-506797d1671524f2",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-workflow-config-506797d1671524f2.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-workflow-config-506797d1671524f2.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "workflow shell caller closure not measured: job build-python step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job build-python step 2: line 2: unsupported interpreter script/module/stdin dispatch closure; job build-python step 5: line 1: unsupported interpreter script/module/stdin dispatch closure; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.19,
+   "duration_s": 0.29,
    "entities": [
     "code_unit:.github/workflows/ci.yml",
     "code_unit:.github/workflows/dependabot-auto-merge.yml",
@@ -1349,13 +1320,13 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.0,
+   "duration_s": 0.01,
    "entities": [
     "document:CHANGELOG.md",
     "document:SECURITY.md",
@@ -1371,8 +1342,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-10-26T20:49:22Z",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-10-26T22:07:07Z",
    "summary": "4 document(s), 0 failed"
   },
   {
@@ -1387,9 +1358,9 @@
    "exit_code": 0,
    "id": "v-shell-syntax-8674c66d1f266ea7",
    "kind": "shell_syntax",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-shell-syntax-8674c66d1f266ea7.txt",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-shell-syntax-8674c66d1f266ea7.txt",
    "scope": "shell_source_validation",
-   "started_at_utc": "2026-10-26T20:49:24Z",
+   "started_at_utc": "2026-10-26T22:07:10Z",
    "summary": "shell syntax/closure: not_measured"
   },
   {
@@ -1404,9 +1375,9 @@
    "exit_code": 0,
    "id": "v-shell-syntax-91f3f58fb7ca6124",
    "kind": "shell_syntax",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-shell-syntax-91f3f58fb7ca6124.txt",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-shell-syntax-91f3f58fb7ca6124.txt",
    "scope": "shell_source_validation",
-   "started_at_utc": "2026-10-26T20:49:26Z",
+   "started_at_utc": "2026-10-26T22:07:13Z",
    "summary": "shell syntax/closure: not_measured"
   },
   {
@@ -1421,10 +1392,10 @@
    "exit_code": 0,
    "id": "v-shell-behavior-8674c66d1f266ea7",
    "kind": "shell_behavior",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-shell-behavior-8674c66d1f266ea7.txt",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-shell-behavior-8674c66d1f266ea7.txt",
    "scope": "shell_fixture_behavior",
-   "started_at_utc": "2026-10-26T20:49:26Z",
-   "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 1008: multiline/opaque shell statement; line 1009: dynamic command/alias/eval; line 1015: dynamic load/substitution; line 1017: dynamic command/alias/eval; line 1020: multiline/opaque shell statement; line 1021: multiline/opaque shell statement; line 1027: dynamic command/alias/eval; line 1029: dynamic load/substitution; line 1031: dynamic load/substitution; line 1033: dynamic command/alias/eval; line 1042: multiline/opaque shell statement; line 1043: dynamic command/alias/eval; line 1051: dynamic load/substitution; line 1055: dynamic load/substitution; line 1070: dynamic command/alias/eval; line 1070: dynamic load/substitution; line 1070: wrapper options/child command unresolved; line 1071: dynamic load/substitution; line 1073: dynamic command/alias/eval; line 1073: dynamic load/substitution; line 1073: wrapper options/child command unresolved; line 1074: dynamic load/substitution; line 1089: dynamic command/alias/eval; line 1092: dynamic command/alias/eval; line 1092: dynamic load/substitution; line 1092: wrapper options/child command unresolved; line 1093: dynamic load/substitution; line 1095: wrapper options/child command unresolved; line 1096: dynamic load/substitution; line 1097: dynamic load/substitution; line 1098: dynamic command/alias/eval; line 1101: dynamic command/alias/eval; line 1105: dynamic load/substitution; line 362: dynamic command/alias/eval; line 367: dynamic command/alias/eval; line 371: dynamic command/alias/eval; line 389: wrapper options/child command unresolved; line 419: dynamic load/substitution; line 427: wrapper options/child command unresolved; line 428: dynamic load/substitution; line 447: dynamic load/substitution; line 457: dynamic command/alias/eval; line 473: dynamic load/substitution; line 474: dynamic command/alias/eval; line 475: dynamic command/alias/eval; line 477: dynamic command/alias/eval; line 480: dynamic load/substitution; line 490: dynamic command/alias/eval; line 490: dynamic load/substitution; line 491: dynamic load/substitution; line 492: dynamic load/substitution; line 492: wrapper options/child command unresolved; line 495: dynamic load/substitution; line 499: dynamic command/alias/eval; line 501: dynamic load/substitution; line 535: dynamic command/alias/eval; line 538: dynamic command/alias/eval; line 539: dynamic command/alias/eval; line 540: dynamic command/alias/eval; line 542: dynamic command/alias/eval; line 545: dynamic command/alias/eval; line 547: dynamic load/substitution; line 549: dynamic load/substitution; line 552: dynamic command/alias/eval; line 559: dynamic command/alias/eval; line 561: dynamic command/alias/eval; line 562: dynamic command/alias/eval; line 565: dynamic command/alias/eval; line 567: dynamic command/alias/eval; line 580: directory transition has unresolved execution cwd; line 581: dynamic command/alias/eval; line 584: dynamic load/substitution; line 586: dynamic command/alias/eval; line 590: multiline/opaque shell statement; line 591: wrapper options/child command unresolved; line 604: dynamic load/substitution; line 606: dynamic command/alias/eval; line 610: dynamic command/alias/eval; line 623: dynamic command/alias/eval; line 631: multiline/opaque shell statement; line 632: multiline/opaque shell statement; line 648: dynamic command/alias/eval; line 664: dynamic command/alias/eval; line 668: multiline/opaque shell statement; line 669: dynamic command/alias/eval; line 672: dynamic command/alias/eval; line 673: dynamic command/alias/eval; line 685: dynamic command/alias/eval; line 694: dynamic command/alias/eval; line 706: dynamic command/alias/eval; line 714: wrapper options/child command unresolved; line 735: wrapper options/child command unresolved; line 736: dynamic command/alias/eval; line 736: dynamic load/substitution; line 738: directory transition has unresolved execution cwd; line 739: multiline/opaque shell statement; line 740: multiline/opaque shell statement; line 741: multiline/opaque shell statement; line 742: multiline/opaque shell statement; line 743: multiline/opaque shell statement; line 744: dynamic load/substitution; line 754: wrapper options/child command unresolved; line 761: dynamic command/alias/eval; line 767: dynamic command/alias/eval; line 769: multiline/opaque shell statement; line 770: dynamic command/alias/eval; line 773: dynamic command/alias/eval; line 775: dynamic command/alias/eval; line 778: dynamic command/alias/eval; line 783: wrapper options/child command unresolved; line 784: directory transition has unresolved execution cwd; line 785: multiline/opaque shell statement; line 786: multiline/opaque shell statement; line 787: dynamic load/substitution; line 796: dynamic command/alias/eval; line 800: dynamic command/alias/eval; line 839: dynamic command/alias/eval; line 843: dynamic command/alias/eval; line 845: dynamic command/alias/eval; line 853: dynamic command/alias/eval; line 863: wrapper options/child command unresolved; line 865: directory transition has unresolved execution cwd; line 873: wrapper options/child command unresolved; line 877: dynamic load/substitution; line 885: wrapper options/child command unresolved; line 889: dynamic command/alias/eval; line 896: wrapper options/child command unresolved; line 898: dynamic command/alias/eval; line 906: dynamic command/alias/eval; line 917: wrapper options/child command unresolved; line 921: directory transition has unresolved execution cwd; line 924: dynamic load/substitution; line 926: dynamic command/alias/eval; line 935: multiline/opaque shell statement; line 936: multiline/opaque shell statement; line 942: dynamic load/substitution; line 943: dynamic load/substitution; line 944: dynamic command/alias/eval; line 954: dynamic command/alias/eval; line 961: multiline/opaque shell statement"
+   "started_at_utc": "2026-10-26T22:07:13Z",
+   "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 1006: multiline/opaque shell statement; line 1060: multiline/opaque shell statement; line 1061: dynamic command/alias/eval; line 1067: dynamic load/substitution; line 1069: dynamic command/alias/eval; line 1072: multiline/opaque shell statement; line 1073: multiline/opaque shell statement; line 1079: dynamic command/alias/eval; line 1081: dynamic load/substitution; line 1083: dynamic load/substitution; line 1085: dynamic command/alias/eval; line 1096: multiline/opaque shell statement; line 1097: dynamic command/alias/eval; line 1104: dynamic command/alias/eval; line 1105: dynamic command/alias/eval; line 1107: dynamic load/substitution; line 1117: dynamic command/alias/eval; line 1128: dynamic load/substitution; line 1130: dynamic load/substitution; line 1141: dynamic command/alias/eval; line 1142: dynamic load/substitution; line 1144: dynamic load/substitution; line 1150: dynamic command/alias/eval; line 1156: multiline/opaque shell statement; line 1157: dynamic command/alias/eval; line 1165: dynamic load/substitution; line 1169: dynamic load/substitution; line 1171: dynamic load/substitution; line 1186: dynamic command/alias/eval; line 1186: dynamic load/substitution; line 1186: wrapper options/child command unresolved; line 1187: dynamic load/substitution; line 1189: dynamic command/alias/eval; line 1189: dynamic load/substitution; line 1189: wrapper options/child command unresolved; line 1190: dynamic load/substitution; line 1205: dynamic command/alias/eval; line 1208: dynamic command/alias/eval; line 1208: dynamic load/substitution; line 1208: wrapper options/child command unresolved; line 1209: dynamic load/substitution; line 1211: wrapper options/child command unresolved; line 1212: dynamic load/substitution; line 1213: dynamic load/substitution; line 1214: dynamic command/alias/eval; line 1217: dynamic command/alias/eval; line 1221: dynamic load/substitution; line 367: dynamic command/alias/eval; line 372: dynamic command/alias/eval; line 376: dynamic command/alias/eval; line 394: wrapper options/child command unresolved; line 424: dynamic load/substitution; line 432: wrapper options/child command unresolved; line 433: dynamic load/substitution; line 452: dynamic load/substitution; line 462: dynamic command/alias/eval; line 478: dynamic load/substitution; line 479: dynamic command/alias/eval; line 480: dynamic command/alias/eval; line 482: dynamic command/alias/eval; line 485: dynamic load/substitution; line 495: dynamic command/alias/eval; line 495: dynamic load/substitution; line 496: dynamic load/substitution; line 497: dynamic load/substitution; line 497: wrapper options/child command unresolved; line 500: dynamic load/substitution; line 504: dynamic command/alias/eval; line 506: dynamic load/substitution; line 540: dynamic command/alias/eval; line 543: dynamic command/alias/eval; line 544: dynamic command/alias/eval; line 545: dynamic command/alias/eval; line 547: dynamic command/alias/eval; line 550: dynamic command/alias/eval; line 552: dynamic load/substitution; line 554: dynamic load/substitution; line 557: dynamic command/alias/eval; line 564: dynamic command/alias/eval; line 566: dynamic command/alias/eval; line 567: dynamic command/alias/eval; line 570: dynamic command/alias/eval; line 572: dynamic command/alias/eval; line 585: directory transition has unresolved execution cwd; line 586: dynamic command/alias/eval; line 589: dynamic load/substitution; line 591: dynamic command/alias/eval; line 595: multiline/opaque shell statement; line 596: wrapper options/child command unresolved; line 609: dynamic load/substitution; line 611: dynamic command/alias/eval; line 615: dynamic command/alias/eval; line 628: dynamic command/alias/eval; line 636: multiline/opaque shell statement; line 637: multiline/opaque shell statement; line 653: dynamic command/alias/eval; line 669: dynamic command/alias/eval; line 673: multiline/opaque shell statement; line 674: dynamic command/alias/eval; line 677: dynamic command/alias/eval; line 678: dynamic command/alias/eval; line 690: dynamic command/alias/eval; line 699: dynamic command/alias/eval; line 711: dynamic command/alias/eval; line 719: wrapper options/child command unresolved; line 740: wrapper options/child command unresolved; line 741: dynamic command/alias/eval; line 741: dynamic load/substitution; line 743: directory transition has unresolved execution cwd; line 744: multiline/opaque shell statement; line 745: multiline/opaque shell statement; line 746: multiline/opaque shell statement; line 747: multiline/opaque shell statement; line 748: multiline/opaque shell statement; line 749: dynamic load/substitution; line 759: wrapper options/child command unresolved; line 766: dynamic command/alias/eval; line 772: dynamic command/alias/eval; line 774: multiline/opaque shell statement; line 775: dynamic command/alias/eval; line 778: dynamic command/alias/eval; line 780: dynamic command/alias/eval; line 783: dynamic command/alias/eval; line 788: wrapper options/child command unresolved; line 789: directory transition has unresolved execution cwd; line 790: multiline/opaque shell statement; line 791: multiline/opaque shell statement; line 792: dynamic load/substitution; line 801: dynamic command/alias/eval; line 805: dynamic command/alias/eval; line 844: dynamic command/alias/eval; line 848: dynamic command/alias/eval; line 850: dynamic command/alias/eval; line 858: dynamic command/alias/eval; line 868: wrapper options/child command unresolved; line 870: directory transition has unresolved execution cwd; line 878: wrapper options/child command unresolved; line 882: dynamic load/substitution; line 890: wrapper options/child command unresolved; line 894: dynamic command/alias/eval; line 901: wrapper options/child command unresolved; line 903: dynamic command/alias/eval; line 911: dynamic command/alias/eval; line 922: wrapper options/child command unresolved; line 926: directory transition has unresolved execution cwd; line 929: dynamic load/substitution; line 931: dynamic command/alias/eval; line 940: multiline/opaque shell statement; line 941: multiline/opaque shell statement; line 947: dynamic load/substitution; line 950: dynamic command/alias/eval; line 965: dynamic load/substitution; line 966: dynamic load/substitution; line 970: multiline/opaque shell statement; line 987: dynamic load/substitution; line 988: dynamic load/substitution; line 989: dynamic command/alias/eval; line 999: dynamic command/alias/eval"
   },
   {
    "command": "consume source-bound native process fixture; no local execution",
@@ -1438,10 +1409,10 @@
    "exit_code": 0,
    "id": "v-shell-behavior-91f3f58fb7ca6124",
    "kind": "shell_behavior",
-   "output_ref": "/tmp/arcana-verify-fu77a0k7/verifier-out/v-shell-behavior-91f3f58fb7ca6124.txt",
+   "output_ref": "/tmp/arcana-verify-uwa_v7v9/verifier-out/v-shell-behavior-91f3f58fb7ca6124.txt",
    "scope": "shell_fixture_behavior",
-   "started_at_utc": "2026-10-26T20:49:26Z",
-   "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 129: multiline/opaque shell statement; line 131: multiline/opaque shell statement; line 133: multiline/opaque shell statement; line 134: dynamic command/alias/eval; line 135: multiline/opaque shell statement; line 136: dynamic command/alias/eval; line 140: multiline/opaque shell statement; line 146: multiline/opaque shell statement; line 148: multiline/opaque shell statement; line 149: dynamic command/alias/eval; line 167: multiline/opaque shell statement; line 186: heredoc data/generation closure not measured; line 22: multiline/opaque shell statement; line 24: dynamic load/substitution; line 290: heredoc data/generation closure not measured; line 307: multiline/opaque shell statement; line 308: multiline/opaque shell statement; line 309: multiline/opaque shell statement; line 310: dynamic command/alias/eval; line 31: heredoc data/generation closure not measured; line 321: multiline/opaque shell statement; line 322: dynamic command/alias/eval; line 336: multiline/opaque shell statement; line 337: dynamic command/alias/eval; line 342: multiline/opaque shell statement; line 343: dynamic command/alias/eval; line 359: multiline/opaque shell statement; line 360: dynamic command/alias/eval; line 370: multiline/opaque shell statement; line 371: dynamic command/alias/eval; line 376: multiline/opaque shell statement; line 377: dynamic command/alias/eval; line 387: dynamic load/substitution; line 389: dynamic command/alias/eval; line 389: dynamic load/substitution; line 391: dynamic command/alias/eval; line 391: wrapper options/child command unresolved; line 393: multiline/opaque shell statement; line 398: multiline/opaque shell statement; line 402: dynamic load/substitution; line 407: multiline/opaque shell statement; line 416: multiline/opaque shell statement; line 423: multiline/opaque shell statement; line 424: dynamic command/alias/eval; line 428: multiline/opaque shell statement; line 429: dynamic command/alias/eval; line 42: multiline/opaque shell statement; line 430: multiline/opaque shell statement; line 431: dynamic command/alias/eval; line 438: multiline/opaque shell statement; line 43: multiline/opaque shell statement; line 442: multiline/opaque shell statement; line 443: dynamic command/alias/eval; line 44: multiline/opaque shell statement; line 451: multiline/opaque shell statement; line 453: multiline/opaque shell statement; line 454: dynamic command/alias/eval; line 456: dynamic load/substitution; line 45: multiline/opaque shell statement; line 464: dynamic load/substitution; line 467: multiline/opaque shell statement; line 468: dynamic command/alias/eval; line 46: multiline/opaque shell statement; line 476: multiline/opaque shell statement; line 47: dynamic command/alias/eval; line 483: multiline/opaque shell statement; line 484: dynamic command/alias/eval; line 48: dynamic command/alias/eval; line 49: dynamic command/alias/eval; line 4: directory transition has unresolved execution cwd; line 504: multiline/opaque shell statement; line 50: dynamic command/alias/eval; line 519: dynamic command/alias/eval; line 51: multiline/opaque shell statement; line 52: dynamic command/alias/eval; line 533: multiline/opaque shell statement; line 534: dynamic command/alias/eval; line 538: multiline/opaque shell statement; line 539: dynamic command/alias/eval; line 555: heredoc data/generation closure not measured; line 565: multiline/opaque shell statement; line 566: dynamic command/alias/eval; line 567: multiline/opaque shell statement; line 568: dynamic command/alias/eval; line 57: dynamic command/alias/eval; line 580: dynamic command/alias/eval; line 595: heredoc data/generation closure not measured; line 611: multiline/opaque shell statement; line 612: dynamic command/alias/eval; line 624: multiline/opaque shell statement; line 632: multiline/opaque shell statement; line 638: multiline/opaque shell statement; line 639: dynamic command/alias/eval; line 645: multiline/opaque shell statement; line 648: multiline/opaque shell statement; line 656: multiline/opaque shell statement; line 658: multiline/opaque shell statement; line 662: multiline/opaque shell statement; line 672: heredoc data/generation closure not measured; line 680: multiline/opaque shell statement; line 682: multiline/opaque shell statement; line 684: multiline/opaque shell statement; line 686: multiline/opaque shell statement; line 688: multiline/opaque shell statement; line 689: dynamic command/alias/eval; line 71: dynamic command/alias/eval; line 724: dynamic load/substitution; line 735: dynamic command/alias/eval; line 738: dynamic load/substitution; line 743: dynamic load/substitution; line 752: dynamic load/substitution; line 756: dynamic load/substitution; line 765: dynamic load/substitution; line 782: heredoc data/generation closure not measured; line 803: dynamic command/alias/eval; line 809: dynamic load/substitution; line 810: dynamic load/substitution; line 822: dynamic command/alias/eval; line 837: dynamic load/substitution; line 839: dynamic load/substitution; line 840: dynamic load/substitution; line 842: dynamic load/substitution; line 849: multiline/opaque shell statement; line 850: dynamic command/alias/eval; line 855: multiline/opaque shell statement; line 860: multiline/opaque shell statement; line 861: dynamic command/alias/eval; line 882: multiline/opaque shell statement; line 883: multiline/opaque shell statement; line 884: multiline/opaque shell statement; line 885: wrapper options/child command unresolved; line 890: heredoc data/generation closure not measured; line 894: dynamic command/alias/eval; line 907: dynamic command/alias/eval; line 914: heredoc data/generation closure not measured; line 927: heredoc data/generation closure not measured; line 938: heredoc data/generation closure not measured; line 947: heredoc data/generation closure not measured; line 959: heredoc data/generation closure not measured; line 968: heredoc data/generation closure not measured; line 986: dynamic command/alias/eval"
+   "started_at_utc": "2026-10-26T22:07:13Z",
+   "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 1000: heredoc data/generation closure not measured; line 1012: heredoc data/generation closure not measured; line 1021: heredoc data/generation closure not measured; line 1032: dynamic load/substitution; line 1033: dynamic command/alias/eval; line 1033: dynamic load/substitution; line 1041: dynamic load/substitution; line 1049: dynamic load/substitution; line 1060: dynamic command/alias/eval; line 1070: dynamic command/alias/eval; line 1075: dynamic load/substitution; line 1089: dynamic load/substitution; line 129: multiline/opaque shell statement; line 131: multiline/opaque shell statement; line 133: multiline/opaque shell statement; line 134: dynamic command/alias/eval; line 135: multiline/opaque shell statement; line 136: dynamic command/alias/eval; line 140: multiline/opaque shell statement; line 146: multiline/opaque shell statement; line 148: multiline/opaque shell statement; line 149: dynamic command/alias/eval; line 167: multiline/opaque shell statement; line 186: heredoc data/generation closure not measured; line 22: multiline/opaque shell statement; line 24: dynamic load/substitution; line 309: heredoc data/generation closure not measured; line 31: heredoc data/generation closure not measured; line 336: multiline/opaque shell statement; line 337: multiline/opaque shell statement; line 338: multiline/opaque shell statement; line 339: dynamic command/alias/eval; line 350: multiline/opaque shell statement; line 351: dynamic command/alias/eval; line 365: multiline/opaque shell statement; line 366: dynamic command/alias/eval; line 371: multiline/opaque shell statement; line 372: dynamic command/alias/eval; line 388: multiline/opaque shell statement; line 389: dynamic command/alias/eval; line 399: multiline/opaque shell statement; line 400: dynamic command/alias/eval; line 405: multiline/opaque shell statement; line 406: dynamic command/alias/eval; line 416: dynamic load/substitution; line 418: dynamic command/alias/eval; line 418: dynamic load/substitution; line 420: dynamic command/alias/eval; line 420: wrapper options/child command unresolved; line 422: multiline/opaque shell statement; line 427: multiline/opaque shell statement; line 42: multiline/opaque shell statement; line 431: dynamic load/substitution; line 436: multiline/opaque shell statement; line 43: multiline/opaque shell statement; line 445: multiline/opaque shell statement; line 44: multiline/opaque shell statement; line 452: multiline/opaque shell statement; line 453: dynamic command/alias/eval; line 457: multiline/opaque shell statement; line 458: dynamic command/alias/eval; line 459: multiline/opaque shell statement; line 45: multiline/opaque shell statement; line 460: dynamic command/alias/eval; line 467: multiline/opaque shell statement; line 46: multiline/opaque shell statement; line 471: multiline/opaque shell statement; line 472: dynamic command/alias/eval; line 47: dynamic command/alias/eval; line 480: multiline/opaque shell statement; line 482: multiline/opaque shell statement; line 483: dynamic command/alias/eval; line 485: dynamic load/substitution; line 48: dynamic command/alias/eval; line 493: dynamic load/substitution; line 496: multiline/opaque shell statement; line 497: dynamic command/alias/eval; line 49: dynamic command/alias/eval; line 4: directory transition has unresolved execution cwd; line 505: multiline/opaque shell statement; line 50: dynamic command/alias/eval; line 512: multiline/opaque shell statement; line 513: dynamic command/alias/eval; line 51: multiline/opaque shell statement; line 52: dynamic command/alias/eval; line 533: multiline/opaque shell statement; line 548: dynamic command/alias/eval; line 562: multiline/opaque shell statement; line 563: dynamic command/alias/eval; line 567: multiline/opaque shell statement; line 568: dynamic command/alias/eval; line 57: dynamic command/alias/eval; line 584: heredoc data/generation closure not measured; line 594: multiline/opaque shell statement; line 595: dynamic command/alias/eval; line 596: multiline/opaque shell statement; line 597: dynamic command/alias/eval; line 609: dynamic command/alias/eval; line 624: heredoc data/generation closure not measured; line 640: multiline/opaque shell statement; line 641: dynamic command/alias/eval; line 653: multiline/opaque shell statement; line 661: multiline/opaque shell statement; line 667: multiline/opaque shell statement; line 668: dynamic command/alias/eval; line 674: multiline/opaque shell statement; line 677: multiline/opaque shell statement; line 685: multiline/opaque shell statement; line 687: multiline/opaque shell statement; line 691: multiline/opaque shell statement; line 701: heredoc data/generation closure not measured; line 709: multiline/opaque shell statement; line 711: multiline/opaque shell statement; line 713: multiline/opaque shell statement; line 715: multiline/opaque shell statement; line 717: multiline/opaque shell statement; line 718: dynamic command/alias/eval; line 71: dynamic command/alias/eval; line 753: dynamic load/substitution; line 764: dynamic command/alias/eval; line 767: dynamic load/substitution; line 772: dynamic load/substitution; line 781: dynamic load/substitution; line 785: dynamic load/substitution; line 794: dynamic load/substitution; line 811: heredoc data/generation closure not measured; line 832: dynamic command/alias/eval; line 838: dynamic load/substitution; line 839: dynamic load/substitution; line 851: dynamic command/alias/eval; line 866: dynamic load/substitution; line 868: dynamic load/substitution; line 869: dynamic load/substitution; line 871: dynamic load/substitution; line 878: multiline/opaque shell statement; line 879: dynamic command/alias/eval; line 884: multiline/opaque shell statement; line 889: multiline/opaque shell statement; line 890: dynamic command/alias/eval; line 911: multiline/opaque shell statement; line 912: multiline/opaque shell statement; line 913: multiline/opaque shell statement; line 914: wrapper options/child command unresolved; line 915: multiline/opaque shell statement; line 916: multiline/opaque shell statement; line 917: multiline/opaque shell statement; line 918: multiline/opaque shell statement; line 919: multiline/opaque shell statement; line 920: wrapper options/child command unresolved; line 925: heredoc data/generation closure not measured; line 929: dynamic command/alias/eval; line 942: dynamic command/alias/eval; line 948: dynamic load/substitution; line 949: dynamic command/alias/eval; line 957: dynamic load/substitution; line 958: dynamic command/alias/eval; line 967: heredoc data/generation closure not measured; line 980: heredoc data/generation closure not measured; line 991: heredoc data/generation closure not measured"
   }
  ],
  "verify": {
@@ -1455,7 +1426,7 @@
    {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "14 affected entity(ies) owe no verdict (receipt: 14): unchanged at both revisions and given no verifier by the matrix"
+    "text": "15 affected entity(ies) owe no verdict (receipt: 15): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
@@ -1526,12 +1497,13 @@
    "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json": [],
    "receipt:receipts/graph/change-admission-kcp-0012-model-refresh.json": [],
    "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0017-readiness.json": [],
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
   },
   "seconds": {
-   "prepare": 3.37,
-   "total": 43.64,
-   "verifiers": 0.19
+   "prepare": 5.98,
+   "total": 62.99,
+   "verifiers": 0.3
   }
  },
  "work_item": "KCP-0017"
