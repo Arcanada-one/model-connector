@@ -76,7 +76,7 @@ FALLBACK_KINDS = {"lockfile", "global_config"}
 TEST_RE = re.compile(r"(^|/)(test|tests|__tests__|e2e|spec)(/|$)|\.(spec|test)\.[cm]?[jt]sx?$")
 FORWARD_TYPES = {"provides_route", "implements_contract", "maps_model", "deploys_to"}
 BOUNDARY_RANK = {"intra_unit": 0, "service": 1, "repo": 2}
-FILE_HASH_TYPES = {"code_unit", "document", "receipt", "deployable_unit"}  # content_hash = whole file bytes (schema)
+FILE_HASH_TYPES = {"code_unit", "document", "receipt", "deployable_unit", "systemd_unit", "source_file"}  # whole-file bytes
 DEPLOYABLE_MANIFEST_NAMES = ("package.json", "Cargo.toml", "pyproject.toml", "setup.py", "setup.cfg")  # AUP-GRAPH-009: deployable_unit
 # manifests are no longer always npm — try every builder's manifest name, first one present in the tree wins
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -212,7 +212,20 @@ class Repo:
         return p.read_bytes() if p.is_file() else None
 
     def read_at(self, rev: str, rels: list[str]) -> dict[str, bytes | None]:
-        spec = "".join(f"{rev}:{self.prefix}{r}\n" for r in rels).encode()
+        # Graph paths may spell the scoped manifest as ./package.json. Git's
+        # object-path lookup does not normalize that spelling; preserve caller
+        # keys while resolving each name inside the requested repository scope.
+        normalized = []
+        for rel in rels:
+            if (not isinstance(rel, str) or not rel or rel.startswith("/")
+                    or "\\" in rel or ":" in rel or any(ord(c) < 32 or ord(c) == 127 for c in rel)
+                    or ".." in rel.split("/")):
+                raise Refusal("SOURCE_PATH_INVALID", "source path must remain relative to the requested scope")
+            path = "/".join(part for part in rel.split("/") if part not in ("", "."))
+            if not path:
+                raise Refusal("SOURCE_PATH_INVALID", "source path must name a file inside the requested scope")
+            normalized.append(path)
+        spec = "".join(f"{rev}:{self.prefix}{r}\n" for r in normalized).encode()
         out = subprocess.run(["git", "cat-file", "--batch"], cwd=str(self.top), input=spec, check=True,
                              capture_output=True).stdout
         res, pos = {}, 0
@@ -239,6 +252,7 @@ class GraphIndex:
         self.fwd: dict[str, list[dict]] = {}
         self.by_path: dict[str, list[str]] = {}
         self.deployables: dict[str, str] = {}
+        self.deployable_ids_by_path: dict[str, list[str]] = {}
         for e in doc["edges"]:
             self.rev.setdefault(e["to"], []).append(e)
             self.fwd.setdefault(e["from"], []).append(e)
@@ -253,8 +267,11 @@ class GraphIndex:
                 self.by_path.setdefault(p, []).append(n["id"])
                 if n["type"] == "deployable_unit":
                     self.deployables[p.rstrip("/")] = n["id"]
+                    self.deployable_ids_by_path.setdefault(p, []).append(n["id"])
         for k in self.by_path:
             self.by_path[k].sort()
+        for k in self.deployable_ids_by_path:
+            self.deployable_ids_by_path[k].sort()
         self.hints = {t: v.get("mandatory_verifier_hint", "") for t, v in
                       schema_check.load_schema(schema_check.GRAPH_SCHEMA_PATH)["edge_types"].items()}
 
@@ -292,21 +309,108 @@ def classify_file(path: str, idx: GraphIndex | None) -> str:
         return "receipt"
     if ext == ".prisma" or re.search(r"(^|/)prisma/migrations/.*\.sql$", path):
         return "data_model"
-    if TEST_RE.search(path) and (ext in CODE_EXTS or ext == ".json"):
+    if ext == ".bats" or TEST_RE.search(path) and (ext in CODE_EXTS or ext in (".json", ".py", ".sh", ".bash")):
         return "test"
     if idx is not None:
         types = {idx.nodes[i]["type"] for i in idx.by_path.get(path, [])}
+        if "systemd_unit" in types:
+            return "systemd_unit"
+        if "source_file" in types:
+            return "source_file"
         if "contract" in types:
             return "contract"
         if "route" in types:
             return "route"
     if ext in DOC_EXTS or path.startswith("docs/") or "/docs/" in path:
         return "doc"
-    if ext in CODE_EXTS:
+    if ext in CODE_EXTS or ext in (".sh", ".bash") or (idx is not None and any(
+            idx.nodes[i].get("kind") == "bash_source" for i in idx.by_path.get(path, []))):
         return "code"
     if ext in CONFIG_EXTS or base.startswith(".env") or base == "Dockerfile" or path.startswith(".github/"):
         return "config"
     return "other"
+
+
+def _safe_relative_path(path: object, *, root: bool = False) -> str | None:
+    """Return a canonical graph-relative path; refuse aliases and escapes."""
+    if not isinstance(path, str) or not path or "\\" in path or ":" in path:
+        return None
+    if any(ord(c) < 32 or ord(c) == 127 for c in path):
+        return None
+    if root and path == ".":
+        return "."
+    if path.startswith("/"):
+        return None
+    parts = path.split("/")
+    if any(part in ("", ".", "..") for part in parts):
+        return None
+    return "/".join(parts)
+
+
+def deployable_root_for_uncovered(idx: GraphIndex, path: str) -> str | None:
+    """Resolve only a unique, source-declared graph deployable root.
+
+    Nested roots use the most-specific path-prefix match. Duplicate or malformed
+    declarations are not ownership evidence and therefore stay uncovered.
+    """
+    rel = _safe_relative_path(path)
+    if rel is None:
+        return None
+    matches: list[tuple[int, str]] = []
+    for raw_root, node_ids in idx.deployable_ids_by_path.items():
+        root = _safe_relative_path(raw_root, root=True)
+        if root is None:
+            continue
+        contains = root == "." or rel.startswith(root + "/")
+        if contains:
+            depth = 0 if root == "." else len(root.split("/"))
+            matches.append((depth, root))
+    if not matches:
+        return None
+    deepest = max(depth for depth, _ in matches)
+    roots = sorted({root for depth, root in matches if depth == deepest})
+    if len(roots) != 1 or len(idx.deployable_ids_by_path.get(roots[0], [])) != 1:
+        return None
+    return roots[0]
+
+
+def _is_deployable_asset_path(path: str) -> bool:
+    """Recognize the bounded uncovered PHP/CSS/locale asset classes."""
+    rel = _safe_relative_path(path)
+    if rel is None:
+        return False
+    suffix = os.path.splitext(rel)[1].lower()
+    if suffix in {".php", ".css"}:
+        return True
+    parts = rel.split("/")
+    return suffix == ".json" and any(part in {"locale", "locales"} for part in parts[:-1])
+
+
+def _committed_full_test_is_supported(repo: Repo | None, revision: str | None, root: str) -> bool:
+    """Check the committed VerifyProfile declaration consumed by verify.py, without executing it."""
+    if repo is None or not revision:
+        return False
+    try:
+        raw = repo.read_at(revision, [".arcana/verify.json"]).get(".arcana/verify.json")
+        if raw is None:
+            return False
+        profile = json.loads(raw)
+    except (OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError):
+        return False
+    if not isinstance(profile, dict) or profile.get("schema") != "VerifyProfile/v1":
+        return False
+    deployables = profile.get("deployables")
+    if not isinstance(deployables, dict):
+        return False
+    declaration = deployables.get(root)
+    if not isinstance(declaration, dict):
+        return False
+    command = declaration.get("full_test")
+    if (not isinstance(command, list) or not command or not all(isinstance(arg, str) for arg in command)
+            or not command[0].strip() or any("\x00" in arg for arg in command)):
+        return False
+    timeout = declaration.get("full_test_timeout_seconds", 900)
+    return type(timeout) is int and 1 <= timeout <= 7200
 
 
 def parse_file_args(specs: list[str]) -> list[dict]:
@@ -319,19 +423,21 @@ def parse_file_args(specs: list[str]) -> list[dict]:
 
 # ----------------------------------------------------------------------------------------------- staleness
 def check_staleness(idx: GraphIndex, repo: Repo | None, mode: str, base: str | None, tree_commit: str,
-                    tree_dirty: bool, changed_paths: set[str], rules: set[str], reader=None) -> dict:
+                    tree_dirty: bool, changed_paths: set[str], rules: set[str], reader=None, *, head: str | None = None, graph_role: str = "base") -> dict:
     """Returns the staleness block; raises Refusal(STALE_GRAPH). `reader(path) -> bytes|None` overrides the tree
     read (fixtures)."""
     m = idx.manifest
-    ref = base if mode == "diff" else tree_commit
+    if graph_role not in {"base", "head"} or (graph_role == "head" and (mode != "diff" or not head)):
+        raise Refusal("STALE_GRAPH", "invalid graph revision role", {})
+    ref = (head if graph_role == "head" else base) if mode == "diff" else tree_commit
     method = ["manifest.dirty must be false",
-              f"manifest.source_commit == {'change_set.base' if mode == 'diff' else 'HEAD of the tree'}"]
+              f"manifest.source_commit == {('change_set.' + graph_role) if mode == 'diff' else 'HEAD of the tree'}"]
     if mode == "diff":
         method.append("working tree must be clean (a receipt in diff mode describes committed history only)")
     if "staleness" in rules:
         if m.get("source_commit") != ref:
             raise Refusal("STALE_GRAPH", f"graph source_commit {m.get('source_commit', '?')[:12]} ≠ "
-                                         f"{'base' if mode == 'diff' else 'HEAD'} {ref[:12]}; rebuild the graph at that commit",
+                                         f"{graph_role if mode == 'diff' else 'HEAD'} {ref[:12]}; rebuild the graph at that commit",
                           {"graph_source_commit": m.get("source_commit"), "expected": ref})
         if mode == "diff" and tree_dirty:
             raise Refusal("STALE_GRAPH", "working tree is dirty in --diff mode; commit or stash before issuing a receipt",
@@ -340,13 +446,13 @@ def check_staleness(idx: GraphIndex, repo: Repo | None, mode: str, base: str | N
     if "hash_check" in rules and (repo is not None or reader is not None):
         method.append("content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its "
                       "package.json) must equal the sha256 of the file bytes "
-                      + ("at base (git objects)" if mode == "diff" else "in the working tree, changed files excluded")
+                      + (f"at {graph_role} (git objects)" if mode == "diff" else "in the working tree, changed files excluded")
                       + "; contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed")
         def read_one(path: str) -> bytes | None:
             if reader is not None:
                 return reader(path)
             if mode == "diff":
-                return repo.read_at(base, [path]).get(path)
+                return repo.read_at(ref, [path]).get(path)
             return repo.read_worktree(path)
 
         def deployable_manifest(p: str) -> str:
@@ -370,7 +476,7 @@ def check_staleness(idx: GraphIndex, repo: Repo | None, mode: str, base: str | N
         if reader is not None:
             blobs = {p: reader(p) for p in paths}
         elif mode == "diff":
-            blobs = repo.read_at(base, paths)
+            blobs = repo.read_at(ref, paths)
         else:
             blobs = {p: repo.read_worktree(p) for p in paths}
         for p in paths:
@@ -461,7 +567,7 @@ def traverse(idx: GraphIndex, seeds: set[str], max_depth: int | None, edge_types
 # ----------------------------------------------------------------------------------------------- query
 def query(idx: GraphIndex, files: list[dict], *, mode: str, base: str | None = None, head: str | None = None,
           tree_commit: str, tree_dirty: bool, repo: Repo | None = None, reader=None, max_depth: int | None = DEFAULT_MAX_DEPTH,
-          edge_types: set[str] | None = None, rules: set[str] | None = None, graph_path: str | None = None) -> dict:
+          edge_types: set[str] | None = None, rules: set[str] | None = None, graph_path: str | None = None, graph_role: str = "base") -> dict:
     rules = set(RULES) if rules is None else set(rules)
     if "edge_filter" not in rules:
         edge_types = None
@@ -477,22 +583,40 @@ def query(idx: GraphIndex, files: list[dict], *, mode: str, base: str | None = N
     if not files:
         raise Refusal("EMPTY_CHANGE_SET", "no changed files (nothing to admit)", {})
     for f in files:
-        f["kind"] = classify_file(f["path"], idx)
+        f["kind"] = ("config" if f.get("_config_schema_keys") and f["path"] == ".env.example"
+                     else classify_file(f["path"], idx))
     changed_paths = {f["path"] for f in files}
-    out["staleness"] = check_staleness(idx, repo, mode, base, tree_commit, tree_dirty, changed_paths, rules, reader)
+    out["staleness"] = check_staleness(idx, repo, mode, base, tree_commit, tree_dirty, changed_paths, rules, reader, head=head, graph_role=graph_role)
     cs = {"mode": mode, "files": []}
     if mode == "diff":
         cs["base"], cs["head"] = base, head
     seeds: set[str] = set()
     open_containment: set[str] = set()
-    unknown, uncovered, new_files = [], [], []
+    unknown, uncovered, uncovered_assets, new_files = [], [], [], []
     fallback_files = []
+    traversal_seeds: set[str] = set()
+    profile_revision = head if mode == "diff" else tree_commit
+    profile_bindings: dict[str, bool] = {}
+
+    def bound_asset_root(path: str) -> str | None:
+        if not _is_deployable_asset_path(path):
+            return None
+        root = deployable_root_for_uncovered(idx, path)
+        if root is None:
+            return None
+        if root not in profile_bindings:
+            profile_bindings[root] = _committed_full_test_is_supported(repo, profile_revision, root)
+        return root if profile_bindings[root] else None
+
     for f in files:
         entry = {"path": f["path"], "status": f["status"], "kind": f["kind"]}
         for k in ("renamed_to", "renamed_from"):
             if k in f:
                 entry[k] = f[k]
         ids = idx.path_nodes(f["path"], rules)
+        narrow_keys = f.get("_config_schema_keys", []) if f["path"] == ".env.example" else []
+        key_ids = {f"config_key:{key}" for key in narrow_keys if f"config_key:{key}" in idx.nodes}
+        ids = sorted(set(ids) | key_ids)
         base_name = os.path.basename(f["path"])
         d = os.path.dirname(f["path"])
         dep_id = idx.deployables.get(d) or (f"deployable_unit:{d}" if f"deployable_unit:{d}" in idx.nodes else None)
@@ -500,17 +624,42 @@ def query(idx: GraphIndex, files: list[dict], *, mode: str, base: str | None = N
             ids = sorted(set(ids) | {dep_id})
             open_containment.add(dep_id)
             entry["scoped_fallback"] = f"{f['path']} changed ⇒ every unit shipped inside {dep_id} is affected"
+        elif d and not dep_id and "scoped_fallback" in rules and (
+                base_name == "package.json" or re.fullmatch(r"tsconfig(?:\.[\w.-]+)?\.json", base_name)):
+            compiler_units = sorted(nid for nid, node in idx.nodes.items()
+                                    if node["type"] == "code_unit"
+                                    and node.get("path", "").startswith(d + "/")
+                                    and os.path.splitext(node["path"])[1].lower() in CODE_EXTS)
+            ids = sorted(set(ids) | set(compiler_units))
+            if compiler_units:
+                entry["scoped_fallback"] = (f"{f['path']} changed ⇒ existing TS/JS units beneath {d} "
+                                            "are rechecked; no runtime deployable inferred")
         if f["kind"] in FALLBACK_KINDS:
             fallback_files.append(f["path"])
         if ids:
             entry["node_id"] = next((i for i in ids if i.startswith("code_unit:")), ids[0])
             entry["node_ids"] = ids
             seeds.update(ids)
+            traversal_seeds.update(ids)
         elif f["status"] == "A":
             entry["new"] = True
             new_files.append(f["path"])
+            if _is_deployable_asset_path(f["path"]):
+                if bound_asset_root(f["path"]) is not None:
+                    fallback_files.append(f["path"])
+                else:
+                    entry["uncovered"] = True
+                    uncovered.append(f["path"])
+                    uncovered_assets.append(f["path"])
         elif f["kind"] in FALLBACK_KINDS:
             pass
+        elif _is_deployable_asset_path(f["path"]):
+            if bound_asset_root(f["path"]) is not None:
+                fallback_files.append(f["path"])
+            else:
+                entry["uncovered"] = True
+                uncovered.append(f["path"])
+                uncovered_assets.append(f["path"])
         elif os.path.splitext(f["path"])[1].lower() in CODE_EXTS | {".prisma"}:
             unknown.append(f["path"])
         else:
@@ -518,34 +667,48 @@ def query(idx: GraphIndex, files: list[dict], *, mode: str, base: str | None = N
             uncovered.append(f["path"])
         cs["files"].append(entry)
     out["change_set"] = cs
-    if unknown and "unknown_node" in rules:
+    if (unknown or uncovered_assets) and "unknown_node" in rules:
+        files = sorted(set(unknown) | set(uncovered_assets))
+        if uncovered_assets:
+            raise Refusal("UNKNOWN_NODE", f"{len(uncovered_assets)} uncovered deployable asset(s) have no unique graph root "
+                                          "with a supported committed full_test declaration: "
+                                          f"{', '.join(sorted(set(uncovered_assets))[:5])}"
+                                          f"{' …' if len(set(uncovered_assets)) > 5 else ''}; cannot construct an "
+                                          "admitting impact set", {"files": files,
+                                                                   "uncovered_assets": sorted(set(uncovered_assets))})
         raise Refusal("UNKNOWN_NODE", f"{len(unknown)} modified/deleted code file(s) have no node in the graph: "
                                       f"{', '.join(unknown[:5])}{' …' if len(unknown) > 5 else ''}; the graph does not cover "
-                                      f"what is being changed — rebuild it or fix the extractor", {"files": unknown})
+                                      f"what is being changed — rebuild it or fix the extractor", {"files": files})
     out["seeds"] = sorted(seeds)
     imp = {"method": f"reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, "
                      f"maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; "
                      f"max_depth {max_depth if max_depth is not None else 'unlimited'}",
            "max_depth": max_depth, "edge_types": sorted(edge_types) if edge_types else "all",
            "global_fallback": {"triggered": False}, "deterministic_core": [], "inferred_tail": [], "total": 0}
+    # Global scope adds coverage; it cannot erase the normal dependency paths.
+    reached = traverse(idx, traversal_seeds, max_depth, edge_types, rules, open_containment)
+    for e in reached:
+        non_det = any(h["provenance"] != "deterministic" for h in e["path"])
+        (imp["inferred_tail"] if non_det else imp["deterministic_core"]).append(e)
+    normal_ids = {e["entity"] for e in reached}
     if fallback_files and "global_fallback" in rules:
         trig = fallback_files[0]
+        asset_fallback = any(_is_deployable_asset_path(path) for path in fallback_files)
+        reason = (f"{', '.join(fallback_files)} changed ⇒ every node affected (including uncovered deployable assets "
+                  "bound to a committed full-suite declaration)" if asset_fallback else
+                  f"{', '.join(fallback_files)} changed ⇒ every node affected (lockfile / global config / env schema: "
+                  "safe fallback, Bazel/Nx practice)")
         imp["global_fallback"] = {"triggered": True, "files": fallback_files,
-                                  "reason": f"{', '.join(fallback_files)} changed ⇒ every node affected (lockfile / global "
-                                            f"config / env schema: safe fallback, Bazel/Nx practice)"}
+                                  "reason": reason}
         imp["method"] = "global fallback: every node of the graph is affected (depth 0, synthetic containment hop); " + imp["method"]
         for nid in sorted(idx.nodes):
-            if nid in seeds:
+            if nid in seeds or nid in normal_ids:
                 continue
             imp["deterministic_core"].append({"entity": nid, "node_type": idx.nodes[nid]["type"], "depth": 0,
                                               "boundary": "intra_unit",
                                               "path": [{"from": f"code_unit:{trig}", "to": nid, "edge_type": "deploys_to",
                                                         "provenance": "deterministic", "via": "global-fallback"}],
                                               "verifier_hint": idx.hints.get("deploys_to", "")})
-    else:
-        for e in traverse(idx, seeds, max_depth, edge_types, rules, open_containment):
-            non_det = any(h["provenance"] != "deterministic" for h in e["path"])
-            (imp["inferred_tail"] if non_det else imp["deterministic_core"]).append(e)
     imp["total"] = len(imp["deterministic_core"]) + len(imp["inferred_tail"])
     out["impact_set"] = imp
     out["stats"] = {"seeds": len(seeds), "deterministic_core": len(imp["deterministic_core"]),
@@ -611,7 +774,7 @@ def receipt_skeleton(q: dict, work_item: str | None = None) -> dict:
         raise Refusal(q["refusal"]["code"], "no receipt can be issued on a refused query: " + q["refusal"]["reason"])
     imp = q["impact_set"]
     entities = [e["entity"] for e in imp["deterministic_core"] + imp["inferred_tail"]]
-    changed = [f["node_id"] for f in q["change_set"]["files"] if f.get("node_id")]
+    changed = [nid for f in q["change_set"]["files"] for nid in (f.get("node_ids") or ([f["node_id"]] if f.get("node_id") else []))]
     seen, verdicts = set(), []
     for ent in entities + changed:
         if ent in seen:
@@ -632,6 +795,9 @@ def receipt_skeleton(q: dict, work_item: str | None = None) -> dict:
                                  "tri-valued verdict; not_measured blocks unqualified admission"}}
     if "empty_impact_explanation" in q:
         rec["empty_impact_explanation"] = q["empty_impact_explanation"]
+    for key in ("head_graph", "revision_selection"):
+        if key in q:
+            rec[key] = q[key]
     if work_item:
         rec["work_item"] = work_item
     return rec
@@ -656,6 +822,14 @@ def run_query(a) -> tuple[dict, int]:
         else:
             files = repo.worktree_files()
         idx = load_graph(a.graph, rules)
+        if mode == "diff":
+            sys.modules.setdefault("impact", sys.modules[__name__])
+            import impact_pair
+            q = impact_pair.query(idx, impact_pair.index_at(repo, head), files, repo=repo, base=base, head=head,
+                                  tree_commit=tree_commit, tree_dirty=tree_dirty, graph_path=str(a.graph),
+                                  max_depth=None if a.max_depth is not None and a.max_depth < 0 else (a.max_depth if a.max_depth is not None else DEFAULT_MAX_DEPTH),
+                                  edge_types=edge_types)
+            return q, (3 if q["events"] else 0)
         q = query(idx, files, mode=mode, base=base, head=head, tree_commit=tree_commit, tree_dirty=tree_dirty, repo=repo,
                   max_depth=None if a.max_depth is not None and a.max_depth < 0 else (a.max_depth if a.max_depth is not None else DEFAULT_MAX_DEPTH),
                   edge_types=edge_types, rules=rules, graph_path=str(a.graph))
