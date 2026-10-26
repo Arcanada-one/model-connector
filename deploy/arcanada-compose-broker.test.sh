@@ -888,7 +888,7 @@ rm -rf -- "$kc_dir"
 printf '%s\n' 'SCRUTATOR_DATABASE_URL=postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract' >"${env_root}/knowledge-contract-scrutator.env"
 chmod 0600 "${env_root}/knowledge-contract-scrutator.env"
 cat >"$fake_docker_state/kc-config.json" <<'JSON'
-{"name":"knowledge-contract-scrutator","services":{"scrutator":{"container_name":"knowledge-contract-scrutator-scrutator-1","image":"scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547","ports":[{"mode":"ingress","target":8310,"published":"8311","protocol":"tcp","host_ip":"127.0.0.1"}],"environment":{"SCRUTATOR_HOST":"0.0.0.0","SCRUTATOR_PORT":"8310","SCRUTATOR_AUTH_ENFORCE":"true","SCRUTATOR_FEEDER_NAMESPACES":"knowledge-contract","SCRUTATOR_DATABASE_URL":"postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract"}}}}
+{"name":"knowledge-contract-scrutator","networks":{"default":{"name":"knowledge-contract-scrutator_default","ipam":{}}},"services":{"scrutator":{"container_name":"knowledge-contract-scrutator-scrutator-1","image":"scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547","networks":{"default":null},"ports":[{"mode":"ingress","target":8310,"published":"8311","protocol":"tcp","host_ip":"127.0.0.1"}],"environment":{"SCRUTATOR_HOST":"0.0.0.0","SCRUTATOR_PORT":"8310","SCRUTATOR_AUTH_ENFORCE":"true","SCRUTATOR_FEEDER_NAMESPACES":"knowledge-contract","SCRUTATOR_DATABASE_URL":"postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract"}}}}
 JSON
 printf '%s\n' 'sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17' >"$fake_docker_state/kc-running-image"
 kc_run() { printf '%s\n' 'fixture-token-abcdefghijklmnopqrstuvwxyz' | "$kc_broker" knowledge-contract-scrutator kc-deploy "$kc_head"; }
@@ -924,6 +924,25 @@ grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-public-port.out"
 [[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
 echo 'PASS: kc_public_port_refused_before_up'
 unset PYTHONOPTIMIZE
+python3 - "$fake_docker_state/kc-config.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+x = json.load(open(p))
+x["services"]["scrutator"]["ports"][0]["host_ip"] = "127.0.0.1"
+x["networks"]["default"]["external"] = True
+json.dump(x, open(p, "w"))
+PY
+if kc_run >"${fixture_dir}/kc-external-network.out" 2>&1; then echo 'FAIL: external network accepted' >&2; exit 1; fi
+grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-external-network.out" || exit 1
+[[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+python3 - "$fake_docker_state/kc-config.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+x = json.load(open(p))
+del x["networks"]["default"]["external"]
+json.dump(x, open(p, "w"))
+PY
+echo 'PASS: kc_external_network_refused_before_up'
 for forbidden in volumes_from secrets configs build extends; do
   python3 - "$fake_docker_state/kc-config.json" "$forbidden" <<'PY'
 import json, sys

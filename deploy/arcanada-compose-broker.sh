@@ -970,6 +970,12 @@ try:
     services = cfg["services"]
     require(set(services) == {"scrutator"})
     svc = services["scrutator"]
+    networks = cfg.get("networks", {})
+    require(set(networks) == {"default"})
+    network = networks["default"]
+    require(network.get("name") == "knowledge-contract-scrutator_default")
+    require(not network.get("external") and network.get("driver") in (None, "bridge"))
+    require(svc.get("networks") == {"default": None})
     require(svc.get("container_name") == "knowledge-contract-scrutator-scrutator-1")
     require(svc.get("image") == "scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547")
     require(not svc.get("network_mode") and not svc.get("privileged"))
