@@ -639,8 +639,10 @@ def pin_only_edit(repo: Path, base: str, head: str, path: str, expect_ref: str |
                                 capture_output=True, text=True)
         if origin.returncode == 0 and _canonical_auth_origin(origin.stdout.strip()):
             scoped_ok, scoped_why = _canonical_caller_pin_and_read_scope_edit(old, new, expect_ref)
+        elif origin.returncode == 0 and _canonical_model_connector_origin(origin.stdout.strip()):
+            scoped_ok, scoped_why = _canonical_model_connector_pin_and_read_scope_edit(old, new, expect_ref)
         else:
-            scoped_ok, scoped_why = False, "read-scope amendment is limited to the canonical Auth GitHub origin"
+            scoped_ok, scoped_why = False, "read-scope amendment requires a canonical enrolled GitHub origin"
         if scoped_ok:
             return True, scoped_why
         # Preserve the existing strictly line-bound pin-only case. A permission-bearing change
@@ -721,6 +723,86 @@ def _canonical_auth_origin(origin: str) -> bool:
         r"ssh://git@github\.com/Arcanada-one/auth-arcana(?:\.git)?|"
         r"git@github\.com:Arcanada-one/auth-arcana(?:\.git)?)",
         origin))
+
+
+def _canonical_model_connector_origin(origin: str) -> bool:
+    """Accept only the canonical Model Connector repository on github.com."""
+    return bool(re.fullmatch(
+        r"(?:https://github\.com/Arcanada-one/model-connector(?:\.git)?|"
+        r"ssh://git@github\.com/Arcanada-one/model-connector(?:\.git)?|"
+        r"git@github\.com:Arcanada-one/model-connector(?:\.git)?)",
+        origin))
+
+
+def _canonical_model_connector_pin_and_read_scope_edit(old: str, new: str,
+                                                         expect_ref: str | None) -> tuple[bool, str]:
+    """Permit only the paired bundle pin and caller-level read-only Actions scope.
+
+    The existing local reusable-workflow reference, trigger, trust pin, and job
+    configuration must remain unchanged. Parsing is inert and rejects ambiguous YAML.
+    """
+    if not isinstance(expect_ref, str) or not re.fullmatch(r"[0-9a-f]{40}", expect_ref):
+        return False, "no full40 head bundle program_ref"
+    try:
+        import yaml
+
+        def parse(raw: str):
+            try:
+                for token in yaml.scan(raw):
+                    if isinstance(token, (yaml.tokens.AliasToken, yaml.tokens.AnchorToken,
+                                          yaml.tokens.TagToken, yaml.tokens.DirectiveToken)):
+                        raise ValueError("workflow aliases/tags/directives unsupported")
+
+                class UniqueLoader(yaml.BaseLoader):
+                    pass
+
+                def unique_mapping(loader, node):
+                    result = {}
+                    for key_node, value_node in node.value:
+                        key = loader.construct_object(key_node)
+                        if key in result:
+                            raise ValueError("duplicate workflow mapping key")
+                        result[key] = loader.construct_object(value_node)
+                    return result
+
+                UniqueLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping)
+                value = yaml.load(raw, Loader=UniqueLoader)
+            except yaml.YAMLError as exc:
+                raise ValueError("malformed workflow YAML") from exc
+            if not isinstance(value, dict):
+                raise ValueError("caller workflow is not a YAML mapping")
+            return value
+
+        before, after = parse(old), parse(new)
+        before_jobs, after_jobs = before.get("jobs"), after.get("jobs")
+        before_job = before_jobs.get("graph-admission") if isinstance(before_jobs, dict) else None
+        after_job = after_jobs.get("graph-admission") if isinstance(after_jobs, dict) else None
+        if not isinstance(before_job, dict) or not isinstance(after_job, dict):
+            return False, "canonical graph-admission job is absent"
+        local_uses = "./.github/workflows/graph-admission.yml"
+        if before_job.get("uses") != local_uses or after_job.get("uses") != local_uses:
+            return False, "local reusable-workflow reference changed"
+        before_inputs, after_inputs = before_job.get("with"), after_job.get("with")
+        if not isinstance(before_inputs, dict) or not isinstance(after_inputs, dict):
+            return False, "caller input map is absent"
+        old_ref, new_ref = before_inputs.get("program_ref"), after_inputs.get("program_ref")
+        if not isinstance(old_ref, str) or not re.fullmatch(r"[0-9a-f]{40}", old_ref):
+            return False, "base caller program_ref is not a full40 pin"
+        if old_ref == new_ref or new_ref != expect_ref:
+            return False, "caller program_ref did not move to the head bundle pin"
+        if before.get("permissions") != {"contents": "read"}:
+            return False, "base caller permissions are not exactly contents: read"
+        if after.get("permissions") != {"contents": "read", "actions": "read"}:
+            return False, "head caller permissions are not exactly read-only contents and actions"
+        before_cmp, after_cmp = copy.deepcopy(before), copy.deepcopy(after)
+        before_cmp["jobs"]["graph-admission"]["with"]["program_ref"] = "<paired-program-pin>"
+        after_cmp["jobs"]["graph-admission"]["with"]["program_ref"] = "<paired-program-pin>"
+        after_cmp["permissions"] = {"contents": "read"}
+        if before_cmp != after_cmp:
+            return False, "caller change includes fields beyond the paired pin and exact read-only scope"
+    except (ImportError, ValueError, TypeError, KeyError) as exc:
+        return False, "Model Connector caller cannot be safely classified: " + str(exc)
+    return True, "canonical Model Connector pin and caller-level contents/actions read scope are paired"
 
 
 def _canonical_muneral_origin(origin: str) -> bool:
