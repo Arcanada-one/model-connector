@@ -5,7 +5,7 @@
     "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
     "verdict": "admitted_with_exemptions"
   },
-  "captured_at_utc": "2026-10-26T08:31:23Z",
+  "captured_at_utc": "2026-10-26T08:33:00Z",
   "change_set": {
     "base": "7724d39671373bd45247fdcfa9d2d60b241085f9",
     "files": [
@@ -35,9 +35,18 @@
         ],
         "path": ".github/workflows/publish-sdks.yml",
         "status": "M"
+      },
+      {
+        "kind": "receipt",
+        "node_id": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+        "node_ids": [
+          "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json"
+        ],
+        "path": "receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+        "status": "A"
       }
     ],
-    "head": "31cf1f271799342c7890756cc15f3ff5815d2da4",
+    "head": "5a27ac93bd2e5783003e59cc6713cd99bf6fb05e",
     "mode": "diff"
   },
   "decision_ref": "DEC-AUP-0008",
@@ -74,12 +83,12 @@
   "head_graph": {
     "builder_version": "1.0.6",
     "built_at_utc": "2026-09-05T00:00:00Z",
-    "graph_digest": "sha256:ab8f375c2e9c0f6833f69cfdb2f30f57c9acaff4955755c778cafc0afcfe32e5",
-    "path": "[local-verifier-output]/graph-head-31cf1f271799.json",
-    "source_commit": "31cf1f271799342c7890756cc15f3ff5815d2da4",
+    "graph_digest": "sha256:08bb85df5391d4b83e5f933ea5557b3d32f99967e6d529b34098f47f3e5c01c9",
+    "path": "[local-verifier-output]/graph-head-5a27ac93bd2e.json",
+    "source_commit": "5a27ac93bd2e5783003e59cc6713cd99bf6fb05e",
     "staleness": {
-      "checked_at_utc": "2026-10-26T08:31:53Z",
-      "checked_nodes": 911,
+      "checked_at_utc": "2026-10-26T08:33:29Z",
+      "checked_nodes": 912,
       "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
       "mismatched_nodes": [],
       "verdict": "fresh"
@@ -87,7 +96,7 @@
   },
   "host": "verifier-host",
   "host_redacted": true,
-  "host_sha256": "47e0af8aaf6bfa3678ffb8f3d1bcb1c2597b7c6c5d94a87e8c7d42a938bbeef1",
+  "host_sha256": "4fcff2b637df2b3ab935c4310df40d186c2f240fb7d0ce5c8f039072346db294",
   "impact_set": {
     "deterministic_core": [
       {
@@ -389,7 +398,7 @@
     "tool": "tools/graph/verify.py",
     "version": "1.4.1"
   },
-  "receipt_id": "car-verify-20261026T083123Z-31cf1f27",
+  "receipt_id": "car-verify-20261026T083300Z-5a27ac93",
   "receipt_path": "receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
   "repo": {
     "name": "Arcanada-one/model-connector",
@@ -432,6 +441,7 @@
       "receipt:receipts/graph/change-admission-a2-432.json",
       "receipt:receipts/graph/change-admission-a2-443.json",
       "receipt:receipts/graph/change-admission-jev-decision.json",
+      "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
       "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json"
     ],
     "schema": "RevisionImpactSelection/v1",
@@ -439,7 +449,7 @@
   },
   "schema": "ChangeAdmissionReceipt/v1",
   "staleness": {
-    "checked_at_utc": "2026-10-26T08:31:53Z",
+    "checked_at_utc": "2026-10-26T08:33:29Z",
     "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
     "mismatched_nodes": [],
     "verdict": "fresh"
@@ -535,6 +545,21 @@
     },
     {
       "content_hash": {
+        "base": null,
+        "head": "sha256:162839130cf6e875ac6bc74c1eab60a8150163833a23749891d8bc17fab1ff5f"
+      },
+      "entity": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+      "node_type": "receipt",
+      "path": "receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+      "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it; superseded by construction — this run re-issues the receipt at receipts/graph/change-admission-kcp-0005-workflow-fitness.json for work item KCP-0005",
+      "rule": "DEC-AUP-0035",
+      "superseded": {
+        "receipt_path": "receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+        "work_item": "KCP-0005"
+      }
+    },
+    {
+      "content_hash": {
         "base": "sha256:bb9e96aee76d55309f4538be0bbee5ddc9a8ad35f9b23090c652f6c6a6d8fb50",
         "head": "sha256:bb9e96aee76d55309f4538be0bbee5ddc9a8ad35f9b23090c652f6c6a6d8fb50"
       },
@@ -546,7 +571,7 @@
     }
   ],
   "tree": {
-    "commit": "31cf1f271799342c7890756cc15f3ff5815d2da4",
+    "commit": "5a27ac93bd2e5783003e59cc6713cd99bf6fb05e",
     "dirty": false
   },
   "verdicts": [
@@ -627,8 +652,8 @@
   },
   "verifiers": [
     {
-      "command": "[local-repo]/node_modules/.bin/tsc -p [local-repo]/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile [local-verifier-output]/type-check-xazvwxku/check.tsbuildinfo --listFiles",
-      "duration_s": 5.47,
+      "command": "[local-repo]/node_modules/.bin/tsc -p [local-repo]/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile [local-verifier-output]/type-check-35b59lyc/check.tsbuildinfo --listFiles",
+      "duration_s": 5.58,
       "entities": [
         "deployable_unit:."
       ],
@@ -639,12 +664,12 @@
       "id": "v-type-check-tsconfig-build",
       "kind": "type_check",
       "output_ref": "[local-verifier-output]/v-type-check-tsconfig-build.txt",
-      "started_at_utc": "2026-10-26T08:32:00Z",
+      "started_at_utc": "2026-10-26T08:33:36Z",
       "summary": "tsconfig.build.json: exit 0, 0 error(s), 2131 files listed"
     },
     {
-      "command": "[local-repo]/node_modules/.bin/tsc -p [local-repo]/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile [local-verifier-output]/type-check-mkq8yb67/check.tsbuildinfo --listFiles",
-      "duration_s": 0.75,
+      "command": "[local-repo]/node_modules/.bin/tsc -p [local-repo]/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile [local-verifier-output]/type-check-xh9qu_pl/check.tsbuildinfo --listFiles",
+      "duration_s": 0.74,
       "entities": [
         "deployable_unit:."
       ],
@@ -655,12 +680,12 @@
       "id": "v-type-check-tsconfig-ci",
       "kind": "type_check",
       "output_ref": "[local-verifier-output]/v-type-check-tsconfig-ci.txt",
-      "started_at_utc": "2026-10-26T08:32:06Z",
+      "started_at_utc": "2026-10-26T08:33:41Z",
       "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
     },
     {
-      "command": "[local-repo]/node_modules/.bin/tsc -p [local-repo]/tsconfig.json --noEmit --incremental true --tsBuildInfoFile [local-verifier-output]/type-check-aq03uz86/check.tsbuildinfo --listFiles",
-      "duration_s": 9.27,
+      "command": "[local-repo]/node_modules/.bin/tsc -p [local-repo]/tsconfig.json --noEmit --incremental true --tsBuildInfoFile [local-verifier-output]/type-check-65zynzhk/check.tsbuildinfo --listFiles",
+      "duration_s": 9.06,
       "entities": [
         "deployable_unit:."
       ],
@@ -671,12 +696,12 @@
       "id": "v-type-check-tsconfig",
       "kind": "type_check",
       "output_ref": "[local-verifier-output]/v-type-check-tsconfig.txt",
-      "started_at_utc": "2026-10-26T08:32:07Z",
+      "started_at_utc": "2026-10-26T08:33:42Z",
       "summary": "tsconfig.json: exit 0, 0 error(s), 2750 files listed"
     },
     {
-      "command": "[local-repo]/node_modules/.bin/tsc -p [local-repo]/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile [local-verifier-output]/type-check-tbg5i6tz/check.tsbuildinfo --listFiles",
-      "duration_s": 10.77,
+      "command": "[local-repo]/node_modules/.bin/tsc -p [local-repo]/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile [local-verifier-output]/type-check-w364fo0t/check.tsbuildinfo --listFiles",
+      "duration_s": 9.28,
       "entities": [
         "deployable_unit:."
       ],
@@ -687,7 +712,7 @@
       "id": "v-type-check-tsconfig-test",
       "kind": "type_check",
       "output_ref": "[local-verifier-output]/v-type-check-tsconfig-test.txt",
-      "started_at_utc": "2026-10-26T08:32:16Z",
+      "started_at_utc": "2026-10-26T08:33:52Z",
       "summary": "tsconfig.test.json: exit 0, 0 error(s), 2856 files listed"
     },
     {
@@ -703,7 +728,7 @@
       "id": "v-workflow-config-b803fcb7f17ed923",
       "kind": "config_schema",
       "output_ref": "[local-verifier-output]/v-workflow-config-b803fcb7f17ed923.txt",
-      "started_at_utc": "2026-10-26T08:32:27Z",
+      "started_at_utc": "2026-10-26T08:34:01Z",
       "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 2: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 7: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 12: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 13: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 14: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 14: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 1: command/process substitution closure is unresolved; job lint-and-test step 2: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 2: line 9: unsupported loader/interpreter options; job lint-and-test step 3: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 3: line 1: relative execution cwd is not declared; job lint-and-test step 4: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 4: line 1: unsupported loader/interpreter options; job lint-and-test step 4: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 5: line 1: unsupported loader/interpreter options; job lint-and-test step 5: line 2: relative execution cwd is not declared; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 13: unsupported loader/interpreter options; job lint-and-test step 6: line 14: relative execution cwd is not declared; job lint-and-test step 6: line 15: unsupported loader/interpreter options; job lint-and-test step 6: line 16: relative execution cwd is not declared; job lint-and-test step 6: line 1: unsupported loader/interpreter options; job lint-and-test step 6: line 2: unsupported loader/interpreter options; job lint-and-test step 6: line 3: relative execution cwd is not declared; job lint-and-test step 6: line 4: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 5: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 6: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 7: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: heredoc/group/function/brace expansion closure is unresolved; 44 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
     },
     {
@@ -719,7 +744,7 @@
       "id": "v-workflow-config-6ceb21cf301c7eb2",
       "kind": "config_schema",
       "output_ref": "[local-verifier-output]/v-workflow-config-6ceb21cf301c7eb2.txt",
-      "started_at_utc": "2026-10-26T08:32:28Z",
+      "started_at_utc": "2026-10-26T08:34:01Z",
       "summary": "workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; job deploy step 7: command/process substitution closure is unresolved; job deploy step 8: checkout root or source-affecting workflow environment unresolved; job deploy step 8: command/process substitution closure is unresolved; job deploy step 9: checkout root or source-affecting workflow environment unresolved; job deploy step 9: line 1: wrapper execution scope/options unresolved; job network-exposure-lint: reusable/opaque shell context; 13 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
     },
     {
@@ -735,12 +760,12 @@
       "id": "v-workflow-config-506797d1671524f2",
       "kind": "config_schema",
       "output_ref": "[local-verifier-output]/v-workflow-config-506797d1671524f2.txt",
-      "started_at_utc": "2026-10-26T08:32:28Z",
+      "started_at_utc": "2026-10-26T08:34:02Z",
       "summary": "workflow shell caller closure not measured: job build-python step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job build-python step 2: line 2: unsupported interpreter script/module/stdin dispatch closure; job build-python step 5: line 1: unsupported interpreter script/module/stdin dispatch closure; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
     },
     {
       "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-      "duration_s": 0.5,
+      "duration_s": 0.43,
       "entities": [
         "code_unit:.github/workflows/ci.yml",
         "code_unit:.github/workflows/deploy-stt-whisper.yml",
@@ -757,7 +782,7 @@
       "id": "v-fitness",
       "kind": "fitness_rules",
       "output_ref": "[local-verifier-output]/v-fitness.json",
-      "started_at_utc": "2026-10-26T08:32:28Z",
+      "started_at_utc": "2026-10-26T08:34:02Z",
       "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
     },
     {
@@ -779,16 +804,22 @@
       "id": "v-doc-reference",
       "kind": "doc_reference",
       "output_ref": "[local-verifier-output]/v-doc-reference.txt",
-      "started_at_utc": "2026-10-26T08:32:28Z",
+      "started_at_utc": "2026-10-26T08:34:02Z",
       "summary": "4 document(s), 0 failed"
     }
   ],
   "verify": {
     "events": [
       {
+        "code": "SUPERSEDED_SELF_EXCLUSION",
+        "entity": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+        "rule": "DEC-AUP-0035",
+        "text": "the receipt at receipts/graph/change-admission-kcp-0005-workflow-fitness.json is the previous version of the one this run is writing, for the same work item KCP-0005 — superseded by construction, so it owes this change no verdict"
+      },
+      {
         "code": "STRUCTURAL_EXCLUSION",
         "rule": "DEC-AUP-0034",
-        "text": "9 affected entity(ies) owe no verdict (receipt: 9): unchanged at both revisions and given no verifier by the matrix"
+        "text": "10 affected entity(ies) owe no verdict (receipt: 10): unchanged at both revisions and given no verifier by the matrix"
       }
     ],
     "required_by_entity": {
@@ -828,18 +859,19 @@
       "receipt:receipts/graph/change-admission-a2-432.json": [],
       "receipt:receipts/graph/change-admission-a2-443.json": [],
       "receipt:receipts/graph/change-admission-jev-decision.json": [],
+      "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json": [],
       "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
     },
     "seconds": {
-      "prepare": 3.08,
-      "total": 64.57,
-      "verifiers": 26.76
+      "prepare": 3.19,
+      "total": 61.92,
+      "verifiers": 25.09
     }
   },
   "work_item": "KCP-0005",
   "public_redaction": {
     "scope": "local checkout, verifier-output and protected-inbox paths only; verdicts, digests, source commits and verifier observations retained",
     "raw_receipt_custody": "protected KCP-0005 inbox on Arcana DEVS",
-    "raw_receipt_sha256": "39ec1a30ba4dd027817fd601ff117375a593e7f0c4698122c2530e083f7534e8"
+    "raw_receipt_sha256": "aeaa157966f5e6e73c6dbebf69307b888e523382aea9e121d7cc3d6354797347"
   }
 }
