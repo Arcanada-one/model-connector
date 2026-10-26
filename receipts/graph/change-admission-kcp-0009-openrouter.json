@@ -1,0 +1,732 @@
+{
+ "admission": {
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+  "verdict": "admitted_with_exemptions"
+ },
+ "captured_at_utc": "2026-10-26T08:10:38Z",
+ "change_set": {
+  "base": "89935a0c95960d7b5a3827f1487e86d9eb4dcf9a",
+  "files": [
+   {
+    "kind": "code",
+    "node_id": "code_unit:scripts/vault-provider-keys.mjs",
+    "node_ids": [
+     "code_unit:scripts/vault-provider-keys.mjs"
+    ],
+    "path": "scripts/vault-provider-keys.mjs",
+    "status": "M"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:scripts/vault-provider-keys.spec.mjs",
+    "node_ids": [
+     "code_unit:scripts/vault-provider-keys.spec.mjs"
+    ],
+    "path": "scripts/vault-provider-keys.spec.mjs",
+    "status": "M"
+   }
+  ],
+  "head": "c98cf9d7d5f2b2c988dd0cecfd8ec9ba45d438f2",
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "exemptions": [
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:scripts/vault-provider-keys.mjs",
+   "expires_at_utc": "2026-11-02T00:00:00Z",
+   "owner": "Model Connector",
+   "reason": "The current mandatory TypeScript verifier excludes .mjs files through tsconfig.json. Node --check and the focused Vitest suite passed, but these do not establish a TypeScript verifier verdict. KCP-0009 tracks module-aware verifier coverage."
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:scripts/vault-provider-keys.spec.mjs",
+   "expires_at_utc": "2026-11-02T00:00:00Z",
+   "owner": "Model Connector",
+   "reason": "The current mandatory TypeScript verifier excludes .mjs tests through tsconfig.test.json. Node --check and the focused 17-test Vitest suite passed, but these do not establish a TypeScript verifier verdict. KCP-0009 tracks module-aware verifier coverage."
+  }
+ ],
+ "graph": {
+  "builder_version": "1.0.1",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:8e90109a42378c6c594e0c7cbdb28e17c6b79b54b9e5808e0d39ab80628009ba",
+  "path": "/home/dev/arcanada-inbox/contract-place/kcp0009-graph-work/verifier-out/graph-89935a0c9596.json",
+  "source_commit": "89935a0c95960d7b5a3827f1487e86d9eb4dcf9a"
+ },
+ "head_graph": {
+  "builder_version": "1.0.1",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:d76e4b9bb5aba7b6ca82122535c55c509ee1f8f91b4ccde940cb7e1a377d477a",
+  "path": "/home/dev/arcanada-inbox/contract-place/kcp0009-graph-work/verifier-out/graph-head-c98cf9d7d5f2.json",
+  "source_commit": "c98cf9d7d5f2b2c988dd0cecfd8ec9ba45d438f2",
+  "staleness": {
+   "checked_at_utc": "2026-10-26T08:10:52Z",
+   "checked_nodes": 870,
+   "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+   "mismatched_nodes": [],
+   "verdict": "fresh"
+  }
+ },
+ "host": "arcana-devs",
+ "impact_set": {
+  "deterministic_core": [
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "deployable_unit:.",
+    "node_type": "deployable_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:scripts/vault-provider-keys.mjs",
+      "provenance": "deterministic",
+      "to": "deployable_unit:.",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "document:CHANGELOG.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/onboard-agent-to-mc.md",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:CHANGELOG.md",
+      "provenance": "deterministic",
+      "to": "document:docs/how-to/onboard-agent-to-mc.md",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:docs/how-to/onboard-agent-to-mc.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/onboard-agent-to-mc.md",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/bench-source-ctx24/source-car.json",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/onboard-agent-to-mc.md",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+      "provenance": "deterministic",
+      "to": "document:docs/how-to/onboard-agent-to-mc.md",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/onboard-agent-to-mc.md",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+      "provenance": "deterministic",
+      "to": "document:docs/how-to/onboard-agent-to-mc.md",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/onboard-agent-to-mc.md",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+      "provenance": "deterministic",
+      "to": "document:docs/how-to/onboard-agent-to-mc.md",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/onboard-agent-to-mc.md",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+      "provenance": "deterministic",
+      "to": "document:docs/how-to/onboard-agent-to-mc.md",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-425.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/onboard-agent-to-mc.md",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-425.json",
+      "provenance": "deterministic",
+      "to": "document:docs/how-to/onboard-agent-to-mc.md",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-432.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-432.json",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-443.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-443.json",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-jev-decision.json",
+      "provenance": "deterministic",
+      "to": "code_unit:scripts/vault-provider-keys.mjs",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   }
+  ],
+  "edge_types": "all",
+  "global_fallback": {
+   "triggered": false
+  },
+  "inferred_tail": [],
+  "max_depth": 3,
+  "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+  "total": 13
+ },
+ "notes": [
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.2.0) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
+  "exemptions: 2 attached from /home/dev/arcanada-inbox/contract-place/kcp0009-openrouter-exemptions.json"
+ ],
+ "producer": {
+  "tool": "tools/graph/verify.py",
+  "version": "1.2.0"
+ },
+ "receipt_id": "car-verify-20261026T081038Z-c98cf9d7",
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/home/dev/orca/workspaces/arcanada/KCP-0001-contract-place-openrouter"
+ },
+ "revision_selection": {
+  "base": [
+   "code_unit:scripts/vault-provider-keys.mjs",
+   "code_unit:scripts/vault-provider-keys.spec.mjs",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:docs/how-to/onboard-agent-to-mc.md",
+   "receipt:receipts/bench-source-ctx24/source-car.json",
+   "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+   "receipt:receipts/graph/change-admission-a2-425.json",
+   "receipt:receipts/graph/change-admission-a2-432.json",
+   "receipt:receipts/graph/change-admission-a2-443.json",
+   "receipt:receipts/graph/change-admission-jev-decision.json"
+  ],
+  "head": [
+   "code_unit:scripts/vault-provider-keys.mjs",
+   "code_unit:scripts/vault-provider-keys.spec.mjs",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:docs/how-to/onboard-agent-to-mc.md",
+   "receipt:receipts/bench-source-ctx24/source-car.json",
+   "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+   "receipt:receipts/graph/change-admission-a2-425.json",
+   "receipt:receipts/graph/change-admission-a2-432.json",
+   "receipt:receipts/graph/change-admission-a2-443.json",
+   "receipt:receipts/graph/change-admission-jev-decision.json"
+  ],
+  "schema": "RevisionImpactSelection/v1",
+  "unmeasured_head_files": []
+ },
+ "schema": "ChangeAdmissionReceipt/v1",
+ "staleness": {
+  "checked_at_utc": "2026-10-26T08:10:52Z",
+  "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+  "mismatched_nodes": [],
+  "verdict": "fresh"
+ },
+ "structural_exclusions": [
+  {
+   "content_hash": {
+    "base": "sha256:1bf9d4ab170eee11a6e10ae667a923438765d8fb168561ffbc1480555c77ad94",
+    "head": "sha256:1bf9d4ab170eee11a6e10ae667a923438765d8fb168561ffbc1480555c77ad94"
+   },
+   "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
+   "node_type": "receipt",
+   "path": "receipts/bench-source-ctx24/source-car.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:f09d58b4096eb02b4450816057806a140465115c3947aa416e47e95422abf0e9",
+    "head": "sha256:f09d58b4096eb02b4450816057806a140465115c3947aa416e47e95422abf0e9"
+   },
+   "entity": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/a2-319-rate-limit-admin.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf",
+    "head": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:55aa15f55fa943313632f398f2934cfc9fa99c25fcae2cca6cda20e14a00eb9a",
+    "head": "sha256:55aa15f55fa943313632f398f2934cfc9fa99c25fcae2cca6cda20e14a00eb9a"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:b2f2634796fa4f3dd05a4968bf6035f30619441d3e557ee1960ad3aa7838eab4",
+    "head": "sha256:b2f2634796fa4f3dd05a4968bf6035f30619441d3e557ee1960ad3aa7838eab4"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:f662576eb0ad71c0a0dc16ed3322df90522563d46bd77ddabbae8139b2767c60",
+    "head": "sha256:f662576eb0ad71c0a0dc16ed3322df90522563d46bd77ddabbae8139b2767c60"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:969805673500d0f88865bd7c239e01fdf86746339c77e5bd5b4b3b10ce869e65",
+    "head": "sha256:969805673500d0f88865bd7c239e01fdf86746339c77e5bd5b4b3b10ce869e65"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-425.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-425.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:47947b97d33ab3f837dc83a1fc71d3594e4c7df6351cd20e146d08e282ddda1e",
+    "head": "sha256:47947b97d33ab3f837dc83a1fc71d3594e4c7df6351cd20e146d08e282ddda1e"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-432.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-432.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:b8b7f231eb201c9a12810ec8f88f172ce525a0498c12bbb70b89f1f0390f0dda",
+    "head": "sha256:b8b7f231eb201c9a12810ec8f88f172ce525a0498c12bbb70b89f1f0390f0dda"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-443.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-443.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a",
+    "head": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a"
+   },
+   "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-jev-decision.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  }
+ ],
+ "tree": {
+  "commit": "c98cf9d7d5f2b2c988dd0cecfd8ec9ba45d438f2",
+  "dirty": false
+ },
+ "verdicts": [
+  {
+   "entity": "code_unit:scripts/vault-provider-keys.mjs",
+   "reason": "v-type-check-tsconfig: tsconfig.json does not include scripts/vault-provider-keys.mjs",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:scripts/vault-provider-keys.spec.mjs",
+   "reason": "v-type-check-tsconfig-test: tsconfig.test.json does not include scripts/vault-provider-keys.spec.mjs",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-test"
+   ]
+  },
+  {
+   "entity": "deployable_unit:.",
+   "reason": "v-type-check-tsconfig: tsconfig.json: 0 errors; v-fitness: no new violation in . (35 frozen)",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig"
+   ]
+  },
+  {
+   "entity": "document:CHANGELOG.md",
+   "reason": "v-doc-reference: 26 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:docs/how-to/onboard-agent-to-mc.md",
+   "reason": "v-doc-reference: 3 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  }
+ ],
+ "verifier_selection": {
+  "applied": {},
+  "not_applied": [],
+  "requested": [],
+  "schema": "VerifierSelection/v1"
+ },
+ "verifiers": [
+  {
+   "command": "/home/dev/orca/workspaces/arcanada/KCP-0001-contract-place-openrouter/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0001-contract-place-openrouter/tsconfig.json --noEmit --incremental false --listFiles",
+   "duration_s": 13.23,
+   "entities": [
+    "code_unit:scripts/vault-provider-keys.mjs",
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "code_unit:scripts/vault-provider-keys.mjs": "not_measured",
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig",
+   "kind": "type_check",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0009-graph-work/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-10-26T08:11:06Z",
+   "summary": "tsconfig.json: exit 0, 0 error(s), 2750 files listed"
+  },
+  {
+   "command": "/home/dev/orca/workspaces/arcanada/KCP-0001-contract-place-openrouter/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0001-contract-place-openrouter/tsconfig.test.json --noEmit --incremental false --listFiles",
+   "duration_s": 13.4,
+   "entities": [
+    "code_unit:scripts/vault-provider-keys.spec.mjs"
+   ],
+   "entity_verdicts": {
+    "code_unit:scripts/vault-provider-keys.spec.mjs": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig-test",
+   "kind": "type_check",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0009-graph-work/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-10-26T08:11:20Z",
+   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2856 files listed"
+  },
+  {
+   "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+   "duration_s": 0.29,
+   "entities": [
+    "code_unit:scripts/vault-provider-keys.mjs",
+    "code_unit:scripts/vault-provider-keys.spec.mjs",
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "code_unit:scripts/vault-provider-keys.mjs": "verified",
+    "code_unit:scripts/vault-provider-keys.spec.mjs": "verified",
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-fitness",
+   "kind": "fitness_rules",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0009-graph-work/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-10-26T08:11:34Z",
+   "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+  },
+  {
+   "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+   "duration_s": 0.01,
+   "entities": [
+    "document:CHANGELOG.md",
+    "document:docs/how-to/onboard-agent-to-mc.md"
+   ],
+   "entity_verdicts": {
+    "document:CHANGELOG.md": "verified",
+    "document:docs/how-to/onboard-agent-to-mc.md": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-doc-reference",
+   "kind": "doc_reference",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0009-graph-work/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-10-26T08:11:34Z",
+   "summary": "2 document(s), 0 failed"
+  }
+ ],
+ "verify": {
+  "events": [
+   {
+    "code": "STRUCTURAL_EXCLUSION",
+    "rule": "DEC-AUP-0034",
+    "text": "10 affected entity(ies) owe no verdict (receipt: 10): unchanged at both revisions and given no verifier by the matrix"
+   }
+  ],
+  "required_by_entity": {
+   "code_unit:scripts/vault-provider-keys.mjs": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:scripts/vault-provider-keys.spec.mjs": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "deployable_unit:.": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "document:CHANGELOG.md": [
+    "doc_reference"
+   ],
+   "document:docs/how-to/onboard-agent-to-mc.md": [
+    "doc_reference"
+   ],
+   "receipt:receipts/bench-source-ctx24/source-car.json": [],
+   "receipt:receipts/graph/a2-319-rate-limit-admin.json": [],
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-425.json": [],
+   "receipt:receipts/graph/change-admission-a2-432.json": [],
+   "receipt:receipts/graph/change-admission-a2-443.json": [],
+   "receipt:receipts/graph/change-admission-jev-decision.json": []
+  },
+  "seconds": {
+   "prepare": 9.98,
+   "total": 56.23,
+   "verifiers": 26.93
+  }
+ },
+ "work_item": "KCP-0009"
+}
