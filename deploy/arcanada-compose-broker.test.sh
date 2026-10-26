@@ -550,6 +550,7 @@ cat >"$fake_docker_argana" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\n' "$*" >>"${FAKE_DOCKER_LOG}"
+printf 'BUILD_SHA=%s\n' "${BUILD_SHA:-}" >>"${FAKE_DOCKER_LOG}"
 if [[ "${1:-}" == 'inspect' ]]; then
   # What `freshness` parses with date(1). A container created now is fresh, so
   # the case asserts the NAME that was inspected rather than the age verdict.
@@ -576,6 +577,30 @@ grep -Fq 'inspect argana-argana-1 --format {{.Created}}' "$fake_docker_log" || {
 }
 expect_message argana_freshness_inspects_the_derived_container \
   'BROKER_FRESHNESS_PASS service=argana'
+
+# The new private API uses only the fixed checkout, pinned compose project and
+# broker-derived build SHA. No environment file or registry credential is needed.
+api_checkout="${state_root}/contract-place-api"
+mkdir -p "$api_checkout"
+git -C "$api_checkout" init -q
+git -C "$api_checkout" -c user.email=t@example.invalid -c user.name=t \
+  commit -q --allow-empty -m 'fixture API head'
+api_head="$(git -C "$api_checkout" rev-parse HEAD)"
+printf '%s\n' 'services: {api: {}}' >"${api_checkout}/docker-compose.yml"
+: >"$fake_docker_log"
+expect_pass contract_place_api_up_uses_fixed_project contract-place-api up
+grep -Fq "compose -p contract-place-api -f ${api_checkout}/docker-compose.yml up -d" \
+  "$fake_docker_log" || { echo 'FAIL: API compose project or path drifted' >&2; exit 1; }
+grep -Fxq "BUILD_SHA=${api_head}" "$fake_docker_log" || {
+  echo 'FAIL: API build SHA did not come from broker checkout HEAD' >&2
+  exit 1
+}
+expect_fail contract_place_api_has_no_root_script contract-place-api run-deploy
+expect_message contract_place_api_has_no_root_script \
+  'service has no deploy script: contract-place-api'
+expect_fail contract_place_api_has_no_registry_login contract-place-api registry-login Arcanada
+expect_message contract_place_api_has_no_registry_login \
+  'may not establish a registry credential: contract-place-api'
 
 # Admitting a service to the DEPLOY allowlist must not admit it to anything
 # else. argana builds from its checkout and never pulls a private image, so it
@@ -609,6 +634,10 @@ sed -i -e "s#^readonly GIT=.*#readonly GIT='${fake_git}'#" "$broker"
 expect_fail argana_sync_requires_a_fetch_credential \
   argana sync 0000000000000000000000000000000000000000 </dev/null
 expect_message argana_sync_requires_a_fetch_credential \
+  'this service needs a fetch credential on stdin'
+expect_fail contract_place_api_sync_requires_a_fetch_credential \
+  contract-place-api sync 0000000000000000000000000000000000000000 </dev/null
+expect_message contract_place_api_sync_requires_a_fetch_credential \
   'this service needs a fetch credential on stdin'
 if grep -Fq 'FAKE_GIT_REACHED' \
   "${fixture_dir}/argana_sync_requires_a_fetch_credential.out"; then

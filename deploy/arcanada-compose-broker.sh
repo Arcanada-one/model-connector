@@ -117,6 +117,8 @@ declare -rA REPOS=(
   # checkout as root. No MIGRATE, IMAGE, VERIFY or SMOKE row: the service has no
   # schema, no pre-built image and no post-deploy script.
   [argana]='https://github.com/Arcanada-one/argana.git'
+  # KCP-0005: the private health-stub API runs only on this host behind nginx.
+  [contract-place-api]='https://github.com/Arcanada-one/contract-place-api.git'
   # Muneral cc96570a: the observability stack (Grafana/Loki/Tempo/Mimir) has
   # been running on arcana-prd since INFRA-0417 (project `observability-stack`,
   # named volumes obs_*), but its deploy job still SSHed to the decommissioned
@@ -139,6 +141,7 @@ declare -rA COMPOSE=(
   [verdicus]='docker-compose.prod.yml'
   [langfuse-deploy]='docker-compose.yml'
   [argana]='docker-compose.yml'
+  [contract-place-api]='docker-compose.yml'
   [observability-stack]='docker-compose.yml'
 )
 # Private repositories whose fetch needs a credential on stdin.
@@ -156,6 +159,7 @@ declare -rA AUTH=(
   # opposite case, where a PUBLIC repo with an AUTH row would block on an empty
   # stdin read.
   [argana]='github-token'
+  [contract-place-api]='github-token'
   [observability-stack]='github-token'
 )
 # Pin the compose project name. Unset means Compose derives it from the
@@ -200,6 +204,8 @@ declare -rA PROJECT=(
   # derives the same name; the pin is what stops the check from depending on
   # that coincidence, exactly as for arcanada-assistant.
   [argana]='argana'
+  # A new stack with no existing containers or volumes to adopt.
+  [contract-place-api]='contract-place-api'
   # Pinned to the name the ALREADY-RUNNING stack carries
   # (com.docker.compose.project=observability-stack, measured 2026-09-30). Its
   # named volumes are fixed by `name:` (obs_*), so they would be adopted either
@@ -274,6 +280,8 @@ declare -rA BUILDSHA=(
   # COMPOSE, PROJECT, ENVFILE, MIGRATE, AGGREGATE_READBACK rows above), so this
   # admits it to no capability it did not already have.
   [muneral]='yes'
+  # The build passes the broker-owned checkout HEAD into the image; /health reports it.
+  [contract-place-api]='yes'
 )
 # Services whose compose file interpolates IMAGE_TAG to select a PRE-BUILT
 # image from a registry. The broker supplies it from its own checkout HEAD, so
