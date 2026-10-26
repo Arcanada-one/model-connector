@@ -918,10 +918,12 @@ x = json.load(open(p))
 x["services"]["scrutator"]["ports"][0]["host_ip"] = "0.0.0.0"
 json.dump(x, open(p, "w"))
 PY
+export PYTHONOPTIMIZE=1
 if kc_run >"${fixture_dir}/kc-public-port.out" 2>&1; then echo 'FAIL: public port accepted' >&2; exit 1; fi
 grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-public-port.out" || exit 1
 [[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
 echo 'PASS: kc_public_port_refused_before_up'
+unset PYTHONOPTIMIZE
 python3 - "$fake_docker_state/kc-config.json" <<'PY'
 import json, sys
 p = sys.argv[1]

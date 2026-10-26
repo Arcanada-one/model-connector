@@ -958,33 +958,36 @@ cmd_kc_stop() {
 kc_config_contract() {
   # Compose renders env_file values into JSON, so stdout goes only to this
   # parser; neither the JSON nor a database URL is printed or stored.
-  "$DOCKER" "${COMPOSE_ARGV[@]}" config --format json | /usr/bin/python3 -c '
+  "$DOCKER" "${COMPOSE_ARGV[@]}" config --format json | /usr/bin/python3 -I -c '
 import json, sys
 from urllib.parse import urlsplit
+def require(ok):
+    if not ok:
+        raise ValueError("isolation contract")
 try:
     cfg = json.load(sys.stdin)
-    assert cfg.get("name") == "knowledge-contract-scrutator"
+    require(cfg.get("name") == "knowledge-contract-scrutator")
     services = cfg["services"]
-    assert set(services) == {"scrutator"}
+    require(set(services) == {"scrutator"})
     svc = services["scrutator"]
-    assert svc.get("container_name") == "knowledge-contract-scrutator-scrutator-1"
-    assert svc.get("image") == "scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547"
-    assert not svc.get("network_mode") and not svc.get("privileged")
+    require(svc.get("container_name") == "knowledge-contract-scrutator-scrutator-1")
+    require(svc.get("image") == "scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547")
+    require(not svc.get("network_mode") and not svc.get("privileged"))
     for key in ("volumes", "devices", "cap_add", "security_opt", "pid", "ipc"):
-        assert not svc.get(key), key
-    assert svc.get("ports") == [{"mode": "ingress", "target": 8310,
-        "published": "8311", "protocol": "tcp", "host_ip": "127.0.0.1"}]
+        require(not svc.get(key))
+    require(svc.get("ports") == [{"mode": "ingress", "target": 8310,
+        "published": "8311", "protocol": "tcp", "host_ip": "127.0.0.1"}])
     env = svc["environment"]
-    assert env["SCRUTATOR_HOST"] == "0.0.0.0"
-    assert str(env["SCRUTATOR_PORT"]) == "8310"
-    assert str(env["SCRUTATOR_AUTH_ENFORCE"]).lower() == "true"
-    assert env["SCRUTATOR_FEEDER_NAMESPACES"] == "knowledge-contract"
+    require(env["SCRUTATOR_HOST"] == "0.0.0.0")
+    require(str(env["SCRUTATOR_PORT"]) == "8310")
+    require(str(env["SCRUTATOR_AUTH_ENFORCE"]).lower() == "true")
+    require(env["SCRUTATOR_FEEDER_NAMESPACES"] == "knowledge-contract")
     dsn = urlsplit(env["SCRUTATOR_DATABASE_URL"])
-    assert dsn.scheme in ("postgres", "postgresql")
-    assert dsn.username == "kc_scrutator_app" and bool(dsn.password)
-    assert dsn.hostname == "100.97.136.74" and dsn.port == 5432
-    assert dsn.path == "/knowledge_contract" and not dsn.query and not dsn.fragment
-except (AssertionError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+    require(dsn.scheme in ("postgres", "postgresql"))
+    require(dsn.username == "kc_scrutator_app" and bool(dsn.password))
+    require(dsn.hostname == "100.97.136.74" and dsn.port == 5432)
+    require(dsn.path == "/knowledge_contract" and not dsn.query and not dsn.fragment)
+except (KeyError, TypeError, ValueError, json.JSONDecodeError):
     sys.exit(1)
 ' || die 'project Compose isolation contract failed'
 }
