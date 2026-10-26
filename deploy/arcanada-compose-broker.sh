@@ -51,6 +51,7 @@ readonly MUNERAL_HEALTH_URL='http://127.0.0.1:3500/health'
 readonly KC_SHARED_HEALTH_URL='http://127.0.0.1:8310/health'
 readonly KC_PROJECT_HEALTH_URL='http://127.0.0.1:8311/health'
 readonly KC_IMAGE_ID='sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17'
+readonly KC_IMAGE_REF='scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547'
 readonly KC_CONTAINER='knowledge-contract-scrutator-scrutator-1'
 # Content-addressed root helper; no runner-owned import or path override.
 # shellcheck disable=SC2034 # Root installer consumes the sudoers pin from this reviewed broker.
@@ -950,8 +951,42 @@ kc_compose() {
 
 cmd_kc_stop() {
   kc_compose
-  "$DOCKER" "${COMPOSE_ARGV[@]}" down
+  "$DOCKER" "${COMPOSE_ARGV[@]}" down || return 1
   printf 'KC_PROJECT_STOP_PASS project=knowledge-contract-scrutator\n'
+}
+
+kc_config_contract() {
+  # Compose renders env_file values into JSON, so stdout goes only to this
+  # parser; neither the JSON nor a database URL is printed or stored.
+  "$DOCKER" "${COMPOSE_ARGV[@]}" config --format json | /usr/bin/python3 -c '
+import json, sys
+from urllib.parse import urlsplit
+try:
+    cfg = json.load(sys.stdin)
+    assert cfg.get("name") == "knowledge-contract-scrutator"
+    services = cfg["services"]
+    assert set(services) == {"scrutator"}
+    svc = services["scrutator"]
+    assert svc.get("container_name") == "knowledge-contract-scrutator-scrutator-1"
+    assert svc.get("image") == "scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547"
+    assert not svc.get("network_mode") and not svc.get("privileged")
+    for key in ("volumes", "devices", "cap_add", "security_opt", "pid", "ipc"):
+        assert not svc.get(key), key
+    assert svc.get("ports") == [{"mode": "ingress", "target": 8310,
+        "published": "8311", "protocol": "tcp", "host_ip": "127.0.0.1"}]
+    env = svc["environment"]
+    assert env["SCRUTATOR_HOST"] == "0.0.0.0"
+    assert str(env["SCRUTATOR_PORT"]) == "8310"
+    assert str(env["SCRUTATOR_AUTH_ENFORCE"]).lower() == "true"
+    assert env["SCRUTATOR_FEEDER_NAMESPACES"] == "knowledge-contract"
+    dsn = urlsplit(env["SCRUTATOR_DATABASE_URL"])
+    assert dsn.scheme in ("postgres", "postgresql")
+    assert dsn.username == "kc_scrutator_app" and bool(dsn.password)
+    assert dsn.hostname == "100.97.136.74" and dsn.port == 5432
+    assert dsn.path == "/knowledge_contract" and not dsn.query and not dsn.fragment
+except (AssertionError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+    sys.exit(1)
+' || die 'project Compose isolation contract failed'
 }
 
 cmd_kc_status() {
@@ -964,28 +999,33 @@ cmd_kc_status() {
 }
 
 cmd_kc_deploy() {
-  local sha="$1" image_ref image_id
+  local sha="$1" image_ref image_id project_containers
   set_root_env_path knowledge-contract-scrutator
   [[ "$(stat -c '%a' -- "$ROOT_ENV_PATH")" == 600 ]] || die 'project env must be mode 0600'
   kc_health "$KC_SHARED_HEALTH_URL" || die 'shared Scrutator unhealthy before project install'
   if "$DOCKER" container inspect "$KC_CONTAINER" >/dev/null 2>&1; then
     die 'project container already exists; initial-install verb refuses upgrades'
   fi
+  project_containers="$("$DOCKER" ps -a -q \
+    --filter 'label=com.docker.compose.project=knowledge-contract-scrutator')" ||
+    die 'cannot inspect existing project containers'
+  [[ -z "$project_containers" ]] || die 'project already has a container; initial install refused'
   if kc_health "$KC_PROJECT_HEALTH_URL"; then die 'project port already serves HTTP'; fi
   cmd_sync knowledge-contract-scrutator "$sha"
   kc_compose
   "$DOCKER" "${COMPOSE_ARGV[@]}" config -q || die 'project Compose preflight failed'
+  kc_config_contract
   image_ref="$("$DOCKER" "${COMPOSE_ARGV[@]}" config --images)" || die 'cannot read project image'
-  [[ "$image_ref" != *$'\n'* && -n "$image_ref" ]] || die 'project Compose must name one image'
+  [[ "$image_ref" == "$KC_IMAGE_REF" ]] || die 'project Compose image reference mismatch'
   image_id="$("$DOCKER" image inspect "$image_ref" --format '{{.Id}}')" || die 'project image missing'
   [[ "$image_id" == "$KC_IMAGE_ID" ]] || die 'project image digest mismatch'
   if ! "$DOCKER" "${COMPOSE_ARGV[@]}" up -d --no-build --no-deps scrutator; then
-    cmd_kc_stop || true
+    cmd_kc_stop || die 'project startup failed and project-only rollback failed; live state unknown'
     die 'project Compose startup failed; project-only rollback attempted'
   fi
   if ! kc_container_image || ! kc_health "$KC_PROJECT_HEALTH_URL" ||
     ! kc_health "$KC_SHARED_HEALTH_URL"; then
-    cmd_kc_stop || true
+    cmd_kc_stop || die 'project readback failed and project-only rollback failed; live state unknown'
     die 'project readback failed; project-only rollback attempted'
   fi
   printf 'KC_PROJECT_DEPLOY_PASS project=knowledge-contract-scrutator image=%s sha=%s\n' \
