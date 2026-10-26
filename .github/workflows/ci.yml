@@ -15,6 +15,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+permissions:
+  contents: read
+
 jobs:
   lint-and-test:
     # A2-315: pre-deploy gates run on the dedicated `deploy-gate` lane, not on `ci-general`, where
@@ -24,7 +27,7 @@ jobs:
     # Main pre-deploy checks retain deploy-gate; Docker e2e retains ci-general.
     runs-on: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && fromJSON('["deploy-gate"]') || fromJSON('["ci-nodocker"]') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Provision pinned Compose CLI in PR job temp (no daemon)
         if: github.event_name == 'pull_request'
@@ -119,11 +122,11 @@ jobs:
       # one OS user, so the action default `~/setup-pnpm` is ONE directory that
       # concurrent jobs install pnpm into simultaneously and corrupt (A2-227).
       # `runner.temp` is per runner and per job. Do not drop this.
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
           dest: ${{ runner.temp }}/setup-pnpm
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '22.23.4'
           cache: pnpm
@@ -177,7 +180,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -221,6 +224,7 @@ jobs:
             timeout --kill-after=5s 15s docker rm -f "$name" >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
+          # shellcheck disable=SC2016 # The single-quoted script expands inside the container.
           timeout --kill-after=5s 90s docker run --rm --init --name "$name" --network=host \
             --user "$(id -u):$(id -g)" \
             --entrypoint sh \
