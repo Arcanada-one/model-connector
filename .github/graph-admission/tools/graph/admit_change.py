@@ -2248,7 +2248,8 @@ def _selftest_output(raw: bytes) -> dict:
     return out
 
 
-def _bundle_selftest(bundle_root: Path, *, evidence: dict | None = None) -> tuple[int | None, int | None, str]:
+def _bundle_selftest(bundle_root: Path, *, evidence: dict | None = None,
+                     legacy_base: bool = False) -> tuple[int | None, int | None, str]:
     """→ (exit code, measured arm count, tail); retain full stdout/stderr in `evidence`.
 
     A FAIL summary measures a count, not a success. Missing, ambiguous, malformed or unfinished
@@ -2280,15 +2281,18 @@ def _bundle_selftest(bundle_root: Path, *, evidence: dict | None = None) -> tupl
     text = report["stdout"]["text"]
     # Only the single final aggregate is comparable. Per-battery totals, a duplicate aggregate,
     # zero measured arms, truncated output and contradictory totals cannot prove monotonicity.
-    summaries = re.findall(r"^TOTAL (PASS|FAIL): (\d+)/(\d+) checks across eight batteries "
-                           r"\((\d+) not_measured\)$", text, re.M)
+    # The signed pre-upgrade caller bundle reports three batteries. It can serve as
+    # B4's BASE measurement only; the candidate HEAD still owes the current eight.
+    batteries = r"(?:three|eight)" if legacy_base else "eight"
+    aggregate = (rf"TOTAL (PASS|FAIL): (\d+)/(\d+) checks across {batteries} batteries "
+                 r"\((\d+) not_measured\)")
+    summaries = re.findall(rf"^{aggregate}$", text, re.M)
     if report["complete"] and len(summaries) == 1:
         status, passed, total, nm = summaries[0]
         passed, total, nm = int(passed), int(total), int(nm)
         if (total > 0 and 0 <= passed <= total
                 and ((status == "PASS" and passed == total) or (status == "FAIL" and passed < total))
-                and re.fullmatch(r"TOTAL (PASS|FAIL): (\d+)/(\d+) checks across eight batteries "
-                                 r"\((\d+) not_measured\)", text.rstrip().splitlines()[-1])):
+                and re.fullmatch(aggregate, text.rstrip().splitlines()[-1])):
             report["summary"] = {"status": status, "passed": passed, "measured": total,
                                  "not_measured": nm}
             report["arms"] = total
@@ -2795,7 +2799,7 @@ def evaluate_self_update(repo: Path, base: str, head: str, files: list[dict], wo
         ids_b = _bundle_policy_check_ids(base_bundle) if base_bundle else None
         base_test: dict = {}
         if base_bundle:
-            rc_b, arms_b, _ = _bundle_selftest(base_bundle, evidence=base_test)
+            rc_b, arms_b, _ = _bundle_selftest(base_bundle, evidence=base_test, legacy_base=True)
         else:
             rc_b, arms_b = None, None
             base_test = {"exit_code": None, "arms": None, "complete": False, "summary": None,
