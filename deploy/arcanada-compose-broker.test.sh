@@ -213,6 +213,11 @@ if [[ "${1:-}" == container && "${2:-}" == inspect ]]; then
   fi
   exit 1
 fi
+if [[ "${1:-}" == logs && "${2:-}" == --tail && "${3:-}" == 200 &&
+      "${4:-}" == knowledge-contract-scrutator-scrutator-1 ]]; then
+  printf 'startup diagnostic fixture\npostgresql://kc_scrutator_app:synthetic-secret@db/knowledge_contract\n'
+  exit 0
+fi
 if [[ "${1:-}" == ps && " $* " == *' label=com.docker.compose.project=knowledge-contract-scrutator '* ]]; then
   [[ ! -e "$FAKE_DOCKER_STATE/kc-exists" ]] || printf '%s\n' kc-container
   exit 0
@@ -296,6 +301,12 @@ if [[ "$*" == *'http://127.0.0.1:8310/health'* ]]; then
 fi
 if [[ "$*" == *'http://127.0.0.1:8311/health'* ]]; then
   [[ -e "$FAKE_DOCKER_STATE/kc-exists" ]] || exit 1
+  if [[ -n "${FAKE_KC_READY_AFTER:-}" ]]; then
+    count="$(cat "$FAKE_DOCKER_STATE/kc-health-count" 2>/dev/null || printf 0)"
+    count=$((count + 1))
+    printf '%s\n' "$count" >"$FAKE_DOCKER_STATE/kc-health-count"
+    if ((count <= FAKE_KC_READY_AFTER)); then printf '503'; exit 0; fi
+  fi
   printf '%s' "${FAKE_KC_PROJECT_STATUS:-200}"; exit 0
 fi
 [[ "$*" == *"--max-time 5"* && "$*" == *"http://127.0.0.1:3500/health"* ]] || exit 97
@@ -883,6 +894,10 @@ sed -i -e "s#^readonly DOCKER=.*#readonly DOCKER='${fake_docker}'#" \
   -e "s#^readonly CURL=.*#readonly CURL='${fake_curl}'#" \
   -e "s#^readonly GIT=.*#readonly GIT='/usr/bin/git'#" \
   -e "s#install -d -m 0755 -o root -g root#install -d -m 0755 -o ${owner} -g $(id -gn)#" "$kc_broker"
+sed -i -e "s#^readonly KC_READINESS_TIMEOUT=.*#readonly KC_READINESS_TIMEOUT=3#" \
+  -e "s#^readonly KC_READINESS_POLL_SECONDS=.*#readonly KC_READINESS_POLL_SECONDS=1#" \
+  -e "s#^readonly KC_DIAGNOSTIC_ROOT=.*#readonly KC_DIAGNOSTIC_ROOT='${fixture_dir}/kc-diagnostics'#" \
+  -e "s#== root:700#== ${owner}:700#" "$kc_broker"
 chmod 0755 "$kc_broker"
 rm -rf -- "$kc_dir"
 printf '%s\n' 'SCRUTATOR_DATABASE_URL=postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract' >"${env_root}/knowledge-contract-scrutator.env"
@@ -905,6 +920,15 @@ if kc_run >"${fixture_dir}/kc-existing.out" 2>&1; then echo 'FAIL: existing proj
 grep -Fq 'initial-install verb refuses upgrades' "${fixture_dir}/kc-existing.out" || exit 1
 echo 'PASS: kc_existing_project_refused'
 "$kc_broker" knowledge-contract-scrutator kc-stop >"${fixture_dir}/kc-stop.out"
+export FAKE_KC_READY_AFTER=1
+rm -f "$fake_docker_state/kc-health-count"
+if ! kc_run >"${fixture_dir}/kc-delayed-ready.out" 2>&1; then
+  echo 'FAIL: delayed project readiness was not accepted' >&2; exit 1
+fi
+[[ "$(cat "$fake_docker_state/kc-health-count")" -ge 2 ]] || exit 1
+"$kc_broker" knowledge-contract-scrutator kc-stop >"${fixture_dir}/kc-delayed-stop.out"
+unset FAKE_KC_READY_AFTER
+echo 'PASS: kc_delayed_readiness_passes_within_bound'
 export FAKE_KC_IMAGE_ID='sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
 if kc_run >"${fixture_dir}/kc-image.out" 2>&1; then echo 'FAIL: wrong image accepted' >&2; exit 1; fi
 grep -Fq 'project image digest mismatch' "${fixture_dir}/kc-image.out" || exit 1
@@ -976,6 +1000,11 @@ export FAKE_KC_PROJECT_STATUS=500
 if kc_run >"${fixture_dir}/kc-health.out" 2>&1; then echo 'FAIL: failed health accepted' >&2; exit 1; fi
 grep -Fq 'project-only rollback attempted' "${fixture_dir}/kc-health.out" || exit 1
 [[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+log_path="$(sed -n 's/^KC_PROJECT_DIAGNOSTIC_LOG=//p' "${fixture_dir}/kc-health.out" | tail -1)"
+[[ -f "$log_path" && "$(stat -c '%a' "$log_path")" == 600 ]] || exit 1
+grep -Fq 'startup diagnostic fixture' "$log_path" || exit 1
+grep -Fq '[REDACTED_SENSITIVE_LINE]' "$log_path" || exit 1
+if grep -Fq 'synthetic-secret' "$log_path"; then echo 'FAIL: diagnostic log leaked DSN' >&2; exit 1; fi
 echo 'PASS: kc_failed_health_stops_project'
 export FAKE_KC_DOWN_FAIL=1
 if kc_run >"${fixture_dir}/kc-rollback.out" 2>&1; then echo 'FAIL: failed rollback accepted' >&2; exit 1; fi
