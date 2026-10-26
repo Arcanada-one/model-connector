@@ -270,8 +270,14 @@ if [[ "${1:-}" == compose ]]; then
     if [[ " $* " == *' config --images '* ]]; then
       printf '%s\n' 'scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547'; exit 0
     fi
-    if [[ " $* " == *' up -d --no-build --no-deps scrutator '* ]]; then
+    if [[ " $* " == *' up -d --no-build --no-deps scrutator '* ||
+          " $* " == *' up -d --force-recreate --no-build --no-deps scrutator '* ]]; then
       touch "$FAKE_DOCKER_STATE/kc-exists"
+      if [[ "${FAKE_KC_FAIL_UPGRADE_HEALTH:-}" == 1 && " $* " == *' --force-recreate '* ]]; then
+        count="$(cat "$FAKE_DOCKER_STATE/kc-up-count" 2>/dev/null || printf 0)"
+        count=$((count + 1))
+        printf '%s\n' "$count" >"$FAKE_DOCKER_STATE/kc-up-count"
+      fi
       [[ "${FAKE_KC_UP_FAIL:-}" != 1 ]] || exit 1
       exit 0
     fi
@@ -309,6 +315,10 @@ if [[ "$*" == *'http://127.0.0.1:8310/health'* ]]; then
 fi
 if [[ "$*" == *'http://127.0.0.1:8311/health'* ]]; then
   [[ -e "$FAKE_DOCKER_STATE/kc-exists" ]] || exit 1
+  if [[ "${FAKE_KC_FAIL_UPGRADE_HEALTH:-}" == 1 &&
+        "$(cat "$FAKE_DOCKER_STATE/kc-up-count" 2>/dev/null || printf 0)" == 1 ]]; then
+    printf '503'; exit 0
+  fi
   if [[ -n "${FAKE_KC_READY_AFTER:-}" ]]; then
     count="$(cat "$FAKE_DOCKER_STATE/kc-health-count" 2>/dev/null || printf 0)"
     count=$((count + 1))
@@ -868,7 +878,7 @@ mkdir -p "${kc_dir}/.git" "${kc_dir}/deploy/knowledge-contract-scrutator"
 printf '%s\n' 'services: {scrutator: {image: fixture}}' \
   >"${kc_dir}/deploy/knowledge-contract-scrutator/compose.yml"
 expect_fail kc_generic_up_refused knowledge-contract-scrutator up
-expect_message kc_generic_up_refused 'allows only kc-deploy, kc-status and kc-stop'
+expect_message kc_generic_up_refused 'allows only kc-deploy, kc-upgrade, kc-status and kc-stop'
 expect_fail kc_bad_sha_refused knowledge-contract-scrutator kc-deploy not-a-sha
 expect_message kc_bad_sha_refused 'release sha must be 40 lowercase hex'
 expect_fail kc_missing_env_refused knowledge-contract-scrutator kc-deploy \
@@ -913,7 +923,7 @@ rm -rf -- "$kc_dir"
 printf '%s\n' 'SCRUTATOR_DATABASE_URL=postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract' >"${env_root}/knowledge-contract-scrutator.env"
 chmod 0600 "${env_root}/knowledge-contract-scrutator.env"
 cat >"$fake_docker_state/kc-config.json" <<'JSON'
-{"name":"knowledge-contract-scrutator","networks":{"default":{"name":"knowledge-contract-scrutator_default","ipam":{}}},"services":{"scrutator":{"container_name":"knowledge-contract-scrutator-scrutator-1","image":"scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547","networks":{"default":null},"ports":[{"mode":"ingress","target":8310,"published":"8311","protocol":"tcp","host_ip":"127.0.0.1"}],"environment":{"SCRUTATOR_HOST":"0.0.0.0","SCRUTATOR_PORT":"8310","SCRUTATOR_AUTH_ENFORCE":"true","SCRUTATOR_FEEDER_NAMESPACES":"knowledge-contract","SCRUTATOR_DATABASE_URL":"postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract"}}}}
+{"name":"knowledge-contract-scrutator","networks":{"default":{"name":"knowledge-contract-scrutator_default","ipam":{}}},"services":{"scrutator":{"container_name":"knowledge-contract-scrutator-scrutator-1","image":"scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547","networks":{"default":null},"ports":[{"mode":"ingress","target":8310,"published":"8311","protocol":"tcp","host_ip":"127.0.0.1"}],"environment":{"SCRUTATOR_HOST":"0.0.0.0","SCRUTATOR_PORT":"8310","SCRUTATOR_AUTH_ENFORCE":"true","SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL":"https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect","SCRUTATOR_AUTH_SERVICE_AUDIENCE":"urn:arcanada:scrutator:knowledge-contract","SCRUTATOR_AUTH_SERVICE_SCOPE":"kb:knowledge-contract.read","SCRUTATOR_FEEDER_NAMESPACES":"knowledge-contract","SCRUTATOR_DATABASE_URL":"postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract"}}}}
 JSON
 printf '%s\n' 'sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17' >"$fake_docker_state/kc-running-image"
 kc_run() { printf '%s\n' 'fixture-token-abcdefghijklmnopqrstuvwxyz' | "$kc_broker" knowledge-contract-scrutator kc-deploy "$kc_head"; }
@@ -1048,3 +1058,35 @@ grep -Fq 'rollback failed; live state unknown' "${fixture_dir}/kc-rollback.out" 
 unset FAKE_KC_DOWN_FAIL FAKE_KC_PROJECT_STATUS
 echo 'PASS: kc_failed_rollback_explicitly_refused'
 "$kc_broker" knowledge-contract-scrutator kc-stop >"${fixture_dir}/kc-cleanup.out"
+
+# Upgrade reuses the existing project only, pins a new main commit, and keeps
+# the previous checkout/container available for bounded rollback.
+if ! kc_run >"${fixture_dir}/kc-upgrade-base.out" 2>&1; then exit 1; fi
+printf '%s\n' '# upgraded' >>"$kc_source/deploy/knowledge-contract-scrutator/compose.yml"
+git -C "$kc_source" add deploy/knowledge-contract-scrutator/compose.yml
+git -C "$kc_source" -c user.email=t@example.invalid -c user.name=t commit -qm upgraded
+kc_next="$(git -C "$kc_source" rev-parse HEAD)"
+git -C "$kc_source" push -q origin main
+kc_upgrade() { printf '%s\n' 'fixture-token-abcdefghijklmnopqrstuvwxyz' | "$kc_broker" knowledge-contract-scrutator kc-upgrade "$kc_next"; }
+if ! kc_upgrade >"${fixture_dir}/kc-upgrade-success.out" 2>&1; then
+  sed -n '1,35p' "${fixture_dir}/kc-upgrade-success.out" >&2; exit 1
+fi
+grep -Fq "KC_PROJECT_UPGRADE_PASS project=knowledge-contract-scrutator" "${fixture_dir}/kc-upgrade-success.out" || exit 1
+[[ "$(git -C "$kc_dir" rev-parse HEAD)" == "$kc_next" ]] || exit 1
+echo 'PASS: kc_upgrade_pins_new_main_without_shared_compose'
+
+printf '%s\n' '# next' >>"$kc_source/deploy/knowledge-contract-scrutator/compose.yml"
+git -C "$kc_source" add deploy/knowledge-contract-scrutator/compose.yml
+git -C "$kc_source" -c user.email=t@example.invalid -c user.name=t commit -qm next
+kc_next="$(git -C "$kc_source" rev-parse HEAD)"
+git -C "$kc_source" push -q origin main
+export FAKE_KC_FAIL_UPGRADE_HEALTH=1
+rm -f "$fake_docker_state/kc-up-count"
+if kc_upgrade >"${fixture_dir}/kc-upgrade-rollback.out" 2>&1; then
+  echo 'FAIL: unhealthy upgraded project accepted' >&2; exit 1
+fi
+grep -Fq 'KC_PROJECT_UPGRADE_ROLLBACK_PASS' "${fixture_dir}/kc-upgrade-rollback.out" || exit 1
+[[ "$(git -C "$kc_dir" rev-parse HEAD)" == "$(git -C "$kc_source" rev-parse HEAD^)" ]] || exit 1
+[[ -e "$fake_docker_state/kc-exists" ]] || exit 1
+unset FAKE_KC_FAIL_UPGRADE_HEALTH
+echo 'PASS: kc_upgrade_health_failure_restores_previous_checkout_and_project'

@@ -1034,6 +1034,13 @@ try:
     require(env["SCRUTATOR_HOST"] == "0.0.0.0")
     require(str(env["SCRUTATOR_PORT"]) == "8310")
     require(str(env["SCRUTATOR_AUTH_ENFORCE"]).lower() == "true")
+    introspect = urlsplit(env["SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL"])
+    require(introspect.scheme == "https" and introspect.hostname == "auth.arcanada.ai")
+    require(introspect.path == "/api/v1/api-keys/knowledge-contract/introspect")
+    require(not introspect.username and not introspect.password and not introspect.port)
+    require(not introspect.query and not introspect.fragment)
+    require(env["SCRUTATOR_AUTH_SERVICE_AUDIENCE"] == "urn:arcanada:scrutator:knowledge-contract")
+    require(env["SCRUTATOR_AUTH_SERVICE_SCOPE"] == "kb:knowledge-contract.read")
     require(env["SCRUTATOR_FEEDER_NAMESPACES"] == "knowledge-contract")
     dsn = urlsplit(env["SCRUTATOR_DATABASE_URL"])
     require(dsn.scheme in ("postgres", "postgresql"))
@@ -1090,7 +1097,67 @@ cmd_kc_deploy() {
     "$KC_IMAGE_ID" "$sha"
 }
 
-usage='usage: <service> {sync <sha>|pull|build|up|ps|logs [n]|migrate|tag-rotate|tag-release|image-id|verify|rollback|promote|prune|freshness|smoke|env-get <KEY>|aggregate-readback|run-deploy|registry-login <user>|registry-logout|kc-deploy <sha>|kc-status|kc-stop}'
+kc_restore_checkout() {
+  local old_sha="$1" dir
+  dir="$(checkout_dir knowledge-contract-scrutator)"
+  require_clean_tracked_state "$dir" knowledge-contract-scrutator before-rollback
+  "$GIT" -C "$dir" checkout --quiet --detach "$old_sha" || return 1
+  "$GIT" -C "$dir" clean -qxdff -e node_modules || return 1
+  install_env knowledge-contract-scrutator || return 1
+  [[ "$(head_sha knowledge-contract-scrutator)" == "$old_sha" ]] || return 1
+  require_clean_tracked_state "$dir" knowledge-contract-scrutator after-rollback
+}
+
+kc_rollback_upgrade() {
+  local old_sha="$1"
+  if ! (kc_restore_checkout "$old_sha"); then
+    die 'project upgrade rollback checkout failed; live state unknown'
+  fi
+  kc_compose
+  if ! "$DOCKER" "${COMPOSE_ARGV[@]}" up -d --force-recreate --no-build --no-deps scrutator ||
+    ! kc_wait_ready || ! kc_health "$KC_SHARED_HEALTH_URL"; then
+    kc_capture_failure_logs || printf 'KC_PROJECT_DIAGNOSTIC_LOG_UNAVAILABLE\n' >&2
+    die 'project upgrade rollback failed; live state unknown'
+  fi
+  printf 'KC_PROJECT_UPGRADE_ROLLBACK_PASS project=knowledge-contract-scrutator sha=%s\n' "$old_sha" >&2
+}
+
+cmd_kc_upgrade() {
+  local sha="$1" old_sha
+  set_root_env_path knowledge-contract-scrutator
+  [[ "$(stat -c '%a' -- "$ROOT_ENV_PATH")" == 600 ]] || die 'project env must be mode 0600'
+  kc_compose
+  old_sha="$(head_sha knowledge-contract-scrutator)" || die 'project checkout has no prior sha'
+  [[ "$old_sha" != "$sha" ]] || die 'project upgrade requires a new source sha'
+  kc_container_image || die 'existing project is absent, stopped or has the wrong image'
+  kc_health "$KC_PROJECT_HEALTH_URL" || die 'existing project unhealthy before upgrade'
+  kc_health "$KC_SHARED_HEALTH_URL" || die 'shared Scrutator unhealthy before upgrade'
+  if ! (cmd_sync knowledge-contract-scrutator "$sha"); then
+    kc_restore_checkout "$old_sha" || die 'project sync failed and prior checkout could not be restored'
+    die 'project upgrade sync failed before recreation; prior project remains running'
+  fi
+  kc_compose
+  if ! (
+    "$DOCKER" "${COMPOSE_ARGV[@]}" config -q && kc_config_contract || exit 1
+    image_ref="$("$DOCKER" "${COMPOSE_ARGV[@]}" config --images)" || exit 1
+    [[ "$image_ref" == "$KC_IMAGE_REF" ]] || exit 1
+    image_id="$("$DOCKER" image inspect "$image_ref" --format '{{.Id}}')" || exit 1
+    [[ "$image_id" == "$KC_IMAGE_ID" ]]
+  ); then
+    kc_restore_checkout "$old_sha" || die 'project config failed and prior checkout could not be restored'
+    die 'project upgrade config or image refused before recreation; prior project remains running'
+  fi
+  if ! "$DOCKER" "${COMPOSE_ARGV[@]}" up -d --force-recreate --no-build --no-deps scrutator ||
+    ! kc_wait_ready || ! kc_health "$KC_SHARED_HEALTH_URL"; then
+    kc_capture_failure_logs || printf 'KC_PROJECT_DIAGNOSTIC_LOG_UNAVAILABLE\n' >&2
+    kc_rollback_upgrade "$old_sha"
+    die 'project upgrade readback failed; prior project restored'
+  fi
+  printf 'KC_PROJECT_UPGRADE_PASS project=knowledge-contract-scrutator image=%s old=%s sha=%s\n' \
+    "$KC_IMAGE_ID" "$old_sha" "$sha"
+}
+
+usage='usage: <service> {sync <sha>|pull|build|up|ps|logs [n]|migrate|tag-rotate|tag-release|image-id|verify|rollback|promote|prune|freshness|smoke|env-get <KEY>|aggregate-readback|run-deploy|registry-login <user>|registry-logout|kc-deploy <sha>|kc-upgrade <sha>|kc-status|kc-stop}'
 
 main() {
   [[ $# -ge 2 ]] || die "$usage"
@@ -1100,9 +1167,11 @@ main() {
     case "$action" in
       kc-deploy) [[ $# -eq 1 ]] || die 'kc-deploy takes one main sha'
                  cmd_kc_deploy "$(validate_sha "$1")" ;;
+      kc-upgrade) [[ $# -eq 1 ]] || die 'kc-upgrade takes one main sha'
+                  cmd_kc_upgrade "$(validate_sha "$1")" ;;
       kc-status) [[ $# -eq 0 ]] || die 'kc-status takes no arguments'; cmd_kc_status ;;
       kc-stop)   [[ $# -eq 0 ]] || die 'kc-stop takes no arguments'; cmd_kc_stop ;;
-      *) die 'project service allows only kc-deploy, kc-status and kc-stop' ;;
+      *) die 'project service allows only kc-deploy, kc-upgrade, kc-status and kc-stop' ;;
     esac
     return
   fi
