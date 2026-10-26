@@ -215,6 +215,7 @@ if [[ "${1:-}" == container && "${2:-}" == inspect ]]; then
 fi
 if [[ "${1:-}" == logs && "${2:-}" == --tail && "${3:-}" == 200 &&
       "${4:-}" == knowledge-contract-scrutator-scrutator-1 ]]; then
+  if [[ "${FAKE_KC_HANG_LOGS:-}" == 1 ]]; then sleep 20; fi
   printf 'startup diagnostic fixture\npostgresql://kc_scrutator_app:synthetic-secret@db/knowledge_contract\n'
   exit 0
 fi
@@ -224,6 +225,13 @@ if [[ "${1:-}" == ps && " $* " == *' label=com.docker.compose.project=knowledge-
 fi
 if [[ "${1:-}" == inspect ]]; then
   if [[ "${4:-}" == knowledge-contract-scrutator-scrutator-1 ]]; then
+    if [[ "${FAKE_KC_HANG_INSPECT:-}" == 1 ]]; then sleep 20; fi
+    if [[ -n "${FAKE_KC_INSPECT_READY_AFTER:-}" ]]; then
+      count="$(cat "$FAKE_DOCKER_STATE/kc-inspect-count" 2>/dev/null || printf 0)"
+      count=$((count + 1))
+      printf '%s\n' "$count" >"$FAKE_DOCKER_STATE/kc-inspect-count"
+      if ((count <= FAKE_KC_INSPECT_READY_AFTER)); then exit 1; fi
+    fi
     [[ -e "$FAKE_DOCKER_STATE/kc-exists" ]] || exit 1
     case "${3:-}" in
       '{{.Image}}') cat "$FAKE_DOCKER_STATE/kc-running-image" ;;
@@ -896,6 +904,8 @@ sed -i -e "s#^readonly DOCKER=.*#readonly DOCKER='${fake_docker}'#" \
   -e "s#install -d -m 0755 -o root -g root#install -d -m 0755 -o ${owner} -g $(id -gn)#" "$kc_broker"
 sed -i -e "s#^readonly KC_READINESS_TIMEOUT=.*#readonly KC_READINESS_TIMEOUT=3#" \
   -e "s#^readonly KC_READINESS_POLL_SECONDS=.*#readonly KC_READINESS_POLL_SECONDS=1#" \
+  -e "s#^readonly KC_INSPECT_TIMEOUT=.*#readonly KC_INSPECT_TIMEOUT=1#" \
+  -e "s#^readonly KC_LOG_TIMEOUT=.*#readonly KC_LOG_TIMEOUT=1#" \
   -e "s#^readonly KC_DIAGNOSTIC_ROOT=.*#readonly KC_DIAGNOSTIC_ROOT='${fixture_dir}/kc-diagnostics'#" \
   -e "s#== root:700#== ${owner}:700#" "$kc_broker"
 chmod 0755 "$kc_broker"
@@ -929,6 +939,15 @@ fi
 "$kc_broker" knowledge-contract-scrutator kc-stop >"${fixture_dir}/kc-delayed-stop.out"
 unset FAKE_KC_READY_AFTER
 echo 'PASS: kc_delayed_readiness_passes_within_bound'
+export FAKE_KC_INSPECT_READY_AFTER=1
+rm -f "$fake_docker_state/kc-inspect-count"
+if ! kc_run >"${fixture_dir}/kc-delayed-container.out" 2>&1; then
+  echo 'FAIL: transient container inspect was not retried' >&2; exit 1
+fi
+[[ "$(cat "$fake_docker_state/kc-inspect-count")" -ge 2 ]] || exit 1
+"$kc_broker" knowledge-contract-scrutator kc-stop >"${fixture_dir}/kc-delayed-container-stop.out"
+unset FAKE_KC_INSPECT_READY_AFTER
+echo 'PASS: kc_transient_container_inspect_retried'
 export FAKE_KC_IMAGE_ID='sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
 if kc_run >"${fixture_dir}/kc-image.out" 2>&1; then echo 'FAIL: wrong image accepted' >&2; exit 1; fi
 grep -Fq 'project image digest mismatch' "${fixture_dir}/kc-image.out" || exit 1
@@ -1006,6 +1025,22 @@ grep -Fq 'startup diagnostic fixture' "$log_path" || exit 1
 grep -Fq '[REDACTED_SENSITIVE_LINE]' "$log_path" || exit 1
 if grep -Fq 'synthetic-secret' "$log_path"; then echo 'FAIL: diagnostic log leaked DSN' >&2; exit 1; fi
 echo 'PASS: kc_failed_health_stops_project'
+export FAKE_KC_HANG_LOGS=1
+start_seconds=$SECONDS
+if kc_run >"${fixture_dir}/kc-hung-logs.out" 2>&1; then echo 'FAIL: hung logs accepted' >&2; exit 1; fi
+[[ $((SECONDS - start_seconds)) -lt 10 ]] || { echo 'FAIL: diagnostic timeout did not bound rollback' >&2; exit 1; }
+grep -Fq 'KC_PROJECT_STOP_PASS' "${fixture_dir}/kc-hung-logs.out" || exit 1
+[[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+unset FAKE_KC_HANG_LOGS
+echo 'PASS: kc_hung_logs_do_not_defer_rollback'
+export FAKE_KC_HANG_INSPECT=1
+start_seconds=$SECONDS
+if kc_run >"${fixture_dir}/kc-hung-inspect.out" 2>&1; then echo 'FAIL: hung inspect accepted' >&2; exit 1; fi
+[[ $((SECONDS - start_seconds)) -lt 12 ]] || { echo 'FAIL: inspect timeout did not bound rollback' >&2; exit 1; }
+grep -Fq 'KC_PROJECT_STOP_PASS' "${fixture_dir}/kc-hung-inspect.out" || exit 1
+[[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+unset FAKE_KC_HANG_INSPECT
+echo 'PASS: kc_hung_inspect_bounded'
 export FAKE_KC_DOWN_FAIL=1
 if kc_run >"${fixture_dir}/kc-rollback.out" 2>&1; then echo 'FAIL: failed rollback accepted' >&2; exit 1; fi
 grep -Fq 'rollback failed; live state unknown' "${fixture_dir}/kc-rollback.out" || exit 1

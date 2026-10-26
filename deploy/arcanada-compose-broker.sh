@@ -55,6 +55,8 @@ readonly KC_IMAGE_REF='scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547
 readonly KC_CONTAINER='knowledge-contract-scrutator-scrutator-1'
 readonly KC_READINESS_TIMEOUT=90
 readonly KC_READINESS_POLL_SECONDS=2
+readonly KC_INSPECT_TIMEOUT=3
+readonly KC_LOG_TIMEOUT=8
 readonly KC_DIAGNOSTIC_ROOT=/root/kcp17-readiness
 # Content-addressed root helper; no runner-owned import or path override.
 # shellcheck disable=SC2034 # Root installer consumes the sudoers pin from this reviewed broker.
@@ -941,11 +943,15 @@ kc_health() {
 }
 
 kc_wait_ready() {
-  local deadline now
+  local deadline now image running
   deadline=$(( $(/usr/bin/date +%s) + KC_READINESS_TIMEOUT ))
   while :; do
-    kc_container_image || return 1
-    if kc_health "$KC_PROJECT_HEALTH_URL" 2>/dev/null; then return 0; fi
+    image="$(/usr/bin/timeout -k 1 "$KC_INSPECT_TIMEOUT" "$DOCKER" inspect --format '{{.Image}}' "$KC_CONTAINER")" || image=''
+    [[ -z "$image" || "$image" == "$KC_IMAGE_ID" ]] || return 1
+    if [[ "$image" == "$KC_IMAGE_ID" ]]; then
+      running="$(/usr/bin/timeout -k 1 "$KC_INSPECT_TIMEOUT" "$DOCKER" inspect --format '{{.State.Running}}' "$KC_CONTAINER")" || running=''
+      if [[ "$running" == true ]] && kc_health "$KC_PROJECT_HEALTH_URL" 2>/dev/null; then return 0; fi
+    fi
     now="$(/usr/bin/date +%s)"
     ((now < deadline)) || return 1
     sleep "$KC_READINESS_POLL_SECONDS"
@@ -961,7 +967,7 @@ kc_capture_failure_logs() {
   chmod 0600 "$log_file" || return 1
   # Docker output goes only through this bounded redactor into a root-only file.
   # Secret-bearing lines are removed entirely; no raw container log is printed.
-  if ! "$DOCKER" logs --tail 200 "$KC_CONTAINER" 2>&1 | /usr/bin/python3 -I -c '
+  if ! /usr/bin/timeout -k 1 "$KC_LOG_TIMEOUT" "$DOCKER" logs --tail 200 "$KC_CONTAINER" 2>&1 | /usr/bin/python3 -I -c '
 import re, sys
 data = sys.stdin.buffer.read(1048577)
 if len(data) > 1048576:
