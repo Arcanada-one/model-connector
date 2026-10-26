@@ -34,8 +34,10 @@ export const SECRETS = [
 // strict tier before the secret exists would crash-loop the whole service for
 // every tenant on the next deploy (entrypoint exits 78 before exec).
 //   arcanada/shared/tokens/anthropic-model-connector  field api_key
+//   arcanada/shared/tokens/openrouter  field api_key
 export const OPTIONAL_SECRETS = [
   ['arcanada/data/shared/tokens/anthropic-model-connector', 'ANTHROPIC_API_KEY'],
+  ['arcanada/data/shared/tokens/openrouter', 'OPENROUTER_API_KEY'],
 ];
 
 /**

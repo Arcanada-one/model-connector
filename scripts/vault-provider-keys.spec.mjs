@@ -150,6 +150,13 @@ describe('OPTIONAL_SECRETS (DEC-AUP-0028 R2)', () => {
     ]);
   });
 
+  it('lists the canonical shared OpenRouter slot by its Vault path and env var name', () => {
+    expect(OPTIONAL_SECRETS).toContainEqual([
+      'arcanada/data/shared/tokens/openrouter',
+      'OPENROUTER_API_KEY',
+    ]);
+  });
+
   it('an absent optional path (404) emits nothing for it, warns once, and the boot continues', async () => {
     const emit = vi.fn();
     const warn = vi.fn();
@@ -168,11 +175,31 @@ describe('OPTIONAL_SECRETS (DEC-AUP-0028 R2)', () => {
   it('a present optional secret is exported under its env var name', async () => {
     const emit = vi.fn();
     const fetchImpl = makeFetch({
-      reads: [...strictReads, [OPTIONAL_SECRETS[0][0], okResp(keyBody('anthropic-test-value'))]],
+      reads: [
+        ...strictReads,
+        [OPTIONAL_SECRETS[0][0], okResp(keyBody('anthropic-test-value'))],
+        [OPTIONAL_SECRETS[1][0], errResp(404)],
+      ],
     });
     const n = await sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows });
     expect(n).toBe(SECRETS.length + 1);
     expect(emit).toHaveBeenCalledWith("export ANTHROPIC_API_KEY='anthropic-test-value'");
+  });
+
+  it('exports the shared OpenRouter key without placing its value in diagnostics', async () => {
+    const emit = vi.fn();
+    const warn = vi.fn();
+    const fetchImpl = makeFetch({
+      reads: [
+        ...strictReads,
+        [OPTIONAL_SECRETS[0][0], errResp(404)],
+        [OPTIONAL_SECRETS[1][0], okResp(keyBody('openrouter-test-value'))],
+      ],
+    });
+    const n = await sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows, warn });
+    expect(n).toBe(SECRETS.length + 1);
+    expect(emit).toHaveBeenCalledWith("export OPENROUTER_API_KEY='openrouter-test-value'");
+    expect(warn.mock.calls.flat().join('\n')).not.toContain('openrouter-test-value');
   });
 
   it('an optional path the AppRole policy does not cover (403) is absent, not fatal', async () => {
@@ -181,11 +208,11 @@ describe('OPTIONAL_SECRETS (DEC-AUP-0028 R2)', () => {
     const emit = vi.fn();
     const warn = vi.fn();
     const fetchImpl = makeFetch({
-      reads: [...strictReads, [OPTIONAL_SECRETS[0][0], errResp(403)]],
+      reads: [...strictReads, [OPTIONAL_SECRETS[0][0], errResp(403)], [OPTIONAL_SECRETS[1][0], errResp(404)]],
     });
     const n = await sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows, warn });
     expect(n).toBe(SECRETS.length);
-    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledTimes(OPTIONAL_SECRETS.length);
     expect(warn.mock.calls[0][0]).toContain('HTTP 403');
   });
 
