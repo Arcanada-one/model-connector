@@ -189,6 +189,8 @@ set -euo pipefail
 printf '%s\n' "$*" >>"$FAKE_DOCKER_LOG"
 ref_id() {
   case "$1" in
+    scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547)
+      printf '%s' "${FAKE_KC_IMAGE_ID:-sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17}"; return 0 ;;
     *:latest) tag=latest ;;
     *:previous) tag=previous ;;
     muneral-api:*)
@@ -205,7 +207,26 @@ if [[ "${1:-}" == image && "${2:-}" == inspect ]]; then
   printf '%s\n' "$id"
   exit 0
 fi
+if [[ "${1:-}" == container && "${2:-}" == inspect ]]; then
+  if [[ "${3:-}" == knowledge-contract-scrutator-scrutator-1 && -e "$FAKE_DOCKER_STATE/kc-exists" ]]; then
+    exit 0
+  fi
+  exit 1
+fi
+if [[ "${1:-}" == ps && " $* " == *' label=com.docker.compose.project=knowledge-contract-scrutator '* ]]; then
+  [[ ! -e "$FAKE_DOCKER_STATE/kc-exists" ]] || printf '%s\n' kc-container
+  exit 0
+fi
 if [[ "${1:-}" == inspect ]]; then
+  if [[ "${4:-}" == knowledge-contract-scrutator-scrutator-1 ]]; then
+    [[ -e "$FAKE_DOCKER_STATE/kc-exists" ]] || exit 1
+    case "${3:-}" in
+      '{{.Image}}') cat "$FAKE_DOCKER_STATE/kc-running-image" ;;
+      '{{.State.Running}}') printf '%s\n' true ;;
+      *) exit 97 ;;
+    esac
+    exit 0
+  fi
   [[ "${4:-}" == "$(cat "$FAKE_DOCKER_STATE/container")" ]] || exit 1
   case "${3:-}" in
     '{{.Image}}') cat "$FAKE_DOCKER_STATE/running" ;;
@@ -229,6 +250,24 @@ if [[ "${1:-}" == tag ]]; then
   exit 0
 fi
 if [[ "${1:-}" == compose ]]; then
+  if [[ " $* " == *' -p knowledge-contract-scrutator '* ]]; then
+    if [[ " $* " == *' config --format json '* ]]; then
+      cat "$FAKE_DOCKER_STATE/kc-config.json"; exit 0
+    fi
+    if [[ " $* " == *' config --images '* ]]; then
+      printf '%s\n' 'scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547'; exit 0
+    fi
+    if [[ " $* " == *' up -d --no-build --no-deps scrutator '* ]]; then
+      touch "$FAKE_DOCKER_STATE/kc-exists"
+      [[ "${FAKE_KC_UP_FAIL:-}" != 1 ]] || exit 1
+      exit 0
+    fi
+    if [[ " $* " == *' down '* ]]; then
+      [[ "${FAKE_KC_DOWN_FAIL:-}" != 1 ]] || exit 1
+      rm -f "$FAKE_DOCKER_STATE/kc-exists"; exit 0
+    fi
+    if [[ " $* " == *' config -q '* ]]; then exit 0; fi
+  fi
   if [[ " $* " == *" ps -q muneral-api "* ]]; then
     cat "$FAKE_DOCKER_STATE/container"
     exit 0
@@ -252,6 +291,13 @@ cat >"$fake_curl" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\n' "$*" >>"$FAKE_CURL_LOG"
+if [[ "$*" == *'http://127.0.0.1:8310/health'* ]]; then
+  printf '%s' "${FAKE_KC_SHARED_STATUS:-200}"; exit 0
+fi
+if [[ "$*" == *'http://127.0.0.1:8311/health'* ]]; then
+  [[ -e "$FAKE_DOCKER_STATE/kc-exists" ]] || exit 1
+  printf '%s' "${FAKE_KC_PROJECT_STATUS:-200}"; exit 0
+fi
 [[ "$*" == *"--max-time 5"* && "$*" == *"http://127.0.0.1:3500/health"* ]] || exit 97
 [[ -s "$FAKE_DOCKER_STATE/health-status" ]] || exit 97
 cat "$FAKE_DOCKER_STATE/health-status"
@@ -795,3 +841,146 @@ grep -Fq "BROKER_SYNC_PASS service=arcanada-assistant sha=${sync_c2}" "$sync_out
 [ ! -e "${sync_dir}/stray.txt" ] || { echo 'FAIL: untracked file survived clean' >&2; exit 1; }
 [ "$(cat "${sync_dir}/other.txt")" = two ] || { echo 'FAIL: checkout did not land c2' >&2; exit 1; }
 echo 'PASS: sync_clean_tree_syncs_and_verifies'
+
+# KCP-0017: the project row cannot reach generic root Compose verbs, and its
+# rollback names only the separate project. No live Docker or secret is used.
+kc_dir="${state_root}/knowledge-contract-scrutator"
+mkdir -p "${kc_dir}/.git" "${kc_dir}/deploy/knowledge-contract-scrutator"
+printf '%s\n' 'services: {scrutator: {image: fixture}}' \
+  >"${kc_dir}/deploy/knowledge-contract-scrutator/compose.yml"
+expect_fail kc_generic_up_refused knowledge-contract-scrutator up
+expect_message kc_generic_up_refused 'allows only kc-deploy, kc-status and kc-stop'
+expect_fail kc_bad_sha_refused knowledge-contract-scrutator kc-deploy not-a-sha
+expect_message kc_bad_sha_refused 'release sha must be 40 lowercase hex'
+expect_fail kc_missing_env_refused knowledge-contract-scrutator kc-deploy \
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+expect_message kc_missing_env_refused 'root-owned env file missing'
+: >"$fake_docker_log"
+expect_pass kc_project_only_stop knowledge-contract-scrutator kc-stop
+grep -Fq "compose -p knowledge-contract-scrutator -f ${kc_dir}/deploy/knowledge-contract-scrutator/compose.yml down" \
+  "$fake_docker_log" || { echo 'FAIL: kc-stop did not target the fixed project' >&2; exit 1; }
+if grep -Fq 'scrutator-deploy' "$fake_docker_log"; then
+  echo 'FAIL: kc-stop referenced the shared Scrutator transaction' >&2; exit 1
+fi
+
+# Drive the first-install path against a local main and fake Docker. This
+# measures the readback and rollback branches without touching production.
+kc_source="${fixture_dir}/kc-source"
+kc_remote="${fixture_dir}/kc-remote.git"
+mkdir -p "$kc_source/deploy/knowledge-contract-scrutator"
+printf '%s\n' 'services: {scrutator: {image: fixture}}' >"$kc_source/deploy/knowledge-contract-scrutator/compose.yml"
+git -C "$kc_source" init -q -b main
+git -C "$kc_source" -c user.email=t@example.invalid -c user.name=t add .
+git -C "$kc_source" -c user.email=t@example.invalid -c user.name=t commit -qm fixture
+kc_head="$(git -C "$kc_source" rev-parse HEAD)"
+git init -q --bare "$kc_remote"
+git -C "$kc_remote" symbolic-ref HEAD refs/heads/main
+git -C "$kc_source" remote add origin "$kc_remote"
+git -C "$kc_source" push -q origin main
+kc_broker="${fixture_dir}/kc-broker"
+sed "s#\[knowledge-contract-scrutator\]='https://github.com/Arcanada-one/contract-place-api.git'#\[knowledge-contract-scrutator\]='${kc_remote}'#" "$broker" >"$kc_broker"
+sed -i -e "s#^readonly DOCKER=.*#readonly DOCKER='${fake_docker}'#" \
+  -e "s#^readonly CURL=.*#readonly CURL='${fake_curl}'#" \
+  -e "s#^readonly GIT=.*#readonly GIT='/usr/bin/git'#" \
+  -e "s#install -d -m 0755 -o root -g root#install -d -m 0755 -o ${owner} -g $(id -gn)#" "$kc_broker"
+chmod 0755 "$kc_broker"
+rm -rf -- "$kc_dir"
+printf '%s\n' 'SCRUTATOR_DATABASE_URL=postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract' >"${env_root}/knowledge-contract-scrutator.env"
+chmod 0600 "${env_root}/knowledge-contract-scrutator.env"
+cat >"$fake_docker_state/kc-config.json" <<'JSON'
+{"name":"knowledge-contract-scrutator","networks":{"default":{"name":"knowledge-contract-scrutator_default","ipam":{}}},"services":{"scrutator":{"container_name":"knowledge-contract-scrutator-scrutator-1","image":"scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547","networks":{"default":null},"ports":[{"mode":"ingress","target":8310,"published":"8311","protocol":"tcp","host_ip":"127.0.0.1"}],"environment":{"SCRUTATOR_HOST":"0.0.0.0","SCRUTATOR_PORT":"8310","SCRUTATOR_AUTH_ENFORCE":"true","SCRUTATOR_FEEDER_NAMESPACES":"knowledge-contract","SCRUTATOR_DATABASE_URL":"postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract"}}}}
+JSON
+printf '%s\n' 'sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17' >"$fake_docker_state/kc-running-image"
+kc_run() { printf '%s\n' 'fixture-token-abcdefghijklmnopqrstuvwxyz' | "$kc_broker" knowledge-contract-scrutator kc-deploy "$kc_head"; }
+[[ ! -e "$fake_docker_state/kc-exists" ]] || { echo 'FAIL: fake project exists before deploy' >&2; exit 1; }
+if ! kc_run >"${fixture_dir}/kc-success.out" 2>&1; then
+  echo 'FAIL: kc first-install fixture' >&2; sed -n '1,40p' "${fixture_dir}/kc-success.out" >&2
+  tail -8 "$fake_docker_log" >&2
+  ls -la "$fake_docker_state" >&2
+  exit 1
+fi
+grep -Fq 'KC_PROJECT_DEPLOY_PASS' "${fixture_dir}/kc-success.out" || exit 1
+echo 'PASS: kc_first_install_exact_main_and_image'
+if kc_run >"${fixture_dir}/kc-existing.out" 2>&1; then echo 'FAIL: existing project accepted' >&2; exit 1; fi
+grep -Fq 'initial-install verb refuses upgrades' "${fixture_dir}/kc-existing.out" || exit 1
+echo 'PASS: kc_existing_project_refused'
+"$kc_broker" knowledge-contract-scrutator kc-stop >"${fixture_dir}/kc-stop.out"
+export FAKE_KC_IMAGE_ID='sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+if kc_run >"${fixture_dir}/kc-image.out" 2>&1; then echo 'FAIL: wrong image accepted' >&2; exit 1; fi
+grep -Fq 'project image digest mismatch' "${fixture_dir}/kc-image.out" || exit 1
+[[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+unset FAKE_KC_IMAGE_ID
+echo 'PASS: kc_wrong_image_refused_before_up'
+python3 - "$fake_docker_state/kc-config.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+x = json.load(open(p))
+x["services"]["scrutator"]["ports"][0]["host_ip"] = "0.0.0.0"
+json.dump(x, open(p, "w"))
+PY
+export PYTHONOPTIMIZE=1
+if kc_run >"${fixture_dir}/kc-public-port.out" 2>&1; then echo 'FAIL: public port accepted' >&2; exit 1; fi
+grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-public-port.out" || exit 1
+[[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+echo 'PASS: kc_public_port_refused_before_up'
+unset PYTHONOPTIMIZE
+python3 - "$fake_docker_state/kc-config.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+x = json.load(open(p))
+x["services"]["scrutator"]["ports"][0]["host_ip"] = "127.0.0.1"
+x["networks"]["default"]["external"] = True
+json.dump(x, open(p, "w"))
+PY
+if kc_run >"${fixture_dir}/kc-external-network.out" 2>&1; then echo 'FAIL: external network accepted' >&2; exit 1; fi
+grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-external-network.out" || exit 1
+[[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+python3 - "$fake_docker_state/kc-config.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+x = json.load(open(p))
+del x["networks"]["default"]["external"]
+json.dump(x, open(p, "w"))
+PY
+echo 'PASS: kc_external_network_refused_before_up'
+for forbidden in volumes_from secrets configs build extends; do
+  python3 - "$fake_docker_state/kc-config.json" "$forbidden" <<'PY'
+import json, sys
+p, key = sys.argv[1:]
+x = json.load(open(p))
+x["services"]["scrutator"][key] = ["shared-scrutator"]
+json.dump(x, open(p, "w"))
+PY
+  if kc_run >"${fixture_dir}/kc-forbidden-${forbidden}.out" 2>&1; then
+    echo "FAIL: ${forbidden} accepted" >&2; exit 1
+  fi
+  grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-forbidden-${forbidden}.out" || exit 1
+  [[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+  python3 - "$fake_docker_state/kc-config.json" "$forbidden" <<'PY'
+import json, sys
+p, key = sys.argv[1:]
+x = json.load(open(p))
+del x["services"]["scrutator"][key]
+json.dump(x, open(p, "w"))
+PY
+  echo "PASS: kc_${forbidden}_refused_before_up"
+done
+python3 - "$fake_docker_state/kc-config.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+x = json.load(open(p))
+x["services"]["scrutator"]["ports"][0]["host_ip"] = "127.0.0.1"
+json.dump(x, open(p, "w"))
+PY
+export FAKE_KC_PROJECT_STATUS=500
+if kc_run >"${fixture_dir}/kc-health.out" 2>&1; then echo 'FAIL: failed health accepted' >&2; exit 1; fi
+grep -Fq 'project-only rollback attempted' "${fixture_dir}/kc-health.out" || exit 1
+[[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+echo 'PASS: kc_failed_health_stops_project'
+export FAKE_KC_DOWN_FAIL=1
+if kc_run >"${fixture_dir}/kc-rollback.out" 2>&1; then echo 'FAIL: failed rollback accepted' >&2; exit 1; fi
+grep -Fq 'rollback failed; live state unknown' "${fixture_dir}/kc-rollback.out" || exit 1
+[[ -e "$fake_docker_state/kc-exists" ]] || exit 1
+unset FAKE_KC_DOWN_FAIL FAKE_KC_PROJECT_STATUS
+echo 'PASS: kc_failed_rollback_explicitly_refused'
+"$kc_broker" knowledge-contract-scrutator kc-stop >"${fixture_dir}/kc-cleanup.out"
