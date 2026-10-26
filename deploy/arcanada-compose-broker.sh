@@ -53,6 +53,11 @@ readonly KC_PROJECT_HEALTH_URL='http://127.0.0.1:8311/health'
 readonly KC_IMAGE_ID='sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17'
 readonly KC_IMAGE_REF='scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547'
 readonly KC_CONTAINER='knowledge-contract-scrutator-scrutator-1'
+readonly KC_READINESS_TIMEOUT=90
+readonly KC_READINESS_POLL_SECONDS=2
+readonly KC_INSPECT_TIMEOUT=3
+readonly KC_LOG_TIMEOUT=8
+readonly KC_DIAGNOSTIC_ROOT=/root/kcp17-readiness
 # Content-addressed root helper; no runner-owned import or path override.
 # shellcheck disable=SC2034 # Root installer consumes the sudoers pin from this reviewed broker.
 readonly BILLING_SUDOERS_SHA=a9668698e99a2306887687726b978b71b6a26663e49f58d74086f89f00c95508
@@ -937,6 +942,46 @@ kc_health() {
   [[ "$status" == 200 ]]
 }
 
+kc_wait_ready() {
+  local deadline now image running
+  deadline=$(( $(/usr/bin/date +%s) + KC_READINESS_TIMEOUT ))
+  while :; do
+    image="$(/usr/bin/timeout -k 1 "$KC_INSPECT_TIMEOUT" "$DOCKER" inspect --format '{{.Image}}' "$KC_CONTAINER")" || image=''
+    [[ -z "$image" || "$image" == "$KC_IMAGE_ID" ]] || return 1
+    if [[ "$image" == "$KC_IMAGE_ID" ]]; then
+      running="$(/usr/bin/timeout -k 1 "$KC_INSPECT_TIMEOUT" "$DOCKER" inspect --format '{{.State.Running}}' "$KC_CONTAINER")" || running=''
+      if [[ "$running" == true ]] && kc_health "$KC_PROJECT_HEALTH_URL" 2>/dev/null; then return 0; fi
+    fi
+    now="$(/usr/bin/date +%s)"
+    ((now < deadline)) || return 1
+    sleep "$KC_READINESS_POLL_SECONDS"
+  done
+}
+
+kc_capture_failure_logs() {
+  local log_file
+  [[ ! -L "$KC_DIAGNOSTIC_ROOT" ]] || return 1
+  install -d -m 0700 "$KC_DIAGNOSTIC_ROOT" || return 1
+  [[ "$(stat -c '%U:%a' "$KC_DIAGNOSTIC_ROOT")" == root:700 ]] || return 1
+  log_file="$(mktemp "$KC_DIAGNOSTIC_ROOT/project.XXXXXXXX.log")" || return 1
+  chmod 0600 "$log_file" || return 1
+  # Docker output goes only through this bounded redactor into a root-only file.
+  # Secret-bearing lines are removed entirely; no raw container log is printed.
+  if ! /usr/bin/timeout -k 1 "$KC_LOG_TIMEOUT" "$DOCKER" logs --tail 200 "$KC_CONTAINER" 2>&1 | /usr/bin/python3 -I -c '
+import re, sys
+data = sys.stdin.buffer.read(1048577)
+if len(data) > 1048576:
+    sys.stdout.buffer.write(b"[DIAGNOSTIC_LOG_TOO_LARGE]\n")
+else:
+    sensitive = re.compile(rb"(?i)postgres(?:ql)?[:=]|database[_ -]?url|password|token|secret|authorization|api[_-]?key|pgpass")
+    for line in data.splitlines(keepends=True):
+        sys.stdout.buffer.write(b"[REDACTED_SENSITIVE_LINE]\n" if sensitive.search(line) else line)
+' >"$log_file"; then
+    printf '[DIAGNOSTIC_LOG_CAPTURE_FAILED]\n' >"$log_file"
+  fi
+  printf 'KC_PROJECT_DIAGNOSTIC_LOG=%s\n' "$log_file" >&2
+}
+
 kc_container_image() {
   local image running
   image="$("$DOCKER" inspect --format '{{.Image}}' "$KC_CONTAINER")" || return 1
@@ -1031,11 +1076,13 @@ cmd_kc_deploy() {
   image_id="$("$DOCKER" image inspect "$image_ref" --format '{{.Id}}')" || die 'project image missing'
   [[ "$image_id" == "$KC_IMAGE_ID" ]] || die 'project image digest mismatch'
   if ! "$DOCKER" "${COMPOSE_ARGV[@]}" up -d --no-build --no-deps scrutator; then
+    kc_capture_failure_logs || printf 'KC_PROJECT_DIAGNOSTIC_LOG_UNAVAILABLE\n' >&2
     cmd_kc_stop || die 'project startup failed and project-only rollback failed; live state unknown'
     die 'project Compose startup failed; project-only rollback attempted'
   fi
-  if ! kc_container_image || ! kc_health "$KC_PROJECT_HEALTH_URL" ||
+  if ! kc_wait_ready ||
     ! kc_health "$KC_SHARED_HEALTH_URL"; then
+    kc_capture_failure_logs || printf 'KC_PROJECT_DIAGNOSTIC_LOG_UNAVAILABLE\n' >&2
     cmd_kc_stop || die 'project readback failed and project-only rollback failed; live state unknown'
     die 'project readback failed; project-only rollback attempted'
   fi
