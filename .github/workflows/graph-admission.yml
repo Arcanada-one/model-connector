@@ -928,6 +928,31 @@ jobs:
           pnpm --filter @muneral/types build
           cat "$PLAN_PATH" >> "$GITHUB_STEP_SUMMARY"
 
+      # The canonical Model Connector self-update is the only caller admitted by the narrow
+      # B1 pin/permission grammar. Its current-candidate TypeScript verifiers need the same
+      # frozen dependencies and generated Prisma client as its ordinary CI job. Keep this
+      # source-fixed setup separate from caller-controlled dependency-setup inputs.
+      - name: Prepare canonical Model Connector self-update verifier dependencies
+        if: github.repository == 'Arcanada-one/model-connector' && steps.self_update_classifier.outputs.case == 'gate_self_update'
+        env:
+          RANGE_BASE: ${{ steps.range.outputs.base }}
+          RANGE_HEAD: ${{ steps.range.outputs.head }}
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+        run: |
+          set -euo pipefail
+          test -f package.json && test ! -L package.json
+          test -f pnpm-lock.yaml && test ! -L pnpm-lock.yaml
+          git diff --quiet "$RANGE_BASE" "$RANGE_HEAD" -- package.json pnpm-lock.yaml prisma
+          python3 -I -B - <<'PY'
+          import json
+          from pathlib import Path
+          package = json.loads(Path('package.json').read_text(encoding='utf-8'))
+          if package.get('name') != 'model-connector' or package.get('packageManager') != 'pnpm@10.30.3':
+              raise SystemExit('MODEL_SELF_UPDATE_DEPENDENCY_SUBJECT_REFUSED')
+          PY
+          corepack pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile
+          corepack pnpm exec prisma generate
+
       - name: jsonschema 4.23.0 for candidate and stage source-input controls
         if: inputs.stage_userpath_required || inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update'
         run: python3 -I -m pip install --disable-pip-version-check --no-input 'jsonschema==4.23.0'
