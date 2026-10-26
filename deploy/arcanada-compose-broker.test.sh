@@ -795,3 +795,24 @@ grep -Fq "BROKER_SYNC_PASS service=arcanada-assistant sha=${sync_c2}" "$sync_out
 [ ! -e "${sync_dir}/stray.txt" ] || { echo 'FAIL: untracked file survived clean' >&2; exit 1; }
 [ "$(cat "${sync_dir}/other.txt")" = two ] || { echo 'FAIL: checkout did not land c2' >&2; exit 1; }
 echo 'PASS: sync_clean_tree_syncs_and_verifies'
+
+# KCP-0017: the project row cannot reach generic root Compose verbs, and its
+# rollback names only the separate project. No live Docker or secret is used.
+kc_dir="${state_root}/knowledge-contract-scrutator"
+mkdir -p "${kc_dir}/.git" "${kc_dir}/deploy/knowledge-contract-scrutator"
+printf '%s\n' 'services: {scrutator: {image: fixture}}' \
+  >"${kc_dir}/deploy/knowledge-contract-scrutator/compose.yml"
+expect_fail kc_generic_up_refused knowledge-contract-scrutator up
+expect_message kc_generic_up_refused 'allows only kc-deploy, kc-status and kc-stop'
+expect_fail kc_bad_sha_refused knowledge-contract-scrutator kc-deploy not-a-sha
+expect_message kc_bad_sha_refused 'release sha must be 40 lowercase hex'
+expect_fail kc_missing_env_refused knowledge-contract-scrutator kc-deploy \
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+expect_message kc_missing_env_refused 'root-owned env file missing'
+: >"$fake_docker_log"
+expect_pass kc_project_only_stop knowledge-contract-scrutator kc-stop
+grep -Fq "compose -p knowledge-contract-scrutator -f ${kc_dir}/deploy/knowledge-contract-scrutator/compose.yml down" \
+  "$fake_docker_log" || { echo 'FAIL: kc-stop did not target the fixed project' >&2; exit 1; }
+if grep -Fq 'scrutator-deploy' "$fake_docker_log"; then
+  echo 'FAIL: kc-stop referenced the shared Scrutator transaction' >&2; exit 1
+fi

@@ -48,6 +48,10 @@ readonly CURL=/usr/bin/curl
 readonly PNPM=/usr/bin/pnpm
 readonly NODE=/usr/bin/node
 readonly MUNERAL_HEALTH_URL='http://127.0.0.1:3500/health'
+readonly KC_SHARED_HEALTH_URL='http://127.0.0.1:8310/health'
+readonly KC_PROJECT_HEALTH_URL='http://127.0.0.1:8311/health'
+readonly KC_IMAGE_ID='sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17'
+readonly KC_CONTAINER='knowledge-contract-scrutator-scrutator-1'
 # Content-addressed root helper; no runner-owned import or path override.
 # shellcheck disable=SC2034 # Root installer consumes the sudoers pin from this reviewed broker.
 readonly BILLING_SUDOERS_SHA=a9668698e99a2306887687726b978b71b6a26663e49f58d74086f89f00c95508
@@ -119,6 +123,9 @@ declare -rA REPOS=(
   [argana]='https://github.com/Arcanada-one/argana.git'
   # KCP-0005: the private health-stub API runs only on this host behind nginx.
   [contract-place-api]='https://github.com/Arcanada-one/contract-place-api.git'
+  # KCP-0017: separate project checkout and Compose identity, never the shared
+  # Scrutator checkout or its transaction.
+  [knowledge-contract-scrutator]='https://github.com/Arcanada-one/contract-place-api.git'
   # Muneral cc96570a: the observability stack (Grafana/Loki/Tempo/Mimir) has
   # been running on arcana-prd since INFRA-0417 (project `observability-stack`,
   # named volumes obs_*), but its deploy job still SSHed to the decommissioned
@@ -142,6 +149,7 @@ declare -rA COMPOSE=(
   [langfuse-deploy]='docker-compose.yml'
   [argana]='docker-compose.yml'
   [contract-place-api]='docker-compose.yml'
+  [knowledge-contract-scrutator]='deploy/knowledge-contract-scrutator/compose.yml'
   [observability-stack]='docker-compose.yml'
 )
 # Private repositories whose fetch needs a credential on stdin.
@@ -160,6 +168,7 @@ declare -rA AUTH=(
   # stdin read.
   [argana]='github-token'
   [contract-place-api]='github-token'
+  [knowledge-contract-scrutator]='github-token'
   [observability-stack]='github-token'
 )
 # Pin the compose project name. Unset means Compose derives it from the
@@ -206,6 +215,7 @@ declare -rA PROJECT=(
   [argana]='argana'
   # A new stack with no existing containers or volumes to adopt.
   [contract-place-api]='contract-place-api'
+  [knowledge-contract-scrutator]='knowledge-contract-scrutator'
   # Pinned to the name the ALREADY-RUNNING stack carries
   # (com.docker.compose.project=observability-stack, measured 2026-09-30). Its
   # named volumes are fixed by `name:` (obs_*), so they would be adopted either
@@ -242,6 +252,7 @@ declare -rA ENVFILE=(
   # Holds TAILSCALE_IP + GRAFANA_ADMIN_PASSWORD (+ GRAFANA_OIDC_CLIENT_SECRET).
   # Operator-maintained under ENV_ROOT, root 0600; never carried in the repo.
   [observability-stack]='observability-stack.env'
+  [knowledge-contract-scrutator]='knowledge-contract-scrutator.env'
 )
 # A release script inside the checkout that already encapsulates the whole
 # deploy. Running it as root is the same trust boundary the broker already
@@ -915,12 +926,88 @@ cmd_aggregate_readback() {
   )
 }
 
-usage='usage: <service> {sync <sha>|pull|build|up|ps|logs [n]|migrate|tag-rotate|tag-release|image-id|verify|rollback|promote|prune|freshness|smoke|env-get <KEY>|aggregate-readback|run-deploy|registry-login <user>|registry-logout}'
+# KCP-0017 is a first install only. The caller can name one reviewed main SHA;
+# it cannot supply a Compose path, image, command, project or environment. A
+# later upgrade needs its own transaction so that rollback has a prior version.
+kc_health() {
+  local url="$1" status
+  status="$("$CURL" --fail --silent --show-error --max-time 5 \
+    --output /dev/null --write-out '%{http_code}' "$url")" || return 1
+  [[ "$status" == 200 ]]
+}
+
+kc_container_image() {
+  local image running
+  image="$("$DOCKER" inspect --format '{{.Image}}' "$KC_CONTAINER")" || return 1
+  running="$("$DOCKER" inspect --format '{{.State.Running}}' "$KC_CONTAINER")" || return 1
+  [[ "$running" == true && "$image" == "$KC_IMAGE_ID" ]]
+}
+
+kc_compose() {
+  require_checkout knowledge-contract-scrutator
+  set_compose_argv knowledge-contract-scrutator
+}
+
+cmd_kc_stop() {
+  kc_compose
+  "$DOCKER" "${COMPOSE_ARGV[@]}" down
+  printf 'KC_PROJECT_STOP_PASS project=knowledge-contract-scrutator\n'
+}
+
+cmd_kc_status() {
+  kc_compose
+  kc_container_image || die 'project container is absent, stopped or has the wrong image'
+  kc_health "$KC_PROJECT_HEALTH_URL" || die 'project loopback health failed'
+  kc_health "$KC_SHARED_HEALTH_URL" || die 'shared Scrutator loopback health failed'
+  printf 'KC_PROJECT_STATUS_PASS project=knowledge-contract-scrutator image=%s sha=%s\n' \
+    "$KC_IMAGE_ID" "$(head_sha knowledge-contract-scrutator)"
+}
+
+cmd_kc_deploy() {
+  local sha="$1" image_ref image_id
+  set_root_env_path knowledge-contract-scrutator
+  [[ "$(stat -c '%a' -- "$ROOT_ENV_PATH")" == 600 ]] || die 'project env must be mode 0600'
+  kc_health "$KC_SHARED_HEALTH_URL" || die 'shared Scrutator unhealthy before project install'
+  if "$DOCKER" container inspect "$KC_CONTAINER" >/dev/null 2>&1; then
+    die 'project container already exists; initial-install verb refuses upgrades'
+  fi
+  if kc_health "$KC_PROJECT_HEALTH_URL"; then die 'project port already serves HTTP'; fi
+  cmd_sync knowledge-contract-scrutator "$sha"
+  kc_compose
+  "$DOCKER" "${COMPOSE_ARGV[@]}" config -q || die 'project Compose preflight failed'
+  image_ref="$("$DOCKER" "${COMPOSE_ARGV[@]}" config --images)" || die 'cannot read project image'
+  [[ "$image_ref" != *$'\n'* && -n "$image_ref" ]] || die 'project Compose must name one image'
+  image_id="$("$DOCKER" image inspect "$image_ref" --format '{{.Id}}')" || die 'project image missing'
+  [[ "$image_id" == "$KC_IMAGE_ID" ]] || die 'project image digest mismatch'
+  if ! "$DOCKER" "${COMPOSE_ARGV[@]}" up -d --no-build --no-deps scrutator; then
+    cmd_kc_stop || true
+    die 'project Compose startup failed; project-only rollback attempted'
+  fi
+  if ! kc_container_image || ! kc_health "$KC_PROJECT_HEALTH_URL" ||
+    ! kc_health "$KC_SHARED_HEALTH_URL"; then
+    cmd_kc_stop || true
+    die 'project readback failed; project-only rollback attempted'
+  fi
+  printf 'KC_PROJECT_DEPLOY_PASS project=knowledge-contract-scrutator image=%s sha=%s\n' \
+    "$KC_IMAGE_ID" "$sha"
+}
+
+usage='usage: <service> {sync <sha>|pull|build|up|ps|logs [n]|migrate|tag-rotate|tag-release|image-id|verify|rollback|promote|prune|freshness|smoke|env-get <KEY>|aggregate-readback|run-deploy|registry-login <user>|registry-logout|kc-deploy <sha>|kc-status|kc-stop}'
 
 main() {
   [[ $# -ge 2 ]] || die "$usage"
   local svc action
   svc="$(validate_service "$1")"; action="$2"; shift 2
+  if [[ "$svc" == knowledge-contract-scrutator ]]; then
+    case "$action" in
+      kc-deploy) [[ $# -eq 1 ]] || die 'kc-deploy takes one main sha'
+                 cmd_kc_deploy "$(validate_sha "$1")" ;;
+      kc-status) [[ $# -eq 0 ]] || die 'kc-status takes no arguments'; cmd_kc_status ;;
+      kc-stop)   [[ $# -eq 0 ]] || die 'kc-stop takes no arguments'; cmd_kc_stop ;;
+      *) die 'project service allows only kc-deploy, kc-status and kc-stop' ;;
+    esac
+    return
+  fi
   # C07: no generic actuator/registry/log capability for Prime.
   if [[ "$svc" == prime ]]; then
     case "$action" in
