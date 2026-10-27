@@ -1,0 +1,7 @@
+{
+  "extends": "./dev-tools/tsconfig.json",
+  "include": [
+    "scripts/vault-provider-keys.mjs",
+    "scripts/vault-provider-keys.spec.mjs"
+  ]
+}

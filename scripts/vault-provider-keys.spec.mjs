@@ -8,16 +8,21 @@ import { sourceProviderKeys, SECRETS, OPTIONAL_SECRETS } from './vault-provider-
 // that contract; `fail` throws here so we can assert on it (in prod it exits 78).
 
 const OK_LOGIN = { auth: { client_token: 'vault-token-xyz' } };
+/** @typedef {{ok: boolean, status: number, json: () => Promise<object>}} StubResponse */
+/** @param {object} body */
 const okResp = (body) => ({ ok: true, status: 200, json: async () => body });
+/** @param {number} status */
 const errResp = (status) => ({ ok: false, status, json: async () => ({}) });
 
+/** @param {string} apiKey */
 function keyBody(apiKey) {
   return { data: { data: { api_key: apiKey } } };
 }
 
 /** Build a fetch stub: login → OK_LOGIN, then each secret path → its body. */
-function makeFetch({ login = okResp(OK_LOGIN), reads } = {}) {
-  return vi.fn(async (url) => {
+/** @param {{login?: StubResponse, reads?: Array<[string, StubResponse]>}} [config] */
+function makeFetch({ login = okResp(OK_LOGIN), reads = [] } = {}) {
+  return vi.fn(async (/** @type {string} */ url) => {
     if (url.endsWith('/v1/auth/approle/login')) return login;
     const hit = reads.find(([p]) => url.endsWith(`/v1/${p}`));
     if (!hit) throw new Error(`unexpected url ${url}`);
@@ -25,6 +30,7 @@ function makeFetch({ login = okResp(OK_LOGIN), reads } = {}) {
   });
 }
 
+/** @param {string} msg */
 const failThrows = (msg) => {
   throw new Error(`FAIL: ${msg}`);
 };
@@ -52,7 +58,7 @@ describe('sourceProviderKeys (CONN-1666)', () => {
         [SECRETS[0][0], okResp(keyBody('sk-or-email-agent'))],
         [SECRETS[1][0], okResp(keyBody('sk-or-agents-free'))],
         // DEC-AUP-0028 R2 — the optional tier is absent here and must not count.
-        ...OPTIONAL_SECRETS.map(([p]) => [p, errResp(404)]),
+        ...OPTIONAL_SECRETS.map(([p]) => /** @type {[string, StubResponse]} */ ([p, errResp(404)])),
       ],
     });
     const n = await sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows });
@@ -138,6 +144,7 @@ describe('OPTIONAL_SECRETS (DEC-AUP-0028 R2)', () => {
     MC_VAULT_SECRET_ID: 'secret-1',
     VAULT_ADDR: 'http://vault.test:8200',
   };
+  /** @type {Array<[string, StubResponse]>} */
   const strictReads = [
     [SECRETS[0][0], okResp(keyBody('sk-or-email-agent'))],
     [SECRETS[1][0], okResp(keyBody('sk-or-agents-free'))],
@@ -161,7 +168,7 @@ describe('OPTIONAL_SECRETS (DEC-AUP-0028 R2)', () => {
     const emit = vi.fn();
     const warn = vi.fn();
     const fetchImpl = makeFetch({
-      reads: [...strictReads, ...OPTIONAL_SECRETS.map(([p]) => [p, errResp(404)])],
+      reads: [...strictReads, ...OPTIONAL_SECRETS.map(([p]) => /** @type {[string, StubResponse]} */ ([p, errResp(404)]))],
     });
     const n = await sourceProviderKeys({ env: activeEnv, fetchImpl, emit, fail: failThrows, warn });
     expect(n).toBe(SECRETS.length);

@@ -2,14 +2,20 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
-    "incremental": false
+    "incremental": false,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "checkJs": true
   },
   "include": [
     "src/**/*",
     "test/app.e2e-spec.ts",
     "test/bench-reservation/**/*.ts",
     "vitest.config.ts",
-    "vitest.bench-reservation.config.ts"
+    "vitest.bench-reservation.config.ts",
+    "scripts/vault-provider-keys.mjs",
+    "scripts/vault-provider-keys.spec.mjs"
   ],
   "exclude": [
     "node_modules",

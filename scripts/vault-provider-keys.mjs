@@ -17,6 +17,7 @@
 //   arcanada/shared/tokens/openrouter-email-agent  field api_key
 //   arcanada/shared/tokens/openrouter-agents-free  field api_key
 
+/** @type {Array<[string, string]>} */
 export const SECRETS = [
   ['arcanada/data/shared/tokens/openrouter-email-agent', 'OPENROUTER_API_KEY_EMAIL_AGENT'],
   ['arcanada/data/shared/tokens/openrouter-agents-free', 'OPENROUTER_API_KEY_AGENTS_FREE'],
@@ -35,6 +36,7 @@ export const SECRETS = [
 // every tenant on the next deploy (entrypoint exits 78 before exec).
 //   arcanada/shared/tokens/anthropic-model-connector  field api_key
 //   arcanada/shared/tokens/openrouter  field api_key
+/** @type {Array<[string, string]>} */
 export const OPTIONAL_SECRETS = [
   ['arcanada/data/shared/tokens/anthropic-model-connector', 'ANTHROPIC_API_KEY'],
   ['arcanada/data/shared/tokens/openrouter', 'OPENROUTER_API_KEY'],
@@ -46,11 +48,11 @@ export const OPTIONAL_SECRETS = [
  * production wrapper stays a one-liner.
  *
  * @param {object}   deps
- * @param {object}   deps.env        environment map (process.env in prod)
- * @param {Function} deps.fetchImpl  fetch(url, opts) => Response
- * @param {Function} deps.emit       (line) => void — receives one export line
- * @param {Function} deps.fail       (msg)  => never — MUST NOT return (throws/exits)
- * @param {Function} [deps.warn]     (msg)  => void — diagnostics for an ABSENT optional secret (stderr in prod)
+ * @param {Record<string, string | undefined>} deps.env environment map (process.env in prod)
+ * @param {(url: string, opts?: RequestInit) => Promise<{ok: boolean, status: number, json: () => Promise<unknown>}>} deps.fetchImpl
+ * @param {(line: string) => void} deps.emit receives one export line
+ * @param {(msg: string) => never} deps.fail MUST NOT return (throws/exits)
+ * @param {(msg: string) => void} [deps.warn] diagnostics for an ABSENT optional secret
  * @returns {Promise<number>} count of keys sourced (0 when Vault sourcing is off)
  */
 export async function sourceProviderKeys({ env, fetchImpl, emit, fail, warn = () => {} }) {
@@ -74,9 +76,9 @@ export async function sourceProviderKeys({ env, fetchImpl, emit, fail, warn = ()
       signal: AbortSignal.timeout(10_000),
     });
     if (!r.ok) return fail(`approle login HTTP ${r.status}`);
-    login = await r.json();
+    login = /** @type {{auth?: {client_token?: string}}} */ (await r.json());
   } catch (e) {
-    return fail(`approle login failed: ${e.cause?.code ?? e.message}`);
+    return fail(`approle login failed: ${errorDetail(e)}`);
   }
   const token = login?.auth?.client_token;
   if (!token) return fail('approle login returned no client_token');
@@ -104,10 +106,10 @@ export async function sourceProviderKeys({ env, fetchImpl, emit, fail, warn = ()
         continue;
       }
       if (!r.ok) return fail(`read ${path} HTTP ${r.status}`);
-      const body = await r.json();
+      const body = /** @type {{data?: {data?: {api_key?: string}}}} */ (await r.json());
       value = body?.data?.data?.api_key;
     } catch (e) {
-      return fail(`read ${path} failed: ${e.cause?.code ?? e.message}`);
+      return fail(`read ${path} failed: ${errorDetail(e)}`);
     }
     if (!value || typeof value !== 'string') return fail(`${path} has no string field "api_key"`);
     // Value is wrapped in single quotes for `eval` — a quote would break out.
@@ -118,6 +120,14 @@ export async function sourceProviderKeys({ env, fetchImpl, emit, fail, warn = ()
   return count;
 }
 
+/** @param {unknown} error */
+function errorDetail(error) {
+  if (!(error instanceof Error)) return String(error);
+  const cause = error.cause;
+  if (cause && typeof cause === 'object' && 'code' in cause) return String(cause.code);
+  return error.message;
+}
+
 // Production wrapper: real deps, fail-loud via process.exit(78), stdout is the
 // export stream. Guarded so importing this module in a test does not run it —
 // pathToFileURL makes the comparison robust to relative argv and symlinks (a
@@ -126,16 +136,19 @@ export async function sourceProviderKeys({ env, fetchImpl, emit, fail, warn = ()
 const { pathToFileURL } = await import('node:url');
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
+  /** @type {(msg: string) => never} */
   const fail = (msg) => {
     console.error(`[vault-provider-keys] FATAL: ${msg}`);
     process.exit(78);
   };
+  /** @type {(line: string) => void} */
   const emit = (line) => {
     process.stdout.write(line + '\n');
     // Log the env var name + length to stderr, never the value.
     const [, envName] = /^export (\w+)='(.*)'$/.exec(line) ?? [];
     console.error(`[vault-provider-keys] loaded ${envName} (sourced from Vault)`);
   };
+  /** @type {(msg: string) => void} */
   const warn = (msg) => console.error(`[vault-provider-keys] ${msg}`);
   await sourceProviderKeys({ env: process.env, fetchImpl: fetch, emit, fail, warn });
 }
