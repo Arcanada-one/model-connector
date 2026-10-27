@@ -2,6 +2,7 @@
   "schema": "VerifyProfile/v1",
   "deployables": {
     ".": {
+      "tsconfig_test": ".arcana/tsconfig.mjs.json",
       "full_test": [
         "bash",
         "scripts/graph-full-suite-isolated.sh",
