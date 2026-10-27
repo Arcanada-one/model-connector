@@ -291,6 +291,30 @@ class Controls(unittest.TestCase):
                 self.assertIn('FULL_FALLBACK_TEST_REFUSED: invalid source/path/environment', result.stderr)
                 self.assertEqual(list(self.root.rglob('execution.json')), [])
 
+    def test_root_child_home_accepts_only_private_wrapper_path(self):
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as directory:
+            root = Path(directory)
+            runs = root / 'node_modules/.cache/graph-full-suite/runs'
+            runs.mkdir(parents=True)
+            runs.chmod(0o700)
+            run = runs / 'run.abcdefgh'
+            run.mkdir(mode=0o700)
+            home = run / 'home'
+            home.mkdir(mode=0o700)
+            env = subject.clean_environment(self.root, root, str(home))
+            self.assertEqual(env['HOME'], str(home))
+            self.assertNotIn('GRAPH_FULL_SUITE_PROTECTED_HOME', env)
+            home.rename(run / 'real-home')
+            home.symlink_to(run / 'real-home', target_is_directory=True)
+            with self.assertRaises(subject.Refusal):
+                subject.clean_environment(self.root, root, str(home))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            home = root / 'node_modules/.cache/graph-full-suite/runs/run.abcdefgh/home'
+            home.mkdir(parents=True, mode=0o700)
+            with self.assertRaises(subject.Refusal):
+                subject.clean_environment(self.root, root, str(home))
+
     def test_isolated_entrypoint_provisions_private_tmpdir_and_preserves_exit_status(self):
         scripts = self.root / 'scripts'
         scripts.mkdir()
@@ -301,7 +325,7 @@ class Controls(unittest.TestCase):
         runner.write_text(
             '#!/usr/bin/env bash\n'
             '[[ "$1" == . ]] || exit 9\n'
-            'printf "%s\\n%s\\n%s\\n" "$TMPDIR" "$HOME" "$(stat -c %a "$TMPDIR")"\n'
+            'printf "%s\\n%s\\n%s\\n%s\\n" "$TMPDIR" "$HOME" "$(stat -c %a "$TMPDIR")" "$GRAPH_FULL_SUITE_PROTECTED_HOME"\n'
             '[[ -z "${FIXTURE_SECRET:-}" ]] || exit 10\n'
             'exit 23\n'
         )
@@ -314,8 +338,9 @@ class Controls(unittest.TestCase):
             timeout=10,
         )
         self.assertEqual(result.returncode, 23, result.stdout + result.stderr)
-        tempdir, home, mode = result.stdout.strip().splitlines()
+        tempdir, home, mode, protected = result.stdout.strip().splitlines()
         self.assertEqual(mode, '700')
+        self.assertEqual(protected, home)
         self.assertEqual(Path(home).parent.parent, self.root / 'node_modules/.cache/graph-full-suite/runs')
         self.assertFalse(Path(tempdir).exists())
         self.assertEqual(Path(tempdir).parent, Path('/tmp'))

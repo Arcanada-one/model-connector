@@ -145,15 +145,35 @@ def plan(unit, members):
     return suites
 
 
-def clean_environment(scratch, unit_root):
+def protected_home(raw, unit_root):
+    """Accept only the isolated wrapper's private HOME and its safe ancestry."""
+    home = Path(raw)
+    runs = unit_root / 'node_modules/.cache/graph-full-suite/runs'
+    if (not home.is_absolute() or '..' in home.parts or home.name != 'home'
+            or home.parent.parent != runs or not re.fullmatch(r'run\.[A-Za-z0-9]{8}', home.parent.name)):
+        raise Refusal('protected full-suite HOME required')
+    for node in [*reversed(home.parents), home]:
+        info = node.lstat()
+        if (stat.S_ISLNK(info.st_mode) or not stat.S_ISDIR(info.st_mode)
+                or info.st_uid not in (0, os.geteuid()) or info.st_mode & 0o022):
+            raise Refusal('unsafe full-suite HOME ancestry')
+    for node in (home.parent, home):
+        if stat.S_IMODE(node.lstat().st_mode) != 0o700:
+            raise Refusal('private full-suite HOME required')
+    return home
+
+
+def clean_environment(scratch, unit_root, root_home=None):
     # No inherited tokens, flags, URLs, NODE_OPTIONS, PYTHONPATH or agent hooks.
-    env = {'PATH': os.environ.get('PATH', os.defpath), 'HOME': str(scratch / 'home'),
+    home = protected_home(root_home, unit_root) if root_home else scratch / 'home'
+    env = {'PATH': os.environ.get('PATH', os.defpath), 'HOME': str(home),
            'TMPDIR': str(scratch), 'CI': '1', 'NO_COLOR': '1', 'FORCE_COLOR': '0',
            'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONPATH': str(unit_root),
            'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1'}
     if any(not Path(part).is_absolute() for part in env['PATH'].split(os.pathsep)):
         raise Refusal('relative PATH entry')
-    (scratch / 'home').mkdir(mode=0o700)
+    if not root_home:
+        home.mkdir(mode=0o700)
     return env
 
 
@@ -423,7 +443,7 @@ def run_root_suites(root, suites, scratch, executor=execute):
             checked_file(root, member)
             if suite['suite'] == 'maintained-regression':
                 root_regression_command(root, member)
-    env = clean_environment(scratch, root)
+    env = clean_environment(scratch, root, os.environ.get('GRAPH_FULL_SUITE_PROTECTED_HOME'))
     deadline = time.monotonic() + 900
     results = []
     def run(argv, members, name, parser):
