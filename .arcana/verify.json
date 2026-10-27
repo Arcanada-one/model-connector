@@ -2,6 +2,13 @@
   "schema": "VerifyProfile/v1",
   "deployables": {
     ".": {
+      "tsconfig": [
+        "tsconfig.json",
+        "tsconfig.build.json",
+        "tsconfig.ci.json",
+        "tsconfig.test.json",
+        ".arcana/tsconfig.mjs.json"
+      ],
       "tsconfig_test": ".arcana/tsconfig.mjs.json",
       "full_test": [
         "bash",
