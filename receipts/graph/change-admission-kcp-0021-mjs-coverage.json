@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted"
  },
- "captured_at_utc": "2026-10-27T08:43:55Z",
+ "captured_at_utc": "2026-10-27T08:47:26Z",
  "change_set": {
   "base": "1c53b5cf0907dc6d5b18c52775f72e0cb5d716c9",
   "files": [
@@ -49,7 +49,7 @@
     "status": "M"
    }
   ],
-  "head": "416938cae0202dc9163093b9c7db3c96a4fc53ad",
+  "head": "fc43e4ae6dfb5426c10e70003aa4eb77dd7078f1",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -58,17 +58,17 @@
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:4909670dc2c8d7528b75e735a3f5aa5186f650319f9dcf06dcde75199813483e",
-  "path": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/graph-1c53b5cf0907.json",
+  "path": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/graph-1c53b5cf0907.json",
   "source_commit": "1c53b5cf0907dc6d5b18c52775f72e0cb5d716c9"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:90839000bc3de00f5bcbc84d92a532cc23ec789ce34574eeeba2ff0a4f205022",
-  "path": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/graph-head-416938cae020.json",
-  "source_commit": "416938cae0202dc9163093b9c7db3c96a4fc53ad",
+  "graph_digest": "sha256:e80e6eb08d5e73dc97e6592370bf82690fc5b8be607396d775d1935367622382",
+  "path": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/graph-head-fc43e4ae6dfb.json",
+  "source_commit": "fc43e4ae6dfb5426c10e70003aa4eb77dd7078f1",
   "staleness": {
-   "checked_at_utc": "2026-10-27T08:44:37Z",
+   "checked_at_utc": "2026-10-27T08:48:05Z",
    "checked_nodes": 945,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -418,7 +418,7 @@
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261027T084355Z-416938ca",
+ "receipt_id": "car-verify-20261027T084726Z-fc43e4ae",
  "receipt_path": "receipts/graph/change-admission-kcp-0021-mjs-coverage.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -467,7 +467,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-10-27T08:44:37Z",
+  "checked_at_utc": "2026-10-27T08:48:05Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -597,7 +597,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:6bf373494256ca05f98c8e6806664f636f806edbeab6c7f840f6c825a4096ad4"
+    "head": "sha256:b8056445f6a5201f5cd6bca6562636049fb3a3a76ae8eab32cf2ad5a8d1a2dde"
    },
    "entity": "receipt:receipts/graph/change-admission-kcp-0021-mjs-coverage.json",
    "node_type": "receipt",
@@ -611,7 +611,7 @@
   }
  ],
  "tree": {
-  "commit": "416938cae0202dc9163093b9c7db3c96a4fc53ad",
+  "commit": "fc43e4ae6dfb5426c10e70003aa4eb77dd7078f1",
   "dirty": false
  },
  "verdicts": [
@@ -667,8 +667,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/type-check-i4zhgsvg/check.tsbuildinfo --listFiles",
-   "duration_s": 8.74,
+   "command": "/home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/type-check-9ufhrgv2/check.tsbuildinfo --listFiles",
+   "duration_s": 7.98,
    "entities": [
     "code_unit:scripts/vault-provider-keys.mjs",
     "code_unit:scripts/vault-provider-keys.spec.mjs",
@@ -682,13 +682,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-10-27T08:44:45Z",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-10-27T08:48:12Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2859 files listed"
   },
   {
-   "command": "/home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/type-check-3vk1v6i_/check.tsbuildinfo --listFiles",
-   "duration_s": 5.06,
+   "command": "/home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/type-check-txc_rrg4/check.tsbuildinfo --listFiles",
+   "duration_s": 4.64,
    "entities": [
     "code_unit:scripts/vault-provider-keys.mjs",
     "deployable_unit:."
@@ -699,13 +699,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-10-27T08:44:54Z",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-10-27T08:48:21Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2131 files listed"
   },
   {
-   "command": "/home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/type-check-ewe9drtr/check.tsbuildinfo --listFiles",
-   "duration_s": 0.68,
+   "command": "/home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/type-check-eq4uf7gm/check.tsbuildinfo --listFiles",
+   "duration_s": 0.64,
    "entities": [
     "code_unit:scripts/vault-provider-keys.mjs",
     "deployable_unit:."
@@ -716,13 +716,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-10-27T08:45:00Z",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-10-27T08:48:26Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/type-check-jboaypez/check.tsbuildinfo --listFiles",
-   "duration_s": 8.35,
+   "command": "/home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/type-check-1b_t0vtf/check.tsbuildinfo --listFiles",
+   "duration_s": 7.72,
    "entities": [
     "code_unit:scripts/vault-provider-keys.mjs",
     "deployable_unit:."
@@ -733,13 +733,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-10-27T08:45:00Z",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-10-27T08:48:26Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2750 files listed"
   },
   {
-   "command": "/home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/type-check-vkz4arcc/check.tsbuildinfo --listFiles",
-   "duration_s": 8.43,
+   "command": "/home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/node_modules/.bin/tsc -p /home/dev/orca/workspaces/arcanada/KCP-0021-model-mjs/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/type-check-ejhlti6n/check.tsbuildinfo --listFiles",
+   "duration_s": 7.97,
    "entities": [
     "code_unit:scripts/vault-provider-keys.mjs",
     "deployable_unit:."
@@ -750,13 +750,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-10-27T08:45:09Z",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-10-27T08:48:34Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2856 files listed"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.25,
+   "duration_s": 0.24,
    "entities": [
     "code_unit:scripts/vault-provider-keys.mjs",
     "code_unit:scripts/vault-provider-keys.spec.mjs",
@@ -770,8 +770,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/v-fitness.json",
-   "started_at_utc": "2026-10-27T08:45:18Z",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/v-fitness.json",
+   "started_at_utc": "2026-10-27T08:48:43Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -788,8 +788,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final/v-doc-reference.txt",
-   "started_at_utc": "2026-10-27T08:45:18Z",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0021-profile-verifier-out-final2/v-doc-reference.txt",
+   "started_at_utc": "2026-10-27T08:48:43Z",
    "summary": "2 document(s), 0 failed"
   }
  ],
@@ -840,9 +840,9 @@
    "receipt:receipts/graph/change-admission-kcp-0021-mjs-coverage.json": []
   },
   "seconds": {
-   "prepare": 3.74,
-   "total": 82.85,
-   "verifiers": 31.51
+   "prepare": 3.23,
+   "total": 77.34,
+   "verifiers": 29.19
   }
  },
  "work_item": "KCP-0021"
