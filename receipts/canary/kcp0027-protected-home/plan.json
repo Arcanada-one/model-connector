@@ -1,0 +1,81 @@
+{
+  "schema": "CanaryPlan/v2",
+  "id": "kcp0027-protected-home-260977bf",
+  "owner": "KCP-0027 / Model Connector graph verification and CI maintainer",
+  "producer_repository": "/home/dev/orca/workspaces/arcanada/KCP-0027-canary-run",
+  "environment": "Arcana DEVS isolated Model Connector source",
+  "read_only": true,
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "260977bf54c289e48e7d89107cf40a14b59a239a",
+    "tree": "ef0a39b298fcbd9f2a76c9d6be05f1ba4af896bd",
+    "evidence": {
+      "path": "source.json",
+      "sha256": "51c6c077a1b4341ebf7e4c844d3f3aede4df80437bed0ea4f7766f1a47a0062b",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "id": "graph-full-suite-protected-home-controls",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/python3.12",
+        "-B",
+        "dev-tools/graph-full-suite.test.py"
+      ],
+      "cwd": ".",
+      "entities": [
+        "code_unit:dev-tools/graph-full-suite.test.py",
+        "code_unit:scripts/graph_full_suite.py",
+        "code_unit:scripts/graph-full-suite-isolated.sh"
+      ],
+      "mutating": false,
+      "timeout_seconds": 120,
+      "capture_limit_bytes": 65536,
+      "executable_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/arcanada/KCP-0027-canary-run/dev-tools/graph-full-suite.test.py",
+          "sha256": "d3f1417a5f5383f7b7e54111fa556fb019c9cce61adaa3eca4aa547e8fffb12c",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/home/dev/orca/workspaces/arcanada/KCP-0027-canary-run/scripts/graph_full_suite.py",
+          "sha256": "40c7cf7b9a98d477ab144c8b4c21d683160231a22d9143011d84a4c2ea05c9b4",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/home/dev/orca/workspaces/arcanada/KCP-0027-canary-run/scripts/graph-full-suite-isolated.sh",
+          "sha256": "46aff40c06a4c5d01eba709fd6f45336094ae41c5ee078b4b242fa50c03fa82b",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/usr/bin/python3.12",
+          "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+          "attribution": {
+            "kind": "system_executable",
+            "source_id": "/usr/bin/python3.12",
+            "version": "sha256:e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+          }
+        }
+      ],
+      "env_keys": [],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stderr_contains": [
+          "Ran 32 tests",
+          "OK"
+        ]
+      }
+    }
+  ]
+}
