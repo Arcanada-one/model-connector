@@ -87,6 +87,12 @@ export interface ParsedApiOutput {
    * a measurement rather than a lookup. Opt-in per connector (deepseek).
    */
   modelSubstituted?: { requested: string; served: string };
+  /**
+   * #6664 — processing tier the provider echoed (`service_tier` / alias).
+   * Forwarded to {@link ConnectorResponse.processingTier}; normalized later
+   * when written next to `model` on the request log row.
+   */
+  processingTier?: string;
   isError: boolean;
   errorMessage?: string;
 }
@@ -602,6 +608,8 @@ export abstract class BaseApiConnector implements IConnector {
         ...(parsed.modelSubstituted !== undefined
           ? { modelSubstituted: parsed.modelSubstituted }
           : {}),
+        // #6664 — only when the provider (or connector) named a processing tier.
+        ...(parsed.processingTier !== undefined ? { processingTier: parsed.processingTier } : {}),
         latencyMs: Date.now() - start,
         queueWaitMs,
         status: parsed.isError ? 'error' : 'success',

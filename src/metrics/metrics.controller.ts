@@ -28,7 +28,8 @@ export class MetricsController {
     const registry = this.speechMetrics.getRegistry();
     const speechBody = await registry.metrics();
     const codexBody = this.metricsService.getPrometheusCodexOauth();
-    const body = speechBody + codexBody;
+    const tierBody = this.metricsService.getPrometheusProcessingTier();
+    const body = speechBody + codexBody + tierBody;
     reply.status(200);
     reply.header('Content-Type', registry.contentType);
     reply.send(body);

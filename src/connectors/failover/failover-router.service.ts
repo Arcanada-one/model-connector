@@ -163,29 +163,63 @@ export class FailoverRouterService {
     const chainRequest: Omit<ConnectorRequest, 'connector'> = { ...request, maxRetries: 0 };
     const byName = new Map(eligibleCapabilities.map((capability) => [capability.name, capability]));
 
-    return runFailoverChain({
-      candidates,
-      execute: (connector, req, key) => this.connectorsService.execute(connector, req, key),
-      request: chainRequest,
-      apiKeyId,
-      deadlineMs: cfg.chainDeadlineMs,
-      // A CLI hop (gemini, codex, claude-code) can run tools and write files
-      // before a timeout. Only an API chat hop is pure generation, so only
-      // that timeout advances.
-      allowTimeoutAdvance: (candidate) => byName.get(candidate.connector)?.type === 'api',
-      hopOwnTimeoutMs: (candidate) =>
-        configuredHopTimeoutMs(
-          candidate.connector,
-          request.timeout,
-          byName.get(candidate.connector)?.maxTimeout,
-        ),
-      onAttempt: (candidate, _resp, outcome) => {
-        if (outcome === 'advance') {
-          this.logger.warn(
-            `Failover: ${candidate.connector}:${candidate.model} failed — advancing`,
-          );
-        }
-      },
-    });
+    const hopCostsUsd: number[] = [];
+    let hopCount = 0;
+
+    try {
+      const response = await runFailoverChain({
+        candidates,
+        execute: (connector, req, key) => this.connectorsService.execute(connector, req, key),
+        request: chainRequest,
+        apiKeyId,
+        deadlineMs: cfg.chainDeadlineMs,
+        // A CLI hop (gemini, codex, claude-code) can run tools and write files
+        // before a timeout. Only an API chat hop is pure generation, so only
+        // that timeout advances.
+        allowTimeoutAdvance: (candidate) => byName.get(candidate.connector)?.type === 'api',
+        hopOwnTimeoutMs: (candidate) =>
+          configuredHopTimeoutMs(
+            candidate.connector,
+            request.timeout,
+            byName.get(candidate.connector)?.maxTimeout,
+          ),
+        onAttempt: (candidate, resp, outcome) => {
+          hopCount += 1;
+          const hopCost = resp?.usage?.costUsd ?? 0;
+          hopCostsUsd.push(hopCost);
+          if (outcome === 'advance') {
+            this.logger.warn({
+              msg: 'failover_hop_advance',
+              hop: hopCount,
+              connector: candidate.connector,
+              model: candidate.model,
+              hop_cost_usd: hopCost,
+              // Redacted: no prompt / api key.
+            });
+          }
+        },
+      });
+      this.connectorsService.recordFailoverHops(hopCount, hopCostsUsd);
+      this.logger.log({
+        msg: 'failover_chain_complete',
+        hop_count: hopCount,
+        hop_transitions: Math.max(0, hopCount - 1),
+        hop_costs_usd: hopCostsUsd,
+        model: response.model,
+        connector: response.connector,
+      });
+      return response;
+    } catch (err) {
+      if (hopCount > 0) {
+        this.connectorsService.recordFailoverHops(hopCount, hopCostsUsd);
+        this.logger.log({
+          msg: 'failover_chain_exhausted',
+          hop_count: hopCount,
+          hop_transitions: Math.max(0, hopCount - 1),
+          hop_costs_usd: hopCostsUsd,
+        });
+      }
+      throw err;
+    }
   }
 }
