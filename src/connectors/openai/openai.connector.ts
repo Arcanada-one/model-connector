@@ -5,6 +5,7 @@ import {
   ProviderModelMeta,
 } from '../interfaces/connector.interface';
 import { isTimeoutAbort } from '../../core/utils/abort';
+import { OPENAI_PRICE_UNIT, openAiCataloguePricing, openAiModelLimits } from './openai.pricing';
 
 interface OpenAiResponse {
   id?: string;
@@ -90,37 +91,76 @@ export type OpenAiModerationOperationResult =
     };
 
 const DEFAULT_MODEL = 'gpt-4.1-mini';
-const STATIC_MODELS = ['gpt-4.1-mini', 'gpt-4.1', 'gpt-4.1-nano'];
+const STATIC_MODELS = ['gpt-4.1-mini', 'gpt-4.1', 'gpt-4.1-nano', 'gpt-6.1-terra'];
 
 /**
  * A2-223 — hand-curated list price per model, USD per 1M tokens, from OpenAI's
  * published pricing page https://developers.openai.com/api/docs/pricing
- * (fetched 2026-09-23; `platform.openai.com/docs/pricing` 301-redirects there).
- * Standard processing tier — the tier this connector's requests run on; Batch
- * and Fast mode are priced differently and neither is reachable from here.
+ * (gpt-4.1 family fetched 2026-09-23; gpt-6.1-terra re-checked 2026-10-28).
+ * Standard / short-context tier — the tier this connector's requests run on.
+ * Batch, Flex, Fast, and long-context (>272K) rates live in `openai.pricing.ts`
+ * and are not applied by the live connector path today.
  *
- * `cachedInputPerMTok` is published for all three ($0.50 / $0.10 / $0.025) and
- * is deliberately NOT carried: `MeasuredCostPricing.cachedInputPerMTok` exists
- * but no catalogue COLUMN does, so the value would be dropped on the way to the
- * DB, and this connector reports no `cachedInputTokens` for the meter to apply
- * it to. Cached tokens therefore bill at the full input rate, which overstates
- * a cache hit and never understates it — the same direction anthropic and
- * deepseek already take, and the same gap they already document.
+ * For gpt-4.1 / mini / nano, `cachedInputPerMTok` is still omitted: this
+ * connector reports no `cachedInputTokens` for those ids, so carrying the
+ * cache-hit rate would be unused. gpt-6.1-terra carries cached input because
+ * the catalogue column exists and the public book publishes $0.05 / 1M.
  */
 export const OPENAI_LIST_PRICES_USD_PER_MTOK: Readonly<
-  Record<string, { inputPerMTok: number; outputPerMTok: number }>
+  Record<
+    string,
+    {
+      inputPerMTok: number;
+      outputPerMTok: number;
+      cachedInputPerMTok?: number;
+    }
+  >
 > = {
   'gpt-4.1': { inputPerMTok: 2.0, outputPerMTok: 8.0 },
   'gpt-4.1-mini': { inputPerMTok: 0.4, outputPerMTok: 1.6 },
   'gpt-4.1-nano': { inputPerMTok: 0.1, outputPerMTok: 0.4 },
+  // Standard short-context floor from openai.pricing.ts (2026-10-28).
+  ...((): Record<
+    string,
+    { inputPerMTok: number; outputPerMTok: number; cachedInputPerMTok?: number }
+  > => {
+    const terra = openAiCataloguePricing('gpt-6.1-terra');
+    return terra
+      ? {
+          'gpt-6.1-terra': {
+            inputPerMTok: terra.inputPerMTok,
+            outputPerMTok: terra.outputPerMTok,
+            cachedInputPerMTok: terra.cachedInputPerMTok,
+          },
+        }
+      : {};
+  })(),
 };
-const OPENAI_PRICE_UNIT = 'USD/1M tokens';
 
 /** Attach the curated list price to a model meta; unknown ids keep `pricing: null`. */
 function withOpenAiListPrice(meta: ProviderModelMeta): ProviderModelMeta {
   const price = OPENAI_LIST_PRICES_USD_PER_MTOK[meta.id];
-  if (!price) return { ...meta, pricing: meta.pricing ?? null };
-  return { ...meta, pricing: { ...price, unit: OPENAI_PRICE_UNIT } };
+  const limits = openAiModelLimits(meta.id);
+  if (!price && !limits) return { ...meta, pricing: meta.pricing ?? null };
+  return {
+    ...meta,
+    pricing: price
+      ? {
+          inputPerMTok: price.inputPerMTok,
+          outputPerMTok: price.outputPerMTok,
+          ...(price.cachedInputPerMTok !== undefined
+            ? { cachedInputPerMTok: price.cachedInputPerMTok }
+            : {}),
+          unit: OPENAI_PRICE_UNIT,
+        }
+      : (meta.pricing ?? null),
+    ...(limits
+      ? {
+          contextWindow: meta.contextWindow ?? limits.contextWindow,
+          maxOutputTokens: meta.maxOutputTokens ?? limits.maxOutputTokens,
+        }
+      : {}),
+  };
 }
 const MODERATIONS_ENDPOINT = 'https://api.openai.com/v1/moderations';
 const DEFAULT_MODERATION_MODEL = 'omni-moderation-latest';
