@@ -475,12 +475,13 @@ export const envSchema = z
     // Shared by POST /v1/chat/completions and POST /execute with `profile`.
     // Each hop receives min(its own timeout, time left). When none is left the
     // chain stops with chain_deadline_exceeded and the last hop's error.
-    CHAIN_DEADLINE_MS: z.coerce
-      .number()
-      .int()
-      .min(1_000)
-      .max(600_000)
-      .default(DEFAULT_CHAIN_DEADLINE_MS),
+    // `.env.example` keeps `CHAIN_DEADLINE_MS=` empty so graph impact can narrow
+    // to config_key:CHAIN_DEADLINE_MS (a valued root .env.example line is
+    // global_config). Empty / whitespace must not coerce to 0 and fail .min(1000).
+    CHAIN_DEADLINE_MS: z.preprocess(
+      (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+      z.coerce.number().int().min(1_000).max(600_000).default(DEFAULT_CHAIN_DEADLINE_MS),
+    ),
   })
   .superRefine((data, ctx) => {
     // CONN-0103 V-AC-8 — fail-closed boot when a provider is enabled but its API key

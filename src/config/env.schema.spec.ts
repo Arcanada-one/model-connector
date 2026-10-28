@@ -51,6 +51,9 @@ describe('envSchema', () => {
   it('defaults CHAIN_DEADLINE_MS to 180s and rejects a sub-second budget', () => {
     expect(validateEnv(validEnv).CHAIN_DEADLINE_MS).toBe(180_000);
     expect(validateEnv({ ...validEnv, CHAIN_DEADLINE_MS: '90000' }).CHAIN_DEADLINE_MS).toBe(90_000);
+    // Empty string (as in `.env.example` KEY=) must use the default, not coerce to 0.
+    expect(validateEnv({ ...validEnv, CHAIN_DEADLINE_MS: '' }).CHAIN_DEADLINE_MS).toBe(180_000);
+    expect(validateEnv({ ...validEnv, CHAIN_DEADLINE_MS: '   ' }).CHAIN_DEADLINE_MS).toBe(180_000);
     expect(() => validateEnv({ ...validEnv, CHAIN_DEADLINE_MS: '999' })).toThrow(
       'Invalid environment variables',
     );
