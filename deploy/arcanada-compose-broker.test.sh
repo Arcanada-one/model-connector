@@ -1184,6 +1184,59 @@ kc_fresh
 if ! kc_run >"${fixture_dir}/kc-ns-absent.out" 2>&1; then echo 'FAIL: absent write namespace refused' >&2; exit 1; fi
 echo 'PASS: kc_write_namespace_absent_accepted'
 
+# KCP-0035 embedding contract: each governed key is absent or exactly the reviewed value.
+kc_embed_refused() { # <name> <key> <value>
+  kc_set_config "$2" "$3"
+  kc_fresh
+  if kc_run >"${fixture_dir}/kc-embed-$1.out" 2>&1; then echo "FAIL: ${1} accepted" >&2; exit 1; fi
+  grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-embed-$1.out" || { echo "FAIL: ${1} not refused by the contract" >&2; exit 1; }
+  [[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+  kc_set_config "$2" __unset__
+  echo "PASS: kc_embedding_${1}_refused"
+}
+kc_set_config SCRUTATOR_EMBEDDING_API_URL http://100.90.7.20:8300
+kc_set_config SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED true
+kc_set_config SCRUTATOR_EMBEDDING_TIMEOUT 300
+kc_fresh
+if ! kc_run >"${fixture_dir}/kc-embed-ok.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-embed-ok.out" >&2; echo 'FAIL: exact embedding env refused' >&2; exit 1; fi
+echo 'PASS: kc_embedding_exact_values_accepted'
+kc_embed_refused url_localhost SCRUTATOR_EMBEDDING_API_URL http://localhost:8300
+kc_embed_refused url_other_host SCRUTATOR_EMBEDDING_API_URL http://100.90.7.21:8300
+kc_embed_refused url_empty SCRUTATOR_EMBEDDING_API_URL ''
+kc_embed_refused url_trailing_slash SCRUTATOR_EMBEDDING_API_URL http://100.90.7.20:8300/
+kc_embed_refused dense_sparse_false SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED false
+kc_embed_refused dense_sparse_capitalised SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED True
+kc_embed_refused dense_sparse_empty SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED ''
+kc_embed_refused timeout_30 SCRUTATOR_EMBEDDING_TIMEOUT 30
+kc_embed_refused timeout_empty SCRUTATOR_EMBEDDING_TIMEOUT ''
+kc_embed_refused timeout_padded SCRUTATOR_EMBEDDING_TIMEOUT ' 300'
+# Look-alike keys that differ only by case could be read by a case-insensitive settings loader.
+kc_embed_refused lowercase_url_key scrutator_embedding_api_url http://100.90.7.20:8300
+kc_embed_refused mixedcase_timeout_key Scrutator_Embedding_Timeout 300
+kc_embed_refused lowercase_write_namespace_key scrutator_project_write_namespace knowledge-contract
+kc_embed_refused lowercase_database_url_key scrutator_database_url postgres://x
+kc_set_config SCRUTATOR_EMBEDDING_API_URL __unset__
+kc_set_config SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED __unset__
+kc_set_config SCRUTATOR_EMBEDDING_TIMEOUT __unset__
+kc_fresh
+if ! kc_run >"${fixture_dir}/kc-embed-absent.out" 2>&1; then echo 'FAIL: absent embedding env refused (old pair rollback path)' >&2; exit 1; fi
+echo 'PASS: kc_embedding_env_absent_accepted'
+
+# Selector level (not the Compose contract): a ref that only starts with a reviewed ref is not in the set.
+kc_selector_fn="$(sed -n '/^kc_pair_id_for_ref() {/,/^}/p' "$broker")"
+[[ -n "$kc_selector_fn" ]] || { echo 'FAIL: selector function not found' >&2; exit 1; }
+kc_selector() ( # <ref>; prints the pair id or exits 1
+  KC_OLD_IMAGE_REF="$kc_old_ref"; KC_OLD_IMAGE_ID="$kc_old_id"; KC_NEW_IMAGE_REF="$kc_new_ref"; KC_NEW_IMAGE_ID="$kc_new_id"
+  eval "$kc_selector_fn"
+  kc_pair_id_for_ref "$1"
+)
+[[ "$(kc_selector "$kc_new_ref")" == "$kc_new_id" ]] || { echo 'FAIL: selector rejects the new ref' >&2; exit 1; }
+[[ "$(kc_selector "$kc_old_ref")" == "$kc_old_id" ]] || { echo 'FAIL: selector rejects the old ref' >&2; exit 1; }
+for kc_bad_ref in "${kc_new_ref}-x" "${kc_new_ref}x" "${kc_old_ref}-x" "x${kc_new_ref}" "${kc_new_ref%?}" "${kc_new_ref}"$'\n'"${kc_old_ref}" ''; do
+  if kc_selector "$kc_bad_ref" >/dev/null 2>&1; then echo "FAIL: selector accepted a look-alike ref" >&2; exit 1; fi
+done
+echo 'PASS: kc_pair_selector_refuses_prefix_and_lookalike_refs'
+
 # Upgrade old -> new succeeds, reports the new id, and leaves the new image running.
 kc_fresh
 kc_commit_image "$kc_old_ref"; kc_set_config image "$kc_old_ref"

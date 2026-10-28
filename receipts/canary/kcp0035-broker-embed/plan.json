@@ -1,0 +1,73 @@
+{
+  "schema": "CanaryPlan/v2",
+  "id": "kcp0035-broker-embed-251e1eec",
+  "owner": "KCP-0035 / Model Connector compose-broker maintainer",
+  "producer_repository": "/home/dev/orca/workspaces/arcanada/KCP-0035-canary-run",
+  "environment": "Arcana DEVS isolated Model Connector source",
+  "read_only": true,
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "251e1eec01f99941f95aaf0a33abc4719770bbef",
+    "tree": "c19addd51f60c5021e41b1a61285bad50dece69c",
+    "evidence": {
+      "path": "source.json",
+      "sha256": "518048bfbad999a1f481968b005949152f9067bb8ef1a2139910e3494a696bd0",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "id": "compose-broker-fixture-suite",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/bash",
+        "deploy/arcanada-compose-broker.test.sh"
+      ],
+      "cwd": ".",
+      "entities": [
+        "code_unit:deploy/arcanada-compose-broker.sh",
+        "code_unit:deploy/arcanada-compose-broker.test.sh"
+      ],
+      "mutating": false,
+      "timeout_seconds": 120,
+      "capture_limit_bytes": 65536,
+      "executable_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/arcanada/KCP-0035-canary-run/deploy/arcanada-compose-broker.test.sh",
+          "sha256": "15ee001c05617d1cc64b813878feabbe08adbb36633e91c5b02785d7eee0e9c4",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/home/dev/orca/workspaces/arcanada/KCP-0035-canary-run/deploy/arcanada-compose-broker.sh",
+          "sha256": "c57a05e7ebe8e62a065193d062e49712478207c6e9b578cce00ae9d191fb8dd1",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/usr/bin/bash",
+          "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+          "attribution": {
+            "kind": "system_executable",
+            "source_id": "/usr/bin/bash",
+            "version": "sha256:bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1"
+          }
+        }
+      ],
+      "env_keys": [],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "PASS: kc_embedding_exact_values_accepted",
+          "PASS: kc_embedding_lowercase_write_namespace_key_refused",
+          "PASS: kc_pair_selector_refuses_prefix_and_lookalike_refs"
+        ]
+      }
+    }
+  ]
+}

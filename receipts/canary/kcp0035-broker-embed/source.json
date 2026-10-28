@@ -1,0 +1,9 @@
+{
+  "schema": "MeasuredGitSource/v1",
+  "commit": "251e1eec01f99941f95aaf0a33abc4719770bbef",
+  "tree": "c19addd51f60c5021e41b1a61285bad50dece69c",
+  "dirty": false,
+  "producer": "git rev-parse on isolated Arcana DEVS worktree",
+  "captured_at_utc": "2026-10-28T04:36:31Z",
+  "repository_path": "/home/dev/orca/workspaces/arcanada/KCP-0035-canary-run"
+}
