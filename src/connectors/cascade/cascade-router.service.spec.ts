@@ -31,6 +31,7 @@ function makeErrorResponse(
   connector = 'openmodel',
   model = 'deepseek-v4-flash',
   retryable = true,
+  status: 'error' | 'timeout' | 'rate_limited' = 'error',
 ) {
   return {
     id: 'test-id',
@@ -39,7 +40,7 @@ function makeErrorResponse(
     result: '',
     usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
     latencyMs: 50,
-    status: 'error' as const,
+    status,
     error: {
       type: errorType,
       message: `Mock ${errorType}`,
@@ -338,10 +339,13 @@ describe('CascadeRouterService (T1-T7)', () => {
   it('timeout on an API hop advances to the next candidate', async () => {
     mockConfig.CASCADE_LOW_REASONING_ORDER =
       'groq:llama-3.3-70b-versatile:free,openrouter:meta-llama/llama-4-maverick:free';
-    const hanging = {
-      ...makeErrorResponse('timeout', 'groq', 'llama-3.3-70b-versatile', false),
-      status: 'timeout' as const,
-    };
+    const hanging = makeErrorResponse(
+      'timeout',
+      'groq',
+      'llama-3.3-70b-versatile',
+      false,
+      'timeout',
+    );
     const mockService = withTransport(
       makeMockConnectorsService([
         hanging,
@@ -365,10 +369,13 @@ describe('CascadeRouterService (T1-T7)', () => {
       'groq:llama-3.3-70b-versatile:free,openrouter:meta-llama/llama-4-maverick:free';
     mockConfig.CHAIN_DEADLINE_MS = 1_000;
     let t = 0;
-    const hanging = {
-      ...makeErrorResponse('timeout', 'groq', 'llama-3.3-70b-versatile', false),
-      status: 'timeout' as const,
-    };
+    const hanging = makeErrorResponse(
+      'timeout',
+      'groq',
+      'llama-3.3-70b-versatile',
+      false,
+      'timeout',
+    );
     const mockService = withTransport(
       makeMockConnectorsService([hanging, makeSuccessResponse('openrouter', 'next')]),
       'api',
@@ -397,8 +404,7 @@ describe('CascadeRouterService (T1-T7)', () => {
     mockConfig.CASCADE_LOW_REASONING_ORDER =
       'groq:llama-3.3-70b-versatile:free,openrouter:meta-llama/llama-4-maverick:free';
     const hanging = {
-      ...makeErrorResponse('timeout', 'groq', 'llama-3.3-70b-versatile', false),
-      status: 'timeout' as const,
+      ...makeErrorResponse('timeout', 'groq', 'llama-3.3-70b-versatile', false, 'timeout'),
       clientChunkSent: true,
     };
     const mockService = withTransport(
@@ -419,10 +425,7 @@ describe('CascadeRouterService (T1-T7)', () => {
   it('a CLI hop timeout does not advance', async () => {
     mockConfig.CASCADE_LOW_REASONING_ORDER =
       'gemini:gemini-2.5-flash:free,groq:llama-3.3-70b-versatile:free';
-    const hanging = {
-      ...makeErrorResponse('timeout', 'gemini', 'gemini-2.5-flash', false),
-      status: 'timeout' as const,
-    };
+    const hanging = makeErrorResponse('timeout', 'gemini', 'gemini-2.5-flash', false, 'timeout');
     const mockService = withTransport(
       makeMockConnectorsService([hanging, makeSuccessResponse('groq', 'llama-3.3-70b-versatile')]),
       'cli',
