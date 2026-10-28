@@ -191,6 +191,8 @@ ref_id() {
   case "$1" in
     scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547)
       printf '%s' "${FAKE_KC_IMAGE_ID:-sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17}"; return 0 ;;
+    scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c)
+      printf '%s' 'sha256:ae4a4768ce83f34b3dc7c5b1620f836b8eafef86e32687b43a5c6a4eaa0c0c85'; return 0 ;;
     *:latest) tag=latest ;;
     *:previous) tag=previous ;;
     muneral-api:*)
@@ -268,11 +270,24 @@ if [[ "${1:-}" == compose ]]; then
       cat "$FAKE_DOCKER_STATE/kc-config.json"; exit 0
     fi
     if [[ " $* " == *' config --images '* ]]; then
+      if [[ "${FAKE_KC_IMAGE_FROM_CHECKOUT:-}" == 1 ]]; then
+        compose_file=''
+        prev=''
+        for arg in "$@"; do [[ "$prev" == -f ]] && compose_file="$arg"; prev="$arg"; done
+        sed -n 's/^# image=//p' "$compose_file" | tail -1; exit 0
+      fi
       printf '%s\n' 'scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547'; exit 0
     fi
     if [[ " $* " == *' up -d --no-build --no-deps scrutator '* ||
           " $* " == *' up -d --force-recreate --no-build --no-deps scrutator '* ]]; then
       touch "$FAKE_DOCKER_STATE/kc-exists"
+      if [[ "${FAKE_KC_IMAGE_FROM_CHECKOUT:-}" == 1 ]]; then
+        compose_file=''
+        prev=''
+        for arg in "$@"; do [[ "$prev" == -f ]] && compose_file="$arg"; prev="$arg"; done
+        ref_id "$(sed -n 's/^# image=//p' "$compose_file" | tail -1)" >"$FAKE_DOCKER_STATE/kc-running-image"
+        printf '\n' >>"$FAKE_DOCKER_STATE/kc-running-image"
+      fi
       if [[ "${FAKE_KC_FAIL_UPGRADE_HEALTH:-}" == 1 && " $* " == *' --force-recreate '* ]]; then
         count="$(cat "$FAKE_DOCKER_STATE/kc-up-count" 2>/dev/null || printf 0)"
         count=$((count + 1))
@@ -1090,3 +1105,113 @@ grep -Fq 'KC_PROJECT_UPGRADE_ROLLBACK_PASS' "${fixture_dir}/kc-upgrade-rollback.
 [[ -e "$fake_docker_state/kc-exists" ]] || exit 1
 unset FAKE_KC_FAIL_UPGRADE_HEALTH
 echo 'PASS: kc_upgrade_health_failure_restores_previous_checkout_and_project'
+
+# KCP-0033: explicit reviewed image-pair set {old e87b4c84, new 16a4061f}. The image the checkout
+# renders selects the pair; the running container must match one pair before an upgrade; the
+# postcondition and the rollback use the selected pair; the project write opt-in may name only
+# knowledge-contract.
+kc_old_ref='scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547'
+kc_old_id='sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17'
+kc_new_ref='scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c'
+kc_new_id='sha256:ae4a4768ce83f34b3dc7c5b1620f836b8eafef86e32687b43a5c6a4eaa0c0c85'
+export FAKE_KC_IMAGE_FROM_CHECKOUT=1
+kc_commit_image() {
+  printf '%s\n' "# image=$1" >>"$kc_source/deploy/knowledge-contract-scrutator/compose.yml"
+  git -C "$kc_source" add deploy/knowledge-contract-scrutator/compose.yml
+  git -C "$kc_source" -c user.email=t@example.invalid -c user.name=t commit -qm "image $1"
+  git -C "$kc_source" push -q origin main
+  kc_head="$(git -C "$kc_source" rev-parse HEAD)"
+  kc_next="$kc_head"
+}
+kc_set_config() { # edit the rendered Compose JSON: image, or an env var (value __unset__ removes it)
+  python3 - "$fake_docker_state/kc-config.json" "$1" "$2" <<'PY'
+import json, sys
+p, key, value = sys.argv[1:4]
+x = json.load(open(p))
+svc = x["services"]["scrutator"]
+if key == "image":
+    svc["image"] = value
+elif value == "__unset__":
+    svc["environment"].pop(key, None)
+else:
+    svc["environment"][key] = value
+json.dump(x, open(p, "w"))
+PY
+}
+kc_fresh() { "$kc_broker" knowledge-contract-scrutator kc-stop >/dev/null 2>&1 || true; rm -rf -- "$kc_dir"; }
+
+# New pair accepted on a fresh install and reported with the NEW image id.
+kc_fresh
+kc_commit_image "$kc_new_ref"; kc_set_config image "$kc_new_ref"
+if ! kc_run >"${fixture_dir}/kc-pair-new.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-pair-new.out" >&2; echo 'FAIL: new pair refused' >&2; exit 1; fi
+grep -Fq "image=${kc_new_id}" "${fixture_dir}/kc-pair-new.out" || { echo 'FAIL: new pair id not reported' >&2; exit 1; }
+echo 'PASS: kc_new_image_pair_accepted'
+
+# An image outside the set is refused before recreation (contract check).
+kc_fresh
+kc_foreign='scrutator-deploy:ffffffffffffffffffffffffffffffffffffffff'
+kc_commit_image "$kc_foreign"; kc_set_config image "$kc_foreign"
+if kc_run >"${fixture_dir}/kc-pair-foreign.out" 2>&1; then echo 'FAIL: foreign image accepted' >&2; exit 1; fi
+grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-pair-foreign.out" || exit 1
+[[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+echo 'PASS: kc_image_outside_pair_set_refused'
+
+# Contract JSON in the set but the rendered image is not: the pair selector refuses.
+kc_fresh
+kc_set_config image "$kc_new_ref"
+if kc_run >"${fixture_dir}/kc-pair-rendered-foreign.out" 2>&1; then echo 'FAIL: rendered foreign image accepted' >&2; exit 1; fi
+grep -Fq 'project Compose image reference mismatch' "${fixture_dir}/kc-pair-rendered-foreign.out" || exit 1
+[[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+echo 'PASS: kc_rendered_image_outside_pair_set_refused'
+
+# Write opt-in namespace: another namespace and the empty string are refused; the exact one and absence pass.
+kc_fresh
+kc_commit_image "$kc_new_ref"; kc_set_config image "$kc_new_ref"
+kc_set_config SCRUTATOR_PROJECT_WRITE_NAMESPACE shared-tenant
+if kc_run >"${fixture_dir}/kc-ns-other.out" 2>&1; then echo 'FAIL: other write namespace accepted' >&2; exit 1; fi
+grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-ns-other.out" || exit 1
+[[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+echo 'PASS: kc_write_namespace_other_than_knowledge_contract_refused'
+kc_set_config SCRUTATOR_PROJECT_WRITE_NAMESPACE ''
+if kc_run >"${fixture_dir}/kc-ns-empty.out" 2>&1; then echo 'FAIL: empty write namespace accepted' >&2; exit 1; fi
+echo 'PASS: kc_write_namespace_empty_string_refused'
+kc_set_config SCRUTATOR_PROJECT_WRITE_NAMESPACE knowledge-contract
+kc_fresh
+if ! kc_run >"${fixture_dir}/kc-ns-ok.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-ns-ok.out" >&2; echo 'FAIL: exact write namespace refused' >&2; exit 1; fi
+echo 'PASS: kc_write_namespace_knowledge_contract_accepted'
+kc_set_config SCRUTATOR_PROJECT_WRITE_NAMESPACE __unset__
+kc_fresh
+if ! kc_run >"${fixture_dir}/kc-ns-absent.out" 2>&1; then echo 'FAIL: absent write namespace refused' >&2; exit 1; fi
+echo 'PASS: kc_write_namespace_absent_accepted'
+
+# Upgrade old -> new succeeds, reports the new id, and leaves the new image running.
+kc_fresh
+kc_commit_image "$kc_old_ref"; kc_set_config image "$kc_old_ref"
+if ! kc_run >"${fixture_dir}/kc-pair-base-old.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-pair-base-old.out" >&2; exit 1; fi
+grep -Fq "$kc_old_id" "$fake_docker_state/kc-running-image" || exit 1
+kc_commit_image "$kc_new_ref"
+if ! kc_upgrade >"${fixture_dir}/kc-pair-upgrade.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-pair-upgrade.out" >&2; echo 'FAIL: old->new upgrade refused' >&2; exit 1; fi
+grep -Fq "KC_PROJECT_UPGRADE_PASS project=knowledge-contract-scrutator image=${kc_new_id}" "${fixture_dir}/kc-pair-upgrade.out" || exit 1
+grep -Fq "$kc_new_id" "$fake_docker_state/kc-running-image" || exit 1
+echo 'PASS: kc_upgrade_old_to_new_pair'
+
+# Failed readiness of the new image rolls back to the OLD pair (old checkout, old image id running).
+kc_fresh
+kc_commit_image "$kc_old_ref"; kc_set_config image "$kc_old_ref"
+if ! kc_run >"${fixture_dir}/kc-pair-base-old2.out" 2>&1; then exit 1; fi
+kc_commit_image "$kc_new_ref"
+export FAKE_KC_FAIL_UPGRADE_HEALTH=1
+rm -f "$fake_docker_state/kc-up-count"
+if kc_upgrade >"${fixture_dir}/kc-pair-rollback.out" 2>&1; then echo 'FAIL: unhealthy new image accepted' >&2; exit 1; fi
+unset FAKE_KC_FAIL_UPGRADE_HEALTH
+grep -Fq 'KC_PROJECT_UPGRADE_ROLLBACK_PASS' "${fixture_dir}/kc-pair-rollback.out" || { sed -n '1,30p' "${fixture_dir}/kc-pair-rollback.out" >&2; exit 1; }
+grep -Fq "$kc_old_id" "$fake_docker_state/kc-running-image" || { echo 'FAIL: rollback did not restore the old image' >&2; exit 1; }
+echo 'PASS: kc_upgrade_failure_rolls_back_to_old_pair'
+
+# A running container outside both pairs blocks an upgrade.
+printf '%s\n' 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' >"$fake_docker_state/kc-running-image"
+kc_commit_image "$kc_new_ref"
+if kc_upgrade >"${fixture_dir}/kc-pair-running-foreign.out" 2>&1; then echo 'FAIL: foreign running image upgraded' >&2; exit 1; fi
+grep -Fq 'wrong image' "${fixture_dir}/kc-pair-running-foreign.out" || exit 1
+echo 'PASS: kc_running_container_outside_pair_set_blocks_upgrade'
+unset FAKE_KC_IMAGE_FROM_CHECKOUT
