@@ -5,7 +5,9 @@ from __future__ import annotations
 import importlib.util
 import pathlib
 import re
+import tempfile
 import unittest
+from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 FILTER_PATH = ROOT / "dev-tools/docker-e2e-path-filter.py"
@@ -83,6 +85,32 @@ class DecisionMatrix(unittest.TestCase):
     def test_unrelated_workflow_change_skips_docker_e2e(self):
         self.assertFalse(FILTER.decide("pull_request", EVENT, REPO,
                                       [".github/workflows/public-surface.yml"], IGNORE)[0])
+
+    def test_partial_output_write_cannot_publish_skip_value(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = pathlib.Path(directory) / "github-output"
+            output.touch()
+            real_write = FILTER.os.write
+            calls = 0
+
+            def short_then_fail(fd, payload):
+                nonlocal calls
+                calls += 1
+                if calls == 1:
+                    return real_write(fd, payload[:8])
+                return 0
+
+            with mock.patch.object(FILTER.os, "write", side_effect=short_then_fail):
+                self.assertFalse(FILTER._write_outputs(str(output), False, "ignored_context_only", 1))
+            self.assertNotIn(b"required=false", output.read_bytes())
+
+    def test_complete_output_write_publishes_required_value_last(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = pathlib.Path(directory) / "github-output"
+            output.touch()
+            self.assertTrue(FILTER._write_outputs(str(output), False, "ignored_context_only", 1))
+            data = output.read_bytes()
+            self.assertTrue(data.endswith(b"required=false\n"))
 
 
 class WorkflowContract(unittest.TestCase):

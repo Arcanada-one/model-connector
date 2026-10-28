@@ -174,7 +174,9 @@ def _write_outputs(path: str, required: bool, reason: str, count: int | None) ->
     if not path:
         return False
     count_value = "unknown" if count is None else str(count)
-    payload = f"required={'true' if required else 'false'}\nreason={reason}\nchanged_count={count_value}\n".encode()
+    # Put the disabling value last: a short/failed append can never leave a
+    # parseable required=false line without completing the whole payload.
+    payload = f"reason={reason}\nchanged_count={count_value}\nrequired={'true' if required else 'false'}\n".encode()
     try:
         fd = os.open(path, os.O_WRONLY | os.O_APPEND | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0))
         try:
