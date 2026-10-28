@@ -26,8 +26,24 @@ jobs:
     # DEC-AUP-0101 O3: pull requests use the existing unprivileged ci-nodocker lane.
     # Main pre-deploy checks retain deploy-gate; Docker e2e retains ci-general.
     runs-on: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && fromJSON('["deploy-gate"]') || fromJSON('["ci-nodocker"]') }}
+    outputs:
+      docker_e2e_required: ${{ steps.docker_e2e_filter.outputs.required }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      # The Docker context uses COPY . . and .dockerignore is the authoritative
+      # input boundary. A failed or incomplete path qualification fails open:
+      # docker-e2e still runs. This job-level skip keeps the required check from
+      # becoming pending on docs-only PRs while preserving all main-branch runs.
+      - name: Qualify Docker e2e context changes
+        id: docker_e2e_filter
+        continue-on-error: true
+        run: python3 -B dev-tools/docker-e2e-path-filter.py
+
+      - name: Docker e2e path filter controls
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/docker-e2e-path-filter.test.py
 
       - name: Provision pinned Compose CLI in PR job temp (no daemon)
         if: github.event_name == 'pull_request'
@@ -151,6 +167,9 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 dev-tools/rate-limit-ci-workflow.test.py
 
   docker-e2e:
+    # Skipped only when a same-repository PR changes Docker-ignored files alone.
+    # Missing output, unknown event, fork, or source-read failure keeps the job enabled.
+    if: needs.lint-and-test.outputs.docker_e2e_required != 'false'
     runs-on: [self-hosted, Linux, ci-general]
     needs: lint-and-test
     concurrency:
