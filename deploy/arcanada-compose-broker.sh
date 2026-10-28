@@ -1073,6 +1073,26 @@ try:
     require(env["SCRUTATOR_FEEDER_NAMESPACES"] == "knowledge-contract")
     # KCP-0033: the project write opt-in may name only this namespace; absent keeps it off.
     require(env.get("SCRUTATOR_PROJECT_WRITE_NAMESPACE") in (None, "knowledge-contract"))
+    # KCP-0035: the project instance reaches embeddings over the mesh address (its bridge network
+    # cannot use the default localhost), with the same dense/sparse and timeout as the shared
+    # instance. Each governed key is absent (the previous pair still validates for rollback) or
+    # exactly the reviewed value; empty, other values and look-alike keys are refused.
+    governed = {
+        "SCRUTATOR_EMBEDDING_API_URL": "http://100.90.7.20:8300",
+        "SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED": "true",
+        "SCRUTATOR_EMBEDDING_TIMEOUT": "300",
+    }
+    for key, wanted in governed.items():
+        require(key not in env or (isinstance(env[key], str) and env[key] == wanted))
+    # A key that differs from a governed or contract key only by case could be read by a
+    # case-insensitive settings loader; refuse every such look-alike.
+    exact = {"SCRUTATOR_HOST", "SCRUTATOR_PORT", "SCRUTATOR_AUTH_ENFORCE",
+             "SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL", "SCRUTATOR_AUTH_SERVICE_AUDIENCE",
+             "SCRUTATOR_AUTH_SERVICE_SCOPE", "SCRUTATOR_FEEDER_NAMESPACES",
+             "SCRUTATOR_PROJECT_WRITE_NAMESPACE", "SCRUTATOR_DATABASE_URL"} | set(governed)
+    folded = {key.casefold(): key for key in exact}
+    for key in env:
+        require(key.casefold() not in folded or folded[key.casefold()] == key)
     dsn = urlsplit(env["SCRUTATOR_DATABASE_URL"])
     require(dsn.scheme in ("postgres", "postgresql"))
     require(dsn.username == "kc_scrutator_app" and bool(dsn.password))
