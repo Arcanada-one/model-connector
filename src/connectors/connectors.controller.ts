@@ -32,6 +32,7 @@ import { ImageGenerationService } from './image-generation/image-generation.serv
 import { IMAGE_CAPABILITIES } from './image-generation/capabilities';
 import { CascadeRouterService } from './cascade/cascade-router.service';
 import { CascadeExhaustedError, CascadeBudgetExceededError } from './cascade/cascade.errors';
+import { ChainDeadlineError } from './failover/failover.errors';
 import {
   IDEMPOTENCY_HEADER,
   InvalidIdempotencyKeyError,
@@ -288,6 +289,17 @@ export class ConnectorsController {
               dailyCostUsd: err.dailyCostUsd,
               limitUsd: err.limitUsd,
               message: err.message,
+            },
+            HttpStatus.SERVICE_UNAVAILABLE,
+          );
+        }
+        if (err instanceof ChainDeadlineError) {
+          throw new HttpException(
+            {
+              error: 'chain_deadline_exceeded',
+              message: err.message,
+              lastHop: err.lastHop,
+              tried: err.tried,
             },
             HttpStatus.SERVICE_UNAVAILABLE,
           );

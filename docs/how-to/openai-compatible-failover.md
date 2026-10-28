@@ -75,12 +75,20 @@ curl https://connector.arcanada.ai/v1/models -H "Authorization: Bearer $MC_API_K
 
 1. MC builds an ordered candidate list from the registered connectors' capabilities
    (in-memory — no extra network probes), free-first, DeepSeek promoted to the front.
-2. It calls the first candidate. On `429` / `5xx` / connection error / open circuit it
-   advances to the next candidate transparently.
+2. It calls the first candidate. On `429` / `5xx` / connection error / open circuit /
+   provider `timeout` it advances to the next candidate transparently. A `timeout`
+   from a CLI connector (one that can run tools or write files before the process
+   is killed) still stops the chain. Direct `/execute` calls are unchanged:
+   `timeout` stays non-retryable there.
 3. The first successful provider's completion is returned in OpenAI shape. If every
-   candidate fails, MC returns `503` with a `cascade_exhausted` error body.
+   candidate fails, MC returns `503` with a `cascade_exhausted` error body. If the
+   whole-chain deadline runs out first, MC returns `503` with
+   `chain_deadline_exceeded` and the last hop's error.
 
 Each inner call uses a single attempt (no compounded backoff) so failover is fast.
+Each hop waits at most `min(its own timeout, time left on CHAIN_DEADLINE_MS)`.
+These routes do not stream (`stream: true` is rejected). If a hop has already
+delivered a chunk to the client, a later stall does not advance.
 
 ## Tuning
 
@@ -92,6 +100,7 @@ Set these in the MC environment (see `.env.example`):
 | `FAILOVER_DEEPSEEK_MODEL` | `deepseek-v4-flash` | The DeepSeek default first free hop. |
 | `FAILOVER_PAID_ENABLED` | `false` | Append paid candidates after all free ones. |
 | `FAILOVER_ALLOW_FREE_DOWNGRADE` | `true` | Allow a failed/unknown requested model to fall back to free. |
+| `CHAIN_DEADLINE_MS` | `180000` | Whole-chain budget in milliseconds (also used by the cascade). Minimum `1000`, maximum `600000`. |
 
 ## Limitations
 

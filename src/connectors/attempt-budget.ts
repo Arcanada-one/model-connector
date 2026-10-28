@@ -1,3 +1,5 @@
+import { getConfig } from '../config/env.schema';
+
 /**
  * A2-210 — how long ONE attempt is allowed to take, decided in one place for
  * both transports.
@@ -62,4 +64,38 @@ export function resolveAttemptBudget(
     timeoutMs: callerBudget ?? connectorBudget,
     callerBudgetIsShorter: callerBudget !== undefined && callerBudget < connectorBudget,
   };
+}
+
+/**
+ * The connector's configured per-attempt budget, before a caller's `timeout`
+ * and before `maxTimeout`. Same lookup as `BaseApiConnector.getTimeout` and
+ * `BaseCliConnector.getTimeout` (per-connector `{NAME}_TIMEOUT_MS`, then
+ * `CONNECTOR_TIMEOUT_MS`, then 120s when env cannot be validated).
+ */
+export function configuredConnectorTimeoutMs(connectorName: string): number {
+  const envKey = `${connectorName.toUpperCase().replace(/-/g, '_')}_TIMEOUT_MS`;
+  const perConnector = Number(process.env[envKey]);
+  if (Number.isFinite(perConnector) && perConnector > 0) return perConnector;
+  try {
+    const configured = getConfig().CONNECTOR_TIMEOUT_MS;
+    if (typeof configured === 'number' && Number.isFinite(configured) && configured > 0) {
+      return configured;
+    }
+  } catch {
+    // Specs that construct a chain without a validated environment.
+  }
+  return 120_000;
+}
+
+/** The budget one hop would use on its own, before the chain deadline caps it. */
+export function configuredHopTimeoutMs(
+  connectorName: string,
+  requestTimeoutMs: number | undefined,
+  advertisedMaxTimeoutMs: number | undefined,
+): number {
+  return resolveAttemptBudget(
+    requestTimeoutMs,
+    configuredConnectorTimeoutMs(connectorName),
+    advertisedMaxTimeoutMs,
+  ).timeoutMs;
 }

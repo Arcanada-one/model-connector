@@ -2,7 +2,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FailoverRouterService } from './failover-router.service';
-import { FailoverExhaustedError } from './failover.errors';
+import { FailoverAbortError, FailoverExhaustedError } from './failover.errors';
 import { ConnectorCapabilities, ConnectorResponse } from '../interfaces/connector.interface';
 
 vi.mock('../../config/env.schema', () => ({ getConfig: vi.fn(() => ({})) }));
@@ -141,5 +141,46 @@ describe('FailoverRouterService.complete', () => {
 
     expect(mockConnectors.canUseForPolicy).toHaveBeenCalledWith('openrouter', null);
     expect(execute).not.toHaveBeenCalledWith('openrouter', expect.anything(), expect.anything());
+  });
+
+  it('a CLI hop timeout does not advance to the next provider', async () => {
+    const cli = { ...caps('openmodel', 'deepseek-v4-flash', true), type: 'cli' as const };
+    const api = caps('groq', 'llama-3.3-70b-versatile', true);
+    const execute = vi.fn(async (connector: string) => {
+      if (connector === 'openmodel') {
+        return {
+          id: 'r',
+          connector,
+          model: 'deepseek-v4-flash',
+          result: '',
+          usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+          latencyMs: 5,
+          status: 'timeout' as const,
+          error: {
+            type: 'timeout',
+            message: 'timed out',
+            retryable: false,
+            recommendation: 'abort' as const,
+          },
+        };
+      }
+      return success(connector, 'llama-3.3-70b-versatile');
+    });
+    const service = new FailoverRouterService({
+      listCapabilities: vi.fn(() => [cli, api]),
+      checkProviderCredentials: vi.fn(async () => []),
+      canUse: vi.fn(() => true),
+      canUseForPolicy: vi.fn(async () => true),
+      isGloballyRoutable: vi.fn(() => true),
+      execute,
+      getKeyPolicy: vi.fn(async () => null),
+      isCandidateAllowedByPolicy: vi.fn(async () => true),
+    } as unknown as ConstructorParameters<typeof FailoverRouterService>[0]);
+
+    await expect(service.complete({ prompt: 'ping' }, 'key-1')).rejects.toBeInstanceOf(
+      FailoverAbortError,
+    );
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(execute).toHaveBeenCalledWith('openmodel', expect.anything(), 'key-1');
   });
 });

@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CascadeRouterService } from './cascade-router.service';
 import { CascadeExhaustedError, CascadeBudgetExceededError } from './cascade.errors';
+import { ChainDeadlineError } from '../failover/failover.errors';
 import type { ApiKeyPolicy } from '../../policy/policy.schema';
 
 // Mock getConfig to control env
@@ -30,6 +31,7 @@ function makeErrorResponse(
   connector = 'openmodel',
   model = 'deepseek-v4-flash',
   retryable = true,
+  status: 'error' | 'timeout' | 'rate_limited' = 'error',
 ) {
   return {
     id: 'test-id',
@@ -38,7 +40,7 @@ function makeErrorResponse(
     result: '',
     usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
     latencyMs: 50,
-    status: 'error' as const,
+    status,
     error: {
       type: errorType,
       message: `Mock ${errorType}`,
@@ -319,6 +321,123 @@ describe('CascadeRouterService (T1-T7)', () => {
       CascadeExhaustedError,
     );
     // Only 1 call (abort stops cascade immediately)
+    expect(mockService.execute).toHaveBeenCalledTimes(1);
+  });
+
+  function withTransport(
+    mockService: ReturnType<typeof makeMockConnectorsService>,
+    type: 'api' | 'cli',
+  ) {
+    return Object.assign(mockService, {
+      get: vi.fn(() => ({
+        type,
+        getCapabilities: () => ({ maxTimeout: 120_000 }),
+      })),
+    });
+  }
+
+  it('timeout on an API hop advances to the next candidate', async () => {
+    mockConfig.CASCADE_LOW_REASONING_ORDER =
+      'groq:llama-3.3-70b-versatile:free,openrouter:meta-llama/llama-4-maverick:free';
+    const hanging = makeErrorResponse(
+      'timeout',
+      'groq',
+      'llama-3.3-70b-versatile',
+      false,
+      'timeout',
+    );
+    const mockService = withTransport(
+      makeMockConnectorsService([
+        hanging,
+        makeSuccessResponse('openrouter', 'meta-llama/llama-4-maverick'),
+      ]),
+      'api',
+    );
+    const router = new CascadeRouterService(
+      mockService as unknown as ConstructorParameters<typeof CascadeRouterService>[0],
+      makeMockMetrics() as unknown as ConstructorParameters<typeof CascadeRouterService>[1],
+    );
+
+    const result = await router.execute('low-reasoning', { prompt: 'hang' }, 'key-1');
+    expect(result.status).toBe('success');
+    expect(result.connector).toBe('openrouter');
+    expect(mockService.execute).toHaveBeenCalledTimes(2);
+  });
+
+  it('deadline exhausted returns the last hop error and does not start another hop', async () => {
+    mockConfig.CASCADE_LOW_REASONING_ORDER =
+      'groq:llama-3.3-70b-versatile:free,openrouter:meta-llama/llama-4-maverick:free';
+    mockConfig.CHAIN_DEADLINE_MS = 1_000;
+    let t = 0;
+    const hanging = makeErrorResponse(
+      'timeout',
+      'groq',
+      'llama-3.3-70b-versatile',
+      false,
+      'timeout',
+    );
+    const mockService = withTransport(
+      makeMockConnectorsService([hanging, makeSuccessResponse('openrouter', 'next')]),
+      'api',
+    );
+    mockService.execute.mockImplementation(async () => {
+      t = 1_000;
+      return hanging;
+    });
+    const router = new CascadeRouterService(
+      mockService as unknown as ConstructorParameters<typeof CascadeRouterService>[0],
+      makeMockMetrics() as unknown as ConstructorParameters<typeof CascadeRouterService>[1],
+    );
+
+    const error = await router
+      .execute('low-reasoning', { prompt: 'hang' }, 'key-1', { now: () => t })
+      .catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(ChainDeadlineError);
+    expect(error).toMatchObject({
+      name: 'ChainDeadlineError',
+      lastHop: { connector: 'groq', errorType: 'timeout' },
+    });
+    expect(mockService.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('a stall after the first streamed chunk does not advance', async () => {
+    mockConfig.CASCADE_LOW_REASONING_ORDER =
+      'groq:llama-3.3-70b-versatile:free,openrouter:meta-llama/llama-4-maverick:free';
+    const hanging = {
+      ...makeErrorResponse('timeout', 'groq', 'llama-3.3-70b-versatile', false, 'timeout'),
+      clientChunkSent: true,
+    };
+    const mockService = withTransport(
+      makeMockConnectorsService([hanging, makeSuccessResponse('openrouter', 'next')]),
+      'api',
+    );
+    const router = new CascadeRouterService(
+      mockService as unknown as ConstructorParameters<typeof CascadeRouterService>[0],
+      makeMockMetrics() as unknown as ConstructorParameters<typeof CascadeRouterService>[1],
+    );
+
+    await expect(router.execute('low-reasoning', { prompt: 'hang' }, 'key-1')).rejects.toThrow(
+      CascadeExhaustedError,
+    );
+    expect(mockService.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('a CLI hop timeout does not advance', async () => {
+    mockConfig.CASCADE_LOW_REASONING_ORDER =
+      'gemini:gemini-2.5-flash:free,groq:llama-3.3-70b-versatile:free';
+    const hanging = makeErrorResponse('timeout', 'gemini', 'gemini-2.5-flash', false, 'timeout');
+    const mockService = withTransport(
+      makeMockConnectorsService([hanging, makeSuccessResponse('groq', 'llama-3.3-70b-versatile')]),
+      'cli',
+    );
+    const router = new CascadeRouterService(
+      mockService as unknown as ConstructorParameters<typeof CascadeRouterService>[0],
+      makeMockMetrics() as unknown as ConstructorParameters<typeof CascadeRouterService>[1],
+    );
+
+    await expect(router.execute('low-reasoning', { prompt: 'hang' }, 'key-1')).rejects.toThrow(
+      CascadeExhaustedError,
+    );
     expect(mockService.execute).toHaveBeenCalledTimes(1);
   });
 });

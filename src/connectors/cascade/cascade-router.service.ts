@@ -12,6 +12,14 @@ import {
 import { buildLowReasoningCandidates, CascadeCandidate } from './cascade.profiles';
 import { CascadeExhaustedError, CascadeBudgetExceededError } from './cascade.errors';
 import { getConfig } from '../../config/env.schema';
+import { DEFAULT_CHAIN_DEADLINE_MS } from '../../config/chain-deadline';
+import { configuredHopTimeoutMs } from '../attempt-budget';
+import { ChainDeadlineError } from '../failover/failover.errors';
+import {
+  capHopTimeout,
+  chainShouldAdvance,
+  responseDeliveredChunk,
+} from '../failover/failover.chain';
 // CONN-1665 — per-key policy candidate filtering (attribution before dispatch).
 import type { ApiKeyPolicy } from '../../policy/policy.schema';
 
@@ -88,6 +96,38 @@ export class CascadeRouterService {
     };
   }
 
+  private chainDeadlineMs(): number {
+    try {
+      const configured = getConfig().CHAIN_DEADLINE_MS;
+      if (typeof configured === 'number' && Number.isFinite(configured) && configured >= 1) {
+        return configured;
+      }
+    } catch {
+      // Specs that construct the router without a validated environment.
+    }
+    return DEFAULT_CHAIN_DEADLINE_MS;
+  }
+
+  /**
+   * CLI connectors can execute tools and write files before a timeout
+   * (gemini, codex, claude-code). An API hop is one HTTP completion. When the
+   * registry cannot answer, the hop is not treated as pure.
+   */
+  private hopTransport(connectorName: string): {
+    type: 'cli' | 'api' | 'unknown';
+    maxTimeout?: number;
+  } {
+    if (typeof this.connectorsService.get !== 'function') {
+      return { type: 'unknown' };
+    }
+    try {
+      const connector = this.connectorsService.get(connectorName);
+      return { type: connector.type, maxTimeout: connector.getCapabilities().maxTimeout };
+    } catch {
+      return { type: 'unknown' };
+    }
+  }
+
   private getBudgetLimitUsd(): number {
     try {
       return getConfig().CASCADE_PAID_DAILY_BUDGET_USD;
@@ -100,6 +140,7 @@ export class CascadeRouterService {
     profile: string,
     request: Omit<ConnectorRequest, 'connector'>,
     apiKeyId: string,
+    clock?: { now?: () => number },
   ): Promise<ConnectorResponse> {
     this.resetDailyBudgetIfNeeded();
 
@@ -153,11 +194,31 @@ export class CascadeRouterService {
       candidates = filtered;
     }
     const tried: { connector: string; model: string; errorType: string }[] = [];
-    const startMs = Date.now();
+    const now = clock?.now ?? Date.now;
+    const startedAt = now();
+    const deadlineMs = this.chainDeadlineMs();
+    const startMs = startedAt;
     let fallbackCount = 0;
     let freeTierHit = false;
+    let lastHop: ChainDeadlineError['lastHop'] = null;
 
     for (let i = 0; i < candidates.length; i++) {
+      const remaining = deadlineMs - (now() - startedAt);
+      if (remaining < 1) {
+        const previous = i > 0 ? candidates[i - 1] : undefined;
+        this.metricsService.recordCascade({
+          connector: previous?.connector ?? 'none',
+          model: previous?.model ?? 'none',
+          tier: previous?.tier ?? 'free',
+          status: 'abort',
+          fallbackCount,
+          latencyMs: now() - startedAt,
+          costUsd: 0,
+          freeTierHit,
+        });
+        throw new ChainDeadlineError(tried, lastHop);
+      }
+
       const candidate = candidates[i];
       const { connector: connectorName, model, tier } = candidate;
 
@@ -188,9 +249,14 @@ export class CascadeRouterService {
         freeTierHit = true;
       }
 
+      const transport = this.hopTransport(connectorName);
       const connectorRequest: ConnectorRequest = {
         ...request,
         model,
+        timeout: capHopTimeout(
+          configuredHopTimeoutMs(connectorName, request.timeout, transport.maxTimeout),
+          remaining,
+        ),
       };
 
       let response: ConnectorResponse;
@@ -201,6 +267,12 @@ export class CascadeRouterService {
         const errorMessage = err instanceof Error ? err.message : String(err);
         this.logger.warn(`Cascade: connector "${connectorName}" threw: ${errorMessage}`);
         tried.push({ connector: connectorName, model, errorType: 'connector_not_found' });
+        lastHop = {
+          connector: connectorName,
+          model,
+          errorType: 'connector_not_found',
+          message: 'Connector unavailable',
+        };
         fallbackCount++;
         continue;
       }
@@ -228,15 +300,21 @@ export class CascadeRouterService {
         return response;
       }
 
-      // Classify the error to decide whether to advance or abort
-      const errorType = response.error?.type ?? 'unknown';
-      const action = classifyErrorAction(errorType);
+      // Classify the error to decide whether to advance or abort.
+      // `timeout` advances only here, and only for an API hop that has not
+      // already delivered a chunk. classifyErrorAction('timeout') stays abort
+      // for direct callers.
+      const errorType =
+        response.error?.type ?? (response.status === 'timeout' ? 'timeout' : 'unknown');
+      const message = response.error?.message ?? `Upstream ${errorType}`;
 
       tried.push({ connector: connectorName, model, errorType });
+      lastHop = { connector: connectorName, model, errorType, message };
 
-      // circuit_open is retryable in cascade context: the circuit breaker is per-connector,
-      // so opening on one connector is a signal to fallback to the next, not abort the cascade.
-      const cascadeRetryable = action.retryable || errorType === 'circuit_open';
+      const cascadeRetryable = chainShouldAdvance(errorType, {
+        chunkSent: responseDeliveredChunk(response),
+        allowTimeoutAdvance: transport.type === 'api',
+      });
 
       if (!cascadeRetryable) {
         // Abort-class error — stop the cascade immediately

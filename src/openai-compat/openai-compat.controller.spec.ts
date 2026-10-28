@@ -3,7 +3,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { OpenAiCompatController } from './openai-compat.controller';
-import { FailoverExhaustedError, FailoverAbortError } from '../connectors/failover/failover.errors';
+import {
+  FailoverExhaustedError,
+  FailoverAbortError,
+  ChainDeadlineError,
+} from '../connectors/failover/failover.errors';
 import {
   ConnectorResponse,
   ConnectorCapabilities,
@@ -127,6 +131,33 @@ describe('OpenAiCompatController.chatCompletions', () => {
     expect((error as HttpException).getStatus()).toBe(HttpStatus.PAYMENT_REQUIRED);
     expect((error as HttpException).getResponse()).toEqual({
       error: { message, type: 'credit_depleted', code: 'credit_depleted' },
+    });
+  });
+
+  it('chain deadline → 503 carrying the last hop error', async () => {
+    const { controller } = makeController({
+      complete: () =>
+        Promise.reject(
+          new ChainDeadlineError([{ connector: 'groq', model: 'm', errorType: 'timeout' }], {
+            connector: 'groq',
+            model: 'm',
+            errorType: 'timeout',
+            message: 'timed out on groq',
+          }),
+        ),
+    });
+    const error = await controller.chatCompletions(body(), undefined, req).then(
+      () => null,
+      (caught: unknown) => caught,
+    );
+    expect(error).toBeInstanceOf(HttpException);
+    expect((error as HttpException).getStatus()).toBe(HttpStatus.SERVICE_UNAVAILABLE);
+    expect((error as HttpException).getResponse()).toEqual({
+      error: {
+        message: expect.stringContaining('timed out on groq'),
+        type: 'chain_deadline_exceeded',
+        code: 'timeout',
+      },
     });
   });
 
