@@ -102,7 +102,12 @@ function buildStack(connectors: FakeConnector[], opts: StackOptions = {}) {
     },
   };
   const jobQueue = {} as never;
-  const metrics = { record: () => undefined } as never;
+  const metrics = {
+    record: () => undefined,
+    // #6664 — FailoverRouterService → recordFailoverHops on settle of a chain.
+    recordFailoverHops: () => undefined,
+    incrementProcessingTierUnknown: () => undefined,
+  } as never;
   const outputGuard = { wrapExecute: () => Promise.resolve({ response: null }) } as never;
   const policyService = new PolicyService(prisma as unknown as PrismaService);
 
