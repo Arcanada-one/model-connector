@@ -348,7 +348,10 @@ export class OpenAiConnector extends BaseApiConnector {
     } else if (request.responseFormat?.type === 'json_object') {
       body.text = { format: { type: 'json_object' } };
     }
-    for (const key of ['max_output_tokens', 'temperature', 'top_p', 'service_tier'] as const) {
+    // Do not forward `service_tier` (#6664 / lingxi): metering prices Standard
+    // list rates only. Requested tier is logged/alerted from extra; actual tier
+    // is read from the provider echo on the response.
+    for (const key of ['max_output_tokens', 'temperature', 'top_p'] as const) {
       if (request.extra?.[key] != null) body[key] = request.extra[key];
     }
     return body;
