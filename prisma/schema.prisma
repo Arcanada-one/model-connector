@@ -10,6 +10,11 @@ model Request {
   id           String   @id @default(uuid())
   connector    String
   model        String?
+  // #6664 — processing tier the client asked for / the provider actually used
+  // (normalized per #5704: standard|flex|batch|fast|unknown). Nullable so
+  // rows written before this shipped stay NULL rather than inventing standard.
+  tierRequested String?
+  tierActual    String?
   promptHash   String
   promptLength Int
   inputTokens  Int      @default(0)

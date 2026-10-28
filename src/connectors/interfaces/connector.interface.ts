@@ -103,6 +103,13 @@ export interface ConnectorResponse {
    * involved no substitution keep their previous shape byte-for-byte.
    */
   modelSubstituted?: { requested: string; served: string };
+  /**
+   * #6664 — processing tier the provider reported for this attempt
+   * (`standard` / `flex` / `batch` / `fast` / raw provider token). Normalized
+   * with {@link import('../processing-tier').normalizeProcessingTier} before
+   * it is written next to `model` on the request log row.
+   */
+  processingTier?: string;
   result: string;
   structured?: unknown;
   usage: {

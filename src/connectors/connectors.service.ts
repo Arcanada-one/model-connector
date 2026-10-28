@@ -42,6 +42,7 @@ import {
   type MeasuredCostPricing,
   isChargeableToCustomer,
 } from '../billing/measured-cost';
+import { actualTierFromResponse, requestedTierFromExtra } from './processing-tier';
 import type { OutputGuardReport } from './output-guard/types';
 import { OPENMODEL_CATALOGUE } from './openmodel/openmodel.catalogue';
 import { parseProviderAccess, resolveProviderAccess, type ProviderAccess } from './provider-access';
@@ -432,6 +433,11 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
    */
   listCapabilities(): ConnectorCapabilities[] {
     return Array.from(this.connectors.values()).map((c) => c.getCapabilities());
+  }
+
+  /** #6664 — record failover hop transitions + per-hop costUsd totals. */
+  recordFailoverHops(hopCount: number, hopCostsUsd: number[]): void {
+    this.metricsService.recordFailoverHops({ hopCount, hopCostsUsd });
   }
 
   /**
@@ -1796,12 +1802,44 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       );
     }
 
+    const tierRequested = requestedTierFromExtra(request.extra);
+    const tierActual = response.processingTier
+      ? actualTierFromResponse(response.processingTier)
+      : tierRequested;
+
+    // #6664 — same log record as the served model (structured fields).
+    this.logger.log({
+      msg: 'request_settled',
+      connector: response.connector,
+      model: response.model,
+      tier_requested: tierRequested,
+      tier_actual: tierActual,
+      status: response.status,
+      cost_usd: response.usage.costUsd,
+      // Redacted: no prompt, no api key material.
+    });
+
+    if (tierActual !== 'standard') {
+      this.logger.warn({
+        msg: 'tier_actual_not_standard',
+        connector: response.connector,
+        model: response.model,
+        tier_requested: tierRequested,
+        tier_actual: tierActual,
+      });
+    }
+    if (tierActual === 'unknown') {
+      this.metricsService.incrementProcessingTierUnknown();
+    }
+
     try {
       await this.prisma.$transaction(async (tx) => {
         const created = await tx.request.create({
           data: {
             connector: response.connector,
             model: response.model,
+            tierRequested,
+            tierActual,
             promptHash: digest.promptHash,
             promptLength: digest.promptLength,
             inputTokens: response.usage.inputTokens,

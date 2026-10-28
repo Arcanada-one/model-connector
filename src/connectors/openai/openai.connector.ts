@@ -11,6 +11,8 @@ interface OpenAiResponse {
   id?: string;
   status?: string;
   model?: string;
+  /** Provider echo of the processing tier (#6664 / OpenAI service_tier). */
+  service_tier?: string;
   output?: Array<{
     type?: string;
     content?: Array<{ type?: string; text?: string }>;
@@ -346,6 +348,9 @@ export class OpenAiConnector extends BaseApiConnector {
     } else if (request.responseFormat?.type === 'json_object') {
       body.text = { format: { type: 'json_object' } };
     }
+    // Do not forward `service_tier` (#6664 / lingxi): metering prices Standard
+    // list rates only. Requested tier is logged/alerted from extra; actual tier
+    // is read from the provider echo on the response.
     for (const key of ['max_output_tokens', 'temperature', 'top_p'] as const) {
       if (request.extra?.[key] != null) body[key] = request.extra[key];
     }
@@ -367,6 +372,9 @@ export class OpenAiConnector extends BaseApiConnector {
       inputTokens: json.usage?.input_tokens ?? 0,
       outputTokens: json.usage?.output_tokens ?? 0,
       costUsd: 0,
+      // #6664 — prefer the provider echo; otherwise leave undefined so settle
+      // falls back to the requested tier without inventing one.
+      ...(typeof json.service_tier === 'string' ? { processingTier: json.service_tier } : {}),
       isError: !completed,
       errorMessage: completed
         ? undefined

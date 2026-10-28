@@ -192,6 +192,43 @@ import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
+describe('MetricsService — processing tier + failover hops (#6664)', () => {
+  let metrics: MetricsService;
+
+  beforeEach(() => {
+    metrics = new MetricsService();
+  });
+
+  it('increments a dedicated unknown-tier counter', () => {
+    expect(metrics.getProcessingTierUnknownTotal()).toBe(0);
+    metrics.incrementProcessingTierUnknown();
+    metrics.incrementProcessingTierUnknown();
+    expect(metrics.getProcessingTierUnknownTotal()).toBe(2);
+  });
+
+  it('records failover hop transitions as hopCount-1 and sums hop costs', () => {
+    metrics.recordFailoverHops({ hopCount: 3, hopCostsUsd: [0.01, 0.02, 0.03] });
+    expect(metrics.getFailoverHopCounters()).toEqual({
+      hopTransitionsTotal: 2,
+      hopCostUsdTotal: 0.06,
+    });
+    metrics.recordFailoverHops({ hopCount: 1, hopCostsUsd: [0.05] });
+    expect(metrics.getFailoverHopCounters()).toEqual({
+      hopTransitionsTotal: 2,
+      hopCostUsdTotal: 0.11,
+    });
+  });
+
+  it('exposes unknown + hop counters on the Prometheus scrape body', () => {
+    metrics.incrementProcessingTierUnknown();
+    metrics.recordFailoverHops({ hopCount: 2, hopCostsUsd: [0.01, 0.02] });
+    const body = metrics.getPrometheusProcessingTier();
+    expect(body).toContain('processing_tier_unknown_total 1');
+    expect(body).toContain('failover_hop_transitions_total 1');
+    expect(body).toContain('failover_hop_cost_usd_total 0.03');
+  });
+});
+
 describe('MetricsService — drainCodexSentinel', () => {
   let metrics: MetricsService;
   let tmpDir: string;

@@ -253,6 +253,44 @@ export class MetricsService {
   }
 
   // -------------------------------------------------------------------------
+  // #6664 — processing-tier + failover-hop observability
+  // -------------------------------------------------------------------------
+  private processingTierUnknownTotal = 0;
+  private failoverHopTransitionsTotal = 0;
+  private failoverHopCostUsdTotal = 0;
+
+  /** Count a request whose normalized `tier_actual` is `unknown`. */
+  incrementProcessingTierUnknown(): void {
+    this.processingTierUnknownTotal++;
+  }
+
+  getProcessingTierUnknownTotal(): number {
+    return this.processingTierUnknownTotal;
+  }
+
+  /**
+   * Record one completed failover/cascade chain: how many hops advanced past
+   * the first candidate, and the per-hop costUsd values (including the first).
+   */
+  recordFailoverHops(opts: { hopCount: number; hopCostsUsd: number[] }): void {
+    const transitions = Math.max(0, opts.hopCount - 1);
+    this.failoverHopTransitionsTotal += transitions;
+    for (const cost of opts.hopCostsUsd) {
+      if (Number.isFinite(cost)) this.failoverHopCostUsdTotal += cost;
+    }
+  }
+
+  getFailoverHopCounters(): {
+    hopTransitionsTotal: number;
+    hopCostUsdTotal: number;
+  } {
+    return {
+      hopTransitionsTotal: this.failoverHopTransitionsTotal,
+      hopCostUsdTotal: this.failoverHopCostUsdTotal,
+    };
+  }
+
+  // -------------------------------------------------------------------------
   // Codex OAuth detection counters (CONN-0222 Phase 5)
   // Sidecar-side signals (writeback_failures, refresh_attempts) are
   // incremented by calling code in the sidecar entrypoint or via a sentinel
@@ -365,6 +403,23 @@ export class MetricsService {
         '# HELP codex_circuit_open_ms_total Total ms the Codex circuit breaker was open',
         '# TYPE codex_circuit_open_ms_total counter',
         'codex_circuit_open_ms_total ' + String(this.codexCircuitOpenMsTotal),
+      ].join('\n') + '\n'
+    );
+  }
+
+  /** #6664 — processing-tier unknown + failover-hop counters for /metrics scrapes. */
+  getPrometheusProcessingTier(): string {
+    return (
+      [
+        '# HELP processing_tier_unknown_total Requests whose normalized tier_actual is unknown',
+        '# TYPE processing_tier_unknown_total counter',
+        'processing_tier_unknown_total ' + String(this.processingTierUnknownTotal),
+        '# HELP failover_hop_transitions_total Failover chain advances past the first candidate',
+        '# TYPE failover_hop_transitions_total counter',
+        'failover_hop_transitions_total ' + String(this.failoverHopTransitionsTotal),
+        '# HELP failover_hop_cost_usd_total Sum of usage.costUsd across all failover hops',
+        '# TYPE failover_hop_cost_usd_total counter',
+        'failover_hop_cost_usd_total ' + String(this.failoverHopCostUsdTotal),
       ].join('\n') + '\n'
     );
   }

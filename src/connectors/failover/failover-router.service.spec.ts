@@ -21,25 +21,25 @@ function caps(name: string, model: string, free: boolean): ConnectorCapabilities
   };
 }
 
-function success(connector: string, model: string): ConnectorResponse {
+function success(connector: string, model: string, costUsd = 0): ConnectorResponse {
   return {
     id: 'r',
     connector,
     model,
     result: 'hello',
-    usage: { inputTokens: 4, outputTokens: 2, totalTokens: 6, costUsd: 0 },
+    usage: { inputTokens: 4, outputTokens: 2, totalTokens: 6, costUsd },
     latencyMs: 12,
     status: 'success',
   };
 }
 
-function rateLimited(connector: string, model: string): ConnectorResponse {
+function rateLimited(connector: string, model: string, costUsd = 0): ConnectorResponse {
   return {
     id: 'r',
     connector,
     model,
     result: '',
-    usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+    usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd },
     latencyMs: 5,
     status: 'error',
     error: { type: 'rate_limited', message: '429', retryable: true, recommendation: 'wait' },
@@ -56,6 +56,7 @@ function makeService(
   unavailable: string[] = [],
 ) {
   const execute = vi.fn((connector: string) => execImpl(connector));
+  const recordFailoverHops = vi.fn();
   const mockConnectors = {
     listCapabilities: vi.fn(() => CAPS),
     checkProviderCredentials: vi.fn(async () => []),
@@ -63,6 +64,7 @@ function makeService(
     canUseForPolicy: vi.fn(async (connector: string) => !unavailable.includes(connector)),
     isGloballyRoutable: vi.fn(() => true),
     execute,
+    recordFailoverHops,
     // CONN-1665 — failover consults the per-key policy before dispatch; these
     // tests exercise legacy (policy-less) keys.
     getKeyPolicy: vi.fn(async () => null),
@@ -71,7 +73,7 @@ function makeService(
   const service = new FailoverRouterService(
     mockConnectors as unknown as ConstructorParameters<typeof FailoverRouterService>[0],
   );
-  return { service, execute };
+  return { service, execute, recordFailoverHops };
 }
 
 describe('FailoverRouterService.complete', () => {
@@ -130,6 +132,7 @@ describe('FailoverRouterService.complete', () => {
       canUseForPolicy: vi.fn(async (connector: string) => connector !== 'openrouter'),
       isGloballyRoutable: vi.fn(() => true),
       execute,
+      recordFailoverHops: vi.fn(),
       getKeyPolicy: vi.fn(async () => null),
       isCandidateAllowedByPolicy: vi.fn(async () => true),
     };
@@ -173,6 +176,7 @@ describe('FailoverRouterService.complete', () => {
       canUseForPolicy: vi.fn(async () => true),
       isGloballyRoutable: vi.fn(() => true),
       execute,
+      recordFailoverHops: vi.fn(),
       getKeyPolicy: vi.fn(async () => null),
       isCandidateAllowedByPolicy: vi.fn(async () => true),
     } as unknown as ConstructorParameters<typeof FailoverRouterService>[0]);
@@ -182,5 +186,28 @@ describe('FailoverRouterService.complete', () => {
     );
     expect(execute).toHaveBeenCalledTimes(1);
     expect(execute).toHaveBeenCalledWith('openmodel', expect.anything(), 'key-1');
+  });
+
+  it('#6664: records hop count and per-hop costUsd on a successful advance', async () => {
+    const { service, recordFailoverHops } = makeService((connector) =>
+      connector === 'openmodel'
+        ? Promise.resolve(rateLimited('openmodel', 'deepseek-v4-flash', 0.001))
+        : Promise.resolve(success('groq', 'llama-3.3-70b-versatile', 0.004)),
+    );
+
+    await service.complete({ prompt: 'ping' }, 'key-1', { requestedModel: 'auto' });
+
+    expect(recordFailoverHops).toHaveBeenCalledTimes(1);
+    expect(recordFailoverHops).toHaveBeenCalledWith(2, [0.001, 0.004]);
+  });
+
+  it('#6664: records hops even when the chain is exhausted', async () => {
+    const { service, recordFailoverHops } = makeService((c) =>
+      Promise.resolve(rateLimited(c, 'x', 0.002)),
+    );
+
+    await expect(service.complete({ prompt: 'ping' }, 'k')).rejects.toThrow(FailoverExhaustedError);
+    expect(recordFailoverHops).toHaveBeenCalledTimes(1);
+    expect(recordFailoverHops).toHaveBeenCalledWith(2, [0.002, 0.002]);
   });
 });
