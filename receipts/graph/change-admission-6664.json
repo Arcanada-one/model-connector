@@ -5,9 +5,9 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-10-28T15:31:41Z",
+ "captured_at_utc": "2026-10-28T16:25:31Z",
  "change_set": {
-  "base": "73a12fc91a4432bb119207ac7fb33d2287de41af",
+  "base": "d27b74a94a9dd4140d279e2454e4789483831fe1",
   "files": [
    {
     "kind": "data_model",
@@ -163,7 +163,7 @@
     "status": "M"
    }
   ],
-  "head": "5910ee562f63413d0e39e8364295fb6a0e2a8219",
+  "head": "cf0241b9583b8a22ae645691524ebf1e6cdd0b8a",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -173,473 +173,473 @@
    "entity": "code_unit:src/admin/admin.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/admin/circuit-breaker.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/admin/watcher-repair.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/billing/credits.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/billing/payments.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/connectors/connectors.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/connectors/connectors.service.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/connectors/failover/failover-router.service.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/connectors/image-generation/jobs/image-job.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/connectors/openai/openai.connector.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/health/health.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/metrics/metrics.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/metrics/metrics.service.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/openai-compat/openai-compat.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/speech/speech.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-contract-diff: contract:src/speech/dto/tts-request.dto.ts#ttsRequestSchema: safeParse result/payload usage not proven: union requires bound safeParse and object variants; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists "
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-contract-diff: contract:src/speech/dto/tts-request.dto.ts#ttsRequestSchema: safeParse result/payload usage not proven: union requires bound safeParse and object variants; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists "
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "code_unit:src/speech/stt/stt-async.controller.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "TEST_SOURCE",
    "entity": "code_unit:test/provider-profiles/boundary-http.spec.ts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "test-only file outside the production contour for this change. Verifier reason: v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json does not include test/provider-profiles/boundary-http.spec.ts"
+   "reason": "test-only surface outside the production contour for this change. Verifier reason: v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json does not include test/provider-profiles/boundary-http.spec.ts"
   },
   {
    "code": "TEST_SOURCE",
    "entity": "code_unit:test/provider-profiles/canary/admin-routes.cjs",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "test-only file outside the production contour for this change. Verifier reason: v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json does not include test/provider-profiles/canary/admin-routes.cjs"
+   "reason": "test-only surface outside the production contour for this change. Verifier reason: v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json does not include test/provider-profiles/canary/admin-routes.cjs"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:DELETE /admin/keys/:id",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /admin/credits/:apiKeyId",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /admin/credits/:apiKeyId/history",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /admin/keys",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /admin/keys/:id",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /admin/keys/:id/policy",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /admin/keys/:id/usage",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /connectors",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /connectors/:name/status",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /connectors/catalog",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /connectors/image/capabilities",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /connectors/intents/:intentId",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /health",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /health/connectors",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /health/metrics",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /health/ready",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /jobs/:id",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "TEST_SOURCE",
    "entity": "route:GET /keyed",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not a live contour for this change. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "test-only surface outside the production contour for this change. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /metrics",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "TEST_SOURCE",
    "entity": "route:GET /probe/abort",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not a live contour for this change. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "test-only surface outside the production contour for this change. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "TEST_SOURCE",
    "entity": "route:GET /probe/execute",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not a live contour for this change. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "test-only surface outside the production contour for this change. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "TEST_SOURCE",
    "entity": "route:GET /probe/health",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not a live contour for this change. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "test-only surface outside the production contour for this change. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "TEST_SOURCE",
    "entity": "route:GET /probe/metrics",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "test-only harness controllers declared inside *.spec.ts files; they are not mounted by the production AppModule and are not a live contour for this change. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "test-only surface outside the production contour for this change. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /v1/models",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:GET /v1/speech/stt/jobs/:id",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:PATCH /admin/keys/:id/policy",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:PATCH /admin/keys/:id/rate-limit",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /admin/circuit-breaker/reset",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /admin/credits/:apiKeyId",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /admin/credits/:apiKeyId/gift",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /admin/credits/holds/sweep",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /admin/credits/reconcile",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /admin/keys",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /connectors/:name/chat/completions",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /connectors/:name/execute",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /execute",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /images/generate",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /internal/credits/:apiKeyId/payment",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /internal/credits/:apiKeyId/reverse",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /internal/watcher/circuit-breaker/reset",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /v1/chat/completions",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /v1/prompt-cache/prewarm",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /v1/speech/stt",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /v1/speech/stt/async",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /v1/speech/tts",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "VERIFIER_DEBT",
    "entity": "route:POST /v1/speech/vad",
    "expires_at_utc": "2026-11-28T00:00:00Z",
    "owner": "Arcanada (MC-6664 tier-failover-logging, Cursor cloud agent)",
-   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage for the changed connectors/metrics/openai surface is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+   "reason": "Inferred/observed boundary entity reached from the tier/failover logging change; no committed CanaryResult/v2 lists it in this admission run. Unit/spec coverage is exercised by lint-and-test. Verifier reason: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   }
  ],
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:867eaf4d15aa6cada5163b830c28ce66e1e6c4d982e1f2d10c21dd134a461d11",
-  "path": "/tmp/graph-admit-6664/verifier-out/graph-73a12fc91a44.json",
-  "source_commit": "73a12fc91a4432bb119207ac7fb33d2287de41af"
+  "graph_digest": "sha256:720f6edf00ad45a82f63cb28142ab8086b073313b77870809ff3bd0125e2835a",
+  "path": "/tmp/graph-admit-6664b/verifier-out/graph-d27b74a94a9d.json",
+  "source_commit": "d27b74a94a9dd4140d279e2454e4789483831fe1"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:957ec9333f33ab2dcb4da0dc682bb2d182ba8589f8277c0722ec1345d8c14fb7",
-  "path": "/tmp/graph-admit-6664/verifier-out/graph-head-5910ee562f63.json",
-  "source_commit": "5910ee562f63413d0e39e8364295fb6a0e2a8219",
+  "graph_digest": "sha256:d61626ba9ad345c3a28dad9efcdecf4e72f1798807d5004375b67f1249e280c0",
+  "path": "/tmp/graph-admit-6664b/verifier-out/graph-head-cf0241b9583b.json",
+  "source_commit": "cf0241b9583b8a22ae645691524ebf1e6cdd0b8a",
   "staleness": {
-   "checked_at_utc": "2026-10-28T15:32:04Z",
-   "checked_nodes": 954,
+   "checked_at_utc": "2026-10-28T16:25:55Z",
+   "checked_nodes": 956,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -647,7 +647,7 @@
  },
  "host": "development",
  "host_redacted": true,
- "host_sha256": "cab041e79a84bfb4f252d3da901b7517f800a96b27cefce172a27d11a0318bdd",
+ "host_sha256": "af0257b06402e9afeb18900d0a6643fb5f932209dd3bb1380f397e0ea86cb4e1",
  "impact_set": {
   "deterministic_core": [
    {
@@ -8304,6 +8304,26 @@
    {
     "boundary": "intra_unit",
     "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-6206.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-6206.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/base-api.connector.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
     "entity": "receipt:receipts/graph/change-admission-7148.json",
     "node_type": "receipt",
     "path": [
@@ -9932,19 +9952,19 @@
   "inferred_tail": [],
   "max_depth": 3,
   "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
-  "total": 378
+  "total": 379
  },
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 65 attached from /tmp/graph-admit-6664/exemptions.json",
+  "exemptions: 65 attached from /tmp/graph-admit-6664b/exemptions.json",
   "A2-353: `canary` discharged for 4 test code_unit(s) — a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/admin/admin-rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.integration.spec.ts, code_unit:src/connectors/connectors.service.policy.spec.ts"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261028T153141Z-5910ee56",
+ "receipt_id": "car-verify-20261028T162531Z-cf0241b9",
  "receipt_path": "receipts/graph/change-admission-6664.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -10304,6 +10324,7 @@
    "receipt:receipts/bench-source-ctx24/source-car.json",
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
    "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+   "receipt:receipts/graph/change-admission-6206.json",
    "receipt:receipts/graph/change-admission-7148.json",
    "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
    "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
@@ -10718,6 +10739,7 @@
    "receipt:receipts/bench-source-ctx24/source-car.json",
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
    "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+   "receipt:receipts/graph/change-admission-6206.json",
    "receipt:receipts/graph/change-admission-6664.json",
    "receipt:receipts/graph/change-admission-7148.json",
    "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
@@ -10783,7 +10805,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-10-28T15:32:04Z",
+  "checked_at_utc": "2026-10-28T16:25:55Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -10824,8 +10846,19 @@
   },
   {
    "content_hash": {
+    "base": "sha256:0c6f2e29c0efca7c7712302fe67e301986e3870bfbb5caccb48e7b4db29c4754",
+    "head": "sha256:0c6f2e29c0efca7c7712302fe67e301986e3870bfbb5caccb48e7b4db29c4754"
+   },
+   "entity": "receipt:receipts/graph/change-admission-6206.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-6206.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
     "base": null,
-    "head": "sha256:4cdc5bc4f03e3d8093a08ea7dcb6457b07749d21ba1a6ad12d63de064e1b8f38"
+    "head": "sha256:11c2ebb50a10d313c11f98341e411a4b3c58a6f355675132a1f2326c06ffb10c"
    },
    "entity": "receipt:receipts/graph/change-admission-6664.json",
    "node_type": "receipt",
@@ -10971,7 +11004,7 @@
   }
  ],
  "tree": {
-  "commit": "5910ee562f63413d0e39e8364295fb6a0e2a8219",
+  "commit": "cf0241b9583b8a22ae645691524ebf1e6cdd0b8a",
   "dirty": false
  },
  "verdicts": [
@@ -14629,7 +14662,7 @@
  },
  "verifiers": [
   {
-   "command": "/workspace/node_modules/.bin/tsc -p /workspace/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /tmp/graph-admit-6664/verifier-out/type-check-xpj3y_56/check.tsbuildinfo --listFiles",
+   "command": "/workspace/node_modules/.bin/tsc -p /workspace/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /tmp/graph-admit-6664b/verifier-out/type-check-wqkyhlvu/check.tsbuildinfo --listFiles",
    "duration_s": 7.57,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
@@ -15298,13 +15331,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-10-28T15:32:10Z",
-   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2863 files listed"
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-10-28T16:26:00Z",
+   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2864 files listed"
   },
   {
-   "command": "/workspace/node_modules/.bin/tsc -p /workspace/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /tmp/graph-admit-6664/verifier-out/type-check-hut03mv4/check.tsbuildinfo --listFiles",
-   "duration_s": 4.36,
+   "command": "/workspace/node_modules/.bin/tsc -p /workspace/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /tmp/graph-admit-6664b/verifier-out/type-check-jgbd_ng6/check.tsbuildinfo --listFiles",
+   "duration_s": 4.43,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -15704,13 +15737,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-10-28T15:32:18Z",
-   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2133 files listed"
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-10-28T16:26:08Z",
+   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2134 files listed"
   },
   {
-   "command": "/workspace/node_modules/.bin/tsc -p /workspace/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /tmp/graph-admit-6664/verifier-out/type-check-c2pweakd/check.tsbuildinfo --listFiles",
-   "duration_s": 0.55,
+   "command": "/workspace/node_modules/.bin/tsc -p /workspace/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /tmp/graph-admit-6664b/verifier-out/type-check-kir90pna/check.tsbuildinfo --listFiles",
+   "duration_s": 0.56,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -15915,13 +15948,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-10-28T15:32:22Z",
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-10-28T16:26:13Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/workspace/node_modules/.bin/tsc -p /workspace/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /tmp/graph-admit-6664/verifier-out/type-check-uakk2jzp/check.tsbuildinfo --listFiles",
-   "duration_s": 7.24,
+   "command": "/workspace/node_modules/.bin/tsc -p /workspace/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /tmp/graph-admit-6664b/verifier-out/type-check-uh1ly4d7/check.tsbuildinfo --listFiles",
+   "duration_s": 7.26,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -16321,13 +16354,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-10-28T15:32:23Z",
-   "summary": "tsconfig.json: exit 0, 0 error(s), 2754 files listed"
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-10-28T16:26:13Z",
+   "summary": "tsconfig.json: exit 0, 0 error(s), 2755 files listed"
   },
   {
-   "command": "/workspace/node_modules/.bin/tsc -p /workspace/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /tmp/graph-admit-6664/verifier-out/type-check-bnlghyyo/check.tsbuildinfo --listFiles",
-   "duration_s": 7.33,
+   "command": "/workspace/node_modules/.bin/tsc -p /workspace/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /tmp/graph-admit-6664b/verifier-out/type-check-foa9_d8m/check.tsbuildinfo --listFiles",
+   "duration_s": 7.53,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -16727,12 +16760,12 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-10-28T15:32:30Z",
-   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2860 files listed"
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-10-28T16:26:21Z",
+   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2861 files listed"
   },
   {
-   "command": "tools/graph/contract_diff.py.run_diff(base=73a12fc91a44, head=5910ee562f63, graph=head graph)",
+   "command": "tools/graph/contract_diff.py.run_diff(base=d27b74a94a9d, head=cf0241b9583b, graph=head graph)",
    "duration_s": 4.28,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
@@ -16911,8 +16944,8 @@
    "exit_code": 1,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-contract-diff.json",
-   "started_at_utc": "2026-10-28T15:32:38Z",
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-contract-diff.json",
+   "started_at_utc": "2026-10-28T16:26:28Z",
    "summary": "186→186 contracts, breaking 0, edges {'not_measured': 3, 'verified': 247}"
   },
   {
@@ -17017,13 +17050,13 @@
    "exit_code": 0,
    "id": "v-route-config",
    "kind": "config_schema",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-route-config.txt",
-   "started_at_utc": "2026-10-28T15:32:42Z",
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-route-config.txt",
+   "started_at_utc": "2026-10-28T16:26:33Z",
    "summary": "46 route(s), 0 failed"
   },
   {
    "command": "verify.py prisma-lite diff base→head + /workspace/node_modules/.bin/prisma validate",
-   "duration_s": 0.67,
+   "duration_s": 0.69,
    "entities": [
     "data_model:ApiKey",
     "data_model:BenchCampaign",
@@ -17065,13 +17098,13 @@
    "exit_code": 0,
    "id": "v-schema-diff",
    "kind": "schema_diff",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-schema-diff.json",
-   "started_at_utc": "2026-10-28T15:32:42Z",
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-schema-diff.json",
+   "started_at_utc": "2026-10-28T16:26:33Z",
    "summary": "1 schema(s), 2 change(s), 0 failed, validate exit 0"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 0.32,
+   "duration_s": 0.35,
    "entities": [
     "code_unit:src/connectors/connectors.service.policy.spec.ts",
     "code_unit:src/connectors/connectors.service.ts",
@@ -17089,8 +17122,8 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-10-28T15:32:43Z",
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-10-28T16:26:33Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
@@ -17673,8 +17706,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-10-28T15:32:43Z",
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-10-28T16:26:34Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -17757,8 +17790,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-10-28T15:32:43Z",
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-10-28T16:26:34Z",
    "summary": "35 document(s), 0 failed"
   },
   {
@@ -17897,8 +17930,8 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/tmp/graph-admit-6664/verifier-out/v-canary.json",
-   "started_at_utc": "2026-10-28T15:32:43Z",
+   "output_ref": "/tmp/graph-admit-6664b/verifier-out/v-canary.json",
+   "started_at_utc": "2026-10-28T16:26:34Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 63 not_measured of 63 entities"
   }
  ],
@@ -17913,7 +17946,7 @@
    {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "16 affected entity(ies) owe no verdict (receipt: 16): unchanged at both revisions and given no verifier by the matrix"
+    "text": "17 affected entity(ies) owe no verdict (receipt: 17): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
@@ -19304,6 +19337,7 @@
    "receipt:receipts/bench-source-ctx24/source-car.json": [],
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json": [],
    "receipt:receipts/graph/a2-319-rate-limit-admin.json": [],
+   "receipt:receipts/graph/change-admission-6206.json": [],
    "receipt:receipts/graph/change-admission-6664.json": [],
    "receipt:receipts/graph/change-admission-7148.json": [],
    "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json": [],
@@ -19595,9 +19629,9 @@
    ]
   },
   "seconds": {
-   "prepare": 2.52,
-   "total": 62.04,
-   "verifiers": 32.52
+   "prepare": 2.55,
+   "total": 62.93,
+   "verifiers": 32.87
   }
  },
  "work_item": "6664"
