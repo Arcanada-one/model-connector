@@ -18,7 +18,7 @@ import { buildFailoverCandidates } from './failover.candidates';
 import { runFailoverChain } from './failover.chain';
 import { FailoverAbortError } from './failover.errors';
 import { getConfig } from '../../config/env.schema';
-import { DEFAULT_CHAIN_DEADLINE_MS } from '../../config/chain-deadline';
+import { DEFAULT_CHAIN_DEADLINE_MS, readChainDeadlineEnv } from '../../config/chain-deadline';
 import { configuredHopTimeoutMs } from '../attempt-budget';
 // CONN-1665 — per-key policy candidate filtering (attribution before dispatch).
 import type { ApiKeyPolicy } from '../../policy/policy.schema';
@@ -62,6 +62,13 @@ export class FailoverRouterService {
       // Test environments where env is not fully loaded — fall back to defaults.
       order = process.env.FAILOVER_PROVIDER_ORDER || order;
       deepseekModel = process.env.FAILOVER_DEEPSEEK_MODEL || deepseekModel;
+      const rawDeadline = readChainDeadlineEnv();
+      if (rawDeadline != null && rawDeadline !== '') {
+        const parsed = Number(rawDeadline);
+        if (Number.isFinite(parsed) && parsed >= 1000) {
+          chainDeadlineMs = parsed;
+        }
+      }
     }
     return {
       providerOrder: order
