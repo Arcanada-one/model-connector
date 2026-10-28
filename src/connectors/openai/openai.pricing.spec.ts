@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   GPT_6_1_TERRA_PRICE_BOOK,
   OPENAI_LONG_CONTEXT_INPUT_TOKENS,
+  OPENAI_MODEL_PRICE_BOOKS,
   contextBandForInputTokens,
   lookupOpenAiRates,
   openAiCataloguePricing,
@@ -17,7 +18,7 @@ describe('openai.pricing — gpt-6.1-terra (retrieved 2026-10-28)', () => {
     expect(GPT_6_1_TERRA_PRICE_BOOK.retrievedAt).toBe('2026-10-28');
   });
 
-  it('standard short-context matches the introducing post and API pricing page', () => {
+  it('standard short-context matches developers.openai.com/api/docs/pricing only', () => {
     expect(lookupOpenAiRates('gpt-6.1-terra', 'standard', 'short')).toEqual({
       inputPerMTok: 1.0,
       cachedInputPerMTok: 0.05,
@@ -77,5 +78,13 @@ describe('openai.pricing — gpt-6.1-terra (retrieved 2026-10-28)', () => {
     expect(lookupOpenAiRates('gpt-does-not-exist')).toBeNull();
     expect(openAiCataloguePricing('gpt-does-not-exist')).toBeNull();
     expect(openAiModelLimits('gpt-does-not-exist')).toBeNull();
+  });
+
+  it('does not publish unconfirmed siblings (terra-pro / azure / eu)', () => {
+    // Held back until a human confirms them on the OpenAI pricing page (#5580).
+    expect(lookupOpenAiRates('gpt-6.1-terra-pro')).toBeNull();
+    expect(lookupOpenAiRates('gpt-6.1-terra-azure')).toBeNull();
+    expect(lookupOpenAiRates('gpt-6.1-terra-eu')).toBeNull();
+    expect(OPENAI_MODEL_PRICE_BOOKS['gpt-6.1-terra-pro']).toBeUndefined();
   });
 });

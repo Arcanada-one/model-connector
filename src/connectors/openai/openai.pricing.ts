@@ -1,9 +1,10 @@
 /**
  * OpenAI curated price book (USD per 1M tokens).
  *
- * Retrieved 2026-10-28 from:
- * - https://developers.openai.com/api/docs/pricing
- * - https://openai.com/index/introducing-gpt-6-1-terra/
+ * Sole price source (#5580): https://developers.openai.com/api/docs/pricing
+ * (retrieved 2026-10-28). OpenRouter API figures and third-party mirrors are
+ * not authoritative. Do not add `gpt-6.1-terra-pro`, Azure, or EU regional
+ * rows until a human confirms them on that page.
  *
  * Short context: ≤272K input tokens. Long context: >272K input tokens.
  * Batch and Flex are 50% of Standard; Fast is 2× Standard.
@@ -35,9 +36,9 @@ export interface OpenAiModelPriceBook {
 }
 
 /**
- * GPT-6.1 Terra — standard short-context matches the introducing post
- * ($1 / $0.05 / $5). Long-context and Batch/Flex/Fast match the API pricing
- * tables (Batch=Flex=0.5×, Fast=2× of the same band).
+ * GPT-6.1 Terra — Standard / Batch / Flex / Fast × short/long from the OpenAI
+ * pricing tables only ($1 / $0.05 / $5 short; $2 / $0.10 / $7.50 long;
+ * Batch=Flex=0.5×, Fast=2× of the same band). No pro / azure / eu sibling.
  */
 export const GPT_6_1_TERRA_PRICE_BOOK: OpenAiModelPriceBook = {
   retrievedAt: '2026-10-28',
