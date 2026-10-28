@@ -28,7 +28,11 @@ MAX_DIFF_BYTES = 2 * 1024 * 1024
 DIFF_TIMEOUT_SECONDS = 20
 FETCH_TIMEOUT_SECONDS = 45
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
-QUALIFICATION_PATHS = {".github/workflows/ci.yml"}
+QUALIFICATION_PATHS = {
+    ".github/workflows/ci.yml",
+    "dev-tools/docker-e2e-path-filter.py",
+    "dev-tools/docker-e2e-path-filter.test.py",
+}
 
 
 def dockerignore_contract(raw: str) -> tuple[str, ...] | None:
@@ -77,7 +81,7 @@ def decide(event_name: str, event: dict, repository: str, paths: list[str] | Non
     if not paths:
         return True, "missing_or_empty_diff_fail_open"
     if any(path in QUALIFICATION_PATHS for path in paths):
-        return True, "workflow_qualification_changed"
+        return True, "qualification_source_changed"
     if any(not context_ignored(path, dockerignore) for path in paths):
         return True, "docker_context_input_changed"
     return False, "ignored_context_only"

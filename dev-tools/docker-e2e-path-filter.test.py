@@ -54,10 +54,14 @@ class DecisionMatrix(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertTrue(FILTER.decide("pull_request", EVENT, REPO, [path], IGNORE)[0])
 
-    def test_selector_and_its_control_test_are_not_docker_context_inputs(self):
+    def test_selector_and_its_control_test_require_e2e_individually_and_mixed(self):
         for path in ("dev-tools/docker-e2e-path-filter.py", "dev-tools/docker-e2e-path-filter.test.py"):
             with self.subTest(path=path):
-                self.assertFalse(FILTER.decide("pull_request", EVENT, REPO, [path], IGNORE)[0])
+                self.assertTrue(FILTER.context_ignored(path, IGNORE))
+                self.assertEqual(FILTER.decide("pull_request", EVENT, REPO, [path], IGNORE),
+                                 (True, "qualification_source_changed"))
+                self.assertTrue(FILTER.decide("pull_request", EVENT, REPO,
+                                              ["README.md", path], IGNORE)[0])
 
     def test_unknown_dockerignore_contract_fails_open(self):
         self.assertTrue(FILTER.decide("pull_request", EVENT, REPO, ["README.md"], None)[0])
