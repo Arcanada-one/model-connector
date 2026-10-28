@@ -18,6 +18,8 @@ import { buildFailoverCandidates } from './failover.candidates';
 import { runFailoverChain } from './failover.chain';
 import { FailoverAbortError } from './failover.errors';
 import { getConfig } from '../../config/env.schema';
+import { DEFAULT_CHAIN_DEADLINE_MS } from '../../config/chain-deadline';
+import { configuredHopTimeoutMs } from '../attempt-budget';
 // CONN-1665 — per-key policy candidate filtering (attribution before dispatch).
 import type { ApiKeyPolicy } from '../../policy/policy.schema';
 import type { CascadeCandidate } from '../cascade/cascade.profiles';
@@ -32,6 +34,7 @@ interface FailoverConfig {
   deepseekModel: string;
   paidEnabled: boolean;
   allowFreeDowngrade: boolean;
+  chainDeadlineMs: number;
 }
 
 @Injectable()
@@ -45,12 +48,16 @@ export class FailoverRouterService {
     let deepseekModel = 'deepseek-v4-flash';
     let paidEnabled = false;
     let allowFreeDowngrade = true;
+    let chainDeadlineMs = DEFAULT_CHAIN_DEADLINE_MS;
     try {
       const c = getConfig();
       order = c.FAILOVER_PROVIDER_ORDER ?? order;
       deepseekModel = c.FAILOVER_DEEPSEEK_MODEL ?? deepseekModel;
       paidEnabled = c.FAILOVER_PAID_ENABLED ?? paidEnabled;
       allowFreeDowngrade = c.FAILOVER_ALLOW_FREE_DOWNGRADE ?? allowFreeDowngrade;
+      if (typeof c.CHAIN_DEADLINE_MS === 'number' && Number.isFinite(c.CHAIN_DEADLINE_MS)) {
+        chainDeadlineMs = c.CHAIN_DEADLINE_MS;
+      }
     } catch {
       // Test environments where env is not fully loaded — fall back to defaults.
       order = process.env.FAILOVER_PROVIDER_ORDER || order;
@@ -64,6 +71,7 @@ export class FailoverRouterService {
       deepseekModel,
       paidEnabled,
       allowFreeDowngrade,
+      chainDeadlineMs,
     };
   }
 
@@ -146,12 +154,24 @@ export class FailoverRouterService {
 
     // maxRetries:0 — the failover chain owns retry/advance; the inner loop makes one attempt.
     const chainRequest: Omit<ConnectorRequest, 'connector'> = { ...request, maxRetries: 0 };
+    const byName = new Map(eligibleCapabilities.map((capability) => [capability.name, capability]));
 
     return runFailoverChain({
       candidates,
       execute: (connector, req, key) => this.connectorsService.execute(connector, req, key),
       request: chainRequest,
       apiKeyId,
+      deadlineMs: cfg.chainDeadlineMs,
+      // A CLI hop (gemini, codex, claude-code) can run tools and write files
+      // before a timeout. Only an API chat hop is pure generation, so only
+      // that timeout advances.
+      allowTimeoutAdvance: (candidate) => byName.get(candidate.connector)?.type === 'api',
+      hopOwnTimeoutMs: (candidate) =>
+        configuredHopTimeoutMs(
+          candidate.connector,
+          request.timeout,
+          byName.get(candidate.connector)?.maxTimeout,
+        ),
       onAttempt: (candidate, _resp, outcome) => {
         if (outcome === 'advance') {
           this.logger.warn(

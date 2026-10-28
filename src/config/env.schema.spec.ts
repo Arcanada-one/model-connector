@@ -48,6 +48,14 @@ describe('envSchema', () => {
 
   // CONN-0244 — the default free cascade must be DEEP (≥5 live free rungs across ≥2 providers)
   // and must NOT route through the paid OpenModel gateway.
+  it('defaults CHAIN_DEADLINE_MS to 180s and rejects a sub-second budget', () => {
+    expect(validateEnv(validEnv).CHAIN_DEADLINE_MS).toBe(180_000);
+    expect(validateEnv({ ...validEnv, CHAIN_DEADLINE_MS: '90000' }).CHAIN_DEADLINE_MS).toBe(90_000);
+    expect(() => validateEnv({ ...validEnv, CHAIN_DEADLINE_MS: '999' })).toThrow(
+      'Invalid environment variables',
+    );
+  });
+
   it('default CASCADE_LOW_REASONING_ORDER is a deep multi-provider free chain, no openmodel', () => {
     const order = validateEnv(validEnv).CASCADE_LOW_REASONING_ORDER;
     expect(order).not.toMatch(/openmodel:/); // openmodel gone entirely (paid)

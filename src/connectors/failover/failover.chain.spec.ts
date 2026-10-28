@@ -1,10 +1,10 @@
 // CONN-0243 — pure failover chain unit tests (mirror cascade T1/T2/T4/T5/T7).
 
 import { describe, it, expect, vi } from 'vitest';
-import { runFailoverChain } from './failover.chain';
-import { FailoverExhaustedError, FailoverAbortError } from './failover.errors';
+import { runFailoverChain, ChainHopSignals } from './failover.chain';
+import { FailoverExhaustedError, FailoverAbortError, ChainDeadlineError } from './failover.errors';
 import { CascadeCandidate } from '../cascade/cascade.profiles';
-import { ConnectorResponse } from '../interfaces/connector.interface';
+import { classifyErrorAction, ConnectorResponse } from '../interfaces/connector.interface';
 
 function success(connector: string, model: string): ConnectorResponse {
   return {
@@ -162,6 +162,145 @@ describe('runFailoverChain', () => {
     });
     expect(res.connector).toBe('groq');
     expect(execute).toHaveBeenCalledTimes(2);
+  });
+
+  it('timeout on an API hop advances to the next candidate', async () => {
+    const hanging = err('openmodel', 'deepseek-v4-flash', 'timeout', false);
+    hanging.status = 'timeout';
+    const { execute } = chainWith([hanging, success('groq', 'llama-3.3-70b-versatile')]);
+    const res = await runFailoverChain({
+      candidates: CANDIDATES,
+      execute,
+      request: { prompt: 'ping' },
+      apiKeyId: 'k1',
+    });
+    expect(res.status).toBe('success');
+    expect(res.connector).toBe('groq');
+    expect(execute).toHaveBeenCalledTimes(2);
+  });
+
+  it('caps each hop at min(its timeout, remaining chain budget)', async () => {
+    let t = 0;
+    const execute = vi.fn((_connector: string, req: { timeout?: number }) => {
+      if (execute.mock.calls.length === 1) {
+        expect(req.timeout).toBe(30_000);
+        t = 20_000;
+        const hanging = err('openmodel', 'deepseek-v4-flash', 'timeout', false);
+        hanging.status = 'timeout';
+        return Promise.resolve(hanging);
+      }
+      expect(req.timeout).toBe(10_000);
+      return Promise.resolve(success('groq', 'llama-3.3-70b-versatile'));
+    });
+    const res = await runFailoverChain({
+      candidates: CANDIDATES,
+      execute,
+      request: { prompt: 'ping', timeout: 80_000 },
+      apiKeyId: 'k1',
+      deadlineMs: 30_000,
+      now: () => t,
+    });
+    expect(res.connector).toBe('groq');
+    expect(execute).toHaveBeenCalledTimes(2);
+  });
+
+  it('deadline exhausted returns the last hop error and does not start another hop', async () => {
+    let t = 0;
+    const execute = vi.fn(() => {
+      t = 5_000;
+      const hanging = err('openmodel', 'deepseek-v4-flash', 'timeout', false);
+      hanging.status = 'timeout';
+      return Promise.resolve(hanging);
+    });
+    const error = await runFailoverChain({
+      candidates: CANDIDATES,
+      execute,
+      request: { prompt: 'ping' },
+      apiKeyId: 'k1',
+      deadlineMs: 5_000,
+      now: () => t,
+    }).catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(ChainDeadlineError);
+    expect(error).toMatchObject({
+      name: 'ChainDeadlineError',
+      type: 'chain_deadline_exceeded',
+      lastHop: {
+        connector: 'openmodel',
+        model: 'deepseek-v4-flash',
+        errorType: 'timeout',
+      },
+    });
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('a stall after the first streamed chunk does not advance', async () => {
+    const execute = vi.fn(
+      (_connector: string, _req: unknown, _key: string, hop?: ChainHopSignals) => {
+        hop?.noteChunkSent();
+        const hanging = err('openmodel', 'deepseek-v4-flash', 'timeout', false);
+        hanging.status = 'timeout';
+        return Promise.resolve(hanging);
+      },
+    );
+    await expect(
+      runFailoverChain({
+        candidates: CANDIDATES,
+        execute,
+        request: { prompt: 'ping' },
+        apiKeyId: 'k1',
+      }),
+    ).rejects.toMatchObject({
+      name: 'FailoverAbortError',
+      errorType: 'timeout',
+      connector: 'openmodel',
+    });
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('a response marked clientChunkSent does not advance', async () => {
+    const hanging = err('openmodel', 'deepseek-v4-flash', 'timeout', false);
+    hanging.status = 'timeout';
+    (hanging as { clientChunkSent?: boolean }).clientChunkSent = true;
+    const { execute } = chainWith([hanging, success('groq', 'llama-3.3-70b-versatile')]);
+    await expect(
+      runFailoverChain({
+        candidates: CANDIDATES,
+        execute,
+        request: { prompt: 'ping' },
+        apiKeyId: 'k1',
+      }),
+    ).rejects.toBeInstanceOf(FailoverAbortError);
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('a CLI hop timeout does not advance (tools may already have run)', async () => {
+    const hanging = err('gemini', 'gemini-2.5-flash', 'timeout', false);
+    hanging.status = 'timeout';
+    const execute = vi.fn(() => Promise.resolve(hanging));
+    await expect(
+      runFailoverChain({
+        candidates: [
+          { connector: 'gemini', model: 'gemini-2.5-flash', tier: 'free' },
+          { connector: 'groq', model: 'llama-3.3-70b-versatile', tier: 'free' },
+        ],
+        execute,
+        request: { prompt: 'ping' },
+        apiKeyId: 'k1',
+        allowTimeoutAdvance: () => false,
+      }),
+    ).rejects.toBeInstanceOf(FailoverAbortError);
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('direct-caller timeout classification stays abort', () => {
+    expect(classifyErrorAction('timeout')).toEqual({
+      retryable: false,
+      recommendation: 'abort',
+    });
+    expect(classifyErrorAction('queue_timeout')).toEqual({
+      retryable: true,
+      recommendation: 'wait',
+    });
   });
 
   it('empty candidate list → FailoverExhaustedError', async () => {

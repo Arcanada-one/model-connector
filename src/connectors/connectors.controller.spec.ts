@@ -6,6 +6,7 @@ import { ConnectorsService } from './connectors.service';
 import type { ImageGenerationService } from './image-generation/image-generation.service';
 import type { CascadeRouterService } from './cascade/cascade-router.service';
 import { CascadeExhaustedError, CascadeBudgetExceededError } from './cascade/cascade.errors';
+import { ChainDeadlineError } from './failover/failover.errors';
 import type { CatalogResponse } from './dto/catalog.dto';
 
 // ─── Mock env.schema to avoid DATABASE_URL requirement ───────────────────────
@@ -116,6 +117,39 @@ describe('ConnectorsController', () => {
     expect(mockService.execute).toHaveBeenCalledWith('test', { prompt: 'hi' }, 'key-1');
   });
 
+  it('direct connector timeout is returned unchanged and does not enter the cascade', async () => {
+    const timeoutResponse = {
+      id: '1',
+      connector: 'test',
+      model: 'm',
+      result: '',
+      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+      latencyMs: 5,
+      status: 'timeout' as const,
+      error: {
+        type: 'timeout',
+        message: 'timed out',
+        retryable: false,
+        recommendation: 'abort' as const,
+      },
+    };
+    mockService.execute.mockResolvedValueOnce(timeoutResponse);
+    const req = authenticatedRequest('key-1');
+    const result = await controller.executeUniversal(
+      { connector: 'test', prompt: 'hi' },
+      undefined,
+      req,
+    );
+    expect(mockCascadeService.execute).not.toHaveBeenCalled();
+    expect(mockService.execute).toHaveBeenCalledTimes(1);
+    expect(result.status).toBe('timeout');
+    expect(result.error).toMatchObject({
+      type: 'timeout',
+      retryable: false,
+      recommendation: 'abort',
+    });
+  });
+
   // ─── CONN-0223 F3 — Cascade routing via profile (plan Phase 4) ───────────────
 
   describe('profile routing (cascade dispatch)', () => {
@@ -167,6 +201,36 @@ describe('ConnectorsController', () => {
       ).rejects.toMatchObject({
         status: 503,
         response: expect.objectContaining({ error: 'cascade_exhausted' }),
+      });
+    });
+
+    it('maps ChainDeadlineError to HTTP 503 carrying the last hop', async () => {
+      vi.mocked(mockCascadeService.execute).mockRejectedValue(
+        new ChainDeadlineError(
+          [{ connector: 'groq', model: 'llama-3.3-70b-versatile', errorType: 'timeout' }],
+          {
+            connector: 'groq',
+            model: 'llama-3.3-70b-versatile',
+            errorType: 'timeout',
+            message: 'timed out',
+          },
+        ),
+      );
+      const req = authenticatedRequest('key-2');
+      await expect(
+        controller.executeUniversal(
+          { profile: 'low-reasoning', prompt: 'hi' } as Parameters<
+            typeof controller.executeUniversal
+          >[0],
+          undefined,
+          req,
+        ),
+      ).rejects.toMatchObject({
+        status: 503,
+        response: expect.objectContaining({
+          error: 'chain_deadline_exceeded',
+          lastHop: expect.objectContaining({ errorType: 'timeout', connector: 'groq' }),
+        }),
       });
     });
 

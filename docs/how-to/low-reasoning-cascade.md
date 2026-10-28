@@ -45,6 +45,7 @@ The default cascade order (`CASCADE_LOW_REASONING_ORDER`) tries candidates in or
 | `CASCADE_PAID_ENABLED` | `false` | Allow fallback to paid candidates. |
 | `CASCADE_PAID_DAILY_BUDGET_USD` | `0.17` | Daily budget cap for paid tier (USD). |
 | `CASCADE_PAID_MODEL` | `deepseek-v4-flash` | Default paid model identifier. |
+| `CHAIN_DEADLINE_MS` | `180000` | Whole-chain budget in milliseconds, shared with the failover gateway. Each hop is capped at `min(its own timeout, time left)`. |
 
 ## Error Handling
 
@@ -52,6 +53,12 @@ The default cascade order (`CASCADE_LOW_REASONING_ORDER`) tries candidates in or
 |---|---|---|
 | `cascade_exhausted` | 503 | All candidates failed or were unavailable. |
 | `budget_exceeded` | 503 | Daily paid budget reached before paid tier was attempted. |
+| `chain_deadline_exceeded` | 503 | The whole-chain deadline ran out. The body includes `lastHop`, the last provider error. |
+
+A provider `timeout` on an API hop advances to the next candidate. A `timeout` on a
+CLI hop, or a stall after the first byte has already been sent to the client, stops
+the chain. Direct `POST /execute` with `connector` is unchanged: a timeout there is
+still not retried and is not a cascade.
 
 ## Security Note
 

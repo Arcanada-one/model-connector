@@ -23,7 +23,11 @@ import {
 } from './dto/openai-chat.dto';
 import { toConnectorRequest, toOpenAiChatCompletion, toOpenAiModelList } from './openai-translate';
 import { FailoverRouterService } from '../connectors/failover/failover-router.service';
-import { FailoverExhaustedError, FailoverAbortError } from '../connectors/failover/failover.errors';
+import {
+  FailoverExhaustedError,
+  FailoverAbortError,
+  ChainDeadlineError,
+} from '../connectors/failover/failover.errors';
 import { ConnectorsService } from '../connectors/connectors.service';
 import { ConnectorResponse } from '../connectors/interfaces/connector.interface';
 
@@ -129,6 +133,14 @@ export class OpenAiCompatController {
       }
       if (err instanceof FailoverExhaustedError) {
         openAiError(err.message, 'cascade_exhausted', HttpStatus.SERVICE_UNAVAILABLE);
+      }
+      if (err instanceof ChainDeadlineError) {
+        openAiError(
+          err.message,
+          'chain_deadline_exceeded',
+          HttpStatus.SERVICE_UNAVAILABLE,
+          err.lastHop?.errorType ?? 'chain_deadline_exceeded',
+        );
       }
       throw err;
     }
