@@ -50,8 +50,15 @@ readonly NODE=/usr/bin/node
 readonly MUNERAL_HEALTH_URL='http://127.0.0.1:3500/health'
 readonly KC_SHARED_HEALTH_URL='http://127.0.0.1:8310/health'
 readonly KC_PROJECT_HEALTH_URL='http://127.0.0.1:8311/health'
-readonly KC_IMAGE_ID='sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17'
-readonly KC_IMAGE_REF='scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547'
+# KCP-0033: an explicit, reviewed pair set. OLD stays valid so an upgrade can roll back; NEW carries the
+# project write adapter (Scrutator 16a4061f). KC_IMAGE_REF/KC_IMAGE_ID are the pair selected for the
+# current operation (from the rendered Compose image, or from the running container for status).
+readonly KC_OLD_IMAGE_ID='sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17'
+readonly KC_OLD_IMAGE_REF='scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547'
+readonly KC_NEW_IMAGE_ID='sha256:ae4a4768ce83f34b3dc7c5b1620f836b8eafef86e32687b43a5c6a4eaa0c0c85'
+readonly KC_NEW_IMAGE_REF='scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c'
+KC_IMAGE_ID="$KC_NEW_IMAGE_ID"
+KC_IMAGE_REF="$KC_NEW_IMAGE_REF"
 readonly KC_CONTAINER='knowledge-contract-scrutator-scrutator-1'
 readonly KC_READINESS_TIMEOUT=90
 readonly KC_READINESS_POLL_SECONDS=2
@@ -986,7 +993,12 @@ kc_container_image() {
   local image running
   image="$("$DOCKER" inspect --format '{{.Image}}' "$KC_CONTAINER")" || return 1
   running="$("$DOCKER" inspect --format '{{.State.Running}}' "$KC_CONTAINER")" || return 1
-  [[ "$running" == true && "$image" == "$KC_IMAGE_ID" ]]
+  [[ "$running" == true ]] || return 1
+  case "$image" in
+    "$KC_OLD_IMAGE_ID") KC_IMAGE_ID="$KC_OLD_IMAGE_ID"; KC_IMAGE_REF="$KC_OLD_IMAGE_REF" ;;
+    "$KC_NEW_IMAGE_ID") KC_IMAGE_ID="$KC_NEW_IMAGE_ID"; KC_IMAGE_REF="$KC_NEW_IMAGE_REF" ;;
+    *) return 1 ;;
+  esac
 }
 
 kc_compose() {
@@ -998,6 +1010,23 @@ cmd_kc_stop() {
   kc_compose
   "$DOCKER" "${COMPOSE_ARGV[@]}" down || return 1
   printf 'KC_PROJECT_STOP_PASS project=knowledge-contract-scrutator\n'
+}
+
+kc_pair_id_for_ref() {
+  case "$1" in
+    "$KC_OLD_IMAGE_REF") printf '%s\n' "$KC_OLD_IMAGE_ID" ;;
+    "$KC_NEW_IMAGE_REF") printf '%s\n' "$KC_NEW_IMAGE_ID" ;;
+    *) return 1 ;;
+  esac
+}
+
+# Select the pair named by the rendered Compose image; refuse any image outside the reviewed set.
+kc_select_pair() {
+  local ref id
+  ref="$("$DOCKER" "${COMPOSE_ARGV[@]}" config --images)" || return 1
+  id="$(kc_pair_id_for_ref "$ref")" || return 1
+  KC_IMAGE_REF="$ref"
+  KC_IMAGE_ID="$id"
 }
 
 kc_config_contract() {
@@ -1022,7 +1051,7 @@ try:
     require(not network.get("external") and network.get("driver") in (None, "bridge"))
     require(svc.get("networks") == {"default": None})
     require(svc.get("container_name") == "knowledge-contract-scrutator-scrutator-1")
-    require(svc.get("image") == "scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547")
+    require(svc.get("image") in (sys.argv[1], sys.argv[2]))
     require(not svc.get("network_mode") and not svc.get("privileged"))
     for key in ("volumes", "volumes_from", "secrets", "configs", "devices",
                 "cap_add", "security_opt", "pid", "ipc", "build", "extends",
@@ -1042,14 +1071,16 @@ try:
     require(env["SCRUTATOR_AUTH_SERVICE_AUDIENCE"] == "urn:arcanada:scrutator:knowledge-contract")
     require(env["SCRUTATOR_AUTH_SERVICE_SCOPE"] == "kb:knowledge-contract.read")
     require(env["SCRUTATOR_FEEDER_NAMESPACES"] == "knowledge-contract")
+    # KCP-0033: the project write opt-in may name only this namespace; absent keeps it off.
+    require(env.get("SCRUTATOR_PROJECT_WRITE_NAMESPACE") in (None, "knowledge-contract"))
     dsn = urlsplit(env["SCRUTATOR_DATABASE_URL"])
     require(dsn.scheme in ("postgres", "postgresql"))
     require(dsn.username == "kc_scrutator_app" and bool(dsn.password))
     require(dsn.hostname == "100.97.136.74" and dsn.port == 5432)
     require(dsn.path == "/knowledge_contract" and not dsn.query and not dsn.fragment)
-except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+except (KeyError, TypeError, ValueError, IndexError, json.JSONDecodeError):
     sys.exit(1)
-' || die 'project Compose isolation contract failed'
+' "$KC_OLD_IMAGE_REF" "$KC_NEW_IMAGE_REF" || die 'project Compose isolation contract failed'
 }
 
 cmd_kc_status() {
@@ -1079,6 +1110,7 @@ cmd_kc_deploy() {
   "$DOCKER" "${COMPOSE_ARGV[@]}" config -q || die 'project Compose preflight failed'
   kc_config_contract
   image_ref="$("$DOCKER" "${COMPOSE_ARGV[@]}" config --images)" || die 'cannot read project image'
+  kc_select_pair || die 'project Compose image reference mismatch'
   [[ "$image_ref" == "$KC_IMAGE_REF" ]] || die 'project Compose image reference mismatch'
   image_id="$("$DOCKER" image inspect "$image_ref" --format '{{.Id}}')" || die 'project image missing'
   [[ "$image_id" == "$KC_IMAGE_ID" ]] || die 'project image digest mismatch'
@@ -1114,6 +1146,7 @@ kc_rollback_upgrade() {
     die 'project upgrade rollback checkout failed; live state unknown'
   fi
   kc_compose
+  kc_select_pair || die 'project upgrade rollback image is outside the reviewed pair set; live state unknown'
   if ! "$DOCKER" "${COMPOSE_ARGV[@]}" up -d --force-recreate --no-build --no-deps scrutator ||
     ! kc_wait_ready || ! kc_health "$KC_SHARED_HEALTH_URL"; then
     kc_capture_failure_logs || printf 'KC_PROJECT_DIAGNOSTIC_LOG_UNAVAILABLE\n' >&2
@@ -1140,10 +1173,10 @@ cmd_kc_upgrade() {
   if ! (
     "$DOCKER" "${COMPOSE_ARGV[@]}" config -q && kc_config_contract || exit 1
     image_ref="$("$DOCKER" "${COMPOSE_ARGV[@]}" config --images)" || exit 1
-    [[ "$image_ref" == "$KC_IMAGE_REF" ]] || exit 1
+    expected_id="$(kc_pair_id_for_ref "$image_ref")" || exit 1
     image_id="$("$DOCKER" image inspect "$image_ref" --format '{{.Id}}')" || exit 1
-    [[ "$image_id" == "$KC_IMAGE_ID" ]]
-  ); then
+    [[ "$image_id" == "$expected_id" ]]
+  ) || ! kc_select_pair; then
     kc_restore_checkout "$old_sha" || die 'project config failed and prior checkout could not be restored'
     die 'project upgrade config or image refused before recreation; prior project remains running'
   fi

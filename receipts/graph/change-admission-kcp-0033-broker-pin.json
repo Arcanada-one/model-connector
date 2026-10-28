@@ -1,0 +1,1640 @@
+{
+ "admission": {
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+  "verdict": "admitted_with_exemptions"
+ },
+ "captured_at_utc": "2026-10-28T03:52:53Z",
+ "change_set": {
+  "base": "fa51d9e55a1f4d2d7c4689380bb8a487a672e72e",
+  "files": [
+   {
+    "kind": "code",
+    "node_id": "code_unit:deploy/arcanada-compose-broker.sh",
+    "node_ids": [
+     "code_unit:deploy/arcanada-compose-broker.sh"
+    ],
+    "path": "deploy/arcanada-compose-broker.sh",
+    "status": "M"
+   },
+   {
+    "kind": "code",
+    "node_id": "code_unit:deploy/arcanada-compose-broker.test.sh",
+    "node_ids": [
+     "code_unit:deploy/arcanada-compose-broker.test.sh"
+    ],
+    "path": "deploy/arcanada-compose-broker.test.sh",
+    "status": "M"
+   },
+   {
+    "kind": "receipt",
+    "new": true,
+    "path": "receipts/canary/kcp0033-broker-pin/plan.json",
+    "status": "A"
+   },
+   {
+    "kind": "receipt",
+    "new": true,
+    "path": "receipts/canary/kcp0033-broker-pin/result.json",
+    "status": "A"
+   },
+   {
+    "kind": "receipt",
+    "new": true,
+    "path": "receipts/canary/kcp0033-broker-pin/source.json",
+    "status": "A"
+   },
+   {
+    "kind": "receipt",
+    "node_id": "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
+    "node_ids": [
+     "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json"
+    ],
+    "path": "receipts/graph/change-admission-kcp-0033-broker-pin.json",
+    "status": "A"
+   }
+  ],
+  "head": "d8a11358ed89c2429541b47d45f838891d99e98a",
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "exemptions": [
+  {
+   "code": "WORKFLOW_SHELL_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/ci.yml",
+   "expires_at_utc": "2026-11-04T00:00:00Z",
+   "owner": "Arcanada (KCP-0033 Model Connector compose-broker maintainer, Muneral 3312a002)",
+   "reason": "Workflow file is not changed by this PR; the bounded checker cannot resolve its shell/reusable context (checker limitation, same state on origin/main). Verifier reason: v-workflow-config-b803fcb7f17ed923: workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job doc"
+  },
+  {
+   "code": "WORKFLOW_SHELL_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
+   "expires_at_utc": "2026-11-04T00:00:00Z",
+   "owner": "Arcanada (KCP-0033 Model Connector compose-broker maintainer, Muneral 3312a002)",
+   "reason": "Workflow file is not changed by this PR; the bounded checker cannot resolve its shell/reusable context (checker limitation, same state on origin/main). Verifier reason: v-workflow-config-2fe48d1021006468: workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitn"
+  },
+  {
+   "code": "WORKFLOW_SHELL_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+   "expires_at_utc": "2026-11-04T00:00:00Z",
+   "owner": "Arcanada (KCP-0033 Model Connector compose-broker maintainer, Muneral 3312a002)",
+   "reason": "Workflow file is not changed by this PR; the bounded checker cannot resolve its shell/reusable context (checker limitation, same state on origin/main). Verifier reason: v-workflow-config-6ceb21cf301c7eb2: workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved;"
+  },
+  {
+   "code": "WORKFLOW_SHELL_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/graph-admission-call.yml",
+   "expires_at_utc": "2026-11-04T00:00:00Z",
+   "owner": "Arcanada (KCP-0033 Model Connector compose-broker maintainer, Muneral 3312a002)",
+   "reason": "Workflow file is not changed by this PR; the bounded checker cannot resolve its shell/reusable context (checker limitation, same state on origin/main). Verifier reason: v-workflow-config-60a4bd100e640545: workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation;"
+  },
+  {
+   "code": "WORKFLOW_SHELL_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/graph-admission.yml",
+   "expires_at_utc": "2026-11-04T00:00:00Z",
+   "owner": "Arcanada (KCP-0033 Model Connector compose-broker maintainer, Muneral 3312a002)",
+   "reason": "Workflow file is not changed by this PR; the bounded checker cannot resolve its shell/reusable context (checker limitation, same state on origin/main). Verifier reason: v-workflow-config-dc49cc771602c92b: workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: chec"
+  },
+  {
+   "code": "WORKFLOW_SHELL_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/public-surface.yml",
+   "expires_at_utc": "2026-11-04T00:00:00Z",
+   "owner": "Arcanada (KCP-0033 Model Connector compose-broker maintainer, Muneral 3312a002)",
+   "reason": "Workflow file is not changed by this PR; the bounded checker cannot resolve its shell/reusable context (checker limitation, same state on origin/main). Verifier reason: v-workflow-config-9de6bedb8518f82f: workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-aff"
+  },
+  {
+   "code": "WORKFLOW_SHELL_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/publish-sdks.yml",
+   "expires_at_utc": "2026-11-04T00:00:00Z",
+   "owner": "Arcanada (KCP-0033 Model Connector compose-broker maintainer, Muneral 3312a002)",
+   "reason": "Workflow file is not changed by this PR; the bounded checker cannot resolve its shell/reusable context (checker limitation, same state on origin/main). Verifier reason: v-workflow-config-506797d1671524f2: workflow shell caller closure not measured: job build-python step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job build-python step 2: line 2: unsupported interpreter script/module/stdin dispatch closure; job build-python step 5: line "
+  },
+  {
+   "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:deploy/arcanada-compose-broker.sh",
+   "expires_at_utc": "2026-11-04T00:00:00Z",
+   "owner": "Arcanada (KCP-0033 Model Connector compose-broker maintainer, Muneral 3312a002)",
+   "reason": "The static shell checker cannot resolve dynamic commands/heredoc generation in this broker script (checker limitation). Behaviour is measured separately: the committed process canary receipts/canary/kcp0033-broker-pin ran the 30-case fixture suite to exit 0 (verified for both code units), and mutants removing the namespace requirement and the rollback pair selection each fail the suite."
+  },
+  {
+   "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:deploy/arcanada-compose-broker.test.sh",
+   "expires_at_utc": "2026-11-04T00:00:00Z",
+   "owner": "Arcanada (KCP-0033 Model Connector compose-broker maintainer, Muneral 3312a002)",
+   "reason": "The static shell checker cannot resolve dynamic commands/heredoc generation in this broker script (checker limitation). Behaviour is measured separately: the committed process canary receipts/canary/kcp0033-broker-pin ran the 30-case fixture suite to exit 0 (verified for both code units), and mutants removing the namespace requirement and the rollback pair selection each fail the suite."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "deployable_unit:.",
+   "expires_at_utc": "2026-11-04T00:00:00Z",
+   "owner": "Arcanada (KCP-0033 Model Connector compose-broker maintainer, Muneral 3312a002)",
+   "reason": "Root type check needs tsc, which is not installed on this development host; hosted CI runs the type check on the same range. Verifier reason: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+  }
+ ],
+ "graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:de0c140fc0d9126aa24464e6968f73ca1a00110703ffcbfe8b53c5085ed187d3",
+  "path": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/graph-fa51d9e55a1f.json",
+  "source_commit": "fa51d9e55a1f4d2d7c4689380bb8a487a672e72e"
+ },
+ "head_graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:682d2b2e7cc98de72e0b452a7b832dc7a47a5b4077a9198190aef25dc16886f3",
+  "path": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/graph-head-d8a11358ed89.json",
+  "source_commit": "d8a11358ed89c2429541b47d45f838891d99e98a",
+  "staleness": {
+   "checked_at_utc": "2026-10-28T03:53:33Z",
+   "checked_nodes": 945,
+   "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+   "mismatched_nodes": [],
+   "verdict": "fresh"
+  }
+ },
+ "host": "development",
+ "host_redacted": true,
+ "host_sha256": "357d18b26daff512783b97607f664cdbcad7531efb0e90b8150ea10458ad11cb",
+ "impact_set": {
+  "deterministic_core": [
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "deployable_unit:.",
+    "node_type": "deployable_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:deploy/arcanada-compose-broker.sh",
+      "provenance": "deterministic",
+      "to": "deployable_unit:.",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+      "provenance": "deterministic",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-260-20260924T041416Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-260-20260924T041416Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+      "provenance": "deterministic",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json",
+      "provenance": "deterministic",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   }
+  ],
+  "edge_types": "all",
+  "global_fallback": {
+   "triggered": false
+  },
+  "inferred_tail": [
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:.github/workflows/ci.yml",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check of the caller; canary when inferred across a boundary"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/dependabot-auto-merge.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check of the caller; canary when inferred across a boundary"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check of the caller; canary when inferred across a boundary"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:.github/workflows/graph-admission-call.yml",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/graph-admission-call.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check of the caller; canary when inferred across a boundary"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:.github/workflows/graph-admission.yml",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/graph-admission.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check of the caller; canary when inferred across a boundary"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:.github/workflows/public-surface.yml",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/public-surface.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check of the caller; canary when inferred across a boundary"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:.github/workflows/publish-sdks.yml",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/publish-sdks.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check of the caller; canary when inferred across a boundary"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "document:CHANGELOG.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/publish-sdks.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:CHANGELOG.md",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/publish-sdks.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "document:SECURITY.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:SECURITY.md",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "document:deploy/stt-whisper/README.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:deploy/stt-whisper/README.md",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "document:docs/how-to/deploy-runbook.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/deploy-runbook.md",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/bench-source-ctx24/source-car.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/A2-315.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/A2-315.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-432.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-432.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-443.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-443.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-jev-decision.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0012-model-refresh.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/graph-admission-call.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:deploy/arcanada-compose-broker.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0012-model-refresh.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/graph-admission-call.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   }
+  ],
+  "max_depth": 3,
+  "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+  "total": 27
+ },
+ "notes": [
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
+  "exemptions: 10 attached from /home/dev/arcanada-inbox/contract-place/kcp0033-exemptions.json"
+ ],
+ "producer": {
+  "tool": "tools/graph/verify.py",
+  "version": "1.4.1"
+ },
+ "receipt_id": "car-verify-20261028T035253Z-d8a11358",
+ "receipt_path": "receipts/graph/change-admission-kcp-0033-broker-pin.json",
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/home/dev/orca/workspaces/arcanada/KCP-0033-broker-pin"
+ },
+ "revision_selection": {
+  "base": [
+   "code_unit:.github/workflows/ci.yml",
+   "code_unit:.github/workflows/dependabot-auto-merge.yml",
+   "code_unit:.github/workflows/deploy-stt-whisper.yml",
+   "code_unit:.github/workflows/graph-admission-call.yml",
+   "code_unit:.github/workflows/graph-admission.yml",
+   "code_unit:.github/workflows/public-surface.yml",
+   "code_unit:.github/workflows/publish-sdks.yml",
+   "code_unit:deploy/arcanada-compose-broker.sh",
+   "code_unit:deploy/arcanada-compose-broker.test.sh",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:SECURITY.md",
+   "document:deploy/stt-whisper/README.md",
+   "document:docs/how-to/deploy-runbook.md",
+   "receipt:receipts/bench-source-ctx24/source-car.json",
+   "receipt:receipts/graph/A2-315.json",
+   "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
+   "receipt:receipts/graph/change-admission-a2-260-20260924T041416Z.json",
+   "receipt:receipts/graph/change-admission-a2-432.json",
+   "receipt:receipts/graph/change-admission-a2-443.json",
+   "receipt:receipts/graph/change-admission-jev-decision.json",
+   "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+   "receipt:receipts/graph/change-admission-kcp-0012-model-refresh.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+   "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json"
+  ],
+  "head": [
+   "code_unit:.github/workflows/ci.yml",
+   "code_unit:.github/workflows/dependabot-auto-merge.yml",
+   "code_unit:.github/workflows/deploy-stt-whisper.yml",
+   "code_unit:.github/workflows/graph-admission-call.yml",
+   "code_unit:.github/workflows/graph-admission.yml",
+   "code_unit:.github/workflows/public-surface.yml",
+   "code_unit:.github/workflows/publish-sdks.yml",
+   "code_unit:deploy/arcanada-compose-broker.sh",
+   "code_unit:deploy/arcanada-compose-broker.test.sh",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:SECURITY.md",
+   "document:deploy/stt-whisper/README.md",
+   "document:docs/how-to/deploy-runbook.md",
+   "receipt:receipts/bench-source-ctx24/source-car.json",
+   "receipt:receipts/graph/A2-315.json",
+   "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
+   "receipt:receipts/graph/change-admission-a2-260-20260924T041416Z.json",
+   "receipt:receipts/graph/change-admission-a2-432.json",
+   "receipt:receipts/graph/change-admission-a2-443.json",
+   "receipt:receipts/graph/change-admission-jev-decision.json",
+   "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+   "receipt:receipts/graph/change-admission-kcp-0012-model-refresh.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+   "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
+   "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json"
+  ],
+  "schema": "RevisionImpactSelection/v1",
+  "unmeasured_head_files": []
+ },
+ "schema": "ChangeAdmissionReceipt/v1",
+ "staleness": {
+  "checked_at_utc": "2026-10-28T03:53:33Z",
+  "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+  "mismatched_nodes": [],
+  "verdict": "fresh"
+ },
+ "structural_exclusions": [
+  {
+   "content_hash": {
+    "base": "sha256:1bf9d4ab170eee11a6e10ae667a923438765d8fb168561ffbc1480555c77ad94",
+    "head": "sha256:1bf9d4ab170eee11a6e10ae667a923438765d8fb168561ffbc1480555c77ad94"
+   },
+   "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
+   "node_type": "receipt",
+   "path": "receipts/bench-source-ctx24/source-car.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:08b56ae46e35de4703776ded820f2aedf6a7d968b2619075789008e66e60ab19",
+    "head": "sha256:08b56ae46e35de4703776ded820f2aedf6a7d968b2619075789008e66e60ab19"
+   },
+   "entity": "receipt:receipts/graph/A2-315.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/A2-315.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:99aed4bdd7b9d8f3bceb8059e6b1525cadeb595f2cb20a9b4d53f0e2f003c30c",
+    "head": "sha256:99aed4bdd7b9d8f3bceb8059e6b1525cadeb595f2cb20a9b4d53f0e2f003c30c"
+   },
+   "entity": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-A2-457-preflight.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf",
+    "head": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:73f07861997f0e6ebcc76800a4792914e610045ae274efb2482e78fb91752c33",
+    "head": "sha256:73f07861997f0e6ebcc76800a4792914e610045ae274efb2482e78fb91752c33"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-227-20260923T191453Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:2dc71eda0274d595dc4e98dd269ff33f3fae175ac859252439135a6c667ba333",
+    "head": "sha256:2dc71eda0274d595dc4e98dd269ff33f3fae175ac859252439135a6c667ba333"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-260-20260924T041416Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-260-20260924T041416Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:47947b97d33ab3f837dc83a1fc71d3594e4c7df6351cd20e146d08e282ddda1e",
+    "head": "sha256:47947b97d33ab3f837dc83a1fc71d3594e4c7df6351cd20e146d08e282ddda1e"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-432.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-432.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:b8b7f231eb201c9a12810ec8f88f172ce525a0498c12bbb70b89f1f0390f0dda",
+    "head": "sha256:b8b7f231eb201c9a12810ec8f88f172ce525a0498c12bbb70b89f1f0390f0dda"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-443.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-443.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a",
+    "head": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a"
+   },
+   "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-jev-decision.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:185669a3af778225600ff194a07921b6933bbbda68f3f6796f7cb420384f8775",
+    "head": "sha256:185669a3af778225600ff194a07921b6933bbbda68f3f6796f7cb420384f8775"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0005-api-broker.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:ecd8a96dedd76efe3cbb5e0c1f3234f416e845cb3577be1157e7471a55473313",
+    "head": "sha256:ecd8a96dedd76efe3cbb5e0c1f3234f416e845cb3577be1157e7471a55473313"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:5503c3d18545f67b82ce7945dddf006d675a7b8422401f2c8b81ed411e011a32",
+    "head": "sha256:5503c3d18545f67b82ce7945dddf006d675a7b8422401f2c8b81ed411e011a32"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0012-model-refresh.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0012-model-refresh.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:a8ec9b45b8b44be625766f7b9dc5fb3108cb52894f38d93fbfba2d74312cc326",
+    "head": "sha256:a8ec9b45b8b44be625766f7b9dc5fb3108cb52894f38d93fbfba2d74312cc326"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0017-compose-broker.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:aa2053cbc62cdd20c055a7971b3e22385cc853d937ba33b3300e3785ca28bd33",
+    "head": "sha256:aa2053cbc62cdd20c055a7971b3e22385cc853d937ba33b3300e3785ca28bd33"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0017-readiness.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": null,
+    "head": "sha256:00db53db0ca721a632a8f0d4523904c75f5674432677cffdf9bd6672dd7f6979"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0033-broker-pin.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it; superseded by construction — this run re-issues the receipt at receipts/graph/change-admission-kcp-0033-broker-pin.json for work item KCP-0033",
+   "rule": "DEC-AUP-0035",
+   "superseded": {
+    "receipt_path": "receipts/graph/change-admission-kcp-0033-broker-pin.json",
+    "work_item": "KCP-0033"
+   }
+  },
+  {
+   "content_hash": {
+    "base": "sha256:bb9e96aee76d55309f4538be0bbee5ddc9a8ad35f9b23090c652f6c6a6d8fb50",
+    "head": "sha256:bb9e96aee76d55309f4538be0bbee5ddc9a8ad35f9b23090c652f6c6a6d8fb50"
+   },
+   "entity": "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json",
+   "node_type": "receipt",
+   "path": "receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  }
+ ],
+ "tree": {
+  "commit": "d8a11358ed89c2429541b47d45f838891d99e98a",
+  "dirty": false
+ },
+ "verdicts": [
+  {
+   "entity": "code_unit:.github/workflows/ci.yml",
+   "reason": "v-workflow-config-b803fcb7f17ed923: workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 2: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 7: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: command/process substitution closure i",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-workflow-config-b803fcb7f17ed923"
+   ]
+  },
+  {
+   "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
+   "reason": "v-workflow-config-2fe48d1021006468: workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-workflow-config-2fe48d1021006468"
+   ]
+  },
+  {
+   "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+   "reason": "v-workflow-config-6ceb21cf301c7eb2: workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; ",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-workflow-config-6ceb21cf301c7eb2"
+   ]
+  },
+  {
+   "entity": "code_unit:.github/workflows/graph-admission-call.yml",
+   "reason": "v-workflow-config-60a4bd100e640545: workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-workflow-config-60a4bd100e640545"
+   ]
+  },
+  {
+   "entity": "code_unit:.github/workflows/graph-admission.yml",
+   "reason": "v-workflow-config-dc49cc771602c92b: workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 13: checkout root or source-affecting workflow environment unresolved; job graph-admission step 14: checkout root or source-affecti",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-workflow-config-dc49cc771602c92b"
+   ]
+  },
+  {
+   "entity": "code_unit:.github/workflows/public-surface.yml",
+   "reason": "v-workflow-config-9de6bedb8518f82f: workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; wo",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-workflow-config-9de6bedb8518f82f"
+   ]
+  },
+  {
+   "entity": "code_unit:.github/workflows/publish-sdks.yml",
+   "reason": "v-workflow-config-506797d1671524f2: workflow shell caller closure not measured: job build-python step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job build-python step 2: line 2: unsupported interpreter script/module/stdin dispatch closure; job build-python step 5: line 1: unsupported interpreter script/module/stdin dispatch closure; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavail",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-workflow-config-506797d1671524f2"
+   ]
+  },
+  {
+   "entity": "code_unit:deploy/arcanada-compose-broker.sh",
+   "reason": "v-shell-syntax-8674c66d1f266ea7: shell syntax/closure: not_measured; v-shell-behavior-8674c66d1f266ea7: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 1011: dynamic command/alias/eval; line 1017: dynamic command/alias/eval; line 1018: dynamic command/alias/eval; line 1026: dynamic load/substitution; line 1027: dynamic load/substitution; line 1035: multiline/opaque shell statement; line 1091: multiline/opaque shell statement; line 1092: dynamic command/alias/eval; line 1098: dynamic load/substitution; line 1100: dynamic command/alias/eval; line 1103: multiline/opaque shell statement; line 1104: multi",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-shell-behavior-8674c66d1f266ea7",
+    "v-shell-syntax-8674c66d1f266ea7"
+   ]
+  },
+  {
+   "entity": "code_unit:deploy/arcanada-compose-broker.test.sh",
+   "reason": "v-shell-syntax-91f3f58fb7ca6124: shell syntax/closure: not_measured; v-shell-behavior-91f3f58fb7ca6124: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 1006: heredoc data/generation closure not measured; line 1015: heredoc data/generation closure not measured; line 1027: heredoc data/generation closure not measured; line 1036: heredoc data/generation closure not measured; line 1047: dynamic load/substitution; line 1048: dynamic command/alias/eval; line 1048: dynamic load/substitution; line 1056: dynamic load/substitution; line 1064: dynamic load/substitution; line 1075: dynamic command/alias/eval; li",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-shell-behavior-91f3f58fb7ca6124",
+    "v-shell-syntax-91f3f58fb7ca6124"
+   ]
+  },
+  {
+   "entity": "deployable_unit:.",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "document:CHANGELOG.md",
+   "reason": "v-doc-reference: 26 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:SECURITY.md",
+   "reason": "v-doc-reference: 0 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:deploy/stt-whisper/README.md",
+   "reason": "v-doc-reference: 0 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:docs/how-to/deploy-runbook.md",
+   "reason": "v-doc-reference: 0 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  }
+ ],
+ "verifier_selection": {
+  "applied": {},
+  "not_applied": [],
+  "requested": [],
+  "schema": "VerifierSelection/v1"
+ },
+ "verifiers": [
+  {
+   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0033-broker-pin/.arcana/tsconfig.mjs.json (tsc not found)",
+   "duration_s": 0.0,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "not_measured"
+   },
+   "exit_code": 127,
+   "id": "v-type-check-tsconfig-mjs",
+   "kind": "type_check",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "not_measured: tsc unavailable"
+  },
+  {
+   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0033-broker-pin/tsconfig.build.json (tsc not found)",
+   "duration_s": 0.0,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "not_measured"
+   },
+   "exit_code": 127,
+   "id": "v-type-check-tsconfig-build",
+   "kind": "type_check",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "not_measured: tsc unavailable"
+  },
+  {
+   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0033-broker-pin/tsconfig.ci.json (tsc not found)",
+   "duration_s": 0.0,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "not_measured"
+   },
+   "exit_code": 127,
+   "id": "v-type-check-tsconfig-ci",
+   "kind": "type_check",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "not_measured: tsc unavailable"
+  },
+  {
+   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0033-broker-pin/tsconfig.json (tsc not found)",
+   "duration_s": 0.0,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "not_measured"
+   },
+   "exit_code": 127,
+   "id": "v-type-check-tsconfig",
+   "kind": "type_check",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "not_measured: tsc unavailable"
+  },
+  {
+   "command": "tsc -p /home/dev/orca/workspaces/arcanada/KCP-0033-broker-pin/tsconfig.test.json (tsc not found)",
+   "duration_s": 0.0,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "not_measured"
+   },
+   "exit_code": 127,
+   "id": "v-type-check-tsconfig-test",
+   "kind": "type_check",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "not_measured: tsc unavailable"
+  },
+  {
+   "command": "workflow_config.validate exact head bytes",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:.github/workflows/ci.yml"
+   ],
+   "entity_verdicts": {
+    "code_unit:.github/workflows/ci.yml": "not_measured"
+   },
+   "exit_code": 1,
+   "id": "v-workflow-config-b803fcb7f17ed923",
+   "kind": "config_schema",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 2: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 7: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 12: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 13: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 14: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 14: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 1: command/process substitution closure is unresolved; job lint-and-test step 2: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 2: line 9: unsupported loader/interpreter options; job lint-and-test step 3: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 3: line 1: relative execution cwd is not declared; job lint-and-test step 4: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 4: line 1: unsupported loader/interpreter options; job lint-and-test step 4: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 5: line 1: unsupported loader/interpreter options; job lint-and-test step 5: line 2: relative execution cwd is not declared; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 13: unsupported loader/interpreter options; job lint-and-test step 6: line 14: relative execution cwd is not declared; job lint-and-test step 6: line 15: unsupported loader/interpreter options; job lint-and-test step 6: line 16: relative execution cwd is not declared; job lint-and-test step 6: line 1: unsupported loader/interpreter options; job lint-and-test step 6: line 2: unsupported loader/interpreter options; job lint-and-test step 6: line 3: relative execution cwd is not declared; job lint-and-test step 6: line 4: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 5: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 6: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 7: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: heredoc/group/function/brace expansion closure is unresolved; 44 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
+  },
+  {
+   "command": "workflow_config.validate exact head bytes",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:.github/workflows/dependabot-auto-merge.yml"
+   ],
+   "entity_verdicts": {
+    "code_unit:.github/workflows/dependabot-auto-merge.yml": "not_measured"
+   },
+   "exit_code": 1,
+   "id": "v-workflow-config-2fe48d1021006468",
+   "kind": "config_schema",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-workflow-config-2fe48d1021006468.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
+  },
+  {
+   "command": "workflow_config.validate exact head bytes",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:.github/workflows/deploy-stt-whisper.yml"
+   ],
+   "entity_verdicts": {
+    "code_unit:.github/workflows/deploy-stt-whisper.yml": "not_measured"
+   },
+   "exit_code": 1,
+   "id": "v-workflow-config-6ceb21cf301c7eb2",
+   "kind": "config_schema",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; job deploy step 7: command/process substitution closure is unresolved; job deploy step 8: checkout root or source-affecting workflow environment unresolved; job deploy step 8: command/process substitution closure is unresolved; job deploy step 9: checkout root or source-affecting workflow environment unresolved; job deploy step 9: line 1: wrapper execution scope/options unresolved; job network-exposure-lint: reusable/opaque shell context; 13 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
+  },
+  {
+   "command": "workflow_config.validate exact head bytes",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:.github/workflows/graph-admission-call.yml"
+   ],
+   "entity_verdicts": {
+    "code_unit:.github/workflows/graph-admission-call.yml": "not_measured"
+   },
+   "exit_code": 1,
+   "id": "v-workflow-config-60a4bd100e640545",
+   "kind": "config_schema",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-workflow-config-60a4bd100e640545.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
+  },
+  {
+   "command": "workflow_config.validate exact head bytes",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:.github/workflows/graph-admission.yml"
+   ],
+   "entity_verdicts": {
+    "code_unit:.github/workflows/graph-admission.yml": "not_measured"
+   },
+   "exit_code": 1,
+   "id": "v-workflow-config-dc49cc771602c92b",
+   "kind": "config_schema",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-workflow-config-dc49cc771602c92b.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 13: checkout root or source-affecting workflow environment unresolved; job graph-admission step 14: checkout root or source-affecting workflow environment unresolved; job graph-admission step 15: checkout root or source-affecting workflow environment unresolved; job graph-admission step 15: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 16: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 17: checkout root or source-affecting workflow environment unresolved; job graph-admission step 17: command/process substitution closure is unresolved; job graph-admission step 18: checkout root or source-affecting workflow environment unresolved; job graph-admission step 18: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 19: checkout root or source-affecting workflow environment unresolved; job graph-admission step 19: line 11: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 1: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 20: checkout root or source-affecting workflow environment unresolved; job graph-admission step 20: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 21: checkout root or source-affecting workflow environment unresolved; job graph-admission step 21: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 22: local action/checkout path scope unresolved; job graph-admission step 23: checkout root or source-affecting workflow environment unresolved; job graph-admission step 3: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 4: command/process substitution closure is unresolved; job graph-admission step 8: checkout root or source-affecting workflow environment unresolved; job graph-admission step 8: command/process substitution closure is unresolved; job graph-admission step 9: checkout root or source-affecting workflow environment unresolved; job graph-admission step 9: command/process substitution closure is unresolved; 29 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
+  },
+  {
+   "command": "workflow_config.validate exact head bytes",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:.github/workflows/public-surface.yml"
+   ],
+   "entity_verdicts": {
+    "code_unit:.github/workflows/public-surface.yml": "not_measured"
+   },
+   "exit_code": 1,
+   "id": "v-workflow-config-9de6bedb8518f82f",
+   "kind": "config_schema",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-workflow-config-9de6bedb8518f82f.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
+  },
+  {
+   "command": "workflow_config.validate exact head bytes",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:.github/workflows/publish-sdks.yml"
+   ],
+   "entity_verdicts": {
+    "code_unit:.github/workflows/publish-sdks.yml": "not_measured"
+   },
+   "exit_code": 1,
+   "id": "v-workflow-config-506797d1671524f2",
+   "kind": "config_schema",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-workflow-config-506797d1671524f2.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "workflow shell caller closure not measured: job build-python step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job build-python step 2: line 2: unsupported interpreter script/module/stdin dispatch closure; job build-python step 5: line 1: unsupported interpreter script/module/stdin dispatch closure; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
+  },
+  {
+   "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+   "duration_s": 0.24,
+   "entities": [
+    "code_unit:.github/workflows/ci.yml",
+    "code_unit:.github/workflows/dependabot-auto-merge.yml",
+    "code_unit:.github/workflows/deploy-stt-whisper.yml",
+    "code_unit:.github/workflows/graph-admission-call.yml",
+    "code_unit:.github/workflows/graph-admission.yml",
+    "code_unit:.github/workflows/public-surface.yml",
+    "code_unit:.github/workflows/publish-sdks.yml",
+    "code_unit:deploy/arcanada-compose-broker.sh",
+    "code_unit:deploy/arcanada-compose-broker.test.sh",
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "code_unit:.github/workflows/ci.yml": "not_measured",
+    "code_unit:.github/workflows/dependabot-auto-merge.yml": "not_measured",
+    "code_unit:.github/workflows/deploy-stt-whisper.yml": "not_measured",
+    "code_unit:.github/workflows/graph-admission-call.yml": "not_measured",
+    "code_unit:.github/workflows/graph-admission.yml": "not_measured",
+    "code_unit:.github/workflows/public-surface.yml": "not_measured",
+    "code_unit:.github/workflows/publish-sdks.yml": "not_measured",
+    "code_unit:deploy/arcanada-compose-broker.sh": "verified",
+    "code_unit:deploy/arcanada-compose-broker.test.sh": "verified",
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-fitness",
+   "kind": "fitness_rules",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+  },
+  {
+   "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+   "duration_s": 0.0,
+   "entities": [
+    "document:CHANGELOG.md",
+    "document:SECURITY.md",
+    "document:deploy/stt-whisper/README.md",
+    "document:docs/how-to/deploy-runbook.md"
+   ],
+   "entity_verdicts": {
+    "document:CHANGELOG.md": "verified",
+    "document:SECURITY.md": "verified",
+    "document:deploy/stt-whisper/README.md": "verified",
+    "document:docs/how-to/deploy-runbook.md": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-doc-reference",
+   "kind": "doc_reference",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-10-28T03:53:43Z",
+   "summary": "4 document(s), 0 failed"
+  },
+  {
+   "command": "bash -n + pinned ShellCheck on syntax projection; no caller/Bats execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:deploy/arcanada-compose-broker.sh"
+   ],
+   "entity_verdicts": {
+    "code_unit:deploy/arcanada-compose-broker.sh": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-syntax-8674c66d1f266ea7",
+   "kind": "shell_syntax",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-shell-syntax-8674c66d1f266ea7.txt",
+   "scope": "shell_source_validation",
+   "started_at_utc": "2026-10-28T03:53:46Z",
+   "summary": "shell syntax/closure: not_measured"
+  },
+  {
+   "command": "bash -n + pinned ShellCheck on syntax projection; no caller/Bats execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:deploy/arcanada-compose-broker.test.sh"
+   ],
+   "entity_verdicts": {
+    "code_unit:deploy/arcanada-compose-broker.test.sh": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-syntax-91f3f58fb7ca6124",
+   "kind": "shell_syntax",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-shell-syntax-91f3f58fb7ca6124.txt",
+   "scope": "shell_source_validation",
+   "started_at_utc": "2026-10-28T03:53:49Z",
+   "summary": "shell syntax/closure: not_measured"
+  },
+  {
+   "command": "consume source-bound native process fixture; no local execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:deploy/arcanada-compose-broker.sh"
+   ],
+   "entity_verdicts": {
+    "code_unit:deploy/arcanada-compose-broker.sh": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-behavior-8674c66d1f266ea7",
+   "kind": "shell_behavior",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-shell-behavior-8674c66d1f266ea7.txt",
+   "scope": "shell_fixture_behavior",
+   "started_at_utc": "2026-10-28T03:53:49Z",
+   "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 1011: dynamic command/alias/eval; line 1017: dynamic command/alias/eval; line 1018: dynamic command/alias/eval; line 1026: dynamic load/substitution; line 1027: dynamic load/substitution; line 1035: multiline/opaque shell statement; line 1091: multiline/opaque shell statement; line 1092: dynamic command/alias/eval; line 1098: dynamic load/substitution; line 1100: dynamic command/alias/eval; line 1103: multiline/opaque shell statement; line 1104: multiline/opaque shell statement; line 1110: dynamic command/alias/eval; line 1112: dynamic load/substitution; line 1115: dynamic load/substitution; line 1117: dynamic command/alias/eval; line 1128: multiline/opaque shell statement; line 1129: dynamic command/alias/eval; line 1136: dynamic command/alias/eval; line 1137: dynamic command/alias/eval; line 1139: dynamic load/substitution; line 1150: dynamic command/alias/eval; line 1161: dynamic load/substitution; line 1163: dynamic load/substitution; line 1174: dynamic command/alias/eval; line 1175: dynamic load/substitution; line 1176: dynamic load/substitution; line 1177: dynamic load/substitution; line 1183: dynamic command/alias/eval; line 1189: multiline/opaque shell statement; line 1190: dynamic command/alias/eval; line 1198: dynamic load/substitution; line 1202: dynamic load/substitution; line 1204: dynamic load/substitution; line 1219: dynamic command/alias/eval; line 1219: dynamic load/substitution; line 1219: wrapper options/child command unresolved; line 1220: dynamic load/substitution; line 1222: dynamic command/alias/eval; line 1222: dynamic load/substitution; line 1222: wrapper options/child command unresolved; line 1223: dynamic load/substitution; line 1238: dynamic command/alias/eval; line 1241: dynamic command/alias/eval; line 1241: dynamic load/substitution; line 1241: wrapper options/child command unresolved; line 1242: dynamic load/substitution; line 1244: wrapper options/child command unresolved; line 1245: dynamic load/substitution; line 1246: dynamic load/substitution; line 1247: dynamic command/alias/eval; line 1250: dynamic command/alias/eval; line 1254: dynamic load/substitution; line 374: dynamic command/alias/eval; line 379: dynamic command/alias/eval; line 383: dynamic command/alias/eval; line 401: wrapper options/child command unresolved; line 431: dynamic load/substitution; line 439: wrapper options/child command unresolved; line 440: dynamic load/substitution; line 459: dynamic load/substitution; line 469: dynamic command/alias/eval; line 485: dynamic load/substitution; line 486: dynamic command/alias/eval; line 487: dynamic command/alias/eval; line 489: dynamic command/alias/eval; line 492: dynamic load/substitution; line 502: dynamic command/alias/eval; line 502: dynamic load/substitution; line 503: dynamic load/substitution; line 504: dynamic load/substitution; line 504: wrapper options/child command unresolved; line 507: dynamic load/substitution; line 511: dynamic command/alias/eval; line 513: dynamic load/substitution; line 547: dynamic command/alias/eval; line 550: dynamic command/alias/eval; line 551: dynamic command/alias/eval; line 552: dynamic command/alias/eval; line 554: dynamic command/alias/eval; line 557: dynamic command/alias/eval; line 559: dynamic load/substitution; line 561: dynamic load/substitution; line 564: dynamic command/alias/eval; line 571: dynamic command/alias/eval; line 573: dynamic command/alias/eval; line 574: dynamic command/alias/eval; line 577: dynamic command/alias/eval; line 579: dynamic command/alias/eval; line 592: directory transition has unresolved execution cwd; line 593: dynamic command/alias/eval; line 596: dynamic load/substitution; line 598: dynamic command/alias/eval; line 602: multiline/opaque shell statement; line 603: wrapper options/child command unresolved; line 616: dynamic load/substitution; line 618: dynamic command/alias/eval; line 622: dynamic command/alias/eval; line 635: dynamic command/alias/eval; line 643: multiline/opaque shell statement; line 644: multiline/opaque shell statement; line 660: dynamic command/alias/eval; line 676: dynamic command/alias/eval; line 680: multiline/opaque shell statement; line 681: dynamic command/alias/eval; line 684: dynamic command/alias/eval; line 685: dynamic command/alias/eval; line 697: dynamic command/alias/eval; line 706: dynamic command/alias/eval; line 718: dynamic command/alias/eval; line 726: wrapper options/child command unresolved; line 747: wrapper options/child command unresolved; line 748: dynamic command/alias/eval; line 748: dynamic load/substitution; line 750: directory transition has unresolved execution cwd; line 751: multiline/opaque shell statement; line 752: multiline/opaque shell statement; line 753: multiline/opaque shell statement; line 754: multiline/opaque shell statement; line 755: multiline/opaque shell statement; line 756: dynamic load/substitution; line 766: wrapper options/child command unresolved; line 773: dynamic command/alias/eval; line 779: dynamic command/alias/eval; line 781: multiline/opaque shell statement; line 782: dynamic command/alias/eval; line 785: dynamic command/alias/eval; line 787: dynamic command/alias/eval; line 790: dynamic command/alias/eval; line 795: wrapper options/child command unresolved; line 796: directory transition has unresolved execution cwd; line 797: multiline/opaque shell statement; line 798: multiline/opaque shell statement; line 799: dynamic load/substitution; line 808: dynamic command/alias/eval; line 812: dynamic command/alias/eval; line 851: dynamic command/alias/eval; line 855: dynamic command/alias/eval; line 857: dynamic command/alias/eval; line 865: dynamic command/alias/eval; line 875: wrapper options/child command unresolved; line 877: directory transition has unresolved execution cwd; line 885: wrapper options/child command unresolved; line 889: dynamic load/substitution; line 897: wrapper options/child command unresolved; line 901: dynamic command/alias/eval; line 908: wrapper options/child command unresolved; line 910: dynamic command/alias/eval; line 918: dynamic command/alias/eval; line 929: wrapper options/child command unresolved; line 933: directory transition has unresolved execution cwd; line 936: dynamic load/substitution; line 938: dynamic command/alias/eval; line 947: multiline/opaque shell statement; line 948: multiline/opaque shell statement; line 954: dynamic load/substitution; line 957: dynamic command/alias/eval; line 972: dynamic load/substitution; line 973: dynamic load/substitution; line 977: multiline/opaque shell statement; line 994: dynamic load/substitution; line 995: dynamic load/substitution; line 998: dynamic command/alias/eval; line 999: dynamic command/alias/eval"
+  },
+  {
+   "command": "consume source-bound native process fixture; no local execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:deploy/arcanada-compose-broker.test.sh"
+   ],
+   "entity_verdicts": {
+    "code_unit:deploy/arcanada-compose-broker.test.sh": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-behavior-91f3f58fb7ca6124",
+   "kind": "shell_behavior",
+   "output_ref": "/home/dev/arcanada-inbox/contract-place/kcp0033-work2/verifier-out/v-shell-behavior-91f3f58fb7ca6124.txt",
+   "scope": "shell_fixture_behavior",
+   "started_at_utc": "2026-10-28T03:53:49Z",
+   "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 1006: heredoc data/generation closure not measured; line 1015: heredoc data/generation closure not measured; line 1027: heredoc data/generation closure not measured; line 1036: heredoc data/generation closure not measured; line 1047: dynamic load/substitution; line 1048: dynamic command/alias/eval; line 1048: dynamic load/substitution; line 1056: dynamic load/substitution; line 1064: dynamic load/substitution; line 1075: dynamic command/alias/eval; line 1085: dynamic command/alias/eval; line 1090: dynamic load/substitution; line 1104: dynamic load/substitution; line 1127: heredoc data/generation closure not measured; line 1141: dynamic command/alias/eval; line 129: multiline/opaque shell statement; line 131: multiline/opaque shell statement; line 133: multiline/opaque shell statement; line 134: dynamic command/alias/eval; line 135: multiline/opaque shell statement; line 136: dynamic command/alias/eval; line 140: multiline/opaque shell statement; line 146: multiline/opaque shell statement; line 148: multiline/opaque shell statement; line 149: dynamic command/alias/eval; line 167: multiline/opaque shell statement; line 186: heredoc data/generation closure not measured; line 22: multiline/opaque shell statement; line 24: dynamic load/substitution; line 31: heredoc data/generation closure not measured; line 324: heredoc data/generation closure not measured; line 351: multiline/opaque shell statement; line 352: multiline/opaque shell statement; line 353: multiline/opaque shell statement; line 354: dynamic command/alias/eval; line 365: multiline/opaque shell statement; line 366: dynamic command/alias/eval; line 380: multiline/opaque shell statement; line 381: dynamic command/alias/eval; line 386: multiline/opaque shell statement; line 387: dynamic command/alias/eval; line 403: multiline/opaque shell statement; line 404: dynamic command/alias/eval; line 414: multiline/opaque shell statement; line 415: dynamic command/alias/eval; line 420: multiline/opaque shell statement; line 421: dynamic command/alias/eval; line 42: multiline/opaque shell statement; line 431: dynamic load/substitution; line 433: dynamic command/alias/eval; line 433: dynamic load/substitution; line 435: dynamic command/alias/eval; line 435: wrapper options/child command unresolved; line 437: multiline/opaque shell statement; line 43: multiline/opaque shell statement; line 442: multiline/opaque shell statement; line 446: dynamic load/substitution; line 44: multiline/opaque shell statement; line 451: multiline/opaque shell statement; line 45: multiline/opaque shell statement; line 460: multiline/opaque shell statement; line 467: multiline/opaque shell statement; line 468: dynamic command/alias/eval; line 46: multiline/opaque shell statement; line 472: multiline/opaque shell statement; line 473: dynamic command/alias/eval; line 474: multiline/opaque shell statement; line 475: dynamic command/alias/eval; line 47: dynamic command/alias/eval; line 482: multiline/opaque shell statement; line 486: multiline/opaque shell statement; line 487: dynamic command/alias/eval; line 48: dynamic command/alias/eval; line 495: multiline/opaque shell statement; line 497: multiline/opaque shell statement; line 498: dynamic command/alias/eval; line 49: dynamic command/alias/eval; line 4: directory transition has unresolved execution cwd; line 500: dynamic load/substitution; line 508: dynamic load/substitution; line 50: dynamic command/alias/eval; line 511: multiline/opaque shell statement; line 512: dynamic command/alias/eval; line 51: multiline/opaque shell statement; line 520: multiline/opaque shell statement; line 527: multiline/opaque shell statement; line 528: dynamic command/alias/eval; line 52: dynamic command/alias/eval; line 548: multiline/opaque shell statement; line 563: dynamic command/alias/eval; line 577: multiline/opaque shell statement; line 578: dynamic command/alias/eval; line 57: dynamic command/alias/eval; line 582: multiline/opaque shell statement; line 583: dynamic command/alias/eval; line 599: heredoc data/generation closure not measured; line 609: multiline/opaque shell statement; line 610: dynamic command/alias/eval; line 611: multiline/opaque shell statement; line 612: dynamic command/alias/eval; line 624: dynamic command/alias/eval; line 639: heredoc data/generation closure not measured; line 655: multiline/opaque shell statement; line 656: dynamic command/alias/eval; line 668: multiline/opaque shell statement; line 676: multiline/opaque shell statement; line 682: multiline/opaque shell statement; line 683: dynamic command/alias/eval; line 689: multiline/opaque shell statement; line 692: multiline/opaque shell statement; line 700: multiline/opaque shell statement; line 702: multiline/opaque shell statement; line 706: multiline/opaque shell statement; line 716: heredoc data/generation closure not measured; line 71: dynamic command/alias/eval; line 724: multiline/opaque shell statement; line 726: multiline/opaque shell statement; line 728: multiline/opaque shell statement; line 730: multiline/opaque shell statement; line 732: multiline/opaque shell statement; line 733: dynamic command/alias/eval; line 768: dynamic load/substitution; line 779: dynamic command/alias/eval; line 782: dynamic load/substitution; line 787: dynamic load/substitution; line 796: dynamic load/substitution; line 800: dynamic load/substitution; line 809: dynamic load/substitution; line 826: heredoc data/generation closure not measured; line 847: dynamic command/alias/eval; line 853: dynamic load/substitution; line 854: dynamic load/substitution; line 866: dynamic command/alias/eval; line 881: dynamic load/substitution; line 883: dynamic load/substitution; line 884: dynamic load/substitution; line 886: dynamic load/substitution; line 893: multiline/opaque shell statement; line 894: dynamic command/alias/eval; line 899: multiline/opaque shell statement; line 904: multiline/opaque shell statement; line 905: dynamic command/alias/eval; line 926: multiline/opaque shell statement; line 927: multiline/opaque shell statement; line 928: multiline/opaque shell statement; line 929: wrapper options/child command unresolved; line 930: multiline/opaque shell statement; line 931: multiline/opaque shell statement; line 932: multiline/opaque shell statement; line 933: multiline/opaque shell statement; line 934: multiline/opaque shell statement; line 935: wrapper options/child command unresolved; line 940: heredoc data/generation closure not measured; line 944: dynamic command/alias/eval; line 957: dynamic command/alias/eval; line 963: dynamic load/substitution; line 964: dynamic command/alias/eval; line 972: dynamic load/substitution; line 973: dynamic command/alias/eval; line 982: heredoc data/generation closure not measured; line 995: heredoc data/generation closure not measured"
+  }
+ ],
+ "verify": {
+  "events": [
+   {
+    "code": "SUPERSEDED_SELF_EXCLUSION",
+    "entity": "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
+    "rule": "DEC-AUP-0035",
+    "text": "the receipt at receipts/graph/change-admission-kcp-0033-broker-pin.json is the previous version of the one this run is writing, for the same work item KCP-0033 — superseded by construction, so it owes this change no verdict"
+   },
+   {
+    "code": "STRUCTURAL_EXCLUSION",
+    "rule": "DEC-AUP-0034",
+    "text": "16 affected entity(ies) owe no verdict (receipt: 16): unchanged at both revisions and given no verifier by the matrix"
+   }
+  ],
+  "required_by_entity": {
+   "code_unit:.github/workflows/ci.yml": [
+    "config_schema",
+    "fitness_rules"
+   ],
+   "code_unit:.github/workflows/dependabot-auto-merge.yml": [
+    "config_schema",
+    "fitness_rules"
+   ],
+   "code_unit:.github/workflows/deploy-stt-whisper.yml": [
+    "config_schema",
+    "fitness_rules"
+   ],
+   "code_unit:.github/workflows/graph-admission-call.yml": [
+    "config_schema",
+    "fitness_rules"
+   ],
+   "code_unit:.github/workflows/graph-admission.yml": [
+    "config_schema",
+    "fitness_rules"
+   ],
+   "code_unit:.github/workflows/public-surface.yml": [
+    "config_schema",
+    "fitness_rules"
+   ],
+   "code_unit:.github/workflows/publish-sdks.yml": [
+    "config_schema",
+    "fitness_rules"
+   ],
+   "code_unit:deploy/arcanada-compose-broker.sh": [
+    "fitness_rules",
+    "shell_behavior",
+    "shell_syntax"
+   ],
+   "code_unit:deploy/arcanada-compose-broker.test.sh": [
+    "fitness_rules",
+    "shell_behavior",
+    "shell_syntax"
+   ],
+   "deployable_unit:.": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "document:CHANGELOG.md": [
+    "doc_reference"
+   ],
+   "document:SECURITY.md": [
+    "doc_reference"
+   ],
+   "document:deploy/stt-whisper/README.md": [
+    "doc_reference"
+   ],
+   "document:docs/how-to/deploy-runbook.md": [
+    "doc_reference"
+   ],
+   "receipt:receipts/bench-source-ctx24/source-car.json": [],
+   "receipt:receipts/graph/A2-315.json": [],
+   "receipt:receipts/graph/change-admission-A2-457-preflight.json": [],
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-260-20260924T041416Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-432.json": [],
+   "receipt:receipts/graph/change-admission-a2-443.json": [],
+   "receipt:receipts/graph/change-admission-jev-decision.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0012-model-refresh.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0017-readiness.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json": [],
+   "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
+  },
+  "seconds": {
+   "prepare": 4.5,
+   "total": 56.15,
+   "verifiers": 0.24
+  }
+ },
+ "work_item": "KCP-0033"
+}
