@@ -1,0 +1,37 @@
+{
+  "schema": "CanaryPlan/v2",
+  "id": "kcp0033-broker-pin-b0acd10f",
+  "owner": "KCP-0033 / Model Connector compose-broker maintainer",
+  "producer_repository": "/home/dev/orca/workspaces/arcanada/KCP-0033-canary-run",
+  "environment": "Arcana DEVS isolated Model Connector source",
+  "read_only": true,
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "b0acd10ffe83487f48e8b18797ff97d68e9d637f",
+    "tree": "08da8370dfce21f810f741b28f1b3e9dc3870463",
+    "evidence": {"path": "source.json", "sha256": "4386acb468cee3a7931d2f9f825c0cf8cc5b2e4cb9304cd24dfc426cbf2c460e", "source_field": "commit"}
+  },
+  "probes": [
+    {
+      "id": "compose-broker-fixture-suite",
+      "kind": "process",
+      "argv": ["/usr/bin/bash", "deploy/arcanada-compose-broker.test.sh"],
+      "cwd": ".",
+      "entities": [
+        "code_unit:deploy/arcanada-compose-broker.sh",
+        "code_unit:deploy/arcanada-compose-broker.test.sh"
+      ],
+      "mutating": false,
+      "timeout_seconds": 120,
+      "capture_limit_bytes": 65536,
+      "executable_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+      "execution_files": [
+        {"path": "/home/dev/orca/workspaces/arcanada/KCP-0033-canary-run/deploy/arcanada-compose-broker.test.sh", "sha256": "370638e66a2c413b84f061f58f1c5bd3b1fa7ea624c3f79a4c21e7cb4d19903c", "attribution": {"kind": "product_source"}},
+        {"path": "/home/dev/orca/workspaces/arcanada/KCP-0033-canary-run/deploy/arcanada-compose-broker.sh", "sha256": "f49c19a065b20d08ca97fe9ba21895e5fec47c1ce53a2a46dc20f8c578e01170", "attribution": {"kind": "product_source"}},
+        {"path": "/usr/bin/bash", "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1", "attribution": {"kind": "system_executable", "source_id": "/usr/bin/bash", "version": "sha256:bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1"}}
+      ],
+      "env_keys": [],
+      "expect": {"exit_codes": [0], "stdout_contains": ["PASS: kc_new_image_pair_accepted", "PASS: kc_upgrade_failure_rolls_back_to_old_pair", "PASS: kc_write_namespace_other_than_knowledge_contract_refused"]}
+    }
+  ]
+}
