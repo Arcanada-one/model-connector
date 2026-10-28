@@ -5,6 +5,7 @@ The profile's explicit full_test remains the declaration; evidence never declare
 """
 import argparse
 import hashlib
+import importlib.util
 import io
 import json
 import os
@@ -19,7 +20,16 @@ from pathlib import Path
 from pathlib import PurePosixPath
 from urllib.parse import quote
 
-import canary_evidence
+# The hosted root-typecheck collector runs this file with `python3 -I`; isolated
+# mode excludes the script directory from sys.path. Load the sibling from the
+# already authenticated graph bundle by exact path, without restoring cwd or
+# ambient Python import paths.
+_canary_path = Path(__file__).resolve().with_name("canary_evidence.py")
+_canary_spec = importlib.util.spec_from_file_location("_graph_canary_evidence", _canary_path)
+if _canary_spec is None or _canary_spec.loader is None:
+    raise RuntimeError("canary_evidence module cannot be loaded from the graph bundle")
+canary_evidence = importlib.util.module_from_spec(_canary_spec)
+_canary_spec.loader.exec_module(canary_evidence)
 
 SCHEMA = "GitHubFullSuiteEvidence/v1"
 MAX_BYTES = 16 * 1024 * 1024
@@ -832,6 +842,14 @@ ROOT_TYPECHECK_STEP_COMMANDS = {
     "pnpm exec prisma generate",
     "pnpm exec tsc --noEmit",
 }
+ROOT_TYPECHECK_RUNNER_IDENTITY_STEP = {
+    "name": "Runner identity \u2014 not root (A2-400)",
+    "run": 'echo "runner=${RUNNER_NAME} user=$(id -un) uid=$(id -u) env=${RUNNER_ENVIRONMENT:-unset}"\n'
+           'if [ "$(id -u)" = "0" ]; then echo "::error::this job must not run as root"; exit 1; fi',
+}
+ROOT_TYPECHECK_NODE_PIN_STEP = {
+    "name": "Assert Node matches the runtime pin", "run": "node scripts/assert-node-pin.mjs",
+}
 ROOT_TYPECHECK_INPUTS = (
     "tsconfig.json", "package.json", "pnpm-lock.yaml", ".npmrc", "pnpm-workspace.yaml",
     "prisma/schema.prisma", "prisma.config.ts",
@@ -927,7 +945,7 @@ def root_typecheck_source_binding(repo, source):
     if runner != ["self-hosted", "linux", "docker", "ci-general"]:
         raise ValueError("Auth compiler runner labels differ from the qualified literal runner")
     steps = job.get("steps")
-    if not isinstance(steps, list) or len(steps) != 6:
+    if not isinstance(steps, list) or len(steps) != 8:
         raise ValueError("Auth compiler job steps are absent or outside the bounded supported shape")
     checkout = [s for s in steps if isinstance(s, dict) and isinstance(s.get("uses"), str)
                 and s["uses"].startswith("actions/checkout@")]
@@ -949,7 +967,7 @@ def root_typecheck_source_binding(repo, source):
             or pnpm_setup[0].get("with") != {"dest": "${{ runner.temp }}/setup-pnpm"}
             or len(node_setup) != 1 or node_setup[0]["uses"] !=
             "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020"
-            or node_setup[0].get("with") != {"node-version": "24", "cache": "pnpm"}):
+            or node_setup[0].get("with") != {"node-version-file": ".nvmrc", "cache": "pnpm"}):
         raise ValueError("Auth compiler toolchain setup differs from the exact qualified pinned actions")
     by_command = {}
     for step in steps:
@@ -969,8 +987,14 @@ def root_typecheck_source_binding(repo, source):
     if ([steps.index(checkout[0]), steps.index(pnpm_setup[0]), steps.index(node_setup[0]),
          steps.index(by_command["pnpm install --frozen-lockfile"][0]),
          steps.index(by_command["pnpm exec prisma generate"][0]),
-         steps.index(by_command["pnpm exec tsc --noEmit"][0])] != list(range(6))):
+         steps.index(by_command["pnpm exec tsc --noEmit"][0])] != [1, 2, 3, 5, 6, 7]):
         raise ValueError("Auth compiler checkout/setup/install/generate/tsc ordering differs")
+    for index, expected in ((0, ROOT_TYPECHECK_RUNNER_IDENTITY_STEP), (4, ROOT_TYPECHECK_NODE_PIN_STEP)):
+        extra = steps[index]
+        if (not isinstance(extra, dict) or set(extra) != {"name", "run"}
+                or extra["name"] != expected["name"] or not isinstance(extra["run"], str)
+                or extra["run"].strip() != expected["run"].strip()):
+            raise ValueError("Auth compiler job extra guard steps differ from the exact qualified literals")
     compiler = by_command["pnpm exec tsc --noEmit"][0]
     if any(s.get("if") is not None or s.get("continue-on-error") not in (None, "false")
            for s in steps if isinstance(s, dict)):
@@ -1119,7 +1143,8 @@ def collect_root_typecheck(repo, repository, source, base, event_file, evidence_
                    and any(isinstance(item, dict) and item.get("number") == pr["number"]
                            and (item.get("head") or {}).get("sha") == source
                            and (item.get("base") or {}).get("sha") == base
-                           for item in run.get("pull_requests", []))]
+                           for item in run.get("pull_requests", []))
+                   and run.get("head_sha") == source]
         if len(matches) != 1:
             raise ValueError("exact Auth PR has no unique associated ci.yml workflow run")
         run = matches[0]
