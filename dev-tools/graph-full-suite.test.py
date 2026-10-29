@@ -485,7 +485,7 @@ class Controls(unittest.TestCase):
 
 
 class ArmEvidence(unittest.TestCase):
-    """Opt-in FullSuiteArmEvidence/v1 emitter. Red controls run through the AUP gate when AUP_GATE_TOOLS is set."""
+    """Opt-in FullSuiteArmEvidence/v1 emitter; the same cases run through the AUP gate in the controls script."""
     UNIT = 'deployable_unit:.'
 
     def setUp(self):
@@ -542,20 +542,15 @@ class ArmEvidence(unittest.TestCase):
         environ = {subject.ARM_EVIDENCE_ENV: files, subject.ARM_BASE_ENV: base or self.base, **(extra or {})}
         return subject.arm_evidence(self.root, self.head, environ)
 
-    def gate(self, evidence, claim_verified=True):
-        tools = os.environ.get('AUP_GATE_TOOLS')
-        if not tools:
-            self.skipTest('AUP_GATE_TOOLS not set')
-        sys.path.insert(0, tools)
-        self.addCleanup(sys.path.remove, tools)
-        import impact, impact_pair  # noqa: E401
-        shipped = {k: v for k, v in evidence.items() if k != 'notes'}
-        doc = {'admission': {'verdict': 'admitted_with_exemptions'}, 'change_set': {'head': self.head, 'base': self.base},
-               'verdicts': [{'entity': self.UNIT, 'verdict': 'verified', 'verifier_ids': ['v']}],
-               'verifiers': [{'id': 'v', 'kind': 'targeted_test', 'scope': 'global_fallback_full_suite',
-                              'entities': [self.UNIT], 'exit_code': 0, 'output_ref': 'o',
-                              'entity_verdicts': {self.UNIT: 'verified'}, 'arms': shipped}]}
-        return impact_pair.fallback_arm_problems(impact.Repo(self.root), self.base, self.head, doc, {self.UNIT}, self.base)
+    def gate(self, evidence):
+        """Hook for dev-tools/graph-full-suite-arms-gate-controls.py: the AUP gate's verdict on a row claiming
+        verified. None means no gate is attached (the ordinary suite checks the emitter's own output only)."""
+        return None
+
+    def refused(self, evidence):
+        problems = self.gate(evidence)
+        if problems is not None:
+            self.assertTrue(problems)
 
     def test_no_opt_in_emits_nothing(self):
         self.assertIsNone(subject.arm_evidence(self.root, self.head, {}))
@@ -566,39 +561,39 @@ class ArmEvidence(unittest.TestCase):
         self.assertEqual(evidence['not_run'], [])
         self.assertEqual(sorted(a['name'] for a in evidence['arms']), sorted(self.defined))
         self.assertEqual(evidence['definition']['sha256'], hashlib.sha256(self.profile).hexdigest())
-        self.assertEqual(self.gate(evidence), [])
+        self.assertIn(self.gate(evidence), (None, []))
 
     def test_missing_arm_is_not_run_and_the_gate_refuses_the_claim(self):
         evidence = self.emit(self.executor_files(drop=('app-e2e',)))
         self.assertEqual(evidence['not_run'], ['app-e2e'])
-        self.assertTrue(self.gate(evidence))
+        self.refused(evidence)
 
     def test_wrong_head_in_executor_result_is_not_run(self):
         evidence = self.emit(self.executor_files(head='0' * 40))
         self.assertEqual(sorted(evidence['not_run']), sorted(self.defined))
         self.assertEqual(evidence['arms'], [])
-        self.assertTrue(self.gate(evidence))
+        self.refused(evidence)
 
     def test_stub_in_a_real_slot_is_carried_faithfully_and_refused(self):
         evidence = self.emit(self.executor_files(overrides={'billing': {'backend': 'stub(local)'}}))
         self.assertEqual([a['backend'] for a in evidence['arms'] if a['name'] == 'billing'], ['stub'])
-        self.assertTrue(self.gate(evidence))
+        self.refused(evidence)
 
     def test_skipped_tests_never_verify(self):
         evidence = self.emit(self.executor_files(overrides={'auth-rate-limit': self.row('real(disposable x)', skipped=1)}))
         arm = [a for a in evidence['arms'] if a['name'] == 'auth-rate-limit'][0]
         self.assertEqual(arm['verdict'], 'not_measured')
-        self.assertTrue(self.gate(evidence))
+        self.refused(evidence)
 
     def test_zero_tests_never_verify(self):
         evidence = self.emit(self.executor_files(overrides={'billing': self.row('real(disposable x)', total=0)}))
         self.assertNotEqual([a['verdict'] for a in evidence['arms'] if a['name'] == 'billing'], ['verified'])
-        self.assertTrue(self.gate(evidence))
+        self.refused(evidence)
 
     def test_missing_red_control_never_verifies(self):
         evidence = self.emit(self.executor_files(overrides={'billing': self.row('real(disposable x)', control=None)}))
         self.assertNotEqual([a['verdict'] for a in evidence['arms'] if a['name'] == 'billing'], ['verified'])
-        self.assertTrue(self.gate(evidence))
+        self.refused(evidence)
 
     def test_failed_arm_is_reported_failed(self):
         row = self.row('real(disposable x)')
@@ -610,7 +605,7 @@ class ArmEvidence(unittest.TestCase):
     def test_definition_sha_mismatch_is_refused_by_the_gate(self):
         evidence = self.emit(self.executor_files())
         evidence['definition'] = dict(evidence['definition'], sha256='0' * 64)
-        self.assertTrue(self.gate(evidence))
+        self.refused(evidence)
 
     def test_env_gated_arm_without_named_gate_variables_is_not_run(self):
         document = json.loads(Path(self.executor_files()).read_text())
@@ -620,7 +615,7 @@ class ArmEvidence(unittest.TestCase):
         evidence = self.emit(str(path))
         self.assertIn('image-router-fallback', evidence['not_run'])
         self.assertIn('vertex-auth', evidence['not_run'])
-        self.assertTrue(self.gate(evidence))
+        self.refused(evidence)
 
     def test_duplicate_evidence_for_one_arm_counts_for_neither(self):
         first = self.executor_files()
@@ -658,7 +653,7 @@ class ArmEvidence(unittest.TestCase):
         self.assertEqual(by_name['app-e2e']['control'], {'result': 'PASS_RED'})
         self.assertNotIn('image-router-fallback', by_name)       # DEC-AUP-0170 item 5: gate variable not named
         self.assertIn('image-router-fallback', evidence['not_run'])
-        self.assertEqual(self.gate(evidence) != [], True)
+        self.refused(evidence)
 
     def test_default_main_path_adds_no_arms_key(self):
         source = (ROOT / 'scripts/graph_full_suite.py').read_text()
