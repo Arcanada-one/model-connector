@@ -1,5 +1,6 @@
 """Focused orchestration controls only, never the four complete product suites."""
 from pathlib import Path
+import hashlib
 import importlib.util
 import json
 import os
@@ -481,6 +482,182 @@ class Controls(unittest.TestCase):
                 lambda *args: self.fail('escaped source spawned a child'))
         self.assertEqual(subject.regression_counts('unittest',
             'Ran 1 test in 0.1s\nOK (expected failures=1)\n')['skipped'], 1)
+
+
+class ArmEvidence(unittest.TestCase):
+    """Opt-in FullSuiteArmEvidence/v1 emitter; the same cases run through the AUP gate in the controls script."""
+    UNIT = 'deployable_unit:.'
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name) / 'repo'
+        self.root.mkdir()
+        self.profile = (ROOT / '.arcana/verify.json').read_bytes()
+        arms = json.loads(self.profile)['deployables']['.']['full_test_arms']
+        self.defined = {a['name']: a['requires'] for a in arms}
+        self.git('init', '-q')
+        (self.root / '.arcana').mkdir()
+        (self.root / '.arcana/verify.json').write_bytes(self.profile)
+        self.base = self.commit('base')
+        (self.root / 'x.txt').write_text('head')
+        self.head = self.commit('head')
+
+    def git(self, *args):
+        env = dict(os.environ, HOME=self.temp.name, GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_SYSTEM=os.devnull)
+        return subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', *args],
+                              check=True, capture_output=True, env=env).stdout.decode().strip()
+
+    def commit(self, message):
+        self.git('add', '-A')
+        self.git('commit', '-q', '-m', message)
+        return self.git('rev-parse', 'HEAD')
+
+    def row(self, backend, total=3, skipped=0, exit_code=0, control='PASS_RED'):
+        row = {'exit': exit_code, 'backend': backend,
+               'counts': {'total': total, 'passed': total - skipped, 'failed': 0, 'skipped': skipped}}
+        if control:
+            row['connectivity_control'] = {'result': control}
+        return row
+
+    def executor_files(self, head=None, overrides=None, drop=(), env=('RUN_INTEGRATION',)):
+        """Synthetic executor results in the retained KCP0027ArmExecution shape, one multi-arm file."""
+        gates = {g for name in self.defined for g in subject.ARM_ENV_GATES.get(name, ())}
+        arms = {}
+        for name, slot in self.defined.items():
+            backend = {'real_disposable': 'real(disposable local postgres16)',
+                       'real_external': 'real(external provider)', 'stub_ok': 'stub(local loopback)'}[slot]
+            arms[name] = self.row(backend)
+        for name, patch_ in (overrides or {}).items():
+            arms[name] = patch_ if 'counts' in patch_ else {**arms[name], **patch_}
+        for name in drop:
+            arms.pop(name)
+        document = {'schema': 'KCP0027ArmExecution/v1', 'worktree_head': head or self.head, 'arms': arms,
+                    'env_keys_set': sorted(gates | set(env))}
+        path = Path(self.temp.name) / 'executor.json'
+        path.write_text(json.dumps(document))
+        return str(path)
+
+    def emit(self, files, base=None, extra=None):
+        environ = {subject.ARM_EVIDENCE_ENV: files, subject.ARM_BASE_ENV: base or self.base, **(extra or {})}
+        return subject.arm_evidence(self.root, self.head, environ)
+
+    def gate(self, evidence):
+        """Hook for dev-tools/graph-full-suite-arms-gate-controls.py: the AUP gate's verdict on a row claiming
+        verified. None means no gate is attached (the ordinary suite checks the emitter's own output only)."""
+        return None
+
+    def refused(self, evidence):
+        problems = self.gate(evidence)
+        if problems is not None:
+            self.assertTrue(problems)
+
+    def test_no_opt_in_emits_nothing(self):
+        self.assertIsNone(subject.arm_evidence(self.root, self.head, {}))
+        self.assertIsNone(subject.arm_evidence(self.root, self.head, {subject.ARM_BASE_ENV: self.base}))
+
+    def test_complete_synthetic_set_is_accepted_by_the_gate(self):
+        evidence = self.emit(self.executor_files())
+        self.assertEqual(evidence['not_run'], [])
+        self.assertEqual(sorted(a['name'] for a in evidence['arms']), sorted(self.defined))
+        self.assertEqual(evidence['definition']['sha256'], hashlib.sha256(self.profile).hexdigest())
+        self.assertIn(self.gate(evidence), (None, []))
+
+    def test_missing_arm_is_not_run_and_the_gate_refuses_the_claim(self):
+        evidence = self.emit(self.executor_files(drop=('app-e2e',)))
+        self.assertEqual(evidence['not_run'], ['app-e2e'])
+        self.refused(evidence)
+
+    def test_wrong_head_in_executor_result_is_not_run(self):
+        evidence = self.emit(self.executor_files(head='0' * 40))
+        self.assertEqual(sorted(evidence['not_run']), sorted(self.defined))
+        self.assertEqual(evidence['arms'], [])
+        self.refused(evidence)
+
+    def test_stub_in_a_real_slot_is_carried_faithfully_and_refused(self):
+        evidence = self.emit(self.executor_files(overrides={'billing': {'backend': 'stub(local)'}}))
+        self.assertEqual([a['backend'] for a in evidence['arms'] if a['name'] == 'billing'], ['stub'])
+        self.refused(evidence)
+
+    def test_skipped_tests_never_verify(self):
+        evidence = self.emit(self.executor_files(overrides={'auth-rate-limit': self.row('real(disposable x)', skipped=1)}))
+        arm = [a for a in evidence['arms'] if a['name'] == 'auth-rate-limit'][0]
+        self.assertEqual(arm['verdict'], 'not_measured')
+        self.refused(evidence)
+
+    def test_zero_tests_never_verify(self):
+        evidence = self.emit(self.executor_files(overrides={'billing': self.row('real(disposable x)', total=0)}))
+        self.assertNotEqual([a['verdict'] for a in evidence['arms'] if a['name'] == 'billing'], ['verified'])
+        self.refused(evidence)
+
+    def test_missing_red_control_never_verifies(self):
+        evidence = self.emit(self.executor_files(overrides={'billing': self.row('real(disposable x)', control=None)}))
+        self.assertNotEqual([a['verdict'] for a in evidence['arms'] if a['name'] == 'billing'], ['verified'])
+        self.refused(evidence)
+
+    def test_failed_arm_is_reported_failed(self):
+        row = self.row('real(disposable x)')
+        row['counts'].update(passed=2, failed=1)
+        row['exit'] = 1
+        evidence = self.emit(self.executor_files(overrides={'billing': row}))
+        self.assertEqual([a['verdict'] for a in evidence['arms'] if a['name'] == 'billing'], ['failed'])
+
+    def test_definition_sha_mismatch_is_refused_by_the_gate(self):
+        evidence = self.emit(self.executor_files())
+        evidence['definition'] = dict(evidence['definition'], sha256='0' * 64)
+        self.refused(evidence)
+
+    def test_env_gated_arm_without_named_gate_variables_is_not_run(self):
+        document = json.loads(Path(self.executor_files()).read_text())
+        document['env_keys_set'] = ['RUN_INTEGRATION']          # VERTEX_SERVICE_ACCOUNT_JSON not named as set
+        path = Path(self.temp.name) / 'gated.json'
+        path.write_text(json.dumps(document))
+        evidence = self.emit(str(path))
+        self.assertIn('image-router-fallback', evidence['not_run'])
+        self.assertIn('vertex-auth', evidence['not_run'])
+        self.refused(evidence)
+
+    def test_duplicate_evidence_for_one_arm_counts_for_neither(self):
+        first = self.executor_files()
+        copy = Path(self.temp.name) / 'copy.json'
+        copy.write_text(Path(first).read_text())
+        evidence = self.emit(first + os.pathsep + str(copy))
+        self.assertEqual(sorted(evidence['not_run']), sorted(self.defined))
+
+    def test_refuses_without_base_or_with_a_base_lacking_the_definition(self):
+        self.assertIn('refused', subject.arm_evidence(self.root, self.head, {subject.ARM_EVIDENCE_ENV: self.executor_files()}))
+        (self.root / '.arcana/verify.json').write_text('{}')
+        bad = self.commit('empty definition')
+        self.assertIn('refused', self.emit(self.executor_files(), base=bad))
+
+    def test_relative_or_unreadable_evidence_path_is_ignored_not_trusted(self):
+        evidence = self.emit('relative.json')
+        self.assertEqual(sorted(evidence['not_run']), sorted(self.defined))
+        self.assertEqual(evidence['arms'], [])
+
+    def test_executor_a3_and_a4_shapes_map_to_the_defined_names(self):
+        a3 = {'arm': 'app-e2e', 'worktree_head': self.head, 'backend': 'real(disposable local postgres16 + redis)',
+              'env_keys_set': ['DEEPSEEK_API_KEY'], 'run': {'exit': 0, 'counts': {'total': 3, 'passed': 3, 'failed': 0, 'skipped': 0}},
+              'controls': {'one': {'result': 'PASS_RED'}, 'two': {'result': 'PASS_RED'}}}
+        a4 = {'arm': 'image-router-fallback', 'worktree_head': self.head, 'backend': {'provider': 'none'},
+              'env_keys_set': ['RUN_INTEGRATION'], 'run': {'exit': 0, 'counts': {'total': 7, 'passed': 7, 'failed': 0, 'skipped': 0}},
+              'controls': {'one': {'result': 'PASS_RED'}}}
+        paths = []
+        for index, document in enumerate((a3, a4)):
+            path = Path(self.temp.name) / ('a%d.json' % index)
+            path.write_text(json.dumps(document))
+            paths.append(str(path))
+        evidence = self.emit(os.pathsep.join(paths))
+        by_name = {a['name']: a for a in evidence['arms']}
+        self.assertEqual(by_name['app-e2e']['backend'], 'real_disposable')
+        self.assertEqual(by_name['app-e2e']['control'], {'result': 'PASS_RED'})
+        self.assertNotIn('image-router-fallback', by_name)       # DEC-AUP-0170 item 5: gate variable not named
+        self.assertIn('image-router-fallback', evidence['not_run'])
+        self.refused(evidence)
+
+    def test_default_main_path_adds_no_arms_key(self):
+        source = (ROOT / 'scripts/graph_full_suite.py').read_text()
+        self.assertIn("if unit == '.' and os.environ.get(ARM_EVIDENCE_ENV):", source)
 
 
 if __name__ == '__main__':
