@@ -1,9 +1,9 @@
 {
   "schema": "MeasuredGitSource/v1",
-  "commit": "f718a504342101ec0d793e4ebd338d934a3b6e2c",
-  "tree": "aa2b16b2b45d881fc74d5605964628391f47839c",
+  "commit": "5f3b0bfcc3490bdadead6a718ae0df0dec986eb3",
+  "tree": "ed9f22236b164388faeb750621e7b6b56c9b0a84",
   "dirty": false,
   "producer": "git rev-parse on isolated Arcana DEVS worktree",
-  "captured_at_utc": "2026-10-30T20:34:54Z",
+  "captured_at_utc": "2026-10-30T21:07:17Z",
   "repository_path": "/home/dev/orca/workspaces/arcanada/KCP-0017-broker-internal-canary-run"
 }
