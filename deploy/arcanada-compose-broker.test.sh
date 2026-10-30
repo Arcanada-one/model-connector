@@ -938,7 +938,7 @@ rm -rf -- "$kc_dir"
 printf '%s\n' 'SCRUTATOR_DATABASE_URL=postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract' >"${env_root}/knowledge-contract-scrutator.env"
 chmod 0600 "${env_root}/knowledge-contract-scrutator.env"
 cat >"$fake_docker_state/kc-config.json" <<'JSON'
-{"name":"knowledge-contract-scrutator","networks":{"default":{"name":"knowledge-contract-scrutator_default","ipam":{}}},"services":{"scrutator":{"container_name":"knowledge-contract-scrutator-scrutator-1","image":"scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c","networks":{"default":null},"ports":[{"mode":"ingress","target":8310,"published":"8311","protocol":"tcp","host_ip":"127.0.0.1"}],"environment":{"SCRUTATOR_HOST":"0.0.0.0","SCRUTATOR_PORT":"8310","SCRUTATOR_AUTH_ENFORCE":"true","SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL":"https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect","SCRUTATOR_AUTH_SERVICE_AUDIENCE":"urn:arcanada:scrutator:knowledge-contract","SCRUTATOR_AUTH_SERVICE_SCOPE":"kb:knowledge-contract.read","SCRUTATOR_FEEDER_NAMESPACES":"knowledge-contract","SCRUTATOR_DATABASE_URL":"postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract"}}}}
+{"name":"knowledge-contract-scrutator","networks":{"default":{"name":"knowledge-contract-scrutator_default","ipam":{}}},"services":{"scrutator":{"container_name":"knowledge-contract-scrutator-scrutator-1","image":"scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c","networks":{"default":null},"ports":[{"mode":"ingress","target":8310,"published":"8311","protocol":"tcp","host_ip":"127.0.0.1"}],"environment":{"SCRUTATOR_HOST":"0.0.0.0","SCRUTATOR_PORT":"8310","SCRUTATOR_AUTH_ENFORCE":"true","SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL":"https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect","SCRUTATOR_AUTH_SERVICE_AUDIENCE":"urn:arcanada:scrutator:knowledge-contract","SCRUTATOR_AUTH_SERVICE_SCOPE":"kb:knowledge-contract.read","SCRUTATOR_FEEDER_NAMESPACES":"knowledge-contract","SCRUTATOR_DATABASE_URL":"postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract"},"command":null,"entrypoint":null,"restart":"unless-stopped","healthcheck":{"test":["CMD","curl","--fail","--silent","http://127.0.0.1:8310/health"],"timeout":"5s","interval":"30s","retries":3}}}}
 JSON
 printf '%s\n' 'sha256:ae4a4768ce83f34b3dc7c5b1620f836b8eafef86e32687b43a5c6a4eaa0c0c85' >"$fake_docker_state/kc-running-image"
 kc_run() { printf '%s\n' 'fixture-token-abcdefghijklmnopqrstuvwxyz' | "$kc_broker" knowledge-contract-scrutator kc-deploy "$kc_head"; }
@@ -1221,6 +1221,183 @@ kc_set_config SCRUTATOR_EMBEDDING_TIMEOUT __unset__
 kc_fresh
 if ! kc_run >"${fixture_dir}/kc-embed-absent.out" 2>&1; then echo 'FAIL: absent embedding env refused (old pair rollback path)' >&2; exit 1; fi
 echo 'PASS: kc_embedding_env_absent_accepted'
+
+# KCP-0017 step 2: exactly two reviewed network/introspection variants are accepted.
+#   PUBLIC   = default network only + the public introspection URL (today's render).
+#   INTERNAL = default network + external network key "auth-arcana-ai" named auth-arcana-ai_default,
+#              attached to the service, + exactly the internal introspection URL.
+kc_edit() { # <python statements over x (config), svc, env, nets>
+  python3 - "$fake_docker_state/kc-config.json" "$1" <<'PY'
+import json, sys
+p, code = sys.argv[1:3]
+x = json.load(open(p))
+svc = x["services"]["scrutator"]
+env = svc["environment"]
+nets = x["networks"]
+exec(code)
+json.dump(x, open(p, "w"))
+PY
+}
+kc_public_url='https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect'
+kc_internal_url='http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+# The two snapshots below are the real `docker compose config --format json` renders (Compose v5.6.0)
+# of contract-place-api main (PUBLIC) and of PR #9 at 7830a863 (INTERNAL), with the fixture DSN.
+cat >"${fixture_dir}/kc-config-public.json" <<'JSON'
+{"name":"knowledge-contract-scrutator","networks":{"default":{"name":"knowledge-contract-scrutator_default","ipam":{}}},"services":{"scrutator":{"restart":"unless-stopped","container_name":"knowledge-contract-scrutator-scrutator-1","command":null,"entrypoint":null,"environment":{"SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL":"https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect","SCRUTATOR_AUTH_ENFORCE":"true","SCRUTATOR_AUTH_SERVICE_AUDIENCE":"urn:arcanada:scrutator:knowledge-contract","SCRUTATOR_AUTH_SERVICE_SCOPE":"kb:knowledge-contract.read","SCRUTATOR_DATABASE_URL":"postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract","SCRUTATOR_EMBEDDING_API_URL":"http://100.90.7.20:8300","SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED":"true","SCRUTATOR_EMBEDDING_TIMEOUT":"300","SCRUTATOR_FEEDER_NAMESPACES":"knowledge-contract","SCRUTATOR_HOST":"0.0.0.0","SCRUTATOR_PORT":"8310"},"image":"scrutator-deploy:cc1e9828a89444c752faefec8fa39236d181465d","networks":{"default":null},"healthcheck":{"test":["CMD","curl","--fail","--silent","http://127.0.0.1:8310/health"],"timeout":"5s","interval":"30s","retries":3},"ports":[{"mode":"ingress","host_ip":"127.0.0.1","target":8310,"published":"8311","protocol":"tcp"}]}}}
+JSON
+cat >"${fixture_dir}/kc-config-internal.json" <<'JSON'
+{"name":"knowledge-contract-scrutator","networks":{"auth-arcana-ai":{"name":"auth-arcana-ai_default","ipam":{},"external":true},"default":{"name":"knowledge-contract-scrutator_default","ipam":{}}},"services":{"scrutator":{"restart":"unless-stopped","container_name":"knowledge-contract-scrutator-scrutator-1","command":null,"entrypoint":null,"environment":{"SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL":"http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect","SCRUTATOR_AUTH_ENFORCE":"true","SCRUTATOR_AUTH_SERVICE_AUDIENCE":"urn:arcanada:scrutator:knowledge-contract","SCRUTATOR_AUTH_SERVICE_SCOPE":"kb:knowledge-contract.read","SCRUTATOR_DATABASE_URL":"postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract","SCRUTATOR_EMBEDDING_API_URL":"http://100.90.7.20:8300","SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED":"true","SCRUTATOR_EMBEDDING_TIMEOUT":"300","SCRUTATOR_FEEDER_NAMESPACES":"knowledge-contract","SCRUTATOR_HOST":"0.0.0.0","SCRUTATOR_PORT":"8310"},"image":"scrutator-deploy:cc1e9828a89444c752faefec8fa39236d181465d","networks":{"auth-arcana-ai":null,"default":null},"healthcheck":{"test":["CMD","curl","--fail","--silent","http://127.0.0.1:8310/health"],"timeout":"5s","interval":"30s","retries":3},"ports":[{"mode":"ingress","host_ip":"127.0.0.1","target":8310,"published":"8311","protocol":"tcp"}]}}}
+JSON
+kc_use() { cp -- "${fixture_dir}/kc-config-$1.json" "$fake_docker_state/kc-config.json"; }
+kc_route_refused() { # <name> <python edit applied on top of the exact INTERNAL variant>
+  kc_use internal
+  kc_edit "$2"
+  kc_fresh
+  if kc_run >"${fixture_dir}/kc-route-$1.out" 2>&1; then echo "FAIL: route variant ${1} accepted" >&2; exit 1; fi
+  grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-route-$1.out" || { echo "FAIL: route variant ${1} not refused by the contract" >&2; exit 1; }
+  [[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+  kc_use public
+  echo "PASS: kc_route_${1}_refused"
+}
+kc_use public
+kc_fresh
+if ! kc_run >"${fixture_dir}/kc-route-public.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-route-public.out" >&2; echo 'FAIL: PUBLIC variant refused' >&2; exit 1; fi
+grep -Fq 'KC_PROJECT_DEPLOY_PASS' "${fixture_dir}/kc-route-public.out" || exit 1
+echo 'PASS: kc_route_public_variant_accepted'
+kc_use internal
+kc_fresh
+if ! kc_run >"${fixture_dir}/kc-route-internal.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-route-internal.out" >&2; echo 'FAIL: INTERNAL variant refused' >&2; exit 1; fi
+grep -Fq 'KC_PROJECT_DEPLOY_PASS' "${fixture_dir}/kc-route-internal.out" || exit 1
+echo 'PASS: kc_route_internal_variant_accepted'
+kc_use public
+# The URL and the network only together.
+kc_route_refused internal_url_without_network "nets.pop('auth-arcana-ai'); svc['networks'] = {'default': None}"
+kc_route_refused network_with_public_url "env['SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL'] = '${kc_public_url}'"
+kc_route_refused network_declared_not_attached "svc['networks'] = {'default': None}"
+kc_route_refused network_attached_without_default "svc['networks'] = {'auth-arcana-ai': None}"
+# Any other external network, key, name or attribute.
+kc_route_refused other_external_name "nets['auth-arcana-ai']['name'] = 'auth-arcana-prod_default'"
+kc_route_refused lookalike_name_suffix "nets['auth-arcana-ai']['name'] = 'auth-arcana-ai_default2'"
+kc_route_refused lookalike_name_case "nets['auth-arcana-ai']['name'] = 'Auth-arcana-ai_default'"
+kc_route_refused lookalike_name_space "nets['auth-arcana-ai']['name'] = 'auth-arcana-ai_default '"
+kc_route_refused other_network_key "nets['auth'] = nets.pop('auth-arcana-ai'); svc['networks'] = {'auth': None, 'default': None}"
+kc_route_refused not_external "nets['auth-arcana-ai'].pop('external')"
+kc_route_refused external_false "nets['auth-arcana-ai']['external'] = False"
+kc_route_refused external_string "nets['auth-arcana-ai']['external'] = 'true'"
+kc_route_refused network_driver "nets['auth-arcana-ai']['driver'] = 'bridge'"
+kc_route_refused network_ipam_config "nets['auth-arcana-ai']['ipam'] = {'config': [{'subnet': '172.30.0.0/16'}]}"
+kc_route_refused third_network "nets['other'] = {'name': 'other_default', 'ipam': {}, 'external': True}; svc['networks']['other'] = None"
+kc_route_refused extra_service_attachment "svc['networks']['other'] = None"
+kc_route_refused attachment_aliases "svc['networks']['auth-arcana-ai'] = {'aliases': ['scrutator']}"
+kc_route_refused attachment_static_ip "svc['networks']['auth-arcana-ai'] = {'ipv4_address': '172.30.0.9'}"
+kc_route_refused links "svc['links'] = ['auth-arcana-ai-app-1']"
+kc_route_refused external_links "svc['external_links'] = ['auth-arcana-ai-app-1']"
+kc_route_refused network_mode_host "svc['network_mode'] = 'host'; svc.pop('networks')"
+# Any other internal URL: scheme, host, port, path, userinfo, query, fragment, look-alikes.
+kc_route_url_refused() { kc_route_refused "url_$1" "env['SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL'] = '$2'"; }
+kc_route_url_refused https_scheme 'https://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused other_container 'http://auth-arcana-prod-app-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused host_port 'http://auth-arcana-ai-app-1:3220/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused no_port 'http://auth-arcana-ai-app-1/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused loopback 'http://127.0.0.1:3220/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused host_gateway 'http://host.docker.internal:3220/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused other_path 'http://auth-arcana-ai-app-1:3200/api/v1/api-keys/introspect'
+kc_route_url_refused trailing_slash 'http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect/'
+kc_route_url_refused userinfo 'http://user:pass@auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused query 'http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect?x=1'
+kc_route_url_refused fragment 'http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect#x'
+kc_route_url_refused uppercase_host 'http://AUTH-ARCANA-AI-APP-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused lookalike_host 'http://auth-arcana-ai-app-1.example.invalid:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused lookalike_host_suffix 'http://auth-arcana-ai-app-10:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused padded ' http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused empty ''
+kc_use public
+# On top of the PUBLIC variant: the service may attach only to the default network.
+kc_public_refused() { # <name> <python edit applied on top of the exact PUBLIC variant>
+  kc_use public
+  kc_edit "$2"
+  kc_fresh
+  if kc_run >"${fixture_dir}/kc-route-public-$1.out" 2>&1; then echo "FAIL: public variant ${1} accepted" >&2; exit 1; fi
+  grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-route-public-$1.out" || { echo "FAIL: public variant ${1} not refused by the contract" >&2; exit 1; }
+  [[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+  kc_use public
+  echo "PASS: kc_route_public_${1}_refused"
+}
+kc_public_refused undeclared_attachment "svc['networks']['auth-arcana-ai'] = None"
+kc_public_refused default_aliases "svc['networks']['default'] = {'aliases': ['scrutator']}"
+kc_public_refused internal_host_on_public_scheme "env['SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL'] = 'https://auth-arcana-ai-app-1/api/v1/api-keys/knowledge-contract/introspect'"
+# Third network declared but not attached: refused over both variants.
+kc_route_refused third_network_declared_not_attached "nets['other'] = {'name': 'other_default', 'ipam': {}, 'external': True}"
+kc_public_refused third_network_declared_not_attached "nets['other'] = {'name': 'other_default', 'ipam': {}, 'external': True}"
+# PUBLIC URL is an exact string too.
+kc_public_url_refused() { kc_public_refused "url_$1" "env['SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL'] = '$2'"; }
+kc_public_url_refused port_443 'https://auth.arcanada.ai:443/api/v1/api-keys/knowledge-contract/introspect'
+kc_public_url_refused userinfo 'https://user:pass@auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect'
+kc_public_url_refused query 'https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect?x=1'
+kc_public_url_refused fragment 'https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect#x'
+kc_public_url_refused trailing_slash 'https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect/'
+kc_public_url_refused uppercase_host 'https://AUTH.ARCANADA.AI/api/v1/api-keys/knowledge-contract/introspect'
+kc_public_url_refused http_scheme 'http://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect'
+# Name resolution, kernel network settings and egress environment of the service (review finding 1):
+# refused over BOTH variants. Compose renders env_file values into environment, so these cover env_file.
+kc_both_refused() { kc_route_refused "$1" "$2"; kc_public_refused "$1" "$2"; }
+kc_both_refused extra_hosts_list "svc['extra_hosts'] = ['auth-arcana-ai-app-1=203.0.113.5']"
+kc_both_refused extra_hosts_mapping "svc['extra_hosts'] = {'auth.arcanada.ai': '203.0.113.5'}"
+kc_both_refused dns "svc['dns'] = ['203.0.113.53']"
+kc_both_refused dns_search "svc['dns_search'] = ['example.invalid']"
+kc_both_refused dns_opt "svc['dns_opt'] = ['ndots:5']"
+kc_both_refused sysctls "svc['sysctls'] = {'net.ipv4.ip_forward': '1'}"
+kc_both_refused cap_add_net_admin "svc['cap_add'] = ['NET_ADMIN']"
+kc_both_refused privileged "svc['privileged'] = True"
+kc_public_refused network_mode_host "svc['network_mode'] = 'host'; svc.pop('networks')"
+for kc_egress_key in HTTP_PROXY http_proxy Https_Proxy HTTPS_PROXY ALL_PROXY all_proxy NO_PROXY no_proxy WS_PROXY wss_proxy SSL_CERT_FILE ssl_cert_dir SSLKEYLOGFILE; do
+  kc_both_refused "env_${kc_egress_key}" "env['${kc_egress_key}'] = 'http://203.0.113.7:3128'"
+done
+# Re-review of 4523cd4a: the service is an ALLOWLIST. Even empty forms of unlisted keys and any
+# unlisted environment key are refused, over both variants.
+kc_both_refused empty_extra_hosts "svc['extra_hosts'] = []"
+kc_both_refused empty_dns "svc['dns'] = []"
+# Resolver, loader, CA, runtime and harmless-looking environment keys: none is listed, all refused.
+for kc_env_key in LOCALDOMAIN RES_OPTIONS HOSTALIASES OPENSSL_CONF LD_PRELOAD LD_LIBRARY_PATH PYTHONPATH PYTHONHOME PYTHONSTARTUP REQUESTS_CA_BUNDLE CURL_CA_BUNDLE NODE_OPTIONS TZ SCRUTATOR_PROXY_NOTE SCRUTATOR_AUTH_ARCANA_JWKS_URL; do
+  kc_both_refused "env_${kc_env_key}" "env['${kc_env_key}'] = 'x'"
+done
+kc_both_refused env_resolver_pair "env['RES_OPTIONS'] = 'ndots:1'; env['LOCALDOMAIN'] = 'attacker.example'"
+# Bare environment forms (`- KEY` renders as null) and non-string values are refused.
+kc_both_refused env_bare_listed_key "env['SCRUTATOR_PROJECT_WRITE_NAMESPACE'] = None"
+kc_both_refused env_bare_unlisted_key "env['LOCALDOMAIN'] = None"
+kc_both_refused env_port_integer "env['SCRUTATOR_PORT'] = 8310"
+kc_both_refused env_enforce_capitalised "env['SCRUTATOR_AUTH_ENFORCE'] = 'True'"
+kc_both_refused env_missing_required "env.pop('SCRUTATOR_FEEDER_NAMESPACES')"
+# Code execution and container shape: not listed, so refused.
+kc_both_refused command "svc['command'] = ['sh', '-c', 'echo 203.0.113.5 auth-arcana-ai-app-1 >> /etc/hosts; exec uvicorn scrutator.health:app']"
+kc_both_refused entrypoint "svc['entrypoint'] = ['sh', '-c']"
+kc_both_refused user "svc['user'] = '0:0'"
+kc_both_refused tmpfs "svc['tmpfs'] = ['/etc']"
+kc_both_refused post_start "svc['post_start'] = [{'command': ['sh', '-c', 'true']}]"
+kc_both_refused uts "svc['uts'] = 'host'"
+kc_both_refused userns_mode "svc['userns_mode'] = 'host'"
+kc_both_refused runtime "svc['runtime'] = 'runc'"
+kc_both_refused ulimits "svc['ulimits'] = {'nofile': 1024}"
+kc_both_refused init "svc['init'] = True"
+kc_both_refused labels "svc['labels'] = {'a': 'b'}"
+kc_both_refused env_file_key "svc['env_file'] = ['/etc/other.env']"
+kc_both_refused working_dir "svc['working_dir'] = '/tmp'"
+# Healthcheck and restart are pinned to the exact rendered values.
+kc_both_refused healthcheck_cmd_shell "svc['healthcheck']['test'] = ['CMD-SHELL', 'echo 203.0.113.5 auth-arcana-ai-app-1 >> /etc/hosts']"
+kc_both_refused healthcheck_other_url "svc['healthcheck']['test'] = ['CMD', 'curl', '--fail', '--silent', 'http://127.0.0.1:8310/v1/stats']"
+kc_both_refused healthcheck_interval "svc['healthcheck']['interval'] = '1s'"
+kc_both_refused healthcheck_extra_key "svc['healthcheck']['start_period'] = '5s'"
+kc_both_refused healthcheck_disabled "svc['healthcheck'] = {'disable': True}"
+kc_both_refused healthcheck_absent "svc.pop('healthcheck')"
+kc_both_refused restart_always "svc['restart'] = 'always'"
+kc_both_refused command_empty_list "svc['command'] = []"
+# The real renders stay accepted with the listed optional keys at their pinned values.
+kc_use internal
+kc_edit "env['SCRUTATOR_PROJECT_WRITE_NAMESPACE'] = 'knowledge-contract'"
+kc_fresh
+if ! kc_run >"${fixture_dir}/kc-route-internal-optional.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-route-internal-optional.out" >&2; echo 'FAIL: INTERNAL with the write namespace refused' >&2; exit 1; fi
+kc_use public
+echo 'PASS: kc_route_internal_with_write_namespace_accepted'
 
 # Selector level (not the Compose contract): a ref that only starts with a reviewed ref is not in the set.
 kc_selector_fn="$(sed -n '/^kc_pair_id_for_ref() {/,/^}/p' "$broker")"

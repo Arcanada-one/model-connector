@@ -1,0 +1,91 @@
+{
+  "schema": "CanaryPlan/v2",
+  "id": "kcp0017-broker-internal-route-52ed61e3",
+  "owner": "KCP-0017 / Model Connector compose-broker maintainer",
+  "producer_repository": "/home/dev/orca/workspaces/arcanada/KCP-0017-broker-internal-canary-run",
+  "environment": "Arcana DEVS isolated Model Connector source",
+  "read_only": true,
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "52ed61e33ea4db6e9b1eb0c267eeddf7121b511a",
+    "tree": "fe69191b32761c427cb042c9e2ddfa7e7ac17d64",
+    "evidence": {
+      "path": "source.json",
+      "sha256": "6698351e6769a151427c76bc1340e2b3587495f79124b77e0b6ddea15a2936a1",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "id": "compose-broker-fixture-suite",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/bash",
+        "deploy/arcanada-compose-broker.test.sh"
+      ],
+      "cwd": ".",
+      "entities": [
+        "code_unit:deploy/arcanada-compose-broker.sh",
+        "code_unit:deploy/arcanada-compose-broker.test.sh"
+      ],
+      "mutating": false,
+      "timeout_seconds": 120,
+      "capture_limit_bytes": 65536,
+      "executable_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/arcanada/KCP-0017-broker-internal-canary-run/deploy/arcanada-compose-broker.test.sh",
+          "sha256": "e7074510e6bd08da22859dfa36280b4c8a6904b59b9cdd523cb3b7d39c707e81",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/home/dev/orca/workspaces/arcanada/KCP-0017-broker-internal-canary-run/deploy/arcanada-compose-broker.sh",
+          "sha256": "6ce96b71bb66a723c0251188d1e62aeadc04552762016fd685f71c2e7ab163f2",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/usr/bin/bash",
+          "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+          "attribution": {
+            "kind": "system_executable",
+            "source_id": "/usr/bin/bash",
+            "version": "sha256:bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1"
+          }
+        }
+      ],
+      "env_keys": [],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "PASS: kc_route_public_variant_accepted",
+          "PASS: kc_route_internal_variant_accepted",
+          "PASS: kc_route_internal_url_without_network_refused",
+          "PASS: kc_route_network_with_public_url_refused",
+          "PASS: kc_route_other_external_name_refused",
+          "PASS: kc_route_url_host_port_refused",
+          "PASS: kc_route_public_undeclared_attachment_refused",
+          "PASS: kc_upgrade_old_to_new_pair",
+          "PASS: kc_route_extra_hosts_list_refused",
+          "PASS: kc_route_public_extra_hosts_list_refused",
+          "PASS: kc_route_env_HTTP_PROXY_refused",
+          "PASS: kc_route_env_http_proxy_refused",
+          "PASS: kc_route_dns_refused",
+          "PASS: kc_route_public_url_uppercase_host_refused",
+          "PASS: kc_route_third_network_declared_not_attached_refused",
+          "PASS: kc_route_env_LOCALDOMAIN_refused",
+          "PASS: kc_route_env_resolver_pair_refused",
+          "PASS: kc_route_command_refused",
+          "PASS: kc_route_healthcheck_cmd_shell_refused",
+          "PASS: kc_route_public_user_refused",
+          "PASS: kc_route_internal_with_write_namespace_accepted"
+        ]
+      }
+    }
+  ]
+}
