@@ -1,17 +1,17 @@
 {
   "schema": "CanaryPlan/v2",
-  "id": "kcp0017-broker-internal-route-5f3b0bfc",
+  "id": "kcp0017-broker-internal-route-52ed61e3",
   "owner": "KCP-0017 / Model Connector compose-broker maintainer",
   "producer_repository": "/home/dev/orca/workspaces/arcanada/KCP-0017-broker-internal-canary-run",
   "environment": "Arcana DEVS isolated Model Connector source",
   "read_only": true,
   "subject": {
     "schema": "GitCanarySubject/v1",
-    "commit": "5f3b0bfcc3490bdadead6a718ae0df0dec986eb3",
-    "tree": "ed9f22236b164388faeb750621e7b6b56c9b0a84",
+    "commit": "52ed61e33ea4db6e9b1eb0c267eeddf7121b511a",
+    "tree": "fe69191b32761c427cb042c9e2ddfa7e7ac17d64",
     "evidence": {
       "path": "source.json",
-      "sha256": "4c748d27bb51e738f975695569fc711a90d81d7680e3778f1c50732b64139e8e",
+      "sha256": "6698351e6769a151427c76bc1340e2b3587495f79124b77e0b6ddea15a2936a1",
       "source_field": "commit"
     }
   },
@@ -35,14 +35,14 @@
       "execution_files": [
         {
           "path": "/home/dev/orca/workspaces/arcanada/KCP-0017-broker-internal-canary-run/deploy/arcanada-compose-broker.test.sh",
-          "sha256": "ba3cba15a9458aa07245e398b35c014c425410ff7e609a9b387c5c8fc3e8b823",
+          "sha256": "e7074510e6bd08da22859dfa36280b4c8a6904b59b9cdd523cb3b7d39c707e81",
           "attribution": {
             "kind": "product_source"
           }
         },
         {
           "path": "/home/dev/orca/workspaces/arcanada/KCP-0017-broker-internal-canary-run/deploy/arcanada-compose-broker.sh",
-          "sha256": "72ba75b32172b5eb1db799dc0b2afe726dda0e8c74363717850cbb15a8d9acdd",
+          "sha256": "6ce96b71bb66a723c0251188d1e62aeadc04552762016fd685f71c2e7ab163f2",
           "attribution": {
             "kind": "product_source"
           }
@@ -77,7 +77,13 @@
           "PASS: kc_route_env_http_proxy_refused",
           "PASS: kc_route_dns_refused",
           "PASS: kc_route_public_url_uppercase_host_refused",
-          "PASS: kc_route_third_network_declared_not_attached_refused"
+          "PASS: kc_route_third_network_declared_not_attached_refused",
+          "PASS: kc_route_env_LOCALDOMAIN_refused",
+          "PASS: kc_route_env_resolver_pair_refused",
+          "PASS: kc_route_command_refused",
+          "PASS: kc_route_healthcheck_cmd_shell_refused",
+          "PASS: kc_route_public_user_refused",
+          "PASS: kc_route_internal_with_write_namespace_accepted"
         ]
       }
     }
