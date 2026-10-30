@@ -1,0 +1,75 @@
+{
+  "schema": "CanaryPlan/v2",
+  "id": "kcp0017-broker-pair-30029310",
+  "owner": "KCP-0017 / Model Connector compose-broker maintainer",
+  "producer_repository": "/home/dev/orca/workspaces/arcanada/KCP-0017-broker-canary-run",
+  "environment": "Arcana DEVS isolated Model Connector source",
+  "read_only": true,
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "30029310f4a27085792e2ac28e35a360149332ef",
+    "tree": "6d0689472445a653c387a96bcb41edd4930c5325",
+    "evidence": {
+      "path": "source.json",
+      "sha256": "776c33b33edb93d1c37f5750dccdb62a171f08336813478372e5a2eeb9197e87",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "id": "compose-broker-fixture-suite",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/bash",
+        "deploy/arcanada-compose-broker.test.sh"
+      ],
+      "cwd": ".",
+      "entities": [
+        "code_unit:deploy/arcanada-compose-broker.sh",
+        "code_unit:deploy/arcanada-compose-broker.test.sh"
+      ],
+      "mutating": false,
+      "timeout_seconds": 120,
+      "capture_limit_bytes": 65536,
+      "executable_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+      "execution_files": [
+        {
+          "path": "/home/dev/orca/workspaces/arcanada/KCP-0017-broker-canary-run/deploy/arcanada-compose-broker.test.sh",
+          "sha256": "e242d312c298bd4449a63cfe3d3f9e1c4e31101d1965850b6e2e2c3244fc7df9",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/home/dev/orca/workspaces/arcanada/KCP-0017-broker-canary-run/deploy/arcanada-compose-broker.sh",
+          "sha256": "f1162e1988675fee181668ed0ac6971c4c86a4c14e8091a1fe07489d667e2bd8",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/usr/bin/bash",
+          "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+          "attribution": {
+            "kind": "system_executable",
+            "source_id": "/usr/bin/bash",
+            "version": "sha256:bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1"
+          }
+        }
+      ],
+      "env_keys": [],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "PASS: kc_new_image_pair_accepted",
+          "PASS: kc_image_outside_pair_set_refused",
+          "PASS: kc_pair_selector_refuses_prefix_and_lookalike_refs",
+          "PASS: kc_upgrade_old_to_new_pair",
+          "PASS: kc_upgrade_failure_rolls_back_to_old_pair"
+        ]
+      }
+    }
+  ]
+}

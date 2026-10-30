@@ -51,12 +51,12 @@ readonly MUNERAL_HEALTH_URL='http://127.0.0.1:3500/health'
 readonly KC_SHARED_HEALTH_URL='http://127.0.0.1:8310/health'
 readonly KC_PROJECT_HEALTH_URL='http://127.0.0.1:8311/health'
 # KCP-0033: an explicit, reviewed pair set. OLD stays valid so an upgrade can roll back; NEW carries the
-# project write adapter (Scrutator 16a4061f). KC_IMAGE_REF/KC_IMAGE_ID are the pair selected for the
+# project write adapter and the Auth introspection retry + positive cache (Scrutator cc1e9828, KCP-0017); OLD is the previous pair member 16a4061f. KC_IMAGE_REF/KC_IMAGE_ID are the pair selected for the
 # current operation (from the rendered Compose image, or from the running container for status).
-readonly KC_OLD_IMAGE_ID='sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17'
-readonly KC_OLD_IMAGE_REF='scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547'
-readonly KC_NEW_IMAGE_ID='sha256:ae4a4768ce83f34b3dc7c5b1620f836b8eafef86e32687b43a5c6a4eaa0c0c85'
-readonly KC_NEW_IMAGE_REF='scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c'
+readonly KC_OLD_IMAGE_ID='sha256:ae4a4768ce83f34b3dc7c5b1620f836b8eafef86e32687b43a5c6a4eaa0c0c85'
+readonly KC_OLD_IMAGE_REF='scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c'
+readonly KC_NEW_IMAGE_ID='sha256:9adb3252b20ddd5508f42fcb56fc2c28512b047d192cb545e40f31a5869e3b26'
+readonly KC_NEW_IMAGE_REF='scrutator-deploy:cc1e9828a89444c752faefec8fa39236d181465d'
 KC_IMAGE_ID="$KC_NEW_IMAGE_ID"
 KC_IMAGE_REF="$KC_NEW_IMAGE_REF"
 readonly KC_CONTAINER='knowledge-contract-scrutator-scrutator-1'
