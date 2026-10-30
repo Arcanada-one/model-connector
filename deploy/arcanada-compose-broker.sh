@@ -1073,57 +1073,56 @@ try:
                 "http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect")
     else:
         require(False)
+    # KCP-0017 step 2 re-review: the service is validated by ALLOWLIST, for both variants. Each
+    # denylist was bypassed by the next key (resolver/loader environment, healthcheck or command
+    # running code in a root container on the shared network). The allowed keys are exactly the
+    # ones docker compose renders for the reviewed compose files; command and entrypoint are
+    # rendered as null and must stay null. Anything else (user, tmpfs, post_start, uts,
+    # userns_mode, runtime, network_mode, privileged, cap_add, extra_hosts, dns*, sysctls, volumes,
+    # devices, security_opt, ulimits, ...) is refused because it is not listed.
+    require(set(svc) <= {"image", "container_name", "environment", "ports", "restart",
+                         "healthcheck", "networks", "command", "entrypoint"})
+    require(svc.get("command") is None and svc.get("entrypoint") is None)
     require(svc.get("container_name") == "knowledge-contract-scrutator-scrutator-1")
     require(svc.get("image") in (sys.argv[1], sys.argv[2]))
-    require(not svc.get("network_mode") and not svc.get("privileged"))
-    for key in ("volumes", "volumes_from", "secrets", "configs", "devices",
-                "cap_add", "security_opt", "pid", "ipc", "build", "extends",
-                "depends_on", "links", "external_links"):
-        require(not svc.get(key))
-    # KCP-0017 step 2 review: name resolution and kernel network settings of the service are
-    # part of the contract. INTERNAL introspects over plain http, so a hosts entry or resolver
-    # that renames auth-arcana-ai-app-1 would hand every introspected token to someone else.
-    for key in ("extra_hosts", "dns", "dns_search", "dns_opt", "sysctls"):
-        require(not svc.get(key))
+    require(svc.get("restart") == "unless-stopped")
+    require(svc.get("healthcheck") == {
+        "test": ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8310/health"],
+        "interval": "30s", "timeout": "5s", "retries": 3})
     require(svc.get("ports") == [{"mode": "ingress", "target": 8310,
         "published": "8311", "protocol": "tcp", "host_ip": "127.0.0.1"}])
     env = svc["environment"]
-    # The Scrutator introspection client (httpx, trust_env on by default) reads proxy and CA
-    # settings from the environment; a proxy would see every introspected token and a CA bundle
-    # would let a forged endpoint pass TLS. Compose renders env_file values into this mapping,
-    # so the rendered environment is what is checked. Any spelling of these keys is refused.
-    egress_keys = {"http_proxy", "https_proxy", "all_proxy", "no_proxy", "ws_proxy", "wss_proxy",
-                   "ssl_cert_file", "ssl_cert_dir", "sslkeylogfile"}
-    for key in env:
-        require(key.casefold() not in egress_keys)
-    require(env["SCRUTATOR_HOST"] == "0.0.0.0")
-    require(str(env["SCRUTATOR_PORT"]) == "8310")
-    require(str(env["SCRUTATOR_AUTH_ENFORCE"]).lower() == "true")
-    require(env["SCRUTATOR_AUTH_SERVICE_AUDIENCE"] == "urn:arcanada:scrutator:knowledge-contract")
-    require(env["SCRUTATOR_AUTH_SERVICE_SCOPE"] == "kb:knowledge-contract.read")
-    require(env["SCRUTATOR_FEEDER_NAMESPACES"] == "knowledge-contract")
-    # KCP-0033: the project write opt-in may name only this namespace; absent keeps it off.
-    require(env.get("SCRUTATOR_PROJECT_WRITE_NAMESPACE") in (None, "knowledge-contract"))
+    require(isinstance(env, dict))
+    # Environment: an exact key set. Compose renders env_file values (the root .env) into this
+    # mapping, so every proxy, resolver (LOCALDOMAIN, RES_OPTIONS, HOSTALIASES), loader
+    # (LD_PRELOAD, PYTHONPATH), CA bundle or other key is refused because it is not listed, in
+    # any spelling. Required keys must be present; optional keys are absent or pinned below.
+    required_env = {"SCRUTATOR_HOST", "SCRUTATOR_PORT", "SCRUTATOR_AUTH_ENFORCE",
+                    "SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL", "SCRUTATOR_AUTH_SERVICE_AUDIENCE",
+                    "SCRUTATOR_AUTH_SERVICE_SCOPE", "SCRUTATOR_FEEDER_NAMESPACES",
+                    "SCRUTATOR_DATABASE_URL"}
     # KCP-0035: the project instance reaches embeddings over the mesh address (its bridge network
     # cannot use the default localhost), with the same dense/sparse and timeout as the shared
     # instance. Each governed key is absent (the previous pair still validates for rollback) or
-    # exactly the reviewed value; empty, other values and look-alike keys are refused.
+    # exactly the reviewed value.
     governed = {
         "SCRUTATOR_EMBEDDING_API_URL": "http://100.90.7.20:8300",
         "SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED": "true",
         "SCRUTATOR_EMBEDDING_TIMEOUT": "300",
     }
+    optional_env = {"SCRUTATOR_PROJECT_WRITE_NAMESPACE"} | set(governed)
+    require(required_env <= set(env) <= required_env | optional_env)
+    require(all(isinstance(value, str) for value in env.values()))
+    require(env["SCRUTATOR_HOST"] == "0.0.0.0")
+    require(env["SCRUTATOR_PORT"] == "8310")
+    require(env["SCRUTATOR_AUTH_ENFORCE"] == "true")
+    require(env["SCRUTATOR_AUTH_SERVICE_AUDIENCE"] == "urn:arcanada:scrutator:knowledge-contract")
+    require(env["SCRUTATOR_AUTH_SERVICE_SCOPE"] == "kb:knowledge-contract.read")
+    require(env["SCRUTATOR_FEEDER_NAMESPACES"] == "knowledge-contract")
+    # KCP-0033: the project write opt-in may name only this namespace; absent keeps it off.
+    require(env.get("SCRUTATOR_PROJECT_WRITE_NAMESPACE") in (None, "knowledge-contract"))
     for key, wanted in governed.items():
-        require(key not in env or (isinstance(env[key], str) and env[key] == wanted))
-    # A key that differs from a governed or contract key only by case could be read by a
-    # case-insensitive settings loader; refuse every such look-alike.
-    exact = {"SCRUTATOR_HOST", "SCRUTATOR_PORT", "SCRUTATOR_AUTH_ENFORCE",
-             "SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL", "SCRUTATOR_AUTH_SERVICE_AUDIENCE",
-             "SCRUTATOR_AUTH_SERVICE_SCOPE", "SCRUTATOR_FEEDER_NAMESPACES",
-             "SCRUTATOR_PROJECT_WRITE_NAMESPACE", "SCRUTATOR_DATABASE_URL"} | set(governed)
-    folded = {key.casefold(): key for key in exact}
-    for key in env:
-        require(key.casefold() not in folded or folded[key.casefold()] == key)
+        require(key not in env or env[key] == wanted)
     dsn = urlsplit(env["SCRUTATOR_DATABASE_URL"])
     require(dsn.scheme in ("postgres", "postgresql"))
     require(dsn.username == "kc_scrutator_app" and bool(dsn.password))
