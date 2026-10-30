@@ -1222,6 +1222,111 @@ kc_fresh
 if ! kc_run >"${fixture_dir}/kc-embed-absent.out" 2>&1; then echo 'FAIL: absent embedding env refused (old pair rollback path)' >&2; exit 1; fi
 echo 'PASS: kc_embedding_env_absent_accepted'
 
+# KCP-0017 step 2: exactly two reviewed network/introspection variants are accepted.
+#   PUBLIC   = default network only + the public introspection URL (today's render).
+#   INTERNAL = default network + external network key "auth-arcana-ai" named auth-arcana-ai_default,
+#              attached to the service, + exactly the internal introspection URL.
+kc_public_url='https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect'
+kc_internal_url='http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_edit() { # <python statements over x (config), svc, env, nets>
+  python3 - "$fake_docker_state/kc-config.json" "$1" <<'PY'
+import json, sys
+p, code = sys.argv[1:3]
+x = json.load(open(p))
+svc = x["services"]["scrutator"]
+env = svc["environment"]
+nets = x["networks"]
+exec(code)
+json.dump(x, open(p, "w"))
+PY
+}
+kc_variant_public() {
+  kc_edit "nets.clear(); nets['default'] = {'name': 'knowledge-contract-scrutator_default', 'ipam': {}}; svc['networks'] = {'default': None}; env['SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL'] = '${kc_public_url}'"
+}
+kc_variant_public
+cp -- "$fake_docker_state/kc-config.json" "${fixture_dir}/kc-config-public.json"
+# The exact render docker compose produces for the reviewed contract-place-api compose.yml (INTERNAL).
+kc_edit "nets['auth-arcana-ai'] = {'name': 'auth-arcana-ai_default', 'ipam': {}, 'external': True}; svc['networks'] = {'auth-arcana-ai': None, 'default': None}; env['SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL'] = '${kc_internal_url}'"
+cp -- "$fake_docker_state/kc-config.json" "${fixture_dir}/kc-config-internal.json"
+kc_use() { cp -- "${fixture_dir}/kc-config-$1.json" "$fake_docker_state/kc-config.json"; }
+kc_route_refused() { # <name> <python edit applied on top of the exact INTERNAL variant>
+  kc_use internal
+  kc_edit "$2"
+  kc_fresh
+  if kc_run >"${fixture_dir}/kc-route-$1.out" 2>&1; then echo "FAIL: route variant ${1} accepted" >&2; exit 1; fi
+  grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-route-$1.out" || { echo "FAIL: route variant ${1} not refused by the contract" >&2; exit 1; }
+  [[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+  kc_use public
+  echo "PASS: kc_route_${1}_refused"
+}
+kc_use public
+kc_fresh
+if ! kc_run >"${fixture_dir}/kc-route-public.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-route-public.out" >&2; echo 'FAIL: PUBLIC variant refused' >&2; exit 1; fi
+grep -Fq 'KC_PROJECT_DEPLOY_PASS' "${fixture_dir}/kc-route-public.out" || exit 1
+echo 'PASS: kc_route_public_variant_accepted'
+kc_use internal
+kc_fresh
+if ! kc_run >"${fixture_dir}/kc-route-internal.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-route-internal.out" >&2; echo 'FAIL: INTERNAL variant refused' >&2; exit 1; fi
+grep -Fq 'KC_PROJECT_DEPLOY_PASS' "${fixture_dir}/kc-route-internal.out" || exit 1
+echo 'PASS: kc_route_internal_variant_accepted'
+kc_use public
+# The URL and the network only together.
+kc_route_refused internal_url_without_network "nets.pop('auth-arcana-ai'); svc['networks'] = {'default': None}"
+kc_route_refused network_with_public_url "env['SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL'] = '${kc_public_url}'"
+kc_route_refused network_declared_not_attached "svc['networks'] = {'default': None}"
+kc_route_refused network_attached_without_default "svc['networks'] = {'auth-arcana-ai': None}"
+# Any other external network, key, name or attribute.
+kc_route_refused other_external_name "nets['auth-arcana-ai']['name'] = 'auth-arcana-prod_default'"
+kc_route_refused lookalike_name_suffix "nets['auth-arcana-ai']['name'] = 'auth-arcana-ai_default2'"
+kc_route_refused lookalike_name_case "nets['auth-arcana-ai']['name'] = 'Auth-arcana-ai_default'"
+kc_route_refused lookalike_name_space "nets['auth-arcana-ai']['name'] = 'auth-arcana-ai_default '"
+kc_route_refused other_network_key "nets['auth'] = nets.pop('auth-arcana-ai'); svc['networks'] = {'auth': None, 'default': None}"
+kc_route_refused not_external "nets['auth-arcana-ai'].pop('external')"
+kc_route_refused external_false "nets['auth-arcana-ai']['external'] = False"
+kc_route_refused external_string "nets['auth-arcana-ai']['external'] = 'true'"
+kc_route_refused network_driver "nets['auth-arcana-ai']['driver'] = 'bridge'"
+kc_route_refused network_ipam_config "nets['auth-arcana-ai']['ipam'] = {'config': [{'subnet': '172.30.0.0/16'}]}"
+kc_route_refused third_network "nets['other'] = {'name': 'other_default', 'ipam': {}, 'external': True}; svc['networks']['other'] = None"
+kc_route_refused extra_service_attachment "svc['networks']['other'] = None"
+kc_route_refused attachment_aliases "svc['networks']['auth-arcana-ai'] = {'aliases': ['scrutator']}"
+kc_route_refused attachment_static_ip "svc['networks']['auth-arcana-ai'] = {'ipv4_address': '172.30.0.9'}"
+kc_route_refused links "svc['links'] = ['auth-arcana-ai-app-1']"
+kc_route_refused external_links "svc['external_links'] = ['auth-arcana-ai-app-1']"
+kc_route_refused network_mode_host "svc['network_mode'] = 'host'; svc.pop('networks')"
+# Any other internal URL: scheme, host, port, path, userinfo, query, fragment, look-alikes.
+kc_route_url_refused() { kc_route_refused "url_$1" "env['SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL'] = '$2'"; }
+kc_route_url_refused https_scheme 'https://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused other_container 'http://auth-arcana-prod-app-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused host_port 'http://auth-arcana-ai-app-1:3220/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused no_port 'http://auth-arcana-ai-app-1/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused loopback 'http://127.0.0.1:3220/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused host_gateway 'http://host.docker.internal:3220/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused other_path 'http://auth-arcana-ai-app-1:3200/api/v1/api-keys/introspect'
+kc_route_url_refused trailing_slash 'http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect/'
+kc_route_url_refused userinfo 'http://user:pass@auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused query 'http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect?x=1'
+kc_route_url_refused fragment 'http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect#x'
+kc_route_url_refused uppercase_host 'http://AUTH-ARCANA-AI-APP-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused lookalike_host 'http://auth-arcana-ai-app-1.example.invalid:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused lookalike_host_suffix 'http://auth-arcana-ai-app-10:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused padded ' http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect'
+kc_route_url_refused empty ''
+kc_use public
+# On top of the PUBLIC variant: the service may attach only to the default network.
+kc_public_refused() { # <name> <python edit applied on top of the exact PUBLIC variant>
+  kc_use public
+  kc_edit "$2"
+  kc_fresh
+  if kc_run >"${fixture_dir}/kc-route-public-$1.out" 2>&1; then echo "FAIL: public variant ${1} accepted" >&2; exit 1; fi
+  grep -Fq 'Compose isolation contract failed' "${fixture_dir}/kc-route-public-$1.out" || { echo "FAIL: public variant ${1} not refused by the contract" >&2; exit 1; }
+  [[ ! -e "$fake_docker_state/kc-exists" ]] || exit 1
+  kc_use public
+  echo "PASS: kc_route_public_${1}_refused"
+}
+kc_public_refused undeclared_attachment "svc['networks']['auth-arcana-ai'] = None"
+kc_public_refused default_aliases "svc['networks']['default'] = {'aliases': ['scrutator']}"
+kc_public_refused internal_host_on_public_scheme "env['SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL'] = 'https://auth-arcana-ai-app-1/api/v1/api-keys/knowledge-contract/introspect'"
+
 # Selector level (not the Compose contract): a ref that only starts with a reviewed ref is not in the set.
 kc_selector_fn="$(sed -n '/^kc_pair_id_for_ref() {/,/^}/p' "$broker")"
 [[ -n "$kc_selector_fn" ]] || { echo 'FAIL: selector function not found' >&2; exit 1; }

@@ -1045,11 +1045,35 @@ try:
     require(set(services) == {"scrutator"})
     svc = services["scrutator"]
     networks = cfg.get("networks", {})
-    require(set(networks) == {"default"})
     network = networks["default"]
     require(network.get("name") == "knowledge-contract-scrutator_default")
     require(not network.get("external") and network.get("driver") in (None, "bridge"))
-    require(svc.get("networks") == {"default": None})
+    # KCP-0017 step 2: exactly two reviewed network/introspection variants.
+    #   PUBLIC:   the project default network only, and the public introspection URL.
+    #   INTERNAL: the default network plus exactly one external network, key "auth-arcana-ai",
+    #             name "auth-arcana-ai_default" (the Auth Arcana AI compose network), attached to
+    #             the service, and exactly the internal introspection URL on that network.
+    # Any other network set, name, attachment or URL is refused; the URL and the network are
+    # accepted only together.
+    introspect_raw = svc["environment"]["SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL"]
+    require(isinstance(introspect_raw, str))
+    if set(networks) == {"default"}:
+        require(svc.get("networks") == {"default": None})
+        introspect = urlsplit(introspect_raw)
+        require(introspect.scheme == "https" and introspect.hostname == "auth.arcanada.ai")
+        require(introspect.path == "/api/v1/api-keys/knowledge-contract/introspect")
+        require(not introspect.username and not introspect.password and not introspect.port)
+        require(not introspect.query and not introspect.fragment)
+    elif set(networks) == {"default", "auth-arcana-ai"}:
+        auth_net = networks["auth-arcana-ai"]
+        require(set(auth_net) <= {"name", "external", "ipam"})
+        require(auth_net.get("name") == "auth-arcana-ai_default")
+        require(auth_net.get("external") is True and not auth_net.get("ipam"))
+        require(svc.get("networks") == {"default": None, "auth-arcana-ai": None})
+        require(introspect_raw ==
+                "http://auth-arcana-ai-app-1:3200/api/v1/api-keys/knowledge-contract/introspect")
+    else:
+        require(False)
     require(svc.get("container_name") == "knowledge-contract-scrutator-scrutator-1")
     require(svc.get("image") in (sys.argv[1], sys.argv[2]))
     require(not svc.get("network_mode") and not svc.get("privileged"))
@@ -1063,11 +1087,6 @@ try:
     require(env["SCRUTATOR_HOST"] == "0.0.0.0")
     require(str(env["SCRUTATOR_PORT"]) == "8310")
     require(str(env["SCRUTATOR_AUTH_ENFORCE"]).lower() == "true")
-    introspect = urlsplit(env["SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL"])
-    require(introspect.scheme == "https" and introspect.hostname == "auth.arcanada.ai")
-    require(introspect.path == "/api/v1/api-keys/knowledge-contract/introspect")
-    require(not introspect.username and not introspect.password and not introspect.port)
-    require(not introspect.query and not introspect.fragment)
     require(env["SCRUTATOR_AUTH_SERVICE_AUDIENCE"] == "urn:arcanada:scrutator:knowledge-contract")
     require(env["SCRUTATOR_AUTH_SERVICE_SCOPE"] == "kb:knowledge-contract.read")
     require(env["SCRUTATOR_FEEDER_NAMESPACES"] == "knowledge-contract")
