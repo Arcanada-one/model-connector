@@ -1059,11 +1059,10 @@ try:
     require(isinstance(introspect_raw, str))
     if set(networks) == {"default"}:
         require(svc.get("networks") == {"default": None})
-        introspect = urlsplit(introspect_raw)
-        require(introspect.scheme == "https" and introspect.hostname == "auth.arcanada.ai")
-        require(introspect.path == "/api/v1/api-keys/knowledge-contract/introspect")
-        require(not introspect.username and not introspect.password and not introspect.port)
-        require(not introspect.query and not introspect.fragment)
+        # Exact string, as for INTERNAL: a parsed check folded the host case and let
+        # `https://AUTH.ARCANADA.AI/...` through.
+        require(introspect_raw ==
+                "https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect")
     elif set(networks) == {"default", "auth-arcana-ai"}:
         auth_net = networks["auth-arcana-ai"]
         require(set(auth_net) <= {"name", "external", "ipam"})
@@ -1081,9 +1080,22 @@ try:
                 "cap_add", "security_opt", "pid", "ipc", "build", "extends",
                 "depends_on", "links", "external_links"):
         require(not svc.get(key))
+    # KCP-0017 step 2 review: name resolution and kernel network settings of the service are
+    # part of the contract. INTERNAL introspects over plain http, so a hosts entry or resolver
+    # that renames auth-arcana-ai-app-1 would hand every introspected token to someone else.
+    for key in ("extra_hosts", "dns", "dns_search", "dns_opt", "sysctls"):
+        require(not svc.get(key))
     require(svc.get("ports") == [{"mode": "ingress", "target": 8310,
         "published": "8311", "protocol": "tcp", "host_ip": "127.0.0.1"}])
     env = svc["environment"]
+    # The Scrutator introspection client (httpx, trust_env on by default) reads proxy and CA
+    # settings from the environment; a proxy would see every introspected token and a CA bundle
+    # would let a forged endpoint pass TLS. Compose renders env_file values into this mapping,
+    # so the rendered environment is what is checked. Any spelling of these keys is refused.
+    egress_keys = {"http_proxy", "https_proxy", "all_proxy", "no_proxy", "ws_proxy", "wss_proxy",
+                   "ssl_cert_file", "ssl_cert_dir", "sslkeylogfile"}
+    for key in env:
+        require(key.casefold() not in egress_keys)
     require(env["SCRUTATOR_HOST"] == "0.0.0.0")
     require(str(env["SCRUTATOR_PORT"]) == "8310")
     require(str(env["SCRUTATOR_AUTH_ENFORCE"]).lower() == "true")

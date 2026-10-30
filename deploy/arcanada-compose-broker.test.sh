@@ -1326,6 +1326,40 @@ kc_public_refused() { # <name> <python edit applied on top of the exact PUBLIC v
 kc_public_refused undeclared_attachment "svc['networks']['auth-arcana-ai'] = None"
 kc_public_refused default_aliases "svc['networks']['default'] = {'aliases': ['scrutator']}"
 kc_public_refused internal_host_on_public_scheme "env['SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL'] = 'https://auth-arcana-ai-app-1/api/v1/api-keys/knowledge-contract/introspect'"
+# Third network declared but not attached: refused over both variants.
+kc_route_refused third_network_declared_not_attached "nets['other'] = {'name': 'other_default', 'ipam': {}, 'external': True}"
+kc_public_refused third_network_declared_not_attached "nets['other'] = {'name': 'other_default', 'ipam': {}, 'external': True}"
+# PUBLIC URL is an exact string too.
+kc_public_url_refused() { kc_public_refused "url_$1" "env['SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL'] = '$2'"; }
+kc_public_url_refused port_443 'https://auth.arcanada.ai:443/api/v1/api-keys/knowledge-contract/introspect'
+kc_public_url_refused userinfo 'https://user:pass@auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect'
+kc_public_url_refused query 'https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect?x=1'
+kc_public_url_refused fragment 'https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect#x'
+kc_public_url_refused trailing_slash 'https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect/'
+kc_public_url_refused uppercase_host 'https://AUTH.ARCANADA.AI/api/v1/api-keys/knowledge-contract/introspect'
+kc_public_url_refused http_scheme 'http://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect'
+# Name resolution, kernel network settings and egress environment of the service (review finding 1):
+# refused over BOTH variants. Compose renders env_file values into environment, so these cover env_file.
+kc_both_refused() { kc_route_refused "$1" "$2"; kc_public_refused "$1" "$2"; }
+kc_both_refused extra_hosts_list "svc['extra_hosts'] = ['auth-arcana-ai-app-1=203.0.113.5']"
+kc_both_refused extra_hosts_mapping "svc['extra_hosts'] = {'auth.arcanada.ai': '203.0.113.5'}"
+kc_both_refused dns "svc['dns'] = ['203.0.113.53']"
+kc_both_refused dns_search "svc['dns_search'] = ['example.invalid']"
+kc_both_refused dns_opt "svc['dns_opt'] = ['ndots:5']"
+kc_both_refused sysctls "svc['sysctls'] = {'net.ipv4.ip_forward': '1'}"
+kc_both_refused cap_add_net_admin "svc['cap_add'] = ['NET_ADMIN']"
+kc_both_refused privileged "svc['privileged'] = True"
+kc_public_refused network_mode_host "svc['network_mode'] = 'host'; svc.pop('networks')"
+for kc_egress_key in HTTP_PROXY http_proxy Https_Proxy HTTPS_PROXY ALL_PROXY all_proxy NO_PROXY no_proxy WS_PROXY wss_proxy SSL_CERT_FILE ssl_cert_dir SSLKEYLOGFILE; do
+  kc_both_refused "env_${kc_egress_key}" "env['${kc_egress_key}'] = 'http://203.0.113.7:3128'"
+done
+# Empty forms stay accepted (the checks refuse non-empty values only); an unrelated *_PROXY-like key is fine.
+kc_use internal
+kc_edit "svc['extra_hosts'] = []; svc['dns'] = []; env['SCRUTATOR_PROXY_NOTE'] = 'none'"
+kc_fresh
+if ! kc_run >"${fixture_dir}/kc-route-empty-forms.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-route-empty-forms.out" >&2; echo 'FAIL: empty extra_hosts/dns or unrelated key refused' >&2; exit 1; fi
+kc_use public
+echo 'PASS: kc_route_empty_extra_hosts_dns_and_unrelated_key_accepted'
 
 # Selector level (not the Compose contract): a ref that only starts with a reviewed ref is not in the set.
 kc_selector_fn="$(sed -n '/^kc_pair_id_for_ref() {/,/^}/p' "$broker")"
