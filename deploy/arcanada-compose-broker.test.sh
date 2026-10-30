@@ -189,10 +189,10 @@ set -euo pipefail
 printf '%s\n' "$*" >>"$FAKE_DOCKER_LOG"
 ref_id() {
   case "$1" in
-    scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547)
-      printf '%s' "${FAKE_KC_IMAGE_ID:-sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17}"; return 0 ;;
     scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c)
-      printf '%s' 'sha256:ae4a4768ce83f34b3dc7c5b1620f836b8eafef86e32687b43a5c6a4eaa0c0c85'; return 0 ;;
+      printf '%s' "${FAKE_KC_IMAGE_ID:-sha256:ae4a4768ce83f34b3dc7c5b1620f836b8eafef86e32687b43a5c6a4eaa0c0c85}"; return 0 ;;
+    scrutator-deploy:cc1e9828a89444c752faefec8fa39236d181465d)
+      printf '%s' 'sha256:9adb3252b20ddd5508f42fcb56fc2c28512b047d192cb545e40f31a5869e3b26'; return 0 ;;
     *:latest) tag=latest ;;
     *:previous) tag=previous ;;
     muneral-api:*)
@@ -276,7 +276,7 @@ if [[ "${1:-}" == compose ]]; then
         for arg in "$@"; do [[ "$prev" == -f ]] && compose_file="$arg"; prev="$arg"; done
         sed -n 's/^# image=//p' "$compose_file" | tail -1; exit 0
       fi
-      printf '%s\n' 'scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547'; exit 0
+      printf '%s\n' 'scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c'; exit 0
     fi
     if [[ " $* " == *' up -d --no-build --no-deps scrutator '* ||
           " $* " == *' up -d --force-recreate --no-build --no-deps scrutator '* ]]; then
@@ -938,9 +938,9 @@ rm -rf -- "$kc_dir"
 printf '%s\n' 'SCRUTATOR_DATABASE_URL=postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract' >"${env_root}/knowledge-contract-scrutator.env"
 chmod 0600 "${env_root}/knowledge-contract-scrutator.env"
 cat >"$fake_docker_state/kc-config.json" <<'JSON'
-{"name":"knowledge-contract-scrutator","networks":{"default":{"name":"knowledge-contract-scrutator_default","ipam":{}}},"services":{"scrutator":{"container_name":"knowledge-contract-scrutator-scrutator-1","image":"scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547","networks":{"default":null},"ports":[{"mode":"ingress","target":8310,"published":"8311","protocol":"tcp","host_ip":"127.0.0.1"}],"environment":{"SCRUTATOR_HOST":"0.0.0.0","SCRUTATOR_PORT":"8310","SCRUTATOR_AUTH_ENFORCE":"true","SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL":"https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect","SCRUTATOR_AUTH_SERVICE_AUDIENCE":"urn:arcanada:scrutator:knowledge-contract","SCRUTATOR_AUTH_SERVICE_SCOPE":"kb:knowledge-contract.read","SCRUTATOR_FEEDER_NAMESPACES":"knowledge-contract","SCRUTATOR_DATABASE_URL":"postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract"}}}}
+{"name":"knowledge-contract-scrutator","networks":{"default":{"name":"knowledge-contract-scrutator_default","ipam":{}}},"services":{"scrutator":{"container_name":"knowledge-contract-scrutator-scrutator-1","image":"scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c","networks":{"default":null},"ports":[{"mode":"ingress","target":8310,"published":"8311","protocol":"tcp","host_ip":"127.0.0.1"}],"environment":{"SCRUTATOR_HOST":"0.0.0.0","SCRUTATOR_PORT":"8310","SCRUTATOR_AUTH_ENFORCE":"true","SCRUTATOR_AUTH_ARCANA_INTROSPECT_URL":"https://auth.arcanada.ai/api/v1/api-keys/knowledge-contract/introspect","SCRUTATOR_AUTH_SERVICE_AUDIENCE":"urn:arcanada:scrutator:knowledge-contract","SCRUTATOR_AUTH_SERVICE_SCOPE":"kb:knowledge-contract.read","SCRUTATOR_FEEDER_NAMESPACES":"knowledge-contract","SCRUTATOR_DATABASE_URL":"postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract"}}}}
 JSON
-printf '%s\n' 'sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17' >"$fake_docker_state/kc-running-image"
+printf '%s\n' 'sha256:ae4a4768ce83f34b3dc7c5b1620f836b8eafef86e32687b43a5c6a4eaa0c0c85' >"$fake_docker_state/kc-running-image"
 kc_run() { printf '%s\n' 'fixture-token-abcdefghijklmnopqrstuvwxyz' | "$kc_broker" knowledge-contract-scrutator kc-deploy "$kc_head"; }
 [[ ! -e "$fake_docker_state/kc-exists" ]] || { echo 'FAIL: fake project exists before deploy' >&2; exit 1; }
 if ! kc_run >"${fixture_dir}/kc-success.out" 2>&1; then
@@ -1106,14 +1106,14 @@ grep -Fq 'KC_PROJECT_UPGRADE_ROLLBACK_PASS' "${fixture_dir}/kc-upgrade-rollback.
 unset FAKE_KC_FAIL_UPGRADE_HEALTH
 echo 'PASS: kc_upgrade_health_failure_restores_previous_checkout_and_project'
 
-# KCP-0033: explicit reviewed image-pair set {old e87b4c84, new 16a4061f}. The image the checkout
+# KCP-0033: explicit reviewed image-pair set {old 16a4061f, new cc1e9828}. The image the checkout
 # renders selects the pair; the running container must match one pair before an upgrade; the
 # postcondition and the rollback use the selected pair; the project write opt-in may name only
 # knowledge-contract.
-kc_old_ref='scrutator-deploy:e87b4c84c9da8b2cbbb48dc2d02763e478a22547'
-kc_old_id='sha256:a7f7a494c1dc3879e4731f8f91ebada70a2372ec7de433196b26dc748cf4bf17'
-kc_new_ref='scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c'
-kc_new_id='sha256:ae4a4768ce83f34b3dc7c5b1620f836b8eafef86e32687b43a5c6a4eaa0c0c85'
+kc_old_ref='scrutator-deploy:16a4061f0493fef5fc159e252cd793185ec2283c'
+kc_old_id='sha256:ae4a4768ce83f34b3dc7c5b1620f836b8eafef86e32687b43a5c6a4eaa0c0c85'
+kc_new_ref='scrutator-deploy:cc1e9828a89444c752faefec8fa39236d181465d'
+kc_new_id='sha256:9adb3252b20ddd5508f42fcb56fc2c28512b047d192cb545e40f31a5869e3b26'
 export FAKE_KC_IMAGE_FROM_CHECKOUT=1
 kc_commit_image() {
   printf '%s\n' "# image=$1" >>"$kc_source/deploy/knowledge-contract-scrutator/compose.yml"
