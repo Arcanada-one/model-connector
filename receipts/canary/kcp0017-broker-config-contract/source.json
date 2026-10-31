@@ -1,0 +1,9 @@
+{
+  "schema": "MeasuredGitSource/v1",
+  "commit": "b994e5c9701ba656d18a1372faccb7ea5bb40db1",
+  "tree": "cd8f5fe1dd906456ae58c9b101f7650569763183",
+  "dirty": false,
+  "producer": "git rev-parse on isolated Arcana DEVS worktree",
+  "captured_at_utc": "2026-10-31T11:15:09Z",
+  "repository_path": "/home/dev/aup/claude-work/mc243r.UR4PEZ/src"
+}
