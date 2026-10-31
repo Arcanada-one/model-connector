@@ -1,0 +1,9 @@
+{
+  "schema": "MeasuredGitSource/v1",
+  "commit": "972e72bacd2026d1c5625c8012a2b9d70f090b55",
+  "tree": "2ef6e72cf316490357aa4830cd0406056498296f",
+  "dirty": false,
+  "producer": "git rev-parse on isolated Arcana DEVS worktree",
+  "captured_at_utc": "2026-10-31T03:50:14Z",
+  "repository_path": "/home/dev/orca/workspaces/arcanada/KCP-0017-broker-exact-bytes-canary-run"
+}
