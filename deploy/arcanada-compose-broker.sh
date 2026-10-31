@@ -1110,7 +1110,16 @@ try:
         "SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED": "true",
         "SCRUTATOR_EMBEDDING_TIMEOUT": "300",
     }
-    optional_env = {"SCRUTATOR_PROJECT_WRITE_NAMESPACE"} | set(governed)
+    # KCP-0017 exact bytes: the project instance may serve exact document bytes for exactly the
+    # knowledge-contract namespace. Both keys are absent (the previous checkout still validates for
+    # rollback) or both present with exactly these strings. The namespaces value must be this JSON
+    # string: a plain string stops the app at import, and the flag without the list would enable
+    # every non-skills namespace.
+    exact_bytes = {
+        "SCRUTATOR_EVIDENCE_EXACT_BYTES": "true",
+        "SCRUTATOR_EVIDENCE_EXACT_NAMESPACES": "[\"knowledge-contract\"]",
+    }
+    optional_env = {"SCRUTATOR_PROJECT_WRITE_NAMESPACE"} | set(governed) | set(exact_bytes)
     require(required_env <= set(env) <= required_env | optional_env)
     require(all(isinstance(value, str) for value in env.values()))
     require(env["SCRUTATOR_HOST"] == "0.0.0.0")
@@ -1122,6 +1131,10 @@ try:
     # KCP-0033: the project write opt-in may name only this namespace; absent keeps it off.
     require(env.get("SCRUTATOR_PROJECT_WRITE_NAMESPACE") in (None, "knowledge-contract"))
     for key, wanted in governed.items():
+        require(key not in env or env[key] == wanted)
+    exact_present = [key in env for key in exact_bytes]
+    require(all(exact_present) or not any(exact_present))
+    for key, wanted in exact_bytes.items():
         require(key not in env or env[key] == wanted)
     dsn = urlsplit(env["SCRUTATOR_DATABASE_URL"])
     require(dsn.scheme in ("postgres", "postgresql"))

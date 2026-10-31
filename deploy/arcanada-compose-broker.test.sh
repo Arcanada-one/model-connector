@@ -1399,6 +1399,56 @@ if ! kc_run >"${fixture_dir}/kc-route-internal-optional.out" 2>&1; then sed -n '
 kc_use public
 echo 'PASS: kc_route_internal_with_write_namespace_accepted'
 
+# KCP-0017 exact bytes: SCRUTATOR_EVIDENCE_EXACT_BYTES="true" and SCRUTATOR_EVIDENCE_EXACT_NAMESPACES
+# exactly the JSON string ["knowledge-contract"]: both absent (today) or both present, over both variants.
+kc_eb_set="env['SCRUTATOR_EVIDENCE_EXACT_BYTES'] = 'true'; env['SCRUTATOR_EVIDENCE_EXACT_NAMESPACES'] = '[\"knowledge-contract\"]'"
+kc_eb_accepted() { # <variant>
+  kc_use "$1"
+  kc_edit "$kc_eb_set"
+  kc_fresh
+  if ! kc_run >"${fixture_dir}/kc-eb-$1.out" 2>&1; then sed -n '1,30p' "${fixture_dir}/kc-eb-$1.out" >&2; echo "FAIL: exact-bytes pair refused on $1" >&2; exit 1; fi
+  grep -Fq 'KC_PROJECT_DEPLOY_PASS' "${fixture_dir}/kc-eb-$1.out" || exit 1
+  kc_use public
+  echo "PASS: kc_exact_bytes_pair_accepted_$1"
+}
+kc_eb_accepted internal
+kc_eb_accepted public
+kc_eb_both_refused() { kc_both_refused "exact_bytes_$1" "${kc_eb_set}; $2"; }
+# The pair: one key without the other.
+kc_eb_both_refused flag_without_namespaces "env.pop('SCRUTATOR_EVIDENCE_EXACT_NAMESPACES')"
+kc_eb_both_refused namespaces_without_flag "env.pop('SCRUTATOR_EVIDENCE_EXACT_BYTES')"
+# Flag near-misses.
+for kc_eb_flag in 'True' 'TRUE' ' true' 'true ' '1' 'yes' 'on' '' 'false'; do
+  kc_eb_both_refused "flag_$(printf '%s' "$kc_eb_flag" | od -An -tx1 | tr -d ' \n')" "env['SCRUTATOR_EVIDENCE_EXACT_BYTES'] = '${kc_eb_flag}'"
+done
+kc_eb_both_refused flag_bare "env['SCRUTATOR_EVIDENCE_EXACT_BYTES'] = None"
+kc_eb_both_refused flag_bool "env['SCRUTATOR_EVIDENCE_EXACT_BYTES'] = True"
+# Namespace list near-misses: plain string, extra or other namespaces, whitespace/quoting variants, empty, null.
+kc_eb_ns_refused() { kc_eb_both_refused "namespaces_$1" "env['SCRUTATOR_EVIDENCE_EXACT_NAMESPACES'] = $2"; }
+kc_eb_ns_refused plain_string "'knowledge-contract'"
+kc_eb_ns_refused extra_namespace "'[\"knowledge-contract\", \"kc2-store\"]'"
+kc_eb_ns_refused extra_namespace_compact "'[\"knowledge-contract\",\"kc2-store\"]'"
+kc_eb_ns_refused duplicate "'[\"knowledge-contract\",\"knowledge-contract\"]'"
+kc_eb_ns_refused other_namespace "'[\"kc2-store\"]'"
+kc_eb_ns_refused skills "'[\"skills\"]'"
+kc_eb_ns_refused case "'[\"Knowledge-Contract\"]'"
+kc_eb_ns_refused inner_space "'[ \"knowledge-contract\"]'"
+kc_eb_ns_refused inner_space_end "'[\"knowledge-contract\" ]'"
+kc_eb_ns_refused padded "' [\"knowledge-contract\"]'"
+kc_eb_ns_refused trailing_newline "'[\"knowledge-contract\"]\n'"
+kc_eb_ns_refused single_quotes "\"['knowledge-contract']\""
+kc_eb_ns_refused empty_list "'[]'"
+kc_eb_ns_refused null "'null'"
+kc_eb_ns_refused empty_string "''"
+kc_eb_ns_refused bare "None"
+kc_eb_ns_refused native_list "['knowledge-contract']"
+# Look-alike key spellings are not listed.
+kc_both_refused exact_bytes_lowercase_flag_key "${kc_eb_set}; env['scrutator_evidence_exact_bytes'] = env.pop('SCRUTATOR_EVIDENCE_EXACT_BYTES')"
+kc_both_refused exact_bytes_lowercase_namespaces_key "${kc_eb_set}; env['Scrutator_Evidence_Exact_Namespaces'] = env.pop('SCRUTATOR_EVIDENCE_EXACT_NAMESPACES')"
+# Other evidence settings stay unlisted.
+kc_both_refused exact_bytes_population_cap "${kc_eb_set}; env['SCRUTATOR_EVIDENCE_POPULATION_MAX_BYTES'] = '1048576'"
+kc_both_refused exact_bytes_feeder_token "${kc_eb_set}; env['SCRUTATOR_FEEDER_TOKEN'] = 'x'"
+
 # Selector level (not the Compose contract): a ref that only starts with a reviewed ref is not in the set.
 kc_selector_fn="$(sed -n '/^kc_pair_id_for_ref() {/,/^}/p' "$broker")"
 [[ -n "$kc_selector_fn" ]] || { echo 'FAIL: selector function not found' >&2; exit 1; }
