@@ -1,0 +1,134 @@
+{
+  "schema": "CanaryPlan/v2",
+  "id": "kcp0017-broker-config-contract-b994e5c9",
+  "owner": "KCP-0017 / Model Connector compose-broker maintainer",
+  "producer_repository": "/home/dev/aup/claude-work/mc243r.UR4PEZ/src",
+  "environment": "Arcana DEVS isolated Model Connector source",
+  "read_only": true,
+  "subject": {
+    "schema": "GitCanarySubject/v1",
+    "commit": "b994e5c9701ba656d18a1372faccb7ea5bb40db1",
+    "tree": "cd8f5fe1dd906456ae58c9b101f7650569763183",
+    "evidence": {
+      "path": "source.json",
+      "sha256": "a428257b5a64cc7100c666c1f2a0149708c33a9d08409b320d964546d823d82a",
+      "source_field": "commit"
+    }
+  },
+  "probes": [
+    {
+      "id": "compose-broker-config-contract-suite",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/bash",
+        "deploy/arcanada-compose-broker-config-contract.test.sh"
+      ],
+      "cwd": ".",
+      "entities": [
+        "code_unit:deploy/arcanada-compose-broker.sh",
+        "code_unit:deploy/arcanada-compose-broker-config-contract.test.sh"
+      ],
+      "mutating": false,
+      "timeout_seconds": 120,
+      "capture_limit_bytes": 65536,
+      "executable_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+      "execution_files": [
+        {
+          "path": "/home/dev/aup/claude-work/mc243r.UR4PEZ/src/deploy/arcanada-compose-broker.sh",
+          "sha256": "c4934a165cd9866dd22eb22ad399293357001731cb69ea064ae8f6d8ec839258",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/home/dev/aup/claude-work/mc243r.UR4PEZ/src/deploy/arcanada-compose-broker-config-contract.test.sh",
+          "sha256": "ad822a4411804cd1635d4519ce24126c957cb0a35927b8dfc9e338b920197a01",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/usr/bin/bash",
+          "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+          "attribution": {
+            "kind": "system_executable",
+            "source_id": "/usr/bin/bash",
+            "version": "sha256:bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1"
+          }
+        }
+      ],
+      "env_keys": [],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "PASS: kc_contract_public_accepted",
+          "PASS: kc_contract_internal_accepted",
+          "PASS: kc_contract_public_top_injected_volumes_refused",
+          "PASS: kc_contract_public_top_injected_secrets_refused",
+          "PASS: kc_contract_public_default_driver_opts_refused",
+          "PASS: kc_contract_public_default_ipam_config_refused",
+          "PASS: kc_contract_internal_top_injected_volumes_refused",
+          "PASS: kc_contract_internal_top_injected_secrets_refused",
+          "PASS: kc_contract_internal_default_driver_opts_refused",
+          "PASS: kc_contract_internal_default_ipam_config_refused",
+          "PASS: kc_config_contract top-level and default-network allowlists (real renders)"
+        ]
+      }
+    },
+    {
+      "id": "compose-broker-fixture-suite",
+      "kind": "process",
+      "argv": [
+        "/usr/bin/bash",
+        "deploy/arcanada-compose-broker.test.sh"
+      ],
+      "cwd": ".",
+      "entities": [
+        "code_unit:deploy/arcanada-compose-broker.sh",
+        "code_unit:deploy/arcanada-compose-broker.test.sh"
+      ],
+      "mutating": false,
+      "timeout_seconds": 120,
+      "capture_limit_bytes": 65536,
+      "executable_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+      "execution_files": [
+        {
+          "path": "/home/dev/aup/claude-work/mc243r.UR4PEZ/src/deploy/arcanada-compose-broker.sh",
+          "sha256": "c4934a165cd9866dd22eb22ad399293357001731cb69ea064ae8f6d8ec839258",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/home/dev/aup/claude-work/mc243r.UR4PEZ/src/deploy/arcanada-compose-broker.test.sh",
+          "sha256": "3f466b6d043ec3bd250e86550e288688682e2bfd4298250bee99479f5129a8a0",
+          "attribution": {
+            "kind": "product_source"
+          }
+        },
+        {
+          "path": "/usr/bin/bash",
+          "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+          "attribution": {
+            "kind": "system_executable",
+            "source_id": "/usr/bin/bash",
+            "version": "sha256:bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1"
+          }
+        }
+      ],
+      "env_keys": [],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_contains": [
+          "PASS: kc_route_public_variant_accepted",
+          "PASS: kc_exact_bytes_pair_accepted_internal",
+          "PASS: kc_upgrade_old_to_new_pair"
+        ]
+      }
+    }
+  ]
+}

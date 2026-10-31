@@ -1040,6 +1040,10 @@ def require(ok):
         raise ValueError("isolation contract")
 try:
     cfg = json.load(sys.stdin)
+    # Top-level keys by ALLOWLIST: docker compose renders exactly name, services and networks
+    # for the reviewed compose files. volumes, secrets, configs, x-* extensions and include are
+    # refused because they are not listed.
+    require(isinstance(cfg, dict) and set(cfg) <= {"name", "services", "networks"})
     require(cfg.get("name") == "knowledge-contract-scrutator")
     services = cfg["services"]
     require(set(services) == {"scrutator"})
@@ -1047,7 +1051,10 @@ try:
     networks = cfg.get("networks", {})
     network = networks["default"]
     require(network.get("name") == "knowledge-contract-scrutator_default")
-    require(not network.get("external") and network.get("driver") in (None, "bridge"))
+    # The default network entry is exactly what docker compose renders for the reviewed files:
+    # {"name": ..., "ipam": {}}. driver, driver_opts, labels, internal, enable_ipv6, attachable,
+    # external and any ipam content are refused because they are not rendered there.
+    require(set(network) == {"name", "ipam"} and network["ipam"] == {})
     # KCP-0017 step 2: exactly two reviewed network/introspection variants.
     #   PUBLIC:   the project default network only, and the public introspection URL.
     #   INTERNAL: the default network plus exactly one external network, key "auth-arcana-ai",
