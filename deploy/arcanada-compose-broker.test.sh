@@ -692,6 +692,51 @@ expect_fail contract_place_api_has_no_registry_login contract-place-api registry
 expect_message contract_place_api_has_no_registry_login \
   'may not establish a registry credential: contract-place-api'
 
+# doc-md-html (Conversion Arcana): fixed checkout, pinned compose project, a root-owned env file
+# installed beside the root-level compose file, and the broker-derived build SHA. No deploy script,
+# no registry credential.
+dmh_checkout="${state_root}/doc-md-html"
+mkdir -p "$dmh_checkout"
+git -C "$dmh_checkout" init -q
+git -C "$dmh_checkout" -c user.email=t@example.invalid -c user.name=t \
+  commit -q --allow-empty -m 'fixture doc-md-html head'
+dmh_head="$(git -C "$dmh_checkout" rev-parse HEAD)"
+printf '%s\n' 'services: {api: {}}' >"${dmh_checkout}/docker-compose.arcanada.yml"
+printf '%s\n' 'API_KEYS=fixture:0000000000000000000000000000000000000000000000000000000000000000' \
+  >"${env_root}/doc-md-html.env"
+: >"$fake_docker_log"
+expect_pass doc_md_html_up_uses_fixed_project doc-md-html up
+grep -Fq "compose -p doc-md-html -f ${dmh_checkout}/docker-compose.arcanada.yml up -d" \
+  "$fake_docker_log" || { echo 'FAIL: doc-md-html compose project or path drifted' >&2; exit 1; }
+grep -Fxq "BUILD_SHA=${dmh_head}" "$fake_docker_log" || {
+  echo 'FAIL: doc-md-html build SHA did not come from broker checkout HEAD' >&2
+  exit 1
+}
+check_env_placement doc_md_html_env_installed_at_checkout_root doc-md-html \
+  "${dmh_checkout}/.env" "${dmh_checkout}/docker/.env"
+grep -Fq 'API_KEYS=fixture:' "${dmh_checkout}/.env"
+expect_pass doc_md_html_freshness_inspects_the_pinned_container doc-md-html freshness
+grep -Fq 'inspect doc-md-html-api --format {{.Created}}' "$fake_docker_log" || {
+  echo 'FAIL: doc-md-html freshness inspected an unexpected container' >&2
+  cat "$fake_docker_log" >&2
+  exit 1
+}
+expect_message doc_md_html_freshness_inspects_the_pinned_container \
+  'BROKER_FRESHNESS_PASS service=doc-md-html'
+# verify, rollback and smoke have no recipe for this service and must say so.
+expect_fail doc_md_html_verify_refuses doc-md-html verify
+expect_message doc_md_html_verify_refuses 'service has no verify script: doc-md-html'
+expect_fail doc_md_html_rollback_refuses doc-md-html rollback
+expect_message doc_md_html_rollback_refuses 'service has no rollback recipe: doc-md-html'
+expect_fail doc_md_html_smoke_refuses doc-md-html smoke
+expect_message doc_md_html_smoke_refuses 'service has no smoke check: doc-md-html'
+expect_fail doc_md_html_has_no_root_script doc-md-html run-deploy
+expect_message doc_md_html_has_no_root_script \
+  'service has no deploy script: doc-md-html'
+expect_fail doc_md_html_has_no_registry_login doc-md-html registry-login Arcanada
+expect_message doc_md_html_has_no_registry_login \
+  'may not establish a registry credential: doc-md-html'
+
 # Admitting a service to the DEPLOY allowlist must not admit it to anything
 # else. argana builds from its checkout and never pulls a private image, so it
 # has no REGISTRY_AUTH row; and its workflow drives build/up itself, so it has

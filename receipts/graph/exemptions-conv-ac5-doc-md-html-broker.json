@@ -1,0 +1,65 @@
+[
+ {
+  "entity": "code_unit:.github/workflows/ci.yml",
+  "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: workflow shell caller closure is not measurable by the current verifier (class carried by the KCP-0005 receipt); this PR does not change the file; owner KCP-0012 measures the class."
+ },
+ {
+  "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
+  "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: workflow shell caller closure is not measurable by the current verifier (class carried by the KCP-0005 receipt); this PR does not change the file; owner KCP-0012 measures the class."
+ },
+ {
+  "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+  "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: workflow shell caller closure is not measurable by the current verifier (class carried by the KCP-0005 receipt); this PR does not change the file; owner KCP-0012 measures the class."
+ },
+ {
+  "entity": "code_unit:.github/workflows/graph-admission-call.yml",
+  "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: workflow shell caller closure is not measurable by the current verifier (class carried by the KCP-0005 receipt); this PR does not change the file; owner KCP-0012 measures the class."
+ },
+ {
+  "entity": "code_unit:.github/workflows/graph-admission.yml",
+  "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: workflow shell caller closure is not measurable by the current verifier (class carried by the KCP-0005 receipt); this PR does not change the file; owner KCP-0012 measures the class."
+ },
+ {
+  "entity": "code_unit:.github/workflows/public-surface.yml",
+  "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: workflow shell caller closure is not measurable by the current verifier (class carried by the KCP-0005 receipt); this PR does not change the file; owner KCP-0012 measures the class."
+ },
+ {
+  "entity": "code_unit:deploy/arcanada-compose-broker.sh",
+  "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: static shell dynamic-dispatch closure is not measured. Measured instead: broker test suite 395 PASS (8 doc_md_html_* checks) in CI lint-and-test at the PR code head 849e15c, run 41753818974, success, and bash -n clean. Closure measurement owned by KCP-0012."
+ },
+ {
+  "entity": "code_unit:deploy/arcanada-compose-broker.test.sh",
+  "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: static shell dynamic-dispatch closure is not measured. Measured instead: broker test suite 395 PASS (8 doc_md_html_* checks) in CI lint-and-test at the PR code head 849e15c, run 41753818974, success, and bash -n clean. Closure measurement owned by KCP-0012."
+ },
+ {
+  "entity": "deployable_unit:.",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41753818974, success. Class precedent: model-connector #243 (KCP-0017)."
+ }
+]

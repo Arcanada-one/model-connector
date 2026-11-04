@@ -136,6 +136,7 @@ declare -rA REPOS=(
   [argana]='https://github.com/Arcanada-one/argana.git'
   # KCP-0005: the private health-stub API runs only on this host behind nginx.
   [contract-place-api]='https://github.com/Arcanada-one/contract-place-api.git'
+  [doc-md-html]='https://github.com/Arcanada-one/doc-md-html.git'
   # KCP-0017: separate project checkout and Compose identity, never the shared
   # Scrutator checkout or its transaction.
   [knowledge-contract-scrutator]='https://github.com/Arcanada-one/contract-place-api.git'
@@ -162,6 +163,7 @@ declare -rA COMPOSE=(
   [langfuse-deploy]='docker-compose.yml'
   [argana]='docker-compose.yml'
   [contract-place-api]='docker-compose.yml'
+  [doc-md-html]='docker-compose.arcanada.yml'
   [knowledge-contract-scrutator]='deploy/knowledge-contract-scrutator/compose.yml'
   [observability-stack]='docker-compose.yml'
 )
@@ -181,6 +183,7 @@ declare -rA AUTH=(
   # stdin read.
   [argana]='github-token'
   [contract-place-api]='github-token'
+  [doc-md-html]='github-token'
   [knowledge-contract-scrutator]='github-token'
   [observability-stack]='github-token'
 )
@@ -228,6 +231,7 @@ declare -rA PROJECT=(
   [argana]='argana'
   # A new stack with no existing containers or volumes to adopt.
   [contract-place-api]='contract-place-api'
+  [doc-md-html]='doc-md-html'
   [knowledge-contract-scrutator]='knowledge-contract-scrutator'
   # Pinned to the name the ALREADY-RUNNING stack carries
   # (com.docker.compose.project=observability-stack, measured 2026-09-30). Its
@@ -249,6 +253,10 @@ declare -rA ENVFILE=(
   # Operator-maintained, already root-owned where it lives.
   [langfuse-deploy]='/etc/langfuse-deploy/.env'
   [model-connector]='model-connector.env'
+  # Conversion Arcana (doc-md-html, Muneral 8e4cd46e): conversion-only API. The root-owned file holds
+  # only the reviewed allowlist (API_KEYS, JWT_SECRET, MONGODB_URI/DATABASE, CORS_ORIGINS, rate limits);
+  # payment, wallet, mail, AWS, OAuth and Telegram variables are never placed in it.
+  [doc-md-html]='doc-md-html.env'
   # INFRA-0417: the stt-whisper stack had no managed environment at all — its
   # bind address was a literal machine IP written into the compose file. The
   # address is now ${STT_BIND_IP}, which has to come from somewhere root-owned.
@@ -306,6 +314,7 @@ declare -rA BUILDSHA=(
   [muneral]='yes'
   # The build passes the broker-owned checkout HEAD into the image; /health reports it.
   [contract-place-api]='yes'
+  [doc-md-html]='yes'
 )
 # Services whose compose file interpolates IMAGE_TAG to select a PRE-BUILT
 # image from a registry. The broker supplies it from its own checkout HEAD, so
@@ -338,6 +347,8 @@ declare -rA CONTAINER=(
   # (arc2/a2-102-argana-secret-path-and-deploy); it declares no
   # `container_name`, so Compose derives the name rather than being told it.
   [argana]='argana-argana-1'
+  # Conversion Arcana: container_name is pinned in docker-compose.arcanada.yml.
+  [doc-md-html]='doc-md-html-api'
 )
 declare -rA MAXAGE=(
   [opsbot]='300'
@@ -349,6 +360,8 @@ declare -rA MAXAGE=(
   # is slack, not a budget. 600 still fails a deploy that recreated nothing,
   # which is the only thing this check is for.
   [argana]='600'
+  # `up` follows `build` in the same deploy; 600s still fails a deploy that recreated nothing.
+  [doc-md-html]='600'
 )
 # Fixed argv for the module-load smoke check. Compiled in, so the word
 # splitting below is on a constant, not on caller input.
