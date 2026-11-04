@@ -347,6 +347,8 @@ declare -rA CONTAINER=(
   # (arc2/a2-102-argana-secret-path-and-deploy); it declares no
   # `container_name`, so Compose derives the name rather than being told it.
   [argana]='argana-argana-1'
+  # Conversion Arcana: container_name is pinned in docker-compose.arcanada.yml.
+  [doc-md-html]='doc-md-html-api'
 )
 declare -rA MAXAGE=(
   [opsbot]='300'
@@ -358,6 +360,8 @@ declare -rA MAXAGE=(
   # is slack, not a budget. 600 still fails a deploy that recreated nothing,
   # which is the only thing this check is for.
   [argana]='600'
+  # `up` follows `build` in the same deploy; 600s still fails a deploy that recreated nothing.
+  [doc-md-html]='600'
 )
 # Fixed argv for the module-load smoke check. Compiled in, so the word
 # splitting below is on a constant, not on caller input.

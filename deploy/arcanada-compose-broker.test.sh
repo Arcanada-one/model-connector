@@ -715,6 +715,21 @@ grep -Fxq "BUILD_SHA=${dmh_head}" "$fake_docker_log" || {
 check_env_placement doc_md_html_env_installed_at_checkout_root doc-md-html \
   "${dmh_checkout}/.env" "${dmh_checkout}/docker/.env"
 grep -Fq 'API_KEYS=fixture:' "${dmh_checkout}/.env"
+expect_pass doc_md_html_freshness_inspects_the_pinned_container doc-md-html freshness
+grep -Fq 'inspect doc-md-html-api --format {{.Created}}' "$fake_docker_log" || {
+  echo 'FAIL: doc-md-html freshness inspected an unexpected container' >&2
+  cat "$fake_docker_log" >&2
+  exit 1
+}
+expect_message doc_md_html_freshness_inspects_the_pinned_container \
+  'BROKER_FRESHNESS_PASS service=doc-md-html'
+# verify, rollback and smoke have no recipe for this service and must say so.
+expect_fail doc_md_html_verify_refuses doc-md-html verify
+expect_message doc_md_html_verify_refuses 'service has no verify script: doc-md-html'
+expect_fail doc_md_html_rollback_refuses doc-md-html rollback
+expect_message doc_md_html_rollback_refuses 'service has no rollback recipe: doc-md-html'
+expect_fail doc_md_html_smoke_refuses doc-md-html smoke
+expect_message doc_md_html_smoke_refuses 'service has no smoke check: doc-md-html'
 expect_fail doc_md_html_has_no_root_script doc-md-html run-deploy
 expect_message doc_md_html_has_no_root_script \
   'service has no deploy script: doc-md-html'
