@@ -3,9 +3,9 @@
   "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
   "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
-  "verdict": "paused_safe"
+  "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-04T00:38:02Z",
+ "captured_at_utc": "2026-11-04T01:13:53Z",
  "change_set": {
   "base": "8cc9dd61b3d62bfaf8473e8edb48d4bf4523539b",
   "files": [
@@ -16,6 +16,12 @@
      "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json"
     ],
     "path": "receipts/graph/change-admission-conv-ac5-price-coverage.json",
+    "status": "A"
+   },
+   {
+    "kind": "receipt",
+    "new": true,
+    "path": "receipts/graph/exemptions-conv-249-prices.json",
     "status": "A"
    },
    {
@@ -74,27 +80,392 @@
     "status": "M"
    }
   ],
-  "head": "bba9cf6b48429f44e6d2e7616537d4110be5b0a5",
+  "head": "ec70dd405f23eb5b2df644e25fc9be5ba91fb4c5",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
- "exemptions": [],
+ "exemptions": [
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/admin/admin.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/app.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/billing/price-coverage.spec.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/billing/price-coverage.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/billing/price-sources-2026-11.spec.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.spec.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the change is catalog data only — tier unknown→paid and cost estimation for 5 models; request path and routing unchanged (cascade tier from env, failover from freeModels). Measured instead after deploy: /catalog readback of the 5 models' prices and tier. reverse_if: the readback differs from the PR's values."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/codex/codex.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/cohere/cohere.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/connectors.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/cursor/cursor.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/embedding/embedding.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/fireworks/fireworks.connector.spec.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/fireworks/fireworks.connector.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/connectors/fireworks/fireworks.connector.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the change is catalog data only — tier unknown→paid and cost estimation for 5 models; request path and routing unchanged (cascade tier from env, failover from freeModels). Measured instead after deploy: /catalog readback of the 5 models' prices and tier. reverse_if: the readback differs from the PR's values."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.spec.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the change is catalog data only — tier unknown→paid and cost estimation for 5 models; request path and routing unchanged (cascade tier from env, failover from freeModels). Measured instead after deploy: /catalog readback of the 5 models' prices and tier. reverse_if: the readback differs from the PR's values."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.spec.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/gemini-api/index.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/gemini/gemini.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/grok/grok.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/groq/groq.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/jev/decision.service.spec.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/mistral/mistral.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/modal/modal.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/ollama/ollama.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/openai/openai.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/orq/orq.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/together/together.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/health/health.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/openai-compat/openai-compat.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_HOST",
+   "entity": "deployable_unit:.",
+   "expires_at_utc": "2026-12-04T00:00:00Z",
+   "owner": "KCP-0012",
+   "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+  }
+ ],
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:398829d9330424893231119310ee6ba185e6a9735417157f1c8674a90911e76b",
-  "path": "/tmp/arcana-verify-23k6cg3l/verifier-out/graph-8cc9dd61b3d6.json",
+  "graph_digest": "sha256:e28222731c82b3b3fa26633286e6fe4f1dc3ba1c778f103bf9d329815ea40d4d",
+  "path": "/tmp/arcana-verify-q6jp6dqi/verifier-out/graph-8cc9dd61b3d6.json",
   "source_commit": "8cc9dd61b3d62bfaf8473e8edb48d4bf4523539b"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:52b998211d83017c904dccf9a43dd6a28d8527016818f7dfc40599d4b204cfae",
-  "path": "/tmp/arcana-verify-23k6cg3l/verifier-out/graph-head-bba9cf6b4842.json",
-  "source_commit": "bba9cf6b48429f44e6d2e7616537d4110be5b0a5",
+  "graph_digest": "sha256:8a4dd8b6b1b7139c22f3f5ac43aedeaafa77cea79ff059f0fcd6f602da3b611f",
+  "path": "/tmp/arcana-verify-q6jp6dqi/verifier-out/graph-head-ec70dd405f23.json",
+  "source_commit": "ec70dd405f23eb5b2df644e25fc9be5ba91fb4c5",
   "staleness": {
-   "checked_at_utc": "2026-11-04T00:39:05Z",
-   "checked_nodes": 964,
+   "checked_at_utc": "2026-11-04T01:14:39Z",
+   "checked_nodes": 963,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -103,26 +474,6 @@
  "host": "arcana-devs",
  "impact_set": {
   "deterministic_core": [
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-    "node_type": "code_unit",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "type-check / compile of the importer"
-   },
    {
     "boundary": "intra_unit",
     "depth": 3,
@@ -183,46 +534,6 @@
       "provenance": "deterministic",
       "to": "code_unit:src/connectors/connectors.module.ts",
       "via": "relative"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "type-check / compile of the importer"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "code_unit:src/auth/rate-limit.app.spec.ts",
-    "node_type": "code_unit",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "type-check / compile of the importer"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "code_unit:src/auth/rate-limit.integration.spec.ts",
-    "node_type": "code_unit",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
      }
     ],
     "revisions": [
@@ -1568,49 +1879,29 @@
    },
    {
     "boundary": "intra_unit",
-    "depth": 2,
+    "depth": 3,
     "entity": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
     "node_type": "receipt",
     "path": [
      {
       "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "from": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
       "provenance": "deterministic",
       "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/connectors.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+      "via": "relative"
      },
      {
       "edge_type": "verifies",
       "from": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
       "provenance": "deterministic",
-      "to": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-      "provenance": "deterministic",
-      "to": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
+      "to": "code_unit:src/connectors/connectors.module.ts",
       "via": "explicit-path"
      }
     ],
@@ -1900,195 +2191,6 @@
      "head"
     ],
     "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
    }
   ],
   "edge_types": "all",
@@ -2098,30 +2200,28 @@
   "inferred_tail": [],
   "max_depth": 3,
   "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
-  "total": 71
+  "total": 60
  },
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "A2-353: `canary` discharged for 4 test code_unit(s) — a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/admin/admin-rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.integration.spec.ts, code_unit:src/connectors/gemini-api/gemini-api.connector.spec.ts"
+  "exemptions: 52 attached from receipts/graph/exemptions-conv-249-prices.json",
+  "A2-353: `canary` discharged for 1 test code_unit(s) — a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/connectors/gemini-api/gemini-api.connector.spec.ts"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261104T003802Z-bba9cf6b",
+ "receipt_id": "car-verify-20261104T011353Z-ec70dd40",
  "receipt_path": "receipts/graph/change-admission-conv-ac5-price-coverage.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
-  "path": "/home/dev/aup/claude-work/conv/mc-price"
+  "path": "/home/dev/aup/claude-work/conv/clone.Euc6fd/gh3"
  },
  "revision_selection": {
   "base": [
-   "code_unit:src/admin/admin-rate-limit.app.spec.ts",
    "code_unit:src/admin/admin.module.ts",
    "code_unit:src/app.module.ts",
-   "code_unit:src/auth/rate-limit.app.spec.ts",
-   "code_unit:src/auth/rate-limit.integration.spec.ts",
    "code_unit:src/billing/price-coverage.spec.ts",
    "code_unit:src/billing/price-coverage.ts",
    "code_unit:src/connectors/anthropic/anthropic.module.ts",
@@ -2173,7 +2273,6 @@
    "document:templates/api-connector-scaffold/README.md",
    "receipt:receipts/bench-source-ctx24/source-car.json",
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
-   "receipt:receipts/graph/a2-319-rate-limit-admin.json",
    "receipt:receipts/graph/change-admission-6206.json",
    "receipt:receipts/graph/change-admission-6664.json",
    "receipt:receipts/graph/change-admission-7148.json",
@@ -2186,21 +2285,11 @@
    "receipt:receipts/graph/change-admission-a2-425.json",
    "receipt:receipts/graph/change-admission-a2-432.json",
    "receipt:receipts/graph/change-admission-a2-443.json",
-   "receipt:receipts/graph/change-admission-jev-decision.json",
-   "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
+   "receipt:receipts/graph/change-admission-jev-decision.json"
   ],
   "head": [
-   "code_unit:src/admin/admin-rate-limit.app.spec.ts",
    "code_unit:src/admin/admin.module.ts",
    "code_unit:src/app.module.ts",
-   "code_unit:src/auth/rate-limit.app.spec.ts",
-   "code_unit:src/auth/rate-limit.integration.spec.ts",
    "code_unit:src/billing/price-coverage.spec.ts",
    "code_unit:src/billing/price-coverage.ts",
    "code_unit:src/billing/price-sources-2026-11.spec.ts",
@@ -2253,7 +2342,6 @@
    "document:templates/api-connector-scaffold/README.md",
    "receipt:receipts/bench-source-ctx24/source-car.json",
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
-   "receipt:receipts/graph/a2-319-rate-limit-admin.json",
    "receipt:receipts/graph/change-admission-6206.json",
    "receipt:receipts/graph/change-admission-6664.json",
    "receipt:receipts/graph/change-admission-7148.json",
@@ -2267,21 +2355,14 @@
    "receipt:receipts/graph/change-admission-a2-432.json",
    "receipt:receipts/graph/change-admission-a2-443.json",
    "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
-   "receipt:receipts/graph/change-admission-jev-decision.json",
-   "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
+   "receipt:receipts/graph/change-admission-jev-decision.json"
   ],
   "schema": "RevisionImpactSelection/v1",
   "unmeasured_head_files": []
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-04T00:39:05Z",
+  "checked_at_utc": "2026-11-04T01:14:38Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -2306,17 +2387,6 @@
    "entity": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
    "node_type": "receipt",
    "path": "receipts/graph/a2-301-per-key-rate-limit.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:f09d58b4096eb02b4450816057806a140465115c3947aa416e47e95422abf0e9",
-    "head": "sha256:f09d58b4096eb02b4450816057806a140465115c3947aa416e47e95422abf0e9"
-   },
-   "entity": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/a2-319-rate-limit-admin.json",
    "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
    "rule": "DEC-AUP-0034"
   },
@@ -2455,7 +2525,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:380745c0ed178fb8d232e2bf066d17dec8366fe71db62b47c128a3fdbf6addcf"
+    "head": "sha256:b26f78cf8b295314b56a4d8dce8985065f7f609c43dbbcc37a29923490e19308"
    },
    "entity": "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
    "node_type": "receipt",
@@ -2480,24 +2550,14 @@
   }
  ],
  "tree": {
-  "commit": "bba9cf6b48429f44e6d2e7616537d4110be5b0a5",
+  "commit": "ec70dd405f23eb5b2df644e25fc9be5ba91fb4c5",
   "dirty": false
  },
  "verdicts": [
   {
-   "entity": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: no contract edge from this entity at head; nothing to project; v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-contract-diff",
-    "v-fitness",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
    "entity": "code_unit:src/admin/admin.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2505,37 +2565,17 @@
   },
   {
    "entity": "code_unit:src/app.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
-    "v-fitness",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "code_unit:src/auth/rate-limit.app.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: no contract edge from this entity at head; nothing to project; v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-contract-diff",
-    "v-fitness",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "code_unit:src/auth/rate-limit.integration.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: no contract edge from this entity at head; nothing to project; v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-contract-diff",
     "v-fitness",
     "v-type-check-tsconfig-mjs"
    ]
   },
   {
    "entity": "code_unit:src/billing/price-coverage.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2543,8 +2583,8 @@
   },
   {
    "entity": "code_unit:src/billing/price-coverage.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 2 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-contract-diff",
     "v-fitness",
@@ -2553,8 +2593,8 @@
   },
   {
    "entity": "code_unit:src/billing/price-sources-2026-11.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2562,8 +2602,8 @@
   },
   {
    "entity": "code_unit:src/connectors/anthropic/anthropic.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2571,8 +2611,8 @@
   },
   {
    "entity": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2580,8 +2620,8 @@
   },
   {
    "entity": "code_unit:src/connectors/bedrock/bedrock.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2589,8 +2629,8 @@
   },
   {
    "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2598,8 +2638,8 @@
   },
   {
    "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2607,8 +2647,8 @@
   },
   {
    "entity": "code_unit:src/connectors/cerebras/cerebras.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2616,8 +2656,8 @@
   },
   {
    "entity": "code_unit:src/connectors/claude-code/claude-code.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2625,8 +2665,8 @@
   },
   {
    "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2634,7 +2674,7 @@
   },
   {
    "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
    "verdict": "not_measured",
    "verifier_ids": [
     "v-canary",
@@ -2645,8 +2685,8 @@
   },
   {
    "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2654,8 +2694,8 @@
   },
   {
    "entity": "code_unit:src/connectors/codex/codex.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2663,8 +2703,8 @@
   },
   {
    "entity": "code_unit:src/connectors/cohere/cohere.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2672,8 +2712,8 @@
   },
   {
    "entity": "code_unit:src/connectors/connectors.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2681,8 +2721,8 @@
   },
   {
    "entity": "code_unit:src/connectors/cursor/cursor.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2690,8 +2730,8 @@
   },
   {
    "entity": "code_unit:src/connectors/deepseek/deepseek.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2699,8 +2739,8 @@
   },
   {
    "entity": "code_unit:src/connectors/embedding/embedding.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2708,8 +2748,8 @@
   },
   {
    "entity": "code_unit:src/connectors/fireworks/fireworks.connector.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2717,7 +2757,7 @@
   },
   {
    "entity": "code_unit:src/connectors/fireworks/fireworks.connector.ts",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
    "verdict": "not_measured",
    "verifier_ids": [
     "v-canary",
@@ -2728,8 +2768,8 @@
   },
   {
    "entity": "code_unit:src/connectors/fireworks/fireworks.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2737,8 +2777,8 @@
   },
   {
    "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-config-schema: every key read is declared (2 frozen undeclared key(s): GEMINI_API_BASE_URL, GEMINI_API_KEY); v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-config-schema",
     "v-fitness",
@@ -2747,7 +2787,7 @@
   },
   {
    "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
    "verdict": "not_measured",
    "verifier_ids": [
     "v-canary",
@@ -2758,8 +2798,8 @@
   },
   {
    "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2767,8 +2807,8 @@
   },
   {
    "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2776,8 +2816,8 @@
   },
   {
    "entity": "code_unit:src/connectors/gemini-api/index.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2785,8 +2825,8 @@
   },
   {
    "entity": "code_unit:src/connectors/gemini/gemini.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2794,8 +2834,8 @@
   },
   {
    "entity": "code_unit:src/connectors/grok/grok.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2803,8 +2843,8 @@
   },
   {
    "entity": "code_unit:src/connectors/groq/groq.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2812,8 +2852,8 @@
   },
   {
    "entity": "code_unit:src/connectors/huggingface/huggingface.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2821,8 +2861,8 @@
   },
   {
    "entity": "code_unit:src/connectors/jev/decision.service.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2830,8 +2870,8 @@
   },
   {
    "entity": "code_unit:src/connectors/mistral/mistral.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2839,8 +2879,8 @@
   },
   {
    "entity": "code_unit:src/connectors/modal/modal.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2848,8 +2888,8 @@
   },
   {
    "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2857,8 +2897,8 @@
   },
   {
    "entity": "code_unit:src/connectors/ollama/ollama.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2866,8 +2906,8 @@
   },
   {
    "entity": "code_unit:src/connectors/openai/openai.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2875,8 +2915,8 @@
   },
   {
    "entity": "code_unit:src/connectors/openmodel/openmodel.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2884,8 +2924,8 @@
   },
   {
    "entity": "code_unit:src/connectors/openrouter/openrouter.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2893,8 +2933,8 @@
   },
   {
    "entity": "code_unit:src/connectors/orq/orq.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2902,8 +2942,8 @@
   },
   {
    "entity": "code_unit:src/connectors/perplexity/perplexity.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2911,8 +2951,8 @@
   },
   {
    "entity": "code_unit:src/connectors/together/together.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2920,8 +2960,8 @@
   },
   {
    "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation (1 frozen: FR-02)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2929,8 +2969,8 @@
   },
   {
    "entity": "code_unit:src/health/health.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2938,8 +2978,8 @@
   },
   {
    "entity": "code_unit:src/openai-compat/openai-compat.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2947,8 +2987,8 @@
   },
   {
    "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2964,8 +3004,8 @@
   },
   {
    "entity": "deployable_unit:.",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: 0 errors; v-fitness: no new violation in . (35 frozen)",
-   "verdict": "verified",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
    "verifier_ids": [
     "v-fitness",
     "v-type-check-tsconfig-mjs"
@@ -2986,83 +3026,6 @@
    "verifier_ids": [
     "v-doc-reference"
    ]
-  },
-  {
-   "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
   }
  ],
  "verifier_selection": {
@@ -3073,14 +3036,11 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/conv/mc-price/node_modules/.bin/tsc -p /home/dev/aup/claude-work/conv/mc-price/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-23k6cg3l/verifier-out/type-check-ltvs0e0b/check.tsbuildinfo --listFiles",
-   "duration_s": 12.52,
+   "command": "tsc -p /home/dev/aup/claude-work/conv/clone.Euc6fd/gh3/.arcana/tsconfig.mjs.json (tsc not found)",
+   "duration_s": 0.0,
    "entities": [
-    "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
-    "code_unit:src/auth/rate-limit.app.spec.ts",
-    "code_unit:src/auth/rate-limit.integration.spec.ts",
     "code_unit:src/billing/price-coverage.spec.ts",
     "code_unit:src/billing/price-coverage.ts",
     "code_unit:src/billing/price-sources-2026-11.spec.ts",
@@ -3127,86 +3087,69 @@
     "code_unit:src/health/health.module.ts",
     "code_unit:src/openai-compat/openai-compat.module.ts",
     "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
-    "deployable_unit:.",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
+    "deployable_unit:."
    ],
    "entity_verdicts": {
-    "code_unit:src/admin/admin-rate-limit.app.spec.ts": "verified",
-    "code_unit:src/admin/admin.module.ts": "verified",
-    "code_unit:src/app.module.ts": "verified",
-    "code_unit:src/auth/rate-limit.app.spec.ts": "verified",
-    "code_unit:src/auth/rate-limit.integration.spec.ts": "verified",
-    "code_unit:src/billing/price-coverage.spec.ts": "verified",
-    "code_unit:src/billing/price-coverage.ts": "verified",
-    "code_unit:src/billing/price-sources-2026-11.spec.ts": "verified",
-    "code_unit:src/connectors/anthropic/anthropic.module.ts": "verified",
-    "code_unit:src/connectors/azure-openai/azure-openai.module.ts": "verified",
-    "code_unit:src/connectors/bedrock/bedrock.module.ts": "verified",
-    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts": "verified",
-    "code_unit:src/connectors/cascade/cascade.module.ts": "verified",
-    "code_unit:src/connectors/cerebras/cerebras.module.ts": "verified",
-    "code_unit:src/connectors/claude-code/claude-code.module.ts": "verified",
-    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.spec.ts": "verified",
-    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts": "verified",
-    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts": "verified",
-    "code_unit:src/connectors/codex/codex.module.ts": "verified",
-    "code_unit:src/connectors/cohere/cohere.module.ts": "verified",
-    "code_unit:src/connectors/connectors.module.ts": "verified",
-    "code_unit:src/connectors/cursor/cursor.module.ts": "verified",
-    "code_unit:src/connectors/deepseek/deepseek.module.ts": "verified",
-    "code_unit:src/connectors/embedding/embedding.module.ts": "verified",
-    "code_unit:src/connectors/fireworks/fireworks.connector.spec.ts": "verified",
-    "code_unit:src/connectors/fireworks/fireworks.connector.ts": "verified",
-    "code_unit:src/connectors/fireworks/fireworks.module.ts": "verified",
-    "code_unit:src/connectors/gemini-api/gemini-api.connector.spec.ts": "verified",
-    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": "verified",
-    "code_unit:src/connectors/gemini-api/gemini-api.module.spec.ts": "verified",
-    "code_unit:src/connectors/gemini-api/gemini-api.module.ts": "verified",
-    "code_unit:src/connectors/gemini-api/index.ts": "verified",
-    "code_unit:src/connectors/gemini/gemini.module.ts": "verified",
-    "code_unit:src/connectors/grok/grok.module.ts": "verified",
-    "code_unit:src/connectors/groq/groq.module.ts": "verified",
-    "code_unit:src/connectors/huggingface/huggingface.module.ts": "verified",
-    "code_unit:src/connectors/jev/decision.service.spec.ts": "verified",
-    "code_unit:src/connectors/mistral/mistral.module.ts": "verified",
-    "code_unit:src/connectors/modal/modal.module.ts": "verified",
-    "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts": "verified",
-    "code_unit:src/connectors/ollama/ollama.module.ts": "verified",
-    "code_unit:src/connectors/openai/openai.module.ts": "verified",
-    "code_unit:src/connectors/openmodel/openmodel.module.ts": "verified",
-    "code_unit:src/connectors/openrouter/openrouter.module.ts": "verified",
-    "code_unit:src/connectors/orq/orq.module.ts": "verified",
-    "code_unit:src/connectors/perplexity/perplexity.module.ts": "verified",
-    "code_unit:src/connectors/together/together.module.ts": "verified",
-    "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts": "verified",
-    "code_unit:src/health/health.module.ts": "verified",
-    "code_unit:src/openai-compat/openai-compat.module.ts": "verified",
-    "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts": "verified",
-    "deployable_unit:.": "verified",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "verified"
+    "code_unit:src/admin/admin.module.ts": "not_measured",
+    "code_unit:src/app.module.ts": "not_measured",
+    "code_unit:src/billing/price-coverage.spec.ts": "not_measured",
+    "code_unit:src/billing/price-coverage.ts": "not_measured",
+    "code_unit:src/billing/price-sources-2026-11.spec.ts": "not_measured",
+    "code_unit:src/connectors/anthropic/anthropic.module.ts": "not_measured",
+    "code_unit:src/connectors/azure-openai/azure-openai.module.ts": "not_measured",
+    "code_unit:src/connectors/bedrock/bedrock.module.ts": "not_measured",
+    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts": "not_measured",
+    "code_unit:src/connectors/cascade/cascade.module.ts": "not_measured",
+    "code_unit:src/connectors/cerebras/cerebras.module.ts": "not_measured",
+    "code_unit:src/connectors/claude-code/claude-code.module.ts": "not_measured",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.spec.ts": "not_measured",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts": "not_measured",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts": "not_measured",
+    "code_unit:src/connectors/codex/codex.module.ts": "not_measured",
+    "code_unit:src/connectors/cohere/cohere.module.ts": "not_measured",
+    "code_unit:src/connectors/connectors.module.ts": "not_measured",
+    "code_unit:src/connectors/cursor/cursor.module.ts": "not_measured",
+    "code_unit:src/connectors/deepseek/deepseek.module.ts": "not_measured",
+    "code_unit:src/connectors/embedding/embedding.module.ts": "not_measured",
+    "code_unit:src/connectors/fireworks/fireworks.connector.spec.ts": "not_measured",
+    "code_unit:src/connectors/fireworks/fireworks.connector.ts": "not_measured",
+    "code_unit:src/connectors/fireworks/fireworks.module.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.connector.spec.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.module.spec.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.module.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/index.ts": "not_measured",
+    "code_unit:src/connectors/gemini/gemini.module.ts": "not_measured",
+    "code_unit:src/connectors/grok/grok.module.ts": "not_measured",
+    "code_unit:src/connectors/groq/groq.module.ts": "not_measured",
+    "code_unit:src/connectors/huggingface/huggingface.module.ts": "not_measured",
+    "code_unit:src/connectors/jev/decision.service.spec.ts": "not_measured",
+    "code_unit:src/connectors/mistral/mistral.module.ts": "not_measured",
+    "code_unit:src/connectors/modal/modal.module.ts": "not_measured",
+    "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts": "not_measured",
+    "code_unit:src/connectors/ollama/ollama.module.ts": "not_measured",
+    "code_unit:src/connectors/openai/openai.module.ts": "not_measured",
+    "code_unit:src/connectors/openmodel/openmodel.module.ts": "not_measured",
+    "code_unit:src/connectors/openrouter/openrouter.module.ts": "not_measured",
+    "code_unit:src/connectors/orq/orq.module.ts": "not_measured",
+    "code_unit:src/connectors/perplexity/perplexity.module.ts": "not_measured",
+    "code_unit:src/connectors/together/together.module.ts": "not_measured",
+    "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts": "not_measured",
+    "code_unit:src/health/health.module.ts": "not_measured",
+    "code_unit:src/openai-compat/openai-compat.module.ts": "not_measured",
+    "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts": "not_measured",
+    "deployable_unit:.": "not_measured"
    },
-   "exit_code": 0,
+   "exit_code": 127,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-23k6cg3l/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-04T00:39:16Z",
-   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2866 files listed"
+   "output_ref": "/tmp/arcana-verify-q6jp6dqi/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-04T01:14:49Z",
+   "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "/home/dev/aup/claude-work/conv/mc-price/node_modules/.bin/tsc -p /home/dev/aup/claude-work/conv/mc-price/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-23k6cg3l/verifier-out/type-check-7fq_laj3/check.tsbuildinfo --listFiles",
-   "duration_s": 7.2,
+   "command": "tsc -p /home/dev/aup/claude-work/conv/clone.Euc6fd/gh3/tsconfig.build.json (tsc not found)",
+   "duration_s": 0.0,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
@@ -3252,59 +3195,59 @@
     "deployable_unit:."
    ],
    "entity_verdicts": {
-    "code_unit:src/admin/admin.module.ts": "verified",
-    "code_unit:src/app.module.ts": "verified",
-    "code_unit:src/billing/price-coverage.ts": "verified",
-    "code_unit:src/connectors/anthropic/anthropic.module.ts": "verified",
-    "code_unit:src/connectors/azure-openai/azure-openai.module.ts": "verified",
-    "code_unit:src/connectors/bedrock/bedrock.module.ts": "verified",
-    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts": "verified",
-    "code_unit:src/connectors/cascade/cascade.module.ts": "verified",
-    "code_unit:src/connectors/cerebras/cerebras.module.ts": "verified",
-    "code_unit:src/connectors/claude-code/claude-code.module.ts": "verified",
-    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts": "verified",
-    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts": "verified",
-    "code_unit:src/connectors/codex/codex.module.ts": "verified",
-    "code_unit:src/connectors/cohere/cohere.module.ts": "verified",
-    "code_unit:src/connectors/connectors.module.ts": "verified",
-    "code_unit:src/connectors/cursor/cursor.module.ts": "verified",
-    "code_unit:src/connectors/deepseek/deepseek.module.ts": "verified",
-    "code_unit:src/connectors/embedding/embedding.module.ts": "verified",
-    "code_unit:src/connectors/fireworks/fireworks.connector.ts": "verified",
-    "code_unit:src/connectors/fireworks/fireworks.module.ts": "verified",
-    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": "verified",
-    "code_unit:src/connectors/gemini-api/gemini-api.module.ts": "verified",
-    "code_unit:src/connectors/gemini-api/index.ts": "verified",
-    "code_unit:src/connectors/gemini/gemini.module.ts": "verified",
-    "code_unit:src/connectors/grok/grok.module.ts": "verified",
-    "code_unit:src/connectors/groq/groq.module.ts": "verified",
-    "code_unit:src/connectors/huggingface/huggingface.module.ts": "verified",
-    "code_unit:src/connectors/mistral/mistral.module.ts": "verified",
-    "code_unit:src/connectors/modal/modal.module.ts": "verified",
-    "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts": "verified",
-    "code_unit:src/connectors/ollama/ollama.module.ts": "verified",
-    "code_unit:src/connectors/openai/openai.module.ts": "verified",
-    "code_unit:src/connectors/openmodel/openmodel.module.ts": "verified",
-    "code_unit:src/connectors/openrouter/openrouter.module.ts": "verified",
-    "code_unit:src/connectors/orq/orq.module.ts": "verified",
-    "code_unit:src/connectors/perplexity/perplexity.module.ts": "verified",
-    "code_unit:src/connectors/together/together.module.ts": "verified",
-    "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts": "verified",
-    "code_unit:src/health/health.module.ts": "verified",
-    "code_unit:src/openai-compat/openai-compat.module.ts": "verified",
-    "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts": "verified",
-    "deployable_unit:.": "verified"
+    "code_unit:src/admin/admin.module.ts": "not_measured",
+    "code_unit:src/app.module.ts": "not_measured",
+    "code_unit:src/billing/price-coverage.ts": "not_measured",
+    "code_unit:src/connectors/anthropic/anthropic.module.ts": "not_measured",
+    "code_unit:src/connectors/azure-openai/azure-openai.module.ts": "not_measured",
+    "code_unit:src/connectors/bedrock/bedrock.module.ts": "not_measured",
+    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts": "not_measured",
+    "code_unit:src/connectors/cascade/cascade.module.ts": "not_measured",
+    "code_unit:src/connectors/cerebras/cerebras.module.ts": "not_measured",
+    "code_unit:src/connectors/claude-code/claude-code.module.ts": "not_measured",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts": "not_measured",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts": "not_measured",
+    "code_unit:src/connectors/codex/codex.module.ts": "not_measured",
+    "code_unit:src/connectors/cohere/cohere.module.ts": "not_measured",
+    "code_unit:src/connectors/connectors.module.ts": "not_measured",
+    "code_unit:src/connectors/cursor/cursor.module.ts": "not_measured",
+    "code_unit:src/connectors/deepseek/deepseek.module.ts": "not_measured",
+    "code_unit:src/connectors/embedding/embedding.module.ts": "not_measured",
+    "code_unit:src/connectors/fireworks/fireworks.connector.ts": "not_measured",
+    "code_unit:src/connectors/fireworks/fireworks.module.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.module.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/index.ts": "not_measured",
+    "code_unit:src/connectors/gemini/gemini.module.ts": "not_measured",
+    "code_unit:src/connectors/grok/grok.module.ts": "not_measured",
+    "code_unit:src/connectors/groq/groq.module.ts": "not_measured",
+    "code_unit:src/connectors/huggingface/huggingface.module.ts": "not_measured",
+    "code_unit:src/connectors/mistral/mistral.module.ts": "not_measured",
+    "code_unit:src/connectors/modal/modal.module.ts": "not_measured",
+    "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts": "not_measured",
+    "code_unit:src/connectors/ollama/ollama.module.ts": "not_measured",
+    "code_unit:src/connectors/openai/openai.module.ts": "not_measured",
+    "code_unit:src/connectors/openmodel/openmodel.module.ts": "not_measured",
+    "code_unit:src/connectors/openrouter/openrouter.module.ts": "not_measured",
+    "code_unit:src/connectors/orq/orq.module.ts": "not_measured",
+    "code_unit:src/connectors/perplexity/perplexity.module.ts": "not_measured",
+    "code_unit:src/connectors/together/together.module.ts": "not_measured",
+    "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts": "not_measured",
+    "code_unit:src/health/health.module.ts": "not_measured",
+    "code_unit:src/openai-compat/openai-compat.module.ts": "not_measured",
+    "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts": "not_measured",
+    "deployable_unit:.": "not_measured"
    },
-   "exit_code": 0,
+   "exit_code": 127,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-23k6cg3l/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-04T00:39:29Z",
-   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2135 files listed"
+   "output_ref": "/tmp/arcana-verify-q6jp6dqi/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-04T01:14:49Z",
+   "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "/home/dev/aup/claude-work/conv/mc-price/node_modules/.bin/tsc -p /home/dev/aup/claude-work/conv/mc-price/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-23k6cg3l/verifier-out/type-check-3939lekt/check.tsbuildinfo --listFiles",
-   "duration_s": 0.98,
+   "command": "tsc -p /home/dev/aup/claude-work/conv/clone.Euc6fd/gh3/tsconfig.ci.json (tsc not found)",
+   "duration_s": 0.0,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
@@ -3350,18 +3293,59 @@
     "deployable_unit:."
    ],
    "entity_verdicts": {
-    "deployable_unit:.": "verified"
+    "code_unit:src/admin/admin.module.ts": "not_measured",
+    "code_unit:src/app.module.ts": "not_measured",
+    "code_unit:src/billing/price-coverage.ts": "not_measured",
+    "code_unit:src/connectors/anthropic/anthropic.module.ts": "not_measured",
+    "code_unit:src/connectors/azure-openai/azure-openai.module.ts": "not_measured",
+    "code_unit:src/connectors/bedrock/bedrock.module.ts": "not_measured",
+    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts": "not_measured",
+    "code_unit:src/connectors/cascade/cascade.module.ts": "not_measured",
+    "code_unit:src/connectors/cerebras/cerebras.module.ts": "not_measured",
+    "code_unit:src/connectors/claude-code/claude-code.module.ts": "not_measured",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts": "not_measured",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts": "not_measured",
+    "code_unit:src/connectors/codex/codex.module.ts": "not_measured",
+    "code_unit:src/connectors/cohere/cohere.module.ts": "not_measured",
+    "code_unit:src/connectors/connectors.module.ts": "not_measured",
+    "code_unit:src/connectors/cursor/cursor.module.ts": "not_measured",
+    "code_unit:src/connectors/deepseek/deepseek.module.ts": "not_measured",
+    "code_unit:src/connectors/embedding/embedding.module.ts": "not_measured",
+    "code_unit:src/connectors/fireworks/fireworks.connector.ts": "not_measured",
+    "code_unit:src/connectors/fireworks/fireworks.module.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.module.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/index.ts": "not_measured",
+    "code_unit:src/connectors/gemini/gemini.module.ts": "not_measured",
+    "code_unit:src/connectors/grok/grok.module.ts": "not_measured",
+    "code_unit:src/connectors/groq/groq.module.ts": "not_measured",
+    "code_unit:src/connectors/huggingface/huggingface.module.ts": "not_measured",
+    "code_unit:src/connectors/mistral/mistral.module.ts": "not_measured",
+    "code_unit:src/connectors/modal/modal.module.ts": "not_measured",
+    "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts": "not_measured",
+    "code_unit:src/connectors/ollama/ollama.module.ts": "not_measured",
+    "code_unit:src/connectors/openai/openai.module.ts": "not_measured",
+    "code_unit:src/connectors/openmodel/openmodel.module.ts": "not_measured",
+    "code_unit:src/connectors/openrouter/openrouter.module.ts": "not_measured",
+    "code_unit:src/connectors/orq/orq.module.ts": "not_measured",
+    "code_unit:src/connectors/perplexity/perplexity.module.ts": "not_measured",
+    "code_unit:src/connectors/together/together.module.ts": "not_measured",
+    "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts": "not_measured",
+    "code_unit:src/health/health.module.ts": "not_measured",
+    "code_unit:src/openai-compat/openai-compat.module.ts": "not_measured",
+    "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts": "not_measured",
+    "deployable_unit:.": "not_measured"
    },
-   "exit_code": 0,
+   "exit_code": 127,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-23k6cg3l/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-04T00:39:36Z",
-   "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
+   "output_ref": "/tmp/arcana-verify-q6jp6dqi/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-04T01:14:49Z",
+   "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "/home/dev/aup/claude-work/conv/mc-price/node_modules/.bin/tsc -p /home/dev/aup/claude-work/conv/mc-price/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-23k6cg3l/verifier-out/type-check-zh2uw26f/check.tsbuildinfo --listFiles",
-   "duration_s": 12.02,
+   "command": "tsc -p /home/dev/aup/claude-work/conv/clone.Euc6fd/gh3/tsconfig.json (tsc not found)",
+   "duration_s": 0.0,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
@@ -3407,59 +3391,59 @@
     "deployable_unit:."
    ],
    "entity_verdicts": {
-    "code_unit:src/admin/admin.module.ts": "verified",
-    "code_unit:src/app.module.ts": "verified",
-    "code_unit:src/billing/price-coverage.ts": "verified",
-    "code_unit:src/connectors/anthropic/anthropic.module.ts": "verified",
-    "code_unit:src/connectors/azure-openai/azure-openai.module.ts": "verified",
-    "code_unit:src/connectors/bedrock/bedrock.module.ts": "verified",
-    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts": "verified",
-    "code_unit:src/connectors/cascade/cascade.module.ts": "verified",
-    "code_unit:src/connectors/cerebras/cerebras.module.ts": "verified",
-    "code_unit:src/connectors/claude-code/claude-code.module.ts": "verified",
-    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts": "verified",
-    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts": "verified",
-    "code_unit:src/connectors/codex/codex.module.ts": "verified",
-    "code_unit:src/connectors/cohere/cohere.module.ts": "verified",
-    "code_unit:src/connectors/connectors.module.ts": "verified",
-    "code_unit:src/connectors/cursor/cursor.module.ts": "verified",
-    "code_unit:src/connectors/deepseek/deepseek.module.ts": "verified",
-    "code_unit:src/connectors/embedding/embedding.module.ts": "verified",
-    "code_unit:src/connectors/fireworks/fireworks.connector.ts": "verified",
-    "code_unit:src/connectors/fireworks/fireworks.module.ts": "verified",
-    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": "verified",
-    "code_unit:src/connectors/gemini-api/gemini-api.module.ts": "verified",
-    "code_unit:src/connectors/gemini-api/index.ts": "verified",
-    "code_unit:src/connectors/gemini/gemini.module.ts": "verified",
-    "code_unit:src/connectors/grok/grok.module.ts": "verified",
-    "code_unit:src/connectors/groq/groq.module.ts": "verified",
-    "code_unit:src/connectors/huggingface/huggingface.module.ts": "verified",
-    "code_unit:src/connectors/mistral/mistral.module.ts": "verified",
-    "code_unit:src/connectors/modal/modal.module.ts": "verified",
-    "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts": "verified",
-    "code_unit:src/connectors/ollama/ollama.module.ts": "verified",
-    "code_unit:src/connectors/openai/openai.module.ts": "verified",
-    "code_unit:src/connectors/openmodel/openmodel.module.ts": "verified",
-    "code_unit:src/connectors/openrouter/openrouter.module.ts": "verified",
-    "code_unit:src/connectors/orq/orq.module.ts": "verified",
-    "code_unit:src/connectors/perplexity/perplexity.module.ts": "verified",
-    "code_unit:src/connectors/together/together.module.ts": "verified",
-    "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts": "verified",
-    "code_unit:src/health/health.module.ts": "verified",
-    "code_unit:src/openai-compat/openai-compat.module.ts": "verified",
-    "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts": "verified",
-    "deployable_unit:.": "verified"
+    "code_unit:src/admin/admin.module.ts": "not_measured",
+    "code_unit:src/app.module.ts": "not_measured",
+    "code_unit:src/billing/price-coverage.ts": "not_measured",
+    "code_unit:src/connectors/anthropic/anthropic.module.ts": "not_measured",
+    "code_unit:src/connectors/azure-openai/azure-openai.module.ts": "not_measured",
+    "code_unit:src/connectors/bedrock/bedrock.module.ts": "not_measured",
+    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts": "not_measured",
+    "code_unit:src/connectors/cascade/cascade.module.ts": "not_measured",
+    "code_unit:src/connectors/cerebras/cerebras.module.ts": "not_measured",
+    "code_unit:src/connectors/claude-code/claude-code.module.ts": "not_measured",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts": "not_measured",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts": "not_measured",
+    "code_unit:src/connectors/codex/codex.module.ts": "not_measured",
+    "code_unit:src/connectors/cohere/cohere.module.ts": "not_measured",
+    "code_unit:src/connectors/connectors.module.ts": "not_measured",
+    "code_unit:src/connectors/cursor/cursor.module.ts": "not_measured",
+    "code_unit:src/connectors/deepseek/deepseek.module.ts": "not_measured",
+    "code_unit:src/connectors/embedding/embedding.module.ts": "not_measured",
+    "code_unit:src/connectors/fireworks/fireworks.connector.ts": "not_measured",
+    "code_unit:src/connectors/fireworks/fireworks.module.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.module.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/index.ts": "not_measured",
+    "code_unit:src/connectors/gemini/gemini.module.ts": "not_measured",
+    "code_unit:src/connectors/grok/grok.module.ts": "not_measured",
+    "code_unit:src/connectors/groq/groq.module.ts": "not_measured",
+    "code_unit:src/connectors/huggingface/huggingface.module.ts": "not_measured",
+    "code_unit:src/connectors/mistral/mistral.module.ts": "not_measured",
+    "code_unit:src/connectors/modal/modal.module.ts": "not_measured",
+    "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts": "not_measured",
+    "code_unit:src/connectors/ollama/ollama.module.ts": "not_measured",
+    "code_unit:src/connectors/openai/openai.module.ts": "not_measured",
+    "code_unit:src/connectors/openmodel/openmodel.module.ts": "not_measured",
+    "code_unit:src/connectors/openrouter/openrouter.module.ts": "not_measured",
+    "code_unit:src/connectors/orq/orq.module.ts": "not_measured",
+    "code_unit:src/connectors/perplexity/perplexity.module.ts": "not_measured",
+    "code_unit:src/connectors/together/together.module.ts": "not_measured",
+    "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts": "not_measured",
+    "code_unit:src/health/health.module.ts": "not_measured",
+    "code_unit:src/openai-compat/openai-compat.module.ts": "not_measured",
+    "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts": "not_measured",
+    "deployable_unit:.": "not_measured"
    },
-   "exit_code": 0,
+   "exit_code": 127,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-23k6cg3l/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-04T00:39:37Z",
-   "summary": "tsconfig.json: exit 0, 0 error(s), 2757 files listed"
+   "output_ref": "/tmp/arcana-verify-q6jp6dqi/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-04T01:14:49Z",
+   "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "/home/dev/aup/claude-work/conv/mc-price/node_modules/.bin/tsc -p /home/dev/aup/claude-work/conv/mc-price/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-23k6cg3l/verifier-out/type-check-l6bj__es/check.tsbuildinfo --listFiles",
-   "duration_s": 11.82,
+   "command": "tsc -p /home/dev/aup/claude-work/conv/clone.Euc6fd/gh3/tsconfig.test.json (tsc not found)",
+   "duration_s": 0.0,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
@@ -3505,125 +3489,77 @@
     "deployable_unit:."
    ],
    "entity_verdicts": {
-    "code_unit:src/admin/admin.module.ts": "verified",
-    "code_unit:src/app.module.ts": "verified",
-    "code_unit:src/billing/price-coverage.ts": "verified",
-    "code_unit:src/connectors/anthropic/anthropic.module.ts": "verified",
-    "code_unit:src/connectors/azure-openai/azure-openai.module.ts": "verified",
-    "code_unit:src/connectors/bedrock/bedrock.module.ts": "verified",
-    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts": "verified",
-    "code_unit:src/connectors/cascade/cascade.module.ts": "verified",
-    "code_unit:src/connectors/cerebras/cerebras.module.ts": "verified",
-    "code_unit:src/connectors/claude-code/claude-code.module.ts": "verified",
-    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts": "verified",
-    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts": "verified",
-    "code_unit:src/connectors/codex/codex.module.ts": "verified",
-    "code_unit:src/connectors/cohere/cohere.module.ts": "verified",
-    "code_unit:src/connectors/connectors.module.ts": "verified",
-    "code_unit:src/connectors/cursor/cursor.module.ts": "verified",
-    "code_unit:src/connectors/deepseek/deepseek.module.ts": "verified",
-    "code_unit:src/connectors/embedding/embedding.module.ts": "verified",
-    "code_unit:src/connectors/fireworks/fireworks.connector.ts": "verified",
-    "code_unit:src/connectors/fireworks/fireworks.module.ts": "verified",
-    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": "verified",
-    "code_unit:src/connectors/gemini-api/gemini-api.module.ts": "verified",
-    "code_unit:src/connectors/gemini-api/index.ts": "verified",
-    "code_unit:src/connectors/gemini/gemini.module.ts": "verified",
-    "code_unit:src/connectors/grok/grok.module.ts": "verified",
-    "code_unit:src/connectors/groq/groq.module.ts": "verified",
-    "code_unit:src/connectors/huggingface/huggingface.module.ts": "verified",
-    "code_unit:src/connectors/mistral/mistral.module.ts": "verified",
-    "code_unit:src/connectors/modal/modal.module.ts": "verified",
-    "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts": "verified",
-    "code_unit:src/connectors/ollama/ollama.module.ts": "verified",
-    "code_unit:src/connectors/openai/openai.module.ts": "verified",
-    "code_unit:src/connectors/openmodel/openmodel.module.ts": "verified",
-    "code_unit:src/connectors/openrouter/openrouter.module.ts": "verified",
-    "code_unit:src/connectors/orq/orq.module.ts": "verified",
-    "code_unit:src/connectors/perplexity/perplexity.module.ts": "verified",
-    "code_unit:src/connectors/together/together.module.ts": "verified",
-    "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts": "verified",
-    "code_unit:src/health/health.module.ts": "verified",
-    "code_unit:src/openai-compat/openai-compat.module.ts": "verified",
-    "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts": "verified",
-    "deployable_unit:.": "verified"
+    "code_unit:src/admin/admin.module.ts": "not_measured",
+    "code_unit:src/app.module.ts": "not_measured",
+    "code_unit:src/billing/price-coverage.ts": "not_measured",
+    "code_unit:src/connectors/anthropic/anthropic.module.ts": "not_measured",
+    "code_unit:src/connectors/azure-openai/azure-openai.module.ts": "not_measured",
+    "code_unit:src/connectors/bedrock/bedrock.module.ts": "not_measured",
+    "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts": "not_measured",
+    "code_unit:src/connectors/cascade/cascade.module.ts": "not_measured",
+    "code_unit:src/connectors/cerebras/cerebras.module.ts": "not_measured",
+    "code_unit:src/connectors/claude-code/claude-code.module.ts": "not_measured",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts": "not_measured",
+    "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts": "not_measured",
+    "code_unit:src/connectors/codex/codex.module.ts": "not_measured",
+    "code_unit:src/connectors/cohere/cohere.module.ts": "not_measured",
+    "code_unit:src/connectors/connectors.module.ts": "not_measured",
+    "code_unit:src/connectors/cursor/cursor.module.ts": "not_measured",
+    "code_unit:src/connectors/deepseek/deepseek.module.ts": "not_measured",
+    "code_unit:src/connectors/embedding/embedding.module.ts": "not_measured",
+    "code_unit:src/connectors/fireworks/fireworks.connector.ts": "not_measured",
+    "code_unit:src/connectors/fireworks/fireworks.module.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/gemini-api.module.ts": "not_measured",
+    "code_unit:src/connectors/gemini-api/index.ts": "not_measured",
+    "code_unit:src/connectors/gemini/gemini.module.ts": "not_measured",
+    "code_unit:src/connectors/grok/grok.module.ts": "not_measured",
+    "code_unit:src/connectors/groq/groq.module.ts": "not_measured",
+    "code_unit:src/connectors/huggingface/huggingface.module.ts": "not_measured",
+    "code_unit:src/connectors/mistral/mistral.module.ts": "not_measured",
+    "code_unit:src/connectors/modal/modal.module.ts": "not_measured",
+    "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts": "not_measured",
+    "code_unit:src/connectors/ollama/ollama.module.ts": "not_measured",
+    "code_unit:src/connectors/openai/openai.module.ts": "not_measured",
+    "code_unit:src/connectors/openmodel/openmodel.module.ts": "not_measured",
+    "code_unit:src/connectors/openrouter/openrouter.module.ts": "not_measured",
+    "code_unit:src/connectors/orq/orq.module.ts": "not_measured",
+    "code_unit:src/connectors/perplexity/perplexity.module.ts": "not_measured",
+    "code_unit:src/connectors/together/together.module.ts": "not_measured",
+    "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts": "not_measured",
+    "code_unit:src/health/health.module.ts": "not_measured",
+    "code_unit:src/openai-compat/openai-compat.module.ts": "not_measured",
+    "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts": "not_measured",
+    "deployable_unit:.": "not_measured"
    },
-   "exit_code": 0,
+   "exit_code": 127,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-23k6cg3l/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-04T00:39:50Z",
-   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2863 files listed"
+   "output_ref": "/tmp/arcana-verify-q6jp6dqi/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-04T01:14:49Z",
+   "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "tools/graph/contract_diff.py.run_diff(base=8cc9dd61b3d6, head=bba9cf6b4842, graph=head graph)",
-   "duration_s": 8.17,
+   "command": "tools/graph/contract_diff.py.run_diff(base=8cc9dd61b3d6, head=ec70dd405f23, graph=head graph)",
+   "duration_s": 7.89,
    "entities": [
-    "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-    "code_unit:src/auth/rate-limit.app.spec.ts",
-    "code_unit:src/auth/rate-limit.integration.spec.ts",
     "code_unit:src/billing/price-coverage.ts",
-    "contract:src/billing/price-coverage.ts#PriceCoverageVerdict",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
+    "contract:src/billing/price-coverage.ts#PriceCoverageVerdict"
    ],
    "entity_verdicts": {
-    "code_unit:src/admin/admin-rate-limit.app.spec.ts": "verified",
-    "code_unit:src/auth/rate-limit.app.spec.ts": "verified",
-    "code_unit:src/auth/rate-limit.integration.spec.ts": "verified",
     "code_unit:src/billing/price-coverage.ts": "verified",
-    "contract:src/billing/price-coverage.ts#PriceCoverageVerdict": "verified",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "verified"
+    "contract:src/billing/price-coverage.ts#PriceCoverageVerdict": "verified"
    },
    "exit_code": 1,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/tmp/arcana-verify-23k6cg3l/verifier-out/v-contract-diff.json",
-   "started_at_utc": "2026-11-04T00:40:02Z",
+   "output_ref": "/tmp/arcana-verify-q6jp6dqi/verifier-out/v-contract-diff.json",
+   "started_at_utc": "2026-11-04T01:14:49Z",
    "summary": "186→186 contracts, breaking 0, edges {'not_measured': 3, 'verified': 247}"
   },
   {
-   "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
-   "duration_s": 8.45,
-   "entities": [
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
-   ],
-   "entity_verdicts": {
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "verified"
-   },
-   "exit_code": 0,
-   "id": "v-route-config",
-   "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-23k6cg3l/verifier-out/v-route-config.txt",
-   "started_at_utc": "2026-11-04T00:40:11Z",
-   "summary": "7 route(s), 0 failed"
-  },
-  {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 0.68,
+   "duration_s": 0.65,
    "entities": [
     "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
     "code_unit:src/connectors/fireworks/fireworks.connector.ts",
@@ -3639,19 +3575,16 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-23k6cg3l/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-04T00:40:19Z",
+   "output_ref": "/tmp/arcana-verify-q6jp6dqi/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-04T01:14:57Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.36,
+   "duration_s": 0.24,
    "entities": [
-    "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
-    "code_unit:src/auth/rate-limit.app.spec.ts",
-    "code_unit:src/auth/rate-limit.integration.spec.ts",
     "code_unit:src/billing/price-coverage.spec.ts",
     "code_unit:src/billing/price-coverage.ts",
     "code_unit:src/billing/price-sources-2026-11.spec.ts",
@@ -3701,11 +3634,8 @@
     "deployable_unit:."
    ],
    "entity_verdicts": {
-    "code_unit:src/admin/admin-rate-limit.app.spec.ts": "verified",
     "code_unit:src/admin/admin.module.ts": "verified",
     "code_unit:src/app.module.ts": "verified",
-    "code_unit:src/auth/rate-limit.app.spec.ts": "verified",
-    "code_unit:src/auth/rate-limit.integration.spec.ts": "verified",
     "code_unit:src/billing/price-coverage.spec.ts": "verified",
     "code_unit:src/billing/price-coverage.ts": "verified",
     "code_unit:src/billing/price-sources-2026-11.spec.ts": "verified",
@@ -3757,13 +3687,13 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/tmp/arcana-verify-23k6cg3l/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-04T00:40:20Z",
+   "output_ref": "/tmp/arcana-verify-q6jp6dqi/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-04T01:14:57Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.01,
+   "duration_s": 0.0,
    "entities": [
     "document:README.md",
     "document:templates/api-connector-scaffold/README.md"
@@ -3775,8 +3705,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/tmp/arcana-verify-23k6cg3l/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-04T00:40:20Z",
+   "output_ref": "/tmp/arcana-verify-q6jp6dqi/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-04T01:14:58Z",
    "summary": "2 document(s), 0 failed"
   },
   {
@@ -3785,33 +3715,19 @@
    "entities": [
     "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
     "code_unit:src/connectors/fireworks/fireworks.connector.ts",
-    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
+    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts"
    ],
    "entity_verdicts": {
     "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts": "not_measured",
     "code_unit:src/connectors/fireworks/fireworks.connector.ts": "not_measured",
-    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": "not_measured",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "not_measured",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "not_measured",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "not_measured",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "not_measured",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "not_measured",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "not_measured",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "not_measured"
+    "code_unit:src/connectors/gemini-api/gemini-api.connector.ts": "not_measured"
    },
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/tmp/arcana-verify-23k6cg3l/verifier-out/v-canary.json",
-   "started_at_utc": "2026-11-04T00:40:20Z",
-   "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 10 not_measured of 10 entities"
+   "output_ref": "/tmp/arcana-verify-q6jp6dqi/verifier-out/v-canary.json",
+   "started_at_utc": "2026-11-04T01:14:58Z",
+   "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 3 not_measured of 3 entities"
   }
  ],
  "verify": {
@@ -3825,30 +3741,15 @@
    {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "17 affected entity(ies) owe no verdict (receipt: 17): unchanged at both revisions and given no verifier by the matrix"
+    "text": "16 affected entity(ies) owe no verdict (receipt: 16): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
-   "code_unit:src/admin/admin-rate-limit.app.spec.ts": [
-    "contract_diff",
-    "fitness_rules",
-    "type_check"
-   ],
    "code_unit:src/admin/admin.module.ts": [
     "fitness_rules",
     "type_check"
    ],
    "code_unit:src/app.module.ts": [
-    "fitness_rules",
-    "type_check"
-   ],
-   "code_unit:src/auth/rate-limit.app.spec.ts": [
-    "contract_diff",
-    "fitness_rules",
-    "type_check"
-   ],
-   "code_unit:src/auth/rate-limit.integration.spec.ts": [
-    "contract_diff",
     "fitness_rules",
     "type_check"
    ],
@@ -4059,7 +3960,6 @@
    ],
    "receipt:receipts/bench-source-ctx24/source-car.json": [],
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json": [],
-   "receipt:receipts/graph/a2-319-rate-limit-admin.json": [],
    "receipt:receipts/graph/change-admission-6206.json": [],
    "receipt:receipts/graph/change-admission-6664.json": [],
    "receipt:receipts/graph/change-admission-7148.json": [],
@@ -4073,54 +3973,12 @@
    "receipt:receipts/graph/change-admission-a2-432.json": [],
    "receipt:receipts/graph/change-admission-a2-443.json": [],
    "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json": [],
-   "receipt:receipts/graph/change-admission-jev-decision.json": [],
-   "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ]
+   "receipt:receipts/graph/change-admission-jev-decision.json": []
   },
   "seconds": {
-   "prepare": 4.93,
-   "total": 138.1,
-   "verifiers": 62.21
+   "prepare": 4.54,
+   "total": 64.43,
+   "verifiers": 8.78
   }
  },
  "work_item": "CONV-AC5-PRICE-8e4cd46e"
