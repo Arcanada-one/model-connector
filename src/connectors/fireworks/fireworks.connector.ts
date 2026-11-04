@@ -12,9 +12,11 @@ interface FireworksChatResponse {
 }
 
 const DEFAULT_MODEL = 'accounts/fireworks/models/llama-v3p1-8b-instruct';
-// Price: https://docs.fireworks.ai/serverless/pricing (retrieved 2026-11-04), size-band table, row
-// "4B – 16B parameters | $0.20" under the header "$ / 1M tokens"; the page states the size-based prices
-// apply uniformly to input and output (no separate cached-input rate). llama-v3p1-8b-instruct is an 8B model.
+// Price: https://docs.fireworks.ai/serverless/pricing (retrieved 2026-11-04). The page has no row for this
+// model by name; it prices by parameter-count band. The band row reads "4B – 16B parameters | $0.20" under the
+// header "$ / 1M tokens", and the page states the size-based prices apply uniformly to input and output (no
+// separate cached-input rate). 0.20 is therefore the 4B-16B BAND price applied to llama-v3p1-8b-instruct,
+// which is an 8B model: an inference from the band, not a named-model row.
 const FIREWORKS_8B_PRICE_USD_PER_MTOK = 0.2;
 const STATIC_MODELS: ProviderModelMeta[] = [
   {

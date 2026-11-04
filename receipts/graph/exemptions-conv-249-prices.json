@@ -1,0 +1,72 @@
+[
+ {
+  "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the change is catalog data only — tier unknown→paid and cost estimation for 5 models; request path and routing unchanged (cascade tier from env, failover from freeModels). Measured instead after deploy: /catalog readback of the 5 models' prices and tier. reverse_if: the readback differs from the PR's values."
+ },
+ {
+  "entity": "code_unit:src/connectors/fireworks/fireworks.connector.ts",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the change is catalog data only — tier unknown→paid and cost estimation for 5 models; request path and routing unchanged (cascade tier from env, failover from freeModels). Measured instead after deploy: /catalog readback of the 5 models' prices and tier. reverse_if: the readback differs from the PR's values."
+ },
+ {
+  "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the change is catalog data only — tier unknown→paid and cost estimation for 5 models; request path and routing unchanged (cascade tier from env, failover from freeModels). Measured instead after deploy: /catalog readback of the 5 models' prices and tier. reverse_if: the readback differs from the PR's values."
+ },
+ {
+  "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: test-only controllers defined inside spec files, absent in production; linked only through an import of the inline harness compiler dependency; the specs pass in CI lint-and-test at the PR head. A canary cannot measure them."
+ },
+ {
+  "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: test-only controllers defined inside spec files, absent in production; linked only through an import of the inline harness compiler dependency; the specs pass in CI lint-and-test at the PR head. A canary cannot measure them."
+ },
+ {
+  "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: test-only controllers defined inside spec files, absent in production; linked only through an import of the inline harness compiler dependency; the specs pass in CI lint-and-test at the PR head. A canary cannot measure them."
+ },
+ {
+  "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: test-only controllers defined inside spec files, absent in production; linked only through an import of the inline harness compiler dependency; the specs pass in CI lint-and-test at the PR head. A canary cannot measure them."
+ },
+ {
+  "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: test-only controllers defined inside spec files, absent in production; linked only through an import of the inline harness compiler dependency; the specs pass in CI lint-and-test at the PR head. A canary cannot measure them."
+ },
+ {
+  "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: test-only controllers defined inside spec files, absent in production; linked only through an import of the inline harness compiler dependency; the specs pass in CI lint-and-test at the PR head. A canary cannot measure them."
+ },
+ {
+  "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: test-only controllers defined inside spec files, absent in production; linked only through an import of the inline harness compiler dependency; the specs pass in CI lint-and-test at the PR head. A canary cannot measure them."
+ }
+]
