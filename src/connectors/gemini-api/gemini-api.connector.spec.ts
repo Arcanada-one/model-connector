@@ -62,7 +62,11 @@ describe('GeminiApiConnector', () => {
     it('retains only generateContent models in completed discovery', () => {
       expect(
         connector['extractModels'](fixture('gemini-api-models.synthetic.json') as never),
-      ).toEqual([{ id: 'gemini-2.5-flash' }, { id: 'gemini-2.5-pro' }]);
+      ).toEqual([
+        // gemini-2.5-flash carries its official list price (2026-11-04); the live listing must not drop it.
+        { id: 'gemini-2.5-flash', pricing: { inputPerMTok: 0.3, outputPerMTok: 2.5, unit: 'USD/1M tokens' } },
+        { id: 'gemini-2.5-pro' },
+      ]);
     });
 
     it('does not reinterpret an unknown operation as embeddings', async () => {

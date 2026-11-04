@@ -1,5 +1,5 @@
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
-import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
+import { ConnectorCapabilities, ConnectorRequest, ProviderModelMeta } from '../interfaces/connector.interface';
 
 interface CloudflareEnvelope {
   success?: boolean;
@@ -22,6 +22,21 @@ const TEXT_GENERATION_MODELS = [
   '@cf/qwen/qwen2.5-coder-32b-instruct',
 ];
 
+/**
+ * Token prices Cloudflare publishes next to the neuron rates, USD per 1M tokens.
+ * Source: https://developers.cloudflare.com/workers-ai/platform/pricing/ ("Last updated Oct 20, 2026"),
+ * retrieved 2026-11-04; table columns "Model | Price in Tokens | Price in Neurons", e.g.
+ * "@cf/meta/llama-3.2-3b-instruct | $0.051 per M input tokens, $0.335 per M output tokens". Neuron rate on
+ * the same page: $0.011 per 1,000 Neurons. Models not in this table stay unpriced.
+ */
+export const CLOUDFLARE_LIST_PRICES_USD_PER_MTOK: Readonly<
+  Record<string, { inputPerMTok: number; outputPerMTok: number }>
+> = {
+  '@cf/meta/llama-3.1-8b-instruct': { inputPerMTok: 0.282, outputPerMTok: 0.827 },
+  '@cf/meta/llama-3.2-3b-instruct': { inputPerMTok: 0.051, outputPerMTok: 0.335 },
+  '@cf/qwen/qwen2.5-coder-32b-instruct': { inputPerMTok: 0.66, outputPerMTok: 1.0 },
+};
+
 export class CloudflareWorkersAiConnector extends BaseApiConnector {
   readonly name = 'cloudflare-workers-ai';
 
@@ -31,6 +46,13 @@ export class CloudflareWorkersAiConnector extends BaseApiConnector {
 
   protected getStaticModels(): string[] {
     return TEXT_GENERATION_MODELS;
+  }
+
+  protected getStaticModelMetas(): ProviderModelMeta[] {
+    return TEXT_GENERATION_MODELS.map((id) => {
+      const price = CLOUDFLARE_LIST_PRICES_USD_PER_MTOK[id];
+      return price ? { id, pricing: { ...price, unit: 'USD/1M tokens' } } : { id };
+    });
   }
 
   protected getHeaders(): Record<string, string> {

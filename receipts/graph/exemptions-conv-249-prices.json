@@ -1,0 +1,366 @@
+[
+ {
+  "entity": "code_unit:src/admin/admin.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/app.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/billing/price-coverage.spec.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/billing/price-coverage.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/billing/price-sources-2026-11.spec.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.spec.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the change is catalog data only — tier unknown→paid and cost estimation for 5 models; request path and routing unchanged (cascade tier from env, failover from freeModels). Measured instead after deploy: /catalog readback of the 5 models' prices and tier. reverse_if: the readback differs from the PR's values."
+ },
+ {
+  "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/codex/codex.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/cohere/cohere.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/connectors.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/cursor/cursor.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/embedding/embedding.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/fireworks/fireworks.connector.spec.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/fireworks/fireworks.connector.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/fireworks/fireworks.connector.ts",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the change is catalog data only — tier unknown→paid and cost estimation for 5 models; request path and routing unchanged (cascade tier from env, failover from freeModels). Measured instead after deploy: /catalog readback of the 5 models' prices and tier. reverse_if: the readback differs from the PR's values."
+ },
+ {
+  "entity": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.spec.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
+  "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the change is catalog data only — tier unknown→paid and cost estimation for 5 models; request path and routing unchanged (cascade tier from env, failover from freeModels). Measured instead after deploy: /catalog readback of the 5 models' prices and tier. reverse_if: the readback differs from the PR's values."
+ },
+ {
+  "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.spec.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/gemini-api/index.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/gemini/gemini.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/grok/grok.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/groq/groq.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/jev/decision.service.spec.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/mistral/mistral.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/modal/modal.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/ollama/ollama.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/openai/openai.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/orq/orq.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/together/together.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/health/health.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/openai-compat/openai-compat.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ },
+ {
+  "entity": "deployable_unit:.",
+  "code": "TSC_UNAVAILABLE_ON_HOST",
+  "owner": "KCP-0012",
+  "expires_at_utc": "2026-12-04T00:00:00Z",
+  "reason": "Control decision to proceed 2026-11-04: the verifier needs the repository's installed dependencies, which the CI gate graph excludes; measured instead by CI lint-and-test (tsc + vitest) at the PR head, run 41750937310, success. Class precedent: model-connector #243 (KCP-0017)."
+ }
+]

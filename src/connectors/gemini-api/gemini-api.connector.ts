@@ -11,6 +11,29 @@ import {
 const DEFAULT_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 const DEFAULT_MODEL = 'gemini-2.5-flash';
 const STATIC_MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+
+/**
+ * List prices, Paid Tier, Standard (not Batch), USD per 1M tokens.
+ * Source: https://ai.google.dev/gemini-api/docs/pricing (301 -> https://aistudio.google.com/docs/pricing),
+ * retrieved 2026-11-04. Gemini 2.5 Flash: input "$0.30 (text / image / video)" and "$1.00 (audio)";
+ * "Output price (including thinking tokens)" "$2.50". The text/image/video input rate is used (this connector
+ * sends text). The page announces that from 2026-12-01 requests to gemini-2.5-flash are routed to a newer
+ * model and billed at that model's price: re-check this entry then.
+ *
+ * gemini-2.5-pro is ABSENT on purpose: its price depends on prompt size (<=200k vs >200k tokens) and the
+ * catalogue row has one rate per direction, so any single number would mis-bill one side of the threshold.
+ * It stays in PRICE_COVERAGE_WAIVERS until a tiered tariff shape exists.
+ */
+export const GEMINI_LIST_PRICES_USD_PER_MTOK: Readonly<
+  Record<string, { inputPerMTok: number; outputPerMTok: number }>
+> = {
+  'gemini-2.5-flash': { inputPerMTok: 0.3, outputPerMTok: 2.5 },
+};
+
+function withGeminiPrice(id: string): ProviderModelMeta {
+  const price = GEMINI_LIST_PRICES_USD_PER_MTOK[id];
+  return price ? { id, pricing: { ...price, unit: 'USD/1M tokens' } } : { id };
+}
 const EMBEDDING_MODELS = new Set(['gemini-embedding-2', 'gemini-embedding-001']);
 const EMBEDDING_TASK_TYPES = new Set([
   'SEMANTIC_SIMILARITY',
@@ -173,6 +196,10 @@ export class GeminiApiConnector extends BaseApiConnector {
     return STATIC_MODELS;
   }
 
+  protected getStaticModelMetas(): ProviderModelMeta[] {
+    return STATIC_MODELS.map(withGeminiPrice);
+  }
+
   protected getModelsUrl(): string {
     return `${this.getBaseUrl()}/models?pageSize=1000`;
   }
@@ -188,7 +215,7 @@ export class GeminiApiConnector extends BaseApiConnector {
         return [];
       }
       const id = entry.name.replace(/^models\//, '');
-      return id ? [{ id }] : [];
+      return id ? [withGeminiPrice(id)] : [];
     });
   }
 
