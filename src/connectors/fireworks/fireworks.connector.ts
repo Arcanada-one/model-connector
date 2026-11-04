@@ -12,8 +12,20 @@ interface FireworksChatResponse {
 }
 
 const DEFAULT_MODEL = 'accounts/fireworks/models/llama-v3p1-8b-instruct';
+// Price: https://docs.fireworks.ai/serverless/pricing (retrieved 2026-11-04), size-band table, row
+// "4B – 16B parameters | $0.20" under the header "$ / 1M tokens"; the page states the size-based prices
+// apply uniformly to input and output (no separate cached-input rate). llama-v3p1-8b-instruct is an 8B model.
+const FIREWORKS_8B_PRICE_USD_PER_MTOK = 0.2;
 const STATIC_MODELS: ProviderModelMeta[] = [
-  { id: DEFAULT_MODEL, modality: 'chat' },
+  {
+    id: DEFAULT_MODEL,
+    modality: 'chat',
+    pricing: {
+      inputPerMTok: FIREWORKS_8B_PRICE_USD_PER_MTOK,
+      outputPerMTok: FIREWORKS_8B_PRICE_USD_PER_MTOK,
+      unit: 'USD/1M tokens',
+    },
+  },
 ];
 
 export class FireworksConnector extends BaseApiConnector {

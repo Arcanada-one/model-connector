@@ -87,12 +87,13 @@ export interface PriceCoverageWaiver {
 }
 
 const WAIVER_OWNER = 'A2-223 executor (claude-opus-5, arcana-devs) / Model Connector owner';
+/** 2026-11-04 re-measurement (CONV AC5 unblocker): see the per-entry reasons for what was and was not priced. */
 /**
  * Six weeks. Long enough that a provider price hunt is a scheduled piece of
  * work rather than an emergency, short enough that nobody inherits this list as
  * permanent furniture.
  */
-const WAIVER_EXPIRY = '2026-11-04T00:00:00Z';
+const WAIVER_EXPIRY = '2026-12-04T00:00:00Z';
 
 /**
  * The gaps this change did NOT close, each one named.
@@ -106,7 +107,7 @@ export const PRICE_COVERAGE_WAIVERS: readonly PriceCoverageWaiver[] = [
     connector: 'mistral',
     model: 'mistral-small-latest',
     reason:
-      'https://mistral.ai/pricing (fetched 2026-09-23) recommends Mistral Small "for cost-sensitive projects" and prints no per-token rate for it, deferring to the models overview. No figure was read, so none was written. This is the connector DEFAULT_MODEL, which makes it the most expensive omission on this list.',
+      'Re-checked 2026-11-04: https://docs.mistral.ai/models/model-cards/mistral-small-4-0-26-03 shows "$0.15 /M Tokens" and "$0.6 /M Tokens" without input/output labels, and no official page states which model the alias mistral-small-latest currently resolves to. Both the alias target and the direction of the two figures are unconfirmed, so no price is written. Next step: read GET /v1/models for the alias target and the labelled price from the Mistral pricing API/console.',
     owner: WAIVER_OWNER,
     expiresAtUtc: WAIVER_EXPIRY,
   },
@@ -114,30 +115,15 @@ export const PRICE_COVERAGE_WAIVERS: readonly PriceCoverageWaiver[] = [
     connector: 'cerebras',
     model: '*',
     reason:
-      'https://www.cerebras.ai/pricing (fetched 2026-09-23) renders its tier tables client-side; the fetched text carried the headings "Cerebras Inference tier pricing" and "Developer Tier Pricing" with no figures. gpt-oss-120b and zai-glm-4.7 are therefore unpriced rather than guessed.',
-    owner: WAIVER_OWNER,
-    expiresAtUtc: WAIVER_EXPIRY,
-  },
-  {
-    connector: 'fireworks',
-    model: '*',
-    reason:
-      'Fireworks prices by parameter-count band rather than by model id; mapping accounts/fireworks/models/llama-v3p1-8b-instruct onto a band is a second judgement on top of an unfetched number. Not attempted on 2026-09-23.',
+      'Re-checked 2026-11-04: https://www.cerebras.ai/pricing still renders its tier tables client-side (no figures in the fetched text) and https://inference-docs.cerebras.ai/models/overview carries no prices; zai-glm-4.7 is not in that catalogue page at all. gpt-oss-120b and zai-glm-4.7 stay unpriced rather than guessed. Next step: read the prices from the Cerebras console/API with an account.',
     owner: WAIVER_OWNER,
     expiresAtUtc: WAIVER_EXPIRY,
   },
   {
     connector: 'cohere',
     model: '*',
-    reason: 'No price fetched for command-a-03-2025 on 2026-09-23.',
-    owner: WAIVER_OWNER,
-    expiresAtUtc: WAIVER_EXPIRY,
-  },
-  {
-    connector: 'cloudflare-workers-ai',
-    model: '*',
     reason:
-      'Workers AI bills in "neurons", not USD per token; converting a neuron rate into a per-MTok tariff per model is a piece of work, not a lookup. Not attempted on 2026-09-23.',
+      'Re-checked 2026-11-04: https://cohere.com/pricing does not list command-a-03-2025 (it lists Command R+ 08-2024 at $2.50 in / $10.00 out per 1M tokens, which is a different model) and docs.cohere.com/docs/command-a defers to the pricing page. No figure for this model on an official page, so none is written.',
     owner: WAIVER_OWNER,
     expiresAtUtc: WAIVER_EXPIRY,
   },
@@ -145,14 +131,15 @@ export const PRICE_COVERAGE_WAIVERS: readonly PriceCoverageWaiver[] = [
     connector: 'huggingface',
     model: '*',
     reason:
-      'The static id openai/gpt-oss-120b:fastest is an inference-provider ROUTE, not a model with one published price: the rate depends on which provider the router picks per request. No single number is correct here.',
+      'Re-checked 2026-11-04 against https://huggingface.co/docs/inference-providers/index and /pricing: \':fastest\' is a provider-selection policy, not a product with its own price ("automatically selects the fastest available provider"); Hugging Face "charges you the same rates as the provider, with no additional fees", so the rate depends on which provider serves each request (per-provider prices are returned by GET /v1/models). No single number is correct; a per-request provider price would be needed.',
     owner: WAIVER_OWNER,
     expiresAtUtc: WAIVER_EXPIRY,
   },
   {
     connector: 'gemini-api',
-    model: '*',
-    reason: 'No price fetched for gemini-2.5-flash / gemini-2.5-pro on 2026-09-23.',
+    model: 'gemini-2.5-pro',
+    reason:
+      'Priced for gemini-2.5-flash on 2026-11-04 (see GEMINI_LIST_PRICES_USD_PER_MTOK). gemini-2.5-pro is tiered by prompt size (official page, retrieved 2026-11-04: $1.25 in / $10.00 out up to 200k tokens, $2.50 / $15.00 above) and the catalogue row holds one rate per direction, so a single number would mis-bill one side of the threshold. Needs a tiered tariff shape; the page also announces model re-routing from 2026-12-01.',
     owner: WAIVER_OWNER,
     expiresAtUtc: WAIVER_EXPIRY,
   },
@@ -162,28 +149,31 @@ export const PRICE_COVERAGE_WAIVERS: readonly PriceCoverageWaiver[] = [
     connector: 'grok',
     model: 'grok-imagine-image',
     reason:
-      'Image model: billed per image, not per token. A per-MTok row would be a category error. Needs a non-token tariff shape on MeasuredCostPricing.',
+      'Image model billed per image. Official price (https://docs.x.ai/developers/models, Imagine Pricing, retrieved 2026-11-04): $0.02 per image. Not written to the catalogue because MeasuredCostPricing has no per-image tariff shape (a per-MTok row would be a category error); the shape is the open work.',
     owner: WAIVER_OWNER,
     expiresAtUtc: WAIVER_EXPIRY,
   },
   {
     connector: 'grok',
     model: 'grok-imagine-image-quality',
-    reason: 'Image model: billed per image, not per token. See grok-imagine-image.',
+    reason:
+      'Image model billed per image. No row for grok-imagine-image-quality in the official table (https://docs.x.ai/developers/models, retrieved 2026-11-04); the neighbouring grok-imagine-image-2.0 ($0.04 per image) is a different model and is not used as a stand-in. Also needs a per-image tariff shape.',
     owner: WAIVER_OWNER,
     expiresAtUtc: WAIVER_EXPIRY,
   },
   {
     connector: 'grok',
     model: 'grok-imagine-video',
-    reason: 'Video model: billed per second of output, not per token.',
+    reason:
+      'Video model billed per second. Official price (https://docs.x.ai/developers/models, retrieved 2026-11-04): $0.050 per second. Not written: no per-second tariff shape on MeasuredCostPricing.',
     owner: WAIVER_OWNER,
     expiresAtUtc: WAIVER_EXPIRY,
   },
   {
     connector: 'grok',
     model: 'grok-imagine-video-1.5',
-    reason: 'Video model: billed per second of output, not per token.',
+    reason:
+      'Video model billed per second. Official price (https://docs.x.ai/developers/models, retrieved 2026-11-04): $0.080 per second. Not written: no per-second tariff shape on MeasuredCostPricing.',
     owner: WAIVER_OWNER,
     expiresAtUtc: WAIVER_EXPIRY,
   },
@@ -191,7 +181,7 @@ export const PRICE_COVERAGE_WAIVERS: readonly PriceCoverageWaiver[] = [
     connector: 'bedrock-nova-media',
     model: '*',
     reason:
-      'amazon.nova-canvas / nova-reel are image and video models billed per image and per second. Same missing tariff shape as the grok-imagine entries.',
+      'amazon.nova-canvas / nova-reel are billed per image and per second. Re-checked 2026-11-04: https://aws.amazon.com/bedrock/pricing/ and https://aws.amazon.com/nova/pricing/ did not yield the creative-content figures in the fetched text (client-rendered or outside the part read). No figure written; also needs the per-image/per-second tariff shape.',
     owner: WAIVER_OWNER,
     expiresAtUtc: WAIVER_EXPIRY,
   },
