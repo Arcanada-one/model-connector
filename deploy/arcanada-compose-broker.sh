@@ -1044,9 +1044,9 @@ kc_select_pair() {
 
 kc_config_contract() {
   # Compose renders env_file values into JSON, so stdout goes only to this
-  # parser; neither the JSON nor a database URL is printed or stored.
+  # parser; neither the JSON nor a database URL or token is printed or stored.
   "$DOCKER" "${COMPOSE_ARGV[@]}" config --format json | /usr/bin/python3 -I -c '
-import json, sys
+import json, re, sys
 from urllib.parse import urlsplit
 def require(ok):
     if not ok:
@@ -1139,7 +1139,12 @@ try:
         "SCRUTATOR_EVIDENCE_EXACT_BYTES": "true",
         "SCRUTATOR_EVIDENCE_EXACT_NAMESPACES": "[\"knowledge-contract\"]",
     }
-    optional_env = {"SCRUTATOR_PROJECT_WRITE_NAMESPACE"} | set(governed) | set(exact_bytes)
+    # KCP-0018 K4: the static write credential (X-KB-Feeder-Token) of the project instance. Without it every
+    # POST /v1/index answers 401 and the Knowledge Contract corpus cannot be indexed. It arrives only through the
+    # root-owned env file (rendered here because Compose copies env_file values into the environment). It is
+    # optional so the previous checkout still validates for rollback; when present the contract checks its SHAPE
+    # only (32 to 128 printable ASCII characters, no whitespace), never its value, and never prints it.
+    optional_env = {"SCRUTATOR_PROJECT_WRITE_NAMESPACE", "SCRUTATOR_FEEDER_TOKEN"} | set(governed) | set(exact_bytes)
     require(required_env <= set(env) <= required_env | optional_env)
     require(all(isinstance(value, str) for value in env.values()))
     require(env["SCRUTATOR_HOST"] == "0.0.0.0")
@@ -1150,6 +1155,7 @@ try:
     require(env["SCRUTATOR_FEEDER_NAMESPACES"] == "knowledge-contract")
     # KCP-0033: the project write opt-in may name only this namespace; absent keeps it off.
     require(env.get("SCRUTATOR_PROJECT_WRITE_NAMESPACE") in (None, "knowledge-contract"))
+    require("SCRUTATOR_FEEDER_TOKEN" not in env or re.fullmatch(r"[!-~]{32,128}", env["SCRUTATOR_FEEDER_TOKEN"]) is not None)
     for key, wanted in governed.items():
         require(key not in env or env[key] == wanted)
     exact_present = [key in env for key in exact_bytes]

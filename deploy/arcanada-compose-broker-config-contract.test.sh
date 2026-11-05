@@ -45,6 +45,7 @@ YML
       SCRUTATOR_AUTH_SERVICE_SCOPE: kb:knowledge-contract.read
       SCRUTATOR_FEEDER_NAMESPACES: knowledge-contract
       SCRUTATOR_DATABASE_URL: postgresql://kc_scrutator_app:fixture@100.97.136.74:5432/knowledge_contract
+${KC_EXTRA_ENV:-}
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8310/health"]
       interval: 30s
@@ -119,3 +120,25 @@ for v in public internal; do
   refused "${v}_default_driver_overlay" "$v" '' '    driver: overlay'
 done
 echo 'PASS: kc_config_contract top-level and default-network allowlists (real renders)'
+
+# KCP-0018 K4: the optional static write credential. Shape only: 32 to 128 printable ASCII characters, no whitespace;
+# absent stays valid (rollback). The value is generated here from a counter, never a real credential.
+tok() { printf 'x%.0s' $(seq 1 "$1"); }
+for v in public internal; do
+  KC_EXTRA_ENV="      SCRUTATOR_FEEDER_TOKEN: $(tok 43)" accepted "${v}_feeder_token_43" "$v" '' ''
+  KC_EXTRA_ENV="      SCRUTATOR_FEEDER_TOKEN: $(tok 32)" accepted "${v}_feeder_token_32" "$v" '' ''
+  KC_EXTRA_ENV="      SCRUTATOR_FEEDER_TOKEN: $(tok 128)" accepted "${v}_feeder_token_128" "$v" '' ''
+  KC_EXTRA_ENV="      SCRUTATOR_FEEDER_TOKEN: $(tok 31)" refused "${v}_feeder_token_31" "$v" '' ''
+  KC_EXTRA_ENV="      SCRUTATOR_FEEDER_TOKEN: $(tok 129)" refused "${v}_feeder_token_129" "$v" '' ''
+  KC_EXTRA_ENV="      SCRUTATOR_FEEDER_TOKEN: \"$(tok 20) $(tok 20)\"" refused "${v}_feeder_token_space" "$v" '' ''
+  KC_EXTRA_ENV="      SCRUTATOR_FEEDER_TOKEN: \"$(tok 40)é\"" refused "${v}_feeder_token_non_ascii" "$v" '' ''
+  KC_EXTRA_ENV='      SCRUTATOR_FEEDER_TOKEN: ""' refused "${v}_feeder_token_empty" "$v" '' ''
+  KC_EXTRA_ENV="      SCRUTATOR_FEEDER_TOKENS: $(tok 43)" refused "${v}_feeder_token_lookalike_key" "$v" '' ''
+  KC_EXTRA_ENV="      SCRUTATOR_ROLLBACK_TOKEN: $(tok 43)" refused "${v}_other_credential_key" "$v" '' ''
+done
+# A refusal must not print the credential it refused.
+secret="$(tok 31)"
+KC_EXTRA_ENV="      SCRUTATOR_FEEDER_TOKEN: $secret" refused feeder_token_not_echoed public '' ''
+if grep -Fq "$secret" "$work/out"; then echo 'FAIL: the refused credential was printed' >&2; exit 1; fi
+echo 'PASS: kc_contract_feeder_token_not_printed'
+echo 'PASS: kc_config_contract optional SCRUTATOR_FEEDER_TOKEN (shape only, absent valid)'
