@@ -140,6 +140,9 @@ declare -rA REPOS=(
   # KCP-0017: separate project checkout and Compose identity, never the shared
   # Scrutator checkout or its transaction.
   [knowledge-contract-scrutator]='https://github.com/Arcanada-one/contract-place-api.git'
+  # KB-CONS-02: dedicated private Scrutator instance for the kc-corpus namespace. The repository is PUBLIC,
+  # so there is deliberately no AUTH row. Its image is built from this checkout (BUILD_SHA = deployed revision).
+  [kc-corpus-scrutator]='https://github.com/Arcanada-one/scrutator.git'
   # Muneral cc96570a: the observability stack (Grafana/Loki/Tempo/Mimir) has
   # been running on arcana-prd since INFRA-0417 (project `observability-stack`,
   # named volumes obs_*), but its deploy job still SSHed to the decommissioned
@@ -165,6 +168,7 @@ declare -rA COMPOSE=(
   [contract-place-api]='docker-compose.yml'
   [doc-md-html]='docker-compose.arcanada.yml'
   [knowledge-contract-scrutator]='deploy/knowledge-contract-scrutator/compose.yml'
+  [kc-corpus-scrutator]='instances/kc-corpus/docker-compose.yml'
   [observability-stack]='docker-compose.yml'
 )
 # Private repositories whose fetch needs a credential on stdin.
@@ -233,6 +237,7 @@ declare -rA PROJECT=(
   [contract-place-api]='contract-place-api'
   [doc-md-html]='doc-md-html'
   [knowledge-contract-scrutator]='knowledge-contract-scrutator'
+  [kc-corpus-scrutator]='kc-corpus-scrutator'
   # Pinned to the name the ALREADY-RUNNING stack carries
   # (com.docker.compose.project=observability-stack, measured 2026-09-30). Its
   # named volumes are fixed by `name:` (obs_*), so they would be adopted either
@@ -274,6 +279,9 @@ declare -rA ENVFILE=(
   # Operator-maintained under ENV_ROOT, root 0600; never carried in the repo.
   [observability-stack]='observability-stack.env'
   [knowledge-contract-scrutator]='knowledge-contract-scrutator.env'
+  # KB-CONS-02: root-owned, names only SCRUTATOR_DATABASE_URL and SCRUTATOR_FEEDER_TOKEN; installed as .env
+  # beside the compose file on every sync.
+  [kc-corpus-scrutator]='kc-corpus-scrutator.env'
 )
 # A release script inside the checkout that already encapsulates the whole
 # deploy. Running it as root is the same trust boundary the broker already
@@ -315,6 +323,7 @@ declare -rA BUILDSHA=(
   # The build passes the broker-owned checkout HEAD into the image; /health reports it.
   [contract-place-api]='yes'
   [doc-md-html]='yes'
+  [kc-corpus-scrutator]='yes'
 )
 # Services whose compose file interpolates IMAGE_TAG to select a PRE-BUILT
 # image from a registry. The broker supplies it from its own checkout HEAD, so
@@ -349,6 +358,7 @@ declare -rA CONTAINER=(
   [argana]='argana-argana-1'
   # Conversion Arcana: container_name is pinned in docker-compose.arcanada.yml.
   [doc-md-html]='doc-md-html-api'
+  [kc-corpus-scrutator]='kc-corpus-scrutator-scrutator-1'
 )
 declare -rA MAXAGE=(
   [opsbot]='300'
@@ -362,6 +372,7 @@ declare -rA MAXAGE=(
   [argana]='600'
   # `up` follows `build` in the same deploy; 600s still fails a deploy that recreated nothing.
   [doc-md-html]='600'
+  [kc-corpus-scrutator]='600'
 )
 # Fixed argv for the module-load smoke check. Compiled in, so the word
 # splitting below is on a constant, not on caller input.
@@ -581,9 +592,14 @@ cmd_build() {
   # fixed Compose service first; cmd_tag_rotate refuses a missing or stale tag.
   [[ "$1" != 'muneral' ]] || cmd_tag_rotate "$1"
   compose_env "$1"; set_compose_argv "$1"
+  [[ "$1" != kc-corpus-scrutator ]] || kcc_config_contract
   "$DOCKER" "${COMPOSE_ARGV[@]}" build
 }
-cmd_up()    { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" up -d; }
+cmd_up() {
+  require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"
+  [[ "$1" != kc-corpus-scrutator ]] || kcc_config_contract
+  "$DOCKER" "${COMPOSE_ARGV[@]}" up -d
+}
 cmd_ps()    { require_checkout "$1"; compose_env "$1"; set_compose_argv "$1"; "$DOCKER" "${COMPOSE_ARGV[@]}" ps; }
 cmd_logs() {
   local n="${2:-100}"
@@ -1166,6 +1182,74 @@ except (KeyError, TypeError, ValueError, IndexError, json.JSONDecodeError):
 ' "$KC_OLD_IMAGE_REF" "$KC_NEW_IMAGE_REF" || die 'project Compose isolation contract failed'
 }
 
+kcc_config_contract() {
+  # KB-CONS-02: the rendered effective configuration of the kc-corpus instance, validated before any
+  # build or start. Compose renders env_file values into JSON, so stdout goes only to this parser; neither
+  # the JSON, the database URL nor the feeder capability is printed or stored.
+  "$DOCKER" "${COMPOSE_ARGV[@]}" config --format json | /usr/bin/python3 -I -c '
+import json, re, sys
+from urllib.parse import urlsplit
+def require(ok):
+    if not ok:
+        raise ValueError("isolation contract")
+try:
+    build_sha, checkout = sys.argv[1], sys.argv[2]
+    require(re.fullmatch(r"[0-9a-f]{40}", build_sha) is not None)
+    cfg = json.load(sys.stdin)
+    require(isinstance(cfg, dict) and set(cfg) <= {"name", "services", "networks"})
+    require(cfg.get("name") == "kc-corpus-scrutator")
+    services = cfg["services"]
+    require(set(services) == {"scrutator"})
+    svc = services["scrutator"]
+    network = cfg["networks"]["default"]
+    require(set(cfg["networks"]) == {"default"})
+    require(network.get("name") == "kc-corpus-scrutator_default")
+    require(set(network) == {"name", "ipam"} and network["ipam"] == {})
+    require(set(svc) <= {"image", "build", "container_name", "labels", "environment", "ports", "restart",
+                         "healthcheck", "networks", "command", "entrypoint"})
+    require(svc.get("command") is None and svc.get("entrypoint") is None)
+    require(svc.get("networks") == {"default": None})
+    require(svc.get("container_name") == "kc-corpus-scrutator-scrutator-1")
+    require(svc.get("image") == "kc-corpus-scrutator:" + build_sha)
+    require(svc.get("labels") == {"org.opencontainers.image.revision": build_sha})
+    require(svc.get("build") == {"context": checkout, "dockerfile": "Dockerfile", "target": "production",
+                                 "labels": {"org.opencontainers.image.revision": build_sha}})
+    require(svc.get("restart") == "unless-stopped")
+    require(svc.get("healthcheck") == {
+        "test": ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8310/health"],
+        "interval": "30s", "timeout": "5s", "retries": 3})
+    require(svc.get("ports") == [{"mode": "ingress", "target": 8310,
+        "published": "8312", "protocol": "tcp", "host_ip": "127.0.0.1"}])
+    env = svc["environment"]
+    require(isinstance(env, dict) and all(isinstance(v, str) for v in env.values()))
+    # Exact key set: every other key (proxy, resolver, loader, CA bundle, other feeder/writer/rollback
+    # capabilities, introspection or project-write opt-ins) is refused because it is not listed.
+    require(set(env) == {"SCRUTATOR_HOST", "SCRUTATOR_PORT", "SCRUTATOR_AUTH_ENFORCE",
+                         "SCRUTATOR_FEEDER_NAMESPACES", "SCRUTATOR_FEEDER_TOKEN",
+                         "SCRUTATOR_EVIDENCE_EXACT_BYTES", "SCRUTATOR_EVIDENCE_EXACT_NAMESPACES",
+                         "SCRUTATOR_EVIDENCE_EXACT_REQUIRED_NAMESPACES", "SCRUTATOR_EMBEDDING_API_URL",
+                         "SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED", "SCRUTATOR_EMBEDDING_TIMEOUT",
+                         "SCRUTATOR_DATABASE_URL"})
+    require(env["SCRUTATOR_HOST"] == "0.0.0.0" and env["SCRUTATOR_PORT"] == "8310")
+    require(env["SCRUTATOR_AUTH_ENFORCE"] == "true")
+    require(env["SCRUTATOR_FEEDER_NAMESPACES"] == "kc-corpus")
+    require(re.fullmatch(r"[A-Za-z0-9_-]{32,}", env["SCRUTATOR_FEEDER_TOKEN"]) is not None)
+    require(env["SCRUTATOR_EVIDENCE_EXACT_BYTES"] == "true")
+    require(env["SCRUTATOR_EVIDENCE_EXACT_NAMESPACES"] == "[\"kc-corpus\"]")
+    require(env["SCRUTATOR_EVIDENCE_EXACT_REQUIRED_NAMESPACES"] == "[\"kc-corpus\"]")
+    require(env["SCRUTATOR_EMBEDDING_API_URL"] == "http://100.90.7.20:8300")
+    require(env["SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED"] == "true")
+    require(env["SCRUTATOR_EMBEDDING_TIMEOUT"] == "300")
+    dsn = urlsplit(env["SCRUTATOR_DATABASE_URL"])
+    require(dsn.scheme in ("postgres", "postgresql"))
+    require(dsn.username == "kc_corpus_scrutator_app" and bool(dsn.password))
+    require(dsn.hostname == "100.97.136.74" and dsn.port == 5432)
+    require(dsn.path == "/kc_corpus" and not dsn.query and not dsn.fragment)
+except (KeyError, TypeError, ValueError, IndexError, json.JSONDecodeError):
+    sys.exit(1)
+' "${BUILD_SHA:-}" "$(checkout_dir kc-corpus-scrutator)" || die 'kc-corpus Compose isolation contract failed'
+}
+
 cmd_kc_status() {
   kc_compose
   kc_container_image || die 'project container is absent, stopped or has the wrong image'
@@ -1290,6 +1374,14 @@ main() {
       *) die 'project service allows only kc-deploy, kc-upgrade, kc-status and kc-stop' ;;
     esac
     return
+  fi
+  # KB-CONS-02: the kc-corpus instance is deployed by sync, build, up and read-only readbacks only; it has
+  # no migrate, rollback, image-tag, registry, script or environment-readback capability.
+  if [[ "$svc" == kc-corpus-scrutator ]]; then
+    case "$action" in
+      sync|build|up|ps|logs|freshness) ;;
+      *) die 'kc-corpus-scrutator allows only sync, build, up, ps, logs and freshness' ;;
+    esac
   fi
   # C07: no generic actuator/registry/log capability for Prime.
   if [[ "$svc" == prime ]]; then
