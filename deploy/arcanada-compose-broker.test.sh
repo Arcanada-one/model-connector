@@ -641,6 +641,9 @@ cat >"$fake_docker_argana" <<'SH'
 set -euo pipefail
 printf '%s\n' "$*" >>"${FAKE_DOCKER_LOG}"
 printf 'BUILD_SHA=%s\n' "${BUILD_SHA:-}" >>"${FAKE_DOCKER_LOG}"
+if [[ "${1:-}" == compose && " $* " == *' -p kc-corpus-scrutator '* && " $* " == *' config --format json '* ]]; then
+  cat "$FAKE_DOCKER_STATE/kcc-config.json"; exit 0
+fi
 if [[ "${1:-}" == 'inspect' ]]; then
   # What `freshness` parses with date(1). A container created now is fresh, so
   # the case asserts the NAME that was inspected rather than the age verdict.
@@ -736,6 +739,85 @@ expect_message doc_md_html_has_no_root_script \
 expect_fail doc_md_html_has_no_registry_login doc-md-html registry-login Arcanada
 expect_message doc_md_html_has_no_registry_login \
   'may not establish a registry credential: doc-md-html'
+
+# kc-corpus-scrutator (KB-CONS-02): fixed project and compose path, root-owned env installed beside the
+# compose file, broker-derived BUILD_SHA, a rendered-config contract before build/up, and a closed action set.
+kcc_checkout="${state_root}/kc-corpus-scrutator"
+mkdir -p "${kcc_checkout}/instances/kc-corpus"
+git -C "$kcc_checkout" init -q
+git -C "$kcc_checkout" -c user.email=t@example.invalid -c user.name=t \
+  commit -q --allow-empty -m 'fixture kc-corpus head'
+kcc_head="$(git -C "$kcc_checkout" rev-parse HEAD)"
+printf '%s\n' 'services: {scrutator: {}}' >"${kcc_checkout}/instances/kc-corpus/docker-compose.yml"
+printf '%s\n' 'SCRUTATOR_DATABASE_URL=postgresql://fixture-secret-must-not-print' \
+  'SCRUTATOR_FEEDER_TOKEN=fixture-secret-must-not-print' >"${env_root}/kc-corpus-scrutator.env"
+kcc_render() { # <feeder namespaces> <database>
+  KCC_HEAD="$kcc_head" KCC_CHECKOUT="$kcc_checkout" KCC_FEEDER="$1" KCC_DB="$2" /usr/bin/python3 -I - <<'PY' >"$fake_docker_state/kcc-config.json"
+import json, os
+sha, root = os.environ["KCC_HEAD"], os.environ["KCC_CHECKOUT"]
+label = {"org.opencontainers.image.revision": sha}
+print(json.dumps({"name": "kc-corpus-scrutator",
+  "networks": {"default": {"name": "kc-corpus-scrutator_default", "ipam": {}}},
+  "services": {"scrutator": {"restart": "unless-stopped", "container_name": "kc-corpus-scrutator-scrutator-1",
+    "command": None, "entrypoint": None, "image": "kc-corpus-scrutator:" + sha, "labels": label,
+    "networks": {"default": None},
+    "build": {"context": root, "dockerfile": "Dockerfile", "target": "production", "labels": label},
+    "environment": {"SCRUTATOR_HOST": "0.0.0.0", "SCRUTATOR_PORT": "8310", "SCRUTATOR_AUTH_ENFORCE": "true",
+      "SCRUTATOR_FEEDER_NAMESPACES": os.environ["KCC_FEEDER"],
+      "SCRUTATOR_FEEDER_TOKEN": "a" * 40,
+      "SCRUTATOR_EVIDENCE_EXACT_BYTES": "true",
+      "SCRUTATOR_EVIDENCE_EXACT_NAMESPACES": "[\"kc-corpus\"]",
+      "SCRUTATOR_EVIDENCE_EXACT_REQUIRED_NAMESPACES": "[\"kc-corpus\"]",
+      "SCRUTATOR_EMBEDDING_API_URL": "http://100.90.7.20:8300",
+      "SCRUTATOR_EMBEDDING_DENSE_SPARSE_ENABLED": "true", "SCRUTATOR_EMBEDDING_TIMEOUT": "300",
+      "SCRUTATOR_DATABASE_URL": os.environ["KCC_DB"]},
+    "healthcheck": {"test": ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8310/health"],
+      "interval": "30s", "timeout": "5s", "retries": 3},
+    "ports": [{"mode": "ingress", "target": 8310, "published": "8312", "protocol": "tcp", "host_ip": "127.0.0.1"}]}}}))
+PY
+}
+kcc_good_db='postgresql://kc_corpus_scrutator_app:fixture@100.97.136.74:5432/kc_corpus'
+kcc_render kc-corpus "$kcc_good_db"
+: >"$fake_docker_log"
+expect_pass kc_corpus_build_uses_fixed_project_and_path kc-corpus-scrutator build
+grep -Fq "compose -p kc-corpus-scrutator -f ${kcc_checkout}/instances/kc-corpus/docker-compose.yml build" \
+  "$fake_docker_log" || { echo 'FAIL: kc-corpus compose project or path drifted' >&2; exit 1; }
+grep -Fxq "BUILD_SHA=${kcc_head}" "$fake_docker_log" || { echo "FAIL: kc-corpus build SHA did not come from broker checkout HEAD" >&2; exit 1; }
+expect_pass kc_corpus_up_uses_fixed_project_and_path kc-corpus-scrutator up
+grep -Fq "compose -p kc-corpus-scrutator -f ${kcc_checkout}/instances/kc-corpus/docker-compose.yml up -d" \
+  "$fake_docker_log" || { echo 'FAIL: kc-corpus up argv drifted' >&2; exit 1; }
+check_env_placement kc_corpus_env_installed_beside_compose kc-corpus-scrutator \
+  "${kcc_checkout}/instances/kc-corpus/.env" "${kcc_checkout}/.env"
+# A rendered config outside the contract stops build AND up before docker builds or starts anything.
+kcc_render 'kc-corpus,skills' "$kcc_good_db"
+: >"$fake_docker_log"
+expect_fail kc_corpus_broadened_feeder_blocks_build kc-corpus-scrutator build
+expect_message kc_corpus_broadened_feeder_blocks_build 'kc-corpus Compose isolation contract failed'
+expect_fail kc_corpus_broadened_feeder_blocks_up kc-corpus-scrutator up
+if grep -Eq ' (build|up -d)( |$)' "$fake_docker_log"; then
+  echo 'FAIL: kc-corpus build/up ran after a failed contract' >&2; exit 1
+fi
+kcc_render kc-corpus 'postgresql://scrutator:fixture@100.97.136.74:5432/arcanada_scrutator'
+expect_fail kc_corpus_shared_database_blocks_up kc-corpus-scrutator up
+expect_message kc_corpus_shared_database_blocks_up 'kc-corpus Compose isolation contract failed'
+kcc_render kc-corpus "$kcc_good_db"
+# Closed action set: nothing that mutates images, tags, registries, schemas or environment readback.
+for action in migrate tag-rotate tag-release image-id verify rollback promote prune smoke run-deploy \
+              env-get aggregate-readback pull registry-logout; do
+  expect_fail "kc_corpus_${action}_refused" kc-corpus-scrutator "$action"
+  expect_message "kc_corpus_${action}_refused" \
+    'kc-corpus-scrutator allows only sync, build, up, ps, logs and freshness'
+done
+expect_fail kc_corpus_registry_login_refused kc-corpus-scrutator registry-login Arcanada
+expect_message kc_corpus_registry_login_refused \
+  'kc-corpus-scrutator allows only sync, build, up, ps, logs and freshness'
+expect_fail kc_corpus_kc_verbs_refused kc-corpus-scrutator kc-upgrade "$kcc_head"
+# The Knowledge Contract project and the shared instance keep their own actions untouched.
+expect_fail kc_verbs_still_scoped_to_kc_project model-connector kc-upgrade "$kcc_head"
+: >"$fake_docker_log"
+expect_pass kc_corpus_freshness_inspects_the_pinned_container kc-corpus-scrutator freshness
+grep -Fq 'inspect kc-corpus-scrutator-scrutator-1 --format {{.Created}}' "$fake_docker_log" || {
+  echo 'FAIL: kc-corpus freshness inspected an unexpected container' >&2; cat "$fake_docker_log" >&2; exit 1; }
 
 # Admitting a service to the DEPLOY allowlist must not admit it to anything
 # else. argana builds from its checkout and never pulls a private image, so it
