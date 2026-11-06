@@ -14,6 +14,26 @@
         "bash",
         "scripts/graph-full-suite-isolated.sh",
         "."
+      ],
+      "full_test_arms": [
+        {"name": "billing", "requires": "real_disposable"},
+        {"name": "billing-gift", "requires": "real_disposable"},
+        {"name": "billing-hold", "requires": "real_disposable"},
+        {"name": "billing-idempotency", "requires": "real_disposable"},
+        {"name": "billing-metering", "requires": "real_disposable"},
+        {"name": "billing-payment", "requires": "real_disposable"},
+        {"name": "billing-reconciler", "requires": "real_disposable"},
+        {"name": "billing-cache-invoice", "requires": "real_disposable"},
+        {"name": "auth-rate-limit", "requires": "real_disposable"},
+        {"name": "r2-storage", "requires": "stub_ok"},
+        {"name": "bench-reservation-postgres", "requires": "real_disposable"},
+        {"name": "app-e2e", "requires": "real_disposable"},
+        {"name": "openai-images", "requires": "real_external"},
+        {"name": "fal-ai", "requires": "real_external"},
+        {"name": "vertex-image", "requires": "real_external"},
+        {"name": "vertex-auth", "requires": "real_external"},
+        {"name": "image-router-fallback", "requires": "real_external"},
+        {"name": "image-generation-e2e", "requires": "real_external"}
       ]
     },
     "packages/sdk-python": {

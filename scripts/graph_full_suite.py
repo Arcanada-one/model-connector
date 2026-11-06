@@ -512,6 +512,139 @@ def run_root_suites(root, suites, scratch, executor=execute):
     return results
 
 
+# Opt-in per-arm evidence (KCP-0027, DEC-AUP-0169/0170). Absent the two variables nothing below runs.
+ARM_EVIDENCE_ENV = 'GRAPH_FULL_SUITE_ARM_EVIDENCE'   # os.pathsep-separated retained executor result files
+ARM_BASE_ENV = 'GRAPH_FULL_SUITE_ARM_BASE'           # BASE commit whose .arcana/verify.json defines the arms
+ARM_DEFINITION_PATH = '.arcana/verify.json'
+ARM_REQUIRES = ('real_disposable', 'real_external', 'stub_ok')
+# DEC-AUP-0170 item 5: a spec may return early when its gate variable is unset and still count as passed.
+# An arm counts only if the executor names every gate variable as set (names only, never values).
+ARM_ENV_GATES = {
+    'openai-images': ('OPENAI_INTEGRATION',), 'fal-ai': ('FAL_AI_INTEGRATION',),
+    'vertex-image': ('VERTEX_BILLING_ENABLED',), 'vertex-auth': ('VERTEX_SERVICE_ACCOUNT_JSON',),
+    'image-router-fallback': ('RUN_INTEGRATION', 'VERTEX_SERVICE_ACCOUNT_JSON'),
+    'image-generation-e2e': ('MODEL_CONNECTOR_API_KEY', 'VERTEX_SERVICE_ACCOUNT_JSON'),
+    'app-e2e': ('DEEPSEEK_API_KEY',),
+}
+
+
+def arm_backend(label):
+    text = json.dumps(label) if not isinstance(label, str) else label
+    low = text.lower()
+    if low.startswith('stub'):
+        return 'stub'
+    if 'external' in low and low.startswith('real'):
+        return 'real_external'
+    if low.startswith('real') and 'disposable' in low:
+        return 'real_disposable'
+    return 'none'
+
+
+def arm_candidates(document):
+    """Map one retained KCP0027ArmExecution/v1* file to [{name, ...}] without judging it."""
+    head = document.get('worktree_head')
+    out = []
+    if isinstance(document.get('arms'), dict):                      # A, A2: several arms
+        for name, row in sorted(document['arms'].items()):
+            control = row.get('connectivity_control') or row.get('mutation_control') or {}
+            out.append({'name': name, 'head': head, 'exit': row.get('exit'), 'counts': row.get('counts'),
+                        'backend': arm_backend(row.get('backend') or document.get('backend')),
+                        'control': control.get('result'),
+                        'env': set(row.get('env_keys_set') or document.get('env_keys_set') or [])})
+    elif isinstance(document.get('arm'), str) and isinstance(document.get('run'), dict):   # A3, A4: one arm
+        controls = document.get('controls')
+        results = [c.get('result') for c in controls.values() if isinstance(c, dict)] if isinstance(controls, dict) else []
+        out.append({'name': document['arm'], 'head': head, 'exit': document['run'].get('exit'),
+                    'counts': document['run'].get('counts'), 'backend': arm_backend(document.get('backend')),
+                    'control': 'PASS_RED' if results and all(r == 'PASS_RED' for r in results) else None,
+                    'env': set(document.get('env_keys_set') or [])})
+    return out
+
+
+def arm_clean_counts(counts):
+    keys = ('total', 'passed', 'failed', 'skipped')
+    if not isinstance(counts, dict) or set(counts) != set(keys):
+        return None
+    if any(not isinstance(counts[k], int) or isinstance(counts[k], bool) or counts[k] < 0 for k in keys):
+        return None
+    return {k: counts[k] for k in keys}
+
+
+def arm_evidence(root, head, environ):
+    """FullSuiteArmEvidence/v1 from retained executor results, or None when not opted in.
+
+    Never synthesizes a pass: every defined arm without clean, head-bound, gate-proven input is listed in
+    `not_run`. The surrounding row stays whatever the suite itself earned."""
+    paths = environ.get(ARM_EVIDENCE_ENV)
+    if not paths:
+        return None
+    notes = []
+    base = environ.get(ARM_BASE_ENV, '')
+    if len(base) != 40 or any(c not in '0123456789abcdef' for c in base):
+        return {'refused': 'arm evidence needs ' + ARM_BASE_ENV + ' (40-hex BASE commit)'}
+    shown = subprocess.run(['git', '-C', str(root), 'show', base + ':' + ARM_DEFINITION_PATH], capture_output=True)
+    if shown.returncode:
+        return {'refused': 'BASE has no ' + ARM_DEFINITION_PATH}
+    raw = shown.stdout
+    try:
+        entries = json.loads(raw)['deployables']['.']['full_test_arms']
+        defined = {}
+        for e in entries:
+            if set(e) != {'name', 'requires'} or e['requires'] not in ARM_REQUIRES or e['name'] in defined:
+                raise ValueError
+            defined[e['name']] = e['requires']
+        if not defined:
+            raise ValueError
+    except (ValueError, KeyError, TypeError):
+        return {'refused': 'BASE full_test_arms is missing or invalid'}
+    seen = {}
+    for text in paths.split(os.pathsep):
+        try:
+            path = Path(text)
+            if not path.is_absolute() or path.is_symlink():
+                raise ValueError
+            found = arm_candidates(json.loads(path.read_text()))
+        except (ValueError, OSError, AttributeError):
+            notes.append('unreadable or unsupported evidence file')
+            continue
+        for cand in found:
+            seen.setdefault(cand['name'], []).append(cand)
+    arms, not_run = [], []
+    for name in defined:
+        cands = seen.get(name, [])
+        why = None
+        if len(cands) != 1:
+            why = 'no evidence' if not cands else 'duplicate evidence'
+        else:
+            cand = cands[0]
+            counts = arm_clean_counts(cand['counts'])
+            gates = ARM_ENV_GATES.get(name, ())
+            if cand['head'] != head:
+                why = 'evidence head differs from HEAD'
+            elif counts is None:
+                why = 'counts malformed'
+            elif set(gates) - cand['env']:
+                why = 'gate variables not named as set: ' + ','.join(sorted(set(gates) - cand['env']))
+        if why:
+            not_run.append(name)
+            notes.append(name + ': ' + why)
+            continue
+        cand = cands[0]
+        counts = arm_clean_counts(cand['counts'])
+        ok = (cand['exit'] == 0 and counts['total'] > 0 and counts['passed'] == counts['total']
+              and (cand['control'] == 'PASS_RED' or cand['backend'] == 'stub'))
+        arm = {'name': name, 'backend': cand['backend'], 'counts': counts, 'head': head,
+               'verdict': 'failed' if counts['failed'] else 'verified' if ok else 'not_measured'}
+        if cand['control']:
+            arm['control'] = {'result': cand['control']}
+        arms.append(arm)
+    for name in sorted(set(seen) - set(defined)):
+        notes.append(name + ': not a defined arm, ignored')
+    return {'schema': 'FullSuiteArmEvidence/v1', 'head': head,
+            'definition': {'path': ARM_DEFINITION_PATH, 'sha256': hashlib.sha256(raw).hexdigest()},
+            'arms': arms, 'not_run': not_run, 'notes': notes}
+
+
 def execution_code(results):
     executions = [r for row in results for r in row.get('executions', [row])]
     return (1 if any(r['verdict'] == 'failed' for r in results) else
@@ -554,6 +687,13 @@ def main():
         code = 1
     else:
         code = execution_code(document['results'])
+    if unit == '.' and os.environ.get(ARM_EVIDENCE_ENV):
+        emitted = arm_evidence(ROOT, head, os.environ)
+        if emitted and emitted.get('refused'):
+            document['arms_refused'] = emitted['refused']
+        elif emitted:
+            document['arms_notes'] = emitted.pop('notes')
+            document['arms'] = emitted
     document['exit_code'] = code
     target = scratch / 'execution.json'
     with target.open('x') as stream:
