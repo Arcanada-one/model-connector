@@ -148,6 +148,11 @@ declare -rA REPOS=(
   # named volumes obs_*), but its deploy job still SSHed to the decommissioned
   # arcana-agents. The repository is PRIVATE, hence the AUTH row below.
   [observability-stack]='https://github.com/Arcanada-one/observability-stack.git'
+  # COL #8452 / SEC-0028: Collective agent-mailbox on arcana-prd. Live stack is
+  # project=agent-mailbox (container agent-mailbox, compose historically under
+  # /srv/agent-mailbox). Broker checkout is the standard STATE_ROOT path; PROJECT
+  # pin adopts the running stack and its named volume. Private repo → AUTH row.
+  [agent-mailbox]='https://github.com/Arcanada-one/agent-mailbox.git'
 )
 declare -rA COMPOSE=(
   # INFRA-0417: model-connector's OWN stack, not the whisper side-stack. The
@@ -170,6 +175,7 @@ declare -rA COMPOSE=(
   [knowledge-contract-scrutator]='deploy/knowledge-contract-scrutator/compose.yml'
   [kc-corpus-scrutator]='instances/kc-corpus/docker-compose.yml'
   [observability-stack]='docker-compose.yml'
+  [agent-mailbox]='docker-compose.yml'
 )
 # Private repositories whose fetch needs a credential on stdin.
 declare -rA AUTH=(
@@ -190,6 +196,7 @@ declare -rA AUTH=(
   [doc-md-html]='github-token'
   [knowledge-contract-scrutator]='github-token'
   [observability-stack]='github-token'
+  [agent-mailbox]='github-token'
 )
 # Pin the compose project name. Unset means Compose derives it from the
 # checkout directory, which is what the whisper stack has always done —
@@ -243,6 +250,8 @@ declare -rA PROJECT=(
   # named volumes are fixed by `name:` (obs_*), so they would be adopted either
   # way; the pin keeps the container identity from depending on a directory name.
   [observability-stack]='observability-stack'
+  # Live container labels: com.docker.compose.project=agent-mailbox (measured).
+  [agent-mailbox]='agent-mailbox'
 )
 # Root-owned environment file. A bare name resolves under ENV_ROOT; an absolute
 # path is used as given, so a service whose env is already root-owned somewhere
@@ -282,6 +291,9 @@ declare -rA ENVFILE=(
   # KB-CONS-02: root-owned, names only SCRUTATOR_DATABASE_URL and SCRUTATOR_FEEDER_TOKEN; installed as .env
   # beside the compose file on every sync.
   [kc-corpus-scrutator]='kc-corpus-scrutator.env'
+  # Operator-maintained root env already on host (also mirrored historically at
+  # /srv/agent-mailbox/.env). Absolute path — do not duplicate secrets.
+  [agent-mailbox]='/etc/arcanada/deploy-env/agent-mailbox.env'
 )
 # A release script inside the checkout that already encapsulates the whole
 # deploy. Running it as root is the same trust boundary the broker already
