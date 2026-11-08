@@ -33,6 +33,11 @@ import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import { BillingService, RequestIntentHandle } from '../billing/billing.service';
 import { estimateCostUsd, promptCharLength } from '../billing/cost-estimate';
+import {
+  resolveProtectedPricePolicy,
+  type ProtectedCatalogAuthorityRow,
+} from '../billing/protected-price-policy';
+import { isProtectedDispatchFenceClassAdmitted } from './protected-dispatch-fence-admission';
 import { mintServerIntentKey, intentPayloadFingerprint } from '../billing/intent';
 import {
   measureCostUsd,
@@ -2336,13 +2341,23 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * True only when the registered connector declares
-   * `supportsProtectedDispatchFence` (BaseApiConnector today). Missing
-   * connectors and unfenced implementations return false — fail closed.
+   * True only when the registered connector is admitted to the protected
+   * dispatch fence. `BaseApiConnector` subclasses are keyed by exact class
+   * name in `protected-dispatch-fence-admission.ts` — an inherited capability
+   * boolean alone is not enough. Plain (non-class) test doubles may set an
+   * own-property `supportsProtectedDispatchFence = true`. Missing connectors
+   * and unlisted subclasses return false — fail closed.
    */
   connectorSupportsProtectedDispatchFence(connectorName: string): boolean {
     const connector = this.connectors.get(connectorName);
-    return connector?.supportsProtectedDispatchFence === true;
+    if (!connector) return false;
+    if (connector instanceof BaseApiConnector) {
+      return isProtectedDispatchFenceClassAdmitted(connector.constructor?.name);
+    }
+    return (
+      Object.prototype.hasOwnProperty.call(connector, 'supportsProtectedDispatchFence') &&
+      connector.supportsProtectedDispatchFence === true
+    );
   }
 
   /**
@@ -2369,7 +2384,7 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     connectorName: string,
     request: ServiceExecuteRequest,
     apiKeyId: string,
-    pricePolicyRevision: string,
+    clientPricePolicyRevision?: string,
   ) {
     if (!this.billing) {
       throw new BadRequestException({
@@ -2384,18 +2399,104 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
         message: 'Protected Lab prepare requires an Idempotency-Key / operation key.',
       });
     }
-    const estimate = await this.estimateRequestCost(connectorName, request);
+    const modelName = request.model || 'unknown';
+    const routeKey = `connectors/${connectorName}/protected/execute`;
+    const authority = await this.resolveProtectedPriceAuthority(
+      connectorName,
+      modelName,
+      routeKey,
+      request,
+      clientPricePolicyRevision,
+    );
+    if (authority.outcome !== 'resolved') {
+      return {
+        outcome: 'refused' as const,
+        code: authority.code,
+        message: authority.message,
+      };
+    }
     return this.billing.prepareProtectedReservation({
       apiKeyId,
       operationKey: request.idempotencyKey,
       payloadFingerprint: ConnectorsService.requestFingerprint(connectorName, request),
       providerName: connectorName,
-      modelName: request.model || 'unknown',
-      routeKey: `connectors/${connectorName}/protected/execute`,
-      pricePolicyRevision,
-      holdUsd: estimate,
+      modelName,
+      routeKey,
+      pricePolicyRevision: authority.pricePolicyRevision,
+      holdUsd: authority.holdUsd,
       ttlMs: this.holdTtlMs(),
     });
+  }
+
+  /**
+   * Trusted catalogue pin for protected prepare. Never falls back to the
+   * unknown-model estimate floor — that would admit an unpriced call.
+   */
+  private async resolveProtectedPriceAuthority(
+    connectorName: string,
+    modelName: string,
+    routeKey: string,
+    request: ServiceExecuteRequest,
+    clientPricePolicyRevision?: string,
+  ) {
+    const promptLength = promptCharLength(request.prompt);
+    const maxTokens = request.extra?.max_tokens;
+    let catalogReadable = true;
+    let row: ProtectedCatalogAuthorityRow | null = null;
+    try {
+      row = await this.lookupProtectedCatalogRow(connectorName, modelName);
+    } catch (err) {
+      catalogReadable = false;
+      this.logger.error(
+        `Protected prepare: catalogue lookup failed for ${connectorName}/${modelName}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+    return resolveProtectedPricePolicy({
+      catalogReadable,
+      row,
+      routeKey,
+      promptLength,
+      maxTokens,
+      clientRevision: clientPricePolicyRevision,
+    });
+  }
+
+  private async lookupProtectedCatalogRow(
+    connectorName: string,
+    modelName: string,
+  ): Promise<ProtectedCatalogAuthorityRow | null> {
+    if (this.catalogRepo.findPricing) {
+      const priced = await this.catalogRepo.findPricing(connectorName, modelName);
+      if (!priced) return null;
+      return {
+        connector: priced.connector ?? connectorName,
+        model: priced.model ?? modelName,
+        tier: priced.tier,
+        free: priced.free,
+        inputPerMTok: priced.inputPerMTok,
+        outputPerMTok: priced.outputPerMTok,
+        contentFingerprint: priced.contentFingerprint ?? null,
+        snapshotId: priced.snapshotId ?? null,
+      };
+    }
+    const rows = await this.catalogRepo.findAll();
+    const hit = rows.find(
+      (entry: { connector?: string; model?: string }) =>
+        entry.connector === connectorName && entry.model === modelName,
+    );
+    if (!hit) return null;
+    return {
+      connector: hit.connector,
+      model: hit.model,
+      tier: hit.tier,
+      free: hit.free,
+      inputPerMTok: hit.inputPerMTok,
+      outputPerMTok: hit.outputPerMTok,
+      contentFingerprint: hit.contentFingerprint,
+      snapshotId: hit.snapshotId,
+    };
   }
 
   async lookupProtectedReservation(reservationRef: string, apiKeyId: string) {

@@ -13,10 +13,18 @@ import type { PrismaService } from '../prisma/prisma.service';
 import type { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import { ModalityCatalogService } from './modality-catalog.service';
-import type { ConnectorRequest, IConnector } from './interfaces/connector.interface';
+import type {
+  ConnectorCapabilities,
+  ConnectorRequest,
+  ConnectorResponse,
+  IConnector,
+} from './interfaces/connector.interface';
 import type { RequestIntentHandle } from '../billing/billing.service';
 import { validateEnv } from '../config/env.schema';
 import { BadRequestException } from '@nestjs/common';
+import { BaseApiConnector, type ParsedApiOutput } from './base-api.connector';
+import { NATIVE_PRICING_UNAVAILABLE } from '../billing/protected-price-policy';
+import { PROTECTED_DISPATCH_FENCE_DECISIONS } from './protected-dispatch-fence-admission';
 
 const BASE_ENV = {
   PORT: '3900',
@@ -33,7 +41,14 @@ const BASE_ENV = {
   PROVIDER_ACCESS: 'mock,unfenced,liar',
 };
 
-function buildService(billing: Partial<BillingService>, connector: IConnector): ConnectorsService {
+function buildService(
+  billing: Partial<BillingService>,
+  connector: IConnector,
+  catalogRepo: {
+    findAll: () => Promise<unknown[]>;
+    findPricing?: (connector: string, model: string) => Promise<unknown>;
+  } = { findAll: async () => [] },
+): ConnectorsService {
   const service = new ConnectorsService(
     { add: vi.fn() } as unknown as Queue,
     {
@@ -47,7 +62,7 @@ function buildService(billing: Partial<BillingService>, connector: IConnector): 
     { observe: vi.fn(), record: vi.fn() } as unknown as MetricsService,
     new OutputGuardMiddleware({ enabled: false, maxRetries: 0, timeoutMs: 1_000 }),
     new ModalityCatalogService(),
-    { findAll: async () => [] },
+    catalogRepo as never,
     null,
     undefined,
     undefined,
@@ -55,6 +70,62 @@ function buildService(billing: Partial<BillingService>, connector: IConnector): 
   );
   service.register(connector);
   return service;
+}
+
+/**
+ * Adverse subclass: inherits BaseApiConnector, overrides execute, and performs a
+ * physical provider-call without `__beforeProviderFetch`. Must be refused at
+ * admission with zero physical sends.
+ */
+class UnhookedProtectedSubclass extends BaseApiConnector {
+  readonly name = 'unhooked';
+  /** Inherited capability lies — admission must not trust this alone. */
+  override readonly supportsProtectedDispatchFence = true as const;
+  physicalSendCount = 0;
+
+  protected getBaseUrl(): string {
+    return 'https://unhooked.example';
+  }
+  protected buildRequestUrl(): string {
+    return `${this.getBaseUrl()}/v1`;
+  }
+  protected buildRequestBody(): unknown {
+    return {};
+  }
+  protected parseResponse(): ParsedApiOutput {
+    return {
+      text: '',
+      model: 'm',
+      inputTokens: 0,
+      outputTokens: 0,
+      costUsd: 0,
+      isError: false,
+    };
+  }
+  getCapabilities(): ConnectorCapabilities {
+    return {
+      name: 'unhooked',
+      type: 'api',
+      models: ['m'],
+      supportsStreaming: false,
+      supportsJsonSchema: false,
+      supportsTools: false,
+      maxTimeout: 30_000,
+    };
+  }
+
+  override async execute(_request: ConnectorRequest): Promise<ConnectorResponse> {
+    this.physicalSendCount += 1;
+    return {
+      id: 'unhooked-1',
+      connector: 'unhooked',
+      model: 'm',
+      result: 'sent',
+      usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, costUsd: 0 },
+      latencyMs: 1,
+      status: 'success',
+    };
+  }
 }
 
 /** Declares the fence; used for P1/P11 gates that run after admission. */
@@ -360,5 +431,255 @@ describe('protected Lab profile execute guards', () => {
     expect(releaseIntent).not.toHaveBeenCalled();
     // Response may succeed or error depending on settle; the fence invariant is unknown + no release.
     expect(response.status === 'success' || response.status === 'error').toBe(true);
+  });
+
+  it('adverse: fenced-declared subclass that skips the hook is refused before any physical send', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROVIDER_ACCESS: 'mock,unfenced,liar,unhooked',
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'unhooked',
+    });
+    const intent = {
+      id: 'intent-unhooked',
+      apiKeyId: 'key-1',
+      intentKey: 'op-unhooked',
+      holdUsd: { toString: () => '1' },
+      lifecycleVersion: 1,
+      protectedPhase: 'reserved',
+      generation: 1,
+    } as unknown as RequestIntentHandle;
+    const billing = {
+      lookupProtectedReservation: vi.fn(async () => ({
+        outcome: 'found' as const,
+        reservation: {
+          reservationRef: '11111111-1111-4111-8111-111111111111',
+          intentId: intent.id,
+          intentKey: 'op-unhooked',
+          apiKeyId: 'key-1',
+          operationKey: 'op-unhooked',
+          payloadFingerprint: ConnectorsService['requestFingerprint']('unhooked', {
+            prompt: 'hi',
+            model: 'm',
+            idempotencyKey: 'op-unhooked',
+            reservationRef: '11111111-1111-4111-8111-111111111111',
+            protectedProfile: true as const,
+          }),
+          providerName: 'unhooked',
+          modelName: 'm',
+          routeKey: 'connectors/unhooked/protected/execute',
+          pricePolicyRevision: 'catalog:x',
+          holdUsd: '1',
+          amountUnit: 'USD',
+          amountPrecision: 6,
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+          generation: 1,
+          protectedPhase: 'reserved' as const,
+          lifecycleVersion: 1 as const,
+        },
+        intent,
+      })),
+      commitProtectedDispatch: vi.fn(async () => true),
+      markProtectedUnknown: vi.fn(async () => true),
+      releaseIntent: vi.fn(async () => false),
+      settleIntentInTx: vi.fn(async () => true),
+      settleInTx: vi.fn(),
+      releaseIntentInTx: vi.fn(),
+      prepareProtectedReservation: vi.fn(),
+    };
+    const unhooked = new UnhookedProtectedSubclass();
+    // Inherited/override boolean claims the fence — still not on the class allow-list.
+    expect(unhooked.supportsProtectedDispatchFence).toBe(true);
+    expect(
+      PROTECTED_DISPATCH_FENCE_DECISIONS.some(
+        (d) => d.className === 'UnhookedProtectedSubclass' && d.decision === 'admitted',
+      ),
+    ).toBe(false);
+
+    const service = buildService(billing, unhooked);
+
+    const response = await service.execute(
+      'unhooked',
+      {
+        prompt: 'hi',
+        model: 'm',
+        protectedProfile: true,
+        reservationRef: '11111111-1111-4111-8111-111111111111',
+        idempotencyKey: 'op-unhooked',
+      },
+      'key-1',
+    );
+
+    // Physical-send counter must stay zero: admission refuses before execute.
+    // Under the inherited-boolean mutation this becomes 1 (RED proof).
+    expect(unhooked.physicalSendCount).toBe(0);
+    expect(response.status).toBe('error');
+    expect(response.error?.type).toBe('protected_connector_unfenced');
+    expect(service.connectorSupportsProtectedDispatchFence('unhooked')).toBe(false);
+    expect(billing.lookupProtectedReservation).not.toHaveBeenCalled();
+    expect(billing.prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('prepare: client zero: for a paid catalogue row is refused (never a zero hold)', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'mock',
+    });
+    const prepareProtectedReservation = vi.fn();
+    const billing = { prepareProtectedReservation };
+    const paidFp = 'c'.repeat(64);
+    const service = buildService(billing, fencedMockConnector, {
+      findAll: async () => [],
+      findPricing: async () => ({
+        connector: 'mock',
+        model: 'paid-m',
+        tier: 'paid',
+        inputPerMTok: 10,
+        outputPerMTok: 30,
+        contentFingerprint: paidFp,
+        snapshotId: 'snap',
+      }),
+    });
+
+    const result = await service.prepareProtectedReservation(
+      'mock',
+      { prompt: 'hello world', model: 'paid-m', idempotencyKey: 'op-fake-zero' },
+      'key-1',
+      'zero:attacker',
+    );
+
+    expect(result.outcome).toBe('refused');
+    if (result.outcome === 'refused') {
+      expect(result.code).toBe('protected_price_revision_mismatch');
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('prepare: valid paid catalogue pin opens with a positive server hold', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'mock',
+    });
+    const prepareProtectedReservation = vi.fn(async (params: Record<string, unknown>) => ({
+      outcome: 'opened' as const,
+      reservation: {
+        reservationRef: '11111111-1111-4111-8111-111111111111',
+        holdUsd: String(params.holdUsd),
+        pricePolicyRevision: String(params.pricePolicyRevision),
+      },
+      intent: {},
+    }));
+    const paidFp = 'd'.repeat(64);
+    const service = buildService(
+      { prepareProtectedReservation: prepareProtectedReservation as never },
+      fencedMockConnector,
+      {
+        findAll: async () => [],
+        findPricing: async () => ({
+          connector: 'mock',
+          model: 'paid-m',
+          tier: 'paid',
+          inputPerMTok: 10,
+          outputPerMTok: 30,
+          contentFingerprint: paidFp,
+          snapshotId: 'snap',
+        }),
+      },
+    );
+
+    const result = await service.prepareProtectedReservation(
+      'mock',
+      { prompt: 'hello world', model: 'paid-m', idempotencyKey: 'op-paid' },
+      'key-1',
+    );
+
+    expect(result.outcome).toBe('opened');
+    expect(prepareProtectedReservation).toHaveBeenCalledTimes(1);
+    const call = prepareProtectedReservation.mock.calls[0][0] as {
+      holdUsd: string;
+      pricePolicyRevision: string;
+    };
+    expect(call.pricePolicyRevision).toBe(`catalog:${paidFp}`);
+    expect(Number(call.holdUsd)).toBeGreaterThan(0);
+  });
+
+  it('prepare: server-pinned zero-price catalogue row opens a zero hold', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'mock',
+    });
+    const prepareProtectedReservation = vi.fn(async (params: Record<string, unknown>) => ({
+      outcome: 'opened' as const,
+      reservation: {
+        reservationRef: '11111111-1111-4111-8111-111111111112',
+        holdUsd: String(params.holdUsd),
+        pricePolicyRevision: String(params.pricePolicyRevision),
+      },
+      intent: {},
+    }));
+    const freeFp = 'e'.repeat(64);
+    const service = buildService(
+      { prepareProtectedReservation: prepareProtectedReservation as never },
+      fencedMockConnector,
+      {
+        findAll: async () => [],
+        findPricing: async () => ({
+          connector: 'mock',
+          model: 'free-m',
+          tier: 'free',
+          free: true,
+          inputPerMTok: 0,
+          outputPerMTok: 0,
+          contentFingerprint: freeFp,
+          snapshotId: 'snap-free',
+        }),
+      },
+    );
+
+    const result = await service.prepareProtectedReservation(
+      'mock',
+      { prompt: 'hello world', model: 'free-m', idempotencyKey: 'op-free' },
+      'key-1',
+    );
+
+    expect(result.outcome).toBe('opened');
+    const call = prepareProtectedReservation.mock.calls[0][0] as {
+      holdUsd: string;
+      pricePolicyRevision: string;
+    };
+    expect(call.pricePolicyRevision).toBe(`zero:catalog:${freeFp}`);
+    expect(call.holdUsd).toBe('0.000000');
+  });
+
+  it('prepare: unreadable catalogue refuses with NATIVE_PRICING_UNAVAILABLE', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'mock',
+    });
+    const prepareProtectedReservation = vi.fn();
+    const service = buildService({ prepareProtectedReservation }, fencedMockConnector, {
+      findAll: async () => {
+        throw new Error('catalog down');
+      },
+      findPricing: async () => {
+        throw new Error('catalog down');
+      },
+    });
+
+    const result = await service.prepareProtectedReservation(
+      'mock',
+      { prompt: 'hello', model: 'm', idempotencyKey: 'op-down' },
+      'key-1',
+    );
+
+    expect(result.outcome).toBe('refused');
+    if (result.outcome === 'refused') {
+      expect(result.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
   });
 });

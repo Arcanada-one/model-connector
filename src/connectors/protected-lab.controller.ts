@@ -33,7 +33,9 @@ interface AuthenticatedRequest extends FastifyRequest {
 }
 
 const prepareBodySchema = z.object({
-  pricePolicyRevision: z.string().min(1).max(200),
+  // Optional client hint only. Server derives the authoritative revision from
+  // the catalogue; a provided value must equal the server pin or prepare refuses.
+  pricePolicyRevision: z.string().min(1).max(200).optional(),
 });
 
 const executeProtectedExtraSchema = z.object({

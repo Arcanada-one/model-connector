@@ -116,12 +116,17 @@ describe('CatalogRepository CONN-1646', () => {
     expect(prisma.modelCatalog.findFirst).toHaveBeenCalledWith({
       where: { connector: 'anthropic', model: 'claude-fable-5-1', absent: false },
       select: {
+        connector: true,
+        model: true,
         inputPerMTok: true,
         outputPerMTok: true,
-        tier: true,
         cachedInputPerMTok: true,
         cacheWrite5mPerMTok: true,
         cacheWrite1hPerMTok: true,
+        tier: true,
+        free: true,
+        contentFingerprint: true,
+        snapshotId: true,
       },
     });
   });

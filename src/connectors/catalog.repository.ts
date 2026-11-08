@@ -152,6 +152,12 @@ export interface CatalogPricingRow {
   cacheWrite5mPerMTok?: number | null;
   cacheWrite1hPerMTok?: number | null;
   tier: string;
+  /** Present when the repository can pin a catalogue content revision. */
+  free?: boolean;
+  contentFingerprint?: string | null;
+  snapshotId?: string | null;
+  connector?: string;
+  model?: string;
 }
 
 /**
@@ -236,12 +242,17 @@ export class CatalogRepository implements CatalogRepositoryLike {
     const row = await this.prisma.modelCatalog.findFirst({
       where: { connector, model, absent: false },
       select: {
+        connector: true,
+        model: true,
         inputPerMTok: true,
         outputPerMTok: true,
         cachedInputPerMTok: true,
         cacheWrite5mPerMTok: true,
         cacheWrite1hPerMTok: true,
         tier: true,
+        free: true,
+        contentFingerprint: true,
+        snapshotId: true,
       },
     });
     return row ?? null;

@@ -116,11 +116,13 @@ export abstract class BaseApiConnector implements IConnector {
   abstract readonly name: string;
 
   /**
-   * Declares the protected Lab dispatch fence. The base `execute` path invokes
-   * `__beforeProviderFetch` immediately before the single provider `fetch`.
-   * Subclasses that bypass this `fetch` MUST override to `false`.
+   * Inherited capability booleans are NOT admission proof. Protected Lab
+   * admission is keyed to `protected-dispatch-fence-admission.ts` (exact class
+   * allow-list). The base `execute` path still invokes `__beforeProviderFetch`
+   * immediately before the single provider `fetch`; subclasses that override
+   * `execute` stay refused until individually listed.
    */
-  readonly supportsProtectedDispatchFence = true as const;
+  readonly supportsProtectedDispatchFence: boolean = false;
 
   protected activeJobs = 0;
   private _semaphore?: Semaphore;

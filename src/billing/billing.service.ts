@@ -1365,6 +1365,9 @@ export class BillingService {
    *
    * A zero hold is admitted only when `pricePolicyRevision` positively pins a
    * zero-price policy (`zero:` prefix). Unknown / unpinned pricing refuses.
+   *
+   * Callers on the protected Lab route MUST pass a server-derived revision from
+   * `resolveProtectedPricePolicy` — a client `zero:` string is not authority.
    */
   async prepareProtectedReservation(params: {
     apiKeyId: string;

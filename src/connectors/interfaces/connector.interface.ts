@@ -410,12 +410,10 @@ export interface IConnector {
   /**
    * Protected Lab dispatch fence (stage A).
    *
-   * Only connectors whose `execute` path calls `__beforeProviderFetch`
-   * immediately before their single provider handoff may set this true.
-   * Today that is `BaseApiConnector` (and subclasses that keep its `fetch`
-   * path). Direct `IConnector` / `BaseCliConnector` implementations MUST leave
-   * this unset/false — admitting them would leave the row in `reserved`
-   * across a provider call.
+   * For `BaseApiConnector` subclasses, admission is NOT this flag — it is the
+   * explicit per-class allow-list in `protected-dispatch-fence-admission.ts`.
+   * Plain (non-class) test doubles may set this own-property to true. Direct
+   * `IConnector` / `BaseCliConnector` implementations MUST leave this unset.
    */
   readonly supportsProtectedDispatchFence?: boolean;
 
