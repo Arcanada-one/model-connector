@@ -115,6 +115,13 @@ export abstract class BaseApiConnector implements IConnector {
   readonly type = 'api' as const;
   abstract readonly name: string;
 
+  /**
+   * Declares the protected Lab dispatch fence. The base `execute` path invokes
+   * `__beforeProviderFetch` immediately before the single provider `fetch`.
+   * Subclasses that bypass this `fetch` MUST override to `false`.
+   */
+  readonly supportsProtectedDispatchFence = true as const;
+
   protected activeJobs = 0;
   private _semaphore?: Semaphore;
   private _cbManager?: CircuitBreakerManager;

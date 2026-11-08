@@ -407,6 +407,18 @@ export interface IConnector {
    */
   readonly billingLane?: import('../../billing/measured-cost').BillingLane;
 
+  /**
+   * Protected Lab dispatch fence (stage A).
+   *
+   * Only connectors whose `execute` path calls `__beforeProviderFetch`
+   * immediately before their single provider handoff may set this true.
+   * Today that is `BaseApiConnector` (and subclasses that keep its `fetch`
+   * path). Direct `IConnector` / `BaseCliConnector` implementations MUST leave
+   * this unset/false — admitting them would leave the row in `reserved`
+   * across a provider call.
+   */
+  readonly supportsProtectedDispatchFence?: boolean;
+
   execute(request: ConnectorRequest): Promise<ConnectorResponse>;
   getStatus(): Promise<ConnectorStatus>;
   getCapabilities(): ConnectorCapabilities;

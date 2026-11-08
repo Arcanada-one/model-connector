@@ -1557,17 +1557,25 @@ export class BillingService {
   }
 
   /**
-   * After a crash / timeout / lost response past dispatch commit, retain the
-   * operation as unknown. Never releases the hold and never mints a new key.
+   * Retain the operation as unknown. Never releases the hold and never mints a
+   * new key. Two admission paths land here:
+   * - `dispatch_committed` → `unknown` after crash / timeout / lost response;
+   * - `reserved` → `unknown` when `connector.execute` returned or threw without
+   *   running the dispatch fence (hook never ran; handoff state unknown).
+   *
+   * Already-`unknown` / settled rows are a no-op (CAS miss).
    */
   async markProtectedUnknown(intent: RequestIntentHandle): Promise<boolean> {
     if (intent.lifecycleVersion !== PROTECTED_LIFECYCLE_VERSION) return false;
+    if (intent.protectedPhase === PROTECTED_PHASE.unknown) return true;
     const expected = intent.generation;
     const claimed = await this.prisma.requestIntent.updateMany({
       where: {
         id: intent.id,
         lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
-        protectedPhase: PROTECTED_PHASE.dispatch_committed,
+        protectedPhase: {
+          in: [PROTECTED_PHASE.dispatch_committed, PROTECTED_PHASE.reserved],
+        },
         ...(expected === undefined ? {} : { generation: expected }),
       },
       data: {

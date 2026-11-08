@@ -428,3 +428,39 @@ describe('legacy rows unchanged', () => {
     expect(await billing.releaseIntent(opened.intent)).toBe(true);
   });
 });
+
+describe('backstop — reserved → unknown when fence never ran', () => {
+  it('markProtectedUnknown from reserved retains hold; release and sweeper lose', async () => {
+    await fund(KEY_A, '5');
+    const opened = await billing.prepareProtectedReservation({
+      apiKeyId: KEY_A,
+      operationKey: 'op-backstop',
+      payloadFingerprint: 'fp-backstop',
+      providerName: 'mock',
+      modelName: 'm',
+      routeKey: 'r',
+      pricePolicyRevision: 'catalog:x',
+      holdUsd: '1',
+      ttlMs: 1,
+    });
+    expect(opened.outcome).toBe('opened');
+    if (opened.outcome !== 'opened') return;
+
+    // Simulate connector.execute returning without calling the dispatch hook.
+    expect(await billing.markProtectedUnknown(opened.intent)).toBe(true);
+    expect(opened.intent.protectedPhase).toBe(PROTECTED_PHASE.unknown);
+
+    await prisma.requestIntent.update({
+      where: { id: opened.intent.id },
+      data: { expiresAt: new Date(Date.now() - 60_000) },
+    });
+    const sweep = await billing.sweepExpiredIntents(100);
+    expect(sweep.swept).toBe(0);
+    expect(await billing.releaseIntent(opened.intent, 'released')).toBe(false);
+
+    const row = await prisma.requestIntent.findUnique({ where: { id: opened.intent.id } });
+    expect(row!.protectedPhase).toBe(PROTECTED_PHASE.unknown);
+    expect(row!.state).toBe('held');
+    expect((await billing.available(KEY_A)).toString()).toBe('4');
+  });
+});

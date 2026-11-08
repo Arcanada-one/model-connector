@@ -107,12 +107,24 @@ export class ProtectedLabController {
         HttpStatus.NOT_FOUND,
       );
     }
+    // Fail-closed: an empty / unset allow-list admits no connector.
     const allowed = this.connectorsService.protectedLabConnectors();
-    if (allowed.size > 0 && !allowed.has(connectorName)) {
+    if (!allowed.has(connectorName)) {
       throw new HttpException(
         {
           error: 'protected_connector_not_admitted',
           message: `Connector '${connectorName}' is not admitted to the protected Lab profile.`,
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    // Allow-list alone is not enough — the connector must declare and implement
+    // the dispatch fence (BaseApiConnector path today).
+    if (!this.connectorsService.connectorSupportsProtectedDispatchFence(connectorName)) {
+      throw new HttpException(
+        {
+          error: 'protected_connector_unfenced',
+          message: `Connector '${connectorName}' does not support the protected dispatch fence.`,
         },
         HttpStatus.FORBIDDEN,
       );

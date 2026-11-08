@@ -1223,6 +1223,16 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     // (CONN: 35 specs, once).
     let intent: RequestIntentHandle | null = null;
     if (protectedProfile) {
+      // Fence check at execute (controller also checks at the route): an
+      // allow-listed but unfenced connector must never reach provider handoff.
+      if (!this.connectorSupportsProtectedDispatchFence(connectorName)) {
+        return this.gateErrorResponse(
+          connectorName,
+          request.model || 'unknown',
+          'protected_connector_unfenced',
+          `Connector '${connectorName}' does not support the protected dispatch fence.`,
+        );
+      }
       const gate = await this.openProtectedRequestIntent(connectorName, request, apiKeyId);
       if (gate.response) return gate.response;
       intent = gate.intent;
@@ -1404,18 +1414,23 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       // backstop for a process that dies, not the normal path for one that
       // merely fails.
       //
-      // Protected Lab: after dispatch_committed the hold must NOT release —
-      // mark unknown (CAS no-ops if already unknown) and retain the fence.
+      // Protected Lab backstop: if execute threw while still `reserved`, the
+      // dispatch hook never ran — handoff state is unknown. Mark unknown and
+      // never release (sweeper also skips unknown). Same for
+      // dispatch_committed / unknown (crash after commit).
       if (intent?.lifecycleVersion === 1) {
-        if (intent.protectedPhase === 'dispatch_committed' || intent.protectedPhase === 'unknown') {
-          await this.billing?.markProtectedUnknown(intent);
-        } else {
-          await this.releaseIntent(intent);
-        }
+        await this.billing?.markProtectedUnknown(intent);
       } else {
         await this.releaseIntent(intent);
       }
       throw error;
+    }
+
+    // Protected Lab backstop on the return path: an unfenced connector (or a
+    // BaseApiConnector subclass that bypassed the hook) can finish execute
+    // while the row is still `reserved`. Treat that as unknown — never release.
+    if (intent?.lifecycleVersion === 1 && intent.protectedPhase === 'reserved' && this.billing) {
+      await this.billing.markProtectedUnknown(intent);
     }
 
     const lastAttempt = lastResponse!;
@@ -2320,6 +2335,36 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * True only when the registered connector declares
+   * `supportsProtectedDispatchFence` (BaseApiConnector today). Missing
+   * connectors and unfenced implementations return false — fail closed.
+   */
+  connectorSupportsProtectedDispatchFence(connectorName: string): boolean {
+    const connector = this.connectors.get(connectorName);
+    return connector?.supportsProtectedDispatchFence === true;
+  }
+
+  /**
+   * Fail-closed admission for the protected Lab profile: the connector must be
+   * explicitly listed AND declare the dispatch fence capability.
+   */
+  assertProtectedConnectorAdmitted(connectorName: string): void {
+    const allowed = this.protectedLabConnectors();
+    if (!allowed.has(connectorName)) {
+      throw new BadRequestException({
+        error: 'protected_connector_not_admitted',
+        message: `Connector '${connectorName}' is not admitted to the protected Lab profile.`,
+      });
+    }
+    if (!this.connectorSupportsProtectedDispatchFence(connectorName)) {
+      throw new BadRequestException({
+        error: 'protected_connector_unfenced',
+        message: `Connector '${connectorName}' does not support the protected dispatch fence.`,
+      });
+    }
+  }
+
   async prepareProtectedReservation(
     connectorName: string,
     request: ServiceExecuteRequest,
@@ -2332,6 +2377,7 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
         message: 'Protected Lab prepare requires the billing authority.',
       });
     }
+    this.assertProtectedConnectorAdmitted(connectorName);
     if (!request.idempotencyKey) {
       throw new BadRequestException({
         error: 'protected_operation_key_required',
