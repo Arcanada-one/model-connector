@@ -7,6 +7,14 @@
  * `BaseApiConnector.execute` without overriding it. Subclasses that override
  * `execute` (even when they call `super.execute`) stay refused until
  * individually reviewed and listed.
+ *
+ * Non-Base `IConnector` implementations are never admitted by an own
+ * `supportsProtectedDispatchFence === true` alone. Production has no verified
+ * non-Base fenced connectors; tests may use the vitest-only admission seam.
+ *
+ * `forwardsMaxTokens` records whether the class's request body builder
+ * forwards caller `max_tokens` to the provider (source-verified 2026-11-08).
+ * Protected hard-cost holds require this to be true.
  */
 
 export type FenceAdmissionDecision = 'admitted' | 'refused';
@@ -15,12 +23,14 @@ export interface FenceAdmissionRecord {
   className: string;
   overridesExecute: boolean;
   callsSuperExecute: boolean | null;
+  /** True only when buildRequestBody forwards request.extra.max_tokens. */
+  forwardsMaxTokens: boolean;
   decision: FenceAdmissionDecision;
   reason: string;
 }
 
 /**
- * Exhaustive BaseApiConnector subclass inventory as of the Stage A round-3
+ * Exhaustive BaseApiConnector subclass inventory as of the Stage A round-3/5
  * review (2026-11-08). Keep in sync when adding a connector class.
  */
 export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[] = [
@@ -29,120 +39,144 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     className: 'AzureOpenAiConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
   },
   {
     className: 'CerebrasConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: false,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason:
+      'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_completion_tokens only — not max_tokens.',
   },
   {
     className: 'CloudflareWorkersAiConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
   },
   {
     className: 'EmbeddingConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: false,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason:
+      'Inherits BaseApiConnector.execute; provider fetch is fenced. Embedding body has no max_tokens.',
   },
   {
     className: 'FireworksConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
   },
   {
     className: 'GrokConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
   },
   {
     className: 'GroqConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
   },
   {
     className: 'HuggingFaceConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
   },
   {
     className: 'MistralConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
   },
   {
     className: 'OllamaCloudConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: false,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason:
+      'Inherits BaseApiConnector.execute; provider fetch is fenced. Options bag only — does not forward max_tokens.',
   },
   {
     className: 'OllamaConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: false,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason:
+      'Inherits BaseApiConnector.execute; provider fetch is fenced. Options bag only — does not forward max_tokens.',
   },
   {
     className: 'OpenAiConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: false,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason:
+      'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_output_tokens only — not max_tokens.',
   },
   {
     className: 'OpenModelConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason:
+      'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens (defaulted when absent).',
   },
   {
     className: 'OpenRouterConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
   },
   {
     className: 'OrqConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
   },
   {
     className: 'PerplexityConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason:
+      'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens via documented options.',
   },
   {
     className: 'TogetherConnector',
     overridesExecute: false,
     callsSuperExecute: null,
+    forwardsMaxTokens: true,
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced.',
+    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
   },
 
   // --- overrides execute (even with super.execute) — refused until reviewed ---
@@ -150,6 +184,7 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     className: 'AnthropicConnector',
     overridesExecute: true,
     callsSuperExecute: true,
+    forwardsMaxTokens: true,
     decision: 'refused',
     reason: 'Overrides execute; not individually admitted for protected fence.',
   },
@@ -157,6 +192,7 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     className: 'CohereConnector',
     overridesExecute: true,
     callsSuperExecute: true,
+    forwardsMaxTokens: true,
     decision: 'refused',
     reason: 'Overrides execute; not individually admitted for protected fence.',
   },
@@ -164,6 +200,7 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     className: 'DeepSeekConnector',
     overridesExecute: true,
     callsSuperExecute: true,
+    forwardsMaxTokens: true,
     decision: 'refused',
     reason: 'Overrides execute; not individually admitted for protected fence.',
   },
@@ -171,6 +208,7 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     className: 'GeminiApiConnector',
     overridesExecute: true,
     callsSuperExecute: true,
+    forwardsMaxTokens: false,
     decision: 'refused',
     reason: 'Overrides execute; not individually admitted for protected fence.',
   },
@@ -178,6 +216,7 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     className: 'JevConnector',
     overridesExecute: true,
     callsSuperExecute: true,
+    forwardsMaxTokens: false,
     decision: 'refused',
     reason: 'Overrides execute; not individually admitted for protected fence.',
   },
@@ -185,6 +224,7 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     className: 'JinaAiConnector',
     overridesExecute: true,
     callsSuperExecute: true,
+    forwardsMaxTokens: false,
     decision: 'refused',
     reason: 'Overrides execute; not individually admitted for protected fence.',
   },
@@ -192,6 +232,7 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     className: 'PineconeInferenceConnector',
     overridesExecute: true,
     callsSuperExecute: true,
+    forwardsMaxTokens: false,
     decision: 'refused',
     reason: 'Overrides execute; not individually admitted for protected fence.',
   },
@@ -199,6 +240,7 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     className: 'VertexGenerativeConnector',
     overridesExecute: true,
     callsSuperExecute: true,
+    forwardsMaxTokens: false,
     decision: 'refused',
     reason: 'Overrides execute; not individually admitted for protected fence.',
   },
@@ -206,6 +248,7 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     className: 'VoyageAiConnector',
     overridesExecute: true,
     callsSuperExecute: true,
+    forwardsMaxTokens: false,
     decision: 'refused',
     reason: 'Overrides execute; not individually admitted for protected fence.',
   },
@@ -217,9 +260,78 @@ export const PROTECTED_DISPATCH_FENCE_ADMITTED_CLASSES: ReadonlySet<string> = ne
   ),
 );
 
+const FORWARDS_MAX_TOKENS_BY_CLASS: ReadonlyMap<string, boolean> = new Map(
+  PROTECTED_DISPATCH_FENCE_DECISIONS.map((d) => [d.className, d.forwardsMaxTokens]),
+);
+
 export function isProtectedDispatchFenceClassAdmitted(
   constructorName: string | undefined | null,
 ): boolean {
   if (!constructorName) return false;
   return PROTECTED_DISPATCH_FENCE_ADMITTED_CLASSES.has(constructorName);
+}
+
+export function classForwardsProtectedMaxTokens(
+  constructorName: string | undefined | null,
+): boolean {
+  if (!constructorName) return false;
+  return FORWARDS_MAX_TOKENS_BY_CLASS.get(constructorName) === true;
+}
+
+/**
+ * Production non-Base fence admissions: empty. No non-Base connector has an
+ * independently verified pre-send fence today.
+ */
+export const PROTECTED_NON_BASE_FENCE_ADMISSIONS: ReadonlySet<string> = new Set();
+
+interface TestOnlyNonBaseAdmission {
+  forwardsMaxTokens: boolean;
+}
+
+/** Vitest-only map — never populated from production configuration. */
+const testOnlyNonBaseAdmissions = new Map<string, TestOnlyNonBaseAdmission>();
+
+function assertVitestOnlySeam(action: string): void {
+  if (process.env.VITEST !== 'true') {
+    throw new Error(`Protected non-Base fence ${action} is test-only (VITEST!==true).`);
+  }
+}
+
+/**
+ * Test-only admission for a non-Base IConnector double. Unreachable unless
+ * Vitest set `VITEST=true`. Production configuration cannot enable this path.
+ */
+export function __testOnlyAdmitNonBaseProtectedFence(
+  connectorName: string,
+  opts: { forwardsMaxTokens?: boolean } = {},
+): void {
+  assertVitestOnlySeam('admit');
+  testOnlyNonBaseAdmissions.set(connectorName, {
+    forwardsMaxTokens: opts.forwardsMaxTokens === true,
+  });
+}
+
+export function __testOnlyClearNonBaseProtectedFence(): void {
+  assertVitestOnlySeam('clear');
+  testOnlyNonBaseAdmissions.clear();
+}
+
+export function isNonBaseProtectedFenceAdmitted(connectorName: string): boolean {
+  if (PROTECTED_NON_BASE_FENCE_ADMISSIONS.has(connectorName)) return true;
+  if (process.env.VITEST === 'true' && testOnlyNonBaseAdmissions.has(connectorName)) {
+    return true;
+  }
+  return false;
+}
+
+export function nonBaseForwardsProtectedMaxTokens(connectorName: string): boolean {
+  if (PROTECTED_NON_BASE_FENCE_ADMISSIONS.has(connectorName)) {
+    // Production set is empty; if a future reviewed entry is added it must
+    // carry its own forwarding record. Fail closed until then.
+    return false;
+  }
+  if (process.env.VITEST === 'true') {
+    return testOnlyNonBaseAdmissions.get(connectorName)?.forwardsMaxTokens === true;
+  }
+  return false;
 }

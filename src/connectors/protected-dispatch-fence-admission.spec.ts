@@ -124,6 +124,7 @@ describe('PROTECTED_DISPATCH_FENCE_DECISIONS drift', () => {
         `${record.className}.prototype must not own execute (admission requires inherited BaseApiConnector.execute)`,
       ).toBe(false);
       expect(record.overridesExecute).toBe(false);
+      expect(typeof record.forwardsMaxTokens).toBe('boolean');
     }
   });
 

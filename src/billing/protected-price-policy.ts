@@ -8,10 +8,24 @@
 
 import { createHash } from 'crypto';
 
-import { assumedOutputTokens, estimateCostUsd } from './cost-estimate';
+import {
+  ceilUsdToLedgerPrecision,
+  estimateProtectedHoldUsd,
+  protectedOutputTokenCap,
+} from './protected-cost-estimate';
 
 export const NATIVE_PRICING_UNAVAILABLE = 'NATIVE_PRICING_UNAVAILABLE' as const;
 export const PROTECTED_PRICE_REVISION_MISMATCH = 'protected_price_revision_mismatch' as const;
+
+/**
+ * Maximum age of an authoritative catalogue price observation for the
+ * protected profile. Full refresh defaults to every 15m; 60m is four cycles
+ * of headroom before fail-closed refusal.
+ */
+export const PROTECTED_PRICE_MAX_AGE_MS = 60 * 60 * 1000;
+
+/** Allow tiny clock skew so a just-written row is not refused as "future". */
+const PROTECTED_PRICE_FUTURE_SKEW_MS = 60_000;
 
 export interface ProtectedCatalogAuthorityRow {
   connector: string;
@@ -22,6 +36,15 @@ export interface ProtectedCatalogAuthorityRow {
   outputPerMTok: number | null;
   contentFingerprint?: string | null;
   snapshotId?: string | null;
+  /** Row observation time; required for protected freshness. */
+  observedAt?: Date | string | null;
+  /** Catalog freshness enum: fresh | stale | static | unknown. */
+  freshness?: string | null;
+  /**
+   * True only when the row's snapshot came from the authoritative refresh
+   * path (`CatalogSnapshot.authoritative`). Absent/unknown → refuse.
+   */
+  authoritative?: boolean | null;
 }
 
 export type ProtectedPricePolicyResult =
@@ -30,7 +53,7 @@ export type ProtectedPricePolicyResult =
       pricePolicyRevision: string;
       holdUsd: string;
       positivelyZero: boolean;
-      /** Hard bound used for the hold (assumed output tokens under the budget policy). */
+      /** Hard bound used for the hold (forwarded max_tokens, or 0 when zero-priced). */
       assumedOutputTokens: number;
     }
   | {
@@ -49,6 +72,18 @@ function pinFingerprint(parts: string[]): string {
   return createHash('sha256').update(parts.join('\0')).digest('hex');
 }
 
+function asDate(value: Date | string | null | undefined): Date | null {
+  if (value == null) return null;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value === 'string' || typeof value === 'number') {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+
 /**
  * True only when the catalogue positively prices this model at zero — free tier
  * or explicit zero tariffs. Null tariffs on a non-free row are unknown, not free.
@@ -63,6 +98,25 @@ export function isPositivelyZeroPriced(row: ProtectedCatalogAuthorityRow): boole
   return false;
 }
 
+/**
+ * Provenance gate: authoritative refresh path + known age within max age.
+ * Fail closed when any field is missing or unverifiable.
+ */
+export function isAuthoritativeFreshPricing(
+  row: ProtectedCatalogAuthorityRow,
+  now: Date = new Date(),
+  maxAgeMs: number = PROTECTED_PRICE_MAX_AGE_MS,
+): boolean {
+  if (row.authoritative !== true) return false;
+  if (row.freshness !== 'fresh') return false;
+  const observed = asDate(row.observedAt ?? null);
+  if (!observed) return false;
+  const ageMs = now.getTime() - observed.getTime();
+  if (ageMs < -PROTECTED_PRICE_FUTURE_SKEW_MS) return false;
+  if (ageMs > maxAgeMs) return false;
+  return true;
+}
+
 export function isTrustedPricedRow(row: ProtectedCatalogAuthorityRow): boolean {
   if (row.tier === 'unknown') return false;
   if (isPositivelyZeroPriced(row)) return true;
@@ -73,6 +127,8 @@ export function isTrustedPricedRow(row: ProtectedCatalogAuthorityRow): boolean {
   if (!Number.isFinite(row.inputPerMTok) || !Number.isFinite(row.outputPerMTok)) {
     return false;
   }
+  // Negative rates are never a legitimate provider tariff for a hard hold.
+  if (row.inputPerMTok < 0 || row.outputPerMTok < 0) return false;
   return true;
 }
 
@@ -111,9 +167,13 @@ export function resolveProtectedPricePolicy(params: {
   catalogReadable: boolean;
   row: ProtectedCatalogAuthorityRow | null;
   routeKey: string;
-  promptLength: number;
+  /** Upper-bound input token count for the final effective request. */
+  inputTokenUpperBound: number;
   maxTokens?: unknown;
+  /** True only when the admitted connector class forwards `max_tokens`. */
+  connectorForwardsMaxTokens: boolean;
   clientRevision?: string | null;
+  now?: Date;
 }): ProtectedPricePolicyResult {
   if (!params.catalogReadable) {
     return {
@@ -129,6 +189,14 @@ export function resolveProtectedPricePolicy(params: {
       message: 'Protected prepare has no catalogue price for this connector/model.',
     };
   }
+  if (!isAuthoritativeFreshPricing(params.row, params.now ?? new Date())) {
+    return {
+      outcome: 'unavailable',
+      code: NATIVE_PRICING_UNAVAILABLE,
+      message:
+        'Protected prepare refuses catalogue tariffs without authoritative fresh provenance.',
+    };
+  }
   if (!isTrustedPricedRow(params.row)) {
     return {
       outcome: 'unavailable',
@@ -139,20 +207,35 @@ export function resolveProtectedPricePolicy(params: {
 
   const positivelyZero = isPositivelyZeroPriced(params.row);
   const revision = deriveProtectedPricePolicyRevision(params.row, params.routeKey);
-  const outputTokens = assumedOutputTokens(params.maxTokens);
 
-  let hold: number;
+  let holdUsd: string;
+  let outputTokens: number;
+
   if (positivelyZero) {
-    hold = 0;
+    holdUsd = ceilUsdToLedgerPrecision(0);
+    outputTokens = 0;
   } else {
-    hold = estimateCostUsd(
-      params.promptLength,
-      {
-        inputPerMTok: params.row.inputPerMTok,
-        outputPerMTok: params.row.outputPerMTok,
-      },
-      { maxTokens: params.maxTokens },
-    );
+    const capped = protectedOutputTokenCap({
+      maxTokens: params.maxTokens,
+      connectorForwardsMaxTokens: params.connectorForwardsMaxTokens,
+    });
+    if (capped == null) {
+      return {
+        outcome: 'unavailable',
+        code: NATIVE_PRICING_UNAVAILABLE,
+        message:
+          'Protected prepare requires an explicit max_tokens that the admitted connector forwards.',
+      };
+    }
+    outputTokens = capped;
+    const rawHold = estimateProtectedHoldUsd({
+      inputTokenUpperBound: params.inputTokenUpperBound,
+      outputTokenCap: outputTokens,
+      inputPerMTok: params.row.inputPerMTok as number,
+      outputPerMTok: params.row.outputPerMTok as number,
+    });
+    holdUsd = ceilUsdToLedgerPrecision(rawHold);
+    const hold = Number(holdUsd);
     // Bound: the hold must be the catalogue-priced estimate. An unknown-model
     // floor must never admit a protected reservation.
     if (!(hold > 0) || !Number.isFinite(hold)) {
@@ -177,7 +260,7 @@ export function resolveProtectedPricePolicy(params: {
   return {
     outcome: 'resolved',
     pricePolicyRevision: revision,
-    holdUsd: hold.toFixed(6),
+    holdUsd,
     positivelyZero,
     assumedOutputTokens: outputTokens,
   };

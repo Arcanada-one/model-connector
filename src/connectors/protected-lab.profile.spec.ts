@@ -27,7 +27,21 @@ import {
   NATIVE_PRICING_UNAVAILABLE,
   deriveProtectedPricePolicyRevision,
 } from '../billing/protected-price-policy';
-import { PROTECTED_DISPATCH_FENCE_DECISIONS } from './protected-dispatch-fence-admission';
+import {
+  PROTECTED_DISPATCH_FENCE_DECISIONS,
+  __testOnlyAdmitNonBaseProtectedFence,
+  __testOnlyClearNonBaseProtectedFence,
+} from './protected-dispatch-fence-admission';
+
+function freshPricing(row: Record<string, unknown>) {
+  return {
+    ...row,
+    // Relative freshness so wall-clock CI does not age out a fixed fixture.
+    observedAt: new Date(Date.now() - 5 * 60 * 1000),
+    freshness: 'fresh',
+    authoritative: true,
+  };
+}
 
 const BASE_ENV = {
   PORT: '3900',
@@ -232,6 +246,11 @@ describe('protected Lab profile execute guards', () => {
     // separate provider literally named "use".
     process.env.PROVIDER_ACCESS = 'mock,unfenced,liar';
     vi.clearAllMocks();
+    __testOnlyClearNonBaseProtectedFence();
+    // Production non-Base admissions are empty. Vitest-only seam admits the
+    // profile doubles that intentionally exercise post-admission paths.
+    __testOnlyAdmitNonBaseProtectedFence('mock', { forwardsMaxTokens: true });
+    __testOnlyAdmitNonBaseProtectedFence('liar', { forwardsMaxTokens: true });
   });
 
   it('P1: protected execute without reservation_ref refuses null-intent/dark fallback', async () => {
@@ -534,20 +553,26 @@ describe('protected Lab profile execute guards', () => {
     const paidFp = 'c'.repeat(64);
     const service = buildService(billing, fencedMockConnector, {
       findAll: async () => [],
-      findPricing: async () => ({
-        connector: 'mock',
-        model: 'paid-m',
-        tier: 'paid',
-        inputPerMTok: 10,
-        outputPerMTok: 30,
-        contentFingerprint: paidFp,
-        snapshotId: 'snap',
-      }),
+      findPricing: async () =>
+        freshPricing({
+          connector: 'mock',
+          model: 'paid-m',
+          tier: 'paid',
+          inputPerMTok: 10,
+          outputPerMTok: 30,
+          contentFingerprint: paidFp,
+          snapshotId: 'snap',
+        }),
     });
 
     const result = await service.prepareProtectedReservation(
       'mock',
-      { prompt: 'hello world', model: 'paid-m', idempotencyKey: 'op-fake-zero' },
+      {
+        prompt: 'hello world',
+        model: 'paid-m',
+        idempotencyKey: 'op-fake-zero',
+        extra: { max_tokens: 2_000 },
+      },
       'key-1',
       'zero:attacker',
     );
@@ -580,21 +605,27 @@ describe('protected Lab profile execute guards', () => {
       fencedMockConnector,
       {
         findAll: async () => [],
-        findPricing: async () => ({
-          connector: 'mock',
-          model: 'paid-m',
-          tier: 'paid',
-          inputPerMTok: 10,
-          outputPerMTok: 30,
-          contentFingerprint: paidFp,
-          snapshotId: 'snap',
-        }),
+        findPricing: async () =>
+          freshPricing({
+            connector: 'mock',
+            model: 'paid-m',
+            tier: 'paid',
+            inputPerMTok: 10,
+            outputPerMTok: 30,
+            contentFingerprint: paidFp,
+            snapshotId: 'snap',
+          }),
       },
     );
 
     const result = await service.prepareProtectedReservation(
       'mock',
-      { prompt: 'hello world', model: 'paid-m', idempotencyKey: 'op-paid' },
+      {
+        prompt: 'hello world',
+        model: 'paid-m',
+        idempotencyKey: 'op-paid',
+        extra: { max_tokens: 2_000 },
+      },
       'key-1',
     );
 
@@ -643,22 +674,28 @@ describe('protected Lab profile execute guards', () => {
       fencedMockConnector,
       {
         findAll: async () => [],
-        findPricing: async () => ({
-          connector: 'mock',
-          model: 'free-m',
-          tier: 'free',
-          free: true,
-          inputPerMTok: 0,
-          outputPerMTok: 0,
-          contentFingerprint: freeFp,
-          snapshotId: 'snap-free',
-        }),
+        findPricing: async () =>
+          freshPricing({
+            connector: 'mock',
+            model: 'free-m',
+            tier: 'free',
+            free: true,
+            inputPerMTok: 0,
+            outputPerMTok: 0,
+            contentFingerprint: freeFp,
+            snapshotId: 'snap-free',
+          }),
       },
     );
 
     const result = await service.prepareProtectedReservation(
       'mock',
-      { prompt: 'hello world', model: 'free-m', idempotencyKey: 'op-free' },
+      {
+        prompt: 'hello world',
+        model: 'free-m',
+        idempotencyKey: 'op-free',
+        extra: { max_tokens: 2_000 },
+      },
       'key-1',
     );
 
@@ -686,12 +723,80 @@ describe('protected Lab profile execute guards', () => {
     expect(call.holdUsd).toBe('0.000000');
   });
 
+  it('M-NONBASE: unlisted non-Base own-boolean true is refused before any physical send', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'rogue',
+      PROVIDER_ACCESS: 'mock,unfenced,liar,rogue',
+    });
+    // Deliberately NOT admitted via the test-only seam.
+    let physicalSendCount = 0;
+    const rogue: IConnector = {
+      name: 'rogue',
+      supportsProtectedDispatchFence: true,
+      type: 'api',
+      execute: vi.fn(async () => {
+        physicalSendCount += 1;
+        throw new Error('rogue must not be called');
+      }),
+      getCapabilities: () => ({
+        name: 'rogue',
+        type: 'api',
+        models: ['m'],
+        supportsStreaming: false,
+        supportsJsonSchema: false,
+        supportsTools: false,
+        maxTimeout: 30_000,
+      }),
+      getStatus: async () => ({
+        name: 'rogue',
+        healthy: true,
+        activeJobs: 0,
+        queuedJobs: 0,
+        rateLimitStatus: 'ok',
+      }),
+      resetCircuitBreaker: () => [],
+    };
+
+    const billing = {
+      lookupProtectedReservation: vi.fn(),
+      prepareProtectedReservation: vi.fn(),
+    };
+    const service = buildService(billing, rogue);
+
+    expect(rogue.supportsProtectedDispatchFence).toBe(true);
+    expect(service.connectorSupportsProtectedDispatchFence('rogue')).toBe(false);
+
+    const response = await service.execute(
+      'rogue',
+      {
+        prompt: 'hi',
+        model: 'm',
+        protectedProfile: true,
+        reservationRef: '11111111-1111-4111-8111-111111111111',
+        idempotencyKey: 'op-rogue',
+      },
+      'key-1',
+    );
+
+    expect(response.status).toBe('error');
+    expect(response.error?.type).toBe('protected_connector_unfenced');
+    expect(billing.lookupProtectedReservation).not.toHaveBeenCalled();
+    expect(billing.prepareProtectedReservation).not.toHaveBeenCalled();
+    expect(physicalSendCount).toBe(0);
+    expect(rogue.execute).not.toHaveBeenCalled();
+  });
+
   it('M-OWNPROP: inherited prototype supportsProtectedDispatchFence is refused', () => {
     validateEnv({
       ...BASE_ENV,
       PROTECTED_LAB_PROFILE: 'true',
       PROTECTED_LAB_CONNECTORS: 'proto-fence',
     });
+    // Even with an explicit non-Base admission, the fence flag must be an OWN
+    // property — an inherited prototype true must not admit.
+    __testOnlyAdmitNonBaseProtectedFence('proto-fence', { forwardsMaxTokens: true });
     const fenceProto = { supportsProtectedDispatchFence: true as const };
     const protoFenceConnector = Object.assign(Object.create(fenceProto), {
       name: 'proto-fence',

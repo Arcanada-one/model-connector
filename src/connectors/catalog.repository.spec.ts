@@ -111,8 +111,18 @@ describe('CatalogRepository CONN-1646', () => {
       cacheWrite5mPerMTok: 12.5,
       cacheWrite1hPerMTok: 20,
     };
-    prisma.modelCatalog.findFirst.mockResolvedValue(pricing);
-    expect(await repository.findPricing('anthropic', 'claude-fable-5-1')).toEqual(pricing);
+    prisma.modelCatalog.findFirst.mockResolvedValue({
+      ...pricing,
+      observedAt: new Date('2026-11-08T21:00:00.000Z'),
+      freshness: 'fresh',
+      snapshot: { authoritative: true },
+    });
+    expect(await repository.findPricing('anthropic', 'claude-fable-5-1')).toEqual({
+      ...pricing,
+      observedAt: new Date('2026-11-08T21:00:00.000Z'),
+      freshness: 'fresh',
+      authoritative: true,
+    });
     expect(prisma.modelCatalog.findFirst).toHaveBeenCalledWith({
       where: { connector: 'anthropic', model: 'claude-fable-5-1', absent: false },
       select: {
@@ -127,6 +137,13 @@ describe('CatalogRepository CONN-1646', () => {
         free: true,
         contentFingerprint: true,
         snapshotId: true,
+        observedAt: true,
+        freshness: true,
+        snapshot: {
+          select: {
+            authoritative: true,
+          },
+        },
       },
     });
   });

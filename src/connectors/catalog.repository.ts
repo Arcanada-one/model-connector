@@ -158,6 +158,15 @@ export interface CatalogPricingRow {
   snapshotId?: string | null;
   connector?: string;
   model?: string;
+  /** Row observation time from model_catalog.observedAt. */
+  observedAt?: Date | null;
+  /** Row freshness: fresh | stale | static | unknown. */
+  freshness?: string | null;
+  /**
+   * Snapshot authoritative bit from catalog_snapshots. Null when the row has
+   * no snapshot join (legacy / missing provenance).
+   */
+  authoritative?: boolean | null;
 }
 
 /**
@@ -253,9 +262,22 @@ export class CatalogRepository implements CatalogRepositoryLike {
         free: true,
         contentFingerprint: true,
         snapshotId: true,
+        observedAt: true,
+        freshness: true,
+        snapshot: {
+          select: {
+            authoritative: true,
+          },
+        },
       },
     });
-    return row ?? null;
+    if (!row) return null;
+    const { snapshot, ...rest } = row;
+    return {
+      ...rest,
+      // Fail closed for protected callers: missing snapshot → authoritative null.
+      authoritative: snapshot?.authoritative ?? null,
+    };
   }
 
   /**

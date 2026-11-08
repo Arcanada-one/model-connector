@@ -33,11 +33,17 @@ import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import { BillingService, RequestIntentHandle } from '../billing/billing.service';
 import { estimateCostUsd, promptCharLength } from '../billing/cost-estimate';
+import { protectedInputTokenUpperBound } from '../billing/protected-cost-estimate';
 import {
   resolveProtectedPricePolicy,
   type ProtectedCatalogAuthorityRow,
 } from '../billing/protected-price-policy';
-import { isProtectedDispatchFenceClassAdmitted } from './protected-dispatch-fence-admission';
+import {
+  classForwardsProtectedMaxTokens,
+  isNonBaseProtectedFenceAdmitted,
+  isProtectedDispatchFenceClassAdmitted,
+  nonBaseForwardsProtectedMaxTokens,
+} from './protected-dispatch-fence-admission';
 import { mintServerIntentKey, intentPayloadFingerprint } from '../billing/intent';
 import {
   measureCostUsd,
@@ -2344,9 +2350,10 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
    * True only when the registered connector is admitted to the protected
    * dispatch fence. `BaseApiConnector` subclasses are keyed by exact class
    * name in `protected-dispatch-fence-admission.ts` — an inherited capability
-   * boolean alone is not enough. Plain (non-class) test doubles may set an
-   * own-property `supportsProtectedDispatchFence = true`. Missing connectors
-   * and unlisted subclasses return false — fail closed.
+   * boolean alone is not enough. Non-Base connectors require an explicit
+   * reviewed admission record (production list is empty); an own-property
+   * `supportsProtectedDispatchFence === true` alone never admits. Missing
+   * connectors and unlisted subclasses return false — fail closed.
    */
   connectorSupportsProtectedDispatchFence(connectorName: string): boolean {
     const connector = this.connectors.get(connectorName);
@@ -2354,10 +2361,25 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     if (connector instanceof BaseApiConnector) {
       return isProtectedDispatchFenceClassAdmitted(connector.constructor?.name);
     }
-    return (
+    // Own boolean is necessary but never sufficient for non-Base admission.
+    const ownFenceFlag =
       Object.prototype.hasOwnProperty.call(connector, 'supportsProtectedDispatchFence') &&
-      connector.supportsProtectedDispatchFence === true
-    );
+      connector.supportsProtectedDispatchFence === true;
+    if (!ownFenceFlag) return false;
+    return isNonBaseProtectedFenceAdmitted(connectorName);
+  }
+
+  /**
+   * Whether the registered connector class forwards caller `max_tokens` to the
+   * provider. Used only for the protected hard-cost ceiling.
+   */
+  private connectorForwardsProtectedMaxTokens(connectorName: string): boolean {
+    const connector = this.connectors.get(connectorName);
+    if (!connector) return false;
+    if (connector instanceof BaseApiConnector) {
+      return classForwardsProtectedMaxTokens(connector.constructor?.name);
+    }
+    return nonBaseForwardsProtectedMaxTokens(connectorName);
   }
 
   /**
@@ -2439,8 +2461,13 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     request: ServiceExecuteRequest,
     clientPricePolicyRevision?: string,
   ) {
-    const promptLength = promptCharLength(request.prompt);
+    const inputTokenUpperBound = protectedInputTokenUpperBound({
+      prompt: request.prompt,
+      systemPrompt: request.systemPrompt,
+      tools: request.tools,
+    });
     const maxTokens = request.extra?.max_tokens;
+    const connectorForwardsMaxTokens = this.connectorForwardsProtectedMaxTokens(connectorName);
     let catalogReadable = true;
     let row: ProtectedCatalogAuthorityRow | null = null;
     try {
@@ -2457,8 +2484,9 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       catalogReadable,
       row,
       routeKey,
-      promptLength,
+      inputTokenUpperBound,
       maxTokens,
+      connectorForwardsMaxTokens,
       clientRevision: clientPricePolicyRevision,
     });
   }
@@ -2479,6 +2507,9 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
         outputPerMTok: priced.outputPerMTok,
         contentFingerprint: priced.contentFingerprint ?? null,
         snapshotId: priced.snapshotId ?? null,
+        observedAt: priced.observedAt ?? null,
+        freshness: priced.freshness ?? null,
+        authoritative: priced.authoritative ?? null,
       };
     }
     const rows = await this.catalogRepo.findAll();
@@ -2487,6 +2518,8 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
         entry.connector === connectorName && entry.model === modelName,
     );
     if (!hit) return null;
+    // findAll rows carry freshness/observedAt but not snapshot.authoritative —
+    // leave authoritative unset so the protected gate fails closed.
     return {
       connector: hit.connector,
       model: hit.model,
@@ -2496,6 +2529,9 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       outputPerMTok: hit.outputPerMTok,
       contentFingerprint: hit.contentFingerprint,
       snapshotId: hit.snapshotId,
+      observedAt: hit.observedAt ?? null,
+      freshness: hit.freshness ?? null,
+      authoritative: null,
     };
   }
 
