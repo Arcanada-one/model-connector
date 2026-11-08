@@ -1482,7 +1482,46 @@ export class BillingService {
           holdUsd: hold,
           expiresAt,
         });
-        return replay;
+        if (replay.outcome === 'opened') {
+          const row = await this.prisma.requestIntent.findUnique({
+            where: { id: replay.intent.id },
+          });
+          if (
+            !row ||
+            row.lifecycleVersion !== PROTECTED_LIFECYCLE_VERSION ||
+            !row.reservationRef ||
+            row.protectedPhase == null
+          ) {
+            return { outcome: 'in_flight' };
+          }
+          const intent: RequestIntentHandle = {
+            id: row.id,
+            apiKeyId: row.apiKeyId,
+            intentKey: row.intentKey,
+            holdUsd: new Prisma.Decimal(row.holdUsd),
+            reclaimed: true,
+            lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+            protectedPhase: row.protectedPhase as ProtectedPhase,
+            generation: row.generation,
+            reservationRef: row.reservationRef,
+          };
+          return {
+            outcome: 'opened',
+            intent,
+            reservation: BillingService.toProtectedView(row),
+          };
+        }
+        if (
+          replay.outcome === 'insufficient' ||
+          replay.outcome === 'in_flight' ||
+          replay.outcome === 'payload_mismatch' ||
+          replay.outcome === 'protected_unknown' ||
+          replay.outcome === 'replay' ||
+          replay.outcome === 'not_replayable'
+        ) {
+          return replay;
+        }
+        return { outcome: 'in_flight' };
       }
       throw err;
     }

@@ -38,7 +38,10 @@ const prepareBodySchema = z.object({
 
 const executeProtectedExtraSchema = z.object({
   reservationRef: z.string().uuid(),
-  // Client-supplied flags are ignored — profile is route-selected.
+});
+
+/** Client flags that must not select or collide with DTO fields (e.g. profile). */
+const executeClientFlagSchema = z.object({
   protected: z.unknown().optional(),
   profile: z.unknown().optional(),
 });
@@ -67,7 +70,10 @@ function parseExecuteProtectedBody(raw: unknown): ExecuteProtectedDto {
   try {
     const base = perConnectorExecuteSchema.parse(raw);
     const extra = executeProtectedExtraSchema.parse(raw);
-    return { ...base, ...extra };
+    // Parse-and-discard: accept client flags without merging them into the DTO
+    // (they would collide with PerConnectorExecuteDto.profile typing).
+    executeClientFlagSchema.parse(raw);
+    return { ...base, reservationRef: extra.reservationRef };
   } catch (err) {
     if (err instanceof ZodError) {
       throw new HttpException(
