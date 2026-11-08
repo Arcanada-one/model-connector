@@ -261,14 +261,15 @@ export class ProtectedLabController {
     const body = parseExecuteProtectedBody(rawBody);
     const apiKeyId = req.apiKey?.id ?? 'unknown';
     const key = parseIdempotencyKey(idempotencyKey);
-    // Strip any client attempt to select/downgrade the profile; route owns it.
-    const { protected: _clientProtected, profile: _clientProfile, ...rest } = body;
+    // Client `protected`/`profile` flags were parse-and-discarded above. Drop the
+    // DTO `profile` field too — the route owns the protected Lab profile.
+    const { profile: _clientProfile, reservationRef, ...rest } = body;
     const response = await this.connectorsService.execute(
       name,
       {
         ...(rest as PerConnectorExecuteDto),
         idempotencyKey: key,
-        reservationRef: body.reservationRef,
+        reservationRef,
         protectedProfile: true,
       },
       apiKeyId,
