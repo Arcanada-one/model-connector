@@ -32,6 +32,8 @@ import {
   __testOnlyAdmitNonBaseProtectedFence,
   __testOnlyClearNonBaseProtectedFence,
 } from './protected-dispatch-fence-admission';
+import { CerebrasConnector } from './cerebras/cerebras.connector';
+import { PerplexityConnector } from './perplexity/perplexity.connector';
 
 function freshPricing(row: Record<string, unknown>) {
   return {
@@ -862,5 +864,229 @@ describe('protected Lab profile execute guards', () => {
       expect(result.code).toBe(NATIVE_PRICING_UNAVAILABLE);
     }
     expect(prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('M-REPOAUTH: row without snapshot authoritative null refuses protected prepare', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'mock',
+    });
+    const prepareProtectedReservation = vi.fn();
+    const service = buildService({ prepareProtectedReservation }, fencedMockConnector, {
+      findAll: async () => [],
+      findPricing: async () => ({
+        connector: 'mock',
+        model: 'paid-m',
+        tier: 'paid',
+        inputPerMTok: 10,
+        outputPerMTok: 30,
+        contentFingerprint: 'f'.repeat(64),
+        snapshotId: null,
+        observedAt: new Date(Date.now() - 5 * 60 * 1000),
+        freshness: 'fresh',
+        authoritative: null,
+      }),
+    });
+
+    const result = await service.prepareProtectedReservation(
+      'mock',
+      {
+        prompt: 'hello',
+        model: 'paid-m',
+        idempotencyKey: 'op-repoauth',
+        extra: { max_tokens: 2_000 },
+      },
+      'key-1',
+    );
+
+    expect(result.outcome).toBe('refused');
+    if (result.outcome === 'refused') {
+      expect(result.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('M-SVCFWD: admitted Cerebras (forwardsMaxTokens false) refuses despite max_tokens', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'cerebras',
+      PROVIDER_ACCESS: 'cerebras',
+    });
+    const prepareProtectedReservation = vi.fn();
+    const service = buildService(
+      { prepareProtectedReservation },
+      new CerebrasConnector(),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'cerebras',
+            model: 'paid-m',
+            tier: 'paid',
+            inputPerMTok: 10,
+            outputPerMTok: 30,
+            contentFingerprint: 'c'.repeat(64),
+            snapshotId: 'snap-cerebras',
+          }),
+      },
+    );
+
+    const result = await service.prepareProtectedReservation(
+      'cerebras',
+      {
+        prompt: 'hello',
+        model: 'paid-m',
+        idempotencyKey: 'op-svc-fwd',
+        extra: { max_tokens: 2_000 },
+      },
+      'key-1',
+    );
+
+    expect(result.outcome).toBe('refused');
+    if (result.outcome === 'refused') {
+      expect(result.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('M-PPLXSEARCH: protected Perplexity without disable_search is refused', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'perplexity',
+      PROVIDER_ACCESS: 'perplexity',
+    });
+    const prepareProtectedReservation = vi.fn();
+    const service = buildService(
+      { prepareProtectedReservation },
+      new PerplexityConnector(),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'perplexity',
+            model: 'sonar',
+            tier: 'paid',
+            inputPerMTok: 1,
+            outputPerMTok: 1,
+            contentFingerprint: 'p'.repeat(64),
+            snapshotId: 'snap-pplx',
+          }),
+      },
+    );
+
+    const missingKillSwitch = await service.prepareProtectedReservation(
+      'perplexity',
+      {
+        prompt: 'hello',
+        model: 'sonar',
+        idempotencyKey: 'op-pplx-search-1',
+        extra: { max_tokens: 128 },
+      },
+      'key-1',
+    );
+    expect(missingKillSwitch.outcome).toBe('refused');
+    if (missingKillSwitch.outcome === 'refused') {
+      expect(missingKillSwitch.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+    }
+
+    const withSearchOptions = await service.prepareProtectedReservation(
+      'perplexity',
+      {
+        prompt: 'hello',
+        model: 'sonar',
+        idempotencyKey: 'op-pplx-search-2',
+        extra: {
+          max_tokens: 128,
+          disable_search: true,
+          web_search_options: { search_context_size: 'high' },
+        },
+      },
+      'key-1',
+    );
+    expect(withSearchOptions.outcome).toBe('refused');
+    if (withSearchOptions.outcome === 'refused') {
+      expect(withSearchOptions.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('M-PPLXRF: protected Perplexity response_format schema increases the hold', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'perplexity',
+      PROVIDER_ACCESS: 'perplexity',
+    });
+    const prepareProtectedReservation = vi.fn(async (params: Record<string, unknown>) => ({
+      outcome: 'opened' as const,
+      reservation: {
+        reservationRef: '11111111-1111-4111-8111-111111111113',
+        holdUsd: String(params.holdUsd),
+        pricePolicyRevision: String(params.pricePolicyRevision),
+      },
+      intent: {},
+    }));
+    const service = buildService(
+      { prepareProtectedReservation: prepareProtectedReservation as never },
+      new PerplexityConnector(),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'perplexity',
+            model: 'sonar',
+            tier: 'paid',
+            inputPerMTok: 1_000_000,
+            outputPerMTok: 0,
+            contentFingerprint: 'q'.repeat(64),
+            snapshotId: 'snap-pplx-rf',
+          }),
+      },
+    );
+
+    const base = await service.prepareProtectedReservation(
+      'perplexity',
+      {
+        prompt: 'hi',
+        model: 'sonar',
+        idempotencyKey: 'op-pplx-rf-base',
+        extra: { max_tokens: 1, disable_search: true },
+      },
+      'key-1',
+    );
+    const withSchema = await service.prepareProtectedReservation(
+      'perplexity',
+      {
+        prompt: 'hi',
+        model: 'sonar',
+        idempotencyKey: 'op-pplx-rf-schema',
+        extra: {
+          max_tokens: 1,
+          disable_search: true,
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'big',
+              schema: { type: 'object', properties: { a: { type: 'string' } } },
+              description: 'D'.repeat(2_000),
+            },
+          },
+        },
+      },
+      'key-1',
+    );
+
+    expect(base.outcome).toBe('opened');
+    expect(withSchema.outcome).toBe('opened');
+    const baseHold = Number(
+      (prepareProtectedReservation.mock.calls[0][0] as { holdUsd: string }).holdUsd,
+    );
+    const schemaHold = Number(
+      (prepareProtectedReservation.mock.calls[1][0] as { holdUsd: string }).holdUsd,
+    );
+    expect(schemaHold).toBeGreaterThan(baseHold);
   });
 });

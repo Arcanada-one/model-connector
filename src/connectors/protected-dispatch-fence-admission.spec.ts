@@ -125,6 +125,7 @@ describe('PROTECTED_DISPATCH_FENCE_DECISIONS drift', () => {
       ).toBe(false);
       expect(record.overridesExecute).toBe(false);
       expect(typeof record.forwardsMaxTokens).toBe('boolean');
+      expect(Array.isArray(record.forwardedExtraKeys)).toBe(true);
     }
   });
 

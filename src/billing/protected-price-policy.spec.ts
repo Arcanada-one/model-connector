@@ -451,4 +451,102 @@ describe('resolveProtectedPricePolicy', () => {
     const withLarge = estimateCostUsd(100, pricing, { maxTokens: 64_000 });
     expect(withLarge).toBeGreaterThan(estimateCostUsd(100, pricing));
   });
+
+  it('M-SYSPROMPT: large system prompt strictly increases the hold', () => {
+    const prompt = 'hello';
+    const systemPrompt = 'S'.repeat(2_000);
+    const withoutSys = protectedInputTokenUpperBound({ prompt });
+    const withSys = protectedInputTokenUpperBound({ prompt, systemPrompt });
+    expect(withSys).toBeGreaterThan(withoutSys);
+
+    const row = freshAuthority({
+      ...paidRow,
+      inputPerMTok: 1_000_000,
+      outputPerMTok: 0,
+    });
+    const base = resolveProtectedPricePolicy({
+      catalogReadable: true,
+      row,
+      routeKey: ROUTE_A,
+      inputTokenUpperBound: withoutSys,
+      maxTokens: 1,
+      connectorForwardsMaxTokens: true,
+      now: NOW,
+    });
+    const larger = resolveProtectedPricePolicy({
+      catalogReadable: true,
+      row,
+      routeKey: ROUTE_A,
+      inputTokenUpperBound: withSys,
+      maxTokens: 1,
+      connectorForwardsMaxTokens: true,
+      now: NOW,
+    });
+    expect(base.outcome).toBe('resolved');
+    expect(larger.outcome).toBe('resolved');
+    if (base.outcome !== 'resolved' || larger.outcome !== 'resolved') return;
+    expect(Number(larger.holdUsd)).toBeGreaterThan(Number(base.holdUsd));
+  });
+
+  it('M-AUTH: authoritative false fresh row is refused', () => {
+    const result = resolveProtectedPricePolicy({
+      catalogReadable: true,
+      row: {
+        ...paidRow,
+        observedAt: FRESH_AT,
+        freshness: 'fresh',
+        authoritative: false,
+      },
+      routeKey: ROUTE_A,
+      inputTokenUpperBound: 100,
+      maxTokens: 2_000,
+      connectorForwardsMaxTokens: true,
+      now: NOW,
+    });
+    expect(result.outcome).toBe('unavailable');
+    if (result.outcome === 'unavailable') {
+      expect(result.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+    }
+  });
+
+  it('M-FRESHENUM: static freshness observed 1 min ago is refused', () => {
+    const oneMinuteAgo = new Date(NOW.getTime() - 60_000);
+    const result = resolveProtectedPricePolicy({
+      catalogReadable: true,
+      row: {
+        ...paidRow,
+        observedAt: oneMinuteAgo,
+        freshness: 'static',
+        authoritative: true,
+      },
+      routeKey: ROUTE_A,
+      inputTokenUpperBound: 100,
+      maxTokens: 2_000,
+      connectorForwardsMaxTokens: true,
+      now: NOW,
+    });
+    expect(result.outcome).toBe('unavailable');
+    if (result.outcome === 'unavailable') {
+      expect(result.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+    }
+  });
+
+  it('M-FRESHENUM: stale-labelled row observed 1 min ago is refused', () => {
+    const oneMinuteAgo = new Date(NOW.getTime() - 60_000);
+    const result = resolveProtectedPricePolicy({
+      catalogReadable: true,
+      row: {
+        ...paidRow,
+        observedAt: oneMinuteAgo,
+        freshness: 'stale',
+        authoritative: true,
+      },
+      routeKey: ROUTE_A,
+      inputTokenUpperBound: 100,
+      maxTokens: 2_000,
+      connectorForwardsMaxTokens: true,
+      now: NOW,
+    });
+    expect(result.outcome).toBe('unavailable');
+  });
 });

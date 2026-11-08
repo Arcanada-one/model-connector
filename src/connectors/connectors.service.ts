@@ -34,7 +34,9 @@ import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import { BillingService, RequestIntentHandle } from '../billing/billing.service';
 import { estimateCostUsd, promptCharLength } from '../billing/cost-estimate';
 import { protectedInputTokenUpperBound } from '../billing/protected-cost-estimate';
+import { assessProtectedForwardedExtras } from '../billing/protected-forwarded-extras';
 import {
+  NATIVE_PRICING_UNAVAILABLE,
   resolveProtectedPricePolicy,
   type ProtectedCatalogAuthorityRow,
 } from '../billing/protected-price-policy';
@@ -2461,11 +2463,24 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     request: ServiceExecuteRequest,
     clientPricePolicyRevision?: string,
   ) {
-    const inputTokenUpperBound = protectedInputTokenUpperBound({
-      prompt: request.prompt,
-      systemPrompt: request.systemPrompt,
-      tools: request.tools,
+    const connectorClassName = this.protectedConnectorClassName(connectorName);
+    const extras = assessProtectedForwardedExtras({
+      connectorClassName,
+      extra: request.extra as Record<string, unknown> | undefined,
     });
+    if (!extras.ok) {
+      return {
+        outcome: 'unavailable' as const,
+        code: NATIVE_PRICING_UNAVAILABLE,
+        message: extras.message,
+      };
+    }
+    const inputTokenUpperBound =
+      protectedInputTokenUpperBound({
+        prompt: request.prompt,
+        systemPrompt: request.systemPrompt,
+        tools: request.tools,
+      }) + extras.countedInputBytes;
     const maxTokens = request.extra?.max_tokens;
     const connectorForwardsMaxTokens = this.connectorForwardsProtectedMaxTokens(connectorName);
     let catalogReadable = true;
@@ -2489,6 +2504,16 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       connectorForwardsMaxTokens,
       clientRevision: clientPricePolicyRevision,
     });
+  }
+
+  /** Constructor name for BaseApi connectors; null for non-Base doubles. */
+  private protectedConnectorClassName(connectorName: string): string | null {
+    const connector = this.connectors.get(connectorName);
+    if (!connector) return null;
+    if (connector instanceof BaseApiConnector) {
+      return connector.constructor?.name ?? null;
+    }
+    return null;
   }
 
   private async lookupProtectedCatalogRow(
