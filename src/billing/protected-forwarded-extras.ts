@@ -7,11 +7,10 @@
  * - refused before dispatch when present (or when a required kill-switch is absent);
  * - shown not to add input tokens or non-token charges (sampling / stream flags).
  *
- * Perplexity decision (round 6): keep the class admitted (fence + max_tokens),
- * but refuse protected prepares that can bill per-request search fees. Those fees
- * are not catalogue token rates, so the hold cannot cover them. Search is off
- * only when `disable_search: true` and no search-enabling extras are present.
- * `response_format` schemas are counted as UTF-8 JSON into the input bound.
+ * Perplexity (round 9 / Agent-Brain comment 6728472574): the class is refused
+ * at the fence-admission table for the first protected Lab profile, so it has
+ * no extras record and no protected `disable_search` path. Legacy unprotected
+ * Perplexity traffic is unchanged.
  *
  * Round 7: fail closed when an admitted `forwardsMaxTokens: true` BaseApi class
  * has no extras record. Disposition keys must equal `forwardedExtraKeys` for
@@ -35,18 +34,6 @@ export interface ProtectedForwardedExtraRecord {
    */
   requireExtraTrue?: string;
 }
-
-const NEUTRAL_SAMPLING = {
-  temperature: 'neutral',
-  top_p: 'neutral',
-  top_k: 'neutral',
-  seed: 'neutral',
-  stream: 'neutral',
-  stop: 'neutral',
-  stream_mode: 'neutral',
-  reasoning_effort: 'neutral',
-  language_preference: 'neutral',
-} as const satisfies Record<string, ProtectedExtraDisposition>;
 
 /**
  * Exhaustive disposition table for admitted classes with `forwardsMaxTokens: true`.
@@ -146,62 +133,6 @@ export const PROTECTED_FORWARDED_EXTRA_RECORDS: readonly ProtectedForwardedExtra
       temperature: 'neutral',
       top_p: 'neutral',
     },
-  },
-  {
-    className: 'PerplexityConnector',
-    forwardedExtraKeys: [
-      'max_tokens',
-      'stream',
-      'stop',
-      'temperature',
-      'top_p',
-      'response_format',
-      'web_search_options',
-      'search_mode',
-      'return_images',
-      'return_related_questions',
-      'enable_search_classifier',
-      'disable_search',
-      'search_domain_filter',
-      'search_language_filter',
-      'search_recency_filter',
-      'search_after_date_filter',
-      'search_before_date_filter',
-      'last_updated_before_filter',
-      'last_updated_after_filter',
-      'image_format_filter',
-      'image_domain_filter',
-      'stream_mode',
-      'reasoning_effort',
-      'language_preference',
-    ],
-    disposition: {
-      max_tokens: 'neutral',
-      stream: NEUTRAL_SAMPLING.stream,
-      stop: NEUTRAL_SAMPLING.stop,
-      temperature: NEUTRAL_SAMPLING.temperature,
-      top_p: NEUTRAL_SAMPLING.top_p,
-      response_format: 'count_utf8',
-      web_search_options: 'refuse_when_present',
-      search_mode: 'refuse_when_present',
-      return_images: 'refuse_when_present',
-      return_related_questions: 'refuse_when_present',
-      enable_search_classifier: 'refuse_when_present',
-      disable_search: 'neutral',
-      search_domain_filter: 'refuse_when_present',
-      search_language_filter: 'refuse_when_present',
-      search_recency_filter: 'refuse_when_present',
-      search_after_date_filter: 'refuse_when_present',
-      search_before_date_filter: 'refuse_when_present',
-      last_updated_before_filter: 'refuse_when_present',
-      last_updated_after_filter: 'refuse_when_present',
-      image_format_filter: 'refuse_when_present',
-      image_domain_filter: 'refuse_when_present',
-      stream_mode: NEUTRAL_SAMPLING.stream_mode,
-      reasoning_effort: NEUTRAL_SAMPLING.reasoning_effort,
-      language_preference: NEUTRAL_SAMPLING.language_preference,
-    },
-    requireExtraTrue: 'disable_search',
   },
   {
     className: 'TogetherConnector',

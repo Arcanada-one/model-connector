@@ -16,14 +16,20 @@ import type { ContentBlock } from '../connectors/interfaces/connector.interface'
 /** Ledger precision used by BillingService hold SQL (`toFixed(6)`). */
 export const PROTECTED_HOLD_DECIMALS = 6;
 
-/**
- * Chars/bytes charged for one image block when no provider counter exists.
- * ~1 000 tokens × worst-case multi-byte expansion headroom.
- */
-const IMAGE_BLOCK_BYTE_ALLOWANCE = 8_000;
-
 function utf8Bytes(text: string): number {
   return Buffer.byteLength(text, 'utf8');
+}
+
+/**
+ * True when a protected prepare prompt includes an `image_url` ContentBlock.
+ * The first protected Lab profile has no provider-grounded image upper bound
+ * (Agent-Brain comment 6728415319) — callers must refuse, not guess bytes.
+ */
+export function protectedPromptContainsImageUrl(
+  prompt: string | ContentBlock[] | undefined,
+): boolean {
+  if (!Array.isArray(prompt)) return false;
+  return prompt.some((block) => block?.type === 'image_url');
 }
 
 function promptUtf8Bytes(prompt: string | ContentBlock[] | undefined): number {
@@ -32,7 +38,7 @@ function promptUtf8Bytes(prompt: string | ContentBlock[] | undefined): number {
   if (!Array.isArray(prompt)) return 0;
   return prompt.reduce((total, block) => {
     if (block?.type === 'text') return total + utf8Bytes(block.text ?? '');
-    if (block?.type === 'image_url') return total + IMAGE_BLOCK_BYTE_ALLOWANCE;
+    // image_url is refused before this bound is used; never invent an allowance.
     return total;
   }, 0);
 }
@@ -87,8 +93,14 @@ export function protectedOutputTokenCap(params: {
 }
 
 /**
- * Round a non-negative USD amount UP to `decimals` places. Never rounds down
- * toward zero for a positive raw cost (unlike `Number#toFixed`).
+ * Round a non-negative USD amount UP to `decimals` places. Never returns a
+ * ledger amount strictly less than the raw value (unlike `Number#toFixed` and
+ * unlike ceil-after-epsilon-subtraction, which under-ceils values just above a
+ * six-decimal boundary — Agent-Brain comment 6728415319).
+ *
+ * Uses integer micro-units via `Math.ceil` on `amount * 10^decimals` with no
+ * epsilon subtraction. Over-rounding an exact boundary due to binary float
+ * noise is conservative for a hold; under-rounding is not.
  */
 export function ceilUsdToLedgerPrecision(
   amount: number,
@@ -99,10 +111,7 @@ export function ceilUsdToLedgerPrecision(
   }
   if (amount === 0) return (0).toFixed(decimals);
   const scale = 10 ** decimals;
-  // Subtract a tiny epsilon before ceil so exact N.xxxxxx000… stay put;
-  // for values that need rounding up, ceil still moves them up.
-  const scaled = amount * scale;
-  const ceiled = Math.ceil(scaled - Number.EPSILON * scale);
+  const ceiled = Math.ceil(amount * scale);
   return (ceiled / scale).toFixed(decimals);
 }
 

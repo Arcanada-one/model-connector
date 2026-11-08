@@ -282,6 +282,16 @@ describe('resolveProtectedPricePolicy', () => {
     }
   });
 
+  it('M-CEIL-STRICT: never returns less than the raw amount (no epsilon under-ceil)', () => {
+    // Agent-Brain comment 6728415319: epsilon-before-ceil under-rounds values
+    // just above a six-decimal boundary.
+    expect(ceilUsdToLedgerPrecision(0.0000010000000001)).toBe('0.000002');
+    expect(ceilUsdToLedgerPrecision(0.000001)).toBe('0.000001');
+    expect(ceilUsdToLedgerPrecision(0.1234561)).toBe('0.123457');
+    const raw = 0.0000010000000001;
+    expect(Number(ceilUsdToLedgerPrecision(raw))).toBeGreaterThanOrEqual(raw);
+  });
+
   it('M-ROUNDDOWN: a tiny positive cost rounds up and never to 0.000000', () => {
     // 1 input token @ 0.1 / MTok → 1e-7 USD; toFixed(6) would become 0.000000.
     const raw = estimateProtectedHoldUsd({

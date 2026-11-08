@@ -38,6 +38,7 @@ import { PerplexityConnector } from './perplexity/perplexity.connector';
 import { PineconeInferenceConnector } from './pinecone-inference/pinecone-inference.connector';
 import {
   PROTECTED_DISPATCH_FENCE_DECISIONS,
+  isProtectedDispatchFenceClassAdmitted,
   type FenceAdmissionRecord,
 } from './protected-dispatch-fence-admission';
 import { TogetherConnector } from './together/together.connector';
@@ -156,15 +157,26 @@ describe('PROTECTED_DISPATCH_FENCE_DECISIONS drift', () => {
     }
   });
 
-  it('refused classes that override execute are marked overridesExecute', () => {
+  it('refused classes: overridesExecute matches whether the prototype owns execute', () => {
+    // Policy refusals (e.g. Perplexity Stage A exclusion) may refuse a class that
+    // still inherits BaseApiConnector.execute; structural refusals mark overrides.
     const byName = new Map(PRODUCTION_BASE_API_CONNECTORS.map((c) => [c.name, c]));
     for (const record of PROTECTED_DISPATCH_FENCE_DECISIONS) {
       if (record.decision !== 'refused') continue;
       const ctor = byName.get(record.className);
       expect(ctor, `missing import for refused class ${record.className}`).toBeTruthy();
       if (!ctor) continue;
-      expect(Object.prototype.hasOwnProperty.call(ctor.prototype, 'execute')).toBe(true);
-      expect(record.overridesExecute).toBe(true);
+      const ownsExecute = Object.prototype.hasOwnProperty.call(ctor.prototype, 'execute');
+      expect(record.overridesExecute).toBe(ownsExecute);
     }
+  });
+
+  it('M-PPLX-EXCLUDE: PerplexityConnector is refused from the protected fence', () => {
+    const record = PROTECTED_DISPATCH_FENCE_DECISIONS.find(
+      (d) => d.className === 'PerplexityConnector',
+    );
+    expect(record?.decision).toBe('refused');
+    expect(record?.reason).toMatch(/6728472574/);
+    expect(isProtectedDispatchFenceClassAdmitted('PerplexityConnector')).toBe(false);
   });
 });

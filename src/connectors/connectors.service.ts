@@ -33,7 +33,10 @@ import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import { BillingService, RequestIntentHandle } from '../billing/billing.service';
 import { estimateCostUsd, promptCharLength } from '../billing/cost-estimate';
-import { protectedInputTokenUpperBound } from '../billing/protected-cost-estimate';
+import {
+  protectedInputTokenUpperBound,
+  protectedPromptContainsImageUrl,
+} from '../billing/protected-cost-estimate';
 import { assessProtectedForwardedExtras } from '../billing/protected-forwarded-extras';
 import {
   NATIVE_PRICING_UNAVAILABLE,
@@ -2478,6 +2481,17 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     }
     const routeKey = azureBinding.routeKey;
 
+    // M-IMAGE: no provider-grounded image upper bound on the first protected
+    // profile — refuse image_url blocks rather than inventing a byte allowance
+    // (Agent-Brain comment 6728415319).
+    if (protectedPromptContainsImageUrl(request.prompt)) {
+      return {
+        outcome: 'unavailable' as const,
+        code: NATIVE_PRICING_UNAVAILABLE,
+        message:
+          'Protected prepare refuses image_url ContentBlocks; no provider-grounded image upper bound is admitted.',
+      };
+    }
     const extras = assessProtectedForwardedExtras({
       connectorClassName,
       extra: request.extra as Record<string, unknown> | undefined,

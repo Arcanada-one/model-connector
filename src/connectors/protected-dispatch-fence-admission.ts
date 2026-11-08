@@ -217,9 +217,14 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
       'reasoning_effort',
       'language_preference',
     ],
-    decision: 'admitted',
+    // Agent-Brain Stage A exclusion (PR #255 comment 6728472574): Sonar
+    // per-request search / citation / reasoning fees sit outside the token
+    // catalogue; caller disable_search is not a proved hard bound. Refuse the
+    // whole class from the first protected Lab profile. Legacy unprotected
+    // Perplexity traffic is unchanged.
+    decision: 'refused',
     reason:
-      'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens via documented options. Protected prepare requires disable_search=true; search extras refused; response_format counted as UTF-8.',
+      'Excluded from the first protected Lab profile (PR #255 comment 6728472574): provider search/citation/reasoning fees are outside the token price table; disable_search alone is not a hard ceiling. Legacy unprotected path unchanged.',
   },
   {
     className: 'TogetherConnector',

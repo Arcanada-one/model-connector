@@ -76,42 +76,47 @@ describe('assessProtectedForwardedExtras', () => {
     ).toBe(true);
   });
 
-  it('M-PPLXSEARCH: refuses Perplexity without disable_search or with web_search_options', () => {
+  it('M-PPLX-EXCLUDE: Perplexity has no protected extras record after Stage A refusal', () => {
     expect(
-      assessProtectedForwardedExtras({
-        connectorClassName: 'PerplexityConnector',
-        extra: { max_tokens: 64 },
-      }).ok,
+      PROTECTED_FORWARDED_EXTRA_RECORDS.some((r) => r.className === 'PerplexityConnector'),
     ).toBe(false);
-    expect(
-      assessProtectedForwardedExtras({
-        connectorClassName: 'PerplexityConnector',
-        extra: {
-          max_tokens: 64,
-          disable_search: true,
-          web_search_options: { search_context_size: 'low' },
-        },
-      }).ok,
-    ).toBe(false);
+    // Fence refuses the class, so forwardsMaxTokens alone must not invent a
+    // disable_search path — assess is a no-op ok for non-admitted classes that
+    // are not admitted forwarders. Perplexity still declares forwardsMaxTokens
+    // factually; without an admission it must not be treated as a forwarder
+    // with a reviewed extras table.
+    expect(classForwardsProtectedMaxTokens('PerplexityConnector')).toBe(true);
+    const assessed = assessProtectedForwardedExtras({
+      connectorClassName: 'PerplexityConnector',
+      extra: { max_tokens: 64, disable_search: true },
+    });
+    // Admitted-forwarder-without-record refuse: Perplexity still forwards
+    // max_tokens in source, so missing extras record fails closed.
+    expect(assessed.ok).toBe(false);
+    if (!assessed.ok) {
+      expect(assessed.message).toMatch(/without a reviewed extras record/);
+    }
   });
 
-  it('M-PPLXRF: counts response_format schema UTF-8 into the input bound', () => {
-    const schema = {
-      type: 'json_schema',
-      json_schema: { name: 'x', schema: { type: 'object' }, description: 'Z'.repeat(500) },
-    };
-    const without = assessProtectedForwardedExtras({
-      connectorClassName: 'PerplexityConnector',
-      extra: { max_tokens: 1, disable_search: true },
-    });
-    const withSchema = assessProtectedForwardedExtras({
-      connectorClassName: 'PerplexityConnector',
-      extra: { max_tokens: 1, disable_search: true, response_format: schema },
-    });
-    expect(without.ok).toBe(true);
-    expect(withSchema.ok).toBe(true);
-    if (!without.ok || !withSchema.ok) return;
-    expect(withSchema.countedInputBytes).toBeGreaterThan(without.countedInputBytes);
+  it('M-SEAM-PROD: __testOnlyWithoutExtrasRecord throws when VITEST is unset', () => {
+    const saved = process.env.VITEST;
+    try {
+      delete process.env.VITEST;
+      expect(() =>
+        __testOnlyWithoutExtrasRecord('AzureOpenAiConnector', () =>
+          assessProtectedForwardedExtras({
+            connectorClassName: 'AzureOpenAiConnector',
+            extra: { max_tokens: 16 },
+          }),
+        ),
+      ).toThrow(/test-only \(VITEST!==true\)/);
+    } finally {
+      if (saved === undefined) {
+        delete process.env.VITEST;
+      } else {
+        process.env.VITEST = saved;
+      }
+    }
   });
 
   it('Azure tools extras are counted; sampling stays neutral', () => {
