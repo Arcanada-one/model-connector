@@ -1,0 +1,126 @@
+# Digest-promotion identity gate for model-connector (Muneral 440d2499 Step 2).
+#
+# Mirrors the Control/Support guard shape: workflow_dispatch binds an exact
+# main CI publication (release_sha + image_digest + ci_run_id) to
+# published-image.json, then re-pulls the registry artifact as a post-state
+# check. It does NOT cut over production.
+#
+# Production still deploys on push to main via ci.yml → arcanada-compose-broker
+# sync+run-deploy (build-on-host). Host broker REGISTRY_AUTH / digest cutover
+# for model-connector is not installed; wiring cutover here would invent a
+# production path the host cannot run. Keep this workflow additive.
+
+name: Digest promotion identity
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: Exact main HEAD published by green main CI
+        required: true
+        type: string
+      image_digest:
+        description: Exact sha256 digest published and verified by that main CI
+        required: true
+        type: string
+      ci_run_id:
+        description: Successful main CI run that published and verified the image
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  packages: read
+
+concurrency:
+  group: deploy-model-connector-digest-identity
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    runs-on: [self-hosted, linux, arcana-devs]
+    timeout-minutes: 30
+    steps:
+      - name: Require exact main workflow revision
+        timeout-minutes: 2
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "${RELEASE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "${CI_RUN_ID}" =~ ^[1-9][0-9]{0,19}$ ]]
+          test "${GITHUB_REF}" = refs/heads/main
+          test "${GITHUB_SHA}" = "${RELEASE_SHA}"
+          run_json="$(curl --fail --silent --show-error --noproxy '*' \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${CI_RUN_ID}")"
+          jq -e --arg release "${RELEASE_SHA}" \
+            '.head_sha == $release and .head_branch == "main" and
+             .event == "push" and .status == "completed" and
+             .conclusion == "success" and .path == ".github/workflows/ci.yml"' \
+            <<<"${run_json}" >/dev/null
+      - name: Download CI-bound publication identity
+        timeout-minutes: 2
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: model-connector-image-${{ inputs.release_sha }}
+          path: ci-publication
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.ci_run_id }}
+      - name: Match exact published digest
+        timeout-minutes: 2
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          IMAGE_DIGEST: ${{ inputs.image_digest }}
+        run: |
+          set -euo pipefail
+          test "$(find ci-publication -type f | wc -l)" -eq 1
+          jq -e --arg release "${RELEASE_SHA}" --arg digest "${IMAGE_DIGEST}" \
+            '.release_sha == $release and .image_digest == $digest' \
+            ci-publication/published-image.json >/dev/null
+
+  publication-post-state:
+    needs: [guard]
+    runs-on: [self-hosted, Linux, ci-general]
+    timeout-minutes: 30
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Re-pull published digest and assert release labels
+        timeout-minutes: 10
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          IMAGE_DIGEST: ${{ inputs.image_digest }}
+        run: |
+          set -euo pipefail
+          [[ "${IMAGE_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]
+          image="ghcr.io/arcanada-one/model-connector@${IMAGE_DIGEST}"
+          docker pull "${image}"
+          test "$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "${image}")" = "${RELEASE_SHA}"
+          test "$(docker image inspect --format '{{ index .Config.Labels "io.arcanada.release_sha" }}' "${image}")" = "${RELEASE_SHA}"
+          jq -n --arg release "${RELEASE_SHA}" --arg digest "${IMAGE_DIGEST}" \
+            '{schema_version: 1, release_sha: $release, image_digest: $digest, post_state: "publication_pull_ok"}' \
+            > digest-post-state.json
+          {
+            printf 'digest_identity_guard=PASS\n'
+            printf 'publication_post_state=PASS\n'
+            printf 'production_cutover=NOT_RUN (host broker digest path not installed)\n'
+            printf 'image=%s\n' "${image}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+      - name: Upload digest post-state receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: model-connector-digest-post-state-${{ inputs.release_sha }}
+          path: digest-post-state.json
+          if-no-files-found: error
+          retention-days: 7
