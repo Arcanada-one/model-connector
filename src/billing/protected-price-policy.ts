@@ -66,11 +66,13 @@ export function isPositivelyZeroPriced(row: ProtectedCatalogAuthorityRow): boole
 export function isTrustedPricedRow(row: ProtectedCatalogAuthorityRow): boolean {
   if (row.tier === 'unknown') return false;
   if (isPositivelyZeroPriced(row)) return true;
-  // Paid / known tariffs: at least one side must be a finite non-negative number.
-  const inputOk = row.inputPerMTok == null || Number.isFinite(row.inputPerMTok);
-  const outputOk = row.outputPerMTok == null || Number.isFinite(row.outputPerMTok);
-  if (!inputOk || !outputOk) return false;
-  if (row.inputPerMTok == null && row.outputPerMTok == null) return false;
+  // Paid / known tariffs: BOTH sides must be finite numbers. A partial-null row
+  // would be under-held (null side counted as 0 by estimateCostUsd) and is not
+  // a trusted hard bound. Both-null on a non-free tier is unknown, not free.
+  if (row.inputPerMTok == null || row.outputPerMTok == null) return false;
+  if (!Number.isFinite(row.inputPerMTok) || !Number.isFinite(row.outputPerMTok)) {
+    return false;
+  }
   return true;
 }
 
@@ -78,18 +80,23 @@ export function deriveProtectedPricePolicyRevision(
   row: ProtectedCatalogAuthorityRow,
   routeKey: string,
 ): string {
-  const fp =
+  // Every pin binds connector + model + route key. A contentFingerprint alone
+  // is not route-scoped — hash it together with the binding material.
+  const contentFp =
     typeof row.contentFingerprint === 'string' && /^[a-f0-9]{32,64}$/i.test(row.contentFingerprint)
       ? row.contentFingerprint.toLowerCase()
-      : pinFingerprint([
-          row.connector,
-          row.model,
-          routeKey,
-          row.tier,
-          row.snapshotId ?? '',
-          String(row.inputPerMTok),
-          String(row.outputPerMTok),
-        ]);
+      : null;
+  const fp = contentFp
+    ? pinFingerprint([row.connector, row.model, routeKey, contentFp])
+    : pinFingerprint([
+        row.connector,
+        row.model,
+        routeKey,
+        row.tier,
+        row.snapshotId ?? '',
+        String(row.inputPerMTok),
+        String(row.outputPerMTok),
+      ]);
   return isPositivelyZeroPriced(row) ? `zero:catalog:${fp}` : `catalog:${fp}`;
 }
 

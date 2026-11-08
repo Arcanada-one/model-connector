@@ -23,7 +23,10 @@ import type { RequestIntentHandle } from '../billing/billing.service';
 import { validateEnv } from '../config/env.schema';
 import { BadRequestException } from '@nestjs/common';
 import { BaseApiConnector, type ParsedApiOutput } from './base-api.connector';
-import { NATIVE_PRICING_UNAVAILABLE } from '../billing/protected-price-policy';
+import {
+  NATIVE_PRICING_UNAVAILABLE,
+  deriveProtectedPricePolicyRevision,
+} from '../billing/protected-price-policy';
 import { PROTECTED_DISPATCH_FENCE_DECISIONS } from './protected-dispatch-fence-admission';
 
 const BASE_ENV = {
@@ -601,7 +604,21 @@ describe('protected Lab profile execute guards', () => {
       holdUsd: string;
       pricePolicyRevision: string;
     };
-    expect(call.pricePolicyRevision).toBe(`catalog:${paidFp}`);
+    expect(call.pricePolicyRevision).toBe(
+      deriveProtectedPricePolicyRevision(
+        {
+          connector: 'mock',
+          model: 'paid-m',
+          tier: 'paid',
+          inputPerMTok: 10,
+          outputPerMTok: 30,
+          contentFingerprint: paidFp,
+          snapshotId: 'snap',
+        },
+        'connectors/mock/protected/execute',
+      ),
+    );
+    expect(call.pricePolicyRevision).not.toBe(`catalog:${paidFp}`);
     expect(Number(call.holdUsd)).toBeGreaterThan(0);
   });
 
@@ -650,8 +667,67 @@ describe('protected Lab profile execute guards', () => {
       holdUsd: string;
       pricePolicyRevision: string;
     };
-    expect(call.pricePolicyRevision).toBe(`zero:catalog:${freeFp}`);
+    expect(call.pricePolicyRevision).toBe(
+      deriveProtectedPricePolicyRevision(
+        {
+          connector: 'mock',
+          model: 'free-m',
+          tier: 'free',
+          free: true,
+          inputPerMTok: 0,
+          outputPerMTok: 0,
+          contentFingerprint: freeFp,
+          snapshotId: 'snap-free',
+        },
+        'connectors/mock/protected/execute',
+      ),
+    );
+    expect(call.pricePolicyRevision).not.toBe(`zero:catalog:${freeFp}`);
     expect(call.holdUsd).toBe('0.000000');
+  });
+
+  it('M-OWNPROP: inherited prototype supportsProtectedDispatchFence is refused', () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'proto-fence',
+    });
+    const fenceProto = { supportsProtectedDispatchFence: true as const };
+    const protoFenceConnector = Object.assign(Object.create(fenceProto), {
+      name: 'proto-fence',
+      type: 'api' as const,
+      execute: vi.fn(async () => {
+        throw new Error('prototype-fence provider must not be called');
+      }),
+      getCapabilities: () => ({
+        name: 'proto-fence',
+        type: 'api' as const,
+        models: ['m'],
+        supportsStreaming: false,
+        supportsJsonSchema: false,
+        supportsTools: false,
+        maxTimeout: 30_000,
+      }),
+      getStatus: async () => ({
+        name: 'proto-fence',
+        healthy: true,
+        activeJobs: 0,
+        queuedJobs: 0,
+        rateLimitStatus: 'ok' as const,
+      }),
+      resetCircuitBreaker: () => [],
+    }) as IConnector;
+
+    expect(
+      Object.prototype.hasOwnProperty.call(protoFenceConnector, 'supportsProtectedDispatchFence'),
+    ).toBe(false);
+    expect(protoFenceConnector.supportsProtectedDispatchFence).toBe(true);
+
+    const service = buildService({}, protoFenceConnector);
+    expect(service.connectorSupportsProtectedDispatchFence('proto-fence')).toBe(false);
+    expect(() => service.assertProtectedConnectorAdmitted('proto-fence')).toThrow(
+      BadRequestException,
+    );
   });
 
   it('prepare: unreadable catalogue refuses with NATIVE_PRICING_UNAVAILABLE', async () => {
