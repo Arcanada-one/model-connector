@@ -45,6 +45,12 @@ export function protectedInputTokenUpperBound(parts: {
   prompt?: string | ContentBlock[];
   systemPrompt?: string;
   tools?: string[];
+  /**
+   * Server-set `response_format: {type:'json_object'}` (Azure, Mistral,
+   * HuggingFace, Cloudflare). Counted into the input bound — small but not
+   * assumed negligible.
+   */
+  responseFormat?: { type: 'json_object' | 'text' };
 }): number {
   let bytes = promptUtf8Bytes(parts.prompt);
   if (typeof parts.systemPrompt === 'string' && parts.systemPrompt.length > 0) {
@@ -54,6 +60,9 @@ export function protectedInputTokenUpperBound(parts: {
     for (const tool of parts.tools) {
       if (typeof tool === 'string') bytes += utf8Bytes(tool);
     }
+  }
+  if (parts.responseFormat?.type === 'json_object') {
+    bytes += utf8Bytes(JSON.stringify({ type: 'json_object' }));
   }
   return Math.max(0, bytes);
 }

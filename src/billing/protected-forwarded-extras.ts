@@ -12,7 +12,15 @@
  * are not catalogue token rates, so the hold cannot cover them. Search is off
  * only when `disable_search: true` and no search-enabling extras are present.
  * `response_format` schemas are counted as UTF-8 JSON into the input bound.
+ *
+ * Round 7: fail closed when an admitted `forwardsMaxTokens: true` BaseApi class
+ * has no extras record. Disposition keys must equal `forwardedExtraKeys` for
+ * each record (single-source choice: keep two tables — fence admission keys and
+ * this disposition table — bound by consistency tests; do not merge them, to
+ * avoid a connectors↔billing import cycle).
  */
+
+import { classForwardsProtectedMaxTokens } from '../connectors/protected-dispatch-fence-admission';
 
 export type ProtectedExtraDisposition = 'neutral' | 'count_utf8' | 'refuse_when_present';
 
@@ -42,7 +50,8 @@ const NEUTRAL_SAMPLING = {
 
 /**
  * Exhaustive disposition table for admitted classes with `forwardsMaxTokens: true`.
- * Keep in sync with each connector's `buildRequestBody`.
+ * Keep in sync with each connector's `buildRequestBody` and with
+ * `PROTECTED_DISPATCH_FENCE_DECISIONS[].forwardedExtraKeys`.
  */
 export const PROTECTED_FORWARDED_EXTRA_RECORDS: readonly ProtectedForwardedExtraRecord[] = [
   {
@@ -168,14 +177,17 @@ export const PROTECTED_FORWARDED_EXTRA_RECORDS: readonly ProtectedForwardedExtra
     ],
     disposition: {
       max_tokens: 'neutral',
-      ...NEUTRAL_SAMPLING,
-      disable_search: 'neutral',
+      stream: NEUTRAL_SAMPLING.stream,
+      stop: NEUTRAL_SAMPLING.stop,
+      temperature: NEUTRAL_SAMPLING.temperature,
+      top_p: NEUTRAL_SAMPLING.top_p,
       response_format: 'count_utf8',
       web_search_options: 'refuse_when_present',
       search_mode: 'refuse_when_present',
       return_images: 'refuse_when_present',
       return_related_questions: 'refuse_when_present',
       enable_search_classifier: 'refuse_when_present',
+      disable_search: 'neutral',
       search_domain_filter: 'refuse_when_present',
       search_language_filter: 'refuse_when_present',
       search_recency_filter: 'refuse_when_present',
@@ -185,6 +197,9 @@ export const PROTECTED_FORWARDED_EXTRA_RECORDS: readonly ProtectedForwardedExtra
       last_updated_after_filter: 'refuse_when_present',
       image_format_filter: 'refuse_when_present',
       image_domain_filter: 'refuse_when_present',
+      stream_mode: NEUTRAL_SAMPLING.stream_mode,
+      reasoning_effort: NEUTRAL_SAMPLING.reasoning_effort,
+      language_preference: NEUTRAL_SAMPLING.language_preference,
     },
     requireExtraTrue: 'disable_search',
   },
@@ -214,20 +229,27 @@ function utf8JsonBytes(value: unknown): number {
 
 export type ProtectedForwardedExtrasResult =
   | { ok: true; countedInputBytes: number }
-  | { ok: false; message: string };
+  | { ok: false; message: string; countedInputBytes: 0 };
 
 /**
- * Assess forwarded extras for a protected prepare. Unknown class → no-op
- * (non-Base test doubles / classes without a forwardsMaxTokens body).
+ * Assess forwarded extras for a protected prepare.
+ *
+ * - Admitted BaseApi class with `forwardsMaxTokens: true` and no extras record → refuse.
+ * - Unknown / non-forwarding class (including non-Base doubles with null className) → no-op ok.
  */
 export function assessProtectedForwardedExtras(params: {
   connectorClassName: string | null | undefined;
   extra?: Record<string, unknown> | null;
 }): ProtectedForwardedExtrasResult {
-  const record = params.connectorClassName
-    ? BY_CLASS.get(params.connectorClassName)
-    : undefined;
+  const record = params.connectorClassName ? BY_CLASS.get(params.connectorClassName) : undefined;
   if (!record) {
+    if (params.connectorClassName && classForwardsProtectedMaxTokens(params.connectorClassName)) {
+      return {
+        ok: false,
+        countedInputBytes: 0,
+        message: `Protected prepare refuses admitted forwarder ${params.connectorClassName} without a reviewed extras record.`,
+      };
+    }
     return { ok: true, countedInputBytes: 0 };
   }
 
@@ -238,6 +260,7 @@ export function assessProtectedForwardedExtras(params: {
     if (flag !== true) {
       return {
         ok: false,
+        countedInputBytes: 0,
         message: `Protected prepare for ${record.className} requires ${record.requireExtraTrue}=true so unpriced non-token fees cannot apply.`,
       };
     }
@@ -252,12 +275,14 @@ export function assessProtectedForwardedExtras(params: {
     if (disposition == null) {
       return {
         ok: false,
+        countedInputBytes: 0,
         message: `Protected prepare refuses unreviewed forwarded extra '${key}' for ${record.className}.`,
       };
     }
     if (disposition === 'refuse_when_present') {
       return {
         ok: false,
+        countedInputBytes: 0,
         message: `Protected prepare refuses forwarded extra '${key}' for ${record.className} (unpriced input or non-token fee).`,
       };
     }
@@ -266,6 +291,7 @@ export function assessProtectedForwardedExtras(params: {
       if (bytes < 0) {
         return {
           ok: false,
+          countedInputBytes: 0,
           message: `Protected prepare cannot UTF-8-bound forwarded extra '${key}' for ${record.className}.`,
         };
       }

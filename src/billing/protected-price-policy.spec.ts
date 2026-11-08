@@ -452,6 +452,19 @@ describe('resolveProtectedPricePolicy', () => {
     expect(withLarge).toBeGreaterThan(estimateCostUsd(100, pricing));
   });
 
+  it('M-JSONOBJ-RF: server-set response_format json_object increases the input bound', () => {
+    const prompt = 'hello';
+    const without = protectedInputTokenUpperBound({ prompt });
+    const withRf = protectedInputTokenUpperBound({
+      prompt,
+      responseFormat: { type: 'json_object' },
+    });
+    expect(withRf).toBeGreaterThan(without);
+    expect(withRf - without).toBe(
+      Buffer.byteLength(JSON.stringify({ type: 'json_object' }), 'utf8'),
+    );
+  });
+
   it('M-SYSPROMPT: large system prompt strictly increases the hold', () => {
     const prompt = 'hello';
     const systemPrompt = 'S'.repeat(2_000);

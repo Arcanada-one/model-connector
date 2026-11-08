@@ -136,7 +136,7 @@ export class AzureOpenAiConnector extends BaseApiConnector {
   }
 
   getCapabilities(): ConnectorCapabilities {
-    const deployment = this.options.deployment || process.env.AZURE_OPENAI_DEPLOYMENT;
+    const deployment = this.getConfiguredDeployment();
     return {
       name: this.name,
       type: 'api',
@@ -147,5 +147,15 @@ export class AzureOpenAiConnector extends BaseApiConnector {
       maxTimeout: 300_000,
       modality: 'chat',
     };
+  }
+
+  /**
+   * Server-configured deployment only (options / env). Never reads
+   * `request.extra.deployment` — that caller override is refused on the
+   * protected profile so the priced catalogue model cannot diverge from the
+   * URL path.
+   */
+  getConfiguredDeployment(): string {
+    return String(this.options.deployment || process.env.AZURE_OPENAI_DEPLOYMENT || '');
   }
 }

@@ -46,6 +46,7 @@ import {
   isProtectedDispatchFenceClassAdmitted,
   nonBaseForwardsProtectedMaxTokens,
 } from './protected-dispatch-fence-admission';
+import { AzureOpenAiConnector } from './azure-openai/azure-openai.connector';
 import { mintServerIntentKey, intentPayloadFingerprint } from '../billing/intent';
 import {
   measureCostUsd,
@@ -2424,11 +2425,9 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       });
     }
     const modelName = request.model || 'unknown';
-    const routeKey = `connectors/${connectorName}/protected/execute`;
     const authority = await this.resolveProtectedPriceAuthority(
       connectorName,
       modelName,
-      routeKey,
       request,
       clientPricePolicyRevision,
     );
@@ -2445,7 +2444,7 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       payloadFingerprint: ConnectorsService.requestFingerprint(connectorName, request),
       providerName: connectorName,
       modelName,
-      routeKey,
+      routeKey: authority.routeKey,
       pricePolicyRevision: authority.pricePolicyRevision,
       holdUsd: authority.holdUsd,
       ttlMs: this.holdTtlMs(),
@@ -2455,15 +2454,30 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
   /**
    * Trusted catalogue pin for protected prepare. Never falls back to the
    * unknown-model estimate floor — that would admit an unpriced call.
+   *
+   * Azure OpenAI (protected only): refuse caller `extra.deployment` so the
+   * catalogue-priced `request.model` cannot diverge from the URL deployment.
+   * The effective server-configured deployment must equal the priced model and
+   * is bound into the route key (hence the price-policy revision).
    */
   private async resolveProtectedPriceAuthority(
     connectorName: string,
     modelName: string,
-    routeKey: string,
     request: ServiceExecuteRequest,
     clientPricePolicyRevision?: string,
   ) {
     const connectorClassName = this.protectedConnectorClassName(connectorName);
+    const azureBinding = this.resolveProtectedAzureDeploymentBinding(
+      connectorName,
+      connectorClassName,
+      modelName,
+      request,
+    );
+    if (azureBinding.outcome === 'unavailable') {
+      return azureBinding;
+    }
+    const routeKey = azureBinding.routeKey;
+
     const extras = assessProtectedForwardedExtras({
       connectorClassName,
       extra: request.extra as Record<string, unknown> | undefined,
@@ -2480,6 +2494,7 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
         prompt: request.prompt,
         systemPrompt: request.systemPrompt,
         tools: request.tools,
+        responseFormat: request.responseFormat,
       }) + extras.countedInputBytes;
     const maxTokens = request.extra?.max_tokens;
     const connectorForwardsMaxTokens = this.connectorForwardsProtectedMaxTokens(connectorName);
@@ -2495,7 +2510,7 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
         }`,
       );
     }
-    return resolveProtectedPricePolicy({
+    const priced = resolveProtectedPricePolicy({
       catalogReadable,
       row,
       routeKey,
@@ -2504,6 +2519,61 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       connectorForwardsMaxTokens,
       clientRevision: clientPricePolicyRevision,
     });
+    if (priced.outcome !== 'resolved') {
+      return priced;
+    }
+    return { ...priced, routeKey };
+  }
+
+  /**
+   * Protected Azure deployment ↔ priced-model binding.
+   * Non-protected traffic and non-Azure connectors are unchanged.
+   */
+  private resolveProtectedAzureDeploymentBinding(
+    connectorName: string,
+    connectorClassName: string | null,
+    modelName: string,
+    request: ServiceExecuteRequest,
+  ):
+    | { outcome: 'bound'; routeKey: string }
+    | {
+        outcome: 'unavailable';
+        code: typeof NATIVE_PRICING_UNAVAILABLE;
+        message: string;
+      } {
+    const baseRouteKey = `connectors/${connectorName}/protected/execute`;
+    if (connectorClassName !== 'AzureOpenAiConnector') {
+      return { outcome: 'bound', routeKey: baseRouteKey };
+    }
+    // M-AZURE-DEPLOY-CALLER: refuse caller override of the URL deployment.
+    if (
+      request.extra != null &&
+      Object.prototype.hasOwnProperty.call(request.extra, 'deployment') &&
+      request.extra.deployment != null
+    ) {
+      return {
+        outcome: 'unavailable',
+        code: NATIVE_PRICING_UNAVAILABLE,
+        message:
+          'Protected prepare refuses Azure extra.deployment so the priced model cannot diverge from the URL deployment.',
+      };
+    }
+    const connector = this.connectors.get(connectorName);
+    const configured =
+      connector instanceof AzureOpenAiConnector ? connector.getConfiguredDeployment() : '';
+    // M-AZURE-DEPLOY-BIND: effective server deployment must equal priced model.
+    if (!configured || configured !== modelName) {
+      return {
+        outcome: 'unavailable',
+        code: NATIVE_PRICING_UNAVAILABLE,
+        message:
+          'Protected prepare requires the Azure server deployment to equal the catalogue-priced model.',
+      };
+    }
+    return {
+      outcome: 'bound',
+      routeKey: `${baseRouteKey}#azure-deployment=${encodeURIComponent(configured)}`,
+    };
   }
 
   /** Constructor name for BaseApi connectors; null for non-Base doubles. */

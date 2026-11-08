@@ -34,6 +34,7 @@ import {
 } from './protected-dispatch-fence-admission';
 import { CerebrasConnector } from './cerebras/cerebras.connector';
 import { PerplexityConnector } from './perplexity/perplexity.connector';
+import { AzureOpenAiConnector } from './azure-openai/azure-openai.connector';
 
 function freshPricing(row: Record<string, unknown>) {
   return {
@@ -915,23 +916,19 @@ describe('protected Lab profile execute guards', () => {
       PROVIDER_ACCESS: 'cerebras',
     });
     const prepareProtectedReservation = vi.fn();
-    const service = buildService(
-      { prepareProtectedReservation },
-      new CerebrasConnector(),
-      {
-        findAll: async () => [],
-        findPricing: async () =>
-          freshPricing({
-            connector: 'cerebras',
-            model: 'paid-m',
-            tier: 'paid',
-            inputPerMTok: 10,
-            outputPerMTok: 30,
-            contentFingerprint: 'c'.repeat(64),
-            snapshotId: 'snap-cerebras',
-          }),
-      },
-    );
+    const service = buildService({ prepareProtectedReservation }, new CerebrasConnector(), {
+      findAll: async () => [],
+      findPricing: async () =>
+        freshPricing({
+          connector: 'cerebras',
+          model: 'paid-m',
+          tier: 'paid',
+          inputPerMTok: 10,
+          outputPerMTok: 30,
+          contentFingerprint: 'c'.repeat(64),
+          snapshotId: 'snap-cerebras',
+        }),
+    });
 
     const result = await service.prepareProtectedReservation(
       'cerebras',
@@ -951,16 +948,24 @@ describe('protected Lab profile execute guards', () => {
     expect(prepareProtectedReservation).not.toHaveBeenCalled();
   });
 
-  it('M-PPLXSEARCH: protected Perplexity without disable_search is refused', async () => {
+  it('M-EXTRAS-SVC / M-PPLXSEARCH: protected Perplexity extras refuse on the service path', async () => {
     validateEnv({
       ...BASE_ENV,
       PROTECTED_LAB_PROFILE: 'true',
       PROTECTED_LAB_CONNECTORS: 'perplexity',
       PROVIDER_ACCESS: 'perplexity',
     });
-    const prepareProtectedReservation = vi.fn();
+    const prepareProtectedReservation = vi.fn(async (params: Record<string, unknown>) => ({
+      outcome: 'opened' as const,
+      reservation: {
+        reservationRef: '11111111-1111-4111-8111-111111111199',
+        holdUsd: String(params.holdUsd),
+        pricePolicyRevision: String(params.pricePolicyRevision),
+      },
+      intent: {},
+    }));
     const service = buildService(
-      { prepareProtectedReservation },
+      { prepareProtectedReservation: prepareProtectedReservation as never },
       new PerplexityConnector(),
       {
         findAll: async () => [],
@@ -969,8 +974,8 @@ describe('protected Lab profile execute guards', () => {
             connector: 'perplexity',
             model: 'sonar',
             tier: 'paid',
-            inputPerMTok: 1,
-            outputPerMTok: 1,
+            inputPerMTok: 10,
+            outputPerMTok: 30,
             contentFingerprint: 'p'.repeat(64),
             snapshotId: 'snap-pplx',
           }),
@@ -990,6 +995,7 @@ describe('protected Lab profile execute guards', () => {
     expect(missingKillSwitch.outcome).toBe('refused');
     if (missingKillSwitch.outcome === 'refused') {
       expect(missingKillSwitch.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+      expect(missingKillSwitch.message).toMatch(/disable_search=true/);
     }
 
     const withSearchOptions = await service.prepareProtectedReservation(
@@ -1009,7 +1015,9 @@ describe('protected Lab profile execute guards', () => {
     expect(withSearchOptions.outcome).toBe('refused');
     if (withSearchOptions.outcome === 'refused') {
       expect(withSearchOptions.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+      expect(withSearchOptions.message).toMatch(/web_search_options/);
     }
+    // With countedInputBytes:0 on refuse, bypassing `if (!extras.ok)` would open a hold.
     expect(prepareProtectedReservation).not.toHaveBeenCalled();
   });
 
@@ -1088,5 +1096,217 @@ describe('protected Lab profile execute guards', () => {
       (prepareProtectedReservation.mock.calls[1][0] as { holdUsd: string }).holdUsd,
     );
     expect(schemaHold).toBeGreaterThan(baseHold);
+  });
+
+  it('M-AZURE-DEPLOY-CALLER: protected Azure refuses caller extra.deployment', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+      PROVIDER_ACCESS: 'azure-openai',
+    });
+    const prepareProtectedReservation = vi.fn();
+    const service = buildService(
+      { prepareProtectedReservation },
+      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'azure-openai',
+            model: 'gpt-paid',
+            tier: 'paid',
+            inputPerMTok: 10,
+            outputPerMTok: 30,
+            contentFingerprint: 'a'.repeat(64),
+            snapshotId: 'snap-azure',
+          }),
+      },
+    );
+
+    const result = await service.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: 'hello',
+        model: 'gpt-paid',
+        idempotencyKey: 'op-azure-deploy-caller',
+        extra: { max_tokens: 64, deployment: 'cheap-other' },
+      },
+      'key-1',
+    );
+
+    expect(result.outcome).toBe('refused');
+    if (result.outcome === 'refused') {
+      expect(result.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+      expect(result.message).toMatch(/extra\.deployment/);
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('M-AZURE-DEPLOY-BIND: protected Azure requires configured deployment == priced model; route binds it', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+      PROVIDER_ACCESS: 'azure-openai',
+    });
+    const prepareProtectedReservation = vi.fn(async (params: Record<string, unknown>) => ({
+      outcome: 'opened' as const,
+      reservation: {
+        reservationRef: '11111111-1111-4111-8111-111111111198',
+        holdUsd: String(params.holdUsd),
+        pricePolicyRevision: String(params.pricePolicyRevision),
+      },
+      intent: {},
+    }));
+
+    const mismatched = buildService(
+      { prepareProtectedReservation: prepareProtectedReservation as never },
+      new AzureOpenAiConnector({ deployment: 'other-deployment' }),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'azure-openai',
+            model: 'gpt-paid',
+            tier: 'paid',
+            inputPerMTok: 10,
+            outputPerMTok: 30,
+            contentFingerprint: 'b'.repeat(64),
+            snapshotId: 'snap-azure-mis',
+          }),
+      },
+    );
+    const refused = await mismatched.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: 'hello',
+        model: 'gpt-paid',
+        idempotencyKey: 'op-azure-deploy-mis',
+        extra: { max_tokens: 64 },
+      },
+      'key-1',
+    );
+    expect(refused.outcome).toBe('refused');
+    if (refused.outcome === 'refused') {
+      expect(refused.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+      expect(refused.message).toMatch(/deployment to equal the catalogue-priced model/);
+    }
+
+    const bound = buildService(
+      { prepareProtectedReservation: prepareProtectedReservation as never },
+      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'azure-openai',
+            model: 'gpt-paid',
+            tier: 'paid',
+            inputPerMTok: 10,
+            outputPerMTok: 30,
+            contentFingerprint: 'c'.repeat(64),
+            snapshotId: 'snap-azure-ok',
+          }),
+      },
+    );
+    const opened = await bound.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: 'hello',
+        model: 'gpt-paid',
+        idempotencyKey: 'op-azure-deploy-ok',
+        extra: { max_tokens: 64 },
+      },
+      'key-1',
+    );
+    expect(opened.outcome).toBe('opened');
+    expect(prepareProtectedReservation).toHaveBeenCalledTimes(1);
+    const call = prepareProtectedReservation.mock.calls[0][0] as {
+      routeKey: string;
+      pricePolicyRevision: string;
+    };
+    expect(call.routeKey).toContain('azure-deployment=gpt-paid');
+    const expectedRevision = deriveProtectedPricePolicyRevision(
+      {
+        connector: 'azure-openai',
+        model: 'gpt-paid',
+        tier: 'paid',
+        inputPerMTok: 10,
+        outputPerMTok: 30,
+        contentFingerprint: 'c'.repeat(64),
+        snapshotId: 'snap-azure-ok',
+        authoritative: true,
+        freshness: 'fresh',
+      },
+      call.routeKey,
+    );
+    expect(call.pricePolicyRevision).toBe(expectedRevision);
+  });
+
+  it('M-JSONOBJ-RF: server-set response_format json_object increases the protected input bound', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+      PROVIDER_ACCESS: 'azure-openai',
+    });
+    const prepareProtectedReservation = vi.fn(async (params: Record<string, unknown>) => ({
+      outcome: 'opened' as const,
+      reservation: {
+        reservationRef: '11111111-1111-4111-8111-111111111197',
+        holdUsd: String(params.holdUsd),
+        pricePolicyRevision: String(params.pricePolicyRevision),
+      },
+      intent: {},
+    }));
+    const service = buildService(
+      { prepareProtectedReservation: prepareProtectedReservation as never },
+      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'azure-openai',
+            model: 'gpt-paid',
+            tier: 'paid',
+            inputPerMTok: 1_000_000,
+            outputPerMTok: 0,
+            contentFingerprint: 'd'.repeat(64),
+            snapshotId: 'snap-azure-rf',
+          }),
+      },
+    );
+
+    const base = await service.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: 'hi',
+        model: 'gpt-paid',
+        idempotencyKey: 'op-azure-rf-base',
+        extra: { max_tokens: 1 },
+      },
+      'key-1',
+    );
+    const withRf = await service.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: 'hi',
+        model: 'gpt-paid',
+        idempotencyKey: 'op-azure-rf-json',
+        responseFormat: { type: 'json_object' },
+        extra: { max_tokens: 1 },
+      },
+      'key-1',
+    );
+    expect(base.outcome).toBe('opened');
+    expect(withRf.outcome).toBe('opened');
+    const baseHold = Number(
+      (prepareProtectedReservation.mock.calls[0][0] as { holdUsd: string }).holdUsd,
+    );
+    const rfHold = Number(
+      (prepareProtectedReservation.mock.calls[1][0] as { holdUsd: string }).holdUsd,
+    );
+    expect(rfHold).toBeGreaterThan(baseHold);
   });
 });
