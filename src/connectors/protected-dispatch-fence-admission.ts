@@ -48,7 +48,11 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p', 'tools', 'tool_choice'],
     decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
+    reason:
+      'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens. ' +
+      'LIMITATION: protected deployment binding is by server-configured deployment name ' +
+      '(options/env equalling the catalogue-priced model), not by provider-verified ' +
+      'deployment metadata — Azure deployment names are operator-chosen.',
   },
   {
     className: 'CerebrasConnector',

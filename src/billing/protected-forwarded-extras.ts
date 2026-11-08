@@ -214,9 +214,30 @@ export const PROTECTED_FORWARDED_EXTRA_RECORDS: readonly ProtectedForwardedExtra
   },
 ] as const;
 
-const BY_CLASS: ReadonlyMap<string, ProtectedForwardedExtraRecord> = new Map(
+const BY_CLASS: Map<string, ProtectedForwardedExtraRecord> = new Map(
   PROTECTED_FORWARDED_EXTRA_RECORDS.map((r) => [r.className, r]),
 );
+
+/**
+ * Vitest-only: run `fn` while `className` has no extras record so the
+ * admitted-forwarder-without-record refuse path can be exercised directly
+ * (M-UNKNOWN-FWD). Restores the record afterward.
+ */
+export function __testOnlyWithoutExtrasRecord<T>(className: string, fn: () => T): T {
+  if (process.env.VITEST !== 'true') {
+    throw new Error('__testOnlyWithoutExtrasRecord is test-only (VITEST!==true).');
+  }
+  const saved = BY_CLASS.get(className);
+  if (!saved) {
+    throw new Error(`__testOnlyWithoutExtrasRecord: no record for ${className}`);
+  }
+  BY_CLASS.delete(className);
+  try {
+    return fn();
+  } finally {
+    BY_CLASS.set(className, saved);
+  }
+}
 
 function utf8JsonBytes(value: unknown): number {
   try {

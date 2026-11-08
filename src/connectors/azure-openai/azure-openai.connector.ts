@@ -154,6 +154,10 @@ export class AzureOpenAiConnector extends BaseApiConnector {
    * `request.extra.deployment` — that caller override is refused on the
    * protected profile so the priced catalogue model cannot diverge from the
    * URL path.
+   *
+   * LIMITATION: this returns the configured deployment *name*, not
+   * provider-verified deployment metadata. Protected binding therefore trusts
+   * operator configuration rather than an Azure-side model identity check.
    */
   getConfiguredDeployment(): string {
     return String(this.options.deployment || process.env.AZURE_OPENAI_DEPLOYMENT || '');

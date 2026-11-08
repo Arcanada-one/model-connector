@@ -2528,6 +2528,12 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
   /**
    * Protected Azure deployment ↔ priced-model binding.
    * Non-protected traffic and non-Azure connectors are unchanged.
+   *
+   * LIMITATION (stated decision): binding is by the server-configured deployment
+   * *name* (connector options / `AZURE_OPENAI_DEPLOYMENT`) equalling the
+   * catalogue-priced `request.model`. It is not verified against provider
+   * deployment metadata — Azure deployment names are operator-chosen, and no
+   * authoritative server-side deployment→model map exists today.
    */
   private resolveProtectedAzureDeploymentBinding(
     connectorName: string,

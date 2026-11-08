@@ -1310,3 +1310,313 @@ describe('protected Lab profile execute guards', () => {
     expect(rfHold).toBeGreaterThan(baseHold);
   });
 });
+
+describe('M-EXEC: protected execute reservation mismatch', () => {
+  const REF = '11111111-1111-4111-8111-111111111155';
+
+  beforeEach(() => {
+    process.env.PROVIDER_ACCESS = 'mock,azure-openai,perplexity';
+    vi.clearAllMocks();
+    __testOnlyClearNonBaseProtectedFence();
+    __testOnlyAdmitNonBaseProtectedFence('mock', { forwardsMaxTokens: true });
+  });
+
+  type CountingConnector = IConnector & { sendCount: () => number };
+
+  function countingMock(name = 'mock'): CountingConnector {
+    let sends = 0;
+    return {
+      name,
+      supportsProtectedDispatchFence: true,
+      type: 'api',
+      execute: vi.fn(async (request: ConnectorRequest) => {
+        const before = (
+          request as ConnectorRequest & { __beforeProviderFetch?: () => Promise<void> }
+        ).__beforeProviderFetch;
+        if (typeof before === 'function') {
+          await before();
+        }
+        sends += 1;
+        return {
+          id: `${name}-1`,
+          connector: name,
+          model: 'm',
+          result: 'ok',
+          usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, costUsd: 0 },
+          latencyMs: 1,
+          status: 'success' as const,
+        };
+      }),
+      getCapabilities: () => ({
+        name,
+        type: 'api' as const,
+        models: ['m', 'm-other'],
+        supportsStreaming: false,
+        supportsJsonSchema: false,
+        supportsTools: false,
+        maxTimeout: 30_000,
+      }),
+      getStatus: async () => ({
+        name,
+        healthy: true,
+        activeJobs: 0,
+        queuedJobs: 0,
+        rateLimitStatus: 'ok' as const,
+      }),
+      resetCircuitBreaker: () => [],
+      sendCount: () => sends,
+    };
+  }
+
+  function baseRequest(overrides: Record<string, unknown> = {}) {
+    return {
+      prompt: 'hello',
+      model: 'm',
+      protectedProfile: true as const,
+      reservationRef: REF,
+      idempotencyKey: 'op-exec-match',
+      extra: { max_tokens: 64 } as Record<string, unknown>,
+      ...overrides,
+    };
+  }
+
+  function openHold(connectorName: string, prepared: ReturnType<typeof baseRequest>) {
+    const intent = {
+      id: 'intent-exec',
+      apiKeyId: 'key-1',
+      intentKey: prepared.idempotencyKey,
+      holdUsd: { toString: () => '1.25' },
+      lifecycleVersion: 1,
+      protectedPhase: 'reserved' as string,
+      generation: 1,
+    } as unknown as RequestIntentHandle;
+
+    const reservation = {
+      reservationRef: REF,
+      intentId: intent.id,
+      intentKey: String(prepared.idempotencyKey),
+      apiKeyId: 'key-1',
+      operationKey: String(prepared.idempotencyKey),
+      payloadFingerprint: ConnectorsService['requestFingerprint'](connectorName, prepared as never),
+      providerName: connectorName,
+      modelName: String(prepared.model),
+      routeKey: `connectors/${connectorName}/protected/execute`,
+      pricePolicyRevision: 'catalog:x',
+      holdUsd: '1.25',
+      amountUnit: 'USD',
+      amountPrecision: 6,
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      generation: 1,
+      protectedPhase: 'reserved' as const,
+      lifecycleVersion: 1 as const,
+    };
+
+    const settleIntentInTx = vi.fn(async () => true);
+    const releaseIntent = vi.fn(async () => false);
+    const commitProtectedDispatch = vi.fn(async (handle: RequestIntentHandle) => {
+      handle.protectedPhase = 'dispatch_committed';
+      return true;
+    });
+    const markProtectedUnknown = vi.fn(async () => true);
+    const billing = {
+      lookupProtectedReservation: vi.fn(async () => ({
+        outcome: 'found' as const,
+        reservation,
+        intent,
+      })),
+      commitProtectedDispatch,
+      markProtectedUnknown,
+      releaseIntent,
+      settleIntentInTx,
+      settleInTx: vi.fn(),
+      releaseIntentInTx: vi.fn(),
+    };
+    return {
+      intent,
+      reservation,
+      billing,
+      settleIntentInTx,
+      releaseIntent,
+      commitProtectedDispatch,
+      markProtectedUnknown,
+    };
+  }
+
+  async function expectMismatch(params: {
+    connector: IConnector;
+    connectorName: string;
+    prepared: ReturnType<typeof baseRequest>;
+    executeRequest: ReturnType<typeof baseRequest>;
+    sendCount?: () => number;
+  }) {
+    validateEnv({
+      ...BASE_ENV,
+      PROVIDER_ACCESS: 'mock,azure-openai,perplexity',
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: params.connectorName,
+    });
+    const {
+      intent,
+      billing,
+      settleIntentInTx,
+      releaseIntent,
+      commitProtectedDispatch,
+      markProtectedUnknown,
+    } = openHold(params.connectorName, params.prepared);
+    const service = buildService(billing, params.connector);
+    const response = await service.execute(
+      params.connectorName,
+      params.executeRequest as never,
+      'key-1',
+    );
+    expect(response.status).toBe('error');
+    expect(response.error?.type).toBe('protected_reservation_mismatch');
+    if (params.sendCount) {
+      expect(params.sendCount()).toBe(0);
+    } else if ('execute' in params.connector && typeof params.connector.execute === 'function') {
+      expect(params.connector.execute).not.toHaveBeenCalled();
+    }
+    expect(intent.protectedPhase).toBe('reserved');
+    expect(settleIntentInTx).not.toHaveBeenCalled();
+    expect(releaseIntent).not.toHaveBeenCalled();
+    expect(commitProtectedDispatch).not.toHaveBeenCalled();
+    expect(markProtectedUnknown).not.toHaveBeenCalled();
+  }
+
+  it('M-EXEC-FP (a): Azure extra.deployment added only at execute → mismatch, zero sends', async () => {
+    const prepared = baseRequest({
+      model: 'gpt-paid',
+      idempotencyKey: 'op-azure-exec',
+      extra: { max_tokens: 64 },
+    });
+    const azure = new AzureOpenAiConnector({ deployment: 'gpt-paid' });
+    const executeSpy = vi.spyOn(azure, 'execute');
+    await expectMismatch({
+      connector: azure,
+      connectorName: 'azure-openai',
+      prepared,
+      executeRequest: {
+        ...prepared,
+        extra: { max_tokens: 64, deployment: 'other-deploy' },
+      },
+      sendCount: () => executeSpy.mock.calls.length,
+    });
+  });
+
+  it('M-EXEC-FP (b): Perplexity search option added only at execute → mismatch, zero sends', async () => {
+    const prepared = baseRequest({
+      model: 'sonar',
+      idempotencyKey: 'op-pplx-exec',
+      extra: { max_tokens: 64, disable_search: true },
+    });
+    const pplx = new PerplexityConnector();
+    const executeSpy = vi.spyOn(pplx, 'execute');
+    await expectMismatch({
+      connector: pplx,
+      connectorName: 'perplexity',
+      prepared,
+      executeRequest: {
+        ...prepared,
+        extra: {
+          max_tokens: 64,
+          disable_search: true,
+          web_search_options: { search_context_size: 'high' },
+        },
+      },
+      sendCount: () => executeSpy.mock.calls.length,
+    });
+  });
+
+  it('M-EXEC-FP (c): larger prompt at execute → mismatch, zero sends', async () => {
+    const connector = countingMock();
+    const prepared = baseRequest({ prompt: 'short' });
+    await expectMismatch({
+      connector,
+      connectorName: 'mock',
+      prepared,
+      executeRequest: { ...prepared, prompt: 'short'.padEnd(400, 'X') },
+      sendCount: () => connector.sendCount(),
+    });
+  });
+
+  it('M-EXEC-FP (d): larger max_tokens at execute → mismatch, zero sends', async () => {
+    const connector = countingMock();
+    const prepared = baseRequest({ extra: { max_tokens: 64 } });
+    await expectMismatch({
+      connector,
+      connectorName: 'mock',
+      prepared,
+      executeRequest: { ...prepared, extra: { max_tokens: 4096 } },
+      sendCount: () => connector.sendCount(),
+    });
+  });
+
+  it('M-EXEC-MODEL (e): different model at execute → mismatch, zero sends', async () => {
+    // Isolate the modelName comparison from the fingerprint check: fingerprint
+    // matches the execute payload, but reservation.modelName stays on the
+    // prepared model (defense-in-depth field on the reservation row).
+    validateEnv({
+      ...BASE_ENV,
+      PROVIDER_ACCESS: 'mock',
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'mock',
+    });
+    const connector = countingMock();
+    const prepared = baseRequest({ model: 'm' });
+    const executeRequest = { ...prepared, model: 'm-other' };
+    const {
+      intent,
+      reservation,
+      billing,
+      settleIntentInTx,
+      releaseIntent,
+      commitProtectedDispatch,
+      markProtectedUnknown,
+    } = openHold('mock', executeRequest);
+    reservation.modelName = String(prepared.model);
+    const service = buildService(billing, connector);
+    const response = await service.execute('mock', executeRequest as never, 'key-1');
+    expect(response.status).toBe('error');
+    expect(response.error?.type).toBe('protected_reservation_mismatch');
+    expect(connector.sendCount()).toBe(0);
+    expect(intent.protectedPhase).toBe('reserved');
+    expect(settleIntentInTx).not.toHaveBeenCalled();
+    expect(releaseIntent).not.toHaveBeenCalled();
+    expect(commitProtectedDispatch).not.toHaveBeenCalled();
+    expect(markProtectedUnknown).not.toHaveBeenCalled();
+  });
+
+  it('M-EXEC-KEY (f): different idempotencyKey at execute → mismatch, zero sends', async () => {
+    const connector = countingMock();
+    const prepared = baseRequest({ idempotencyKey: 'op-exec-match' });
+    await expectMismatch({
+      connector,
+      connectorName: 'mock',
+      prepared,
+      executeRequest: { ...prepared, idempotencyKey: 'op-exec-other' },
+      sendCount: () => connector.sendCount(),
+    });
+  });
+
+  it('positive control: identical request executes (one physical send)', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROVIDER_ACCESS: 'mock',
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'mock',
+    });
+    const connector = countingMock();
+    const prepared = baseRequest();
+    const { intent, billing, commitProtectedDispatch, settleIntentInTx } = openHold(
+      'mock',
+      prepared,
+    );
+    const service = buildService(billing, connector);
+    const response = await service.execute('mock', prepared as never, 'key-1');
+    expect(response.status).toBe('success');
+    expect(connector.sendCount()).toBe(1);
+    expect(commitProtectedDispatch).toHaveBeenCalled();
+    expect(intent.protectedPhase).not.toBe('reserved');
+    expect(settleIntentInTx).toHaveBeenCalled();
+  });
+});
