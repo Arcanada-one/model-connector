@@ -69,6 +69,15 @@ export const envSchema = z
     // string "false" to true (CONN-0102).
     BILLING_ENFORCED: envBool.default(false),
 
+    // Protected Lab reservation profile (stage A). Server-selected only —
+    // a client flag cannot enable or downgrade it. When false the prepare /
+    // lookup / protected execute routes refuse. Does NOT flip BILLING_ENFORCED.
+    PROTECTED_LAB_PROFILE: envBool.default(false),
+
+    // Comma-separated connector names served by the protected Lab profile.
+    // Empty means "no connector is protected" even when the profile flag is on.
+    PROTECTED_LAB_CONNECTORS: z.string().default(''),
+
     // ARAS-0058 — the seam for a fail-closed inversion, not the inversion
     // itself. `billingEnforced()` catches config errors and returns false,
     // which is RIGHT for gift credits (a bad env parse must not deny every

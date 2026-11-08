@@ -2,6 +2,7 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { ConnectorsService } from './connectors.service';
 import { ModalityCatalogService } from './modality-catalog.service';
 import { ConnectorsController } from './connectors.controller';
+import { ProtectedLabController } from './protected-lab.controller';
 import { QueueModule } from '../queue/queue.module';
 import { CursorModule } from './cursor/cursor.module';
 import { ClaudeCodeModule } from './claude-code/claude-code.module';
@@ -85,7 +86,7 @@ import { PolicyModule } from '../policy/policy.module';
     // CONN-1665 — per-API-key access policy (PolicyService for the choke point).
     PolicyModule,
   ],
-  controllers: [ConnectorsController],
+  controllers: [ConnectorsController, ProtectedLabController],
   providers: [
     JevConnector,
     DecisionService,
@@ -95,7 +96,10 @@ import { PolicyModule } from '../policy/policy.module';
     CatalogRefreshService,
     CATALOG_REDIS_PROVIDER,
     ProviderAccessService,
-    { provide: ProviderCredentialHealthService, useFactory: () => new ProviderCredentialHealthService() },
+    {
+      provide: ProviderCredentialHealthService,
+      useFactory: () => new ProviderCredentialHealthService(),
+    },
   ],
   exports: [ConnectorsService, CatalogRepository, ProviderAccessService, DecisionService],
 })

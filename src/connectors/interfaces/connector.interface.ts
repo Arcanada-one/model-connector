@@ -26,6 +26,17 @@ export interface ConnectorRequest {
   // advance logic lives in the outer free-first failover chain (no compounded backoff).
   maxRetries?: number;
   extra?: Record<string, unknown>;
+  /**
+   * Internal only — set by ConnectorsService for the protected Lab profile.
+   * Invoked by BaseApiConnector after queue/header/body awaits and immediately
+   * before the provider `fetch`. Not a client field.
+   */
+  __beforeProviderFetch?: () => Promise<void>;
+  /**
+   * Internal only — after a crash/timeout past dispatch commit, mark the
+   * protected reservation unknown instead of releasing it.
+   */
+  __afterProviderAmbiguity?: () => Promise<void>;
 }
 
 export type ErrorAction = 'retry' | 'abort' | 'wait' | 'reauth';

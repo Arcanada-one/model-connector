@@ -541,14 +541,30 @@ export abstract class BaseApiConnector implements IConnector {
     try {
       const url = this.buildRequestUrl(request);
       const body = this.buildRequestBody(request);
+      // Finish queue + header + body awaits before the protected dispatch CAS.
+      const headers = await this.getRequestHeaders(request);
 
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: await this.getRequestHeaders(request),
-        body: JSON.stringify(body),
-        redirect: this.getRedirectPolicy(),
-        signal: AbortSignal.timeout(timeout),
-      });
+      if (request.__beforeProviderFetch) {
+        await request.__beforeProviderFetch();
+      }
+
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          redirect: this.getRedirectPolicy(),
+          signal: AbortSignal.timeout(timeout),
+        });
+      } catch (err) {
+        // Crash / timeout / lost response after a protected dispatch commit is
+        // conservatively ambiguous: retain unknown, do not release/reclaim.
+        if (request.__afterProviderAmbiguity) {
+          await request.__afterProviderAmbiguity().catch(() => undefined);
+        }
+        throw err;
+      }
 
       if (!res.ok) {
         const text = redactProviderSecrets(await this.readResponseError(res));

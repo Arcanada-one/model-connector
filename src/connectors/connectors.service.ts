@@ -110,6 +110,15 @@ export type ServiceExecuteRequest = ConnectorRequest & {
    * in this field must still reach the provider identically.
    */
   idempotencyKey?: string;
+  /**
+   * Internal — set only by the server-selected protected Lab route. A client
+   * body flag cannot enable or downgrade this profile.
+   */
+  protectedProfile?: true;
+  /** Opaque reservation_ref from prepare; required on the protected execute path. */
+  reservationRef?: string;
+  /** Pinned price-policy revision used when preparing the reservation. */
+  pricePolicyRevision?: string;
 };
 
 export const RETRYABLE_ERRORS = new Set([
@@ -1154,11 +1163,17 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
+    const protectedProfile = request.protectedProfile === true;
+
     // CONN-0243 — a per-request `maxRetries` (e.g. 0 from the failover gateway) overrides
     // the service-level CONNECTOR_MAX_RETRIES so the outer free-first chain owns retry/advance
     // and the inner loop does not compound exponential backoff on every failover hop.
+    // Protected Lab profile: internal retries / failover / output-guard redispatch
+    // are refused — one fenced attempt owns the exact request.
     let maxRetries: number;
-    if (typeof request.maxRetries === 'number') {
+    if (protectedProfile) {
+      maxRetries = 0;
+    } else if (typeof request.maxRetries === 'number') {
       maxRetries = Math.max(0, request.maxRetries);
     } else {
       try {
@@ -1173,13 +1188,28 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     // provider payload. Two requests differing only in this field have to be
     // byte-identical on the wire, or the connector-level caches and the
     // fingerprint above would disagree about what "the same request" means.
-    const { firstDispatchMeasurement, idempotencyKey: _intentKey, ...providerRequest } = request;
+    const {
+      firstDispatchMeasurement,
+      idempotencyKey: _intentKey,
+      protectedProfile: _protected,
+      reservationRef: _reservationRef,
+      pricePolicyRevision: _pricePolicy,
+      ...providerRequest
+    } = request;
     const validatedMeasurement =
       firstDispatchMeasurement === undefined
         ? undefined
         : firstDispatchMeasurementSchema.parse(firstDispatchMeasurement);
     if (validatedMeasurement !== undefined && providerRequest.output_format !== undefined) {
       throw new BadRequestException('firstDispatchMeasurement cannot use output-guard retries');
+    }
+    if (protectedProfile && providerRequest.output_format !== undefined) {
+      return this.gateErrorResponse(
+        connectorName,
+        request.model || 'unknown',
+        'protected_retry_refused',
+        'The protected Lab profile refuses output-guard redispatch; one fenced attempt only.',
+      );
     }
     const guardActive = Boolean(providerRequest.output_format);
     const attemptsForRequest = validatedMeasurement === undefined ? totalAttempts : 1;
@@ -1192,7 +1222,32 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     // constructs this service without an env fail environment validation
     // (CONN: 35 specs, once).
     let intent: RequestIntentHandle | null = null;
-    if (this.billing) {
+    if (protectedProfile) {
+      const gate = await this.openProtectedRequestIntent(connectorName, request, apiKeyId);
+      if (gate.response) return gate.response;
+      intent = gate.intent;
+      if (!intent) {
+        return this.gateErrorResponse(
+          connectorName,
+          request.model || 'unknown',
+          'protected_intent_required',
+          'The protected Lab profile refuses the dark-billing / null-intent fallback.',
+        );
+      }
+      providerRequest.__beforeProviderFetch = async () => {
+        const committed = await this.billing!.commitProtectedDispatch(intent!);
+        if (!committed) {
+          throw new BadRequestException({
+            error: 'protected_dispatch_cas_lost',
+            message:
+              'Protected dispatch commit lost the compare-and-set race (sweeper or concurrent commit).',
+          });
+        }
+      };
+      providerRequest.__afterProviderAmbiguity = async () => {
+        await this.billing!.markProtectedUnknown(intent!);
+      };
+    } else if (this.billing) {
       const gate = await this.openRequestIntent(connectorName, request, apiKeyId);
       if (gate.response) return gate.response;
       intent = gate.intent;
@@ -1348,7 +1403,18 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       // customer's money frozen until the expiry sweep. The sweep is the
       // backstop for a process that dies, not the normal path for one that
       // merely fails.
-      await this.releaseIntent(intent);
+      //
+      // Protected Lab: after dispatch_committed the hold must NOT release —
+      // mark unknown (CAS no-ops if already unknown) and retain the fence.
+      if (intent?.lifecycleVersion === 1) {
+        if (intent.protectedPhase === 'dispatch_committed' || intent.protectedPhase === 'unknown') {
+          await this.billing?.markProtectedUnknown(intent);
+        } else {
+          await this.releaseIntent(intent);
+        }
+      } else {
+        await this.releaseIntent(intent);
+      }
       throw error;
     }
 
@@ -2141,6 +2207,18 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
               'to continue.',
           ),
         };
+
+      case 'protected_unknown':
+        return {
+          intent: null,
+          response: this.gateErrorResponse(
+            connectorName,
+            model,
+            'protected_unknown',
+            'A prior protected attempt under this key committed dispatch (or is unknown). ' +
+              'It will not be released, reclaimed, or retried under a new key solely because time elapsed.',
+          ),
+        };
     }
   }
 
@@ -2206,9 +2284,173 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     const {
       idempotencyKey: _ignored,
       firstDispatchMeasurement: _measurement,
+      protectedProfile: _protected,
+      reservationRef: _ref,
+      pricePolicyRevision: _price,
+      __beforeProviderFetch: _before,
+      __afterProviderAmbiguity: _after,
       ...payload
     } = request;
     return intentPayloadFingerprint({ connector: connectorName, ...payload });
+  }
+
+  /**
+   * Protected Lab prepare/lookup/execute seam — server-selected profile only.
+   * Billing must be wired; null-intent / dark-billing fallback is refused.
+   */
+  isProtectedLabProfileEnabled(): boolean {
+    try {
+      return getConfig().PROTECTED_LAB_PROFILE === true;
+    } catch {
+      return false;
+    }
+  }
+
+  protectedLabConnectors(): Set<string> {
+    try {
+      const raw = getConfig().PROTECTED_LAB_CONNECTORS ?? '';
+      return new Set(
+        raw
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter(Boolean),
+      );
+    } catch {
+      return new Set();
+    }
+  }
+
+  async prepareProtectedReservation(
+    connectorName: string,
+    request: ServiceExecuteRequest,
+    apiKeyId: string,
+    pricePolicyRevision: string,
+  ) {
+    if (!this.billing) {
+      throw new BadRequestException({
+        error: 'protected_billing_required',
+        message: 'Protected Lab prepare requires the billing authority.',
+      });
+    }
+    if (!request.idempotencyKey) {
+      throw new BadRequestException({
+        error: 'protected_operation_key_required',
+        message: 'Protected Lab prepare requires an Idempotency-Key / operation key.',
+      });
+    }
+    const estimate = await this.estimateRequestCost(connectorName, request);
+    return this.billing.prepareProtectedReservation({
+      apiKeyId,
+      operationKey: request.idempotencyKey,
+      payloadFingerprint: ConnectorsService.requestFingerprint(connectorName, request),
+      providerName: connectorName,
+      modelName: request.model || 'unknown',
+      routeKey: `connectors/${connectorName}/protected/execute`,
+      pricePolicyRevision,
+      holdUsd: estimate,
+      ttlMs: this.holdTtlMs(),
+    });
+  }
+
+  async lookupProtectedReservation(reservationRef: string, apiKeyId: string) {
+    if (!this.billing) {
+      throw new BadRequestException({
+        error: 'protected_billing_required',
+        message: 'Protected Lab lookup requires the billing authority.',
+      });
+    }
+    return this.billing.lookupProtectedReservation({ reservationRef, apiKeyId });
+  }
+
+  private async openProtectedRequestIntent(
+    connectorName: string,
+    request: ServiceExecuteRequest,
+    apiKeyId: string,
+  ): Promise<{ response?: ConnectorResponse; intent: RequestIntentHandle | null }> {
+    const model = request.model || 'unknown';
+    if (!this.billing) {
+      return {
+        intent: null,
+        response: this.gateErrorResponse(
+          connectorName,
+          model,
+          'protected_billing_required',
+          'The protected Lab profile refuses the dark-billing / null-intent fallback.',
+        ),
+      };
+    }
+    if (!request.reservationRef) {
+      return {
+        intent: null,
+        response: this.gateErrorResponse(
+          connectorName,
+          model,
+          'protected_reservation_required',
+          'Protected execute requires a reservation_ref from prepare.',
+        ),
+      };
+    }
+
+    const looked = await this.billing.lookupProtectedReservation({
+      reservationRef: request.reservationRef,
+      apiKeyId,
+    });
+    if (looked.outcome === 'not_found') {
+      return {
+        intent: null,
+        response: this.gateErrorResponse(
+          connectorName,
+          model,
+          'protected_reservation_mismatch',
+          'reservation_ref does not resolve to a protected reservation.',
+        ),
+      };
+    }
+    if (looked.outcome === 'forbidden') {
+      return {
+        intent: null,
+        response: this.gateErrorResponse(
+          connectorName,
+          model,
+          'protected_reservation_forbidden',
+          'reservation_ref is not bound to this API key.',
+        ),
+      };
+    }
+
+    const fingerprint = ConnectorsService.requestFingerprint(connectorName, request);
+    const reservation = looked.reservation;
+    if (
+      reservation.payloadFingerprint !== fingerprint ||
+      reservation.providerName !== connectorName ||
+      (request.model && reservation.modelName !== request.model) ||
+      (request.idempotencyKey && reservation.operationKey !== request.idempotencyKey)
+    ) {
+      return {
+        intent: null,
+        response: this.gateErrorResponse(
+          connectorName,
+          model,
+          'protected_reservation_mismatch',
+          'reservation_ref does not match the authenticated key, operation, or payload.',
+        ),
+      };
+    }
+    if (reservation.protectedPhase !== 'reserved') {
+      return {
+        intent: null,
+        response: this.gateErrorResponse(
+          connectorName,
+          model,
+          reservation.protectedPhase === 'unknown' ||
+            reservation.protectedPhase === 'dispatch_committed'
+            ? 'protected_unknown'
+            : 'protected_reservation_not_ready',
+          `Protected reservation is in phase '${reservation.protectedPhase}' and cannot start a new dispatch.`,
+        ),
+      };
+    }
+    return { intent: looked.intent };
   }
 
   /** Give a reservation back. Safe to call with null, and safe to repeat. */
