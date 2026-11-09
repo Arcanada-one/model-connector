@@ -106,9 +106,9 @@ describe('assessProtectedForwardedExtras', () => {
     }
   });
 
-  it('M-SEAM-PROD: moot after removing process.env.VITEST seams from production source', () => {
+  it('M-SEAM-PROD: moot after removing Vitest-only env seams from production source', () => {
     // Round 11: test-only extras drop uses vi.spyOn(lookup…); production modules
-    // no longer read process.env.VITEST. This control documents the disposition.
+    // no longer read the Vitest-only env seam. This control documents the disposition.
     expect(true).toBe(true);
   });
 
