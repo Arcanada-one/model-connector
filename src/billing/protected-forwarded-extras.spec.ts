@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   PROTECTED_FORWARDED_EXTRA_RECORDS,
-  __testOnlyWithoutExtrasRecord,
   assessProtectedForwardedExtras,
   lookupProtectedForwardedExtraRecord,
+  protectedForwardedExtrasAuthority,
 } from './protected-forwarded-extras';
 import {
   PROTECTED_DISPATCH_FENCE_DECISIONS,
@@ -64,18 +64,25 @@ describe('assessProtectedForwardedExtras', () => {
   it('M-UNKNOWN-FWD: admitted forwarder without an extras record is refused', () => {
     expect(classForwardsProtectedMaxTokens('AzureOpenAiConnector')).toBe(true);
     expect(lookupProtectedForwardedExtraRecord('AzureOpenAiConnector')).toBeTruthy();
-    const refused = __testOnlyWithoutExtrasRecord('AzureOpenAiConnector', () =>
-      assessProtectedForwardedExtras({
-        connectorClassName: 'AzureOpenAiConnector',
-        extra: { max_tokens: 16 },
-      }),
+    const original = protectedForwardedExtrasAuthority.lookup.bind(
+      protectedForwardedExtrasAuthority,
     );
+    const spy = vi
+      .spyOn(protectedForwardedExtrasAuthority, 'lookup')
+      .mockImplementation((className) =>
+        className === 'AzureOpenAiConnector' ? undefined : original(className),
+      );
+    const refused = assessProtectedForwardedExtras({
+      connectorClassName: 'AzureOpenAiConnector',
+      extra: { max_tokens: 16 },
+    });
     expect(refused.ok).toBe(false);
     if (!refused.ok) {
       expect(refused.message).toMatch(/without a reviewed extras record/);
       expect(refused.countedInputBytes).toBe(0);
     }
-    // Record restored after the helper.
+    spy.mockRestore();
+    // Record restored after the spy.
     expect(
       assessProtectedForwardedExtras({
         connectorClassName: 'AzureOpenAiConnector',

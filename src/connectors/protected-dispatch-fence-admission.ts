@@ -10,7 +10,9 @@
  *
  * Non-Base `IConnector` implementations are never admitted by an own
  * `supportsProtectedDispatchFence === true` alone. Production has no verified
- * non-Base fenced connectors; tests may use the vitest-only admission seam.
+ * non-Base fenced connectors; the production admission table is frozen and
+ * empty. Specs admit doubles via `vi.spyOn` of the lookup functions — this
+ * module exports no mutator.
  *
  * `forwardsMaxTokens` records whether the class's request body builder
  * forwards caller `max_tokens` to the provider (source-verified 2026-11-08).
@@ -334,72 +336,55 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
   },
 ] as const;
 
-export const PROTECTED_DISPATCH_FENCE_ADMITTED_CLASSES: ReadonlySet<string> = new Set(
+const ADMITTED_CLASS_NAMES: readonly string[] = Object.freeze(
   PROTECTED_DISPATCH_FENCE_DECISIONS.filter((d) => d.decision === 'admitted').map(
     (d) => d.className,
   ),
 );
 
-const FORWARDS_MAX_TOKENS_BY_CLASS: ReadonlyMap<string, boolean> = new Map(
-  PROTECTED_DISPATCH_FENCE_DECISIONS.map((d) => [d.className, d.forwardsMaxTokens]),
+export const PROTECTED_DISPATCH_FENCE_ADMITTED_CLASSES: ReadonlySet<string> = new Set(
+  ADMITTED_CLASS_NAMES,
+);
+
+const FORWARDS_MAX_TOKENS_BY_CLASS: Readonly<Record<string, boolean>> = Object.freeze(
+  Object.fromEntries(
+    PROTECTED_DISPATCH_FENCE_DECISIONS.map((d) => [d.className, d.forwardsMaxTokens]),
+  ),
 );
 
 export function isProtectedDispatchFenceClassAdmitted(
   constructorName: string | undefined | null,
 ): boolean {
   if (!constructorName) return false;
-  return PROTECTED_DISPATCH_FENCE_ADMITTED_CLASSES.has(constructorName);
+  return ADMITTED_CLASS_NAMES.includes(constructorName);
 }
 
 export function classForwardsProtectedMaxTokens(
   constructorName: string | undefined | null,
 ): boolean {
   if (!constructorName) return false;
-  return FORWARDS_MAX_TOKENS_BY_CLASS.get(constructorName) === true;
+  return FORWARDS_MAX_TOKENS_BY_CLASS[constructorName] === true;
 }
 
 /**
- * Production non-Base fence admissions: empty. No non-Base connector has an
- * independently verified pre-send fence today.
+ * Production non-Base fence admissions: empty and frozen. No non-Base connector
+ * has an independently verified pre-send fence today. Specs must not mutate
+ * this table — use `vi.spyOn` on `isNonBaseProtectedFenceAdmitted` instead.
+ * The lookup reads the frozen array, not a mutable Set backing.
  */
-export const PROTECTED_NON_BASE_FENCE_ADMISSIONS: ReadonlySet<string> = new Set();
+const PRODUCTION_NON_BASE_ADMISSIONS: readonly string[] = Object.freeze([]);
 
-interface TestOnlyNonBaseAdmission {
-  forwardsMaxTokens: boolean;
-}
-
-/**
- * Spec-populated map for non-Base IConnector doubles. Production never writes
- * here (PROTECTED_NON_BASE_FENCE_ADMISSIONS stays empty). No the Vitest env switch
- * branch — M-SEAM-PROD is moot after round 11.
- */
-const testOnlyNonBaseAdmissions = new Map<string, TestOnlyNonBaseAdmission>();
-
-/** Spec helper: admit a non-Base double to the protected fence. */
-export function __testOnlyAdmitNonBaseProtectedFence(
-  connectorName: string,
-  opts: { forwardsMaxTokens?: boolean } = {},
-): void {
-  testOnlyNonBaseAdmissions.set(connectorName, {
-    forwardsMaxTokens: opts.forwardsMaxTokens === true,
-  });
-}
-
-/** Spec helper: clear non-Base test admissions. */
-export function __testOnlyClearNonBaseProtectedFence(): void {
-  testOnlyNonBaseAdmissions.clear();
-}
+export const PROTECTED_NON_BASE_FENCE_ADMISSIONS: ReadonlySet<string> = new Set(
+  PRODUCTION_NON_BASE_ADMISSIONS,
+);
 
 export function isNonBaseProtectedFenceAdmitted(connectorName: string): boolean {
-  if (PROTECTED_NON_BASE_FENCE_ADMISSIONS.has(connectorName)) return true;
-  return testOnlyNonBaseAdmissions.has(connectorName);
+  return PRODUCTION_NON_BASE_ADMISSIONS.includes(connectorName);
 }
 
 export function nonBaseForwardsProtectedMaxTokens(connectorName: string): boolean {
-  if (PROTECTED_NON_BASE_FENCE_ADMISSIONS.has(connectorName)) {
-    // Production set is empty; if a future reviewed entry is added it must
-    // carry its own forwarding record. Fail closed until then.
-    return false;
-  }
-  return testOnlyNonBaseAdmissions.get(connectorName)?.forwardsMaxTokens === true;
+  // Production non-Base admissions are empty; fail closed. A future reviewed
+  // entry must carry its own forwarding record in this function.
+  void connectorName;
+  return false;
 }

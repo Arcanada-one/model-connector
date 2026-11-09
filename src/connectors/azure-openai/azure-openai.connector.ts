@@ -25,6 +25,113 @@ export interface AzureOpenAiConnectorOptions {
 
 const DEFAULT_API_VERSION = '2024-10-21';
 
+/**
+ * Trusted physical Azure OpenAI request target used by protected prepare / P9.
+ * Derived from the same fields `buildRequestUrl` uses. No secrets.
+ * Account/environment is not a separate connector option today — the resource
+ * is identified by `origin` (endpoint host).
+ */
+export interface AzureProtectedEffectiveTarget {
+  kind: 'azure-openai';
+  origin: string;
+  deployment: string;
+  apiVersion: string;
+}
+
+/**
+ * Single configuration → target path shared by URL building and protected
+ * reservation binding. Callers that must ignore request overrides pass
+ * `requestExtra: null`.
+ */
+export function resolveAzureOpenAiRequestTarget(params: {
+  endpoint?: string | null;
+  deployment?: string | null;
+  apiVersion?: string | null;
+  requestExtra?: Record<string, unknown> | null;
+}): AzureProtectedEffectiveTarget | null {
+  const origin = String(params.endpoint || process.env.AZURE_OPENAI_ENDPOINT || '').replace(
+    /\/$/,
+    '',
+  );
+  const deployment = String(
+    params.requestExtra?.deployment ||
+      params.deployment ||
+      process.env.AZURE_OPENAI_DEPLOYMENT ||
+      '',
+  );
+  const apiVersion = String(
+    params.requestExtra?.api_version ||
+      params.apiVersion ||
+      process.env.AZURE_OPENAI_API_VERSION ||
+      DEFAULT_API_VERSION,
+  );
+  if (!origin || !deployment || !apiVersion) return null;
+  return { kind: 'azure-openai', origin, deployment, apiVersion };
+}
+
+export function buildAzureOpenAiChatCompletionsUrl(target: AzureProtectedEffectiveTarget): string {
+  return `${target.origin}/openai/deployments/${encodeURIComponent(target.deployment)}/chat/completions?api-version=${encodeURIComponent(target.apiVersion)}`;
+}
+
+/** Parse the pre-built Azure chat-completions URL the connector is about to fetch. */
+export function parseAzureOpenAiChatCompletionsUrl(
+  url: string,
+): AzureProtectedEffectiveTarget | null {
+  try {
+    const parsed = new URL(url);
+    const match = parsed.pathname.match(/^(.*)\/openai\/deployments\/([^/]+)\/chat\/completions$/);
+    if (!match) return null;
+    const pathPrefix = match[1] ?? '';
+    const deployment = decodeURIComponent(match[2] ?? '');
+    const apiVersion = parsed.searchParams.get('api-version');
+    if (!deployment || !apiVersion) return null;
+    const origin = `${parsed.origin}${pathPrefix}`.replace(/\/$/, '');
+    if (!origin) return null;
+    return { kind: 'azure-openai', origin, deployment, apiVersion };
+  } catch {
+    return null;
+  }
+}
+
+export function azureProtectedTargetsEqual(
+  left: AzureProtectedEffectiveTarget,
+  right: AzureProtectedEffectiveTarget,
+): boolean {
+  return (
+    left.kind === right.kind &&
+    left.origin === right.origin &&
+    left.deployment === right.deployment &&
+    left.apiVersion === right.apiVersion
+  );
+}
+
+/** Embed the Azure effective target into the persisted protected route key. */
+export function encodeAzureTargetIntoRouteKey(
+  baseRouteKey: string,
+  target: AzureProtectedEffectiveTarget,
+): string {
+  const fragment = [
+    `azure-origin=${encodeURIComponent(target.origin)}`,
+    `azure-deployment=${encodeURIComponent(target.deployment)}`,
+    `azure-api-version=${encodeURIComponent(target.apiVersion)}`,
+  ].join('&');
+  return `${baseRouteKey}#${fragment}`;
+}
+
+/** Decode a previously bound Azure target from a protected route key. */
+export function decodeAzureTargetFromRouteKey(
+  routeKey: string,
+): AzureProtectedEffectiveTarget | null {
+  const hash = routeKey.indexOf('#');
+  if (hash < 0) return null;
+  const params = new URLSearchParams(routeKey.slice(hash + 1));
+  const origin = params.get('azure-origin');
+  const deployment = params.get('azure-deployment');
+  const apiVersion = params.get('azure-api-version');
+  if (!origin || !deployment || !apiVersion) return null;
+  return { kind: 'azure-openai', origin, deployment, apiVersion };
+}
+
 export class AzureOpenAiConnector extends BaseApiConnector {
   readonly name = 'azure-openai';
 
@@ -78,23 +185,25 @@ export class AzureOpenAiConnector extends BaseApiConnector {
     return super.formatHttpErrorMessage(_status, body);
   }
 
+  /**
+   * Same resolver `buildRequestUrl` uses. Protected prepare binds this identity
+   * (with request.extra.deployment already refused) into the reservation.
+   */
+  resolveRequestTarget(request?: ConnectorRequest): AzureProtectedEffectiveTarget | null {
+    return resolveAzureOpenAiRequestTarget({
+      endpoint: this.options.endpoint,
+      deployment: this.options.deployment,
+      apiVersion: this.options.apiVersion,
+      requestExtra: request?.extra ?? null,
+    });
+  }
+
   protected buildRequestUrl(request: ConnectorRequest): string {
-    const deployment = String(
-      request.extra?.deployment ||
-        this.options.deployment ||
-        process.env.AZURE_OPENAI_DEPLOYMENT ||
-        '',
-    );
-    const apiVersion = String(
-      request.extra?.api_version ||
-        this.options.apiVersion ||
-        process.env.AZURE_OPENAI_API_VERSION ||
-        DEFAULT_API_VERSION,
-    );
-    if (!this.getBaseUrl() || !deployment || !apiVersion) {
+    const target = this.resolveRequestTarget(request);
+    if (!target) {
       throw new Error('Azure OpenAI endpoint, deployment, and api-version are required');
     }
-    return `${this.getBaseUrl()}/openai/deployments/${encodeURIComponent(deployment)}/chat/completions?api-version=${encodeURIComponent(apiVersion)}`;
+    return buildAzureOpenAiChatCompletionsUrl(target);
   }
 
   protected buildRequestBody(request: ConnectorRequest): unknown {

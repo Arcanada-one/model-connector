@@ -558,7 +558,8 @@ export abstract class BaseApiConnector implements IConnector {
       const headers = await this.getRequestHeaders(request);
 
       if (request.__beforeProviderFetch) {
-        await request.__beforeProviderFetch();
+        // Pass the exact URL that will be fetched — the P9 hook must not rebuild it.
+        await request.__beforeProviderFetch({ requestUrl: url });
       }
 
       let res: Response;

@@ -49,46 +49,48 @@ export interface ProtectedForwardedExtraRecord {
  * definitions or `tool_choice`, so those forwarded extras refuse on protected
  * Azure (legacy unprotected path unchanged).
  */
-export const PROTECTED_FORWARDED_EXTRA_RECORDS: readonly ProtectedForwardedExtraRecord[] = [
-  {
-    className: 'AzureOpenAiConnector',
-    forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p', 'tools', 'tool_choice'],
-    disposition: {
-      max_tokens: 'neutral', // output cap handled separately
-      temperature: 'neutral',
-      top_p: 'neutral',
-      tools: 'refuse_when_present',
-      tool_choice: 'refuse_when_present',
-    },
-  },
-] as const;
+export const PROTECTED_FORWARDED_EXTRA_RECORDS: readonly ProtectedForwardedExtraRecord[] =
+  Object.freeze([
+    Object.freeze({
+      className: 'AzureOpenAiConnector',
+      forwardedExtraKeys: Object.freeze([
+        'max_tokens',
+        'temperature',
+        'top_p',
+        'tools',
+        'tool_choice',
+      ]),
+      disposition: Object.freeze({
+        max_tokens: 'neutral', // output cap handled separately
+        temperature: 'neutral',
+        top_p: 'neutral',
+        tools: 'refuse_when_present',
+        tool_choice: 'refuse_when_present',
+      } as Record<string, ProtectedExtraDisposition>),
+    }),
+  ]);
 
-const BY_CLASS: Map<string, ProtectedForwardedExtraRecord> = new Map(
-  PROTECTED_FORWARDED_EXTRA_RECORDS.map((r) => [r.className, r]),
+/** Frozen production lookup table — no mutable backing map. */
+const BY_CLASS: Readonly<Record<string, ProtectedForwardedExtraRecord>> = Object.freeze(
+  Object.fromEntries(PROTECTED_FORWARDED_EXTRA_RECORDS.map((r) => [r.className, r])),
 );
 
-/** Record lookup used by assess (and by specs that spy / drop a record). */
+/**
+ * Indirection so same-module assess and cross-module callers share one lookup.
+ * Specs may `vi.spyOn(protectedForwardedExtrasAuthority, 'lookup')`; production
+ * exports no table mutator and the frozen BY_CLASS backing never changes.
+ */
+export const protectedForwardedExtrasAuthority = {
+  lookup(className: string): ProtectedForwardedExtraRecord | undefined {
+    return BY_CLASS[className];
+  },
+};
+
+/** Record lookup used by assess and by specs that spy the authority. */
 export function lookupProtectedForwardedExtraRecord(
   className: string,
 ): ProtectedForwardedExtraRecord | undefined {
-  return BY_CLASS.get(className);
-}
-
-/**
- * Spec helper: run `fn` while `className` has no extras record (M-UNKNOWN-FWD /
- * M-EXTRAS-SVC). No the Vitest env switch gate — M-SEAM-PROD is moot after round 11.
- */
-export function __testOnlyWithoutExtrasRecord<T>(className: string, fn: () => T): T {
-  const saved = BY_CLASS.get(className);
-  if (!saved) {
-    throw new Error(`__testOnlyWithoutExtrasRecord: no record for ${className}`);
-  }
-  BY_CLASS.delete(className);
-  try {
-    return fn();
-  } finally {
-    BY_CLASS.set(className, saved);
-  }
+  return protectedForwardedExtrasAuthority.lookup(className);
 }
 
 function utf8JsonBytes(value: unknown): number {
@@ -115,7 +117,7 @@ export function assessProtectedForwardedExtras(params: {
   extra?: Record<string, unknown> | null;
 }): ProtectedForwardedExtrasResult {
   const record = params.connectorClassName
-    ? lookupProtectedForwardedExtraRecord(params.connectorClassName)
+    ? protectedForwardedExtrasAuthority.lookup(params.connectorClassName)
     : undefined;
   if (!record) {
     if (params.connectorClassName && classForwardsProtectedMaxTokens(params.connectorClassName)) {

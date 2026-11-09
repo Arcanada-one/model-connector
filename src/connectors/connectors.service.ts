@@ -58,7 +58,13 @@ import {
   isProtectedDispatchFenceClassAdmitted,
   nonBaseForwardsProtectedMaxTokens,
 } from './protected-dispatch-fence-admission';
-import { AzureOpenAiConnector } from './azure-openai/azure-openai.connector';
+import {
+  AzureOpenAiConnector,
+  azureProtectedTargetsEqual,
+  decodeAzureTargetFromRouteKey,
+  encodeAzureTargetIntoRouteKey,
+  parseAzureOpenAiChatCompletionsUrl,
+} from './azure-openai/azure-openai.connector';
 import { mintServerIntentKey, intentPayloadFingerprint } from '../billing/intent';
 import {
   measureCostUsd,
@@ -1279,9 +1285,15 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
           'The protected Lab profile refuses execute without a reserved binding.',
         );
       }
-      providerRequest.__beforeProviderFetch = async () => {
-        // P9: re-resolve trusted price/route (incl. Azure deployment) before CAS.
-        await this.assertProtectedReservationStillCurrent(connectorName, request, reservedBinding);
+      providerRequest.__beforeProviderFetch = async (ctx) => {
+        // P9: compare reserved effective target to the actual pre-built URL and
+        // re-resolve trusted price/route before CAS. Zero provider sends on mismatch.
+        await this.assertProtectedReservationStillCurrent(
+          connectorName,
+          request,
+          reservedBinding,
+          ctx?.requestUrl,
+        );
         const committed = await this.billing!.commitProtectedDispatch(intent!);
         if (!committed) {
           throw new BadRequestException({
@@ -2626,14 +2638,19 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Protected Azure deployment ↔ priced-model binding.
+   * Protected Azure effective-target ↔ priced-model binding.
    * Non-protected traffic and non-Azure connectors are unchanged.
    *
-   * LIMITATION (stated decision): binding is by the server-configured deployment
-   * *name* (connector options / `AZURE_OPENAI_DEPLOYMENT`) equalling the
-   * catalogue-priced `request.model`. It is not verified against provider
-   * deployment metadata — Azure deployment names are operator-chosen, and no
-   * authoritative server-side deployment→model map exists today.
+   * Binds origin (endpoint), deployment, and api-version from the same
+   * `resolveRequestTarget` path `buildRequestUrl` uses, then persists that
+   * identity in `routeKey`. Account/environment is not a separate connector
+   * option — the Azure resource is identified by origin.
+   *
+   * LIMITATION (stated decision): binding trusts operator-configured endpoint /
+   * deployment *name* / api-version equalling the catalogue-priced
+   * `request.model` for the deployment field. It is not verified against
+   * provider deployment metadata — Azure deployment names are operator-chosen,
+   * and no authoritative server-side deployment→model map exists today.
    */
   private resolveProtectedAzureDeploymentBinding(
     connectorName: string,
@@ -2665,10 +2682,25 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       };
     }
     const connector = this.connectors.get(connectorName);
-    const configured =
-      connector instanceof AzureOpenAiConnector ? connector.getConfiguredDeployment() : '';
+    if (!(connector instanceof AzureOpenAiConnector)) {
+      return {
+        outcome: 'unavailable',
+        code: NATIVE_PRICING_UNAVAILABLE,
+        message: 'Protected prepare requires a registered Azure OpenAI connector instance.',
+      };
+    }
+    // Same code path as buildRequestUrl (caller deployment already refused).
+    const target = connector.resolveRequestTarget(request);
+    if (!target) {
+      return {
+        outcome: 'unavailable',
+        code: NATIVE_PRICING_UNAVAILABLE,
+        message:
+          'Protected prepare cannot derive the Azure effective request target (origin, deployment, api-version).',
+      };
+    }
     // M-AZURE-DEPLOY-BIND: effective server deployment must equal priced model.
-    if (!configured || configured !== modelName) {
+    if (target.deployment !== modelName) {
       return {
         outcome: 'unavailable',
         code: NATIVE_PRICING_UNAVAILABLE,
@@ -2678,7 +2710,7 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     }
     return {
       outcome: 'bound',
-      routeKey: `${baseRouteKey}#azure-deployment=${encodeURIComponent(configured)}`,
+      routeKey: encodeAzureTargetIntoRouteKey(baseRouteKey, target),
     };
   }
 
@@ -2842,17 +2874,40 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * P9 — immediately before the dispatch CAS / provider fetch, re-resolve the
-   * trusted price policy and route for the reserved connector/model/routeKey
-   * (including Azure deployment binding). On mismatch or unavailable proof:
-   * refuse with zero provider calls, do not CAS, leave the hold `reserved`.
+   * P9 — immediately before the dispatch CAS / provider fetch:
+   * (a) reserved effective-target identity,
+   * (b) target parsed from the actual pre-built request URL about to be fetched,
+   * (c) current authoritative route/price re-resolution.
+   * On mismatch or unavailable identity/proof: refuse with zero provider calls,
+   * do not CAS, leave the hold `reserved` (no release / reprice / reroute).
    */
   private async assertProtectedReservationStillCurrent(
     connectorName: string,
     request: ServiceExecuteRequest,
     reserved: ProtectedReservationView,
+    requestUrl?: string,
   ): Promise<void> {
     const modelName = request.model || reserved.modelName || 'unknown';
+    const reservedTarget = decodeAzureTargetFromRouteKey(reserved.routeKey);
+    if (this.protectedConnectorClassName(connectorName) === 'AzureOpenAiConnector') {
+      if (!reservedTarget) {
+        throw new ProtectedReservationStaleError(
+          'Protected reservation is stale: Azure effective target was not bound at prepare.',
+        );
+      }
+      if (!requestUrl) {
+        throw new ProtectedReservationStaleError(
+          'Protected reservation is stale: actual provider request URL was not supplied to the fence.',
+        );
+      }
+      const urlTarget = parseAzureOpenAiChatCompletionsUrl(requestUrl);
+      if (!urlTarget || !azureProtectedTargetsEqual(reservedTarget, urlTarget)) {
+        throw new ProtectedReservationStaleError(
+          'Protected reservation is stale: actual request URL does not match the reserved Azure effective target.',
+        );
+      }
+    }
+
     // Fresh re-derive — do not trust the reserved revision as a client hint.
     const authority = await this.resolveProtectedPriceAuthority(connectorName, modelName, request);
     if (authority.outcome !== 'resolved') {
@@ -2869,6 +2924,14 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       throw new ProtectedReservationStaleError(
         'Protected reservation is stale: trusted price policy or route no longer matches the hold.',
       );
+    }
+    if (reservedTarget) {
+      const currentTarget = decodeAzureTargetFromRouteKey(authority.routeKey);
+      if (!currentTarget || !azureProtectedTargetsEqual(reservedTarget, currentTarget)) {
+        throw new ProtectedReservationStaleError(
+          'Protected reservation is stale: authoritative Azure effective target no longer matches the hold.',
+        );
+      }
     }
   }
 
