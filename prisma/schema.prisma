@@ -662,6 +662,17 @@ model RequestIntent {
   amountUnit      String? @map("amount_unit")
   amountPrecision Int?    @map("amount_precision")
 
+  /// Protected retained-result integrity profile (`pri/v1`). Null on legacy
+  /// rows and on protected rows settled before this column existed — never
+  /// backfilled by hashing on read.
+  resultIntegrityProfile String? @map("result_integrity_profile")
+
+  /// `pri/v1` digest pair `<bindingHex>:<retainedHex>`. Null when not retained.
+  resultIntegrityDigest String? @map("result_integrity_digest")
+
+  /// `retained` | `not_retainable`. Null = integrity unverified / pre-change.
+  resultRetention String? @map("result_retention")
+
   createdAt   DateTime  @default(now()) @map("created_at")
   completedAt DateTime? @map("completed_at")
 

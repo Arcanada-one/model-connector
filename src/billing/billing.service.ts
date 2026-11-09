@@ -62,6 +62,11 @@ import {
   type ProtectedReservationView,
   ProtectedProfileError,
 } from './protected-lifecycle';
+import {
+  RESULT_RETENTION,
+  sealProtectedResultIntegrity,
+  type IntegrityRefusalReason,
+} from './protected-result-integrity';
 import { randomUUID } from 'node:crypto';
 
 /**
@@ -229,7 +234,12 @@ export type IntentOpenResult =
    * Protected lifecycle: the prior attempt under this key committed dispatch
    * (or is unknown). Never reclaim / mint a fresh attempt solely on elapsed time.
    */
-  | { outcome: 'protected_unknown' };
+  | { outcome: 'protected_unknown' }
+  /**
+   * Protected settled row failed retained-result integrity verification.
+   * Typed no-disclosure refusal — no new key, hold, provider call, or charge.
+   */
+  | { outcome: 'integrity_refused'; reason: IntegrityRefusalReason };
 
 /**
  * Internal signal that the conditional reservation matched no row.
@@ -956,17 +966,20 @@ export class BillingService {
       return { outcome: 'in_flight' };
     }
 
-    // Protected Lab P10-05: classify before the legacy completed→replay path so
-    // nonterminal / corrupt settled rows never look like a paid completed replay,
-    // and unknown stays typed apart from ordinary in_flight.
+    // Protected Lab P10-05 + retained integrity: classify before the legacy
+    // completed→replay path so nonterminal / corrupt / integrity-failed settled
+    // rows never look like a paid completed replay, and unknown stays typed
+    // apart from ordinary in_flight.
     if (
       existing.lifecycleVersion === PROTECTED_LIFECYCLE_VERSION &&
       existing.protectedPhase != null
     ) {
-      // expectedResultHash intentionally omitted: production has no retained
-      // hash column at settlement (NOT_IMPLEMENTED until a migration).
+      // Integrity is verified from independently retained result_integrity_*
+      // columns written at settlement — never by hashing the current response
+      // alone, and never via a caller-supplied digest.
       // operationKey is the same intentKey used to load `existing`, so the
-      // classifier's op-key inequality is unreachable here; fingerprint binds.
+      // classifier's op-key inequality remains unreachable here; fingerprint
+      // plus the sealed binding digest pair bind the row.
       const classified = classifyProtectedIntentReplay({
         row: existing,
         payloadFingerprint,
@@ -979,10 +992,12 @@ export class BillingService {
           return { outcome: classified.openOutcome };
         case 'corrupt_settled':
           return { outcome: 'not_replayable' };
+        case 'integrity_refused':
+          return { outcome: 'integrity_refused', reason: classified.reason };
         case 'replay_eligible':
-          // Internally replay-eligible (see classification marker). Returning
+          // Internally replay-eligible after integrity verification. Returning
           // stored bytes here is the pre-Auth-read behaviour: P10-01..04 own
-          // entitlement gating; this round only refuses nonterminal/corrupt.
+          // entitlement gating; integrity is one input to P10, not a read grant.
           return {
             outcome: 'replay',
             response: existing.response,
@@ -1195,6 +1210,51 @@ export class BillingService {
     // and a concurrent release race the SAME transition (charge exactly once).
     if (params.intent.lifecycleVersion === PROTECTED_LIFECYCLE_VERSION) {
       const expectedGeneration = params.intent.generation;
+
+      // Binding columns for the integrity seal come from the row identity inside
+      // this transaction (not from a caller-supplied digest). The retained digest
+      // is computed from the same normalized `response` snapshot written below.
+      const current = await tx.requestIntent.findUnique({
+        where: { id: params.intent.id },
+      });
+      if (
+        !current ||
+        current.lifecycleVersion !== PROTECTED_LIFECYCLE_VERSION ||
+        current.reservationRef == null ||
+        (current.operationKey == null && current.intentKey == null)
+      ) {
+        return false;
+      }
+      if (expectedGeneration !== undefined && current.generation !== expectedGeneration) {
+        return false;
+      }
+      const settlementGeneration = current.generation + 1;
+      const operationKey = current.operationKey ?? current.intentKey;
+      const integrityData =
+        response != null
+          ? (() => {
+              const seal = sealProtectedResultIntegrity({
+                binding: {
+                  operationKey,
+                  apiKeyId: current.apiKeyId,
+                  payloadFingerprint: current.payloadFingerprint,
+                  reservationRef: current.reservationRef!,
+                  settlementGeneration,
+                },
+                retained: response,
+              });
+              return {
+                resultIntegrityProfile: seal.profile,
+                resultIntegrityDigest: seal.digest,
+                resultRetention: seal.retention,
+              };
+            })()
+          : {
+              resultIntegrityProfile: null,
+              resultIntegrityDigest: null,
+              resultRetention: RESULT_RETENTION.not_retainable,
+            };
+
       const claimed = await tx.requestIntent.updateMany({
         where: {
           id: params.intent.id,
@@ -1209,6 +1269,7 @@ export class BillingService {
           requestId: params.requestId,
           response: response === undefined ? undefined : (response as Prisma.InputJsonValue),
           completedAt: new Date(),
+          ...integrityData,
         },
       });
       if (claimed.count !== 1) return false;
@@ -1425,6 +1486,7 @@ export class BillingService {
     | { outcome: 'protected_unknown' }
     | { outcome: 'replay'; response: unknown; requestId?: string }
     | { outcome: 'not_replayable' }
+    | { outcome: 'integrity_refused'; reason: IntegrityRefusalReason }
     | { outcome: 'refused'; code: string; message: string }
   > {
     const hold = new Prisma.Decimal(params.holdUsd);
@@ -1556,7 +1618,8 @@ export class BillingService {
           replay.outcome === 'payload_mismatch' ||
           replay.outcome === 'protected_unknown' ||
           replay.outcome === 'replay' ||
-          replay.outcome === 'not_replayable'
+          replay.outcome === 'not_replayable' ||
+          replay.outcome === 'integrity_refused'
         ) {
           return replay;
         }
