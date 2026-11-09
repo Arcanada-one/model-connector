@@ -1255,12 +1255,17 @@ export class BillingService {
               resultRetention: RESULT_RETENTION.not_retainable,
             };
 
+      // Always CAS on the exact generation the seal used (`current.generation`),
+      // even when the caller omitted `params.intent.generation`. Otherwise a
+      // concurrent bump between the unlocked read and this write can persist a
+      // seal whose settlementGeneration no longer matches the row — honest
+      // results would then refuse forever (liveness loss).
       const claimed = await tx.requestIntent.updateMany({
         where: {
           id: params.intent.id,
           lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
           protectedPhase: { in: [...protectedSettleablePhases()] },
-          ...(expectedGeneration === undefined ? {} : { generation: expectedGeneration }),
+          generation: current.generation,
         },
         data: {
           state: 'completed',

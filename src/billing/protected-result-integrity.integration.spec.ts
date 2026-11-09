@@ -267,6 +267,250 @@ describe('RI03 — foreign integrity record substituted', () => {
   });
 });
 
+/**
+ * RI03 per-field: each sealed binding column must independently refuse when
+ * altered while response + stored digest stay put. Whole-digest substitution
+ * alone leaves single-field contribution unmeasured (MV-BIND-NO-*).
+ *
+ * For columns that also gate the earlier classifier checks (operation_key /
+ * payload_fingerprint / api_key_id), the replay request matches the altered
+ * column so only the sealed binding refuses.
+ */
+describe('RI03 per-field — each binding column refuses alone', () => {
+  async function settleFixture(op: string, fp: string) {
+    await fund(KEY_A, '20');
+    await fund(KEY_B, '5');
+    const body = { retained: op };
+    const opened = await prepareAndCommit({
+      apiKeyId: KEY_A,
+      operationKey: op,
+      payloadFingerprint: fp,
+    });
+    expect(
+      await billing.settleIntent({
+        intent: opened.intent,
+        amountUsd: '1',
+        response: body,
+        requestId: `req-${op}`,
+      }),
+    ).toBe(true);
+    const row = await prisma.requestIntent.findUnique({ where: { id: opened.intent.id } });
+    expect(row!.resultIntegrityDigest).toMatch(/^[0-9a-f]{64}:[0-9a-f]{64}$/);
+    return { opened, body, row: row! };
+  }
+
+  async function assertBindingRefuseNoEffects(params: {
+    intentId: string;
+    apiKeyId: string;
+    intentKey: string;
+    payloadFingerprint: string;
+    /** Columns we deliberately changed; remaining integrity columns must hold. */
+    digestBefore: string | null;
+    responseBefore: unknown;
+  }) {
+    const ledgerABefore = await prisma.creditsLedger.count({ where: { apiKeyId: KEY_A } });
+    const ledgerBBefore = await prisma.creditsLedger.count({ where: { apiKeyId: KEY_B } });
+    const availableABefore = await billing.available(KEY_A);
+    const availableBBefore = await billing.available(KEY_B);
+    const before = await prisma.requestIntent.findUnique({ where: { id: params.intentId } });
+
+    const replay = await billing.openIntent({
+      apiKeyId: params.apiKeyId,
+      intentKey: params.intentKey,
+      clientSupplied: true,
+      payloadFingerprint: params.payloadFingerprint,
+      holdUsd: '1.5',
+    });
+    expect(replay.outcome).toBe('integrity_refused');
+    if (replay.outcome === 'integrity_refused') {
+      expect(replay.reason).toBe(INTEGRITY_REFUSAL_REASON.integrity_binding_mismatch);
+    }
+    expect(replay).not.toHaveProperty('response');
+
+    const after = await prisma.requestIntent.findUnique({ where: { id: params.intentId } });
+    expect(after!.resultIntegrityDigest).toBe(params.digestBefore);
+    expect(priV1CanonicalJson(after!.response)).toBe(priV1CanonicalJson(params.responseBefore));
+    expect(after!.resultRetention).toBe(before!.resultRetention);
+    expect(after!.resultIntegrityProfile).toBe(before!.resultIntegrityProfile);
+    expect(await prisma.creditsLedger.count({ where: { apiKeyId: KEY_A } })).toBe(ledgerABefore);
+    expect(await prisma.creditsLedger.count({ where: { apiKeyId: KEY_B } })).toBe(ledgerBBefore);
+    expect((await billing.available(KEY_A)).toString()).toBe(availableABefore.toString());
+    expect((await billing.available(KEY_B)).toString()).toBe(availableBBefore.toString());
+  }
+
+  it('operation_key alone → integrity_binding_mismatch', async () => {
+    const { opened, body, row } = await settleFixture('op-ri03-opkey', 'fp-ri03-opkey');
+    const alteredOp = 'op-ri03-opkey-altered';
+    // intent_key is the lookup identity (not hashed). Align it with the altered
+    // operation_key so the classifier's early op-key check passes and only the
+    // sealed binding refuses — same shape as the fingerprint case below.
+    await prisma.requestIntent.update({
+      where: { id: opened.intent.id },
+      data: { operationKey: alteredOp, intentKey: alteredOp },
+    });
+    await assertBindingRefuseNoEffects({
+      intentId: opened.intent.id,
+      apiKeyId: KEY_A,
+      intentKey: alteredOp,
+      payloadFingerprint: 'fp-ri03-opkey',
+      digestBefore: row.resultIntegrityDigest,
+      responseBefore: body,
+    });
+  });
+
+  it('api_key_id alone → integrity_binding_mismatch', async () => {
+    const { opened, body, row } = await settleFixture('op-ri03-apikey', 'fp-ri03-apikey');
+    await prisma.requestIntent.update({
+      where: { id: opened.intent.id },
+      data: { apiKeyId: KEY_B },
+    });
+    await assertBindingRefuseNoEffects({
+      intentId: opened.intent.id,
+      apiKeyId: KEY_B,
+      intentKey: 'op-ri03-apikey',
+      payloadFingerprint: 'fp-ri03-apikey',
+      digestBefore: row.resultIntegrityDigest,
+      responseBefore: body,
+    });
+  });
+
+  it('reservation_ref alone → integrity_binding_mismatch', async () => {
+    const { opened, body, row } = await settleFixture('op-ri03-resref', 'fp-ri03-resref');
+    const foreignRef = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
+    await prisma.requestIntent.update({
+      where: { id: opened.intent.id },
+      data: { reservationRef: foreignRef },
+    });
+    await assertBindingRefuseNoEffects({
+      intentId: opened.intent.id,
+      apiKeyId: KEY_A,
+      intentKey: 'op-ri03-resref',
+      payloadFingerprint: 'fp-ri03-resref',
+      digestBefore: row.resultIntegrityDigest,
+      responseBefore: body,
+    });
+  });
+
+  it('payload_fingerprint alone → integrity_binding_mismatch', async () => {
+    const { opened, body, row } = await settleFixture('op-ri03-fp', 'fp-ri03-fp');
+    const alteredFp = 'fp-ri03-fp-altered';
+    await prisma.requestIntent.update({
+      where: { id: opened.intent.id },
+      data: { payloadFingerprint: alteredFp },
+    });
+    // Replay fingerprint matches the altered column so the earlier fingerprint
+    // check passes; only the sealed binding refuses.
+    await assertBindingRefuseNoEffects({
+      intentId: opened.intent.id,
+      apiKeyId: KEY_A,
+      intentKey: 'op-ri03-fp',
+      payloadFingerprint: alteredFp,
+      digestBefore: row.resultIntegrityDigest,
+      responseBefore: body,
+    });
+  });
+
+  it('generation alone → integrity_binding_mismatch', async () => {
+    const { opened, body, row } = await settleFixture('op-ri03-gen', 'fp-ri03-gen');
+    await prisma.requestIntent.update({
+      where: { id: opened.intent.id },
+      data: { generation: row.generation + 7 },
+    });
+    await assertBindingRefuseNoEffects({
+      intentId: opened.intent.id,
+      apiKeyId: KEY_A,
+      intentKey: 'op-ri03-gen',
+      payloadFingerprint: 'fp-ri03-gen',
+      digestBefore: row.resultIntegrityDigest,
+      responseBefore: body,
+    });
+  });
+});
+
+describe('CAS seal generation — concurrent bump without expected generation', () => {
+  it('settle loses CAS when generation bumps between read and write; no mismatched seal', async () => {
+    await fund(KEY_A, '10');
+    const opened = await prepareAndCommit({
+      apiKeyId: KEY_A,
+      operationKey: 'op-ri-cas-gen',
+      payloadFingerprint: 'fp-ri-cas-gen',
+    });
+    const genAtCommit = opened.intent.generation;
+    expect(genAtCommit).toBeTypeOf('number');
+
+    const ledgerBefore = await prisma.creditsLedger.count({
+      where: { apiKeyId: KEY_A, entryType: 'charge' },
+    });
+
+    // Omit expected generation so the pre-CAS fence does not hide the race;
+    // the CAS itself must still constrain current.generation from the seal read.
+    const intentWithoutExpectedGen = {
+      id: opened.intent.id,
+      apiKeyId: opened.intent.apiKeyId,
+      intentKey: opened.intent.intentKey,
+      holdUsd: opened.intent.holdUsd,
+      lifecycleVersion: opened.intent.lifecycleVersion,
+      protectedPhase: opened.intent.protectedPhase,
+      reservationRef: opened.intent.reservationRef,
+    };
+
+    let bumped = false;
+    const realSettleInTx = billing.settleIntentInTx.bind(billing);
+    const wrapSpy = vi.spyOn(billing, 'settleIntentInTx').mockImplementation(async (tx, params) => {
+      const originalFind = tx.requestIntent.findUnique.bind(tx.requestIntent);
+      tx.requestIntent.findUnique = (async (args: unknown) => {
+        const row = await originalFind(args as never);
+        if (
+          !bumped &&
+          row &&
+          typeof row === 'object' &&
+          'id' in row &&
+          (row as { id: string }).id === opened.intent.id
+        ) {
+          bumped = true;
+          // Concurrent writer on a separate connection (Read Committed): bump
+          // generation after the unlocked seal read, before the CAS write.
+          await prisma.requestIntent.update({
+            where: { id: opened.intent.id },
+            data: { generation: { increment: 1 } },
+          });
+        }
+        return row;
+      }) as typeof tx.requestIntent.findUnique;
+      try {
+        return await realSettleInTx(tx, params);
+      } finally {
+        tx.requestIntent.findUnique = originalFind;
+      }
+    });
+
+    const settled = await billing.settleIntent({
+      intent: intentWithoutExpectedGen,
+      amountUsd: '1',
+      response: { should: 'not-seal-mismatched' },
+      requestId: 'req-ri-cas-gen',
+    });
+    wrapSpy.mockRestore();
+
+    expect(bumped).toBe(true);
+    expect(settled).toBe(false);
+
+    const after = await prisma.requestIntent.findUnique({ where: { id: opened.intent.id } });
+    expect(after!.protectedPhase).toBe(PROTECTED_PHASE.dispatch_committed);
+    expect(after!.response).toBeNull();
+    expect(after!.resultIntegrityDigest).toBeNull();
+    expect(after!.resultIntegrityProfile).toBeNull();
+    expect(after!.resultRetention).toBeNull();
+    // Concurrent bump landed; settle did not increment further.
+    expect(after!.generation).toBe((genAtCommit as number) + 1);
+    expect(
+      await prisma.creditsLedger.count({
+        where: { apiKeyId: KEY_A, entryType: 'charge' },
+      }),
+    ).toBe(ledgerBefore);
+  });
+});
+
 describe('RI04 — missing / malformed / unsupported / historical', () => {
   it('exact typed reason each; no on-read backfill', async () => {
     await fund(KEY_A, '30');
