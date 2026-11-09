@@ -3085,10 +3085,14 @@ describe('protected Lab production test-seam isolation', () => {
     });
     const target = azureTestTarget();
     const azure = new AzureOpenAiConnector(azureTestOptions());
-    const prepareService = buildService({ prepareProtectedReservation }, azure, {
-      findAll: async () => [],
-      findPricing: async () => row,
-    });
+    const prepareService = buildService(
+      { prepareProtectedReservation: prepareProtectedReservation as never },
+      azure,
+      {
+        findAll: async () => [],
+        findPricing: async () => row,
+      },
+    );
     const opened = await prepareService.prepareProtectedReservation(
       'azure-openai',
       {
