@@ -342,9 +342,12 @@ const ADMITTED_CLASS_NAMES: readonly string[] = Object.freeze(
   ),
 );
 
-export const PROTECTED_DISPATCH_FENCE_ADMITTED_CLASSES: ReadonlySet<string> = new Set(
-  ADMITTED_CLASS_NAMES,
-);
+/**
+ * Frozen admitted-class names for introspection. Production admission reads
+ * `ADMITTED_CLASS_NAMES` via `isProtectedDispatchFenceClassAdmitted` — never
+ * a mutable Set view.
+ */
+export const PROTECTED_DISPATCH_FENCE_ADMITTED_CLASSES: readonly string[] = ADMITTED_CLASS_NAMES;
 
 const FORWARDS_MAX_TOKENS_BY_CLASS: Readonly<Record<string, boolean>> = Object.freeze(
   Object.fromEntries(
@@ -374,9 +377,9 @@ export function classForwardsProtectedMaxTokens(
  */
 const PRODUCTION_NON_BASE_ADMISSIONS: readonly string[] = Object.freeze([]);
 
-export const PROTECTED_NON_BASE_FENCE_ADMISSIONS: ReadonlySet<string> = new Set(
-  PRODUCTION_NON_BASE_ADMISSIONS,
-);
+/** Frozen empty introspection list — production lookup ignores consumer writes. */
+export const PROTECTED_NON_BASE_FENCE_ADMISSIONS: readonly string[] =
+  PRODUCTION_NON_BASE_ADMISSIONS;
 
 export function isNonBaseProtectedFenceAdmitted(connectorName: string): boolean {
   return PRODUCTION_NON_BASE_ADMISSIONS.includes(connectorName);

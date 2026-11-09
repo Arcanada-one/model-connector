@@ -45,6 +45,35 @@ import {
 } from '../billing/protected-cost-estimate';
 import { PROTECTED_RESERVATION_STALE } from '../billing/protected-lifecycle';
 
+/**
+ * Spec-only seam for M-EXTRAS-SVC: when set, the mocked extras module pretends
+ * Azure has no reviewed record. Production modules stay frozen / unmocked.
+ */
+const extrasPolicyTestSeam = vi.hoisted(() => ({ azureRecordDropped: false }));
+
+vi.mock('../billing/protected-forwarded-extras', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../billing/protected-forwarded-extras')>();
+  return {
+    ...actual,
+    assessProtectedForwardedExtras(
+      params: Parameters<typeof actual.assessProtectedForwardedExtras>[0],
+    ) {
+      if (
+        extrasPolicyTestSeam.azureRecordDropped &&
+        params.connectorClassName === 'AzureOpenAiConnector'
+      ) {
+        return {
+          ok: false as const,
+          countedInputBytes: 0 as const,
+          message:
+            'Protected prepare refuses admitted forwarder AzureOpenAiConnector without a reviewed extras record.',
+        };
+      }
+      return actual.assessProtectedForwardedExtras(params);
+    },
+  };
+});
+
 const AZURE_TEST_ENDPOINT = 'https://example.openai.azure.com';
 const AZURE_TEST_API_VERSION = '2024-10-21';
 
@@ -65,10 +94,8 @@ function admitTestNonBaseProtectedFence(
 }
 
 function installNonBaseFenceSpies(): void {
-  vi.spyOn(fenceAdmission, 'isNonBaseProtectedFenceAdmitted').mockImplementation(
-    (name) =>
-      fenceAdmission.PROTECTED_NON_BASE_FENCE_ADMISSIONS.has(name) ||
-      testNonBaseAdmissions.has(name),
+  vi.spyOn(fenceAdmission, 'isNonBaseProtectedFenceAdmitted').mockImplementation((name) =>
+    testNonBaseAdmissions.has(name),
   );
   vi.spyOn(fenceAdmission, 'nonBaseForwardsProtectedMaxTokens').mockImplementation(
     (name) => testNonBaseAdmissions.get(name)?.forwardsMaxTokens === true,
@@ -1711,14 +1738,8 @@ describe('protected Lab profile execute guards', () => {
       },
     );
 
-    const originalLookup = protectedForwardedExtrasAuthority.lookup.bind(
-      protectedForwardedExtrasAuthority,
-    );
-    const spy = vi
-      .spyOn(protectedForwardedExtrasAuthority, 'lookup')
-      .mockImplementation((className) =>
-        className === 'AzureOpenAiConnector' ? undefined : originalLookup(className),
-      );
+    // Spec-only vi.mock seam — never mutates the frozen production authority.
+    extrasPolicyTestSeam.azureRecordDropped = true;
     try {
       const refused = await service.prepareProtectedReservation(
         'azure-openai',
@@ -1743,7 +1764,7 @@ describe('protected Lab profile execute guards', () => {
       }
       expect(prepareProtectedReservation).not.toHaveBeenCalled();
     } finally {
-      spy.mockRestore();
+      extrasPolicyTestSeam.azureRecordDropped = false;
     }
   });
 
@@ -2905,15 +2926,21 @@ describe('protected Lab production test-seam isolation', () => {
     const mod = await import('./protected-dispatch-fence-admission');
     expect('__testOnlyAdmitNonBaseProtectedFence' in mod).toBe(false);
     expect('__testOnlyClearNonBaseProtectedFence' in mod).toBe(false);
-    // Mutating the exported Set view must not affect the production lookup,
-    // which reads only the frozen empty admissions array.
-    (mod.PROTECTED_NON_BASE_FENCE_ADMISSIONS as Set<string>).add('evil');
-    expect(mod.PROTECTED_NON_BASE_FENCE_ADMISSIONS.has('evil')).toBe(true);
+    // Exported admissions are frozen arrays — mutation throws; lookup stays empty.
+    expect(Object.isFrozen(mod.PROTECTED_NON_BASE_FENCE_ADMISSIONS)).toBe(true);
+    expect(Object.isFrozen(mod.PROTECTED_DISPATCH_FENCE_ADMITTED_CLASSES)).toBe(true);
+    expect(() => {
+      (mod.PROTECTED_NON_BASE_FENCE_ADMISSIONS as unknown as string[]).push('evil');
+    }).toThrow();
+    expect(() => {
+      (mod.PROTECTED_DISPATCH_FENCE_ADMITTED_CLASSES as unknown as string[]).push('evil');
+    }).toThrow();
     expect(mod.isNonBaseProtectedFenceAdmitted('evil')).toBe(false);
     expect(mod.isNonBaseProtectedFenceAdmitted('mock')).toBe(false);
     // Frozen extras records reject mutation attempts.
     const extras = await import('../billing/protected-forwarded-extras');
     expect(Object.isFrozen(extras.PROTECTED_FORWARDED_EXTRA_RECORDS)).toBe(true);
+    expect(Object.isFrozen(extras.protectedForwardedExtrasAuthority)).toBe(true);
     expect(() => {
       (extras.PROTECTED_FORWARDED_EXTRA_RECORDS as unknown as unknown[]).push({});
     }).toThrow();
@@ -2957,6 +2984,210 @@ describe('protected Lab production test-seam isolation', () => {
     const mod = await import('../billing/protected-forwarded-extras');
     expect('__testOnlyWithoutExtrasRecord' in mod).toBe(false);
     expect(Object.isFrozen(mod.PROTECTED_FORWARDED_EXTRA_RECORDS)).toBe(true);
+    expect(Object.isFrozen(mod.protectedForwardedExtrasAuthority)).toBe(true);
+  });
+
+  it('negative production-path: replacing extras lookup throws or tools still refuse before hold', async () => {
+    // Real module (mock seam off). Attempt in-process authority rewrite.
+    extrasPolicyTestSeam.azureRecordDropped = false;
+    expect(Object.isFrozen(protectedForwardedExtrasAuthority)).toBe(true);
+    let replacementThrew = false;
+    try {
+      (protectedForwardedExtrasAuthority as { lookup: unknown }).lookup = () => ({
+        className: 'AzureOpenAiConnector',
+        forwardedExtraKeys: ['tools', 'tool_choice', 'max_tokens'],
+        disposition: {
+          tools: 'neutral',
+          tool_choice: 'neutral',
+          max_tokens: 'neutral',
+        },
+      });
+    } catch {
+      replacementThrew = true;
+    }
+    expect(replacementThrew).toBe(true);
+
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+      PROVIDER_ACCESS: 'azure-openai',
+    });
+    const prepareProtectedReservation = vi.fn();
+    const service = buildService(
+      { prepareProtectedReservation },
+      new AzureOpenAiConnector(azureTestOptions()),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'azure-openai',
+            model: 'gpt-4o',
+            tier: 'paid',
+            inputPerMTok: 10,
+            outputPerMTok: 30,
+            contentFingerprint: 't'.repeat(64),
+            snapshotId: 'snap-auth-neg',
+          }),
+      },
+    );
+    const tools = [
+      {
+        type: 'function',
+        function: {
+          name: 'lookup',
+          parameters: { type: 'object', properties: { q: { type: 'string' } } },
+        },
+      },
+    ];
+    const refused = await service.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: 'hello',
+        model: 'gpt-4o',
+        idempotencyKey: 'op-auth-neg-tools',
+        extra: { max_tokens: 8, tools },
+      },
+      'key-1',
+    );
+    expect(refused.outcome).toBe('refused');
+    if (refused.outcome === 'refused') {
+      expect(refused.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+      expect(refused.message).toMatch(/tools/);
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('positive control: Azure text-only documented model opens a hold and executes once', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+      PROVIDER_ACCESS: 'azure-openai',
+    });
+    const prepareProtectedReservation = vi.fn(async (params: Record<string, unknown>) => ({
+      outcome: 'opened' as const,
+      reservation: {
+        reservationRef: '11111111-1111-4111-8111-111111111196',
+        holdUsd: String(params.holdUsd),
+        pricePolicyRevision: String(params.pricePolicyRevision),
+      },
+      intent: {},
+    }));
+    const row = freshPricing({
+      connector: 'azure-openai',
+      model: 'gpt-4o',
+      tier: 'paid',
+      inputPerMTok: 10,
+      outputPerMTok: 30,
+      contentFingerprint: 'p'.repeat(64),
+      snapshotId: 'snap-azure-pos-auth',
+    });
+    const target = azureTestTarget();
+    const azure = new AzureOpenAiConnector(azureTestOptions());
+    const prepareService = buildService({ prepareProtectedReservation }, azure, {
+      findAll: async () => [],
+      findPricing: async () => row,
+    });
+    const opened = await prepareService.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: 'hello',
+        model: 'gpt-4o',
+        idempotencyKey: 'op-azure-pos-auth',
+        extra: { max_tokens: 16 },
+      },
+      'key-1',
+    );
+    expect(opened.outcome).toBe('opened');
+    expect(prepareProtectedReservation).toHaveBeenCalledTimes(1);
+
+    const routeKey = encodeAzureTargetIntoRouteKey(
+      'connectors/azure-openai/protected/execute',
+      target,
+    );
+    const revision = deriveProtectedPricePolicyRevision(row as never, routeKey);
+    const REF = '11111111-1111-4111-8111-111111111196';
+    const prepared = {
+      prompt: 'hello',
+      model: 'gpt-4o',
+      protectedProfile: true as const,
+      reservationRef: REF,
+      idempotencyKey: 'op-azure-pos-auth',
+      extra: { max_tokens: 16 } as Record<string, unknown>,
+    };
+    const intent = {
+      id: 'intent-pos-auth',
+      apiKeyId: 'key-1',
+      intentKey: prepared.idempotencyKey,
+      holdUsd: { toString: () => '1.25' },
+      lifecycleVersion: 1,
+      protectedPhase: 'reserved' as string,
+      generation: 1,
+    } as unknown as RequestIntentHandle;
+    const reservation = {
+      reservationRef: REF,
+      intentId: intent.id,
+      intentKey: String(prepared.idempotencyKey),
+      apiKeyId: 'key-1',
+      operationKey: String(prepared.idempotencyKey),
+      payloadFingerprint: ConnectorsService['requestFingerprint'](
+        'azure-openai',
+        prepared as never,
+      ),
+      providerName: 'azure-openai',
+      modelName: 'gpt-4o',
+      routeKey,
+      pricePolicyRevision: revision,
+      holdUsd: '1.25',
+      amountUnit: 'USD',
+      amountPrecision: 6,
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      generation: 1,
+      protectedPhase: 'reserved' as const,
+      lifecycleVersion: 1 as const,
+    };
+    const commitProtectedDispatch = vi.fn(async () => true);
+    const execService = buildService(
+      {
+        lookupProtectedReservation: vi.fn(async () => ({
+          outcome: 'found' as const,
+          reservation,
+          intent,
+        })),
+        commitProtectedDispatch,
+        markProtectedUnknown: vi.fn(async () => true),
+        releaseIntent: vi.fn(async () => false),
+        settleIntentInTx: vi.fn(async () => true),
+        settleInTx: vi.fn(),
+        releaseIntentInTx: vi.fn(),
+      },
+      azure,
+      {
+        findAll: async () => [],
+        findPricing: async () => row,
+      },
+    );
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'ok' } }],
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
+      }),
+      text: async () =>
+        JSON.stringify({
+          choices: [{ message: { content: 'ok' } }],
+          usage: { prompt_tokens: 1, completion_tokens: 1 },
+        }),
+    } as Response);
+    try {
+      const response = await execService.execute('azure-openai', prepared as never, 'key-1');
+      expect(response.status).toBe('success');
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(commitProtectedDispatch).toHaveBeenCalledTimes(1);
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 
   it('import-ban: no non-spec src file imports or exports __testOnly*', async () => {

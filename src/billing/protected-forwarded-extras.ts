@@ -76,21 +76,33 @@ const BY_CLASS: Readonly<Record<string, ProtectedForwardedExtraRecord>> = Object
 );
 
 /**
- * Indirection so same-module assess and cross-module callers share one lookup.
- * Specs may `vi.spyOn(protectedForwardedExtrasAuthority, 'lookup')`; production
- * exports no table mutator and the frozen BY_CLASS backing never changes.
+ * Module-private production lookup. Assess and the exported frozen authority
+ * both read this — never a writable consumer-supplied function.
+ * Specs that need a missing-record path use `vi.mock` / fence spies, not
+ * runtime mutation of this table.
  */
-export const protectedForwardedExtrasAuthority = {
-  lookup(className: string): ProtectedForwardedExtraRecord | undefined {
-    return BY_CLASS[className];
-  },
-};
+function lookupFrozenForwardedExtraRecord(
+  className: string,
+): ProtectedForwardedExtraRecord | undefined {
+  return BY_CLASS[className];
+}
 
-/** Record lookup used by assess and by specs that spy the authority. */
+/**
+ * Frozen introspection surface for callers/tests. Production assess does not
+ * read this object's `.lookup` — it calls `lookupFrozenForwardedExtraRecord`
+ * so replacing the method (if freeze were removed) cannot neutralize refusals.
+ */
+export const protectedForwardedExtrasAuthority = Object.freeze({
+  lookup(className: string): ProtectedForwardedExtraRecord | undefined {
+    return lookupFrozenForwardedExtraRecord(className);
+  },
+});
+
+/** Record lookup used by specs and diagnostics; same frozen table as assess. */
 export function lookupProtectedForwardedExtraRecord(
   className: string,
 ): ProtectedForwardedExtraRecord | undefined {
-  return protectedForwardedExtrasAuthority.lookup(className);
+  return lookupFrozenForwardedExtraRecord(className);
 }
 
 function utf8JsonBytes(value: unknown): number {
@@ -117,7 +129,7 @@ export function assessProtectedForwardedExtras(params: {
   extra?: Record<string, unknown> | null;
 }): ProtectedForwardedExtrasResult {
   const record = params.connectorClassName
-    ? protectedForwardedExtrasAuthority.lookup(params.connectorClassName)
+    ? lookupFrozenForwardedExtraRecord(params.connectorClassName)
     : undefined;
   if (!record) {
     if (params.connectorClassName && classForwardsProtectedMaxTokens(params.connectorClassName)) {

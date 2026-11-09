@@ -6,6 +6,7 @@ import {
   lookupProtectedForwardedExtraRecord,
   protectedForwardedExtrasAuthority,
 } from './protected-forwarded-extras';
+import * as fenceAdmission from '../connectors/protected-dispatch-fence-admission';
 import {
   PROTECTED_DISPATCH_FENCE_DECISIONS,
   classForwardsProtectedMaxTokens,
@@ -62,33 +63,56 @@ describe('assessProtectedForwardedExtras', () => {
   });
 
   it('M-UNKNOWN-FWD: admitted forwarder without an extras record is refused', () => {
-    expect(classForwardsProtectedMaxTokens('AzureOpenAiConnector')).toBe(true);
-    expect(lookupProtectedForwardedExtraRecord('AzureOpenAiConnector')).toBeTruthy();
-    const original = protectedForwardedExtrasAuthority.lookup.bind(
-      protectedForwardedExtrasAuthority,
-    );
+    // Spec-only: admit a ghost forwarder via fence spy. Production extras
+    // authority is frozen and assess reads the private table — no runtime
+    // mutation of production policy objects.
+    expect(lookupProtectedForwardedExtraRecord('AdmittedForwarderWithoutRecord')).toBeUndefined();
+    const originalForwards = fenceAdmission.classForwardsProtectedMaxTokens;
     const spy = vi
-      .spyOn(protectedForwardedExtrasAuthority, 'lookup')
-      .mockImplementation((className) =>
-        className === 'AzureOpenAiConnector' ? undefined : original(className),
+      .spyOn(fenceAdmission, 'classForwardsProtectedMaxTokens')
+      .mockImplementation((name) =>
+        name === 'AdmittedForwarderWithoutRecord' ? true : originalForwards(name),
       );
-    const refused = assessProtectedForwardedExtras({
-      connectorClassName: 'AzureOpenAiConnector',
-      extra: { max_tokens: 16 },
-    });
-    expect(refused.ok).toBe(false);
-    if (!refused.ok) {
-      expect(refused.message).toMatch(/without a reviewed extras record/);
-      expect(refused.countedInputBytes).toBe(0);
+    try {
+      const refused = assessProtectedForwardedExtras({
+        connectorClassName: 'AdmittedForwarderWithoutRecord',
+        extra: { max_tokens: 16 },
+      });
+      expect(refused.ok).toBe(false);
+      if (!refused.ok) {
+        expect(refused.message).toMatch(/without a reviewed extras record/);
+        expect(refused.countedInputBytes).toBe(0);
+      }
+    } finally {
+      spy.mockRestore();
     }
-    spy.mockRestore();
-    // Record restored after the spy.
     expect(
       assessProtectedForwardedExtras({
         connectorClassName: 'AzureOpenAiConnector',
         extra: { max_tokens: 16 },
       }).ok,
     ).toBe(true);
+  });
+
+  it('M-AUTH-UNFROZEN: exported extras authority is frozen; assess ignores lookup writes', () => {
+    expect(Object.isFrozen(protectedForwardedExtrasAuthority)).toBe(true);
+    expect(() => {
+      (protectedForwardedExtrasAuthority as { lookup: unknown }).lookup = () => ({
+        className: 'AzureOpenAiConnector',
+        forwardedExtraKeys: ['tools'],
+        disposition: { tools: 'neutral' },
+      });
+    }).toThrow();
+    const withTools = assessProtectedForwardedExtras({
+      connectorClassName: 'AzureOpenAiConnector',
+      extra: {
+        tools: [{ type: 'function', function: { name: 'x', parameters: {} } }],
+      },
+    });
+    expect(withTools.ok).toBe(false);
+    if (!withTools.ok) {
+      expect(withTools.message).toMatch(/tools/);
+    }
   });
 
   it('M-PPLX-EXCLUDE: Perplexity has no protected extras record after Stage A refusal', () => {
