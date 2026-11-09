@@ -66,3 +66,18 @@ export class ProtectedProfileError extends Error {
     this.code = code;
   }
 }
+
+/** P9: reserved price/route proof no longer matches at pre-fetch recheck. */
+export const PROTECTED_RESERVATION_STALE = 'protected_reservation_stale' as const;
+
+/**
+ * Thrown from `__beforeProviderFetch` when the trusted price/route recheck
+ * fails. Must not run the dispatch CAS, must not release, and must leave the
+ * hold in `reserved` (not `unknown`).
+ */
+export class ProtectedReservationStaleError extends ProtectedProfileError {
+  constructor(message: string) {
+    super(PROTECTED_RESERVATION_STALE, message);
+    this.name = 'ProtectedReservationStaleError';
+  }
+}

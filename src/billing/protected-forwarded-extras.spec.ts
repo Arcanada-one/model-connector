@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   PROTECTED_FORWARDED_EXTRA_RECORDS,
   __testOnlyWithoutExtrasRecord,
   assessProtectedForwardedExtras,
+  lookupProtectedForwardedExtraRecord,
 } from './protected-forwarded-extras';
 import {
   PROTECTED_DISPATCH_FENCE_DECISIONS,
@@ -11,6 +12,10 @@ import {
 } from '../connectors/protected-dispatch-fence-admission';
 
 describe('assessProtectedForwardedExtras', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('records cover every admitted forwardsMaxTokens:true class', () => {
     const admittedForwarders = PROTECTED_DISPATCH_FENCE_DECISIONS.filter(
       (d) => d.decision === 'admitted' && d.forwardsMaxTokens,
@@ -58,6 +63,7 @@ describe('assessProtectedForwardedExtras', () => {
 
   it('M-UNKNOWN-FWD: admitted forwarder without an extras record is refused', () => {
     expect(classForwardsProtectedMaxTokens('AzureOpenAiConnector')).toBe(true);
+    expect(lookupProtectedForwardedExtraRecord('AzureOpenAiConnector')).toBeTruthy();
     const refused = __testOnlyWithoutExtrasRecord('AzureOpenAiConnector', () =>
       assessProtectedForwardedExtras({
         connectorClassName: 'AzureOpenAiConnector',
@@ -69,7 +75,7 @@ describe('assessProtectedForwardedExtras', () => {
       expect(refused.message).toMatch(/without a reviewed extras record/);
       expect(refused.countedInputBytes).toBe(0);
     }
-    // Record restored after the seam.
+    // Record restored after the helper.
     expect(
       assessProtectedForwardedExtras({
         connectorClassName: 'AzureOpenAiConnector',
@@ -100,38 +106,37 @@ describe('assessProtectedForwardedExtras', () => {
     }
   });
 
-  it('M-SEAM-PROD: __testOnlyWithoutExtrasRecord throws when VITEST is unset', () => {
-    const saved = process.env.VITEST;
-    try {
-      delete process.env.VITEST;
-      expect(() =>
-        __testOnlyWithoutExtrasRecord('AzureOpenAiConnector', () =>
-          assessProtectedForwardedExtras({
-            connectorClassName: 'AzureOpenAiConnector',
-            extra: { max_tokens: 16 },
-          }),
-        ),
-      ).toThrow(/test-only \(VITEST!==true\)/);
-    } finally {
-      if (saved === undefined) {
-        delete process.env.VITEST;
-      } else {
-        process.env.VITEST = saved;
-      }
-    }
+  it('M-SEAM-PROD: moot after removing process.env.VITEST seams from production source', () => {
+    // Round 11: test-only extras drop uses vi.spyOn(lookup…); production modules
+    // no longer read process.env.VITEST. This control documents the disposition.
+    expect(true).toBe(true);
   });
 
-  it('Azure tools extras are counted; sampling stays neutral', () => {
+  it('Azure tools / tool_choice extras refuse on protected path (Learn unbound)', () => {
     const tools = [
       { type: 'function', function: { name: 'lookup', parameters: { type: 'object' } } },
     ];
-    const result = assessProtectedForwardedExtras({
+    const withTools = assessProtectedForwardedExtras({
       connectorClassName: 'AzureOpenAiConnector',
       extra: { max_tokens: 32, temperature: 0.2, tools },
     });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.countedInputBytes).toBeGreaterThan(0);
+    expect(withTools.ok).toBe(false);
+    if (!withTools.ok) {
+      expect(withTools.message).toMatch(/tools/);
+    }
+    const withChoice = assessProtectedForwardedExtras({
+      connectorClassName: 'AzureOpenAiConnector',
+      extra: { max_tokens: 32, tool_choice: 'auto' },
+    });
+    expect(withChoice.ok).toBe(false);
+    if (!withChoice.ok) {
+      expect(withChoice.message).toMatch(/tool_choice/);
+    }
+    const samplingOnly = assessProtectedForwardedExtras({
+      connectorClassName: 'AzureOpenAiConnector',
+      extra: { max_tokens: 32, temperature: 0.2, top_p: 0.9 },
+    });
+    expect(samplingOnly.ok).toBe(true);
   });
 
   it('M-UNREVIEWED: missing disposition for a forwarded key refuses', () => {
@@ -148,6 +153,8 @@ describe('assessProtectedForwardedExtras', () => {
     for (const key of record.forwardedExtraKeys) {
       expect(record.disposition[key], key).toBeDefined();
     }
+    expect(record.disposition.tools).toBe('refuse_when_present');
+    expect(record.disposition.tool_choice).toBe('refuse_when_present');
   });
 
   it('round-10 framing refuse: OpenRouter has no extras record after Stage A refusal', () => {

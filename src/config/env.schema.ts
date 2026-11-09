@@ -70,8 +70,10 @@ export const envSchema = z
     BILLING_ENFORCED: envBool.default(false),
 
     // Protected Lab reservation profile (stage A). Server-selected only —
-    // a client flag cannot enable or downgrade it. When false the prepare /
-    // lookup / protected execute routes refuse. Does NOT flip BILLING_ENFORCED.
+    // a client flag cannot enable or downgrade it. When false / empty / unset
+    // the prepare / lookup / protected execute routes 404. Does NOT flip
+    // BILLING_ENFORCED. `.env.example` declares bare KEY= lines only (graph
+    // env_example_key_delta); empty PROTECTED_LAB_PROFILE means disabled.
     PROTECTED_LAB_PROFILE: envBool.default(false),
 
     // Comma-separated connector names served by the protected Lab profile.

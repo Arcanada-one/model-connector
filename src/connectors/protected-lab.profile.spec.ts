@@ -38,8 +38,10 @@ import { AzureOpenAiConnector } from './azure-openai/azure-openai.connector';
 import { __testOnlyWithoutExtrasRecord } from '../billing/protected-forwarded-extras';
 import {
   azureOpenAiChatFramingTokenAllowance,
+  PROTECTED_AZURE_FRAMING_MODEL_UNSUPPORTED,
   protectedInputTokenUpperBound,
 } from '../billing/protected-cost-estimate';
+import { PROTECTED_RESERVATION_STALE } from '../billing/protected-lifecycle';
 
 function freshPricing(row: Record<string, unknown>) {
   return {
@@ -255,8 +257,8 @@ describe('protected Lab profile execute guards', () => {
     process.env.PROVIDER_ACCESS = 'mock,unfenced,liar';
     vi.clearAllMocks();
     __testOnlyClearNonBaseProtectedFence();
-    // Production non-Base admissions are empty. Vitest-only seam admits the
-    // profile doubles that intentionally exercise post-admission paths.
+    // Production non-Base admissions are empty. Spec helpers admit the profile
+    // doubles that intentionally exercise post-admission paths (no VITEST env).
     __testOnlyAdmitNonBaseProtectedFence('mock', { forwardsMaxTokens: true });
     __testOnlyAdmitNonBaseProtectedFence('liar', { forwardsMaxTokens: true });
   });
@@ -1195,13 +1197,13 @@ describe('protected Lab profile execute guards', () => {
     const prepareProtectedReservation = vi.fn();
     const service = buildService(
       { prepareProtectedReservation },
-      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      new AzureOpenAiConnector({ deployment: 'gpt-4o' }),
       {
         findAll: async () => [],
         findPricing: async () =>
           freshPricing({
             connector: 'azure-openai',
-            model: 'gpt-paid',
+            model: 'gpt-4o',
             tier: 'paid',
             inputPerMTok: 10,
             outputPerMTok: 30,
@@ -1215,7 +1217,7 @@ describe('protected Lab profile execute guards', () => {
       'azure-openai',
       {
         prompt: 'hello',
-        model: 'gpt-paid',
+        model: 'gpt-4o',
         idempotencyKey: 'op-azure-deploy-caller',
         extra: { max_tokens: 64, deployment: 'cheap-other' },
       },
@@ -1255,7 +1257,7 @@ describe('protected Lab profile execute guards', () => {
         findPricing: async () =>
           freshPricing({
             connector: 'azure-openai',
-            model: 'gpt-paid',
+            model: 'gpt-4o',
             tier: 'paid',
             inputPerMTok: 10,
             outputPerMTok: 30,
@@ -1268,7 +1270,7 @@ describe('protected Lab profile execute guards', () => {
       'azure-openai',
       {
         prompt: 'hello',
-        model: 'gpt-paid',
+        model: 'gpt-4o',
         idempotencyKey: 'op-azure-deploy-mis',
         extra: { max_tokens: 64 },
       },
@@ -1282,13 +1284,13 @@ describe('protected Lab profile execute guards', () => {
 
     const bound = buildService(
       { prepareProtectedReservation: prepareProtectedReservation as never },
-      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      new AzureOpenAiConnector({ deployment: 'gpt-4o' }),
       {
         findAll: async () => [],
         findPricing: async () =>
           freshPricing({
             connector: 'azure-openai',
-            model: 'gpt-paid',
+            model: 'gpt-4o',
             tier: 'paid',
             inputPerMTok: 10,
             outputPerMTok: 30,
@@ -1301,7 +1303,7 @@ describe('protected Lab profile execute guards', () => {
       'azure-openai',
       {
         prompt: 'hello',
-        model: 'gpt-paid',
+        model: 'gpt-4o',
         idempotencyKey: 'op-azure-deploy-ok',
         extra: { max_tokens: 64 },
       },
@@ -1313,11 +1315,11 @@ describe('protected Lab profile execute guards', () => {
       routeKey: string;
       pricePolicyRevision: string;
     };
-    expect(call.routeKey).toContain('azure-deployment=gpt-paid');
+    expect(call.routeKey).toContain('azure-deployment=gpt-4o');
     const expectedRevision = deriveProtectedPricePolicyRevision(
       {
         connector: 'azure-openai',
-        model: 'gpt-paid',
+        model: 'gpt-4o',
         tier: 'paid',
         inputPerMTok: 10,
         outputPerMTok: 30,
@@ -1331,31 +1333,23 @@ describe('protected Lab profile execute guards', () => {
     expect(call.pricePolicyRevision).toBe(expectedRevision);
   });
 
-  it('M-JSONOBJ-RF: server-set response_format json_object increases the protected input bound', async () => {
+  it('M-JSONOBJ-RF: server-set response_format json_object refuses on protected Azure', async () => {
     validateEnv({
       ...BASE_ENV,
       PROTECTED_LAB_PROFILE: 'true',
       PROTECTED_LAB_CONNECTORS: 'azure-openai',
       PROVIDER_ACCESS: 'azure-openai',
     });
-    const prepareProtectedReservation = vi.fn(async (params: Record<string, unknown>) => ({
-      outcome: 'opened' as const,
-      reservation: {
-        reservationRef: '11111111-1111-4111-8111-111111111197',
-        holdUsd: String(params.holdUsd),
-        pricePolicyRevision: String(params.pricePolicyRevision),
-      },
-      intent: {},
-    }));
+    const prepareProtectedReservation = vi.fn();
     const service = buildService(
-      { prepareProtectedReservation: prepareProtectedReservation as never },
-      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      { prepareProtectedReservation },
+      new AzureOpenAiConnector({ deployment: 'gpt-4o' }),
       {
         findAll: async () => [],
         findPricing: async () =>
           freshPricing({
             connector: 'azure-openai',
-            model: 'gpt-paid',
+            model: 'gpt-4o',
             tier: 'paid',
             inputPerMTok: 1_000_000,
             outputPerMTok: 0,
@@ -1365,45 +1359,36 @@ describe('protected Lab profile execute guards', () => {
       },
     );
 
-    const base = await service.prepareProtectedReservation(
+    const refused = await service.prepareProtectedReservation(
       'azure-openai',
       {
         prompt: 'hi',
-        model: 'gpt-paid',
-        idempotencyKey: 'op-azure-rf-base',
-        extra: { max_tokens: 1 },
-      },
-      'key-1',
-    );
-    const withRf = await service.prepareProtectedReservation(
-      'azure-openai',
-      {
-        prompt: 'hi',
-        model: 'gpt-paid',
+        model: 'gpt-4o',
         idempotencyKey: 'op-azure-rf-json',
         responseFormat: { type: 'json_object' },
         extra: { max_tokens: 1 },
       },
       'key-1',
     );
-    expect(base.outcome).toBe('opened');
-    expect(withRf.outcome).toBe('opened');
-    const baseHold = Number(
-      (prepareProtectedReservation.mock.calls[0][0] as { holdUsd: string }).holdUsd,
-    );
-    const rfHold = Number(
-      (prepareProtectedReservation.mock.calls[1][0] as { holdUsd: string }).holdUsd,
-    );
-    expect(rfHold).toBeGreaterThan(baseHold);
+    expect(refused.outcome).toBe('refused');
+    if (refused.outcome === 'refused') {
+      expect(refused.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+      expect(refused.message).toMatch(/response_format/);
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
   });
 
-  it('M-FRAMING: Azure empty and one-char prompts hold strictly above content-only bound', async () => {
+  it('M-FRAMING / M-FRAMING-PRIME / M-FRAMING-ROLE / M-FRAMING-SYS: exact Azure framing allowance', async () => {
     validateEnv({
       ...BASE_ENV,
       PROTECTED_LAB_PROFILE: 'true',
       PROTECTED_LAB_CONNECTORS: 'azure-openai',
       PROVIDER_ACCESS: 'azure-openai',
     });
+    // Exact Learn formula: empty user-only = 10; with system = 19.
+    expect(azureOpenAiChatFramingTokenAllowance({})).toBe(10);
+    expect(azureOpenAiChatFramingTokenAllowance({ systemPrompt: 'sys' })).toBe(19);
+
     const prepareProtectedReservation = vi.fn(async (params: Record<string, unknown>) => ({
       outcome: 'opened' as const,
       reservation: {
@@ -1415,13 +1400,13 @@ describe('protected Lab profile execute guards', () => {
     }));
     const service = buildService(
       { prepareProtectedReservation: prepareProtectedReservation as never },
-      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      new AzureOpenAiConnector({ deployment: 'gpt-4o' }),
       {
         findAll: async () => [],
         findPricing: async () =>
           freshPricing({
             connector: 'azure-openai',
-            model: 'gpt-paid',
+            model: 'gpt-4o',
             tier: 'paid',
             inputPerMTok: 1_000_000,
             outputPerMTok: 0,
@@ -1437,7 +1422,7 @@ describe('protected Lab profile execute guards', () => {
         'azure-openai',
         {
           prompt,
-          model: 'gpt-paid',
+          model: 'gpt-4o',
           idempotencyKey: `op-azure-framing-${prompt.length}`,
           extra: { max_tokens: 1 },
         },
@@ -1449,13 +1434,119 @@ describe('protected Lab profile execute guards', () => {
       );
       const contentOnly = protectedInputTokenUpperBound({ prompt });
       const framing = azureOpenAiChatFramingTokenAllowance({});
-      expect(framing).toBeGreaterThan(0);
+      expect(framing).toBe(10);
       expect(holdUsd).toBeGreaterThan(contentOnly);
       expect(holdUsd).toBeGreaterThanOrEqual(contentOnly + framing);
     }
+
+    prepareProtectedReservation.mockClear();
+    const withSys = await service.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: '',
+        systemPrompt: 'sys',
+        model: 'gpt-4o',
+        idempotencyKey: 'op-azure-framing-sys',
+        extra: { max_tokens: 1 },
+      },
+      'key-1',
+    );
+    expect(withSys.outcome).toBe('opened');
+    const sysHold = Number(
+      (prepareProtectedReservation.mock.calls[0][0] as { holdUsd: string }).holdUsd,
+    );
+    const sysContent = protectedInputTokenUpperBound({ prompt: '', systemPrompt: 'sys' });
+    expect(azureOpenAiChatFramingTokenAllowance({ systemPrompt: 'sys' })).toBe(19);
+    expect(sysHold).toBeGreaterThanOrEqual(sysContent + 19);
   });
 
-  it('M-EXTRAS-COUNT: protected Azure prepare with tools holds strictly more than without tools', async () => {
+  it('M-FRAMING-MODEL: out-of-set Azure model (gpt-35-turbo) refuses before hold', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+      PROVIDER_ACCESS: 'azure-openai',
+    });
+    const prepareProtectedReservation = vi.fn();
+    const service = buildService(
+      { prepareProtectedReservation },
+      new AzureOpenAiConnector({ deployment: 'gpt-35-turbo' }),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'azure-openai',
+            model: 'gpt-35-turbo',
+            tier: 'paid',
+            inputPerMTok: 10,
+            outputPerMTok: 30,
+            contentFingerprint: 'h'.repeat(64),
+            snapshotId: 'snap-azure-oos',
+          }),
+      },
+    );
+    const refused = await service.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: 'hi',
+        model: 'gpt-35-turbo',
+        idempotencyKey: 'op-azure-oos',
+        extra: { max_tokens: 8 },
+      },
+      'key-1',
+    );
+    expect(refused.outcome).toBe('refused');
+    if (refused.outcome === 'refused') {
+      expect(refused.code).toBe(PROTECTED_AZURE_FRAMING_MODEL_UNSUPPORTED);
+      expect(refused.message).toMatch(/gpt-35-turbo/);
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('M-NONTEXT: unknown non-text ContentBlock refuses before hold/send', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+      PROVIDER_ACCESS: 'azure-openai',
+    });
+    const prepareProtectedReservation = vi.fn();
+    const service = buildService(
+      { prepareProtectedReservation },
+      new AzureOpenAiConnector({ deployment: 'gpt-4o' }),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'azure-openai',
+            model: 'gpt-4o',
+            tier: 'paid',
+            inputPerMTok: 10,
+            outputPerMTok: 30,
+            contentFingerprint: 'i'.repeat(64),
+            snapshotId: 'snap-azure-nontext',
+          }),
+      },
+    );
+    const refused = await service.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: [{ type: 'input_audio', text: 'nope' } as never],
+        model: 'gpt-4o',
+        idempotencyKey: 'op-azure-nontext',
+        extra: { max_tokens: 8 },
+      },
+      'key-1',
+    );
+    expect(refused.outcome).toBe('refused');
+    if (refused.outcome === 'refused') {
+      expect(refused.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+      expect(refused.message).toMatch(/non-text/);
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('M-EXTRAS-COUNT: protected Azure prepare with tools / tool_choice refuses before hold', async () => {
     validateEnv({
       ...BASE_ENV,
       PROTECTED_LAB_PROFILE: 'true',
@@ -1473,13 +1564,13 @@ describe('protected Lab profile execute guards', () => {
     }));
     const service = buildService(
       { prepareProtectedReservation: prepareProtectedReservation as never },
-      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      new AzureOpenAiConnector({ deployment: 'gpt-4o' }),
       {
         findAll: async () => [],
         findPricing: async () =>
           freshPricing({
             connector: 'azure-openai',
-            model: 'gpt-paid',
+            model: 'gpt-4o',
             tier: 'paid',
             inputPerMTok: 1_000_000,
             outputPerMTok: 0,
@@ -1493,12 +1584,15 @@ describe('protected Lab profile execute guards', () => {
       'azure-openai',
       {
         prompt: 'hello',
-        model: 'gpt-paid',
+        model: 'gpt-4o',
         idempotencyKey: 'op-azure-tools-base',
         extra: { max_tokens: 8 },
       },
       'key-1',
     );
+    expect(without.outcome).toBe('opened');
+    expect(prepareProtectedReservation).toHaveBeenCalledTimes(1);
+
     const tools = [
       {
         type: 'function',
@@ -1512,21 +1606,18 @@ describe('protected Lab profile execute guards', () => {
       'azure-openai',
       {
         prompt: 'hello',
-        model: 'gpt-paid',
+        model: 'gpt-4o',
         idempotencyKey: 'op-azure-tools-extra',
         extra: { max_tokens: 8, tools, tool_choice: 'auto' },
       },
       'key-1',
     );
-    expect(without.outcome).toBe('opened');
-    expect(withTools.outcome).toBe('opened');
-    const baseHold = Number(
-      (prepareProtectedReservation.mock.calls[0][0] as { holdUsd: string }).holdUsd,
-    );
-    const toolsHold = Number(
-      (prepareProtectedReservation.mock.calls[1][0] as { holdUsd: string }).holdUsd,
-    );
-    expect(toolsHold).toBeGreaterThan(baseHold);
+    expect(withTools.outcome).toBe('refused');
+    if (withTools.outcome === 'refused') {
+      expect(withTools.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+      expect(withTools.message).toMatch(/tools|tool_choice/);
+    }
+    expect(prepareProtectedReservation).toHaveBeenCalledTimes(1);
   });
 
   it('M-EXTRAS-SVC: dropping extras record on admitted Azure refuses before hold/send', async () => {
@@ -1539,13 +1630,13 @@ describe('protected Lab profile execute guards', () => {
     const prepareProtectedReservation = vi.fn();
     const service = buildService(
       { prepareProtectedReservation },
-      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      new AzureOpenAiConnector({ deployment: 'gpt-4o' }),
       {
         findAll: async () => [],
         findPricing: async () =>
           freshPricing({
             connector: 'azure-openai',
-            model: 'gpt-paid',
+            model: 'gpt-4o',
             tier: 'paid',
             inputPerMTok: 10,
             outputPerMTok: 30,
@@ -1560,7 +1651,7 @@ describe('protected Lab profile execute guards', () => {
         'azure-openai',
         {
           prompt: 'hello',
-          model: 'gpt-paid',
+          model: 'gpt-4o',
           idempotencyKey: 'op-azure-extras-svc',
           extra: { max_tokens: 16 },
         },
@@ -1573,6 +1664,23 @@ describe('protected Lab profile execute guards', () => {
       expect(refused.message).toMatch(/without a reviewed extras record/);
     }
     expect(prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('empty PROTECTED_LAB_PROFILE disables protected routes (404 seam)', () => {
+    const saved = process.env.PROTECTED_LAB_PROFILE;
+    try {
+      process.env.PROTECTED_LAB_PROFILE = '';
+      validateEnv({
+        ...BASE_ENV,
+        PROTECTED_LAB_PROFILE: '',
+        PROTECTED_LAB_CONNECTORS: 'mock',
+      });
+      const service = buildService({}, fencedMockConnector);
+      expect(service.isProtectedLabProfileEnabled()).toBe(false);
+    } finally {
+      if (saved === undefined) delete process.env.PROTECTED_LAB_PROFILE;
+      else process.env.PROTECTED_LAB_PROFILE = saved;
+    }
   });
 });
 
@@ -1750,11 +1858,11 @@ describe('M-EXEC: protected execute reservation mismatch', () => {
 
   it('M-EXEC-FP (a): Azure extra.deployment added only at execute → mismatch, zero sends', async () => {
     const prepared = baseRequest({
-      model: 'gpt-paid',
+      model: 'gpt-4o',
       idempotencyKey: 'op-azure-exec',
       extra: { max_tokens: 64 },
     });
-    const azure = new AzureOpenAiConnector({ deployment: 'gpt-paid' });
+    const azure = new AzureOpenAiConnector({ deployment: 'gpt-4o' });
     const executeSpy = vi.spyOn(azure, 'execute');
     await expectMismatch({
       connector: azure,
@@ -1772,11 +1880,11 @@ describe('M-EXEC: protected execute reservation mismatch', () => {
     // Perplexity is Stage-A excluded from the protected fence; keep the
     // fingerprint-divergence case on an admitted BaseApi class.
     const prepared = baseRequest({
-      model: 'gpt-paid',
+      model: 'gpt-4o',
       idempotencyKey: 'op-azure-temp-exec',
       extra: { max_tokens: 64 },
     });
-    const azure = new AzureOpenAiConnector({ deployment: 'gpt-paid' });
+    const azure = new AzureOpenAiConnector({ deployment: 'gpt-4o' });
     const executeSpy = vi.spyOn(azure, 'execute');
     await expectMismatch({
       connector: azure,
@@ -1902,16 +2010,372 @@ describe('M-EXEC: protected execute reservation mismatch', () => {
     });
     const connector = countingMock();
     const prepared = baseRequest();
-    const { intent, billing, commitProtectedDispatch, settleIntentInTx } = openHold(
+    const row = freshPricing({
+      connector: 'mock',
+      model: 'm',
+      tier: 'paid',
+      inputPerMTok: 10,
+      outputPerMTok: 30,
+      contentFingerprint: 'p'.repeat(64),
+      snapshotId: 'snap-p9-pos',
+    });
+    const routeKey = 'connectors/mock/protected/execute';
+    const revision = deriveProtectedPricePolicyRevision(row as never, routeKey);
+    const { intent, reservation, billing, commitProtectedDispatch, settleIntentInTx } = openHold(
       'mock',
       prepared,
     );
-    const service = buildService(billing, connector);
+    reservation.routeKey = routeKey;
+    reservation.pricePolicyRevision = revision;
+    const service = buildService(billing, connector, {
+      findAll: async () => [],
+      findPricing: async () => row,
+    });
     const response = await service.execute('mock', prepared as never, 'key-1');
     expect(response.status).toBe('success');
     expect(connector.sendCount()).toBe(1);
     expect(commitProtectedDispatch).toHaveBeenCalled();
     expect(intent.protectedPhase).not.toBe('reserved');
     expect(settleIntentInTx).toHaveBeenCalled();
+  });
+});
+
+describe('P9: pre-fetch price/route recheck', () => {
+  const REF = '11111111-1111-4111-8111-111111111166';
+
+  beforeEach(() => {
+    process.env.PROVIDER_ACCESS = 'mock,azure-openai';
+    vi.clearAllMocks();
+    __testOnlyClearNonBaseProtectedFence();
+    __testOnlyAdmitNonBaseProtectedFence('mock', { forwardsMaxTokens: true });
+  });
+
+  function countingMock(): IConnector & { sendCount: () => number } {
+    let sends = 0;
+    return {
+      name: 'mock',
+      supportsProtectedDispatchFence: true,
+      type: 'api',
+      execute: vi.fn(async (request: ConnectorRequest) => {
+        const before = (
+          request as ConnectorRequest & { __beforeProviderFetch?: () => Promise<void> }
+        ).__beforeProviderFetch;
+        if (typeof before === 'function') {
+          await before();
+        }
+        sends += 1;
+        return {
+          id: 'mock-1',
+          connector: 'mock',
+          model: 'm',
+          result: 'ok',
+          usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, costUsd: 0 },
+          latencyMs: 1,
+          status: 'success' as const,
+        };
+      }),
+      getCapabilities: () => ({
+        name: 'mock',
+        type: 'api' as const,
+        models: ['m'],
+        supportsStreaming: false,
+        supportsJsonSchema: false,
+        supportsTools: false,
+        maxTimeout: 30_000,
+      }),
+      getStatus: async () => ({
+        name: 'mock',
+        healthy: true,
+        activeJobs: 0,
+        queuedJobs: 0,
+        rateLimitStatus: 'ok' as const,
+      }),
+      resetCircuitBreaker: () => [],
+      sendCount: () => sends,
+    };
+  }
+
+  function preparedRequest() {
+    return {
+      prompt: 'hello',
+      model: 'm',
+      protectedProfile: true as const,
+      reservationRef: REF,
+      idempotencyKey: 'op-p9',
+      extra: { max_tokens: 64 } as Record<string, unknown>,
+    };
+  }
+
+  function openP9Hold(row: Record<string, unknown>, routeKey: string) {
+    const prepared = preparedRequest();
+    const revision = deriveProtectedPricePolicyRevision(row as never, routeKey);
+    const intent = {
+      id: 'intent-p9',
+      apiKeyId: 'key-1',
+      intentKey: prepared.idempotencyKey,
+      holdUsd: { toString: () => '1.25' },
+      lifecycleVersion: 1,
+      protectedPhase: 'reserved' as string,
+      generation: 1,
+    } as unknown as RequestIntentHandle;
+    const reservation = {
+      reservationRef: REF,
+      intentId: intent.id,
+      intentKey: String(prepared.idempotencyKey),
+      apiKeyId: 'key-1',
+      operationKey: String(prepared.idempotencyKey),
+      payloadFingerprint: ConnectorsService['requestFingerprint']('mock', prepared as never),
+      providerName: 'mock',
+      modelName: 'm',
+      routeKey,
+      pricePolicyRevision: revision,
+      holdUsd: '1.25',
+      amountUnit: 'USD',
+      amountPrecision: 6,
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      generation: 1,
+      protectedPhase: 'reserved' as const,
+      lifecycleVersion: 1 as const,
+    };
+    const commitProtectedDispatch = vi.fn(async (handle: RequestIntentHandle) => {
+      handle.protectedPhase = 'dispatch_committed';
+      return true;
+    });
+    const markProtectedUnknown = vi.fn(async () => true);
+    const releaseIntent = vi.fn(async () => false);
+    const settleIntentInTx = vi.fn(async () => true);
+    const billing = {
+      lookupProtectedReservation: vi.fn(async () => ({
+        outcome: 'found' as const,
+        reservation,
+        intent,
+      })),
+      commitProtectedDispatch,
+      markProtectedUnknown,
+      releaseIntent,
+      settleIntentInTx,
+      settleInTx: vi.fn(),
+      releaseIntentInTx: vi.fn(),
+    };
+    return {
+      prepared,
+      intent,
+      reservation,
+      billing,
+      commitProtectedDispatch,
+      markProtectedUnknown,
+      releaseIntent,
+      settleIntentInTx,
+      row,
+      routeKey,
+      revision,
+    };
+  }
+
+  it('P9-01: price revision change between prepare and hook refuses with zero sends', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROVIDER_ACCESS: 'mock',
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'mock',
+    });
+    const baseRow = freshPricing({
+      connector: 'mock',
+      model: 'm',
+      tier: 'paid',
+      inputPerMTok: 10,
+      outputPerMTok: 30,
+      contentFingerprint: 'a'.repeat(64),
+      snapshotId: 'snap-p9-01a',
+    });
+    const routeKey = 'connectors/mock/protected/execute';
+    const ctx = openP9Hold(baseRow, routeKey);
+    const changedRow = freshPricing({
+      ...baseRow,
+      contentFingerprint: 'b'.repeat(64),
+      snapshotId: 'snap-p9-01b',
+      inputPerMTok: 99,
+    });
+    const connector = countingMock();
+    const service = buildService(ctx.billing, connector, {
+      findAll: async () => [],
+      findPricing: async () => changedRow,
+    });
+    const response = await service.execute('mock', ctx.prepared as never, 'key-1');
+    expect(response.status).toBe('error');
+    expect(response.error?.type).toBe(PROTECTED_RESERVATION_STALE);
+    expect(connector.sendCount()).toBe(0);
+    expect(ctx.commitProtectedDispatch).not.toHaveBeenCalled();
+    expect(ctx.intent.protectedPhase).toBe('reserved');
+    expect(ctx.releaseIntent).not.toHaveBeenCalled();
+    expect(ctx.markProtectedUnknown).not.toHaveBeenCalled();
+  });
+
+  it('P9-02: Azure deployment / route change between prepare and hook refuses', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROVIDER_ACCESS: 'azure-openai',
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+    });
+    const row = freshPricing({
+      connector: 'azure-openai',
+      model: 'gpt-4o',
+      tier: 'paid',
+      inputPerMTok: 10,
+      outputPerMTok: 30,
+      contentFingerprint: 'c'.repeat(64),
+      snapshotId: 'snap-p9-02',
+    });
+    const routeKey = 'connectors/azure-openai/protected/execute#azure-deployment=gpt-4o';
+    const prepared = {
+      prompt: 'hello',
+      model: 'gpt-4o',
+      protectedProfile: true as const,
+      reservationRef: REF,
+      idempotencyKey: 'op-p9-azure',
+      extra: { max_tokens: 64 } as Record<string, unknown>,
+    };
+    const revision = deriveProtectedPricePolicyRevision(row as never, routeKey);
+    const intent = {
+      id: 'intent-p9-az',
+      apiKeyId: 'key-1',
+      intentKey: prepared.idempotencyKey,
+      holdUsd: { toString: () => '1.25' },
+      lifecycleVersion: 1,
+      protectedPhase: 'reserved' as string,
+      generation: 1,
+    } as unknown as RequestIntentHandle;
+    const reservation = {
+      reservationRef: REF,
+      intentId: intent.id,
+      intentKey: String(prepared.idempotencyKey),
+      apiKeyId: 'key-1',
+      operationKey: String(prepared.idempotencyKey),
+      payloadFingerprint: ConnectorsService['requestFingerprint'](
+        'azure-openai',
+        prepared as never,
+      ),
+      providerName: 'azure-openai',
+      modelName: 'gpt-4o',
+      routeKey,
+      pricePolicyRevision: revision,
+      holdUsd: '1.25',
+      amountUnit: 'USD',
+      amountPrecision: 6,
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      generation: 1,
+      protectedPhase: 'reserved' as const,
+      lifecycleVersion: 1 as const,
+    };
+    const commitProtectedDispatch = vi.fn(async () => true);
+    const markProtectedUnknown = vi.fn(async () => true);
+    const releaseIntent = vi.fn(async () => false);
+    const billing = {
+      lookupProtectedReservation: vi.fn(async () => ({
+        outcome: 'found' as const,
+        reservation,
+        intent,
+      })),
+      commitProtectedDispatch,
+      markProtectedUnknown,
+      releaseIntent,
+      settleIntentInTx: vi.fn(async () => true),
+      settleInTx: vi.fn(),
+      releaseIntentInTx: vi.fn(),
+    };
+    // Deployment changed after prepare → binding/route diverges at P9 recheck.
+    // Endpoint/apiKey required so BaseApi reaches __beforeProviderFetch.
+    let sendCount = 0;
+    const azure = new AzureOpenAiConnector({
+      deployment: 'gpt-4o-mini',
+      endpoint: 'https://example.openai.azure.com',
+      apiKey: 'test-key',
+    });
+    const realExecute = azure.execute.bind(azure);
+    azure.execute = (async (request: ConnectorRequest) => {
+      sendCount += 1;
+      return realExecute(request);
+    }) as typeof azure.execute;
+    const service = buildService(billing, azure, {
+      findAll: async () => [],
+      findPricing: async () => row,
+    });
+    // Model still gpt-4o so fingerprint/model checks pass; deployment bind fails/changes route.
+    const response = await service.execute('azure-openai', prepared as never, 'key-1');
+    expect(response.status).toBe('error');
+    expect(response.error?.type).toBe(PROTECTED_RESERVATION_STALE);
+    // execute entered far enough to run the hook, but fetch never ran (send
+    // counter includes the execute call; provider fetch is inside after the hook).
+    expect(commitProtectedDispatch).not.toHaveBeenCalled();
+    expect(intent.protectedPhase).toBe('reserved');
+    expect(releaseIntent).not.toHaveBeenCalled();
+    expect(markProtectedUnknown).not.toHaveBeenCalled();
+    expect(sendCount).toBe(1); // connector.execute entered; fetch blocked by stale throw
+  });
+
+  it('P9-03: catalogue unreadable / unauthoritative between prepare and hook refuses', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROVIDER_ACCESS: 'mock',
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'mock',
+    });
+    const baseRow = freshPricing({
+      connector: 'mock',
+      model: 'm',
+      tier: 'paid',
+      inputPerMTok: 10,
+      outputPerMTok: 30,
+      contentFingerprint: 'd'.repeat(64),
+      snapshotId: 'snap-p9-03',
+    });
+    const routeKey = 'connectors/mock/protected/execute';
+    const ctx = openP9Hold(baseRow, routeKey);
+    const connector = countingMock();
+    const service = buildService(ctx.billing, connector, {
+      findAll: async () => [],
+      findPricing: async () => {
+        throw new Error('catalogue offline');
+      },
+    });
+    const response = await service.execute('mock', ctx.prepared as never, 'key-1');
+    expect(response.status).toBe('error');
+    expect(response.error?.type).toBe(PROTECTED_RESERVATION_STALE);
+    expect(connector.sendCount()).toBe(0);
+    expect(ctx.commitProtectedDispatch).not.toHaveBeenCalled();
+    expect(ctx.intent.protectedPhase).toBe('reserved');
+    expect(ctx.markProtectedUnknown).not.toHaveBeenCalled();
+  });
+
+  it('P9-05: unchanged proof executes once and settles', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROVIDER_ACCESS: 'mock',
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'mock',
+    });
+    const baseRow = freshPricing({
+      connector: 'mock',
+      model: 'm',
+      tier: 'paid',
+      inputPerMTok: 10,
+      outputPerMTok: 30,
+      contentFingerprint: 'e'.repeat(64),
+      snapshotId: 'snap-p9-05',
+    });
+    const routeKey = 'connectors/mock/protected/execute';
+    const ctx = openP9Hold(baseRow, routeKey);
+    const connector = countingMock();
+    const service = buildService(ctx.billing, connector, {
+      findAll: async () => [],
+      findPricing: async () => baseRow,
+    });
+    const response = await service.execute('mock', ctx.prepared as never, 'key-1');
+    expect(response.status).toBe('success');
+    expect(connector.sendCount()).toBe(1);
+    expect(ctx.commitProtectedDispatch).toHaveBeenCalled();
+    expect(ctx.intent.protectedPhase).not.toBe('reserved');
+    expect(ctx.settleIntentInTx).toHaveBeenCalled();
   });
 });

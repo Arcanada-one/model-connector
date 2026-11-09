@@ -44,6 +44,10 @@ export interface ProtectedForwardedExtraRecord {
  * Exhaustive disposition table for admitted classes with `forwardsMaxTokens: true`.
  * Keep in sync with each connector's `buildRequestBody` and with
  * `PROTECTED_DISPATCH_FENCE_DECISIONS[].forwardedExtraKeys`.
+ *
+ * Round 11: Microsoft Learn `num_tokens_from_messages` does not bound tool
+ * definitions or `tool_choice`, so those forwarded extras refuse on protected
+ * Azure (legacy unprotected path unchanged).
  */
 export const PROTECTED_FORWARDED_EXTRA_RECORDS: readonly ProtectedForwardedExtraRecord[] = [
   {
@@ -53,8 +57,8 @@ export const PROTECTED_FORWARDED_EXTRA_RECORDS: readonly ProtectedForwardedExtra
       max_tokens: 'neutral', // output cap handled separately
       temperature: 'neutral',
       top_p: 'neutral',
-      tools: 'count_utf8',
-      tool_choice: 'count_utf8',
+      tools: 'refuse_when_present',
+      tool_choice: 'refuse_when_present',
     },
   },
 ] as const;
@@ -63,15 +67,18 @@ const BY_CLASS: Map<string, ProtectedForwardedExtraRecord> = new Map(
   PROTECTED_FORWARDED_EXTRA_RECORDS.map((r) => [r.className, r]),
 );
 
+/** Record lookup used by assess (and by specs that spy / drop a record). */
+export function lookupProtectedForwardedExtraRecord(
+  className: string,
+): ProtectedForwardedExtraRecord | undefined {
+  return BY_CLASS.get(className);
+}
+
 /**
- * Vitest-only: run `fn` while `className` has no extras record so the
- * admitted-forwarder-without-record refuse path can be exercised directly
- * (M-UNKNOWN-FWD). Restores the record afterward.
+ * Spec helper: run `fn` while `className` has no extras record (M-UNKNOWN-FWD /
+ * M-EXTRAS-SVC). No the Vitest env switch gate — M-SEAM-PROD is moot after round 11.
  */
 export function __testOnlyWithoutExtrasRecord<T>(className: string, fn: () => T): T {
-  if (process.env.VITEST !== 'true') {
-    throw new Error('__testOnlyWithoutExtrasRecord is test-only (VITEST!==true).');
-  }
   const saved = BY_CLASS.get(className);
   if (!saved) {
     throw new Error(`__testOnlyWithoutExtrasRecord: no record for ${className}`);
@@ -107,7 +114,9 @@ export function assessProtectedForwardedExtras(params: {
   connectorClassName: string | null | undefined;
   extra?: Record<string, unknown> | null;
 }): ProtectedForwardedExtrasResult {
-  const record = params.connectorClassName ? BY_CLASS.get(params.connectorClassName) : undefined;
+  const record = params.connectorClassName
+    ? lookupProtectedForwardedExtraRecord(params.connectorClassName)
+    : undefined;
   if (!record) {
     if (params.connectorClassName && classForwardsProtectedMaxTokens(params.connectorClassName)) {
       return {

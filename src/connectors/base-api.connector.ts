@@ -2,6 +2,10 @@ import { redactProviderSecrets } from '../policy/provider-key.context';
 import { randomUUID } from 'crypto';
 import { Logger } from '@nestjs/common';
 import {
+  PROTECTED_RESERVATION_STALE,
+  ProtectedReservationStaleError,
+} from '../billing/protected-lifecycle';
+import {
   CircuitBreakerResetEntry,
   ConnectorCapabilities,
   ConnectorRequest,
@@ -654,6 +658,16 @@ export abstract class BaseApiConnector implements IConnector {
 
       return base;
     } catch (err) {
+      // P9 stale refuse must propagate so ConnectorsService can return a typed
+      // error while leaving the hold `reserved` (no fetch, no CAS, no unknown).
+      if (
+        err instanceof ProtectedReservationStaleError ||
+        (err instanceof Error &&
+          'code' in err &&
+          (err as { code?: string }).code === PROTECTED_RESERVATION_STALE)
+      ) {
+        throw err;
+      }
       const latencyMs = Date.now() - start;
       // A2-210 — `AbortSignal.timeout()` (the only thing that aborts the fetch
       // above) rejects with a DOMException named 'TimeoutError'. This asked for

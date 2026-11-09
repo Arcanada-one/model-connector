@@ -54,9 +54,12 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
       '(options/env equalling the catalogue-priced model), not by provider-verified ' +
       'deployment metadata — Azure deployment names are operator-chosen. ' +
       'Chat framing allowance grounded on Microsoft Learn chat token formula ' +
-      '(tokens_per_message=3, reply priming=+3, role UTF-8) — ' +
+      '(tokens_per_message=3, reply priming=+3, role UTF-8) only for the ' +
+      'documented gpt-4o/gpt-4.1/gpt-5/o-series exact+prefix set; out-of-set ' +
+      'models refuse before hold. tools/tool_choice/response_format refuse on ' +
+      'protected Azure (Learn message loop does not bound them) — ' +
       'https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/chatgpt ' +
-      '(Agent-Brain comment 6728979426).',
+      '(PR #255 round 11).',
   },
   {
     className: 'CerebrasConnector',
@@ -365,40 +368,31 @@ interface TestOnlyNonBaseAdmission {
   forwardsMaxTokens: boolean;
 }
 
-/** Vitest-only map — never populated from production configuration. */
+/**
+ * Spec-populated map for non-Base IConnector doubles. Production never writes
+ * here (PROTECTED_NON_BASE_FENCE_ADMISSIONS stays empty). No the Vitest env switch
+ * branch — M-SEAM-PROD is moot after round 11.
+ */
 const testOnlyNonBaseAdmissions = new Map<string, TestOnlyNonBaseAdmission>();
 
-function assertVitestOnlySeam(action: string): void {
-  if (process.env.VITEST !== 'true') {
-    throw new Error(`Protected non-Base fence ${action} is test-only (VITEST!==true).`);
-  }
-}
-
-/**
- * Test-only admission for a non-Base IConnector double. Unreachable unless
- * Vitest set `VITEST=true`. Production configuration cannot enable this path.
- */
+/** Spec helper: admit a non-Base double to the protected fence. */
 export function __testOnlyAdmitNonBaseProtectedFence(
   connectorName: string,
   opts: { forwardsMaxTokens?: boolean } = {},
 ): void {
-  assertVitestOnlySeam('admit');
   testOnlyNonBaseAdmissions.set(connectorName, {
     forwardsMaxTokens: opts.forwardsMaxTokens === true,
   });
 }
 
+/** Spec helper: clear non-Base test admissions. */
 export function __testOnlyClearNonBaseProtectedFence(): void {
-  assertVitestOnlySeam('clear');
   testOnlyNonBaseAdmissions.clear();
 }
 
 export function isNonBaseProtectedFenceAdmitted(connectorName: string): boolean {
   if (PROTECTED_NON_BASE_FENCE_ADMISSIONS.has(connectorName)) return true;
-  if (process.env.VITEST === 'true' && testOnlyNonBaseAdmissions.has(connectorName)) {
-    return true;
-  }
-  return false;
+  return testOnlyNonBaseAdmissions.has(connectorName);
 }
 
 export function nonBaseForwardsProtectedMaxTokens(connectorName: string): boolean {
@@ -407,8 +401,5 @@ export function nonBaseForwardsProtectedMaxTokens(connectorName: string): boolea
     // carry its own forwarding record. Fail closed until then.
     return false;
   }
-  if (process.env.VITEST === 'true') {
-    return testOnlyNonBaseAdmissions.get(connectorName)?.forwardsMaxTokens === true;
-  }
-  return false;
+  return testOnlyNonBaseAdmissions.get(connectorName)?.forwardsMaxTokens === true;
 }

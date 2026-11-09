@@ -28,18 +28,25 @@ import { BaseCliConnector } from './base-cli.connector';
 import { BaseApiConnector } from './base-api.connector';
 import { parseDeepSeekOptions } from './deepseek/deepseek-options';
 import { sanitizeJsonResponse, JsonSanitizeError } from '../core/utils/json-sanitizer';
-import { getConfig } from '../config/env.schema';
+import { getConfig, parseEnvBool } from '../config/env.schema';
 import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import { BillingService, RequestIntentHandle } from '../billing/billing.service';
 import { estimateCostUsd, promptCharLength } from '../billing/cost-estimate';
 import {
   azureOpenAiChatFramingTokenAllowance,
+  isAzureChatFramingModelAdmitted,
+  PROTECTED_AZURE_FRAMING_MODEL_UNSUPPORTED,
   protectedInputTokenUpperBound,
   protectedPromptContainsImageUrl,
   protectedPromptContainsNonTextBlock,
 } from '../billing/protected-cost-estimate';
 import { assessProtectedForwardedExtras } from '../billing/protected-forwarded-extras';
+import {
+  ProtectedReservationStaleError,
+  PROTECTED_RESERVATION_STALE,
+  type ProtectedReservationView,
+} from '../billing/protected-lifecycle';
 import {
   NATIVE_PRICING_UNAVAILABLE,
   resolveProtectedPricePolicy,
@@ -1263,7 +1270,18 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
           'The protected Lab profile refuses the dark-billing / null-intent fallback.',
         );
       }
+      const reservedBinding = gate.reservation;
+      if (!reservedBinding) {
+        return this.gateErrorResponse(
+          connectorName,
+          request.model || 'unknown',
+          'protected_intent_required',
+          'The protected Lab profile refuses execute without a reserved binding.',
+        );
+      }
       providerRequest.__beforeProviderFetch = async () => {
+        // P9: re-resolve trusted price/route (incl. Azure deployment) before CAS.
+        await this.assertProtectedReservationStillCurrent(connectorName, request, reservedBinding);
         const committed = await this.billing!.commitProtectedDispatch(intent!);
         if (!committed) {
           throw new BadRequestException({
@@ -1426,6 +1444,15 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
         ).catch(() => {
           this.logger.error('Failed to mark first-dispatch observation indeterminate');
         });
+      }
+      // P9: price/route recheck refused before CAS — hold stays reserved.
+      if (error instanceof ProtectedReservationStaleError) {
+        return this.gateErrorResponse(
+          connectorName,
+          request.model || 'unknown',
+          PROTECTED_RESERVATION_STALE,
+          error.message,
+        );
       }
       // ARAS-0058 — hand the reservation back. A throw here means no response
       // was produced and so no charge will be, and a hold nobody releases is a
@@ -2333,6 +2360,13 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
    * Billing must be wired; null-intent / dark-billing fallback is refused.
    */
   isProtectedLabProfileEnabled(): boolean {
+    // Prefer live process.env so bare KEY= / empty disables the profile and so
+    // the relationship graph records config_key:PROTECTED_LAB_PROFILE (required
+    // for env_example_key_delta). Fall back to validated getConfig for specs
+    // that only seed the cache via validateEnv(...).
+    if (Object.prototype.hasOwnProperty.call(process.env, 'PROTECTED_LAB_PROFILE')) {
+      return parseEnvBool(process.env.PROTECTED_LAB_PROFILE);
+    }
     try {
       return getConfig().PROTECTED_LAB_PROFILE === true;
     } catch {
@@ -2341,17 +2375,22 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
   }
 
   protectedLabConnectors(): Set<string> {
-    try {
-      const raw = getConfig().PROTECTED_LAB_CONNECTORS ?? '';
-      return new Set(
-        raw
-          .split(',')
-          .map((s: string) => s.trim())
-          .filter(Boolean),
-      );
-    } catch {
-      return new Set();
+    let raw = '';
+    if (Object.prototype.hasOwnProperty.call(process.env, 'PROTECTED_LAB_CONNECTORS')) {
+      raw = process.env.PROTECTED_LAB_CONNECTORS ?? '';
+    } else {
+      try {
+        raw = getConfig().PROTECTED_LAB_CONNECTORS ?? '';
+      } catch {
+        return new Set();
+      }
     }
+    return new Set(
+      raw
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter(Boolean),
+    );
   }
 
   /**
@@ -2483,18 +2522,50 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     }
     const routeKey = azureBinding.routeKey;
 
-    // M-IMAGE: no provider-grounded image upper bound on the first protected
-    // profile — refuse image_url / non-text blocks rather than inventing a
-    // byte allowance (Agent-Brain comments 6728415319 / 6728979426).
+    // M-IMAGE: no provider-grounded image upper bound — refuse image_url
+    // specifically (Agent-Brain comment 6728415319). Kept as its own branch so
+    // M-IMAGE (image check → false) is not equivalent to M-NONTEXT.
+    if (protectedPromptContainsImageUrl(request.prompt)) {
+      return {
+        outcome: 'unavailable' as const,
+        code: NATIVE_PRICING_UNAVAILABLE,
+        message:
+          'Protected prepare refuses image_url ContentBlocks; no provider-grounded image upper bound is admitted.',
+      };
+    }
+    // M-NONTEXT: other non-text blocks (unknown types) refuse before hold/send.
+    if (protectedPromptContainsNonTextBlock(request.prompt)) {
+      return {
+        outcome: 'unavailable' as const,
+        code: NATIVE_PRICING_UNAVAILABLE,
+        message:
+          'Protected prepare refuses non-text ContentBlocks; no provider-grounded non-text upper bound is admitted.',
+      };
+    }
+    // M-FRAMING-MODEL: Microsoft Learn documents the framing formula only for
+    // an exact/prefix model set. Refuse out-of-set Azure models before hold.
     if (
-      protectedPromptContainsImageUrl(request.prompt) ||
-      protectedPromptContainsNonTextBlock(request.prompt)
+      connectorClassName === 'AzureOpenAiConnector' &&
+      !isAzureChatFramingModelAdmitted(modelName)
+    ) {
+      return {
+        outcome: 'unavailable' as const,
+        code: PROTECTED_AZURE_FRAMING_MODEL_UNSUPPORTED,
+        message: `Protected prepare refuses Azure model '${modelName}': chat framing is documented only for the Microsoft Learn gpt-4o/gpt-4.1/gpt-5/o-series set.`,
+      };
+    }
+    // Learn source does not bound response_format billed rendering — refuse
+    // server-set responseFormat on protected Azure (legacy path unchanged).
+    if (
+      connectorClassName === 'AzureOpenAiConnector' &&
+      request.responseFormat != null &&
+      request.responseFormat.type === 'json_object'
     ) {
       return {
         outcome: 'unavailable' as const,
         code: NATIVE_PRICING_UNAVAILABLE,
         message:
-          'Protected prepare refuses non-text ContentBlocks (including image_url); no provider-grounded image upper bound is admitted.',
+          'Protected prepare refuses Azure response_format: Microsoft Learn num_tokens_from_messages does not document its billed rendering.',
       };
     }
     const extras = assessProtectedForwardedExtras({
@@ -2509,12 +2580,15 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       };
     }
     // Content UTF-8 + counted extras. Azure adds a Microsoft-documented chat
-    // framing allowance (M-FRAMING); other classes are fence-refused instead.
+    // framing allowance (M-FRAMING) only for the admitted model set; other
+    // classes are fence-refused instead.
     let inputTokenUpperBound =
       protectedInputTokenUpperBound({
         prompt: request.prompt,
         systemPrompt: request.systemPrompt,
         tools: request.tools,
+        // responseFormat already refused for protected Azure above; other
+        // admitted classes do not currently exist.
         responseFormat: request.responseFormat,
       }) + extras.countedInputBytes;
     if (connectorClassName === 'AzureOpenAiConnector') {
@@ -2676,7 +2750,11 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     connectorName: string,
     request: ServiceExecuteRequest,
     apiKeyId: string,
-  ): Promise<{ response?: ConnectorResponse; intent: RequestIntentHandle | null }> {
+  ): Promise<{
+    response?: ConnectorResponse;
+    intent: RequestIntentHandle | null;
+    reservation?: ProtectedReservationView;
+  }> {
     const model = request.model || 'unknown';
     if (!this.billing) {
       return {
@@ -2760,7 +2838,38 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
         ),
       };
     }
-    return { intent: looked.intent };
+    return { intent: looked.intent, reservation };
+  }
+
+  /**
+   * P9 — immediately before the dispatch CAS / provider fetch, re-resolve the
+   * trusted price policy and route for the reserved connector/model/routeKey
+   * (including Azure deployment binding). On mismatch or unavailable proof:
+   * refuse with zero provider calls, do not CAS, leave the hold `reserved`.
+   */
+  private async assertProtectedReservationStillCurrent(
+    connectorName: string,
+    request: ServiceExecuteRequest,
+    reserved: ProtectedReservationView,
+  ): Promise<void> {
+    const modelName = request.model || reserved.modelName || 'unknown';
+    // Fresh re-derive — do not trust the reserved revision as a client hint.
+    const authority = await this.resolveProtectedPriceAuthority(connectorName, modelName, request);
+    if (authority.outcome !== 'resolved') {
+      throw new ProtectedReservationStaleError(
+        `Protected reservation is stale: trusted price/route proof is unavailable (${authority.code}).`,
+      );
+    }
+    if (
+      authority.pricePolicyRevision !== reserved.pricePolicyRevision ||
+      authority.routeKey !== reserved.routeKey ||
+      reserved.providerName !== connectorName ||
+      reserved.modelName !== modelName
+    ) {
+      throw new ProtectedReservationStaleError(
+        'Protected reservation is stale: trusted price policy or route no longer matches the hold.',
+      );
+    }
   }
 
   /** Give a reservation back. Safe to call with null, and safe to repeat. */

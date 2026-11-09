@@ -21,7 +21,7 @@ export const PROTECTED_HOLD_DECIMALS = 6;
  * Azure OpenAI chat-completions structural tokens per message.
  * Source: Microsoft Learn — "Work with chat completion models"
  * https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/chatgpt
- * (`tokens_per_message = 3` for the gpt-4o / gpt-4.1 / gpt-5 / o-series set).
+ * (`tokens_per_message = 3` only for the exact/prefix set below).
  */
 export const AZURE_CHAT_TOKENS_PER_MESSAGE = 3;
 
@@ -30,6 +30,46 @@ export const AZURE_CHAT_TOKENS_PER_MESSAGE = 3;
  * Same Microsoft Learn page (`num_tokens += 3` after the message loop).
  */
 export const AZURE_CHAT_REPLY_PRIMING_TOKENS = 3;
+
+/**
+ * Exact model names for which Microsoft Learn documents
+ * `tokens_per_message = 3` and final `+3`. Any other model raises
+ * `NotImplementedError` in the source `num_tokens_from_messages`.
+ */
+export const AZURE_CHAT_FRAMING_EXACT_MODELS: ReadonlySet<string> = new Set([
+  'gpt-4o',
+  'gpt-4o-mini',
+  'gpt-5',
+  'gpt-4.1',
+  'o1',
+  'o1-mini',
+  'o3',
+  'o3-mini',
+  'o4-mini',
+]);
+
+/** Prefixes admitted alongside the exact set (same Learn page). */
+export const AZURE_CHAT_FRAMING_MODEL_PREFIXES: readonly string[] = [
+  'gpt-4o-',
+  'gpt-5-',
+  'gpt-4.1-',
+  'o1-',
+  'o3-',
+  'o4-mini-',
+] as const;
+
+/** Typed refuse when the priced Azure model is outside the Learn framing set. */
+export const PROTECTED_AZURE_FRAMING_MODEL_UNSUPPORTED =
+  'protected_azure_framing_model_unsupported' as const;
+
+/**
+ * True when Microsoft Learn documents the chat framing formula for `model`.
+ * Do not widen beyond the exact/prefix set above.
+ */
+export function isAzureChatFramingModelAdmitted(model: string): boolean {
+  if (AZURE_CHAT_FRAMING_EXACT_MODELS.has(model)) return true;
+  return AZURE_CHAT_FRAMING_MODEL_PREFIXES.some((prefix) => model.startsWith(prefix));
+}
 
 function utf8Bytes(text: string): number {
   return Buffer.byteLength(text, 'utf8');
@@ -106,13 +146,17 @@ export function protectedInputTokenUpperBound(parts: {
  * Provider-grounded Azure OpenAI chat framing allowance for the whole billed
  * prompt beyond content UTF-8 bytes.
  *
- * Microsoft Learn documents, for the listed chat models, `tokens_per_message = 3`
- * plus a final `+ 3` reply priming, and encodes each message `role` separately.
- * Role strings are absent from {@link protectedInputTokenUpperBound}; count their
- * UTF-8 length as a tokenizer upper bound (byte ≥ token).
+ * Microsoft Learn documents, for the listed chat models only,
+ * `tokens_per_message = 3` plus a final `+ 3` reply priming, and encodes each
+ * message `role` separately. Role strings are absent from
+ * {@link protectedInputTokenUpperBound}; count their UTF-8 length as a tokenizer
+ * upper bound (byte ≥ token). The source message loop covers role/content/name
+ * only — not tool definitions, tool_choice, or response_format.
+ *
+ * Exact values: empty user-only prompt → 10; with non-empty system → 19.
  *
  * Source: https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/chatgpt
- * (Agent-Brain comment 6728979426 / PR #255 framing disposition).
+ * (Agent-Brain / PR #255 framing disposition; round 11 model gate).
  */
 export function azureOpenAiChatFramingTokenAllowance(parts: { systemPrompt?: string }): number {
   let messageCount = 1; // buildRequestBody always pushes the user message

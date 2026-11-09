@@ -306,13 +306,16 @@ describe('resolveProtectedPricePolicy', () => {
     expect(Number(ceilUsdToLedgerPrecision(next))).toBeGreaterThanOrEqual(next);
   });
 
-  it('M-FRAMING: Azure chat framing allowance is strictly above content-only for empty and one-char prompts', () => {
+  it('M-FRAMING / M-FRAMING-PRIME / M-FRAMING-ROLE / M-FRAMING-SYS: exact Azure framing allowance', () => {
     const emptyContent = protectedInputTokenUpperBound({ prompt: '' });
     const oneContent = protectedInputTokenUpperBound({ prompt: 'a' });
     const framing = azureOpenAiChatFramingTokenAllowance({});
+    const framingWithSys = azureOpenAiChatFramingTokenAllowance({ systemPrompt: 'sys' });
     expect(emptyContent).toBe(0);
     expect(oneContent).toBe(1);
-    expect(framing).toBeGreaterThan(0);
+    // Exact Learn formula values (empty user-only = 10; with system = 19).
+    expect(framing).toBe(10);
+    expect(framingWithSys).toBe(19);
     expect(emptyContent + framing).toBeGreaterThan(emptyContent);
     expect(oneContent + framing).toBeGreaterThan(oneContent);
 
