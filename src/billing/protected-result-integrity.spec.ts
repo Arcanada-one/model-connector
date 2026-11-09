@@ -91,8 +91,11 @@ describe('pri/v1 canonical + digest', () => {
         retention: null,
         binding,
         storedResponse: { a: 1 },
-      }).reason,
-    ).toBe(INTEGRITY_REFUSAL_REASON.integrity_unverified);
+      }),
+    ).toEqual({
+      ok: false,
+      reason: INTEGRITY_REFUSAL_REASON.integrity_unverified,
+    });
 
     expect(
       verifyProtectedResultIntegrity({
@@ -101,8 +104,11 @@ describe('pri/v1 canonical + digest', () => {
         retention: RESULT_RETENTION.retained,
         binding,
         storedResponse: { a: 1 },
-      }).reason,
-    ).toBe(INTEGRITY_REFUSAL_REASON.integrity_digest_missing);
+      }),
+    ).toEqual({
+      ok: false,
+      reason: INTEGRITY_REFUSAL_REASON.integrity_digest_missing,
+    });
 
     expect(
       verifyProtectedResultIntegrity({
@@ -111,8 +117,11 @@ describe('pri/v1 canonical + digest', () => {
         retention: RESULT_RETENTION.retained,
         binding,
         storedResponse: { a: 1 },
-      }).reason,
-    ).toBe(INTEGRITY_REFUSAL_REASON.integrity_digest_malformed);
+      }),
+    ).toEqual({
+      ok: false,
+      reason: INTEGRITY_REFUSAL_REASON.integrity_digest_malformed,
+    });
 
     expect(
       verifyProtectedResultIntegrity({
@@ -121,8 +130,11 @@ describe('pri/v1 canonical + digest', () => {
         retention: RESULT_RETENTION.retained,
         binding,
         storedResponse: { a: 1 },
-      }).reason,
-    ).toBe(INTEGRITY_REFUSAL_REASON.integrity_version_unsupported);
+      }),
+    ).toEqual({
+      ok: false,
+      reason: INTEGRITY_REFUSAL_REASON.integrity_version_unsupported,
+    });
   });
 });
 
@@ -186,8 +198,10 @@ describe('mutation source anchors (must stay assertion-backed in suite)', () => 
       binding,
       storedResponse: { a: 2 },
     });
-    expect(bad.ok).toBe(false);
-    expect(bad.reason).toBe(INTEGRITY_REFUSAL_REASON.integrity_digest_mismatch);
+    expect(bad).toEqual({
+      ok: false,
+      reason: INTEGRITY_REFUSAL_REASON.integrity_digest_mismatch,
+    });
   });
 
   it('M-RI-NO-BINDING: binding digest is part of the sealed pair', () => {
@@ -210,8 +224,10 @@ describe('mutation source anchors (must stay assertion-backed in suite)', () => 
       binding,
       storedResponse: retained,
     });
-    expect(refused.ok).toBe(false);
-    expect(refused.reason).toBe(INTEGRITY_REFUSAL_REASON.integrity_binding_mismatch);
+    expect(refused).toEqual({
+      ok: false,
+      reason: INTEGRITY_REFUSAL_REASON.integrity_binding_mismatch,
+    });
   });
 
   it('M-RI-NO-VERSION: unsupported profile refuses', () => {
@@ -223,8 +239,10 @@ describe('mutation source anchors (must stay assertion-backed in suite)', () => 
       binding,
       storedResponse: { a: 1 },
     });
-    expect(refused.ok).toBe(false);
-    expect(refused.reason).toBe(INTEGRITY_REFUSAL_REASON.integrity_version_unsupported);
+    expect(refused).toEqual({
+      ok: false,
+      reason: INTEGRITY_REFUSAL_REASON.integrity_version_unsupported,
+    });
   });
 
   it('M-RI-RESNAPSHOT: settle path seals the storable snapshot written in the same CAS', () => {
@@ -261,7 +279,9 @@ describe('mutation source anchors (must stay assertion-backed in suite)', () => 
       binding,
       storedResponse: { a: 1 },
     });
-    expect(v.ok).toBe(false);
-    expect(v.reason).toBe(INTEGRITY_REFUSAL_REASON.integrity_unverified);
+    expect(v).toEqual({
+      ok: false,
+      reason: INTEGRITY_REFUSAL_REASON.integrity_unverified,
+    });
   });
 });
