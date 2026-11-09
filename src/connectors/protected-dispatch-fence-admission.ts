@@ -40,7 +40,7 @@ export interface FenceAdmissionRecord {
  * review (2026-11-08). Keep in sync when adding a connector class.
  */
 export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[] = [
-  // --- inherit BaseApiConnector.execute (hook path) — admitted ---
+  // --- inherit BaseApiConnector.execute — Azure admitted; others framing-refused ---
   {
     className: 'AzureOpenAiConnector',
     overridesExecute: false,
@@ -52,7 +52,11 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
       'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens. ' +
       'LIMITATION: protected deployment binding is by server-configured deployment name ' +
       '(options/env equalling the catalogue-priced model), not by provider-verified ' +
-      'deployment metadata — Azure deployment names are operator-chosen.',
+      'deployment metadata — Azure deployment names are operator-chosen. ' +
+      'Chat framing allowance grounded on Microsoft Learn chat token formula ' +
+      '(tokens_per_message=3, reply priming=+3, role UTF-8) — ' +
+      'https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/chatgpt ' +
+      '(Agent-Brain comment 6728979426).',
   },
   {
     className: 'CerebrasConnector',
@@ -60,9 +64,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: false,
     forwardedExtraKeys: ['max_completion_tokens', 'temperature', 'top_p'],
-    decision: 'admitted',
+    decision: 'refused',
     reason:
-      'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_completion_tokens only — not max_tokens.',
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'CloudflareWorkersAiConnector',
@@ -70,8 +74,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p', 'top_k', 'seed'],
-    decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
+    decision: 'refused',
+    reason:
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'EmbeddingConnector',
@@ -79,9 +84,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: false,
     forwardedExtraKeys: [],
-    decision: 'admitted',
+    decision: 'refused',
     reason:
-      'Inherits BaseApiConnector.execute; provider fetch is fenced. Embedding body has no max_tokens.',
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'FireworksConnector',
@@ -89,8 +94,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
+    decision: 'refused',
+    reason:
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'GrokConnector',
@@ -98,8 +104,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
+    decision: 'refused',
+    reason:
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'GroqConnector',
@@ -107,8 +114,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
+    decision: 'refused',
+    reason:
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'HuggingFaceConnector',
@@ -116,8 +124,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
+    decision: 'refused',
+    reason:
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'MistralConnector',
@@ -125,8 +134,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
+    decision: 'refused',
+    reason:
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'OllamaCloudConnector',
@@ -134,9 +144,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: false,
     forwardedExtraKeys: [],
-    decision: 'admitted',
+    decision: 'refused',
     reason:
-      'Inherits BaseApiConnector.execute; provider fetch is fenced. Options bag only — does not forward max_tokens.',
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'OllamaConnector',
@@ -144,9 +154,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: false,
     forwardedExtraKeys: [],
-    decision: 'admitted',
+    decision: 'refused',
     reason:
-      'Inherits BaseApiConnector.execute; provider fetch is fenced. Options bag only — does not forward max_tokens.',
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'OpenAiConnector',
@@ -154,9 +164,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: false,
     forwardedExtraKeys: ['max_output_tokens', 'temperature', 'top_p'],
-    decision: 'admitted',
+    decision: 'refused',
     reason:
-      'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_output_tokens only — not max_tokens.',
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'OpenModelConnector',
@@ -164,9 +174,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature'],
-    decision: 'admitted',
+    decision: 'refused',
     reason:
-      'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens (defaulted when absent).',
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'OpenRouterConnector',
@@ -174,8 +184,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
+    decision: 'refused',
+    reason:
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'OrqConnector',
@@ -183,8 +194,9 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
+    decision: 'refused',
+    reason:
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
   {
     className: 'PerplexityConnector',
@@ -232,11 +244,10 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
     callsSuperExecute: null,
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    decision: 'admitted',
-    reason: 'Inherits BaseApiConnector.execute; provider fetch is fenced. Forwards max_tokens.',
+    decision: 'refused',
+    reason:
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
   },
-
-  // --- overrides execute (even with super.execute) — refused until reviewed ---
   {
     className: 'AnthropicConnector',
     overridesExecute: true,

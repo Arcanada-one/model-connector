@@ -35,6 +35,11 @@ import {
 import { CerebrasConnector } from './cerebras/cerebras.connector';
 import { PerplexityConnector } from './perplexity/perplexity.connector';
 import { AzureOpenAiConnector } from './azure-openai/azure-openai.connector';
+import { __testOnlyWithoutExtrasRecord } from '../billing/protected-forwarded-extras';
+import {
+  azureOpenAiChatFramingTokenAllowance,
+  protectedInputTokenUpperBound,
+} from '../billing/protected-cost-estimate';
 
 function freshPricing(row: Record<string, unknown>) {
   return {
@@ -908,7 +913,51 @@ describe('protected Lab profile execute guards', () => {
     expect(prepareProtectedReservation).not.toHaveBeenCalled();
   });
 
-  it('M-SVCFWD: admitted Cerebras (forwardsMaxTokens false) refuses despite max_tokens', async () => {
+  it('M-SVCFWD: admitted non-forwarding mock (forwardsMaxTokens false) refuses despite max_tokens', async () => {
+    // Cerebras is fence-refused for chat-framing (round 10). Keep the
+    // forwardsMaxTokens:false service kill on a vitest-only admitted double.
+    __testOnlyClearNonBaseProtectedFence();
+    __testOnlyAdmitNonBaseProtectedFence('mock', { forwardsMaxTokens: false });
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'mock',
+      PROVIDER_ACCESS: 'mock',
+    });
+    const prepareProtectedReservation = vi.fn();
+    const service = buildService({ prepareProtectedReservation }, fencedMockConnector, {
+      findAll: async () => [],
+      findPricing: async () =>
+        freshPricing({
+          connector: 'mock',
+          model: 'paid-m',
+          tier: 'paid',
+          inputPerMTok: 10,
+          outputPerMTok: 30,
+          contentFingerprint: 'c'.repeat(64),
+          snapshotId: 'snap-svc-fwd',
+        }),
+    });
+
+    const result = await service.prepareProtectedReservation(
+      'mock',
+      {
+        prompt: 'hello',
+        model: 'paid-m',
+        idempotencyKey: 'op-svc-fwd',
+        extra: { max_tokens: 2_000 },
+      },
+      'key-1',
+    );
+
+    expect(result.outcome).toBe('refused');
+    if (result.outcome === 'refused') {
+      expect(result.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
+  });
+
+  it('M-FRAMING framing-refuse: allow-listed Cerebras is refused at admission (no hold)', async () => {
     validateEnv({
       ...BASE_ENV,
       PROTECTED_LAB_PROFILE: 'true',
@@ -926,25 +975,22 @@ describe('protected Lab profile execute guards', () => {
           inputPerMTok: 10,
           outputPerMTok: 30,
           contentFingerprint: 'c'.repeat(64),
-          snapshotId: 'snap-cerebras',
+          snapshotId: 'snap-cerebras-framing',
         }),
     });
 
-    const result = await service.prepareProtectedReservation(
-      'cerebras',
-      {
-        prompt: 'hello',
-        model: 'paid-m',
-        idempotencyKey: 'op-svc-fwd',
-        extra: { max_tokens: 2_000 },
-      },
-      'key-1',
-    );
-
-    expect(result.outcome).toBe('refused');
-    if (result.outcome === 'refused') {
-      expect(result.code).toBe(NATIVE_PRICING_UNAVAILABLE);
-    }
+    await expect(
+      service.prepareProtectedReservation(
+        'cerebras',
+        {
+          prompt: 'hello',
+          model: 'paid-m',
+          idempotencyKey: 'op-cerebras-framing',
+          extra: { max_tokens: 2_000 },
+        },
+        'key-1',
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
     expect(prepareProtectedReservation).not.toHaveBeenCalled();
   });
 
@@ -1349,6 +1395,184 @@ describe('protected Lab profile execute guards', () => {
       (prepareProtectedReservation.mock.calls[1][0] as { holdUsd: string }).holdUsd,
     );
     expect(rfHold).toBeGreaterThan(baseHold);
+  });
+
+  it('M-FRAMING: Azure empty and one-char prompts hold strictly above content-only bound', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+      PROVIDER_ACCESS: 'azure-openai',
+    });
+    const prepareProtectedReservation = vi.fn(async (params: Record<string, unknown>) => ({
+      outcome: 'opened' as const,
+      reservation: {
+        reservationRef: '11111111-1111-4111-8111-111111111196',
+        holdUsd: String(params.holdUsd),
+        pricePolicyRevision: String(params.pricePolicyRevision),
+      },
+      intent: {},
+    }));
+    const service = buildService(
+      { prepareProtectedReservation: prepareProtectedReservation as never },
+      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'azure-openai',
+            model: 'gpt-paid',
+            tier: 'paid',
+            inputPerMTok: 1_000_000,
+            outputPerMTok: 0,
+            contentFingerprint: 'e'.repeat(64),
+            snapshotId: 'snap-azure-framing',
+          }),
+      },
+    );
+
+    for (const prompt of ['', 'x'] as const) {
+      prepareProtectedReservation.mockClear();
+      const opened = await service.prepareProtectedReservation(
+        'azure-openai',
+        {
+          prompt,
+          model: 'gpt-paid',
+          idempotencyKey: `op-azure-framing-${prompt.length}`,
+          extra: { max_tokens: 1 },
+        },
+        'key-1',
+      );
+      expect(opened.outcome).toBe('opened');
+      const holdUsd = Number(
+        (prepareProtectedReservation.mock.calls[0][0] as { holdUsd: string }).holdUsd,
+      );
+      const contentOnly = protectedInputTokenUpperBound({ prompt });
+      const framing = azureOpenAiChatFramingTokenAllowance({});
+      expect(framing).toBeGreaterThan(0);
+      expect(holdUsd).toBeGreaterThan(contentOnly);
+      expect(holdUsd).toBeGreaterThanOrEqual(contentOnly + framing);
+    }
+  });
+
+  it('M-EXTRAS-COUNT: protected Azure prepare with tools holds strictly more than without tools', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+      PROVIDER_ACCESS: 'azure-openai',
+    });
+    const prepareProtectedReservation = vi.fn(async (params: Record<string, unknown>) => ({
+      outcome: 'opened' as const,
+      reservation: {
+        reservationRef: '11111111-1111-4111-8111-111111111195',
+        holdUsd: String(params.holdUsd),
+        pricePolicyRevision: String(params.pricePolicyRevision),
+      },
+      intent: {},
+    }));
+    const service = buildService(
+      { prepareProtectedReservation: prepareProtectedReservation as never },
+      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'azure-openai',
+            model: 'gpt-paid',
+            tier: 'paid',
+            inputPerMTok: 1_000_000,
+            outputPerMTok: 0,
+            contentFingerprint: 'f'.repeat(64),
+            snapshotId: 'snap-azure-tools',
+          }),
+      },
+    );
+
+    const without = await service.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: 'hello',
+        model: 'gpt-paid',
+        idempotencyKey: 'op-azure-tools-base',
+        extra: { max_tokens: 8 },
+      },
+      'key-1',
+    );
+    const tools = [
+      {
+        type: 'function',
+        function: {
+          name: 'lookup',
+          parameters: { type: 'object', properties: { q: { type: 'string' } } },
+        },
+      },
+    ];
+    const withTools = await service.prepareProtectedReservation(
+      'azure-openai',
+      {
+        prompt: 'hello',
+        model: 'gpt-paid',
+        idempotencyKey: 'op-azure-tools-extra',
+        extra: { max_tokens: 8, tools, tool_choice: 'auto' },
+      },
+      'key-1',
+    );
+    expect(without.outcome).toBe('opened');
+    expect(withTools.outcome).toBe('opened');
+    const baseHold = Number(
+      (prepareProtectedReservation.mock.calls[0][0] as { holdUsd: string }).holdUsd,
+    );
+    const toolsHold = Number(
+      (prepareProtectedReservation.mock.calls[1][0] as { holdUsd: string }).holdUsd,
+    );
+    expect(toolsHold).toBeGreaterThan(baseHold);
+  });
+
+  it('M-EXTRAS-SVC: dropping extras record on admitted Azure refuses before hold/send', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+      PROVIDER_ACCESS: 'azure-openai',
+    });
+    const prepareProtectedReservation = vi.fn();
+    const service = buildService(
+      { prepareProtectedReservation },
+      new AzureOpenAiConnector({ deployment: 'gpt-paid' }),
+      {
+        findAll: async () => [],
+        findPricing: async () =>
+          freshPricing({
+            connector: 'azure-openai',
+            model: 'gpt-paid',
+            tier: 'paid',
+            inputPerMTok: 10,
+            outputPerMTok: 30,
+            contentFingerprint: 'g'.repeat(64),
+            snapshotId: 'snap-azure-extras-svc',
+          }),
+      },
+    );
+
+    const refused = await __testOnlyWithoutExtrasRecord('AzureOpenAiConnector', () =>
+      service.prepareProtectedReservation(
+        'azure-openai',
+        {
+          prompt: 'hello',
+          model: 'gpt-paid',
+          idempotencyKey: 'op-azure-extras-svc',
+          extra: { max_tokens: 16 },
+        },
+        'key-1',
+      ),
+    );
+    expect(refused.outcome).toBe('refused');
+    if (refused.outcome === 'refused') {
+      expect(refused.code).toBe(NATIVE_PRICING_UNAVAILABLE);
+      expect(refused.message).toMatch(/without a reviewed extras record/);
+    }
+    expect(prepareProtectedReservation).not.toHaveBeenCalled();
   });
 });
 

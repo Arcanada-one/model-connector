@@ -8,6 +8,7 @@ import {
   resolveProtectedPricePolicy,
 } from './protected-price-policy';
 import {
+  azureOpenAiChatFramingTokenAllowance,
   ceilUsdToLedgerPrecision,
   estimateProtectedHoldUsd,
   protectedInputTokenUpperBound,
@@ -290,6 +291,61 @@ describe('resolveProtectedPricePolicy', () => {
     expect(ceilUsdToLedgerPrecision(0.1234561)).toBe('0.123457');
     const raw = 0.0000010000000001;
     expect(Number(ceilUsdToLedgerPrecision(raw))).toBeGreaterThanOrEqual(raw);
+  });
+
+  it('M-CEIL-EXACT: nextUp(0.000075) must ceil to 0.000076 (plain Math.ceil under-shoots)', () => {
+    const f64 = new Float64Array([0.000075]);
+    const u64 = new BigUint64Array(f64.buffer);
+    u64[0] += 1n;
+    const next = f64[0];
+    expect(next).toBeGreaterThan(0.000075);
+    // Plain ceil lands on 75 micro-units and would return a ledger amount < next.
+    expect(Math.ceil(next * 1e6)).toBe(75);
+    expect((75 / 1e6).toFixed(6)).toBe('0.000075');
+    expect(ceilUsdToLedgerPrecision(next)).toBe('0.000076');
+    expect(Number(ceilUsdToLedgerPrecision(next))).toBeGreaterThanOrEqual(next);
+  });
+
+  it('M-FRAMING: Azure chat framing allowance is strictly above content-only for empty and one-char prompts', () => {
+    const emptyContent = protectedInputTokenUpperBound({ prompt: '' });
+    const oneContent = protectedInputTokenUpperBound({ prompt: 'a' });
+    const framing = azureOpenAiChatFramingTokenAllowance({});
+    expect(emptyContent).toBe(0);
+    expect(oneContent).toBe(1);
+    expect(framing).toBeGreaterThan(0);
+    expect(emptyContent + framing).toBeGreaterThan(emptyContent);
+    expect(oneContent + framing).toBeGreaterThan(oneContent);
+
+    // Positive output tariff so a content-only zero-input hold still resolves.
+    const row = freshAuthority({
+      ...paidRow,
+      inputPerMTok: 1_000_000,
+      outputPerMTok: 1_000_000,
+    });
+    for (const content of [emptyContent, oneContent]) {
+      const contentOnly = resolveProtectedPricePolicy({
+        catalogReadable: true,
+        row,
+        routeKey: ROUTE_A,
+        inputTokenUpperBound: content,
+        maxTokens: 1,
+        connectorForwardsMaxTokens: true,
+        now: NOW,
+      });
+      const withFraming = resolveProtectedPricePolicy({
+        catalogReadable: true,
+        row,
+        routeKey: ROUTE_A,
+        inputTokenUpperBound: content + framing,
+        maxTokens: 1,
+        connectorForwardsMaxTokens: true,
+        now: NOW,
+      });
+      expect(contentOnly.outcome).toBe('resolved');
+      expect(withFraming.outcome).toBe('resolved');
+      if (contentOnly.outcome !== 'resolved' || withFraming.outcome !== 'resolved') return;
+      expect(Number(withFraming.holdUsd)).toBeGreaterThan(Number(contentOnly.holdUsd));
+    }
   });
 
   it('M-ROUNDDOWN: a tiny positive cost rounds up and never to 0.000000', () => {

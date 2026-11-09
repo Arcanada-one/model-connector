@@ -40,6 +40,8 @@ describe('assessProtectedForwardedExtras', () => {
     });
     expect(withRecord.ok).toBe(true); // record exists today
 
+    // Cerebras is fence-refused for framing and does not forward max_tokens, so
+    // a missing extras record is a no-op ok (not an admitted forwarder).
     expect(
       assessProtectedForwardedExtras({
         connectorClassName: 'CerebrasConnector',
@@ -139,12 +141,24 @@ describe('assessProtectedForwardedExtras', () => {
     // still exists by checking the message shape for an impossible key via
     // forcing a temporary local record is out of scope — equality test is the kill.
     const record = PROTECTED_FORWARDED_EXTRA_RECORDS.find(
-      (r) => r.className === 'FireworksConnector',
+      (r) => r.className === 'AzureOpenAiConnector',
     );
     expect(record).toBeTruthy();
     if (!record) return;
     for (const key of record.forwardedExtraKeys) {
       expect(record.disposition[key], key).toBeDefined();
     }
+  });
+
+  it('round-10 framing refuse: OpenRouter has no extras record after Stage A refusal', () => {
+    expect(
+      PROTECTED_FORWARDED_EXTRA_RECORDS.some((r) => r.className === 'OpenRouterConnector'),
+    ).toBe(false);
+    expect(classForwardsProtectedMaxTokens('OpenRouterConnector')).toBe(true);
+    const assessed = assessProtectedForwardedExtras({
+      connectorClassName: 'OpenRouterConnector',
+      extra: { max_tokens: 16 },
+    });
+    expect(assessed.ok).toBe(false);
   });
 });

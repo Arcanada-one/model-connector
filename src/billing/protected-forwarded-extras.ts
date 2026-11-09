@@ -12,6 +12,11 @@
  * no extras record and no protected `disable_search` path. Legacy unprotected
  * Perplexity traffic is unchanged.
  *
+ * Round 10 / Agent-Brain comment 6728979426: non-Azure formerly-admitted
+ * BaseApi classes are fence-refused for ungrounded chat-framing bounds, so
+ * only AzureOpenAiConnector remains as an admitted forwardsMaxTokens:true
+ * extras record.
+ *
  * Round 7: fail closed when an admitted `forwardsMaxTokens: true` BaseApi class
  * has no extras record. Disposition keys must equal `forwardedExtraKeys` for
  * each record (single-source choice: keep two tables — fence admission keys and
@@ -50,97 +55,6 @@ export const PROTECTED_FORWARDED_EXTRA_RECORDS: readonly ProtectedForwardedExtra
       top_p: 'neutral',
       tools: 'count_utf8',
       tool_choice: 'count_utf8',
-    },
-  },
-  {
-    className: 'CloudflareWorkersAiConnector',
-    forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p', 'top_k', 'seed'],
-    disposition: {
-      max_tokens: 'neutral',
-      temperature: 'neutral',
-      top_p: 'neutral',
-      top_k: 'neutral',
-      seed: 'neutral',
-    },
-  },
-  {
-    className: 'FireworksConnector',
-    forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    disposition: {
-      max_tokens: 'neutral',
-      temperature: 'neutral',
-      top_p: 'neutral',
-    },
-  },
-  {
-    className: 'GrokConnector',
-    forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    disposition: {
-      max_tokens: 'neutral',
-      temperature: 'neutral',
-      top_p: 'neutral',
-    },
-  },
-  {
-    className: 'GroqConnector',
-    forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    disposition: {
-      max_tokens: 'neutral',
-      temperature: 'neutral',
-      top_p: 'neutral',
-    },
-  },
-  {
-    className: 'HuggingFaceConnector',
-    forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    disposition: {
-      max_tokens: 'neutral',
-      temperature: 'neutral',
-      top_p: 'neutral',
-    },
-  },
-  {
-    className: 'MistralConnector',
-    forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    disposition: {
-      max_tokens: 'neutral',
-      temperature: 'neutral',
-      top_p: 'neutral',
-    },
-  },
-  {
-    className: 'OpenModelConnector',
-    forwardedExtraKeys: ['max_tokens', 'temperature'],
-    disposition: {
-      max_tokens: 'neutral',
-      temperature: 'neutral',
-    },
-  },
-  {
-    className: 'OpenRouterConnector',
-    forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    disposition: {
-      max_tokens: 'neutral',
-      temperature: 'neutral',
-      top_p: 'neutral',
-    },
-  },
-  {
-    className: 'OrqConnector',
-    forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    disposition: {
-      max_tokens: 'neutral',
-      temperature: 'neutral',
-      top_p: 'neutral',
-    },
-  },
-  {
-    className: 'TogetherConnector',
-    forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
-    disposition: {
-      max_tokens: 'neutral',
-      temperature: 'neutral',
-      top_p: 'neutral',
     },
   },
 ] as const;

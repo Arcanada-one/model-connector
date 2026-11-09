@@ -34,8 +34,10 @@ import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import { BillingService, RequestIntentHandle } from '../billing/billing.service';
 import { estimateCostUsd, promptCharLength } from '../billing/cost-estimate';
 import {
+  azureOpenAiChatFramingTokenAllowance,
   protectedInputTokenUpperBound,
   protectedPromptContainsImageUrl,
+  protectedPromptContainsNonTextBlock,
 } from '../billing/protected-cost-estimate';
 import { assessProtectedForwardedExtras } from '../billing/protected-forwarded-extras';
 import {
@@ -2482,14 +2484,17 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     const routeKey = azureBinding.routeKey;
 
     // M-IMAGE: no provider-grounded image upper bound on the first protected
-    // profile — refuse image_url blocks rather than inventing a byte allowance
-    // (Agent-Brain comment 6728415319).
-    if (protectedPromptContainsImageUrl(request.prompt)) {
+    // profile — refuse image_url / non-text blocks rather than inventing a
+    // byte allowance (Agent-Brain comments 6728415319 / 6728979426).
+    if (
+      protectedPromptContainsImageUrl(request.prompt) ||
+      protectedPromptContainsNonTextBlock(request.prompt)
+    ) {
       return {
         outcome: 'unavailable' as const,
         code: NATIVE_PRICING_UNAVAILABLE,
         message:
-          'Protected prepare refuses image_url ContentBlocks; no provider-grounded image upper bound is admitted.',
+          'Protected prepare refuses non-text ContentBlocks (including image_url); no provider-grounded image upper bound is admitted.',
       };
     }
     const extras = assessProtectedForwardedExtras({
@@ -2503,13 +2508,20 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
         message: extras.message,
       };
     }
-    const inputTokenUpperBound =
+    // Content UTF-8 + counted extras. Azure adds a Microsoft-documented chat
+    // framing allowance (M-FRAMING); other classes are fence-refused instead.
+    let inputTokenUpperBound =
       protectedInputTokenUpperBound({
         prompt: request.prompt,
         systemPrompt: request.systemPrompt,
         tools: request.tools,
         responseFormat: request.responseFormat,
       }) + extras.countedInputBytes;
+    if (connectorClassName === 'AzureOpenAiConnector') {
+      inputTokenUpperBound += azureOpenAiChatFramingTokenAllowance({
+        systemPrompt: request.systemPrompt,
+      });
+    }
     const maxTokens = request.extra?.max_tokens;
     const connectorForwardsMaxTokens = this.connectorForwardsProtectedMaxTokens(connectorName);
     let catalogReadable = true;

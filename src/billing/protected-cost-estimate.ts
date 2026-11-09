@@ -6,7 +6,8 @@
  *
  * The protected hold must be a true upper bound:
  * - input tokens: UTF-8 byte length of the final effective request parts
- *   (each byte is an upper bound of ≥1 token under any real tokenizer);
+ *   (each byte is an upper bound of ≥1 token under any real tokenizer),
+ *   plus a class-specific chat-framing allowance when one is provider-grounded;
  * - output tokens: the caller `max_tokens` the admitted connector forwards;
  * - money: round UP to ledger precision (6 decimal places).
  */
@@ -15,6 +16,20 @@ import type { ContentBlock } from '../connectors/interfaces/connector.interface'
 
 /** Ledger precision used by BillingService hold SQL (`toFixed(6)`). */
 export const PROTECTED_HOLD_DECIMALS = 6;
+
+/**
+ * Azure OpenAI chat-completions structural tokens per message.
+ * Source: Microsoft Learn — "Work with chat completion models"
+ * https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/chatgpt
+ * (`tokens_per_message = 3` for the gpt-4o / gpt-4.1 / gpt-5 / o-series set).
+ */
+export const AZURE_CHAT_TOKENS_PER_MESSAGE = 3;
+
+/**
+ * Azure OpenAI chat-completions reply-priming tokens added once per request.
+ * Same Microsoft Learn page (`num_tokens += 3` after the message loop).
+ */
+export const AZURE_CHAT_REPLY_PRIMING_TOKENS = 3;
 
 function utf8Bytes(text: string): number {
   return Buffer.byteLength(text, 'utf8');
@@ -32,20 +47,34 @@ export function protectedPromptContainsImageUrl(
   return prompt.some((block) => block?.type === 'image_url');
 }
 
+/**
+ * True when a protected prepare prompt includes any non-text ContentBlock.
+ * Image and other non-text forms are refused before hold/send on the first
+ * protected profile (Agent-Brain comment 6728979426).
+ */
+export function protectedPromptContainsNonTextBlock(
+  prompt: string | ContentBlock[] | undefined,
+): boolean {
+  if (!Array.isArray(prompt)) return false;
+  return prompt.some((block) => block?.type !== 'text');
+}
+
 function promptUtf8Bytes(prompt: string | ContentBlock[] | undefined): number {
   if (prompt == null) return 0;
   if (typeof prompt === 'string') return utf8Bytes(prompt);
   if (!Array.isArray(prompt)) return 0;
   return prompt.reduce((total, block) => {
     if (block?.type === 'text') return total + utf8Bytes(block.text ?? '');
-    // image_url is refused before this bound is used; never invent an allowance.
+    // Non-text is refused before this bound is used; never invent an allowance.
     return total;
   }, 0);
 }
 
 /**
- * Upper-bound input token count for the final effective protected request.
- * Uses UTF-8 bytes of prompt + system + tool names (no chars/4 undercount).
+ * Content-only UTF-8 input upper bound (prompt + system + tool names +
+ * response_format). Does **not** include provider chat-message framing
+ * (roles, separators, reply priming) — see
+ * {@link azureOpenAiChatFramingTokenAllowance}.
  */
 export function protectedInputTokenUpperBound(parts: {
   prompt?: string | ContentBlock[];
@@ -74,6 +103,28 @@ export function protectedInputTokenUpperBound(parts: {
 }
 
 /**
+ * Provider-grounded Azure OpenAI chat framing allowance for the whole billed
+ * prompt beyond content UTF-8 bytes.
+ *
+ * Microsoft Learn documents, for the listed chat models, `tokens_per_message = 3`
+ * plus a final `+ 3` reply priming, and encodes each message `role` separately.
+ * Role strings are absent from {@link protectedInputTokenUpperBound}; count their
+ * UTF-8 length as a tokenizer upper bound (byte ≥ token).
+ *
+ * Source: https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/chatgpt
+ * (Agent-Brain comment 6728979426 / PR #255 framing disposition).
+ */
+export function azureOpenAiChatFramingTokenAllowance(parts: { systemPrompt?: string }): number {
+  let messageCount = 1; // buildRequestBody always pushes the user message
+  let roleBytes = utf8Bytes('user');
+  if (typeof parts.systemPrompt === 'string' && parts.systemPrompt.length > 0) {
+    messageCount += 1;
+    roleBytes += utf8Bytes('system');
+  }
+  return messageCount * AZURE_CHAT_TOKENS_PER_MESSAGE + AZURE_CHAT_REPLY_PRIMING_TOKENS + roleBytes;
+}
+
+/**
  * Output token cap for a protected hold. Requires a finite positive
  * `max_tokens` that the admitted connector class actually forwards.
  */
@@ -98,9 +149,12 @@ export function protectedOutputTokenCap(params: {
  * unlike ceil-after-epsilon-subtraction, which under-ceils values just above a
  * six-decimal boundary — Agent-Brain comment 6728415319).
  *
- * Uses integer micro-units via `Math.ceil` on `amount * 10^decimals` with no
- * epsilon subtraction. Over-rounding an exact boundary due to binary float
- * noise is conservative for a hold; under-rounding is not.
+ * Plain `Math.ceil(amount * scale)` is not enough: IEEE-754 multiplication can
+ * land just below an integer for a value that is mathematically above a
+ * micro-unit boundary (counterexample: `nextUp(0.000075) * 1e6` ceils to 75).
+ * After the initial ceil, bump while the float quotient `c / scale` still
+ * compares strictly less than `amount`, so the returned ledger string is never
+ * strictly below the raw double.
  */
 export function ceilUsdToLedgerPrecision(
   amount: number,
@@ -111,8 +165,12 @@ export function ceilUsdToLedgerPrecision(
   }
   if (amount === 0) return (0).toFixed(decimals);
   const scale = 10 ** decimals;
-  const ceiled = Math.ceil(amount * scale);
-  return (ceiled / scale).toFixed(decimals);
+  let c = Math.ceil(amount * scale);
+  // Fix-up: if c/scale still compares below amount, multiplication under-shot.
+  while (c / scale < amount) {
+    c += 1;
+  }
+  return (c / scale).toFixed(decimals);
 }
 
 export interface ProtectedHoldEstimateInput {
