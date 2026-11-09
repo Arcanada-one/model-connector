@@ -2705,8 +2705,11 @@ describe('protected Lab production test-seam isolation', () => {
     expect(mod.PROTECTED_NON_BASE_FENCE_ADMISSIONS.has('evil')).toBe(true);
     expect(mod.isNonBaseProtectedFenceAdmitted('evil')).toBe(false);
     expect(mod.isNonBaseProtectedFenceAdmitted('mock')).toBe(false);
+    // Frozen extras records reject mutation attempts.
+    const extras = await import('../billing/protected-forwarded-extras');
+    expect(Object.isFrozen(extras.PROTECTED_FORWARDED_EXTRA_RECORDS)).toBe(true);
     expect(() => {
-      (Object.freeze([]) as string[]).push('x');
+      (extras.PROTECTED_FORWARDED_EXTRA_RECORDS as unknown as unknown[]).push({});
     }).toThrow();
 
     validateEnv({
