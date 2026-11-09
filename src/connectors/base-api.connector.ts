@@ -564,11 +564,20 @@ export abstract class BaseApiConnector implements IConnector {
 
       let res: Response;
       try {
+        // Protected dispatch has already CAS'd (inside __beforeProviderFetch).
+        // Do not follow redirects: a 307/308 would re-POST to a host that was
+        // never compared by the P9 URL check. redirect:'error' throws into the
+        // catch below → __afterProviderAmbiguity → unknown (post-commit
+        // ambiguity), same as crash/timeout after dispatch_committed.
+        // Legacy / unprotected traffic keeps getRedirectPolicy() (usually 'follow').
+        const redirect: RequestRedirect = request.__beforeProviderFetch
+          ? 'error'
+          : this.getRedirectPolicy();
         res = await fetch(url, {
           method: 'POST',
           headers,
           body: JSON.stringify(body),
-          redirect: this.getRedirectPolicy(),
+          redirect,
           signal: AbortSignal.timeout(timeout),
         });
       } catch (err) {

@@ -2686,6 +2686,212 @@ describe('P9: pre-fetch price/route recheck', () => {
       fetchSpy.mockRestore();
     }
   });
+
+  /**
+   * A→B→A through BaseApiConnector.execute:
+   * - A at prepare (openAzureP9Hold)
+   * - B while buildRequestUrl runs (URL carries B)
+   * - A restored inside the awaited header step before __beforeProviderFetch
+   * So (c) price/route re-resolution matches reserved A, and only (b) actual-URL
+   * comparison refuses. Kills M-EQ-APIVER / M-EQ-DEPLOY / M-HOOK-REBUILD.
+   */
+  function installAzureAToBToASchedule(
+    ctx: { azure: AzureOpenAiConnector; opts: Record<string, string | undefined> },
+    field: 'endpoint' | 'apiVersion' | 'deployment',
+    valueB: string,
+  ): void {
+    const valueA = String(ctx.opts[field]);
+    const azure = ctx.azure as unknown as {
+      buildRequestUrl: (request: ConnectorRequest) => string;
+      getRequestHeaders: (request: ConnectorRequest) => Promise<Record<string, string>>;
+    };
+    const originalBuild = azure.buildRequestUrl.bind(ctx.azure);
+    const originalHeaders = azure.getRequestHeaders.bind(ctx.azure);
+    // One-shot: only the first execute-time buildRequestUrl flips A→B.
+    // A later rebuild (M-HOOK-REBUILD) must see restored A, otherwise the
+    // mutant is masked by the test harness itself.
+    let buildCount = 0;
+    azure.buildRequestUrl = (request: ConnectorRequest) => {
+      buildCount += 1;
+      if (buildCount === 1) {
+        ctx.opts[field] = valueB;
+      }
+      return originalBuild(request);
+    };
+    azure.getRequestHeaders = async (request: ConnectorRequest) => {
+      const headers = await originalHeaders(request);
+      // Restore A after the header await, before __beforeProviderFetch.
+      ctx.opts[field] = valueA;
+      return headers;
+    };
+  }
+
+  async function expectAzureUrlCheckStaleAToBToA(params: {
+    snapshotId: string;
+    field: 'endpoint' | 'apiVersion' | 'deployment';
+    valueB: string;
+  }): Promise<void> {
+    validateEnv({
+      ...BASE_ENV,
+      PROVIDER_ACCESS: 'azure-openai',
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+    });
+    const row = freshPricing({
+      connector: 'azure-openai',
+      model: 'gpt-4o',
+      tier: 'paid',
+      inputPerMTok: 10,
+      outputPerMTok: 30,
+      contentFingerprint: params.snapshotId
+        .replace(/[^a-f0-9]/gi, 'a')
+        .padEnd(64, 'a')
+        .slice(0, 64),
+      snapshotId: params.snapshotId,
+    });
+    const ctx = openAzureP9Hold({
+      row,
+      target: azureTestTarget(),
+      options: azureTestOptions(),
+    });
+    installAzureAToBToASchedule(ctx, params.field, params.valueB);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'x' } }],
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
+      }),
+    } as Response);
+    try {
+      const service = buildService(ctx.billing, ctx.azure, {
+        findAll: async () => [],
+        findPricing: async () => row,
+      });
+      const response = await service.execute('azure-openai', ctx.prepared as never, 'key-1');
+      expect(response.status).toBe('error');
+      expect(response.error?.type).toBe(PROTECTED_RESERVATION_STALE);
+      // Discriminate (b) actual-URL check from (c) price/route re-resolution.
+      expect(response.error?.message).toMatch(/actual request URL/);
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(ctx.commitProtectedDispatch).not.toHaveBeenCalled();
+      expect(ctx.intent.protectedPhase).toBe('reserved');
+      expect(ctx.releaseIntent).not.toHaveBeenCalled();
+      expect(ctx.markProtectedUnknown).not.toHaveBeenCalled();
+      // Original key remains; hold was never released.
+      expect(ctx.reservation.operationKey).toBe(String(ctx.prepared.idempotencyKey));
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  }
+
+  it('P9-09: A→B→A origin flip across header await refuses on actual URL check', async () => {
+    await expectAzureUrlCheckStaleAToBToA({
+      snapshotId: 'snap-p9-09-origin',
+      field: 'endpoint',
+      valueB: 'https://flip-origin.openai.azure.com',
+    });
+  });
+
+  it('P9-10: A→B→A apiVersion flip across header await refuses on actual URL check', async () => {
+    await expectAzureUrlCheckStaleAToBToA({
+      snapshotId: 'snap-p9-10-apiver',
+      field: 'apiVersion',
+      valueB: '2025-04-01-preview',
+    });
+  });
+
+  it('P9-11: A→B→A configured deployment flip across header await refuses on actual URL check', async () => {
+    // Reachable via configured options.deployment (not request.extra.deployment).
+    // Prepare's M-AZURE-DEPLOY-BIND only runs at prepare; openAzureP9Hold already
+    // reserved deployment A (== priced model). Flipping opts.deployment A→B→A
+    // during execute reaches azureProtectedTargetsEqual's deployment clause.
+    await expectAzureUrlCheckStaleAToBToA({
+      snapshotId: 'snap-p9-11-deploy',
+      field: 'deployment',
+      valueB: 'gpt-4o-mini',
+    });
+  });
+
+  it('P9-12: protected Azure fetch uses redirect:error; legacy Azure keeps follow', async () => {
+    validateEnv({
+      ...BASE_ENV,
+      PROVIDER_ACCESS: 'azure-openai',
+      PROTECTED_LAB_PROFILE: 'true',
+      PROTECTED_LAB_CONNECTORS: 'azure-openai',
+    });
+    const row = freshPricing({
+      connector: 'azure-openai',
+      model: 'gpt-4o',
+      tier: 'paid',
+      inputPerMTok: 10,
+      outputPerMTok: 30,
+      contentFingerprint: 'j'.repeat(64),
+      snapshotId: 'snap-p9-12-redirect',
+    });
+    const ctx = openAzureP9Hold({
+      row,
+      target: azureTestTarget(),
+      options: azureTestOptions(),
+    });
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'x' } }],
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
+      }),
+      text: async () =>
+        JSON.stringify({
+          choices: [{ message: { content: 'x' } }],
+          usage: { prompt_tokens: 1, completion_tokens: 1 },
+        }),
+    } as Response);
+    try {
+      const service = buildService(ctx.billing, ctx.azure, {
+        findAll: async () => [],
+        findPricing: async () => row,
+      });
+      const response = await service.execute('azure-openai', ctx.prepared as never, 'key-1');
+      expect(response.status).toBe('success');
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(fetchSpy.mock.calls[0]?.[1]).toEqual(expect.objectContaining({ redirect: 'error' }));
+    } finally {
+      fetchSpy.mockRestore();
+    }
+
+    // Legacy / unprotected Azure execute keeps getRedirectPolicy() === 'follow'.
+    validateEnv({
+      ...BASE_ENV,
+      PROVIDER_ACCESS: 'azure-openai',
+      PROTECTED_LAB_PROFILE: 'false',
+      PROTECTED_LAB_CONNECTORS: '',
+    });
+    const legacyAzure = new AzureOpenAiConnector(azureTestOptions());
+    const legacyFetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'y' } }],
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
+      }),
+      text: async () =>
+        JSON.stringify({
+          choices: [{ message: { content: 'y' } }],
+          usage: { prompt_tokens: 1, completion_tokens: 1 },
+        }),
+    } as Response);
+    try {
+      const legacy = await legacyAzure.execute({
+        prompt: 'hello',
+        model: 'gpt-4o',
+      });
+      expect(legacy.status).toBe('success');
+      expect(legacyFetch).toHaveBeenCalledTimes(1);
+      expect(legacyFetch.mock.calls[0]?.[1]).toEqual(
+        expect.objectContaining({ redirect: 'follow' }),
+      );
+    } finally {
+      legacyFetch.mockRestore();
+    }
+  });
 });
 
 describe('protected Lab production test-seam isolation', () => {
