@@ -10,7 +10,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { BillingService } from './billing.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { PROTECTED_PHASE } from './protected-lifecycle';
+import {
+  PROTECTED_PHASE,
+  classifyProtectedIntentReplay,
+  isProtectedNonExpirePhase,
+  protectedNonExpirePhases,
+  protectedSettleablePhases,
+  retainedProtectedResultHash,
+} from './protected-lifecycle';
 
 const prisma = new PrismaService();
 const billing = new BillingService(prisma);
@@ -426,6 +433,234 @@ describe('legacy rows unchanged', () => {
     expect(row?.protectedPhase).toBeNull();
     expect(row?.state).toBe('held');
     expect(await billing.releaseIntent(opened.intent)).toBe(true);
+  });
+});
+
+describe('P10-05 — nonterminal / corrupt settled replay refusals (PG)', () => {
+  it('immutable phase views: mutating exports cannot make reserved settleable or drop unknown', async () => {
+    const nonExpire = protectedNonExpirePhases() as string[];
+    expect(() => {
+      nonExpire.splice(nonExpire.indexOf(PROTECTED_PHASE.unknown), 1);
+    }).toThrow();
+    expect(isProtectedNonExpirePhase(PROTECTED_PHASE.unknown)).toBe(true);
+
+    const settleable = protectedSettleablePhases() as string[];
+    expect(() => {
+      settleable.push(PROTECTED_PHASE.reserved);
+    }).toThrow();
+    expect(protectedSettleablePhases()).not.toContain(PROTECTED_PHASE.reserved);
+
+    await fund(KEY_A, '5');
+    const opened = await billing.prepareProtectedReservation({
+      apiKeyId: KEY_A,
+      operationKey: 'op-p1005-phase',
+      payloadFingerprint: 'fp-p1005-phase',
+      providerName: 'mock',
+      modelName: 'm',
+      routeKey: 'r',
+      pricePolicyRevision: 'catalog:x',
+      holdUsd: '1',
+    });
+    expect(opened.outcome).toBe('opened');
+    if (opened.outcome !== 'opened') return;
+
+    // reserved must still refuse settlement after the mutation attempts above.
+    expect(
+      await billing.settleIntent({
+        intent: opened.intent,
+        amountUsd: '0.5',
+        response: { leaked: true },
+      }),
+    ).toBe(false);
+
+    expect(await billing.markProtectedUnknown(opened.intent)).toBe(true);
+    const retry = await billing.prepareProtectedReservation({
+      apiKeyId: KEY_A,
+      operationKey: 'op-p1005-phase',
+      payloadFingerprint: 'fp-p1005-phase',
+      providerName: 'mock',
+      modelName: 'm',
+      routeKey: 'r',
+      pricePolicyRevision: 'catalog:x',
+      holdUsd: '1',
+    });
+    expect(retry.outcome).toBe('protected_unknown');
+    const row = await prisma.requestIntent.findUnique({ where: { id: opened.intent.id } });
+    expect(row!.protectedPhase).toBe(PROTECTED_PHASE.unknown);
+    expect(row!.state).toBe('held');
+    expect((await billing.available(KEY_A)).toString()).toBe('4');
+  });
+
+  it('per-state refusals: reserved / dispatch_committed / unknown / corrupt settled / mismatch', async () => {
+    await fund(KEY_A, '20');
+
+    const cases: Array<{
+      key: string;
+      setup: (intentId: string) => Promise<void>;
+      expected: 'in_flight' | 'protected_unknown' | 'not_replayable' | 'payload_mismatch';
+      fingerprint?: string;
+    }> = [
+      {
+        key: 'op-p1005-reserved',
+        setup: async () => undefined,
+        expected: 'in_flight',
+      },
+      {
+        key: 'op-p1005-committed',
+        setup: async () => undefined,
+        expected: 'protected_unknown',
+      },
+      {
+        key: 'op-p1005-unknown',
+        setup: async () => undefined,
+        expected: 'protected_unknown',
+      },
+      {
+        key: 'op-p1005-corrupt',
+        setup: async (intentId) => {
+          await prisma.requestIntent.update({
+            where: { id: intentId },
+            data: {
+              state: 'completed',
+              protectedPhase: PROTECTED_PHASE.settled,
+              completedAt: new Date(),
+              response: Prisma.DbNull,
+              requestId: 'req-corrupt',
+            },
+          });
+        },
+        expected: 'not_replayable',
+      },
+      {
+        key: 'op-p1005-mismatch',
+        setup: async () => undefined,
+        expected: 'payload_mismatch',
+        fingerprint: 'fp-WRONG',
+      },
+    ];
+
+    for (const c of cases) {
+      const opened = await billing.prepareProtectedReservation({
+        apiKeyId: KEY_A,
+        operationKey: c.key,
+        payloadFingerprint: `fp-${c.key}`,
+        providerName: 'mock',
+        modelName: 'm',
+        routeKey: 'r',
+        pricePolicyRevision: 'catalog:x',
+        holdUsd: '1',
+      });
+      expect(opened.outcome).toBe('opened');
+      if (opened.outcome !== 'opened') return;
+
+      if (c.key === 'op-p1005-committed') {
+        expect(await billing.commitProtectedDispatch(opened.intent)).toBe(true);
+      }
+      if (c.key === 'op-p1005-unknown') {
+        expect(await billing.commitProtectedDispatch(opened.intent)).toBe(true);
+        expect(await billing.markProtectedUnknown(opened.intent)).toBe(true);
+      }
+      await c.setup(opened.intent.id);
+
+      const before = await prisma.requestIntent.findUnique({ where: { id: opened.intent.id } });
+      const availableBefore = await billing.available(KEY_A);
+
+      const retry = await billing.prepareProtectedReservation({
+        apiKeyId: KEY_A,
+        operationKey: c.key,
+        payloadFingerprint: c.fingerprint ?? `fp-${c.key}`,
+        providerName: 'mock',
+        modelName: 'm',
+        routeKey: 'r',
+        pricePolicyRevision: 'catalog:x',
+        holdUsd: '1',
+      });
+      expect(retry.outcome).toBe(c.expected);
+      expect(retry.outcome).not.toBe('replay');
+      expect(retry.outcome).not.toBe('opened');
+
+      const after = await prisma.requestIntent.findUnique({ where: { id: opened.intent.id } });
+      expect(after!.intentKey).toBe(before!.intentKey);
+      expect(after!.payloadFingerprint).toBe(before!.payloadFingerprint);
+      expect(after!.holdUsd.toString()).toBe(before!.holdUsd.toString());
+      expect(after!.reservationRef).toBe(before!.reservationRef);
+      expect(after!.protectedPhase).toBe(before!.protectedPhase);
+      expect((await billing.available(KEY_A)).toString()).toBe(availableBefore.toString());
+    }
+  });
+
+  it('useful positive: settled matching hash is replay-eligible; recover unknown does not mint/release', async () => {
+    await fund(KEY_A, '10');
+    const opened = await billing.prepareProtectedReservation({
+      apiKeyId: KEY_A,
+      operationKey: 'op-p1005-settled',
+      payloadFingerprint: 'fp-p1005-settled',
+      providerName: 'mock',
+      modelName: 'm',
+      routeKey: 'r',
+      pricePolicyRevision: 'catalog:x',
+      holdUsd: '2',
+    });
+    expect(opened.outcome).toBe('opened');
+    if (opened.outcome !== 'opened') return;
+    expect(await billing.commitProtectedDispatch(opened.intent)).toBe(true);
+    const body = { answer: 'retained' };
+    expect(
+      await billing.settleIntent({
+        intent: opened.intent,
+        amountUsd: '1.25',
+        response: body,
+        requestId: 'req-settled',
+      }),
+    ).toBe(true);
+
+    const settledRow = await prisma.requestIntent.findUnique({ where: { id: opened.intent.id } });
+    const classified = classifyProtectedIntentReplay({
+      row: settledRow!,
+      payloadFingerprint: 'fp-p1005-settled',
+      expectedResultHash: retainedProtectedResultHash(body)!,
+    });
+    expect(classified.kind).toBe('replay_eligible');
+    if (classified.kind === 'replay_eligible') {
+      expect(classified.marker).toBe('protected_settled_replay_eligible');
+      expect(JSON.stringify(classified)).not.toContain('retained');
+    }
+
+    // M-P1005-RECOVER on a separate unknown row.
+    const unk = await billing.prepareProtectedReservation({
+      apiKeyId: KEY_A,
+      operationKey: 'op-p1005-recover',
+      payloadFingerprint: 'fp-p1005-recover',
+      providerName: 'mock',
+      modelName: 'm',
+      routeKey: 'r',
+      pricePolicyRevision: 'catalog:x',
+      holdUsd: '1',
+    });
+    expect(unk.outcome).toBe('opened');
+    if (unk.outcome !== 'opened') return;
+    expect(await billing.commitProtectedDispatch(unk.intent)).toBe(true);
+    expect(await billing.markProtectedUnknown(unk.intent)).toBe(true);
+    const before = await prisma.requestIntent.findUnique({ where: { id: unk.intent.id } });
+    const availableBefore = await billing.available(KEY_A);
+
+    const reopen = await billing.prepareProtectedReservation({
+      apiKeyId: KEY_A,
+      operationKey: 'op-p1005-recover',
+      payloadFingerprint: 'fp-p1005-recover',
+      providerName: 'mock',
+      modelName: 'm',
+      routeKey: 'r',
+      pricePolicyRevision: 'catalog:x',
+      holdUsd: '1',
+    });
+    expect(reopen.outcome).toBe('protected_unknown');
+    const after = await prisma.requestIntent.findUnique({ where: { id: unk.intent.id } });
+    expect(after!.intentKey).toBe(before!.intentKey);
+    expect(after!.reservationRef).toBe(before!.reservationRef);
+    expect(after!.protectedPhase).toBe(PROTECTED_PHASE.unknown);
+    expect(after!.state).toBe('held');
+    expect((await billing.available(KEY_A)).toString()).toBe(availableBefore.toString());
   });
 });
 

@@ -54,9 +54,10 @@ import {
 } from './intent';
 import {
   PROTECTED_LIFECYCLE_VERSION,
-  PROTECTED_NON_EXPIRE_PHASES,
   PROTECTED_PHASE,
-  PROTECTED_SETTLEABLE_PHASES,
+  classifyProtectedIntentReplay,
+  isProtectedNonExpirePhase,
+  protectedSettleablePhases,
   type ProtectedPhase,
   type ProtectedReservationView,
   ProtectedProfileError,
@@ -954,6 +955,42 @@ export class BillingService {
       // a clean open.
       return { outcome: 'in_flight' };
     }
+
+    // Protected Lab P10-05: classify before the legacy completed→replay path so
+    // nonterminal / corrupt settled rows never look like a paid completed replay,
+    // and unknown stays typed apart from ordinary in_flight.
+    if (
+      existing.lifecycleVersion === PROTECTED_LIFECYCLE_VERSION &&
+      existing.protectedPhase != null
+    ) {
+      const classified = classifyProtectedIntentReplay({
+        row: existing,
+        payloadFingerprint,
+        operationKey: intentKey,
+      });
+      switch (classified.kind) {
+        case 'binding_mismatch':
+          return { outcome: 'payload_mismatch' };
+        case 'nonterminal':
+          return { outcome: classified.openOutcome };
+        case 'corrupt_settled':
+          return { outcome: 'not_replayable' };
+        case 'replay_eligible':
+          // Internally replay-eligible (see classification marker). Returning
+          // stored bytes here is the pre-Auth-read behaviour: P10-01..04 own
+          // entitlement gating; this round only refuses nonterminal/corrupt.
+          return {
+            outcome: 'replay',
+            response: existing.response,
+            requestId: existing.requestId ?? undefined,
+          };
+        case 'proven_no_dispatch':
+          return this.reclaimIntent(existing.id, params);
+        case 'not_protected':
+          break;
+      }
+    }
+
     if (existing.payloadFingerprint !== payloadFingerprint) {
       // Checked BEFORE the state, deliberately. Reusing a key for a different
       // request is a caller bug whether or not the first attempt succeeded.
@@ -968,14 +1005,9 @@ export class BillingService {
             requestId: existing.requestId ?? undefined,
           };
     }
-    // Protected Lab lifecycle: dispatch_committed / unknown keep state='held'
-    // (the money is still reserved) but must never be reported as a plain
-    // in-flight that a caller can wait out and reclaim.
-    if (
-      existing.lifecycleVersion === PROTECTED_LIFECYCLE_VERSION &&
-      existing.protectedPhase != null &&
-      PROTECTED_NON_EXPIRE_PHASES.has(existing.protectedPhase)
-    ) {
+    // Defence in depth: non-expire protected phases must never fall through to
+    // ordinary in_flight / reclaim even if classification is bypassed.
+    if (isProtectedNonExpirePhase(existing.protectedPhase)) {
       return { outcome: 'protected_unknown' };
     }
     if (existing.state === 'held') {
@@ -1163,7 +1195,7 @@ export class BillingService {
         where: {
           id: params.intent.id,
           lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
-          protectedPhase: { in: [...PROTECTED_SETTLEABLE_PHASES] },
+          protectedPhase: { in: [...protectedSettleablePhases()] },
           ...(expectedGeneration === undefined ? {} : { generation: expectedGeneration }),
         },
         data: {

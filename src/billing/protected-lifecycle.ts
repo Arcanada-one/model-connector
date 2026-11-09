@@ -8,7 +8,13 @@
  * hold is gone) but reclaim and the sweeper consult the protected phase.
  *
  * Marker: agent-brain-native-reservation-decision-20261108-v1
+ *
+ * Round 15: phase membership is module-private frozen primitive lists plus
+ * explicit predicates. Production paths must not consult any exported mutable
+ * collection (`Object.freeze(new Set())` is not sufficient to freeze entries).
  */
+
+import { createHash } from 'node:crypto';
 
 export const PROTECTED_LIFECYCLE_VERSION = 1 as const;
 
@@ -22,18 +28,46 @@ export const PROTECTED_PHASE = {
 
 export type ProtectedPhase = (typeof PROTECTED_PHASE)[keyof typeof PROTECTED_PHASE];
 
-/** Phases the sweeper and reclaim must never touch. */
-export const PROTECTED_NON_EXPIRE_PHASES: ReadonlySet<string> = new Set([
+/**
+ * Module-private frozen primitive lists. Never exported as a live Set/array
+ * that callers can mutate and that production consults.
+ */
+const PROTECTED_NON_EXPIRE_PHASE_LIST = Object.freeze([
   PROTECTED_PHASE.dispatch_committed,
   PROTECTED_PHASE.unknown,
   PROTECTED_PHASE.settled,
-]);
+] as const);
 
-/** Phases from which a late result may still settle exactly once. */
-export const PROTECTED_SETTLEABLE_PHASES: ReadonlyArray<ProtectedPhase> = [
+const PROTECTED_SETTLEABLE_PHASE_LIST = Object.freeze([
   PROTECTED_PHASE.dispatch_committed,
   PROTECTED_PHASE.unknown,
-];
+] as const);
+
+/** Phases the sweeper and reclaim must never treat as abandoned. */
+export function isProtectedNonExpirePhase(phase: string | null | undefined): boolean {
+  if (phase == null) return false;
+  for (const candidate of PROTECTED_NON_EXPIRE_PHASE_LIST) {
+    if (candidate === phase) return true;
+  }
+  return false;
+}
+
+/**
+ * Fresh frozen copy of settleable phases for the DB `in` predicate.
+ * Callers receive a new frozen array each time — mutating one snapshot cannot
+ * change later predicates or the private list.
+ */
+export function protectedSettleablePhases(): readonly ProtectedPhase[] {
+  return Object.freeze([...PROTECTED_SETTLEABLE_PHASE_LIST]);
+}
+
+/**
+ * Fresh frozen diagnostic view of non-expire phases. Production resolve/sweep
+ * paths call {@link isProtectedNonExpirePhase}, not this array.
+ */
+export function protectedNonExpirePhases(): readonly string[] {
+  return Object.freeze([...PROTECTED_NON_EXPIRE_PHASE_LIST]);
+}
 
 export interface ProtectedReservationBinding {
   apiKeyId: string;
@@ -80,4 +114,195 @@ export class ProtectedReservationStaleError extends ProtectedProfileError {
     super(PROTECTED_RESERVATION_STALE, message);
     this.name = 'ProtectedReservationStaleError';
   }
+}
+
+/** Fields resolveReplay / classification need from a RequestIntent row. */
+export interface ProtectedIntentReplayRow {
+  state: string;
+  lifecycleVersion: number;
+  protectedPhase: string | null;
+  payloadFingerprint: string;
+  operationKey?: string | null;
+  response?: unknown;
+  requestId?: string | null;
+  completedAt?: Date | string | null;
+  holdUsd?: unknown;
+  intentKey?: string;
+  reservationRef?: string | null;
+  generation?: number;
+}
+
+/**
+ * Stable SHA-256 of a retained settled response. Missing / non-JSON values
+ * yield null (treated as a missing retained result hash).
+ */
+export function retainedProtectedResultHash(response: unknown): string | null {
+  if (response === undefined || response === null) return null;
+  try {
+    const serialised = JSON.stringify(response);
+    if (serialised === undefined) return null;
+    return createHash('sha256').update(serialised).digest('hex');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * P10-05 internal replay classification for a protected lifecycle row.
+ *
+ * Does not disclose response bytes; callers that still return stored bytes on
+ * a legacy HTTP path (no Auth read grant yet) must report that separately.
+ */
+export type ProtectedReplayClassification =
+  | {
+      kind: 'nonterminal';
+      phase: typeof PROTECTED_PHASE.reserved;
+      openOutcome: 'in_flight';
+      replayEligible: false;
+    }
+  | {
+      kind: 'nonterminal';
+      phase: typeof PROTECTED_PHASE.dispatch_committed | typeof PROTECTED_PHASE.unknown;
+      openOutcome: 'protected_unknown';
+      replayEligible: false;
+    }
+  | {
+      kind: 'corrupt_settled';
+      reason: string;
+      openOutcome: 'not_replayable';
+      replayEligible: false;
+    }
+  | {
+      kind: 'replay_eligible';
+      resultHash: string;
+      openOutcome: 'replay';
+      replayEligible: true;
+      /** Redacted marker only — never the private response body. */
+      marker: 'protected_settled_replay_eligible';
+    }
+  | {
+      kind: 'proven_no_dispatch';
+      openOutcome: 'reclaimable';
+      replayEligible: false;
+    }
+  | {
+      kind: 'binding_mismatch';
+      openOutcome: 'payload_mismatch';
+      replayEligible: false;
+    }
+  | {
+      kind: 'not_protected';
+      openOutcome: 'delegate_legacy';
+      replayEligible: false;
+    };
+
+export function classifyProtectedIntentReplay(params: {
+  row: ProtectedIntentReplayRow;
+  payloadFingerprint: string;
+  /** When set, must equal the row's operationKey / intentKey binding. */
+  operationKey?: string;
+  /**
+   * Optional expected retained-result hash. A mismatch is corrupt settled
+   * (or binding refusal when the row is not settled).
+   */
+  expectedResultHash?: string;
+}): ProtectedReplayClassification {
+  const { row, payloadFingerprint, operationKey, expectedResultHash } = params;
+
+  if (
+    row.lifecycleVersion !== PROTECTED_LIFECYCLE_VERSION ||
+    row.protectedPhase == null
+  ) {
+    return { kind: 'not_protected', openOutcome: 'delegate_legacy', replayEligible: false };
+  }
+
+  if (row.payloadFingerprint !== payloadFingerprint) {
+    return {
+      kind: 'binding_mismatch',
+      openOutcome: 'payload_mismatch',
+      replayEligible: false,
+    };
+  }
+
+  if (operationKey !== undefined) {
+    const bound = row.operationKey ?? row.intentKey;
+    if (bound != null && bound !== operationKey) {
+      return {
+        kind: 'binding_mismatch',
+        openOutcome: 'payload_mismatch',
+        replayEligible: false,
+      };
+    }
+  }
+
+  const phase = row.protectedPhase;
+
+  if (phase === PROTECTED_PHASE.reserved) {
+    return {
+      kind: 'nonterminal',
+      phase: PROTECTED_PHASE.reserved,
+      openOutcome: 'in_flight',
+      replayEligible: false,
+    };
+  }
+
+  if (phase === PROTECTED_PHASE.dispatch_committed || phase === PROTECTED_PHASE.unknown) {
+    return {
+      kind: 'nonterminal',
+      phase,
+      openOutcome: 'protected_unknown',
+      replayEligible: false,
+    };
+  }
+
+  if (phase === PROTECTED_PHASE.proven_no_dispatch) {
+    return {
+      kind: 'proven_no_dispatch',
+      openOutcome: 'reclaimable',
+      replayEligible: false,
+    };
+  }
+
+  if (phase === PROTECTED_PHASE.settled) {
+    const hash = retainedProtectedResultHash(row.response);
+    const incomplete =
+      row.state !== 'completed' ||
+      row.response == null ||
+      row.completedAt == null ||
+      hash == null;
+
+    if (incomplete) {
+      return {
+        kind: 'corrupt_settled',
+        reason: 'missing_settlement_fields_or_result_hash',
+        openOutcome: 'not_replayable',
+        replayEligible: false,
+      };
+    }
+
+    if (expectedResultHash !== undefined && expectedResultHash !== hash) {
+      return {
+        kind: 'corrupt_settled',
+        reason: 'retained_result_hash_mismatch',
+        openOutcome: 'not_replayable',
+        replayEligible: false,
+      };
+    }
+
+    return {
+      kind: 'replay_eligible',
+      resultHash: hash,
+      openOutcome: 'replay',
+      replayEligible: true,
+      marker: 'protected_settled_replay_eligible',
+    };
+  }
+
+  // Unknown protected phase string — fail closed, never replay.
+  return {
+    kind: 'corrupt_settled',
+    reason: `unrecognized_protected_phase:${phase}`,
+    openOutcome: 'not_replayable',
+    replayEligible: false,
+  };
 }
