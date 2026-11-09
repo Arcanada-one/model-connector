@@ -199,11 +199,18 @@ export type ProtectedReplayClassification =
 export function classifyProtectedIntentReplay(params: {
   row: ProtectedIntentReplayRow;
   payloadFingerprint: string;
-  /** When set, must equal the row's operationKey / intentKey binding. */
+  /**
+   * When set, must equal the row's operationKey / intentKey binding.
+   * Production resolveReplay looks the row up by intentKey and passes that
+   * same intentKey here, so the check is unreachable on the live path; the
+   * effective binding is payloadFingerprint. Kept for defence / unit tests.
+   */
   operationKey?: string;
   /**
-   * Optional expected retained-result hash. A mismatch is corrupt settled
-   * (or binding refusal when the row is not settled).
+   * Optional expected retained-result hash. A mismatch is corrupt settled.
+   * Production resolveReplay never passes this: no column stores a hash at
+   * settlement, so the classifier hashes row.response itself and a retained
+   * mismatch cannot occur until a migration adds one (out of scope).
    */
   expectedResultHash?: string;
 }): ProtectedReplayClassification {

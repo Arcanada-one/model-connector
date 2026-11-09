@@ -228,6 +228,121 @@ describe('P10-05 billing openIntent / prepare / reclaim refusals', () => {
     },
   );
 
+  // Round 16: state=completed + non-null response is where classifier and
+  // legacy diverge. These kill M-CLASSIFY-OFF at the service level.
+  it.each([
+    {
+      name: 'reserved+completed',
+      phase: PROTECTED_PHASE.reserved,
+      expected: 'in_flight' as const,
+    },
+    {
+      name: 'dispatch_committed+completed',
+      phase: PROTECTED_PHASE.dispatch_committed,
+      expected: 'protected_unknown' as const,
+    },
+    {
+      name: 'unknown+completed',
+      phase: PROTECTED_PHASE.unknown,
+      expected: 'protected_unknown' as const,
+    },
+  ])(
+    'M-CLASSIFY-OFF $name: refuses legacy completed→replay (outcome=$expected)',
+    async ({ phase, expected }) => {
+      const body = { leaked: true };
+      stored = row({
+        protectedPhase: phase,
+        state: 'completed',
+        response: body,
+        completedAt: new Date('2026-11-09T00:00:00Z'),
+        requestId: 'req-inconsistent',
+      });
+      const opened = await billing.openIntent({
+        apiKeyId: 'key-a',
+        intentKey: 'op-p1005',
+        clientSupplied: true,
+        payloadFingerprint: 'fp-p1005',
+        holdUsd: '1.5',
+      });
+      expect(opened.outcome).toBe(expected);
+      expect(opened.outcome).not.toBe('replay');
+      if (opened.outcome === 'replay') {
+        expect.fail('must not return retained bytes');
+      }
+      const prepared = await billing.prepareProtectedReservation({
+        apiKeyId: 'key-a',
+        operationKey: 'op-p1005',
+        payloadFingerprint: 'fp-p1005',
+        providerName: 'mock',
+        modelName: 'm',
+        routeKey: 'r',
+        pricePolicyRevision: 'catalog:x',
+        holdUsd: '1.5',
+      });
+      expect(prepared.outcome).toBe(expected);
+      expect(prepared.outcome).not.toBe('replay');
+      expect(updateManyCount).toBe(0);
+      expect(fetchCount).toBe(0);
+      expect(stored.intentKey).toBe('op-p1005');
+      expect(stored.payloadFingerprint).toBe('fp-p1005');
+      expect(stored.holdUsd.toString()).toBe('1.5');
+      expect(stored.reservationRef).toBe('res-p1005');
+    },
+  );
+
+  it('M-INCOMPLETE-COMPLETEDAT: settled completed with null completedAt is not_replayable', async () => {
+    stored = row({
+      protectedPhase: PROTECTED_PHASE.settled,
+      state: 'completed',
+      response: { answer: 'incomplete' },
+      completedAt: null,
+      requestId: 'req-incomplete',
+    });
+    const opened = await billing.openIntent({
+      apiKeyId: 'key-a',
+      intentKey: 'op-p1005',
+      clientSupplied: true,
+      payloadFingerprint: 'fp-p1005',
+      holdUsd: '1.5',
+    });
+    expect(opened.outcome).toBe('not_replayable');
+    expect(opened.outcome).not.toBe('replay');
+    expect(updateManyCount).toBe(0);
+    expect(fetchCount).toBe(0);
+  });
+
+  it('M-UNKNOWN-PHASE-LEGACY: unrecognised phase with completed bytes is not_replayable', async () => {
+    stored = row({
+      protectedPhase: 'phase_not_in_enum_v1',
+      state: 'completed',
+      response: { leaked: true },
+      completedAt: new Date('2026-11-09T00:00:00Z'),
+      requestId: 'req-bogus',
+    });
+    const opened = await billing.openIntent({
+      apiKeyId: 'key-a',
+      intentKey: 'op-p1005',
+      clientSupplied: true,
+      payloadFingerprint: 'fp-p1005',
+      holdUsd: '1.5',
+    });
+    expect(opened.outcome).toBe('not_replayable');
+    expect(opened.outcome).not.toBe('replay');
+    const prepared = await billing.prepareProtectedReservation({
+      apiKeyId: 'key-a',
+      operationKey: 'op-p1005',
+      payloadFingerprint: 'fp-p1005',
+      providerName: 'mock',
+      modelName: 'm',
+      routeKey: 'r',
+      pricePolicyRevision: 'catalog:x',
+      holdUsd: '1.5',
+    });
+    expect(prepared.outcome).toBe('not_replayable');
+    expect(updateManyCount).toBe(0);
+    expect(fetchCount).toBe(0);
+  });
+
   it('M-P1005-UNKNOWN-AS-INFLIGHT: unknown outcome differs from reserved in_flight', async () => {
     stored = row({ protectedPhase: PROTECTED_PHASE.unknown, state: 'held' });
     const unknown = await billing.openIntent({

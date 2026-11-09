@@ -664,6 +664,265 @@ describe('P10-05 — nonterminal / corrupt settled replay refusals (PG)', () => 
   });
 });
 
+describe('P10-05 round 16 — classification vs legacy diverge on inconsistent completed rows (PG)', () => {
+  /**
+   * These rows make the legacy completed→replay path disagree with the
+   * classifier. Without them M-CLASSIFY-OFF / M-INCOMPLETE-COMPLETEDAT /
+   * M-UNKNOWN-PHASE-LEGACY survive every suite because fixtures stay on the
+   * held path where both answers already match.
+   */
+  const retainedBody = { answer: 'stale-completed-bytes', private: true };
+
+  async function forceInconsistentCompleted(params: {
+    intentId: string;
+    protectedPhase: string;
+    completedAt: Date | null;
+  }): Promise<void> {
+    await prisma.requestIntent.update({
+      where: { id: params.intentId },
+      data: {
+        state: 'completed',
+        protectedPhase: params.protectedPhase,
+        response: retainedBody,
+        requestId: `req-inconsistent-${params.protectedPhase}`,
+        completedAt: params.completedAt,
+      },
+    });
+  }
+
+  async function assertZeroSideEffects(params: {
+    intentId: string;
+    before: {
+      intentKey: string;
+      payloadFingerprint: string;
+      holdUsd: string;
+      reservationRef: string | null;
+      protectedPhase: string | null;
+      generation: number;
+    };
+    availableBefore: string;
+    heldBefore: string;
+    fetchCount: number;
+    ledgerCountBefore: number;
+  }): Promise<void> {
+    expect(params.fetchCount).toBe(0);
+    const after = await prisma.requestIntent.findUnique({ where: { id: params.intentId } });
+    expect(after).not.toBeNull();
+    expect(after!.intentKey).toBe(params.before.intentKey);
+    expect(after!.payloadFingerprint).toBe(params.before.payloadFingerprint);
+    expect(after!.holdUsd.toString()).toBe(params.before.holdUsd);
+    expect(after!.reservationRef).toBe(params.before.reservationRef);
+    expect(after!.protectedPhase).toBe(params.before.protectedPhase);
+    expect(after!.generation).toBe(params.before.generation);
+    expect(after!.state).toBe('completed');
+    expect(after!.response).toEqual(retainedBody);
+    expect((await billing.available(KEY_A)).toString()).toBe(params.availableBefore);
+    const balance = await prisma.creditsBalance.findUnique({ where: { apiKeyId: KEY_A } });
+    expect(balance!.heldUsd.toString()).toBe(params.heldBefore);
+    const ledgerCountAfter = await prisma.creditsLedger.count({
+      where: { apiKeyId: KEY_A },
+    });
+    expect(ledgerCountAfter).toBe(params.ledgerCountBefore);
+    const intentCount = await prisma.requestIntent.count({
+      where: { apiKeyId: KEY_A, intentKey: params.before.intentKey },
+    });
+    expect(intentCount).toBe(1);
+  }
+
+  function wrapFetch(): { getCount: () => number; restore: () => void } {
+    let fetchCount = 0;
+    const original = globalThis.fetch;
+    globalThis.fetch = (async (...args: Parameters<typeof fetch>) => {
+      fetchCount += 1;
+      if (typeof original === 'function') return original(...args);
+      throw new Error('unexpected fetch in P10-05 inconsistent-row test');
+    }) as typeof fetch;
+    return {
+      getCount: () => fetchCount,
+      restore: () => {
+        if (original) globalThis.fetch = original;
+        else delete (globalThis as { fetch?: typeof fetch }).fetch;
+      },
+    };
+  }
+
+  it.each([
+    {
+      label: 'a-reserved',
+      key: 'op-p1005-r16-a-reserved',
+      phaseSetup: async (intent: Parameters<BillingService['commitProtectedDispatch']>[0]) => {
+        await forceInconsistentCompleted({
+          intentId: intent.id,
+          protectedPhase: PROTECTED_PHASE.reserved,
+          completedAt: new Date('2026-11-09T00:00:00Z'),
+        });
+      },
+      expected: 'in_flight' as const,
+    },
+    {
+      label: 'a-dispatch_committed',
+      key: 'op-p1005-r16-a-committed',
+      phaseSetup: async (intent: Parameters<BillingService['commitProtectedDispatch']>[0]) => {
+        expect(await billing.commitProtectedDispatch(intent)).toBe(true);
+        await forceInconsistentCompleted({
+          intentId: intent.id,
+          protectedPhase: PROTECTED_PHASE.dispatch_committed,
+          completedAt: new Date('2026-11-09T00:00:00Z'),
+        });
+      },
+      expected: 'protected_unknown' as const,
+    },
+    {
+      label: 'a-unknown',
+      key: 'op-p1005-r16-a-unknown',
+      phaseSetup: async (intent: Parameters<BillingService['commitProtectedDispatch']>[0]) => {
+        expect(await billing.commitProtectedDispatch(intent)).toBe(true);
+        expect(await billing.markProtectedUnknown(intent)).toBe(true);
+        await forceInconsistentCompleted({
+          intentId: intent.id,
+          protectedPhase: PROTECTED_PHASE.unknown,
+          completedAt: new Date('2026-11-09T00:00:00Z'),
+        });
+      },
+      expected: 'protected_unknown' as const,
+    },
+    {
+      label: 'b-incomplete-completedAt',
+      key: 'op-p1005-r16-b-incomplete',
+      phaseSetup: async (intent: Parameters<BillingService['commitProtectedDispatch']>[0]) => {
+        expect(await billing.commitProtectedDispatch(intent)).toBe(true);
+        await forceInconsistentCompleted({
+          intentId: intent.id,
+          protectedPhase: PROTECTED_PHASE.settled,
+          completedAt: null,
+        });
+      },
+      expected: 'not_replayable' as const,
+    },
+    {
+      label: 'c-unrecognised-phase',
+      key: 'op-p1005-r16-c-bogus-phase',
+      phaseSetup: async (intent: Parameters<BillingService['commitProtectedDispatch']>[0]) => {
+        await forceInconsistentCompleted({
+          intentId: intent.id,
+          protectedPhase: 'phase_not_in_enum_v1',
+          completedAt: new Date('2026-11-09T00:00:00Z'),
+        });
+      },
+      expected: 'not_replayable' as const,
+    },
+  ])(
+    'inconsistent completed row $label: prepare / openIntent / reopen refuse replay ($expected)',
+    async ({ key, phaseSetup, expected }) => {
+      await fund(KEY_A, '20');
+      const fetch = wrapFetch();
+      try {
+        const opened = await billing.prepareProtectedReservation({
+          apiKeyId: KEY_A,
+          operationKey: key,
+          payloadFingerprint: `fp-${key}`,
+          providerName: 'mock',
+          modelName: 'm',
+          routeKey: 'r',
+          pricePolicyRevision: 'catalog:x',
+          holdUsd: '1',
+        });
+        expect(opened.outcome).toBe('opened');
+        if (opened.outcome !== 'opened') return;
+
+        await phaseSetup(opened.intent);
+
+        const beforeRow = await prisma.requestIntent.findUnique({
+          where: { id: opened.intent.id },
+        });
+        expect(beforeRow!.state).toBe('completed');
+        expect(beforeRow!.response).toEqual(retainedBody);
+
+        const availableBefore = (await billing.available(KEY_A)).toString();
+        const heldBefore = (
+          await prisma.creditsBalance.findUnique({ where: { apiKeyId: KEY_A } })
+        )!.heldUsd.toString();
+        const ledgerCountBefore = await prisma.creditsLedger.count({
+          where: { apiKeyId: KEY_A },
+        });
+        const intentCountBefore = await prisma.requestIntent.count({
+          where: { apiKeyId: KEY_A },
+        });
+        const before = {
+          intentKey: beforeRow!.intentKey,
+          payloadFingerprint: beforeRow!.payloadFingerprint,
+          holdUsd: beforeRow!.holdUsd.toString(),
+          reservationRef: beforeRow!.reservationRef,
+          protectedPhase: beforeRow!.protectedPhase,
+          generation: beforeRow!.generation,
+        };
+
+        // Same operation key / B replay via prepareProtectedReservation.
+        const prepared = await billing.prepareProtectedReservation({
+          apiKeyId: KEY_A,
+          operationKey: key,
+          payloadFingerprint: `fp-${key}`,
+          providerName: 'mock',
+          modelName: 'm',
+          routeKey: 'r',
+          pricePolicyRevision: 'catalog:x',
+          holdUsd: '1',
+        });
+        expect(prepared.outcome).toBe(expected);
+        expect(prepared.outcome).not.toBe('replay');
+        expect(prepared.outcome).not.toBe('opened');
+        if (prepared.outcome === 'replay') {
+          expect.fail('must not return retained response bytes');
+        }
+
+        // Direct retry via openIntent.
+        const direct = await billing.openIntent({
+          apiKeyId: KEY_A,
+          intentKey: key,
+          clientSupplied: true,
+          payloadFingerprint: `fp-${key}`,
+          holdUsd: '1',
+        });
+        expect(direct.outcome).toBe(expected);
+        expect(direct.outcome).not.toBe('replay');
+        if (direct.outcome === 'replay') {
+          expect.fail('openIntent must not return retained response bytes');
+        }
+
+        // Recover/reopen: a second prepare must still refuse and not mint/release.
+        const reopen = await billing.prepareProtectedReservation({
+          apiKeyId: KEY_A,
+          operationKey: key,
+          payloadFingerprint: `fp-${key}`,
+          providerName: 'mock',
+          modelName: 'm',
+          routeKey: 'r',
+          pricePolicyRevision: 'catalog:x',
+          holdUsd: '1',
+        });
+        expect(reopen.outcome).toBe(expected);
+        expect(reopen.outcome).not.toBe('replay');
+        expect(reopen.outcome).not.toBe('opened');
+
+        expect(await prisma.requestIntent.count({ where: { apiKeyId: KEY_A } })).toBe(
+          intentCountBefore,
+        );
+
+        await assertZeroSideEffects({
+          intentId: opened.intent.id,
+          before,
+          availableBefore,
+          heldBefore,
+          fetchCount: fetch.getCount(),
+          ledgerCountBefore,
+        });
+      } finally {
+        fetch.restore();
+      }
+    },
+  );
+});
+
 describe('backstop — reserved → unknown when fence never ran', () => {
   it('markProtectedUnknown from reserved retains hold; release and sweeper lose', async () => {
     await fund(KEY_A, '5');

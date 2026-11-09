@@ -110,6 +110,17 @@ describe('immutable protected phase membership', () => {
     expect(billingSrc).not.toMatch(/PROTECTED_NON_EXPIRE_PHASES\.has/);
     expect(billingSrc).not.toMatch(/\[\.\.\.PROTECTED_SETTLEABLE_PHASES\]/);
   });
+
+  it('M-DEFENCE-OFF: defence-in-depth non-expire gate is present as source text', () => {
+    // Reachable only when classification is bypassed; kill is source-text only.
+    const billingSrc = readFileSync(
+      path.join(__dirname, 'billing.service.ts'),
+      'utf8',
+    );
+    expect(billingSrc).toMatch(
+      /if \(isProtectedNonExpirePhase\(existing\.protectedPhase\)\) \{\s*return \{ outcome: 'protected_unknown' \};/s,
+    );
+  });
 });
 
 describe('P10-05 protected replay classification', () => {
@@ -188,6 +199,24 @@ describe('P10-05 protected replay classification', () => {
     });
     expect(inconsistentState.kind).toBe('corrupt_settled');
 
+    // M-INCOMPLETE-COMPLETEDAT: completed + non-null response but completedAt null
+    // must still be corrupt_settled (legacy would replay these bytes).
+    const missingCompletedAt = classifyProtectedIntentReplay({
+      row: baseRow({
+        protectedPhase: PROTECTED_PHASE.settled,
+        state: 'completed',
+        response: { answer: 'incomplete-settled' },
+        completedAt: null,
+        requestId: 'req-incomplete',
+      }),
+      payloadFingerprint: 'fp-a',
+    });
+    expect(missingCompletedAt.kind).toBe('corrupt_settled');
+    expect(missingCompletedAt.replayEligible).toBe(false);
+    if (missingCompletedAt.kind === 'corrupt_settled') {
+      expect(missingCompletedAt.openOutcome).toBe('not_replayable');
+    }
+
     const body = { answer: 'paid-result' };
     const hash = retainedProtectedResultHash(body);
     expect(hash).toMatch(/^[a-f0-9]{64}$/);
@@ -205,6 +234,25 @@ describe('P10-05 protected replay classification', () => {
     expect(mismatched.kind).toBe('corrupt_settled');
     if (mismatched.kind === 'corrupt_settled') {
       expect(mismatched.reason).toBe('retained_result_hash_mismatch');
+    }
+  });
+
+  it('M-UNKNOWN-PHASE-LEGACY: unrecognised phase is corrupt_settled, never not_protected', () => {
+    const c = classifyProtectedIntentReplay({
+      row: baseRow({
+        protectedPhase: 'phase_not_in_enum_v1',
+        state: 'completed',
+        response: { leaked: true },
+        completedAt: new Date('2026-11-09T00:00:00Z'),
+      }),
+      payloadFingerprint: 'fp-a',
+    });
+    expect(c.kind).toBe('corrupt_settled');
+    expect(c.kind).not.toBe('not_protected');
+    expect(c.replayEligible).toBe(false);
+    if (c.kind === 'corrupt_settled') {
+      expect(c.openOutcome).toBe('not_replayable');
+      expect(c.reason).toContain('unrecognized_protected_phase');
     }
   });
 

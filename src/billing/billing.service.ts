@@ -963,6 +963,10 @@ export class BillingService {
       existing.lifecycleVersion === PROTECTED_LIFECYCLE_VERSION &&
       existing.protectedPhase != null
     ) {
+      // expectedResultHash intentionally omitted: production has no retained
+      // hash column at settlement (NOT_IMPLEMENTED until a migration).
+      // operationKey is the same intentKey used to load `existing`, so the
+      // classifier's op-key inequality is unreachable here; fingerprint binds.
       const classified = classifyProtectedIntentReplay({
         row: existing,
         payloadFingerprint,
