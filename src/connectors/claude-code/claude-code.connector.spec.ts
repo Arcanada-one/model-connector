@@ -283,11 +283,12 @@ describe('ClaudeCodeConnector', () => {
       expect(parsed.isError).toBe(true);
       expect(parsed.text).toBe('');
       expect(parsed.errorType).toBe('auth_error');
-      expect(parsed.errorMessage).toBe(
+      const errorMessage = parsed.errorMessage ?? '';
+      expect(errorMessage).toBe(
         '[auth_error] Failed to authenticate: OAuth session expired and could not be refreshed',
       );
-      expect(parsed.errorMessage).not.toMatch(/subtype=success/);
-      expect(parsed.errorMessage.toLowerCase()).not.toContain('subtype=success');
+      expect(errorMessage).not.toMatch(/subtype=success/);
+      expect(errorMessage.toLowerCase()).not.toContain('subtype=success');
       const action = classifyErrorAction(parsed.errorType!);
       expect(action.retryable).toBe(false);
       expect(action.recommendation).toBe('reauth');
