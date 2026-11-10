@@ -1,3 +1,4 @@
+import { parseEnvBool } from '../../config/env.schema';
 import { getProviderKeyOverride } from '../../policy/provider-key.context';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
@@ -11,16 +12,59 @@ import {
 } from '../interfaces/connector.interface';
 import { DecisionRequestSchema, nativeRequest, normalizeDecision } from './decision.contract';
 
+/** Typed pre-network refusal codes for the typesafe-jev execute path (CONN-JEV-03). */
+export type JevRefuseCode = 'jev_disabled' | 'route_not_configured' | 'invalid_request';
+
 /** Native System-One adapter. Disabled unless the operator explicitly enables it. */
 export class JevConnector extends BaseApiConnector {
   readonly name = 'typesafe-jev';
 
+  /** CONN-JEV-03 — incident kill switch; re-read every attempt (never cache). */
+  private killSwitchActive(): boolean {
+    return parseEnvBool(process.env.TYPESAFE_JEV_DISABLED);
+  }
+
+  private hasCredential(): boolean {
+    return !!(getProviderKeyOverride(this.name) ?? process.env.TYPESAFE_API_KEY)?.trim();
+  }
+
+  /** Opt-in + credential present (KEY_OVERRIDE_CAPABLE override or TYPESAFE_API_KEY). */
+  private isConfigured(): boolean {
+    return process.env.JEV_ENABLED === 'true' && this.hasCredential();
+  }
+
   private enabled(): boolean {
     // Re-read before every attempt: an in-process kill switch must not be cached.
-    return (
-      process.env.JEV_ENABLED === 'true' &&
-      !!(getProviderKeyOverride(this.name) ?? process.env.TYPESAFE_API_KEY)?.trim()
-    );
+    return !this.killSwitchActive() && this.isConfigured();
+  }
+
+  /**
+   * Pre-network refuse reason. Kill switch wins over missing config so an
+   * incident flag always surfaces as `jev_disabled`, never as a silent success.
+   */
+  private preflightRefuseCode(): Exclude<JevRefuseCode, 'invalid_request'> | null {
+    if (this.killSwitchActive()) return 'jev_disabled';
+    if (!this.isConfigured()) return 'route_not_configured';
+    return null;
+  }
+
+  private refuse(code: JevRefuseCode): ConnectorResponse {
+    return {
+      id: randomUUID(),
+      connector: this.name,
+      model: 'unknown',
+      result: '',
+      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0, usageMissing: true },
+      latencyMs: 0,
+      status: 'error',
+      error: {
+        type: 'validation_error',
+        message: `JEV ${code}`,
+        retryable: false,
+        recommendation: 'abort',
+        details: { code },
+      },
+    };
   }
 
   protected getBaseUrl(): string {
@@ -97,31 +141,13 @@ export class JevConnector extends BaseApiConnector {
   }
 
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
-    let reason: string | undefined;
-    if (!this.enabled()) reason = 'disabled';
-    else {
-      try {
-        this.readRequest(request);
-      } catch {
-        reason = 'invalid_request';
-      }
+    const preflight = this.preflightRefuseCode();
+    if (preflight) return this.refuse(preflight);
+    try {
+      this.readRequest(request);
+    } catch {
+      return this.refuse('invalid_request');
     }
-    if (reason)
-      return {
-        id: randomUUID(),
-        connector: this.name,
-        model: 'unknown',
-        result: '',
-        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0, usageMissing: true },
-        latencyMs: 0,
-        status: 'error',
-        error: {
-          type: 'validation_error',
-          message: `JEV ${reason}`,
-          retryable: false,
-          recommendation: 'abort',
-        },
-      };
     const response = await super.execute(request);
     // Do not expose upstream bodies, JSON parse snippets or arbitrary transport messages.
     if (response.error)
