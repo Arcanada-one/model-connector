@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-10T18:34:51Z",
+ "captured_at_utc": "2026-11-10T18:41:50Z",
  "change_set": {
   "base": "c823bd59b2dff39ef9f85ed1fbb4caf52de11b75",
   "files": [
@@ -94,7 +94,7 @@
     "status": "M"
    }
   ],
-  "head": "42fd769651443c671ad0017fc812ab93e22ef352",
+  "head": "1aee8b5e5ddf20d1b1c19428448a779548635f23",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -321,17 +321,17 @@
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:18a3881aabf28cb7efb56d415eb9e61759a6999866eaaa73fcead4cebf7b998d",
-  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/graph-c823bd59b2df.json",
+  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/graph-c823bd59b2df.json",
   "source_commit": "c823bd59b2dff39ef9f85ed1fbb4caf52de11b75"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:19f747707fed7f02782d0ea40a76d3783b6a94fbd12ce4bc7b68ed3e2bdaa7a6",
-  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/graph-head-42fd76965144.json",
-  "source_commit": "42fd769651443c671ad0017fc812ab93e22ef352",
+  "graph_digest": "sha256:350d796f5b37915fa22e0ef80143fde70dc0291d76141a7cf1415084e166cb1e",
+  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/graph-head-1aee8b5e5ddf.json",
+  "source_commit": "1aee8b5e5ddf20d1b1c19428448a779548635f23",
   "staleness": {
-   "checked_at_utc": "2026-11-10T18:37:36Z",
+   "checked_at_utc": "2026-11-10T18:44:24Z",
    "checked_nodes": 974,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -340,7 +340,7 @@
  },
  "host": "conn-0a3f-author",
  "host_redacted": true,
- "host_sha256": "967d1e8e48440cf7dfb8dd1887c817af9277d7cf6553edf1af6dd6e5429df872",
+ "host_sha256": "620a356fd94d6d5172fd7f24ae94d67fba3430ff4ee0ad05c14e4d187a45c363",
  "impact_set": {
   "deterministic_core": [
    {
@@ -7640,7 +7640,7 @@
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261110T183451Z-42fd7696",
+ "receipt_id": "car-verify-20261110T184150Z-1aee8b5e",
  "receipt_path": "receipts/graph/change-admission-0a3f80e9.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -8289,7 +8289,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-10T18:37:36Z",
+  "checked_at_utc": "2026-11-10T18:44:23Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -8331,7 +8331,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:8b75a8cb520892f76399ccc667c09166a065a9f5e6245a689332050bee5b5d5d"
+    "head": "sha256:8a0f90ce86f9bb3d904e1bc324cae31e7a6d49c73ccc0a113c7201b2e8853f54"
    },
    "entity": "receipt:receipts/graph/change-admission-0a3f80e9.json",
    "node_type": "receipt",
@@ -8565,7 +8565,7 @@
   }
  ],
  "tree": {
-  "commit": "42fd769651443c671ad0017fc812ab93e22ef352",
+  "commit": "1aee8b5e5ddf20d1b1c19428448a779548635f23",
   "dirty": false
  },
  "verdicts": [
@@ -11243,8 +11243,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/type-check-lx7syr_n/check.tsbuildinfo --listFiles",
-   "duration_s": 30.56,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/type-check-7ngg279w/check.tsbuildinfo --listFiles",
+   "duration_s": 66.47,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -11760,13 +11760,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-10T18:38:12Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-10T18:44:52Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2865 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/type-check-ako2hr3i/check.tsbuildinfo --listFiles",
-   "duration_s": 24.62,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/type-check-88zjev3i/check.tsbuildinfo --listFiles",
+   "duration_s": 23.68,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12066,13 +12066,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-10T18:38:44Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-10T18:46:01Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2134 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/type-check-6yqa_1b4/check.tsbuildinfo --listFiles",
-   "duration_s": 2.41,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/type-check-q6lf5oqn/check.tsbuildinfo --listFiles",
+   "duration_s": 2.63,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12227,13 +12227,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-10T18:39:09Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-10T18:46:25Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/type-check-w0vbd3nc/check.tsbuildinfo --listFiles",
-   "duration_s": 33.37,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/type-check-5k_f0g1x/check.tsbuildinfo --listFiles",
+   "duration_s": 46.15,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12533,13 +12533,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-10T18:39:12Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-10T18:46:28Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2756 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/type-check-vtsqlir0/check.tsbuildinfo --listFiles",
-   "duration_s": 62.55,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/type-check-f_h6yjgp/check.tsbuildinfo --listFiles",
+   "duration_s": 73.23,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12839,13 +12839,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-10T18:39:46Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-10T18:47:15Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2862 files listed"
   },
   {
-   "command": "tools/graph/contract_diff.py.run_diff(base=c823bd59b2df, head=42fd76965144, graph=head graph)",
-   "duration_s": 16.58,
+   "command": "tools/graph/contract_diff.py.run_diff(base=c823bd59b2df, head=1aee8b5e5ddf, graph=head graph)",
+   "duration_s": 13.47,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12931,13 +12931,13 @@
    "exit_code": 1,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/v-contract-diff.json",
-   "started_at_utc": "2026-11-10T18:40:50Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/v-contract-diff.json",
+   "started_at_utc": "2026-11-10T18:48:29Z",
    "summary": "186→186 contracts, breaking 0, edges {'not_measured': 3, 'verified': 247}"
   },
   {
    "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
-   "duration_s": 0.21,
+   "duration_s": 0.18,
    "entities": [
     "route:GET /connectors",
     "route:GET /connectors/:name/status",
@@ -12991,13 +12991,13 @@
    "exit_code": 0,
    "id": "v-route-config",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/v-route-config.txt",
-   "started_at_utc": "2026-11-10T18:41:06Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/v-route-config.txt",
+   "started_at_utc": "2026-11-10T18:48:43Z",
    "summary": "23 route(s), 0 failed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 1.49,
+   "duration_s": 1.63,
    "entities": [
     "code_unit:src/connectors/openrouter/openrouter.connector.spec.ts",
     "code_unit:src/connectors/openrouter/openrouter.connector.ts"
@@ -13009,13 +13009,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-10T18:41:07Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-10T18:48:43Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.57,
+   "duration_s": 0.44,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -13485,13 +13485,13 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-10T18:41:08Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-10T18:48:45Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.03,
+   "duration_s": 0.04,
    "entities": [
     "document:CHANGELOG.md",
     "document:README.md",
@@ -13569,8 +13569,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-10T18:41:09Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-10T18:48:45Z",
    "summary": "35 document(s), 0 failed"
   },
   {
@@ -13643,8 +13643,8 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity2/verifier-out/v-canary.json",
-   "started_at_utc": "2026-11-10T18:41:09Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-restart-20261110T1719Z/verify-work/pass-ciparity3/verifier-out/v-canary.json",
+   "started_at_utc": "2026-11-10T18:48:45Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 30 not_measured of 30 entities"
   }
  ],
@@ -14889,9 +14889,9 @@
    ]
   },
   "seconds": {
-   "prepare": 15.51,
-   "total": 377.64,
-   "verifiers": 172.39
+   "prepare": 15.19,
+   "total": 415.79,
+   "verifiers": 227.92
   }
  },
  "work_item": "0a3f80e9-6deb-4dc6-9301-d723a26b72f5"
