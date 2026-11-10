@@ -301,237 +301,247 @@ function abortedConnector(classifyErrorAction: (t: string) => object, estimated:
   };
 }
 
-describe('A2-299b / DEC-AUP-0050 R2 — the INTENT path charges the customer nothing', () => {
-  const OLD_ENV = { ...process.env };
+// stand() reimports ConnectorsService/BillingService after every resetModules;
+// under concurrent host load that cold path exceeds the 5s default (measured
+// timeout under the four-file focused run). Timeout only; asserts unchanged.
+describe(
+  'A2-299b / DEC-AUP-0050 R2 — the INTENT path charges the customer nothing',
+  { timeout: 60_000 },
+  () => {
+    const OLD_ENV = { ...process.env };
 
-  beforeEach(() => {
-    vi.resetModules();
-    process.env = { ...OLD_ENV };
-    process.env.PROVIDER_ACCESS = '';
-  });
-
-  /**
-   * The enforced dispatch path, end to end, with a REAL `BillingService` over
-   * the in-memory store. Enforcement is ON, which is what makes
-   * `openRequestIntent` open a real intent and reserve a real hold — and
-   * therefore what makes `persistAndSettle` take its `intent` branch.
-   */
-  async function stand(opts: { estimated: boolean; openingBalance?: number }) {
-    const { validateEnv } = await observeAsync('import-env', () => import('../config/env.schema'));
-    observeSync('validate-config', () => validateEnv({ ...BASE_ENV, BILLING_ENFORCED: 'true' }));
-
-    const { ConnectorsService } = await observeAsync(
-      'import-connectors',
-      () => import('./connectors.service'),
-    );
-    const { BillingService } = await observeAsync(
-      'import-billing',
-      () => import('../billing/billing.service'),
-    );
-    const { OutputGuardMiddleware } = await observeAsync(
-      'import-output-guard',
-      () => import('./output-guard/output-guard.middleware'),
-    );
-    const { classifyErrorAction } = await observeAsync(
-      'import-interface',
-      () => import('./interfaces/connector.interface'),
-    );
-    const intentKeys = await observeAsync('import-intent', () => import('../billing/intent'));
-
-    const store = observeSync('fixture-construction', () => memoryDb(opts.openingBalance));
-    const billing = observeSync(
-      'billing-construction',
-      () => new BillingService(store.db as never),
-    );
-
-    const service = observeSync(
-      'connector-construction',
-      () =>
-        new ConnectorsService(
-          { add: vi.fn() } as never,
-          store.db as never,
-          { record: vi.fn(), getAll: vi.fn().mockReturnValue({}) } as never,
-          new OutputGuardMiddleware({ enabled: false, maxRetries: 3, timeoutMs: 30_000 }),
-          { getEntries: () => [], getFilteredEntries: () => [] } as never,
-          {
-            findAll: vi.fn().mockResolvedValue([
-              {
-                connector: 'test',
-                model: PRICED,
-                inputPerMTok: INPUT_PER_MTOK,
-                outputPerMTok: 3.48,
-                cachedInputPerMTok: null,
-                status: 'online',
-              },
-            ]),
-          } as never,
-          null,
-          undefined,
-          undefined,
-          billing,
-        ),
-    );
-    observeSync('fixture-register', () =>
-      service.register(abortedConnector(classifyErrorAction, opts.estimated) as never),
-    );
-    return { service, ...store, intentKeys };
-  }
-
-  it('settles the intent at ZERO and leaves the customer balance untouched', async () => {
-    const { service, intents, ledger, requests, balances, intentKeys } = await stand({
-      estimated: true,
+    beforeEach(() => {
+      vi.resetModules();
+      process.env = { ...OLD_ENV };
+      process.env.PROVIDER_ACCESS = '';
     });
 
-    await observeAsync('memory-execute', () =>
-      service.execute(
+    /**
+     * The enforced dispatch path, end to end, with a REAL `BillingService` over
+     * the in-memory store. Enforcement is ON, which is what makes
+     * `openRequestIntent` open a real intent and reserve a real hold — and
+     * therefore what makes `persistAndSettle` take its `intent` branch.
+     */
+    async function stand(opts: { estimated: boolean; openingBalance?: number }) {
+      const { validateEnv } = await observeAsync(
+        'import-env',
+        () => import('../config/env.schema'),
+      );
+      observeSync('validate-config', () => validateEnv({ ...BASE_ENV, BILLING_ENFORCED: 'true' }));
+
+      const { ConnectorsService } = await observeAsync(
+        'import-connectors',
+        () => import('./connectors.service'),
+      );
+      const { BillingService } = await observeAsync(
+        'import-billing',
+        () => import('../billing/billing.service'),
+      );
+      const { OutputGuardMiddleware } = await observeAsync(
+        'import-output-guard',
+        () => import('./output-guard/output-guard.middleware'),
+      );
+      const { classifyErrorAction } = await observeAsync(
+        'import-interface',
+        () => import('./interfaces/connector.interface'),
+      );
+      const intentKeys = await observeAsync('import-intent', () => import('../billing/intent'));
+
+      const store = observeSync('fixture-construction', () => memoryDb(opts.openingBalance));
+      const billing = observeSync(
+        'billing-construction',
+        () => new BillingService(store.db as never),
+      );
+
+      const service = observeSync(
+        'connector-construction',
+        () =>
+          new ConnectorsService(
+            { add: vi.fn() } as never,
+            store.db as never,
+            { record: vi.fn(), getAll: vi.fn().mockReturnValue({}) } as never,
+            new OutputGuardMiddleware({ enabled: false, maxRetries: 3, timeoutMs: 30_000 }),
+            { getEntries: () => [], getFilteredEntries: () => [] } as never,
+            {
+              findAll: vi.fn().mockResolvedValue([
+                {
+                  connector: 'test',
+                  model: PRICED,
+                  inputPerMTok: INPUT_PER_MTOK,
+                  outputPerMTok: 3.48,
+                  cachedInputPerMTok: null,
+                  status: 'online',
+                },
+              ]),
+            } as never,
+            null,
+            undefined,
+            undefined,
+            billing,
+          ),
+      );
+      observeSync('fixture-register', () =>
+        service.register(abortedConnector(classifyErrorAction, opts.estimated) as never),
+      );
+      return { service, ...store, intentKeys };
+    }
+
+    it('settles the intent at ZERO and leaves the customer balance untouched', async () => {
+      const { service, intents, ledger, requests, balances, intentKeys } = await stand({
+        estimated: true,
+      });
+
+      await observeAsync('memory-execute', () =>
+        service.execute(
+          'test',
+          { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-1' },
+          'key-1',
+        ),
+      );
+
+      // The intent branch was genuinely taken: a real intent row exists and the
+      // REAL `settleIntentInTx` moved it off `held`.
+      observeSync('money-assertions', () => {
+        expect(intents.size).toBe(1);
+        const intent = [...intents.values()][0];
+        expect(intent.state).toBe('completed');
+        expect(intent.clientSupplied).toBe(true);
+        expect(intent.intentKey).toBe('client-key-1');
+        expect(intent.requestId).toBe('req-1');
+        // The stored response is what makes a replay answer THIS attempt.
+        expect(intent.response).toBeDefined();
+
+        // R3 — our cost is on the record, and labelled as ours.
+        expect(requests).toHaveLength(1);
+        expect(requests[0].costSource).toBe('estimated-input-unbilled');
+        expect(Number(requests[0].costUsd)).toBeCloseTo(OUR_COST, 6);
+
+        // R2 — and the CUSTOMER'S MONEY DID NOT MOVE. Read from the balance the
+        // real settle path wrote, not from any expression in the service.
+        expect(balances.get('key-1')!.balanceUsd).toBe(OPENING_BALANCE);
+        // The hold that was reserved before dispatch was given back in full.
+        expect(balances.get('key-1')!.heldUsd).toBe(0);
+
+        // One charge row, for zero, findable by name (R3), against the intent's
+        // own derived ledger key.
+        const charges = ledger.filter((r) => r.entryType === 'charge');
+        expect(charges).toHaveLength(1);
+        // A charge is posted as a NEGATIVE ledger entry (`chargeInTx` writes
+        // `amountUsd.negated()`), so "charged nothing" is a row of magnitude zero.
+        // Compared by magnitude so the assertion cannot pass on a sign mistake, and
+        // the CONTROL below is what proves it is not vacuous.
+        expect(Math.abs(Number(charges[0].amountUsd))).toBe(0);
+        expect(charges[0].reason).toContain('estimated-input-unbilled');
+        expect(charges[0].idempotencyKey).toBe(intentKeys.ledgerKeyForIntent(intent.id));
+        expect(charges[0].requestId).toBe('req-1');
+        // Nothing was written off, because nothing was charged.
+        expect(ledger.filter((r) => r.entryType === 'uncollectible')).toHaveLength(0);
+      });
+    });
+
+    it('CONTROL: a provider-METERED cost on the same path DOES debit the balance', async () => {
+      // Same tokens, same tariff, same timeout envelope. The only difference is
+      // that the provider reported the count, so `estimated` is absent. If this
+      // did not move, the test above would be satisfied by a service that charges
+      // nobody for anything.
+      const { service, requests, ledger, balances } = await stand({ estimated: false });
+
+      await service.execute(
         'test',
-        { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-1' },
+        { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-2' },
         'key-1',
-      ),
-    );
+      );
 
-    // The intent branch was genuinely taken: a real intent row exists and the
-    // REAL `settleIntentInTx` moved it off `held`.
-    observeSync('money-assertions', () => {
-      expect(intents.size).toBe(1);
-      const intent = [...intents.values()][0];
-      expect(intent.state).toBe('completed');
-      expect(intent.clientSupplied).toBe(true);
-      expect(intent.intentKey).toBe('client-key-1');
-      expect(intent.requestId).toBe('req-1');
-      // The stored response is what makes a replay answer THIS attempt.
-      expect(intent.response).toBeDefined();
+      expect(requests[0].costSource).toBe('catalog');
+      const charges = ledger.filter((r) => r.entryType === 'charge');
+      expect(charges).toHaveLength(1);
+      expect(Number(charges[0].amountUsd)).toBeCloseTo(-OUR_COST, 6);
+      expect(balances.get('key-1')!.balanceUsd).toBeCloseTo(OPENING_BALANCE - OUR_COST, 6);
+    });
 
-      // R3 — our cost is on the record, and labelled as ours.
+    it('an intent the sweeper expired mid-flight leaves an UNBILLABLE orphan row', async () => {
+      // How the reconciler ever gets to see one of these — measured, not assumed.
+      //
+      // `settleIntentInTx` charges only if it can move the intent off `held`
+      // (`updateMany({where: {state: 'held'}})`); that guard is the anti-double-charge
+      // control. If the hold expired while the request was still in flight and the
+      // hourly sweep released it, the guard matches nothing, `settleIntentInTx`
+      // returns false, and NO ledger row is written — but `persistAndSettle` ignores
+      // the return value, so the transaction still commits the `Request` row.
+      //
+      // The result is precisely the shape `BillingReconcilerService.findUnsettled`
+      // hunts for: `costUsd > 0` and no ledger entry. Before DEC-AUP-0050 an aborted
+      // attempt recorded `costUsd: 0` and could never appear in that query at all;
+      // now it can, which is why the reconciler needed the R2 guard added in
+      // `reconciler-unbillable.spec.ts`. The abort case is also the likeliest to hit
+      // this window, being by definition the longest-running kind of request.
+      const { service, intents, ledger, requests, balances } = await stand({ estimated: true });
+
+      // Stand in for the sweeper: expire the hold after the intent is open and
+      // before the settle, which is exactly the window that produces the orphan.
+      const connector = (
+        service as unknown as { connectors: Map<string, { execute: () => unknown }> }
+      ).connectors.get('test')!;
+      const dispatch = connector.execute;
+      connector.execute = vi.fn(async (...args: unknown[]) => {
+        for (const row of intents.values()) row.state = 'expired';
+        return (dispatch as (...a: unknown[]) => unknown)(...args);
+      }) as never;
+
+      await service.execute(
+        'test',
+        { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-swept' },
+        'key-1',
+      );
+
+      // The row landed, carrying OUR cost...
       expect(requests).toHaveLength(1);
       expect(requests[0].costSource).toBe('estimated-input-unbilled');
       expect(Number(requests[0].costUsd)).toBeCloseTo(OUR_COST, 6);
-
-      // R2 — and the CUSTOMER'S MONEY DID NOT MOVE. Read from the balance the
-      // real settle path wrote, not from any expression in the service.
+      // ...and nothing settled it, so it is an orphan by the reconciler's definition.
+      expect(ledger).toHaveLength(0);
+      // The customer's balance is still untouched, which is the state the
+      // reconciler must not "repair".
       expect(balances.get('key-1')!.balanceUsd).toBe(OPENING_BALANCE);
-      // The hold that was reserved before dispatch was given back in full.
-      expect(balances.get('key-1')!.heldUsd).toBe(0);
-
-      // One charge row, for zero, findable by name (R3), against the intent's
-      // own derived ledger key.
-      const charges = ledger.filter((r) => r.entryType === 'charge');
-      expect(charges).toHaveLength(1);
-      // A charge is posted as a NEGATIVE ledger entry (`chargeInTx` writes
-      // `amountUsd.negated()`), so "charged nothing" is a row of magnitude zero.
-      // Compared by magnitude so the assertion cannot pass on a sign mistake, and
-      // the CONTROL below is what proves it is not vacuous.
-      expect(Math.abs(Number(charges[0].amountUsd))).toBe(0);
-      expect(charges[0].reason).toContain('estimated-input-unbilled');
-      expect(charges[0].idempotencyKey).toBe(intentKeys.ledgerKeyForIntent(intent.id));
-      expect(charges[0].requestId).toBe('req-1');
-      // Nothing was written off, because nothing was charged.
-      expect(ledger.filter((r) => r.entryType === 'uncollectible')).toHaveLength(0);
     });
-  });
 
-  it('CONTROL: a provider-METERED cost on the same path DOES debit the balance', async () => {
-    // Same tokens, same tariff, same timeout envelope. The only difference is
-    // that the provider reported the count, so `estimated` is absent. If this
-    // did not move, the test above would be satisfied by a service that charges
-    // nobody for anything.
-    const { service, requests, ledger, balances } = await stand({ estimated: false });
+    it('a REPLAY of the same idempotency key does not charge the estimate either', async () => {
+      // The second settlement path the card asks about, reached rather than
+      // reasoned about: a client that retries after a timeout with the SAME
+      // `Idempotency-Key`. `openIntent`'s insert hits the unique index, and
+      // `resolveReplay` answers from the intent's stored response instead of
+      // dispatching again.
+      //
+      // This is the exact double-charge the billing role named in the consilium,
+      // and the reason a retry is safe ONLY when the caller sends a key. The
+      // replayed envelope still tells the caller what the attempt cost US
+      // (`estimated-input-unbilled`, $0.0174) — and the ledger must still hold
+      // exactly one row, for zero.
+      const { service, intents, ledger, requests, balances } = await stand({ estimated: true });
 
-    await service.execute(
-      'test',
-      { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-2' },
-      'key-1',
-    );
+      const first = await service.execute(
+        'test',
+        { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-retry' },
+        'key-1',
+      );
+      const replayed = await service.execute(
+        'test',
+        { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-retry' },
+        'key-1',
+      );
 
-    expect(requests[0].costSource).toBe('catalog');
-    const charges = ledger.filter((r) => r.entryType === 'charge');
-    expect(charges).toHaveLength(1);
-    expect(Number(charges[0].amountUsd)).toBeCloseTo(-OUR_COST, 6);
-    expect(balances.get('key-1')!.balanceUsd).toBeCloseTo(OPENING_BALANCE - OUR_COST, 6);
-  });
+      // It really was a replay: the stored response came back, not a new dispatch.
+      expect(intents.size).toBe(1);
+      expect(requests).toHaveLength(1);
+      expect(replayed.usage.costSource).toBe('estimated-input-unbilled');
+      expect(replayed.usage.costUsd).toBeCloseTo(OUR_COST, 6);
+      expect(replayed.usage.costUsd).toBe(first.usage.costUsd);
 
-  it('an intent the sweeper expired mid-flight leaves an UNBILLABLE orphan row', async () => {
-    // How the reconciler ever gets to see one of these — measured, not assumed.
-    //
-    // `settleIntentInTx` charges only if it can move the intent off `held`
-    // (`updateMany({where: {state: 'held'}})`); that guard is the anti-double-charge
-    // control. If the hold expired while the request was still in flight and the
-    // hourly sweep released it, the guard matches nothing, `settleIntentInTx`
-    // returns false, and NO ledger row is written — but `persistAndSettle` ignores
-    // the return value, so the transaction still commits the `Request` row.
-    //
-    // The result is precisely the shape `BillingReconcilerService.findUnsettled`
-    // hunts for: `costUsd > 0` and no ledger entry. Before DEC-AUP-0050 an aborted
-    // attempt recorded `costUsd: 0` and could never appear in that query at all;
-    // now it can, which is why the reconciler needed the R2 guard added in
-    // `reconciler-unbillable.spec.ts`. The abort case is also the likeliest to hit
-    // this window, being by definition the longest-running kind of request.
-    const { service, intents, ledger, requests, balances } = await stand({ estimated: true });
-
-    // Stand in for the sweeper: expire the hold after the intent is open and
-    // before the settle, which is exactly the window that produces the orphan.
-    const connector = (
-      service as unknown as { connectors: Map<string, { execute: () => unknown }> }
-    ).connectors.get('test')!;
-    const dispatch = connector.execute;
-    connector.execute = vi.fn(async (...args: unknown[]) => {
-      for (const row of intents.values()) row.state = 'expired';
-      return (dispatch as (...a: unknown[]) => unknown)(...args);
-    }) as never;
-
-    await service.execute(
-      'test',
-      { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-swept' },
-      'key-1',
-    );
-
-    // The row landed, carrying OUR cost...
-    expect(requests).toHaveLength(1);
-    expect(requests[0].costSource).toBe('estimated-input-unbilled');
-    expect(Number(requests[0].costUsd)).toBeCloseTo(OUR_COST, 6);
-    // ...and nothing settled it, so it is an orphan by the reconciler's definition.
-    expect(ledger).toHaveLength(0);
-    // The customer's balance is still untouched, which is the state the
-    // reconciler must not "repair".
-    expect(balances.get('key-1')!.balanceUsd).toBe(OPENING_BALANCE);
-  });
-
-  it('a REPLAY of the same idempotency key does not charge the estimate either', async () => {
-    // The second settlement path the card asks about, reached rather than
-    // reasoned about: a client that retries after a timeout with the SAME
-    // `Idempotency-Key`. `openIntent`'s insert hits the unique index, and
-    // `resolveReplay` answers from the intent's stored response instead of
-    // dispatching again.
-    //
-    // This is the exact double-charge the billing role named in the consilium,
-    // and the reason a retry is safe ONLY when the caller sends a key. The
-    // replayed envelope still tells the caller what the attempt cost US
-    // (`estimated-input-unbilled`, $0.0174) — and the ledger must still hold
-    // exactly one row, for zero.
-    const { service, intents, ledger, requests, balances } = await stand({ estimated: true });
-
-    const first = await service.execute(
-      'test',
-      { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-retry' },
-      'key-1',
-    );
-    const replayed = await service.execute(
-      'test',
-      { prompt: PROMPT, model: PRICED, idempotencyKey: 'client-key-retry' },
-      'key-1',
-    );
-
-    // It really was a replay: the stored response came back, not a new dispatch.
-    expect(intents.size).toBe(1);
-    expect(requests).toHaveLength(1);
-    expect(replayed.usage.costSource).toBe('estimated-input-unbilled');
-    expect(replayed.usage.costUsd).toBeCloseTo(OUR_COST, 6);
-    expect(replayed.usage.costUsd).toBe(first.usage.costUsd);
-
-    // And the money did not move, once or twice.
-    expect(ledger.filter((r) => r.entryType === 'charge')).toHaveLength(1);
-    expect(ledger.filter((r) => r.entryType === 'uncollectible')).toHaveLength(0);
-    expect(balances.get('key-1')!.balanceUsd).toBe(OPENING_BALANCE);
-    expect(balances.get('key-1')!.heldUsd).toBe(0);
-  });
-});
+      // And the money did not move, once or twice.
+      expect(ledger.filter((r) => r.entryType === 'charge')).toHaveLength(1);
+      expect(ledger.filter((r) => r.entryType === 'uncollectible')).toHaveLength(0);
+      expect(balances.get('key-1')!.balanceUsd).toBe(OPENING_BALANCE);
+      expect(balances.get('key-1')!.heldUsd).toBe(0);
+    });
+  },
+);

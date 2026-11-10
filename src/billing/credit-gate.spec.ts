@@ -103,7 +103,10 @@ describe('promptCharLength', () => {
   });
 });
 
-describe('credit gate at the dispatch choke point', () => {
+// Dynamic import + vi.resetModules under host load can exceed Vitest's 5s
+// default (measured 12s on refuses-the-call at loadavg ~41). Timeout is
+// infrastructure budget, not a softened assertion.
+describe('credit gate at the dispatch choke point', { timeout: 60_000 }, () => {
   const OLD_ENV = { ...process.env };
 
   beforeEach(() => {
