@@ -1,0 +1,2108 @@
+{
+ "admission": {
+  "rule": "admitted requires every verdict = verified; failed without exemption \u21d2 refused; not_measured without exemption \u21d2 paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold \u2014 the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item \u2014 the ordinary case after a rebase or a second commit on a card \u2014 the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+  "verdict": "admitted_with_exemptions"
+ },
+ "captured_at_utc": "2026-11-10T15:10:59Z",
+ "change_set": {
+  "base": "08db7045bb369528b05b68f94e443d68fe0eeef5",
+  "files": [
+   {
+    "kind": "test",
+    "node_id": "code_unit:src/speech/speech.controller.spec.ts",
+    "node_ids": [
+     "code_unit:src/speech/speech.controller.spec.ts"
+    ],
+    "path": "src/speech/speech.controller.spec.ts",
+    "status": "M"
+   },
+   {
+    "kind": "route",
+    "node_id": "code_unit:src/speech/speech.controller.ts",
+    "node_ids": [
+     "code_unit:src/speech/speech.controller.ts",
+     "route:POST /v1/speech/stt",
+     "route:POST /v1/speech/tts",
+     "route:POST /v1/speech/vad"
+    ],
+    "path": "src/speech/speech.controller.ts",
+    "status": "M"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:src/speech/stt/stt-async.controller.spec.ts",
+    "node_ids": [
+     "code_unit:src/speech/stt/stt-async.controller.spec.ts"
+    ],
+    "path": "src/speech/stt/stt-async.controller.spec.ts",
+    "status": "M"
+   },
+   {
+    "kind": "route",
+    "node_id": "code_unit:src/speech/stt/stt-async.controller.ts",
+    "node_ids": [
+     "code_unit:src/speech/stt/stt-async.controller.ts",
+     "route:GET /v1/speech/stt/jobs/:id",
+     "route:POST /v1/speech/stt/async"
+    ],
+    "path": "src/speech/stt/stt-async.controller.ts",
+    "status": "M"
+   }
+  ],
+  "head": "bab62c2aff6501f61adf2210814afab42f25d636",
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "exemptions": [
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/speech/speech.controller.ts",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (cb07a5b3 multipart content-type mapping worker)",
+   "reason": "Inferred/observed boundary entity reached from STT multipart mapping change; no committed CanaryResult lists it in this admission run. Unit/spec coverage for the changed sync/async STT controllers is verified by targeted vitest (speech.controller.spec / stt-async.controller.spec)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/speech/stt/stt-async.controller.ts",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (cb07a5b3 multipart content-type mapping worker)",
+   "reason": "Inferred/observed boundary entity reached from STT multipart mapping change; no committed CanaryResult lists it in this admission run. Unit/spec coverage for the changed sync/async STT controllers is verified by targeted vitest (speech.controller.spec / stt-async.controller.spec)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /v1/speech/stt/jobs/:id",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (cb07a5b3 multipart content-type mapping worker)",
+   "reason": "Inferred/observed boundary entity reached from STT multipart mapping change; no committed CanaryResult lists it in this admission run. Unit/spec coverage for the changed sync/async STT controllers is verified by targeted vitest (speech.controller.spec / stt-async.controller.spec)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /v1/speech/stt",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (cb07a5b3 multipart content-type mapping worker)",
+   "reason": "Inferred/observed boundary entity reached from STT multipart mapping change; no committed CanaryResult lists it in this admission run. Unit/spec coverage for the changed sync/async STT controllers is verified by targeted vitest (speech.controller.spec / stt-async.controller.spec)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /v1/speech/stt/async",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (cb07a5b3 multipart content-type mapping worker)",
+   "reason": "Inferred/observed boundary entity reached from STT multipart mapping change; no committed CanaryResult lists it in this admission run. Unit/spec coverage for the changed sync/async STT controllers is verified by targeted vitest (speech.controller.spec / stt-async.controller.spec)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /v1/speech/tts",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (cb07a5b3 multipart content-type mapping worker)",
+   "reason": "Inferred/observed boundary entity reached from STT multipart mapping change; no committed CanaryResult lists it in this admission run. Unit/spec coverage for the changed sync/async STT controllers is verified by targeted vitest (speech.controller.spec / stt-async.controller.spec)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /v1/speech/vad",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (cb07a5b3 multipart content-type mapping worker)",
+   "reason": "Inferred/observed boundary entity reached from STT multipart mapping change; no committed CanaryResult lists it in this admission run. Unit/spec coverage for the changed sync/async STT controllers is verified by targeted vitest (speech.controller.spec / stt-async.controller.spec)."
+  }
+ ],
+ "graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:8df711ede5edc2b1c259e06f3611b4e32992fb21a236d5e901cd6c6bc256e30e",
+  "path": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/graph-base-nomod.json",
+  "source_commit": "08db7045bb369528b05b68f94e443d68fe0eeef5"
+ },
+ "head_graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:8e8e3bea7ce9788518fd1c536378683142586cde4de91d6b49b88860a35c9e1b",
+  "path": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/graph-head-bab62c2aff65.json",
+  "source_commit": "bab62c2aff6501f61adf2210814afab42f25d636",
+  "staleness": {
+   "checked_at_utc": "2026-11-10T15:12:52Z",
+   "checked_nodes": 971,
+   "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+   "mismatched_nodes": [],
+   "verdict": "fresh"
+  }
+ },
+ "host": "conn-cb07-author",
+ "host_redacted": true,
+ "host_sha256": "4aa70d80ad7e9af5a4105665f76e3986c4657726b3240c0cb1f51f932f70318b",
+ "impact_set": {
+  "deterministic_core": [
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "code_unit:src/app.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:src/main.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/main.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:src/speech/speech.module.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "code_unit:test/app.e2e-spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:test/app.e2e-spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "relative"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:test/bench-reservation/boundary-http.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:test/bench-reservation/boundary-http.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check / compile of the importer"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "deployable_unit:.",
+    "node_type": "deployable_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:src/speech/speech.controller.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:.",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:CHANGELOG.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:CHANGELOG.md",
+      "provenance": "deterministic",
+      "to": "route:POST /v1/speech/stt",
+      "via": "explicit-route"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:docs/connectors/deepgram-tts.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/connectors/deepgram-tts.md",
+      "provenance": "deterministic",
+      "to": "route:POST /v1/speech/tts",
+      "via": "explicit-route"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:docs/connectors/together-tts.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/connectors/together-tts.md",
+      "provenance": "deterministic",
+      "to": "route:POST /v1/speech/tts",
+      "via": "explicit-route"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "document:docs/how-to/stt-multi-provider-demo.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/use-stt-endpoint.md",
+      "provenance": "deterministic",
+      "to": "route:POST /v1/speech/stt",
+      "via": "explicit-route"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/stt-multi-provider-demo.md",
+      "provenance": "deterministic",
+      "to": "document:docs/how-to/use-stt-endpoint.md",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:docs/how-to/use-stt-endpoint.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/use-stt-endpoint.md",
+      "provenance": "deterministic",
+      "to": "route:POST /v1/speech/stt",
+      "via": "explicit-route"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/13-code-unit-coverage.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/13-code-unit-coverage.md",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/route-sweep-classified/classification-policy.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/route-sweep-classified/classification-policy.md",
+      "provenance": "deterministic",
+      "to": "route:GET /v1/speech/stt/jobs/:id",
+      "via": "explicit-route"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "document:receipts/graph/pr207-provider-health-1cd82d0/measurement-report.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:test/bench-reservation/boundary-http.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:receipts/graph/pr207-provider-health-1cd82d0/measurement-report.md",
+      "provenance": "deterministic",
+      "to": "code_unit:test/bench-reservation/boundary-http.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:receipts/graph/pr207-route-sweep-8e21d4b/SWEEP-AND-PROCESS-RECEIPT.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:receipts/graph/pr207-route-sweep-8e21d4b/SWEEP-AND-PROCESS-RECEIPT.md",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/bench-source-ctx24/source-car.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "receipt:receipts/graph/change-admission-14d5ee02.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:test/bench-reservation/boundary-http.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:receipts/graph/pr207-provider-health-1cd82d0/measurement-report.md",
+      "provenance": "deterministic",
+      "to": "code_unit:test/bench-reservation/boundary-http.spec.ts",
+      "via": "explicit-path"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-14d5ee02.json",
+      "provenance": "deterministic",
+      "to": "document:receipts/graph/pr207-provider-health-1cd82d0/measurement-report.md",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-6206.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-6206.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-6664.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-6664.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "receipt:receipts/graph/change-admission-7148.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-7148.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "receipt:receipts/graph/change-admission-a2-425.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-425.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-432.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-432.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-443.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-443.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 3,
+    "entity": "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/speech/speech.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/app.module.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.module.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-jev-decision.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/speech/speech.controller.spec.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   }
+  ],
+  "edge_types": "all",
+  "global_fallback": {
+   "triggered": false
+  },
+  "inferred_tail": [],
+  "max_depth": 3,
+  "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+  "total": 36
+ },
+ "notes": [
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = \u22c3 edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i\u2026",
+  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
+  "exemptions: 7 attached from /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/exemptions-ciparity.json",
+  "head tree bab62c2aff65 exported with git archive into /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/workdir8/export-bab62c2aff65 (node_modules linked from the repository for ['.', 'packages/sdk-ts', 'watcher']; workspace packages built: ['packages/sdk-ts (tsc exit 0, 3.48s)']); the repository was not written"
+ ],
+ "producer": {
+  "tool": "tools/graph/verify.py",
+  "version": "1.4.1"
+ },
+ "receipt_id": "car-verify-20261110T151059Z-bab62c2a",
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/model-connector"
+ },
+ "revision_selection": {
+  "base": [
+   "code_unit:src/app.module.ts",
+   "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+   "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "code_unit:src/main.ts",
+   "code_unit:src/speech/speech.controller.spec.ts",
+   "code_unit:src/speech/speech.controller.ts",
+   "code_unit:src/speech/speech.module.ts",
+   "code_unit:src/speech/stt/stt-async.controller.spec.ts",
+   "code_unit:src/speech/stt/stt-async.controller.ts",
+   "code_unit:test/app.e2e-spec.ts",
+   "code_unit:test/bench-reservation/boundary-http.spec.ts",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:docs/connectors/deepgram-tts.md",
+   "document:docs/connectors/together-tts.md",
+   "document:docs/how-to/stt-multi-provider-demo.md",
+   "document:docs/how-to/use-stt-endpoint.md",
+   "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/13-code-unit-coverage.md",
+   "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/route-sweep-classified/classification-policy.md",
+   "document:receipts/graph/pr207-provider-health-1cd82d0/measurement-report.md",
+   "document:receipts/graph/pr207-route-sweep-8e21d4b/SWEEP-AND-PROCESS-RECEIPT.md",
+   "receipt:receipts/bench-source-ctx24/source-car.json",
+   "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
+   "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+   "receipt:receipts/graph/change-admission-14d5ee02.json",
+   "receipt:receipts/graph/change-admission-6206.json",
+   "receipt:receipts/graph/change-admission-6664.json",
+   "receipt:receipts/graph/change-admission-7148.json",
+   "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+   "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+   "receipt:receipts/graph/change-admission-a2-425.json",
+   "receipt:receipts/graph/change-admission-a2-432.json",
+   "receipt:receipts/graph/change-admission-a2-443.json",
+   "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
+   "receipt:receipts/graph/change-admission-jev-decision.json",
+   "route:GET /v1/speech/stt/jobs/:id",
+   "route:POST /v1/speech/stt",
+   "route:POST /v1/speech/stt/async",
+   "route:POST /v1/speech/tts",
+   "route:POST /v1/speech/vad"
+  ],
+  "head": [
+   "code_unit:src/app.module.ts",
+   "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+   "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "code_unit:src/main.ts",
+   "code_unit:src/speech/speech.controller.spec.ts",
+   "code_unit:src/speech/speech.controller.ts",
+   "code_unit:src/speech/speech.module.ts",
+   "code_unit:src/speech/stt/stt-async.controller.spec.ts",
+   "code_unit:src/speech/stt/stt-async.controller.ts",
+   "code_unit:test/app.e2e-spec.ts",
+   "code_unit:test/bench-reservation/boundary-http.spec.ts",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:docs/connectors/deepgram-tts.md",
+   "document:docs/connectors/together-tts.md",
+   "document:docs/how-to/stt-multi-provider-demo.md",
+   "document:docs/how-to/use-stt-endpoint.md",
+   "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/13-code-unit-coverage.md",
+   "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/route-sweep-classified/classification-policy.md",
+   "document:receipts/graph/pr207-provider-health-1cd82d0/measurement-report.md",
+   "document:receipts/graph/pr207-route-sweep-8e21d4b/SWEEP-AND-PROCESS-RECEIPT.md",
+   "receipt:receipts/bench-source-ctx24/source-car.json",
+   "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
+   "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+   "receipt:receipts/graph/change-admission-14d5ee02.json",
+   "receipt:receipts/graph/change-admission-6206.json",
+   "receipt:receipts/graph/change-admission-6664.json",
+   "receipt:receipts/graph/change-admission-7148.json",
+   "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+   "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+   "receipt:receipts/graph/change-admission-a2-425.json",
+   "receipt:receipts/graph/change-admission-a2-432.json",
+   "receipt:receipts/graph/change-admission-a2-443.json",
+   "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
+   "receipt:receipts/graph/change-admission-jev-decision.json",
+   "route:GET /v1/speech/stt/jobs/:id",
+   "route:POST /v1/speech/stt",
+   "route:POST /v1/speech/stt/async",
+   "route:POST /v1/speech/tts",
+   "route:POST /v1/speech/vad"
+  ],
+  "schema": "RevisionImpactSelection/v1",
+  "unmeasured_head_files": []
+ },
+ "schema": "ChangeAdmissionReceipt/v1",
+ "staleness": {
+  "checked_at_utc": "2026-11-10T15:12:52Z",
+  "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+  "mismatched_nodes": [],
+  "verdict": "fresh"
+ },
+ "structural_exclusions": [
+  {
+   "content_hash": {
+    "base": "sha256:1bf9d4ab170eee11a6e10ae667a923438765d8fb168561ffbc1480555c77ad94",
+    "head": "sha256:1bf9d4ab170eee11a6e10ae667a923438765d8fb168561ffbc1480555c77ad94"
+   },
+   "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
+   "node_type": "receipt",
+   "path": "receipts/bench-source-ctx24/source-car.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:e2ddb11ed9fbb9e0ba9a57378cc23d83e764bb9815cf1b9302d1026cbde28a90",
+    "head": "sha256:e2ddb11ed9fbb9e0ba9a57378cc23d83e764bb9815cf1b9302d1026cbde28a90"
+   },
+   "entity": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/a2-301-per-key-rate-limit.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:f09d58b4096eb02b4450816057806a140465115c3947aa416e47e95422abf0e9",
+    "head": "sha256:f09d58b4096eb02b4450816057806a140465115c3947aa416e47e95422abf0e9"
+   },
+   "entity": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/a2-319-rate-limit-admin.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:6b2f57b071a8eaef7d9482710131d59df9a18e67b8c9ea79201fd4af42d4cbce",
+    "head": "sha256:6b2f57b071a8eaef7d9482710131d59df9a18e67b8c9ea79201fd4af42d4cbce"
+   },
+   "entity": "receipt:receipts/graph/change-admission-14d5ee02.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-14d5ee02.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:0c6f2e29c0efca7c7712302fe67e301986e3870bfbb5caccb48e7b4db29c4754",
+    "head": "sha256:0c6f2e29c0efca7c7712302fe67e301986e3870bfbb5caccb48e7b4db29c4754"
+   },
+   "entity": "receipt:receipts/graph/change-admission-6206.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-6206.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:62d68a5ad65602e0f4b3aed684e9cdfbbe17928a97bb8acbcd46604f355e219f",
+    "head": "sha256:62d68a5ad65602e0f4b3aed684e9cdfbbe17928a97bb8acbcd46604f355e219f"
+   },
+   "entity": "receipt:receipts/graph/change-admission-6664.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-6664.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:8fe0fa04bff2c9097e091a2dcb4bb313e5859f36cb566f7ff4d12f27b63c925d",
+    "head": "sha256:8fe0fa04bff2c9097e091a2dcb4bb313e5859f36cb566f7ff4d12f27b63c925d"
+   },
+   "entity": "receipt:receipts/graph/change-admission-7148.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-7148.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:64da08fdcac8d512c754fc432b1c61f6466e92367c85d78bee7afe0df1461d1c",
+    "head": "sha256:64da08fdcac8d512c754fc432b1c61f6466e92367c85d78bee7afe0df1461d1c"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-201-20260923T123300Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf",
+    "head": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:55aa15f55fa943313632f398f2934cfc9fa99c25fcae2cca6cda20e14a00eb9a",
+    "head": "sha256:55aa15f55fa943313632f398f2934cfc9fa99c25fcae2cca6cda20e14a00eb9a"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:a785e919dadd2eb3f961db5468a9c884f6be662e543456ac1beca9fa5303987c",
+    "head": "sha256:a785e919dadd2eb3f961db5468a9c884f6be662e543456ac1beca9fa5303987c"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-210-20260923T145015Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:b2f2634796fa4f3dd05a4968bf6035f30619441d3e557ee1960ad3aa7838eab4",
+    "head": "sha256:b2f2634796fa4f3dd05a4968bf6035f30619441d3e557ee1960ad3aa7838eab4"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-223-20260923T182706Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:4d75a0b2ca6c1e2655c607d4536d6f510283336842742fe9197d774528399000",
+    "head": "sha256:4d75a0b2ca6c1e2655c607d4536d6f510283336842742fe9197d774528399000"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-228-20260923T191237Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:f662576eb0ad71c0a0dc16ed3322df90522563d46bd77ddabbae8139b2767c60",
+    "head": "sha256:f662576eb0ad71c0a0dc16ed3322df90522563d46bd77ddabbae8139b2767c60"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:969805673500d0f88865bd7c239e01fdf86746339c77e5bd5b4b3b10ce869e65",
+    "head": "sha256:969805673500d0f88865bd7c239e01fdf86746339c77e5bd5b4b3b10ce869e65"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-425.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-425.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:47947b97d33ab3f837dc83a1fc71d3594e4c7df6351cd20e146d08e282ddda1e",
+    "head": "sha256:47947b97d33ab3f837dc83a1fc71d3594e4c7df6351cd20e146d08e282ddda1e"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-432.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-432.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:b8b7f231eb201c9a12810ec8f88f172ce525a0498c12bbb70b89f1f0390f0dda",
+    "head": "sha256:b8b7f231eb201c9a12810ec8f88f172ce525a0498c12bbb70b89f1f0390f0dda"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-443.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-443.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:4c1251b86efa914852ccd9dc0c546b8e3a0ae84db286d0ab83e130b6a8a7c027",
+    "head": "sha256:4c1251b86efa914852ccd9dc0c546b8e3a0ae84db286d0ab83e130b6a8a7c027"
+   },
+   "entity": "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-conv-ac5-price-coverage.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a",
+    "head": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a"
+   },
+   "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-jev-decision.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  }
+ ],
+ "tree": {
+  "commit": "7d237e93b8164cf44406ca45400be29f90fe0b67",
+  "dirty": false
+ },
+ "verdicts": [
+  {
+   "entity": "code_unit:src/app.module.ts",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "code_unit:src/main.ts",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "code_unit:src/speech/speech.controller.spec.ts",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "code_unit:src/speech/speech.controller.ts",
+   "reason": "v-contract-diff: contract:src/speech/dto/tts-request.dto.ts#ttsRequestSchema: safeParse result/payload usage not proven: union requires bound safeParse and object variants; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "code_unit:src/speech/speech.module.ts",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "code_unit:src/speech/stt/stt-async.controller.spec.ts",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "code_unit:src/speech/stt/stt-async.controller.ts",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "code_unit:test/app.e2e-spec.ts",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "code_unit:test/bench-reservation/boundary-http.spec.ts",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "deployable_unit:.",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: 0 errors; v-fitness: no new violation in . (35 frozen)",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "document:CHANGELOG.md",
+   "reason": "v-doc-reference: 26 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:docs/connectors/deepgram-tts.md",
+   "reason": "v-doc-reference: 1 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:docs/connectors/together-tts.md",
+   "reason": "v-doc-reference: 7 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:docs/how-to/stt-multi-provider-demo.md",
+   "reason": "v-doc-reference: 1 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:docs/how-to/use-stt-endpoint.md",
+   "reason": "v-doc-reference: 2 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/13-code-unit-coverage.md",
+   "reason": "v-doc-reference: 40 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/route-sweep-classified/classification-policy.md",
+   "reason": "v-doc-reference: 5 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:receipts/graph/pr207-provider-health-1cd82d0/measurement-report.md",
+   "reason": "v-doc-reference: 5 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:receipts/graph/pr207-route-sweep-8e21d4b/SWEEP-AND-PROCESS-RECEIPT.md",
+   "reason": "v-doc-reference: 26 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "route:GET /v1/speech/stt/jobs/:id",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:POST /v1/speech/stt",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:POST /v1/speech/stt/async",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:POST /v1/speech/tts",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:POST /v1/speech/vad",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  }
+ ],
+ "verifier_selection": {
+  "applied": {},
+  "not_applied": [],
+  "requested": [],
+  "schema": "VerifierSelection/v1"
+ },
+ "verifiers": [
+  {
+   "command": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/tsc-runtime/tsc -p /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/workdir8/export-bab62c2aff65/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/type-check-mtc58v9a/check.tsbuildinfo --listFiles",
+   "duration_s": 49.73,
+   "entities": [
+    "code_unit:src/app.module.ts",
+    "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+    "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+    "code_unit:src/main.ts",
+    "code_unit:src/speech/speech.controller.spec.ts",
+    "code_unit:src/speech/speech.controller.ts",
+    "code_unit:src/speech/speech.module.ts",
+    "code_unit:src/speech/stt/stt-async.controller.spec.ts",
+    "code_unit:src/speech/stt/stt-async.controller.ts",
+    "code_unit:test/app.e2e-spec.ts",
+    "code_unit:test/bench-reservation/boundary-http.spec.ts",
+    "deployable_unit:.",
+    "route:GET /v1/speech/stt/jobs/:id",
+    "route:POST /v1/speech/stt",
+    "route:POST /v1/speech/stt/async",
+    "route:POST /v1/speech/tts",
+    "route:POST /v1/speech/vad"
+   ],
+   "entity_verdicts": {
+    "code_unit:src/app.module.ts": "verified",
+    "code_unit:src/connectors/cascade/cascade.module.di.spec.ts": "verified",
+    "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts": "verified",
+    "code_unit:src/main.ts": "verified",
+    "code_unit:src/speech/speech.controller.spec.ts": "verified",
+    "code_unit:src/speech/speech.controller.ts": "verified",
+    "code_unit:src/speech/speech.module.ts": "verified",
+    "code_unit:src/speech/stt/stt-async.controller.spec.ts": "verified",
+    "code_unit:src/speech/stt/stt-async.controller.ts": "verified",
+    "code_unit:test/app.e2e-spec.ts": "verified",
+    "code_unit:test/bench-reservation/boundary-http.spec.ts": "verified",
+    "deployable_unit:.": "verified",
+    "route:GET /v1/speech/stt/jobs/:id": "verified",
+    "route:POST /v1/speech/stt": "verified",
+    "route:POST /v1/speech/stt/async": "verified",
+    "route:POST /v1/speech/tts": "verified",
+    "route:POST /v1/speech/vad": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig-mjs",
+   "kind": "type_check",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-10T15:13:21Z",
+   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2866 files listed"
+  },
+  {
+   "command": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/tsc-runtime/tsc -p /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/workdir8/export-bab62c2aff65/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/type-check-uljagq8g/check.tsbuildinfo --listFiles",
+   "duration_s": 49.58,
+   "entities": [
+    "code_unit:src/app.module.ts",
+    "code_unit:src/main.ts",
+    "code_unit:src/speech/speech.controller.ts",
+    "code_unit:src/speech/speech.module.ts",
+    "code_unit:src/speech/stt/stt-async.controller.ts",
+    "deployable_unit:.",
+    "route:GET /v1/speech/stt/jobs/:id",
+    "route:POST /v1/speech/stt",
+    "route:POST /v1/speech/stt/async",
+    "route:POST /v1/speech/tts",
+    "route:POST /v1/speech/vad"
+   ],
+   "entity_verdicts": {
+    "code_unit:src/app.module.ts": "verified",
+    "code_unit:src/main.ts": "verified",
+    "code_unit:src/speech/speech.controller.ts": "verified",
+    "code_unit:src/speech/speech.module.ts": "verified",
+    "code_unit:src/speech/stt/stt-async.controller.ts": "verified",
+    "deployable_unit:.": "verified",
+    "route:GET /v1/speech/stt/jobs/:id": "verified",
+    "route:POST /v1/speech/stt": "verified",
+    "route:POST /v1/speech/stt/async": "verified",
+    "route:POST /v1/speech/tts": "verified",
+    "route:POST /v1/speech/vad": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig-build",
+   "kind": "type_check",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-10T15:14:12Z",
+   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2135 files listed"
+  },
+  {
+   "command": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/tsc-runtime/tsc -p /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/workdir8/export-bab62c2aff65/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/type-check-dfff3ohr/check.tsbuildinfo --listFiles",
+   "duration_s": 5.04,
+   "entities": [
+    "code_unit:src/app.module.ts",
+    "code_unit:src/main.ts",
+    "code_unit:src/speech/speech.controller.ts",
+    "code_unit:src/speech/speech.module.ts",
+    "code_unit:src/speech/stt/stt-async.controller.ts",
+    "deployable_unit:.",
+    "route:GET /v1/speech/stt/jobs/:id",
+    "route:POST /v1/speech/stt",
+    "route:POST /v1/speech/stt/async",
+    "route:POST /v1/speech/tts",
+    "route:POST /v1/speech/vad"
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig-ci",
+   "kind": "type_check",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-10T15:15:04Z",
+   "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
+  },
+  {
+   "command": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/tsc-runtime/tsc -p /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/workdir8/export-bab62c2aff65/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/type-check-jbz5bz7y/check.tsbuildinfo --listFiles",
+   "duration_s": 89.89,
+   "entities": [
+    "code_unit:src/app.module.ts",
+    "code_unit:src/main.ts",
+    "code_unit:src/speech/speech.controller.ts",
+    "code_unit:src/speech/speech.module.ts",
+    "code_unit:src/speech/stt/stt-async.controller.ts",
+    "deployable_unit:.",
+    "route:GET /v1/speech/stt/jobs/:id",
+    "route:POST /v1/speech/stt",
+    "route:POST /v1/speech/stt/async",
+    "route:POST /v1/speech/tts",
+    "route:POST /v1/speech/vad"
+   ],
+   "entity_verdicts": {
+    "code_unit:src/app.module.ts": "verified",
+    "code_unit:src/main.ts": "verified",
+    "code_unit:src/speech/speech.controller.ts": "verified",
+    "code_unit:src/speech/speech.module.ts": "verified",
+    "code_unit:src/speech/stt/stt-async.controller.ts": "verified",
+    "deployable_unit:.": "verified",
+    "route:GET /v1/speech/stt/jobs/:id": "verified",
+    "route:POST /v1/speech/stt": "verified",
+    "route:POST /v1/speech/stt/async": "verified",
+    "route:POST /v1/speech/tts": "verified",
+    "route:POST /v1/speech/vad": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig",
+   "kind": "type_check",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-10T15:15:09Z",
+   "summary": "tsconfig.json: exit 0, 0 error(s), 2757 files listed"
+  },
+  {
+   "command": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/tsc-runtime/tsc -p /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/workdir8/export-bab62c2aff65/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/type-check-_arcd2up/check.tsbuildinfo --listFiles",
+   "duration_s": 134.43,
+   "entities": [
+    "code_unit:src/app.module.ts",
+    "code_unit:src/main.ts",
+    "code_unit:src/speech/speech.controller.ts",
+    "code_unit:src/speech/speech.module.ts",
+    "code_unit:src/speech/stt/stt-async.controller.ts",
+    "deployable_unit:.",
+    "route:GET /v1/speech/stt/jobs/:id",
+    "route:POST /v1/speech/stt",
+    "route:POST /v1/speech/stt/async",
+    "route:POST /v1/speech/tts",
+    "route:POST /v1/speech/vad"
+   ],
+   "entity_verdicts": {
+    "code_unit:src/app.module.ts": "verified",
+    "code_unit:src/main.ts": "verified",
+    "code_unit:src/speech/speech.controller.ts": "verified",
+    "code_unit:src/speech/speech.module.ts": "verified",
+    "code_unit:src/speech/stt/stt-async.controller.ts": "verified",
+    "deployable_unit:.": "verified",
+    "route:GET /v1/speech/stt/jobs/:id": "verified",
+    "route:POST /v1/speech/stt": "verified",
+    "route:POST /v1/speech/stt/async": "verified",
+    "route:POST /v1/speech/tts": "verified",
+    "route:POST /v1/speech/vad": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig-test",
+   "kind": "type_check",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-10T15:16:44Z",
+   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2863 files listed"
+  },
+  {
+   "command": "tools/graph/contract_diff.py.run_diff(base=08db7045bb36, head=bab62c2aff65, graph=head graph)",
+   "duration_s": 60.24,
+   "entities": [
+    "code_unit:src/speech/speech.controller.ts",
+    "code_unit:src/speech/stt/stt-async.controller.ts",
+    "route:GET /v1/speech/stt/jobs/:id",
+    "route:POST /v1/speech/stt",
+    "route:POST /v1/speech/stt/async",
+    "route:POST /v1/speech/tts",
+    "route:POST /v1/speech/vad"
+   ],
+   "entity_verdicts": {
+    "code_unit:src/speech/speech.controller.ts": "not_measured",
+    "code_unit:src/speech/stt/stt-async.controller.ts": "verified",
+    "route:GET /v1/speech/stt/jobs/:id": "verified",
+    "route:POST /v1/speech/stt": "verified",
+    "route:POST /v1/speech/stt/async": "verified",
+    "route:POST /v1/speech/tts": "verified",
+    "route:POST /v1/speech/vad": "verified"
+   },
+   "exit_code": 1,
+   "id": "v-contract-diff",
+   "kind": "contract_diff",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/v-contract-diff.json",
+   "started_at_utc": "2026-11-10T15:19:10Z",
+   "summary": "186\u2192186 contracts, breaking 0, edges {'not_measured': 3, 'verified': 247}"
+  },
+  {
+   "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
+   "duration_s": 0.15,
+   "entities": [
+    "route:GET /v1/speech/stt/jobs/:id",
+    "route:POST /v1/speech/stt",
+    "route:POST /v1/speech/stt/async",
+    "route:POST /v1/speech/tts",
+    "route:POST /v1/speech/vad"
+   ],
+   "entity_verdicts": {
+    "route:GET /v1/speech/stt/jobs/:id": "verified",
+    "route:POST /v1/speech/stt": "verified",
+    "route:POST /v1/speech/stt/async": "verified",
+    "route:POST /v1/speech/tts": "verified",
+    "route:POST /v1/speech/vad": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-route-config",
+   "kind": "config_schema",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/v-route-config.txt",
+   "started_at_utc": "2026-11-10T15:20:10Z",
+   "summary": "5 route(s), 0 failed"
+  },
+  {
+   "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+   "duration_s": 0.26,
+   "entities": [
+    "code_unit:src/app.module.ts",
+    "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+    "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+    "code_unit:src/main.ts",
+    "code_unit:src/speech/speech.controller.spec.ts",
+    "code_unit:src/speech/speech.controller.ts",
+    "code_unit:src/speech/speech.module.ts",
+    "code_unit:src/speech/stt/stt-async.controller.spec.ts",
+    "code_unit:src/speech/stt/stt-async.controller.ts",
+    "code_unit:test/app.e2e-spec.ts",
+    "code_unit:test/bench-reservation/boundary-http.spec.ts",
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "code_unit:src/app.module.ts": "verified",
+    "code_unit:src/connectors/cascade/cascade.module.di.spec.ts": "verified",
+    "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts": "verified",
+    "code_unit:src/main.ts": "verified",
+    "code_unit:src/speech/speech.controller.spec.ts": "verified",
+    "code_unit:src/speech/speech.controller.ts": "verified",
+    "code_unit:src/speech/speech.module.ts": "verified",
+    "code_unit:src/speech/stt/stt-async.controller.spec.ts": "verified",
+    "code_unit:src/speech/stt/stt-async.controller.ts": "verified",
+    "code_unit:test/app.e2e-spec.ts": "verified",
+    "code_unit:test/bench-reservation/boundary-http.spec.ts": "verified",
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-fitness",
+   "kind": "fitness_rules",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/v-fitness.json",
+   "started_at_utc": "2026-11-10T15:20:10Z",
+   "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+  },
+  {
+   "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+   "duration_s": 0.01,
+   "entities": [
+    "document:CHANGELOG.md",
+    "document:docs/connectors/deepgram-tts.md",
+    "document:docs/connectors/together-tts.md",
+    "document:docs/how-to/stt-multi-provider-demo.md",
+    "document:docs/how-to/use-stt-endpoint.md",
+    "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/13-code-unit-coverage.md",
+    "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/route-sweep-classified/classification-policy.md",
+    "document:receipts/graph/pr207-provider-health-1cd82d0/measurement-report.md",
+    "document:receipts/graph/pr207-route-sweep-8e21d4b/SWEEP-AND-PROCESS-RECEIPT.md"
+   ],
+   "entity_verdicts": {
+    "document:CHANGELOG.md": "verified",
+    "document:docs/connectors/deepgram-tts.md": "verified",
+    "document:docs/connectors/together-tts.md": "verified",
+    "document:docs/how-to/stt-multi-provider-demo.md": "verified",
+    "document:docs/how-to/use-stt-endpoint.md": "verified",
+    "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/13-code-unit-coverage.md": "verified",
+    "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/route-sweep-classified/classification-policy.md": "verified",
+    "document:receipts/graph/pr207-provider-health-1cd82d0/measurement-report.md": "verified",
+    "document:receipts/graph/pr207-route-sweep-8e21d4b/SWEEP-AND-PROCESS-RECEIPT.md": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-doc-reference",
+   "kind": "doc_reference",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/v-doc-reference.txt",
+   "started_at_utc": "2026-11-10T15:20:10Z",
+   "summary": "9 document(s), 0 failed"
+  },
+  {
+   "command": "tools/graph/deploy_gate.py canary --plan <plan> --phase pre|post (results supplied with --canary)",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:src/speech/speech.controller.ts",
+    "code_unit:src/speech/stt/stt-async.controller.ts",
+    "route:GET /v1/speech/stt/jobs/:id",
+    "route:POST /v1/speech/stt",
+    "route:POST /v1/speech/stt/async",
+    "route:POST /v1/speech/tts",
+    "route:POST /v1/speech/vad"
+   ],
+   "entity_verdicts": {
+    "code_unit:src/speech/speech.controller.ts": "not_measured",
+    "code_unit:src/speech/stt/stt-async.controller.ts": "not_measured",
+    "route:GET /v1/speech/stt/jobs/:id": "not_measured",
+    "route:POST /v1/speech/stt": "not_measured",
+    "route:POST /v1/speech/stt/async": "not_measured",
+    "route:POST /v1/speech/tts": "not_measured",
+    "route:POST /v1/speech/vad": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-canary",
+   "kind": "canary",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-cb07a5b3-update-behind-20261110T141847Z/verify-work/verifier-out8/v-canary.json",
+   "started_at_utc": "2026-11-10T15:20:10Z",
+   "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 7 not_measured of 7 entities"
+  }
+ ],
+ "verify": {
+  "events": [
+   {
+    "code": "STRUCTURAL_EXCLUSION",
+    "rule": "DEC-AUP-0034",
+    "text": "19 affected entity(ies) owe no verdict (receipt: 19): unchanged at both revisions and given no verifier by the matrix"
+   }
+  ],
+  "required_by_entity": {
+   "code_unit:src/app.module.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/connectors/cascade/cascade.module.di.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/main.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/speech/speech.controller.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/speech/speech.controller.ts": [
+    "canary",
+    "contract_diff",
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/speech/speech.module.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/speech/stt/stt-async.controller.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:src/speech/stt/stt-async.controller.ts": [
+    "canary",
+    "contract_diff",
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:test/app.e2e-spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:test/bench-reservation/boundary-http.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "deployable_unit:.": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "document:CHANGELOG.md": [
+    "doc_reference"
+   ],
+   "document:docs/connectors/deepgram-tts.md": [
+    "doc_reference"
+   ],
+   "document:docs/connectors/together-tts.md": [
+    "doc_reference"
+   ],
+   "document:docs/how-to/stt-multi-provider-demo.md": [
+    "doc_reference"
+   ],
+   "document:docs/how-to/use-stt-endpoint.md": [
+    "doc_reference"
+   ],
+   "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/13-code-unit-coverage.md": [
+    "doc_reference"
+   ],
+   "document:receipts/graph/pr207-13-code-unit-canary-31d3a6e/route-sweep-classified/classification-policy.md": [
+    "doc_reference"
+   ],
+   "document:receipts/graph/pr207-provider-health-1cd82d0/measurement-report.md": [
+    "doc_reference"
+   ],
+   "document:receipts/graph/pr207-route-sweep-8e21d4b/SWEEP-AND-PROCESS-RECEIPT.md": [
+    "doc_reference"
+   ],
+   "receipt:receipts/bench-source-ctx24/source-car.json": [],
+   "receipt:receipts/graph/a2-301-per-key-rate-limit.json": [],
+   "receipt:receipts/graph/a2-319-rate-limit-admin.json": [],
+   "receipt:receipts/graph/change-admission-14d5ee02.json": [],
+   "receipt:receipts/graph/change-admission-6206.json": [],
+   "receipt:receipts/graph/change-admission-6664.json": [],
+   "receipt:receipts/graph/change-admission-7148.json": [],
+   "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-210-20260923T145015Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-425.json": [],
+   "receipt:receipts/graph/change-admission-a2-432.json": [],
+   "receipt:receipts/graph/change-admission-a2-443.json": [],
+   "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json": [],
+   "receipt:receipts/graph/change-admission-jev-decision.json": [],
+   "route:GET /v1/speech/stt/jobs/:id": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:POST /v1/speech/stt": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:POST /v1/speech/stt/async": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:POST /v1/speech/tts": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:POST /v1/speech/vad": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ]
+  },
+  "seconds": {
+   "prepare": 17.3,
+   "total": 552.13,
+   "verifiers": 389.33
+  }
+ },
+ "work_item": "cb07a5b3-0bc0-46b1-a3d7-9de4e9d60f86"
+}
