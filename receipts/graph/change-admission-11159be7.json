@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-10T17:39:30Z",
+ "captured_at_utc": "2026-11-10T17:46:44Z",
  "change_set": {
   "base": "fb2139fdee0ce08cb0d8b053233fd3d8dc4e56c0",
   "files": [
@@ -111,7 +111,7 @@
     "status": "M"
    }
   ],
-  "head": "bc7a76ba07f52b316d68f0e57a22904a781ba8c7",
+  "head": "33938bae7ccc589010138d99f24fc42b3aee2183",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -345,17 +345,17 @@
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:da8b3905f1b682998888c159696e13544cd49bea5ec24f8b464d3303170b5dc3",
-  "path": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/graph-fb2139fdee0c.json",
+  "path": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/graph-fb2139fdee0c.json",
   "source_commit": "fb2139fdee0ce08cb0d8b053233fd3d8dc4e56c0"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:d57c1c18db9e41c46eccb563efe14940c51646ae46a3c1305ee9e5f566124ff1",
-  "path": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/graph-head-bc7a76ba07f5.json",
-  "source_commit": "bc7a76ba07f52b316d68f0e57a22904a781ba8c7",
+  "graph_digest": "sha256:bfd4907d17afa7ad81e71a16a19cc7bfafacbb59f562cc191aef5c4d47014833",
+  "path": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/graph-head-33938bae7ccc.json",
+  "source_commit": "33938bae7ccc589010138d99f24fc42b3aee2183",
   "staleness": {
-   "checked_at_utc": "2026-11-10T17:41:19Z",
+   "checked_at_utc": "2026-11-10T17:48:50Z",
    "checked_nodes": 973,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -8516,7 +8516,7 @@
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261110T173930Z-bc7a76ba",
+ "receipt_id": "car-verify-20261110T174644Z-33938bae",
  "receipt_path": "receipts/graph/change-admission-11159be7.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -9141,7 +9141,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-10T17:41:19Z",
+  "checked_at_utc": "2026-11-10T17:48:49Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -9183,7 +9183,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:825c9b210777d952b819fe4b78064ea6b2309409561c2b447983c36d992bd4d3"
+    "head": "sha256:7f4a51d71b0959fbfeaee756a4ffee66e7e3308a01200367809ea89d1d28cf0c"
    },
    "entity": "receipt:receipts/graph/change-admission-11159be7.json",
    "node_type": "receipt",
@@ -9384,7 +9384,7 @@
   }
  ],
  "tree": {
-  "commit": "bc7a76ba07f52b316d68f0e57a22904a781ba8c7",
+  "commit": "33938bae7ccc589010138d99f24fc42b3aee2183",
   "dirty": false
  },
  "verdicts": [
@@ -11973,8 +11973,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/type-check-bg3g6hx9/check.tsbuildinfo --listFiles",
-   "duration_s": 68.61,
+   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/type-check-so95o80s/check.tsbuildinfo --listFiles",
+   "duration_s": 112.09,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -12476,13 +12476,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-10T17:41:47Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-10T17:49:33Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2865 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/type-check-4mrxvus4/check.tsbuildinfo --listFiles",
-   "duration_s": 38.5,
+   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/type-check-usv40lpz/check.tsbuildinfo --listFiles",
+   "duration_s": 39.74,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12772,13 +12772,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-10T17:42:57Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-10T17:51:28Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2134 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/type-check-6uiofv3f/check.tsbuildinfo --listFiles",
-   "duration_s": 4.16,
+   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/type-check-4kjhkset/check.tsbuildinfo --listFiles",
+   "duration_s": 1.74,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12928,13 +12928,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-10T17:43:36Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-10T17:52:09Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/type-check-z0dz1pqp/check.tsbuildinfo --listFiles",
-   "duration_s": 58.45,
+   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/type-check-5rcuy39b/check.tsbuildinfo --listFiles",
+   "duration_s": 46.69,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -13224,13 +13224,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-10T17:43:40Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-10T17:52:10Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2756 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/type-check-t4mppebx/check.tsbuildinfo --listFiles",
-   "duration_s": 63.25,
+   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/type-check-6nzadtbm/check.tsbuildinfo --listFiles",
+   "duration_s": 77.87,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -13520,13 +13520,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-10T17:44:40Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-10T17:52:58Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2862 files listed"
   },
   {
-   "command": "tools/graph/contract_diff.py.run_diff(base=fb2139fdee0c, head=bc7a76ba07f5, graph=head graph)",
-   "duration_s": 12.93,
+   "command": "tools/graph/contract_diff.py.run_diff(base=fb2139fdee0c, head=33938bae7ccc, graph=head graph)",
+   "duration_s": 40.69,
    "entities": [
     "code_unit:src/admin/circuit-breaker.controller.ts",
     "code_unit:src/admin/watcher-repair.controller.ts",
@@ -13610,13 +13610,13 @@
    "exit_code": 1,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/v-contract-diff.json",
-   "started_at_utc": "2026-11-10T17:45:45Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/v-contract-diff.json",
+   "started_at_utc": "2026-11-10T17:54:19Z",
    "summary": "186→186 contracts, breaking 4, edges {'failed': 5, 'not_measured': 5, 'verified': 241}"
   },
   {
    "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
-   "duration_s": 0.12,
+   "duration_s": 0.23,
    "entities": [
     "route:GET /connectors",
     "route:GET /connectors/:name/status",
@@ -13660,13 +13660,13 @@
    "exit_code": 0,
    "id": "v-route-config",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/v-route-config.txt",
-   "started_at_utc": "2026-11-10T17:45:58Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/v-route-config.txt",
+   "started_at_utc": "2026-11-10T17:54:59Z",
    "summary": "18 route(s), 0 failed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 1.2,
+   "duration_s": 5.65,
    "entities": [
     "code_unit:src/connectors/connectors.service.spec.ts",
     "code_unit:src/connectors/jev/jev.connector.ts",
@@ -13680,13 +13680,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-10T17:45:58Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-10T17:54:59Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.44,
+   "duration_s": 2.08,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -14152,8 +14152,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-10T17:45:59Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-10T17:55:05Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -14222,8 +14222,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-10T17:45:59Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-10T17:55:07Z",
    "summary": "28 document(s), 0 failed"
   },
   {
@@ -14286,8 +14286,8 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity/verifier-out/v-canary.json",
-   "started_at_utc": "2026-11-10T17:45:59Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-ciparity2/verifier-out/v-canary.json",
+   "started_at_utc": "2026-11-10T17:55:07Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 25 not_measured of 25 entities"
   }
  ],
@@ -15485,9 +15485,9 @@
    ]
   },
   "seconds": {
-   "prepare": 12.05,
-   "total": 389.66,
-   "verifiers": 247.69
+   "prepare": 17.21,
+   "total": 503.85,
+   "verifiers": 326.81
   }
  },
  "work_item": "11159be7-4854-4aa4-8b88-16fa6533dd38"
