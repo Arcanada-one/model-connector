@@ -165,15 +165,17 @@ export class SpeechController {
           }
       >;
     };
-    // TRANS-0061 B.5 — @fastify/multipart throws `FST_REQ_NOT_MULTIPART`
-    // (HTTP 406 by default) when Content-Type is not `multipart/form-data`.
-    // Convert into a controlled 400 stt_validation_error envelope rather than
-    // leaking through the generic 500 stt_provider_failed branch.
+    // TRANS-0061 B.5 / CONN cb07a5b3 — @fastify/multipart rejects non-multipart
+    // Content-Type with `FST_REQ_NOT_MULTIPART` and/or
+    // `FST_INVALID_MULTIPART_CONTENT_TYPE` (message: "the request is not
+    // multipart"). Map both into a controlled 400 stt_validation_error
+    // envelope rather than leaking through the generic 500
+    // stt_provider_failed branch.
     let data: Awaited<ReturnType<typeof reqWithMultipart.file>>;
     try {
       data = await reqWithMultipart.file();
     } catch (err) {
-      if (this.isFastifyErrorCode(err, 'FST_REQ_NOT_MULTIPART')) {
+      if (this.isInvalidMultipartContentType(err)) {
         throw new HttpException(
           {
             statusCode: 400,
@@ -207,6 +209,13 @@ export class SpeechController {
 
   private isFastifyErrorCode(err: unknown, code: string): boolean {
     return typeof err === 'object' && err !== null && (err as { code?: string }).code === code;
+  }
+
+  private isInvalidMultipartContentType(err: unknown): boolean {
+    return (
+      this.isFastifyErrorCode(err, 'FST_REQ_NOT_MULTIPART') ||
+      this.isFastifyErrorCode(err, 'FST_INVALID_MULTIPART_CONTENT_TYPE')
+    );
   }
 
   private mapSttError(err: unknown): SpeechErrorEnvelope {

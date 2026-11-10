@@ -423,6 +423,28 @@ describe('SpeechController', () => {
     expect(sent.status).toBe(400);
     expect((sent.body as { error_code: string }).error_code).toBe('stt_validation_error');
     expect((sent.body as { message: string }).message).toMatch(/multipart/i);
+    expect(sttRouterMock.transcribe).not.toHaveBeenCalled();
+  });
+
+  // CONN cb07a5b3 — @fastify/multipart 9.x throws
+  // FST_INVALID_MULTIPART_CONTENT_TYPE for missing/invalid Content-Type.
+  // Must map to 400 stt_validation_error, never 500 stt_provider_failed.
+  it('STT: req.file() throws FST_INVALID_MULTIPART_CONTENT_TYPE → 400 stt_validation_error', async () => {
+    const req = {
+      apiKey: { id: 'apikey-1' },
+      file: async () => {
+        throw Object.assign(new Error('the request is not multipart'), {
+          code: 'FST_INVALID_MULTIPART_CONTENT_TYPE',
+          statusCode: 406,
+        });
+      },
+    } as unknown as MultipartReqStub;
+    const { reply, sent } = makeReply();
+    await controller.stt(undefined, req, reply);
+    expect(sent.status).toBe(400);
+    expect((sent.body as { error_code: string }).error_code).toBe('stt_validation_error');
+    expect((sent.body as { message: string }).message).toMatch(/multipart/i);
+    expect(sttRouterMock.transcribe).not.toHaveBeenCalled();
   });
 
   // CONN-0098 — Prometheus instrumentation: counter + histogram per endpoint.
