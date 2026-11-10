@@ -8,66 +8,67 @@
  * container at boot with `Nest can't resolve dependencies of the
  * CascadeRouterService (?, MetricsService)` — green unit tests, red prod.
  *
- * This test compiles the real module graph (no mocked DI) and asserts that
- * CascadeRouterService resolves. PrismaService is overridden so the test
- * needs no live Postgres; everything else is the production wiring.
- *
- * AppModule and PrismaService are imported dynamically AFTER DATABASE_URL is
- * seeded, because app.module.ts calls getConfig() at module-load time (static
- * imports are hoisted above top-level statements, so a static import would
- * validate env before the seed runs).
+ * Root cause of the historical root-suite beforeAll blank failure:
+ * the previous harness dynamically imported the entire AppModule graph
+ * (Prisma/Redis/getConfig seed + every connector) inside beforeAll. Under
+ * Vitest's default hookTimeout (10s), a cold transform of that graph on a
+ * contended host exceeded the budget; the JSON reporter then dropped the
+ * empty hook Error.message, yielding an opaque suite failure while the
+ * focused file still passed. Raising the per-hook budget alone masks load;
+ * compiling CascadeModule itself (with ConnectorsModule overridden to a
+ * stub that still exports ConnectorsService) asserts the same DI wiring
+ * without AppModule bootstrap cost or ambient DATABASE_URL seeding.
  */
 import 'reflect-metadata';
+import { Module } from '@nestjs/common';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { Test } from '@nestjs/testing';
 
 describe('CascadeModule DI bootstrap (CONN-0223)', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let AppModule: any;
+  let CascadeModule: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let PrismaService: any;
+  let ConnectorsModule: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let CascadeRouterService: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let ConnectorsService: any;
 
-  // AppModule import transforms the Nest graph; under host load this beforeAll
-  // measured ~37s (default hookTimeout 10s → empty/opaque suite failure).
+  // CascadeModule still pulls connectors.module.ts for the overrideModule
+  // token; keep a generous hook budget so cold transform under host load
+  // cannot collapse into an empty beforeAll failure again.
   beforeAll(async () => {
     try {
-      // Minimal env so AppModule's eager getConfig() validation passes. Disable
-      // optional providers that would otherwise demand their own API keys — this
-      // test asserts DI wiring, not provider provisioning.
-      if (!process.env.DATABASE_URL) {
-        process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
-      }
-      process.env.STT_PROVIDER_GROQ_ENABLED = 'false';
-      process.env.OPENMODEL_ENABLED = 'false';
-      process.env.CASCADE_PAID_ENABLED = 'false';
-      ({ AppModule } = await import('../../app.module'));
-      ({ PrismaService } = await import('../../prisma/prisma.service'));
+      ({ CascadeModule } = await import('./cascade.module'));
+      ({ ConnectorsModule } = await import('../connectors.module'));
       ({ CascadeRouterService } = await import('./cascade-router.service'));
+      ({ ConnectorsService } = await import('../connectors.service'));
     } catch (err) {
       // Vitest JSON reporters have dropped empty Error.message on this hook;
       // always rethrow a non-empty diagnostic so the suite failure names the cause.
       const detail =
         err instanceof Error ? err.message || err.name || 'Error with empty message' : String(err);
       throw new Error(
-        `CascadeModule DI beforeAll failed while importing AppModule graph: ${detail}`,
+        `CascadeModule DI beforeAll failed while importing CascadeModule graph: ${detail}`,
       );
     }
   }, 60_000);
 
-  it('resolves CascadeRouterService through the real module graph', async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
+  it('resolves CascadeRouterService through CascadeModule wiring', async () => {
+    @Module({
+      providers: [{ provide: ConnectorsService, useValue: { register() {} } }],
+      exports: [ConnectorsService],
     })
-      // Avoid a live DB connection at boot; DI resolution is what we assert.
-      .overrideProvider(PrismaService)
-      .useValue({
-        onModuleInit: async () => {},
-        onModuleDestroy: async () => {},
-        $connect: async () => {},
-        $disconnect: async () => {},
-      })
+    class StubConnectorsModule {}
+
+    const moduleRef = await Test.createTestingModule({
+      imports: [CascadeModule],
+    })
+      // ConnectorsModule is the real forwardRef import CascadeModule declares;
+      // override it so we assert CascadeModule's import list + MetricsModule
+      // resolution without booting every connector provider.
+      .overrideModule(ConnectorsModule)
+      .useModule(StubConnectorsModule)
       .compile();
 
     const cascade = moduleRef.get(CascadeRouterService, { strict: false });

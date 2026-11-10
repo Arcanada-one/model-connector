@@ -6,6 +6,10 @@ export default defineConfig({
     reporters: ['default', './scripts/ci/vitest-profile-reporter.mjs'],
     globals: true,
     root: './',
+    // Cold Nest module graphs (CascadeModule DI, AppModule probes) exceed the
+    // Vitest default 10s hookTimeout under host contention and surface as an
+    // empty beforeAll failure in the JSON reporter. Keep the budget explicit.
+    hookTimeout: 60_000,
     include: [
       'src/**/*.spec.ts',
       'test/watcher/**/*.spec.ts',
