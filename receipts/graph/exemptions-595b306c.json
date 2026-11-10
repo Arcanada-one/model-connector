@@ -204,6 +204,41 @@
       "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
     },
     {
+      "entity": "route:GET /keyed",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "CI-parity graph route ids; focused vitest jev suite PASS; canary listing not produced in author lane",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only. CI-parity route id (nomod graph)."
+    },
+    {
+      "entity": "route:GET /probe/abort",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "CI-parity graph route ids; focused vitest jev suite PASS; canary listing not produced in author lane",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only. CI-parity route id (nomod graph)."
+    },
+    {
+      "entity": "route:GET /probe/execute",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "CI-parity graph route ids; focused vitest jev suite PASS; canary listing not produced in author lane",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only. CI-parity route id (nomod graph)."
+    },
+    {
+      "entity": "route:GET /probe/health",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "CI-parity graph route ids; focused vitest jev suite PASS; canary listing not produced in author lane",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only. CI-parity route id (nomod graph)."
+    },
+    {
+      "entity": "route:GET /probe/metrics",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "CI-parity graph route ids; focused vitest jev suite PASS; canary listing not produced in author lane",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only. CI-parity route id (nomod graph)."
+    },
+    {
       "entity": "route:GET /v1/models",
       "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
       "expires_at_utc": "2026-12-10T00:00:00Z",
@@ -345,55 +380,6 @@
     },
     {
       "entity": "route:POST /v1/speech/vad",
-      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-      "expires_at_utc": "2026-12-10T00:00:00Z",
-      "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
-    },
-    {
-      "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-      "expires_at_utc": "2026-12-10T00:00:00Z",
-      "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
-    },
-    {
-      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-      "expires_at_utc": "2026-12-10T00:00:00Z",
-      "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
-    },
-    {
-      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-      "expires_at_utc": "2026-12-10T00:00:00Z",
-      "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
-    },
-    {
-      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-      "expires_at_utc": "2026-12-10T00:00:00Z",
-      "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
-    },
-    {
-      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-      "expires_at_utc": "2026-12-10T00:00:00Z",
-      "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
-    },
-    {
-      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-      "expires_at_utc": "2026-12-10T00:00:00Z",
-      "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
-    },
-    {
-      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
       "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
       "expires_at_utc": "2026-12-10T00:00:00Z",
       "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
