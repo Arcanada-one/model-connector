@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-10T16:54:17Z",
+ "captured_at_utc": "2026-11-10T17:12:34Z",
  "change_set": {
   "base": "fb2139fdee0ce08cb0d8b053233fd3d8dc4e56c0",
   "files": [
@@ -111,7 +111,7 @@
     "status": "M"
    }
   ],
-  "head": "ec1e154ef6c66a0eec9326508da45c3b3a2988d5",
+  "head": "ab263745357553de42869ddb27f13fd9019827d0",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -393,18 +393,18 @@
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:da8b3905f1b682998888c159696e13544cd49bea5ec24f8b464d3303170b5dc3",
-  "path": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/graph-fb2139fdee0c.json",
+  "graph_digest": "sha256:90f501c889221589fb02b0861f210f3c0be34849ad9eac8da39e351994f065b0",
+  "path": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/graph-fb2139fdee0c.json",
   "source_commit": "fb2139fdee0ce08cb0d8b053233fd3d8dc4e56c0"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:17a8e3b19f1f2d598ab21befaec59dd84c5735b67b6951b08d09417175b28b23",
-  "path": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/graph-head-ec1e154ef6c6.json",
-  "source_commit": "ec1e154ef6c66a0eec9326508da45c3b3a2988d5",
+  "graph_digest": "sha256:47743ec0a9887cf8d75be6878ed2c944d4b7b376e06a0d06d72de6c3f89b246b",
+  "path": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/graph-head-ab2637453575.json",
+  "source_commit": "ab263745357553de42869ddb27f13fd9019827d0",
   "staleness": {
-   "checked_at_utc": "2026-11-10T17:00:21Z",
+   "checked_at_utc": "2026-11-10T17:16:52Z",
    "checked_nodes": 974,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -416,81 +416,21 @@
   "deterministic_core": [
    {
     "boundary": "intra_unit",
-    "depth": 3,
+    "depth": 1,
     "entity": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "node_type": "code_unit",
     "path": [
      {
       "edge_type": "imports",
-      "from": "code_unit:src/connectors/interfaces/connector.interface.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/dto/catalog.dto.ts"
-     },
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.guard.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/interfaces/connector.interface.ts",
-      "via": "relative"
-     },
-     {
-      "edge_type": "imports",
       "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
       "provenance": "deterministic",
-      "to": "code_unit:src/auth/rate-limit.guard.ts",
-      "via": "relative"
+      "to": "code_unit:src/connectors/dto/catalog.dto.ts",
+      "via": "inline-harness-compiler-dependency"
      }
     ],
-    "revision_paths": [
-     {
-      "boundary": "intra_unit",
-      "depth": 3,
-      "entity": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-      "node_type": "code_unit",
-      "path": [
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/connectors/interfaces/connector.interface.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/dto/catalog.dto.ts"
-       },
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/auth/rate-limit.guard.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/interfaces/connector.interface.ts",
-        "via": "relative"
-       },
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/auth/rate-limit.guard.ts",
-        "via": "relative"
-       }
-      ],
-      "revision": "base",
-      "section": "deterministic_core",
-      "verifier_hint": "type-check / compile of the importer"
-     },
-     {
-      "boundary": "intra_unit",
-      "depth": 1,
-      "entity": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-      "node_type": "code_unit",
-      "path": [
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/dto/catalog.dto.ts",
-        "via": "inline-harness-compiler-dependency"
-       }
-      ],
-      "revision": "head",
-      "section": "deterministic_core",
-      "verifier_hint": "type-check / compile of the importer"
-     }
+    "revisions": [
+     "base",
+     "head"
     ],
     "verifier_hint": "type-check / compile of the importer"
    },
@@ -717,81 +657,21 @@
    },
    {
     "boundary": "intra_unit",
-    "depth": 3,
+    "depth": 1,
     "entity": "code_unit:src/auth/rate-limit.app.spec.ts",
     "node_type": "code_unit",
     "path": [
      {
       "edge_type": "imports",
-      "from": "code_unit:src/connectors/interfaces/connector.interface.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/dto/catalog.dto.ts"
-     },
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.guard.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/interfaces/connector.interface.ts",
-      "via": "relative"
-     },
-     {
-      "edge_type": "imports",
       "from": "code_unit:src/auth/rate-limit.app.spec.ts",
       "provenance": "deterministic",
-      "to": "code_unit:src/auth/rate-limit.guard.ts",
-      "via": "relative"
+      "to": "code_unit:src/connectors/dto/catalog.dto.ts",
+      "via": "inline-harness-compiler-dependency"
      }
     ],
-    "revision_paths": [
-     {
-      "boundary": "intra_unit",
-      "depth": 3,
-      "entity": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "node_type": "code_unit",
-      "path": [
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/connectors/interfaces/connector.interface.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/dto/catalog.dto.ts"
-       },
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/auth/rate-limit.guard.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/interfaces/connector.interface.ts",
-        "via": "relative"
-       },
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/auth/rate-limit.guard.ts",
-        "via": "relative"
-       }
-      ],
-      "revision": "base",
-      "section": "deterministic_core",
-      "verifier_hint": "type-check / compile of the importer"
-     },
-     {
-      "boundary": "intra_unit",
-      "depth": 1,
-      "entity": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "node_type": "code_unit",
-      "path": [
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/dto/catalog.dto.ts",
-        "via": "inline-harness-compiler-dependency"
-       }
-      ],
-      "revision": "head",
-      "section": "deterministic_core",
-      "verifier_hint": "type-check / compile of the importer"
-     }
+    "revisions": [
+     "base",
+     "head"
     ],
     "verifier_hint": "type-check / compile of the importer"
    },
@@ -823,81 +703,21 @@
    },
    {
     "boundary": "intra_unit",
-    "depth": 3,
+    "depth": 1,
     "entity": "code_unit:src/auth/rate-limit.integration.spec.ts",
     "node_type": "code_unit",
     "path": [
      {
       "edge_type": "imports",
-      "from": "code_unit:src/connectors/interfaces/connector.interface.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/dto/catalog.dto.ts"
-     },
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.guard.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/interfaces/connector.interface.ts",
-      "via": "relative"
-     },
-     {
-      "edge_type": "imports",
       "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
       "provenance": "deterministic",
-      "to": "code_unit:src/auth/rate-limit.guard.ts",
-      "via": "relative"
+      "to": "code_unit:src/connectors/dto/catalog.dto.ts",
+      "via": "inline-harness-compiler-dependency"
      }
     ],
-    "revision_paths": [
-     {
-      "boundary": "intra_unit",
-      "depth": 3,
-      "entity": "code_unit:src/auth/rate-limit.integration.spec.ts",
-      "node_type": "code_unit",
-      "path": [
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/connectors/interfaces/connector.interface.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/dto/catalog.dto.ts"
-       },
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/auth/rate-limit.guard.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/interfaces/connector.interface.ts",
-        "via": "relative"
-       },
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/auth/rate-limit.guard.ts",
-        "via": "relative"
-       }
-      ],
-      "revision": "base",
-      "section": "deterministic_core",
-      "verifier_hint": "type-check / compile of the importer"
-     },
-     {
-      "boundary": "intra_unit",
-      "depth": 1,
-      "entity": "code_unit:src/auth/rate-limit.integration.spec.ts",
-      "node_type": "code_unit",
-      "path": [
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/dto/catalog.dto.ts",
-        "via": "inline-harness-compiler-dependency"
-       }
-      ],
-      "revision": "head",
-      "section": "deterministic_core",
-      "verifier_hint": "type-check / compile of the importer"
-     }
+    "revisions": [
+     "base",
+     "head"
     ],
     "verifier_hint": "type-check / compile of the importer"
    },
@@ -7688,159 +7508,49 @@
     "path": [
      {
       "edge_type": "imports",
-      "from": "code_unit:src/connectors/connectors.module.ts",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
       "provenance": "deterministic",
-      "to": "code_unit:src/connectors/jev/jev.connector.ts",
-      "via": "relative"
+      "to": "code_unit:src/connectors/dto/catalog.dto.ts",
+      "via": "inline-harness-compiler-dependency"
      },
      {
       "edge_type": "verifies",
       "from": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
       "provenance": "deterministic",
-      "to": "code_unit:src/connectors/connectors.module.ts",
+      "to": "code_unit:src/auth/rate-limit.app.spec.ts",
       "via": "explicit-path"
      }
     ],
-    "revision_paths": [
-     {
-      "boundary": "intra_unit",
-      "depth": 2,
-      "entity": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
-      "node_type": "receipt",
-      "path": [
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/connectors/connectors.module.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/jev/jev.connector.ts",
-        "via": "relative"
-       },
-       {
-        "edge_type": "verifies",
-        "from": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/connectors.module.ts",
-        "via": "explicit-path"
-       }
-      ],
-      "revision": "base",
-      "section": "deterministic_core",
-      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-     },
-     {
-      "boundary": "intra_unit",
-      "depth": 2,
-      "entity": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
-      "node_type": "receipt",
-      "path": [
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/dto/catalog.dto.ts",
-        "via": "inline-harness-compiler-dependency"
-       },
-       {
-        "edge_type": "verifies",
-        "from": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
-        "provenance": "deterministic",
-        "to": "code_unit:src/auth/rate-limit.app.spec.ts",
-        "via": "explicit-path"
-       }
-      ],
-      "revision": "head",
-      "section": "deterministic_core",
-      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-     }
+    "revisions": [
+     "base",
+     "head"
     ],
     "verifier_hint": "selectable: run the targeted test / re-read the receipt"
    },
    {
     "boundary": "intra_unit",
-    "depth": 3,
+    "depth": 2,
     "entity": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
     "node_type": "receipt",
     "path": [
      {
       "edge_type": "imports",
-      "from": "code_unit:src/connectors/connectors.module.ts",
+      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
       "provenance": "deterministic",
-      "to": "code_unit:src/connectors/jev/jev.connector.ts",
-      "via": "relative"
-     },
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/admin/admin.module.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/connectors/connectors.module.ts",
-      "via": "relative"
+      "to": "code_unit:src/connectors/dto/catalog.dto.ts",
+      "via": "inline-harness-compiler-dependency"
      },
      {
       "edge_type": "verifies",
       "from": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
       "provenance": "deterministic",
-      "to": "code_unit:src/admin/admin.module.ts",
+      "to": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
       "via": "explicit-path"
      }
     ],
-    "revision_paths": [
-     {
-      "boundary": "intra_unit",
-      "depth": 3,
-      "entity": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-      "node_type": "receipt",
-      "path": [
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/connectors/connectors.module.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/jev/jev.connector.ts",
-        "via": "relative"
-       },
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/admin/admin.module.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/connectors.module.ts",
-        "via": "relative"
-       },
-       {
-        "edge_type": "verifies",
-        "from": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-        "provenance": "deterministic",
-        "to": "code_unit:src/admin/admin.module.ts",
-        "via": "explicit-path"
-       }
-      ],
-      "revision": "base",
-      "section": "deterministic_core",
-      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-     },
-     {
-      "boundary": "intra_unit",
-      "depth": 2,
-      "entity": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-      "node_type": "receipt",
-      "path": [
-       {
-        "edge_type": "imports",
-        "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-        "provenance": "deterministic",
-        "to": "code_unit:src/connectors/dto/catalog.dto.ts",
-        "via": "inline-harness-compiler-dependency"
-       },
-       {
-        "edge_type": "verifies",
-        "from": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-        "provenance": "deterministic",
-        "to": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-        "via": "explicit-path"
-       }
-      ],
-      "revision": "head",
-      "section": "deterministic_core",
-      "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-     }
+    "revisions": [
+     "base",
+     "head"
     ],
     "verifier_hint": "selectable: run the targeted test / re-read the receipt"
    },
@@ -8811,6 +8521,7 @@
      }
     ],
     "revisions": [
+     "base",
      "head"
     ],
     "verifier_hint": "controller compile + contract-diff + route/config consistency"
@@ -8837,6 +8548,7 @@
      }
     ],
     "revisions": [
+     "base",
      "head"
     ],
     "verifier_hint": "controller compile + contract-diff + route/config consistency"
@@ -8863,6 +8575,7 @@
      }
     ],
     "revisions": [
+     "base",
      "head"
     ],
     "verifier_hint": "controller compile + contract-diff + route/config consistency"
@@ -8889,6 +8602,7 @@
      }
     ],
     "revisions": [
+     "base",
      "head"
     ],
     "verifier_hint": "controller compile + contract-diff + route/config consistency"
@@ -8915,6 +8629,7 @@
      }
     ],
     "revisions": [
+     "base",
      "head"
     ],
     "verifier_hint": "controller compile + contract-diff + route/config consistency"
@@ -8941,6 +8656,7 @@
      }
     ],
     "revisions": [
+     "base",
      "head"
     ],
     "verifier_hint": "controller compile + contract-diff + route/config consistency"
@@ -8967,6 +8683,7 @@
      }
     ],
     "revisions": [
+     "base",
      "head"
     ],
     "verifier_hint": "controller compile + contract-diff + route/config consistency"
@@ -8991,7 +8708,7 @@
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261110T165417Z-ec1e154e",
+ "receipt_id": "car-verify-20261110T171234Z-ab263745",
  "receipt_path": "receipts/graph/change-admission-11159be7.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -9302,7 +9019,14 @@
    "route:POST /images/generate",
    "route:POST /internal/watcher/circuit-breaker/reset",
    "route:POST /v1/chat/completions",
-   "route:POST /v1/prompt-cache/prewarm"
+   "route:POST /v1/prompt-cache/prewarm",
+   "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
   ],
   "head": [
    "code_unit:src/admin/admin-rate-limit.app.spec.ts",
@@ -9623,7 +9347,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-10T17:00:20Z",
+  "checked_at_utc": "2026-11-10T17:16:52Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -9665,7 +9389,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:2baefd1faa44ff69baa65945ab7981a40bae9fe119ae13181df0e734c83c5835"
+    "head": "sha256:47fc5821bee4cc60903ad81c921d91e0458b34a6daa48c2d49665119f546c603"
    },
    "entity": "receipt:receipts/graph/change-admission-11159be7.json",
    "node_type": "receipt",
@@ -9866,7 +9590,7 @@
   }
  ],
  "tree": {
-  "commit": "ec1e154ef6c66a0eec9326508da45c3b3a2988d5",
+  "commit": "ab263745357553de42869ddb27f13fd9019827d0",
   "dirty": false
  },
  "verdicts": [
@@ -12535,8 +12259,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/type-check-fy0d6dc9/check.tsbuildinfo --listFiles",
-   "duration_s": 132.9,
+   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/type-check-b4bedom1/check.tsbuildinfo --listFiles",
+   "duration_s": 59.09,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -13052,13 +12776,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-10T17:00:58Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-10T17:17:23Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2865 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/type-check-3o3dxjp7/check.tsbuildinfo --listFiles",
-   "duration_s": 197.93,
+   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/type-check-ec6unvs3/check.tsbuildinfo --listFiles",
+   "duration_s": 39.11,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -13348,13 +13072,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-10T17:03:16Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-10T17:18:23Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2134 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/type-check-3o0uktdg/check.tsbuildinfo --listFiles",
-   "duration_s": 6.66,
+   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/type-check-wnzs8xdr/check.tsbuildinfo --listFiles",
+   "duration_s": 6.5,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -13504,13 +13228,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-10T17:06:36Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-10T17:19:03Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/type-check-gwpkfwza/check.tsbuildinfo --listFiles",
-   "duration_s": 170.13,
+   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/type-check-pe8mwlv5/check.tsbuildinfo --listFiles",
+   "duration_s": 126.24,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -13800,13 +13524,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-10T17:06:43Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-10T17:19:10Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2756 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/type-check-_h8mmp7h/check.tsbuildinfo --listFiles",
-   "duration_s": 82.65,
+   "command": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/type-check-zmca14yk/check.tsbuildinfo --listFiles",
+   "duration_s": 73.47,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -14096,13 +13820,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-10T17:09:36Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-10T17:21:17Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2862 files listed"
   },
   {
-   "command": "tools/graph/contract_diff.py.run_diff(base=fb2139fdee0c, head=ec1e154ef6c6, graph=head graph)",
-   "duration_s": 18.41,
+   "command": "tools/graph/contract_diff.py.run_diff(base=fb2139fdee0c, head=ab2637453575, graph=head graph)",
+   "duration_s": 37.79,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -14206,13 +13930,13 @@
    "exit_code": 1,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/v-contract-diff.json",
-   "started_at_utc": "2026-11-10T17:10:59Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/v-contract-diff.json",
+   "started_at_utc": "2026-11-10T17:22:33Z",
    "summary": "186→186 contracts, breaking 4, edges {'failed': 5, 'not_measured': 5, 'verified': 241}"
   },
   {
    "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
-   "duration_s": 41.22,
+   "duration_s": 48.41,
    "entities": [
     "route:GET /connectors",
     "route:GET /connectors/:name/status",
@@ -14270,13 +13994,13 @@
    "exit_code": 0,
    "id": "v-route-config",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/v-route-config.txt",
-   "started_at_utc": "2026-11-10T17:11:18Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/v-route-config.txt",
+   "started_at_utc": "2026-11-10T17:23:11Z",
    "summary": "25 route(s), 0 failed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 3.64,
+   "duration_s": 1.46,
    "entities": [
     "code_unit:src/connectors/connectors.service.spec.ts",
     "code_unit:src/connectors/jev/jev.connector.ts",
@@ -14290,13 +14014,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-10T17:11:59Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-10T17:23:59Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 2.27,
+   "duration_s": 0.9,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -14762,8 +14486,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-10T17:12:03Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-10T17:24:01Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -14832,8 +14556,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-10T17:12:05Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-10T17:24:02Z",
    "summary": "28 document(s), 0 failed"
   },
   {
@@ -14910,8 +14634,8 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-2/verifier-out/v-canary.json",
-   "started_at_utc": "2026-11-10T17:12:05Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-11159be7-rc-update-20261110T1606Z/car-work/workdir-3/verifier-out/v-canary.json",
+   "started_at_utc": "2026-11-10T17:24:02Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 32 not_measured of 32 entities"
   }
  ],
@@ -16154,9 +15878,9 @@
    ]
   },
   "seconds": {
-   "prepare": 12.71,
-   "total": 1068.82,
-   "verifiers": 655.84
+   "prepare": 13.25,
+   "total": 688.18,
+   "verifiers": 393.0
   }
  },
  "work_item": "11159be7-4854-4aa4-8b88-16fa6533dd38"
