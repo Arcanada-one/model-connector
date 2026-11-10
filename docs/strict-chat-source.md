@@ -13,6 +13,24 @@ source/config/deployment pins, exact encoder, provider hard output enforcement,
 restricted store and all-writer/revoker fence. No source callback or possession
 of an interface supplies those qualifications. No credentials are loaded here.
 
+## Default-composition HTTP contract (Muneral 709559c4)
+
+When `STRICT_CHAT_BOUNDARY` is unbound (the default `ConnectorsModule`
+composition) **or** the authenticated request carries no `apiKey.id`, both
+handlers return **HTTP 503** with body exactly
+`{"error":"strict_chat_unavailable"}`:
+
+- `GET /connectors/intents/:intentId`
+- `POST /connectors/:name/chat/completions`
+
+This is the **intended contract**, not a provider-unreachable / no-egress
+defect. The controller refuses before any provider transport runs; outbound
+network state does not change this status or body. Unauthenticated callers are
+still stopped by the auth guard (typically HTTP 401) before these handlers.
+Canary and route probes against default composition MUST expect 503
+`strict_chat_unavailable` on authorized hits as a verified contract outcome,
+not as a failed provider probe.
+
 POST `/connectors/:name/chat/completions` accepts only explicit `deepseek` and the
 closed `mc-chat/v1` DTO: ordered text conversation, typed functions, complete
 protected continuation, model/capability/admission/rate/checkpoint pins, immutable
