@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { BaseCliConnector, ParsedCliOutput, SpawnResult } from './base-cli.connector';
 import { ConnectorCapabilities, ConnectorRequest } from './interfaces/connector.interface';
 
@@ -216,43 +216,46 @@ describe('BaseCliConnector', () => {
   });
 
   describe('semaphore concurrency', () => {
-    function makeDelayConnector(delayMs: number): TestConnector {
-      const c = new TestConnector();
-      c.mockSpawnProcess(async () => {
-        await new Promise((r) => setTimeout(r, delayMs));
-        return { stdout: 'ok', stderr: '', exitCode: 0 };
-      });
-      return c;
-    }
-
     const req: ConnectorRequest = { prompt: 'test', model: 'test-model' };
 
-    it('should serialize concurrent calls when max=1', async () => {
-      const c = makeDelayConnector(50);
-      c.setSemaphore(1);
+    // Peak in-flight spawn count — load-stable replacement for wall-clock
+    // windows that failed under host load (elapsed 155ms ≰ 120ms).
+    function makePeakTracker(max: number): {
+      connector: TestConnector;
+      peak: () => number;
+    } {
+      const c = new TestConnector();
+      c.setSemaphore(max);
+      let inFlight = 0;
+      let peak = 0;
+      c.mockSpawnProcess(async () => {
+        inFlight++;
+        peak = Math.max(peak, inFlight);
+        await new Promise((r) => setTimeout(r, 20));
+        inFlight--;
+        return { stdout: 'ok', stderr: '', exitCode: 0 };
+      });
+      return { connector: c, peak: () => peak };
+    }
 
-      const start = Date.now();
+    it('should serialize concurrent calls when max=1', async () => {
+      const { connector: c, peak } = makePeakTracker(1);
+
       const results = await Promise.all([c.execute(req), c.execute(req), c.execute(req)]);
-      const elapsed = Date.now() - start;
 
       expect(results).toHaveLength(3);
       results.forEach((r) => expect(r.status).toBe('success'));
-      // 3 serial calls × 50ms = ~150ms minimum
-      expect(elapsed).toBeGreaterThanOrEqual(120);
+      expect(peak()).toBe(1);
     });
 
     it('should run in parallel when max=3', async () => {
-      const c = makeDelayConnector(50);
-      c.setSemaphore(3);
+      const { connector: c, peak } = makePeakTracker(3);
 
-      const start = Date.now();
       const results = await Promise.all([c.execute(req), c.execute(req), c.execute(req)]);
-      const elapsed = Date.now() - start;
 
       expect(results).toHaveLength(3);
       results.forEach((r) => expect(r.status).toBe('success'));
-      // 3 parallel calls = ~50ms, well under 120ms
-      expect(elapsed).toBeLessThan(120);
+      expect(peak()).toBe(3);
     });
 
     it('should release semaphore on spawn error', async () => {
@@ -287,21 +290,24 @@ describe('BaseCliConnector', () => {
 
       // Start first call — occupies the semaphore
       const p1 = c.execute(req);
-      // Allow acquire + spawnProcess to be called
-      await new Promise((r) => setTimeout(r, 10));
+      await vi.waitFor(() => {
+        expect(resolvers.length).toBe(1);
+      });
 
       // Start second call — will queue on semaphore
       const p2 = c.execute(req);
-      await new Promise((r) => setTimeout(r, 10));
-
-      const status = await c.getStatus();
-      expect(status.activeJobs).toBe(1);
-      expect(status.queuedJobs).toBe(1);
+      await vi.waitFor(async () => {
+        const status = await c.getStatus();
+        expect(status.activeJobs).toBe(1);
+        expect(status.queuedJobs).toBe(1);
+      });
 
       // Resolve first call → releases semaphore → second starts
       resolvers[0]();
       await p1;
-      await new Promise((r) => setTimeout(r, 10));
+      await vi.waitFor(() => {
+        expect(resolvers.length).toBe(2);
+      });
 
       // Resolve second call
       resolvers[1]();
