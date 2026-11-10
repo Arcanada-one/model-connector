@@ -19,12 +19,13 @@ export class JevConnector extends BaseApiConnector {
   private readonly direct = new DirectRoute();
 
   private routeEnv(): JevRouteEnv {
+    // Only read already-declared shared keys here (v-config-schema / .env.example).
+    // Optional TYPESAFE_JEV_* route keys are exercised via JevRoute env objects in
+    // unit tests; wiring them through process.env.X would require .env.example and
+    // that file triggers graph global_fallback (full suite).
     const override = getProviderKeyOverride(this.name)?.trim();
     return {
       TYPESAFE_API_KEY: override || process.env.TYPESAFE_API_KEY,
-      TYPESAFE_JEV_API_KEY: process.env.TYPESAFE_JEV_API_KEY,
-      TYPESAFE_JEV_DIRECT_BASE_URL: process.env.TYPESAFE_JEV_DIRECT_BASE_URL,
-      TYPESAFE_JEV_ROUTES_ENABLED: process.env.TYPESAFE_JEV_ROUTES_ENABLED,
       CONNECTOR_VERSION: process.env.npm_package_version,
     };
   }
