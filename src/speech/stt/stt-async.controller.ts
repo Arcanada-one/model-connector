@@ -203,11 +203,15 @@ export class SttAsyncController {
     const reqWithMultipart = req as unknown as {
       file: () => Promise<undefined | MultipartFile>;
     };
+    // CONN cb07a5b3 — @fastify/multipart may throw
+    // FST_REQ_NOT_MULTIPART and/or FST_INVALID_MULTIPART_CONTENT_TYPE when
+    // Content-Type is missing or not multipart/form-data. Map both to the
+    // controlled 400 stt_validation_error envelope (never 500).
     let data: Awaited<ReturnType<typeof reqWithMultipart.file>>;
     try {
       data = await reqWithMultipart.file();
     } catch (err) {
-      if (this.isFastifyErrorCode(err, 'FST_REQ_NOT_MULTIPART')) {
+      if (this.isInvalidMultipartContentType(err)) {
         throw new HttpException(
           {
             statusCode: 400,
@@ -245,6 +249,13 @@ export class SttAsyncController {
 
   private isFastifyErrorCode(err: unknown, code: string): boolean {
     return typeof err === 'object' && err !== null && (err as { code?: string }).code === code;
+  }
+
+  private isInvalidMultipartContentType(err: unknown): boolean {
+    return (
+      this.isFastifyErrorCode(err, 'FST_REQ_NOT_MULTIPART') ||
+      this.isFastifyErrorCode(err, 'FST_INVALID_MULTIPART_CONTENT_TYPE')
+    );
   }
 
   private mapError(err: unknown): SpeechErrorEnvelope {

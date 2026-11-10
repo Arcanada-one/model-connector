@@ -166,6 +166,50 @@ describe('SttAsyncController', () => {
       const body = reply.send.mock.calls[0][0] as { error_code: string };
       expect(body.error_code).toBe('stt_unsupported_mime');
     });
+
+    it('returns 400 stt_validation_error when req.file() throws FST_REQ_NOT_MULTIPART', async () => {
+      const req = {
+        apiKey: { id: 'key-abc' },
+        file: vi.fn().mockRejectedValue(
+          Object.assign(new Error('the request is not multipart'), {
+            code: 'FST_REQ_NOT_MULTIPART',
+            statusCode: 406,
+          }),
+        ),
+      } as unknown as MockRequest;
+      const reply = makeReply();
+      await controller.submit(undefined, req, reply as unknown as FastifyReply);
+      expect(reply.status).toHaveBeenCalledWith(400);
+      const body = reply.send.mock.calls[0][0] as { error_code: string; message: string };
+      expect(body.error_code).toBe('stt_validation_error');
+      expect(body.message).toMatch(/multipart/i);
+      expect(queueMock.add).not.toHaveBeenCalled();
+      expect(prismaMock.sttTranscription.create).not.toHaveBeenCalled();
+      expect(quotaMock.precheck).not.toHaveBeenCalled();
+    });
+
+    // CONN cb07a5b3 — missing/invalid Content-Type surfaces as
+    // FST_INVALID_MULTIPART_CONTENT_TYPE; must never become 500.
+    it('returns 400 stt_validation_error when req.file() throws FST_INVALID_MULTIPART_CONTENT_TYPE', async () => {
+      const req = {
+        apiKey: { id: 'key-abc' },
+        file: vi.fn().mockRejectedValue(
+          Object.assign(new Error('the request is not multipart'), {
+            code: 'FST_INVALID_MULTIPART_CONTENT_TYPE',
+            statusCode: 406,
+          }),
+        ),
+      } as unknown as MockRequest;
+      const reply = makeReply();
+      await controller.submit(undefined, req, reply as unknown as FastifyReply);
+      expect(reply.status).toHaveBeenCalledWith(400);
+      const body = reply.send.mock.calls[0][0] as { error_code: string; message: string };
+      expect(body.error_code).toBe('stt_validation_error');
+      expect(body.message).toMatch(/multipart/i);
+      expect(queueMock.add).not.toHaveBeenCalled();
+      expect(prismaMock.sttTranscription.create).not.toHaveBeenCalled();
+      expect(quotaMock.precheck).not.toHaveBeenCalled();
+    });
   });
 
   describe('GET /jobs/:id', () => {
