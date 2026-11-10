@@ -1,0 +1,277 @@
+{
+  "exemptions": [
+    {
+      "entity": "code_unit:src/admin/circuit-breaker.controller.ts",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/admin/watcher-repair.controller.ts",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.controller.ts",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/connectors/dto/catalog.dto.spec.ts",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "src/connectors/dto/catalog.dto.ts; src/connectors/dto/catalog.dto.spec.ts; src/connectors/connectors.service.spec.ts; src/connectors/jev/jev.connector.ts",
+      "reason": "CONN-JEV-01 Class B additive modality enum member `decision` (same class as CONN-0238 video/moderation). Zod MODEL_MODALITY_VALUES gained one member; Catalog* schemas accept it. Measured consumers in this repo: catalog.dto.spec (asserts membership + parse), connectors.service.spec (buildCatalogSnapshot modality=decision), jev.connector.spec (capabilities publish jev-latest). No consumer exhaustiveness switch over modality was found in changed surface; filters treat unknown modality as validation_error by design. Verifier ENUM_VALUE_ADDED is true and intentional; exhaustiveness of external clients remains not proven by this exemption."
+    },
+    {
+      "entity": "code_unit:src/connectors/dto/catalog.dto.ts",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "Muneral 11159be7-4854-4aa4-8b88-16fa6533dd38 focused tests",
+      "reason": "CONN-JEV-01 author exemption for measured non-verified verdict: v-contract-diff: contract:src/connectors/dto/catalog.dto.ts#CatalogFiltersSchema: provider side: changed, 1 breaking; contract:src/connectors/dto/catalog.dto.ts#CatalogModelEntrySchema: provider side: changed, 1 breaking"
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/jev.connector.ts",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/health/health.controller.ts",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-compat.controller.ts",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:test/provider-profiles/boundary-http.spec.ts",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": ".arcana/tsconfig.mjs.json; change_set files list in this receipt",
+      "reason": "Pre-existing tsconfig.mjs include gap for test/provider-profiles/boundary-http.spec.ts; unchanged by CONN-JEV-01 (file not in change_set). A/B not re-typed here; recorded as baseline gap, not introduced by modality=decision."
+    },
+    {
+      "entity": "contract:src/connectors/dto/catalog.dto.ts#CatalogFiltersSchema",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "src/connectors/dto/catalog.dto.ts; src/connectors/dto/catalog.dto.spec.ts; src/connectors/connectors.service.spec.ts; src/connectors/jev/jev.connector.ts",
+      "reason": "CONN-JEV-01 Class B additive modality enum member `decision` (same class as CONN-0238 video/moderation). Zod MODEL_MODALITY_VALUES gained one member; Catalog* schemas accept it. Measured consumers in this repo: catalog.dto.spec (asserts membership + parse), connectors.service.spec (buildCatalogSnapshot modality=decision), jev.connector.spec (capabilities publish jev-latest). No consumer exhaustiveness switch over modality was found in changed surface; filters treat unknown modality as validation_error by design. Verifier ENUM_VALUE_ADDED is true and intentional; exhaustiveness of external clients remains not proven by this exemption."
+    },
+    {
+      "entity": "contract:src/connectors/dto/catalog.dto.ts#CatalogModelEntrySchema",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "src/connectors/dto/catalog.dto.ts; src/connectors/dto/catalog.dto.spec.ts; src/connectors/connectors.service.spec.ts; src/connectors/jev/jev.connector.ts",
+      "reason": "CONN-JEV-01 Class B additive modality enum member `decision` (same class as CONN-0238 video/moderation). Zod MODEL_MODALITY_VALUES gained one member; Catalog* schemas accept it. Measured consumers in this repo: catalog.dto.spec (asserts membership + parse), connectors.service.spec (buildCatalogSnapshot modality=decision), jev.connector.spec (capabilities publish jev-latest). No consumer exhaustiveness switch over modality was found in changed surface; filters treat unknown modality as validation_error by design. Verifier ENUM_VALUE_ADDED is true and intentional; exhaustiveness of external clients remains not proven by this exemption."
+    },
+    {
+      "entity": "contract:src/connectors/dto/catalog.dto.ts#CatalogResponseSchema",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "src/connectors/dto/catalog.dto.ts; src/connectors/dto/catalog.dto.spec.ts; src/connectors/connectors.service.spec.ts; src/connectors/jev/jev.connector.ts",
+      "reason": "CONN-JEV-01 Class B additive modality enum member `decision` (same class as CONN-0238 video/moderation). Zod MODEL_MODALITY_VALUES gained one member; Catalog* schemas accept it. Measured consumers in this repo: catalog.dto.spec (asserts membership + parse), connectors.service.spec (buildCatalogSnapshot modality=decision), jev.connector.spec (capabilities publish jev-latest). No consumer exhaustiveness switch over modality was found in changed surface; filters treat unknown modality as validation_error by design. Verifier ENUM_VALUE_ADDED is true and intentional; exhaustiveness of external clients remains not proven by this exemption."
+    },
+    {
+      "entity": "contract:src/connectors/dto/catalog.dto.ts#ModelModalitySchema",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "src/connectors/dto/catalog.dto.ts; src/connectors/dto/catalog.dto.spec.ts; src/connectors/connectors.service.spec.ts; src/connectors/jev/jev.connector.ts",
+      "reason": "CONN-JEV-01 Class B additive modality enum member `decision` (same class as CONN-0238 video/moderation). Zod MODEL_MODALITY_VALUES gained one member; Catalog* schemas accept it. Measured consumers in this repo: catalog.dto.spec (asserts membership + parse), connectors.service.spec (buildCatalogSnapshot modality=decision), jev.connector.spec (capabilities publish jev-latest). No consumer exhaustiveness switch over modality was found in changed surface; filters treat unknown modality as validation_error by design. Verifier ENUM_VALUE_ADDED is true and intentional; exhaustiveness of external clients remains not proven by this exemption."
+    },
+    {
+      "entity": "route:GET /connectors",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /connectors/:name/status",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /connectors/catalog",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /connectors/image/capabilities",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /connectors/intents/:intentId",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /health",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /health/connectors",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /health/metrics",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /health/ready",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /v1/models",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /admin/circuit-breaker/reset",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /connectors/:name/chat/completions",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /connectors/:name/execute",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /execute",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /images/generate",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /internal/watcher/circuit-breaker/reset",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /v1/chat/completions",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /v1/prompt-cache/prewarm",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
+      "owner": "CONN-JEV-01 author lane (Muneral 11159be7) / Model Connector owner",
+      "expires_at_utc": "2026-12-10T00:00:00Z",
+      "evidence": "receipts deferred; focused vitest: catalog.dto.spec + jev.connector.spec + connectors.service.spec CONN-JEV-01",
+      "reason": "Impact fan-out from catalog modality enum + typesafe-jev capabilities (CONN-JEV-01). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    }
+  ]
+}

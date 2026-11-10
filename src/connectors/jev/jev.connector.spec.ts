@@ -77,6 +77,13 @@ describe('native decision contract and adapter', () => {
     });
   });
 
+  it('CONN-JEV-01 publishes jev-latest under modality=decision for catalog discovery', () => {
+    const caps = connector.getCapabilities();
+    expect(caps.models).toEqual(['jev-latest']);
+    expect(caps.modality).toBe('decision');
+    expect(caps.modelMeta).toEqual([{ id: 'jev-latest', modality: 'decision' }]);
+  });
+
   it.each(['', 'false', '1'])(
     'is off for flag %s, including status and catalog refresh',
     async (flag) => {
@@ -84,7 +91,9 @@ describe('native decision contract and adapter', () => {
       expect((await execute()).status).toBe('error');
       expect((await connector.getStatus()).healthy).toBe(false);
       expect((await connector.refreshCatalogModels()).status).toBe('failed');
-      expect(connector.getCapabilities().models).toEqual([]);
+      // Discovery stays published; execute/status remain gated by JEV_ENABLED.
+      expect(connector.getCapabilities().models).toEqual(['jev-latest']);
+      expect(connector.getCapabilities().modality).toBe('decision');
       expect(fetchMock).not.toHaveBeenCalled();
     },
   );
@@ -169,31 +178,73 @@ describe('native decision contract and adapter', () => {
       answers: { ...nativeResponse.answers, tier: { choice: 'small', probabilities, confidence } },
     });
     expect(result).toMatchObject({ status: 'observed', action: 'none', mode: 'shadow' });
-    expect(result.answers.tier).toEqual({ primitive: 'choice', choice: 'small', probabilities, confidence });
+    expect(result.answers.tier).toEqual({
+      primitive: 'choice',
+      choice: 'small',
+      probabilities,
+      confidence,
+    });
     expect(result.answers.complexity).toEqual({ primitive: 'score', score: 2.4 });
     expect(result.answers.risk).toEqual({ primitive: 'noul', noul: 0.6996 });
   });
   it('uses the complete option count for three-way confidence', () => {
-    const three = { ...request, questions: {
-      tier: { type: 'choice' as const, instructions: 'Choose', criteria: { small: 'Small', large: 'Large', other: 'Other' } },
-    } };
-    expect(normalizeDecision(three, { answers: { tier: {
-      choice: 'small', probabilities: { small: 0.6, large: 0.3, other: 0.1 }, confidence: 0.4,
-    } } })).toMatchObject({ status: 'observed', action: 'none' });
+    const three = {
+      ...request,
+      questions: {
+        tier: {
+          type: 'choice' as const,
+          instructions: 'Choose',
+          criteria: { small: 'Small', large: 'Large', other: 'Other' },
+        },
+      },
+    };
+    expect(
+      normalizeDecision(three, {
+        answers: {
+          tier: {
+            choice: 'small',
+            probabilities: { small: 0.6, large: 0.3, other: 0.1 },
+            confidence: 0.4,
+          },
+        },
+      }),
+    ).toMatchObject({ status: 'observed', action: 'none' });
   });
-  it.each([0.8, -0.1, 1.1, true, NaN, Infinity])('refuses inconsistent or malformed confidence %s atomically', (confidence) => {
-    expect(normalizeDecision(request, { ...nativeResponse, answers: {
-      ...nativeResponse.answers, tier: { ...nativeResponse.answers.tier, confidence },
-    } })).toMatchObject({ status: 'unknown', action: 'none', answers: {} });
-  });
+  it.each([0.8, -0.1, 1.1, true, NaN, Infinity])(
+    'refuses inconsistent or malformed confidence %s atomically',
+    (confidence) => {
+      expect(
+        normalizeDecision(request, {
+          ...nativeResponse,
+          answers: {
+            ...nativeResponse.answers,
+            tier: { ...nativeResponse.answers.tier, confidence },
+          },
+        }),
+      ).toMatchObject({ status: 'unknown', action: 'none', answers: {} });
+    },
+  );
   it('preserves absence of confidence even with a valid distribution', () => {
-    expect(normalizeDecision(request, { answers: { ...nativeResponse.answers,
-      tier: { choice: 'small', probabilities: { small: 0.8, large: 0.2 } },
-    } }).answers.tier).toEqual({ primitive: 'choice', choice: 'small',
-      confidence: null, probabilities: { small: 0.8, large: 0.2 } });
+    expect(
+      normalizeDecision(request, {
+        answers: {
+          ...nativeResponse.answers,
+          tier: { choice: 'small', probabilities: { small: 0.8, large: 0.2 } },
+        },
+      }).answers.tier,
+    ).toEqual({
+      primitive: 'choice',
+      choice: 'small',
+      confidence: null,
+      probabilities: { small: 0.8, large: 0.2 },
+    });
   });
   it('does not retrofit the historical probability-as-confidence fixture', () => {
-    expect(normalizeDecision(request, historicalNativeResponse)).toMatchObject({ status: 'unknown', action: 'none', answers: {} });
+    expect(normalizeDecision(request, historicalNativeResponse)).toMatchObject({
+      status: 'unknown',
+      action: 'none',
+      answers: {},
+    });
   });
   it('request digest binds policy and native state', () => {
     const first = normalizeDecision(request, nativeResponse).requestSha256;

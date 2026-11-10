@@ -29,7 +29,7 @@ All parameters are optional. When omitted, the full catalog is returned.
 | `free`       | `true` \| `1` | Return only models on the free tier. |
 | `cheap`      | `true` \| `1` | Return free models **and** models with a low price multiplier (`<= 1`). |
 | `capability` | enum   | Return only models whose connector supports the named capability. Accepted values: `supportsJsonSchema`, `supportsTools`, `supportsStreaming`. |
-| `modality`   | enum   | Return only models of the given modality. Accepted values: `chat`, `embedding`, `image_generation`, `speech_to_text`, `text_to_speech`, `video`, `moderation`, `rerank` (`video` + `moderation` added in CONN-0238). |
+| `modality`   | enum   | Return only models of the given modality. Accepted values: `chat`, `embedding`, `image_generation`, `speech_to_text`, `text_to_speech`, `video`, `moderation`, `decision`, `rerank` (`video` + `moderation` added in CONN-0238; `decision` added in CONN-JEV-01). |
 | `type`       | enum   | Alias for `modality` (same accepted values). When both are given, `modality` wins. |
 | `connector`  | string | Return only models served by that connector (exact match on the `connector` field), e.g. `groq`, `vertex`, `deepgram-stt`. |
 | `tag`        | string | Exact-match a single derived tag, e.g. `cost:free`, `cap:tools`, `modality:chat`. |
@@ -121,7 +121,7 @@ so it is not misrepresented as the chat `/execute` route:
 |-------|------|-------------|
 | `connector` | `string` | Connector name (matches the `connector` field in `/execute` requests). |
 | `model` | `string` | Model identifier passed as `model` in execute requests. |
-| `modality` | enum | Model family: `chat`, `embedding`, `image_generation`, `speech_to_text`, `text_to_speech`, `video`, `moderation`, or `rerank` (`video` + `moderation` added in CONN-0238). Distinct from the connector's transport `type` (`cli`/`api`). One connector can now span modalities (groq: chat + STT + TTS + moderation; grok: chat + image + video). |
+| `modality` | enum | Model family: `chat`, `embedding`, `image_generation`, `speech_to_text`, `text_to_speech`, `video`, `moderation`, `decision`, or `rerank` (`video` + `moderation` added in CONN-0238; `decision` added in CONN-JEV-01). Distinct from the connector's transport `type` (`cli`/`api`). One connector can now span modalities (groq: chat + STT + TTS + moderation; grok: chat + image + video; typesafe-jev: decision). |
 | `tags` | `string[]` | Derived, namespaced tags (CONN-0232). Reproducible from the other fields — never fabricated. Namespaces: `modality:`, `cost:` (`cost:free`, `cost:cheap`), `cap:` (`cap:streaming`, `cap:tools`, `cap:json-schema`). No measured/curated tags yet. |
 | `free` | `boolean` | `true` when the model is on the connector's free tier (per-model since CONN-0238 — e.g. groq chat/moderation are free, its STT/TTS are not). |
 | `cheap` | `boolean` | `true` when `free === true` **or** when the price multiplier is `<= 1`. |
@@ -228,6 +228,7 @@ The catalog spans **all** model families MC serves, not just chat:
 | `text_to_speech` | proxy routing entry + chat-connector listings (CONN-0238) | `tts` → Transcribator (`/v1/speech/tts`); groq orpheus (informational, `available:false`) |
 | `video` | chat-connector listings (CONN-0238) | grok-imagine-video (informational, `available:false` — no MC video execute route yet) |
 | `moderation` | chat-connector listings (CONN-0238) | groq llama-prompt-guard (executable via chat/completions) |
+| `decision` | registered connector (CONN-JEV-01) | `typesafe-jev` / `jev-latest` (executable via `/connectors/typesafe-jev/execute`; not chat) |
 | `rerank` | reserved | no connector yet → **zero entries** (the enum value exists so a future connector needs no breaking change) |
 
 Image-generation, STT and TTS connectors do not implement the chat `IConnector`
