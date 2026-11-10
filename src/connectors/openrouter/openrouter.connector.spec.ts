@@ -300,14 +300,13 @@ describe('OpenRouterConnector', () => {
       expect(response.error?.type).toBe('rate_limited');
     });
 
-    it('should return error when API key not set', async () => {
+    it('should refuse with config_error and skip upstream when API key not set', async () => {
       delete process.env.OPENROUTER_API_KEY;
       connector = new OpenRouterConnector();
-      mockOk(chatResponse);
-      // Auth header will be "Bearer undefined" — server would 401
-      await connector.execute({ prompt: 'hello' });
-      const headers = fetchSpy.mock.calls[0][1].headers;
-      expect(headers['Authorization']).toBe('Bearer ');
+      const response = await connector.execute({ prompt: 'hello' });
+      expect(response.status).toBe('error');
+      expect(response.error?.type).toBe('config_error');
+      expect(fetchSpy).not.toHaveBeenCalled();
     });
   });
 

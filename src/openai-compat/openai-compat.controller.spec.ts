@@ -114,6 +114,23 @@ describe('OpenAiCompatController.chatCompletions', () => {
     });
   });
 
+  it('config_error abort (missing provider credential) → 503, not 500/502', async () => {
+    const message = 'No provider credential is configured for openrouter.';
+    const { controller } = makeController({
+      complete: () =>
+        Promise.reject(new FailoverAbortError('openrouter', 'm', 'config_error', message)),
+    });
+    const error = await controller.chatCompletions(body(), undefined, req).then(
+      () => null,
+      (caught: unknown) => caught,
+    );
+    expect(error).toBeInstanceOf(HttpException);
+    expect((error as HttpException).getStatus()).toBe(HttpStatus.SERVICE_UNAVAILABLE);
+    expect((error as HttpException).getResponse()).toEqual({
+      error: { message, type: 'config_error', code: 'config_error' },
+    });
+  });
+
   it('credit_depleted abort → 402 with an actionable OpenAI error code', async () => {
     const message =
       'Insufficient credits: spendable balance 0 USD does not cover the estimated 0.01 USD for this request. Top up the account to continue.';

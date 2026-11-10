@@ -55,7 +55,10 @@ const HTTP_ERROR_STATUS: Record<string, HttpStatus> = {
   unsupported_modality: HttpStatus.BAD_REQUEST,
   // CONN-1665 — per-key access policy denial / server-side policy misconfiguration.
   policy_violation: HttpStatus.FORBIDDEN,
-  config_error: HttpStatus.INTERNAL_SERVER_ERROR,
+  // Missing/unconfigured provider credentials are operational unavailability
+  // (503), not an internal application fault (500) and not a generic upstream
+  // 502. Aligns with auth_error mapping (0a3f80e9).
+  config_error: HttpStatus.SERVICE_UNAVAILABLE,
   // ARAS-0058 — idempotency outcomes get real status codes, because a client
   // library's retry logic branches on the status long before it reads the body.
   // A conflict returned as 200 would be retried as a success.
