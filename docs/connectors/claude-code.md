@@ -87,6 +87,24 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
   }'
 ```
 
+## Errors — expired OAuth (MCCI-0-F1)
+
+When the Claude Code CLI reports an expired OAuth session it can return
+`is_error: true` with CLI `subtype: "success"` and a result like
+`Failed to authenticate: OAuth session expired and could not be refreshed`
+(measured 2026-09-13 on prod). The connector maps that shape to:
+
+| Field | Value |
+|-------|-------|
+| `error.type` | `auth_error` |
+| `error.retryable` | `false` |
+| `error.recommendation` | `reauth` |
+| `error.message` | `[auth_error] Failed to authenticate: …` (never advertises `subtype=success`) |
+
+ConnectorsService does **not** retry `auth_error`. Re-authenticate the
+`claude-auth` volume (or route the lane to a host with a live Max login);
+do not treat this as a transient `execution_error`.
+
 ## Re-Auth
 
 ```bash

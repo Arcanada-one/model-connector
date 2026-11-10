@@ -61,6 +61,25 @@ const ERROR_SUBTYPE_MAP: Record<string, string> = {
 };
 
 /**
+ * MCCI-0-F1 — Claude Code sometimes reports auth expiry with
+ * `is_error: true` and `subtype: "success"` (measured 2026-09-13 on prod:
+ * result "Failed to authenticate: OAuth session expired and could not be
+ * refreshed", terminal_reason api_error, empty errors[]). That subtype is
+ * not a successful run. Detect the auth-session failure from the diagnostic
+ * text so callers see `auth_error` / reauth instead of a retryable
+ * `execution_error` whose message still says "success".
+ */
+export function isClaudeCodeAuthSessionFailure(diagnostic: string): boolean {
+  const lower = diagnostic.toLowerCase();
+  if (lower.includes('oauth session expired')) return true;
+  if (lower.includes('failed to authenticate')) return true;
+  if (lower.includes('authentication_failed')) return true;
+  if (lower.includes('authentication') && lower.includes('expired')) return true;
+  if (lower.includes('oauth') && lower.includes('could not be refreshed')) return true;
+  return false;
+}
+
+/**
  * A2-P0-2-RES — which model served the request. The CLI's `modelUsage` map is
  * keyed by every model that ran inside the turn, and a Haiku side-call (a
  * small internal request the CLI makes on its own) can precede the requested
@@ -276,11 +295,19 @@ export class ClaudeCodeConnector extends BaseCliConnector {
         typeof errorJson.subtype === 'string' && /^[a-z_0-9]{1,80}$/.test(errorJson.subtype)
           ? errorJson.subtype
           : 'unknown';
+      const joined =
+        [...new Set(messages)].join('; ') || stderr || 'CLI reported an error without a message';
+      const authSessionFailure = isClaudeCodeAuthSessionFailure(joined);
       // Prefix survives the Request.errorMessage 500-character storage limit.
       // Keep diagnostics out of result, which callers treat as generated content.
-      const errorMessage = this.safeErrorMessage(
-        `[subtype=${subtype}] ${[...new Set(messages)].join('; ') || stderr || 'CLI reported an error without a message'}`,
-      );
+      // Never advertise CLI subtype "success" on an auth-session failure — that
+      // was the misleading client-visible shape measured on MCCI-0-F1.
+      const messagePrefix = authSessionFailure ? '[auth_error]' : `[subtype=${subtype}]`;
+      const errorMessage = this.safeErrorMessage(`${messagePrefix} ${joined}`);
+      const mappedSubtype = Object.hasOwn(ERROR_SUBTYPE_MAP, subtype)
+        ? ERROR_SUBTYPE_MAP[subtype]
+        : undefined;
+      const errorType = authSessionFailure ? 'auth_error' : (mappedSubtype ?? 'execution_error');
       return {
         text: '',
         structured: meta,
@@ -291,9 +318,7 @@ export class ClaudeCodeConnector extends BaseCliConnector {
         ...passthrough,
         costUsd,
         isError: true,
-        errorType: Object.hasOwn(ERROR_SUBTYPE_MAP, subtype)
-          ? ERROR_SUBTYPE_MAP[subtype]
-          : 'execution_error',
+        errorType,
         errorMessage,
       };
     }
@@ -347,7 +372,7 @@ export class ClaudeCodeConnector extends BaseCliConnector {
     if (lower.includes('billing_error') || lower.includes('credit balance')) {
       return 'billing_error';
     }
-    if (lower.includes('authentication_failed')) {
+    if (isClaudeCodeAuthSessionFailure(lower)) {
       return 'auth_error';
     }
     if (lower.includes('max_output_tokens')) {

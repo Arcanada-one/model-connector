@@ -30,6 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **claude-code expired OAuth no longer looks like a retryable success (MCCI-0-F1).**
+  When the Claude Code CLI reports `is_error: true` with CLI `subtype: "success"` and a
+  result such as `Failed to authenticate: OAuth session expired and could not be refreshed`
+  (measured 2026-09-13 on prod), the connector now returns `error.type=auth_error`
+  (`retryable=false`, `recommendation=reauth`) and a client-visible message prefixed
+  `[auth_error]` — never the misleading `subtype=success` string. ConnectorsService does
+  not retry `auth_error`. DEVS Max-subscription live measurement receipt:
+  `receipts/mc/mcci0-f1-devs-live-20261110T1814Z.json`.
+
 - **Node 22 pins were below the October 21 2026 security release.** CI, SDK publish,
   and the production image now use Node.js 22.23.4. The production `FROM` is
   `node:22.23.4-slim` plus its registry index digest, so a rebuild cannot float
