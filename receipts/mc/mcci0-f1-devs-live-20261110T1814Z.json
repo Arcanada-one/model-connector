@@ -1,0 +1,52 @@
+{
+  "captured_at_utc": "2026-11-10T18:17:47Z",
+  "card": "MCCI-0-F1",
+  "cli_version": "2.1.322",
+  "command": "claude -p 'Reply with exactly: OK' --output-format json --model claude-haiku-4-5",
+  "host": "arcana-devs",
+  "measurement": {
+    "duration_api_ms": 2185,
+    "duration_ms": 4371,
+    "is_error": false,
+    "modelUsage": {
+      "claude-haiku-4-5": {
+        "cacheCreationEphemeral1hInputTokens": 24341,
+        "cacheCreationEphemeral5mInputTokens": 0,
+        "cacheCreationInputTokens": 24341,
+        "cacheReadInputTokens": 14600,
+        "canonicalModel": "claude-haiku-4-5",
+        "contextWindow": 200000,
+        "costBasis": "list",
+        "costUSD": 0.050372,
+        "inputTokens": 10,
+        "maxOutputTokens": 32000,
+        "outputTokens": 44,
+        "provider": "firstParty",
+        "thinkingTokens": 37,
+        "webSearchRequests": 0
+      }
+    },
+    "result": "OK",
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "total_cost_usd": 0.050372,
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 24341,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 24341,
+      "cache_read_input_tokens": 14600,
+      "input_tokens": 10,
+      "output_tokens": 44
+    }
+  },
+  "notes": "Prod claude-auth volume NOT mutated. This receipt proves DEVS Max login path works; code fix separately fail-closes expired-OAuth client errors.",
+  "path": "task option (2): DEVS Max subscription login (dev user)",
+  "schema": "McLiveMeasurement/v1",
+  "task": "c5630203-f7a8-46b1-8e2d-1fa0f5669012",
+  "verdict": {
+    "cache_fields_present": true,
+    "non_zero_usage": true
+  }
+}

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { ClaudeCodeConnector } from './claude-code.connector';
-import { ConnectorRequest } from '../interfaces/connector.interface';
+import { ClaudeCodeConnector, isClaudeCodeAuthSessionFailure } from './claude-code.connector';
+import { classifyErrorAction, ConnectorRequest } from '../interfaces/connector.interface';
 import { SpawnResult } from '../base-cli.connector';
 
 // Expose protected methods for testing
@@ -247,6 +247,62 @@ describe('ClaudeCodeConnector', () => {
       expect(parsed.errorType).toBe('execution_error');
       expect(parsed.errorMessage).toBe(
         '[subtype=success] Usage limit reached; resets at 16:00 UTC.',
+      );
+    });
+
+    // MCCI-0-F1 — measured 2026-09-13 on prod: OAuth expiry arrives as
+    // is_error=true + subtype=success + terminal_reason=api_error + empty
+    // errors[]. Must fail closed as auth_error with no misleading "success".
+    it('fail-closes expired OAuth as auth_error without advertising subtype=success', () => {
+      const parsed = connector.testParseOutput(
+        JSON.stringify({
+          type: 'result',
+          subtype: 'success',
+          is_error: true,
+          terminal_reason: 'api_error',
+          duration_ms: 120,
+          duration_api_ms: 0,
+          num_turns: 1,
+          stop_reason: null,
+          total_cost_usd: 0,
+          usage: {
+            input_tokens: 0,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+            output_tokens: 0,
+          },
+          modelUsage: {},
+          permission_denials: [],
+          session_id: '00000000-0000-4000-8000-000000000001',
+          uuid: '00000000-0000-4000-8000-000000000002',
+          errors: [],
+          result: 'Failed to authenticate: OAuth session expired and could not be refreshed',
+        }),
+        '',
+      );
+      expect(parsed.isError).toBe(true);
+      expect(parsed.text).toBe('');
+      expect(parsed.errorType).toBe('auth_error');
+      const errorMessage = parsed.errorMessage ?? '';
+      expect(errorMessage).toBe(
+        '[auth_error] Failed to authenticate: OAuth session expired and could not be refreshed',
+      );
+      expect(errorMessage).not.toMatch(/subtype=success/);
+      expect(errorMessage.toLowerCase()).not.toContain('subtype=success');
+      const action = classifyErrorAction(parsed.errorType!);
+      expect(action.retryable).toBe(false);
+      expect(action.recommendation).toBe('reauth');
+    });
+
+    it('detects Claude Code auth-session failure diagnostics', () => {
+      expect(
+        isClaudeCodeAuthSessionFailure(
+          'Failed to authenticate: OAuth session expired and could not be refreshed',
+        ),
+      ).toBe(true);
+      expect(isClaudeCodeAuthSessionFailure('authentication_failed')).toBe(true);
+      expect(isClaudeCodeAuthSessionFailure('Usage limit reached; resets at 16:00 UTC.')).toBe(
+        false,
       );
     });
 
@@ -593,6 +649,12 @@ describe('ClaudeCodeConnector', () => {
 
     it('should classify authentication_failed', () => {
       expect(connector.testClassifyError('authentication_failed', 1)).toBe('auth_error');
+      expect(
+        connector.testClassifyError(
+          'Failed to authenticate: OAuth session expired and could not be refreshed',
+          1,
+        ),
+      ).toBe('auth_error');
     });
 
     it('should classify max_output_tokens', () => {
