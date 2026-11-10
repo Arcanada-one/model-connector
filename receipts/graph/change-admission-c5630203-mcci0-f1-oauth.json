@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-10T19:23:43Z",
+ "captured_at_utc": "2026-11-10T19:35:30Z",
  "change_set": {
   "base": "b69651f5ade9e3d3688b6bcce1a3423506e8f859",
   "files": [
@@ -75,21 +75,21 @@
   }
  ],
  "graph": {
-  "builder_version": "1.0.1",
+  "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:2b09043586d97655281ce35286f831b87690409ca8503273f2e6e6b61a8f2c50",
-  "path": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity/graph-b69651f5ade9.json",
+  "graph_digest": "sha256:d29d493e5ae27a4d6d381d25b7a3c4ea2dc168deac42ff4dc34634ab85119c12",
+  "path": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/graph-b69651f5ade9.json",
   "source_commit": "b69651f5ade9e3d3688b6bcce1a3423506e8f859"
  },
  "head_graph": {
-  "builder_version": "1.0.1",
+  "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:be77986e360ba9ccb7a46fc084a449e99be130b8d82a1776fd083e67aa340cbe",
-  "path": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity/graph-head-9e78d358853d.json",
+  "graph_digest": "sha256:3be7fae2f17102f72a5a8a1fc448bf9162d3105952e3f41c690480b038bc3d6f",
+  "path": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/graph-head-9e78d358853d.json",
   "source_commit": "9e78d358853d72619284e98b2e6a7ec884047f6a",
   "staleness": {
-   "checked_at_utc": "2026-11-10T19:24:18Z",
-   "checked_nodes": 933,
+   "checked_at_utc": "2026-11-10T19:37:21Z",
+   "checked_nodes": 975,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -1966,15 +1966,16 @@
   "total": 63
  },
  "notes": [
-  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.2.0) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 1 attached from /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/exemptions.json"
+  "exemptions: 1 attached from /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/exemptions.json",
+  "head tree 9e78d358853d exported with git archive into /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/workdir-ciparity2/export-9e78d358853d (node_modules linked from the repository for ['.', 'packages/sdk-ts', 'watcher']; workspace packages built: ['packages/sdk-ts (tsc exit 0, 1.32s)']); the repository was not written"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
-  "version": "1.2.0"
+  "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261110T192343Z-9e78d358",
+ "receipt_id": "car-verify-20261110T193530Z-9e78d358",
  "receipt_path": "receipts/graph/change-admission-c5630203-mcci0-f1-oauth.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -2125,7 +2126,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-10T19:24:18Z",
+  "checked_at_utc": "2026-11-10T19:37:20Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -2357,7 +2358,7 @@
   }
  ],
  "tree": {
-  "commit": "9e78d358853d72619284e98b2e6a7ec884047f6a",
+  "commit": "9c1ce989a9d8c90410e89451bda93eec260ff7f5",
   "dirty": false
  },
  "verdicts": [
@@ -2800,8 +2801,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental false --listFiles",
-   "duration_s": 39.13,
+   "command": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/workdir-ciparity2/export-9e78d358853d/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/workdir-ciparity2/export-9e78d358853d/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/type-check-7idmwmqo/check.tsbuildinfo --listFiles",
+   "duration_s": 45.46,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
@@ -2897,13 +2898,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-10T19:24:58Z",
-   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2865 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-10T19:37:38Z",
+   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2866 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/model-connector/tsconfig.build.json --noEmit --incremental false --listFiles",
-   "duration_s": 19.33,
+   "command": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/workdir-ciparity2/export-9e78d358853d/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/workdir-ciparity2/export-9e78d358853d/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/type-check-0urc6waw/check.tsbuildinfo --listFiles",
+   "duration_s": 16.73,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
@@ -2989,13 +2990,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-10T19:25:38Z",
-   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2134 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-10T19:38:24Z",
+   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2135 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/model-connector/tsconfig.ci.json --noEmit --incremental false --listFiles",
-   "duration_s": 1.84,
+   "command": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/workdir-ciparity2/export-9e78d358853d/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/workdir-ciparity2/export-9e78d358853d/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/type-check-piv20lpf/check.tsbuildinfo --listFiles",
+   "duration_s": 1.93,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
@@ -3043,13 +3044,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-10T19:25:58Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-10T19:38:41Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/model-connector/tsconfig.json --noEmit --incremental false --listFiles",
-   "duration_s": 28.57,
+   "command": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/workdir-ciparity2/export-9e78d358853d/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/workdir-ciparity2/export-9e78d358853d/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/type-check-5f46nfu2/check.tsbuildinfo --listFiles",
+   "duration_s": 36.1,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
@@ -3135,13 +3136,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-10T19:26:00Z",
-   "summary": "tsconfig.json: exit 0, 0 error(s), 2756 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-10T19:38:43Z",
+   "summary": "tsconfig.json: exit 0, 0 error(s), 2757 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/model-connector/tsconfig.test.json --noEmit --incremental false --listFiles",
-   "duration_s": 23.79,
+   "command": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/workdir-ciparity2/export-9e78d358853d/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/workdir-ciparity2/export-9e78d358853d/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/type-check-yiztgdtf/check.tsbuildinfo --listFiles",
+   "duration_s": 76.08,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
@@ -3227,13 +3228,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-10T19:26:30Z",
-   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2862 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-10T19:39:20Z",
+   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2863 files listed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 0.93,
+   "duration_s": 2.6,
    "entities": [
     "code_unit:src/connectors/claude-code/claude-code.connector.ts"
    ],
@@ -3243,13 +3244,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity/v-config-schema.json",
-   "started_at_utc": "2026-11-10T19:26:54Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/v-config-schema.json",
+   "started_at_utc": "2026-11-10T19:40:38Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.27,
+   "duration_s": 0.63,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/app.module.ts",
@@ -3345,13 +3346,13 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity/v-fitness.json",
-   "started_at_utc": "2026-11-10T19:26:55Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/v-fitness.json",
+   "started_at_utc": "2026-11-10T19:40:41Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.01,
+   "duration_s": 0.02,
    "entities": [
     "document:CHANGELOG.md",
     "document:docs/connectors/claude-code.md",
@@ -3367,8 +3368,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity/v-doc-reference.txt",
-   "started_at_utc": "2026-11-10T19:26:55Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/v-doc-reference.txt",
+   "started_at_utc": "2026-11-10T19:40:41Z",
    "summary": "4 document(s), 0 failed"
   },
   {
@@ -3383,8 +3384,8 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity/v-canary.json",
-   "started_at_utc": "2026-11-10T19:26:55Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-c5630203-mcci0f1-cure-20261110T1908Z/verify-work/verifier-out-ciparity2/v-canary.json",
+   "started_at_utc": "2026-11-10T19:40:41Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 1 not_measured of 1 entities"
   }
  ],
@@ -3615,9 +3616,9 @@
    "receipt:receipts/graph/change-admission-jev-decision.json": []
   },
   "seconds": {
-   "prepare": 29.65,
-   "total": 192.42,
-   "verifiers": 113.87
+   "prepare": 9.94,
+   "total": 311.62,
+   "verifiers": 179.55
   }
  },
  "work_item": "c5630203-f7a8-46b1-8e2d-1fa0f5669012"
