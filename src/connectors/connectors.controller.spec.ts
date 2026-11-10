@@ -106,6 +106,28 @@ describe('ConnectorsController', () => {
     expect(mockService.execute).toHaveBeenCalledWith('test', { prompt: 'hi' }, 'key-1');
   });
 
+  it('maps config_error (missing provider credential) to HTTP 503, not 500/502', async () => {
+    mockService.execute.mockResolvedValueOnce({
+      id: '1',
+      connector: 'openrouter',
+      model: 'm',
+      result: '',
+      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+      latencyMs: 0,
+      status: 'error',
+      error: {
+        type: 'config_error',
+        message: 'No provider credential is configured for openrouter.',
+        retryable: false,
+        recommendation: 'abort',
+      },
+    });
+    const req = authenticatedRequest('key-1');
+    await expect(
+      controller.executePerConnector('openrouter', { prompt: 'hi' }, undefined, req),
+    ).rejects.toMatchObject({ status: 503 });
+  });
+
   it('should execute universal', async () => {
     const req = authenticatedRequest('key-1');
     const result = await controller.executeUniversal(

@@ -2,14 +2,20 @@ import { Logger } from '@nestjs/common';
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
 import {
   CatalogRefreshResult,
+  classifyErrorAction,
   ConnectorCapabilities,
   ConnectorRequest,
+  ConnectorResponse,
   ContentBlock,
   ProviderModelMeta,
 } from '../interfaces/connector.interface';
 import { normalizePerMTokPrice } from '../dto/catalog.dto';
 // CONN-1665 — per-request provider-key override (set by ConnectorsService.execute).
 import { getProviderKeyOverride } from '../../policy/provider-key.context';
+
+function resolveOpenRouterApiKey(): string {
+  return (getProviderKeyOverride('openrouter') ?? process.env.OPENROUTER_API_KEY ?? '').trim();
+}
 
 interface OpenRouterResponse {
   id: string;
@@ -98,6 +104,12 @@ export class OpenRouterConnector extends BaseApiConnector {
    */
   async refreshFreeModels(): Promise<CatalogRefreshResult> {
     const checkedAt = new Date();
+    if (!resolveOpenRouterApiKey()) {
+      this.logger.warn(
+        'OpenRouter refresh skipped: OPENROUTER_API_KEY unset — keeping static paid floor',
+      );
+      return { status: 'failed', source: 'provider-api', checkedAt, reason: 'auth' };
+    }
     let response: Response;
     try {
       const url = `${this.getBaseUrl()}/v1/models`;
@@ -175,6 +187,32 @@ export class OpenRouterConnector extends BaseApiConnector {
     return this.refreshFreeModels();
   }
 
+  /**
+   * Defense in depth for 0a3f80e9: never send `Authorization: Bearer ` to
+   * OpenRouter. ConnectorsService normally gates missing credentials earlier;
+   * this refuses at the adapter if that gate is bypassed.
+   */
+  override async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
+    if (!resolveOpenRouterApiKey()) {
+      const action = classifyErrorAction('config_error');
+      return {
+        id: '',
+        connector: this.name,
+        model: request.model || DEFAULT_MODEL,
+        result: '',
+        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+        latencyMs: 0,
+        status: 'error',
+        error: {
+          type: 'config_error',
+          message: 'OpenRouter API key is not configured on the server.',
+          ...action,
+        },
+      };
+    }
+    return super.execute(request);
+  }
+
   protected getBaseUrl(): string {
     return 'https://openrouter.ai/api';
   }
@@ -186,7 +224,7 @@ export class OpenRouterConnector extends BaseApiConnector {
     // key instead of the shared OPENROUTER_API_KEY. The helper returns null
     // unless the active context is scoped to THIS provider, so a failover hop
     // to another connector inside the same context never sees the override.
-    const apiKey = getProviderKeyOverride(this.name) ?? (process.env.OPENROUTER_API_KEY || '');
+    const apiKey = resolveOpenRouterApiKey();
     return {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
