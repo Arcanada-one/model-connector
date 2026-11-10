@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Catalog modality `decision` for native System-One JEV (CONN-JEV-01).**
+  `GET /connectors/catalog` can now filter and return `modality=decision`.
+  The `typesafe-jev` connector publishes the documented `jev-latest` model under
+  that modality (static capabilities; the provider has no model-list API). The
+  entry is executable via `/connectors/typesafe-jev/execute` and is not labelled
+  as chat. Schema/filter tests go red if `decision` is removed from the modality
+  enum.
+
 - **A key's rate limit can be read and changed through the admin API, and a probe proves
   a 429 can happen (A2-319).** `ApiKey.rateLimit` could only be set at creation, so the one
   live limit that had to move (`arcana-kb-agent`, 10 -> 60) was moved by editing the
