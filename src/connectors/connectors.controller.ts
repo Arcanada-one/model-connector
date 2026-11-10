@@ -111,7 +111,7 @@ export class ConnectorsController {
    *   modality=M      Return only models of modality M (CONN-0232). `type=M` is
    *                   accepted as an alias and mapped to `modality`.
    *                   M ∈ chat | embedding | image_generation | speech_to_text |
-   *                       text_to_speech | rerank
+   *                       text_to_speech | video | moderation | decision | rerank
    *   connector=NAME  Return only models of that connector (CONN-0232).
    *   tag=T           Exact-match a single derived tag, e.g. cost:free (CONN-0232).
    *   group=G         Namespace-prefix match, e.g. group=cost → any cost:* (CONN-0232).

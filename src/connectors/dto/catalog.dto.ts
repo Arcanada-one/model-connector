@@ -23,6 +23,8 @@ export const MODEL_MODALITY_VALUES = [
   // enum is open to new members without a Class-A migration.
   'video',
   'moderation',
+  // CONN-JEV-01 — native System-One decisions via `typesafe-jev` (not chat).
+  'decision',
   'rerank',
 ] as const;
 
@@ -254,8 +256,8 @@ export function buildDerivedTags(input: {
 /**
  * CONN-0239/CONN-0245 — single source of truth for "can this modality run
  * through the chat `/execute` path of an IConnector?". Chat / embedding /
- * rerank / moderation are served via the connector's chat path; the
- * dedicated-pipeline modalities (STT / TTS / image / video) are NOT.
+ * rerank / moderation / decision are served via the connector's `/execute`
+ * path; the dedicated-pipeline modalities (STT / TTS / image / video) are NOT.
  * Pure + dependency-free so both `ConnectorsService` (execute() gate,
  * presentModel()) and `catalog-mapper.ts` (entryToRow's `executableHere`
  * persisted column) can use it without a circular import between the two.
@@ -268,7 +270,7 @@ export function isModalityExecutableHere(modality: ModelModality): boolean {
     case 'video':
       return false;
     default:
-      // chat, embedding, rerank, moderation
+      // chat, embedding, rerank, moderation, decision
       return true;
   }
 }

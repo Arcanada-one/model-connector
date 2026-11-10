@@ -876,7 +876,9 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     // moderation (groq prompt-guard) IS callable here — it runs through the chat
     // /execute → /chat/completions path — but it is a classifier, so it carries NO
     // chat capabilities (no tools/json-schema/streaming) to keep `cap:*` honest.
-    if (modality === 'moderation' || !executableHere) {
+    // decision (typesafe-jev System-One) is likewise executable via /execute but is
+    // not a chat model, so it also carries NO chat capability tags.
+    if (modality === 'moderation' || modality === 'decision' || !executableHere) {
       return { capabilities: { ...NO_CAPS }, executableHere };
     }
     return { capabilities: connectorCaps, executableHere };
@@ -884,10 +886,10 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * CONN-0239 — single source of truth for "can this modality run through the chat
-   * `/execute` path of an IConnector?". Chat / embedding / rerank / moderation are
-   * served via the connector's chat path; the dedicated-pipeline modalities
-   * (STT / TTS / image / video) are NOT — calling them via /execute would forward a
-   * non-chat id to /chat/completions. Used by {@link presentModel} (catalog
+   * `/execute` path of an IConnector?". Chat / embedding / rerank / moderation /
+   * decision are served via the connector's `/execute` path; the dedicated-pipeline
+   * modalities (STT / TTS / image / video) are NOT — calling them via /execute would
+   * forward a non-chat id to /chat/completions. Used by {@link presentModel} (catalog
    * `available`) AND the execute() pre-flight gate so the two never drift.
    */
   static isModalityExecutableHere(modality: ModelModality): boolean {
