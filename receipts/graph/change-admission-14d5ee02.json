@@ -5,10 +5,19 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted"
  },
- "captured_at_utc": "2026-11-10T13:14:15Z",
+ "captured_at_utc": "2026-11-10T13:38:06Z",
  "change_set": {
   "base": "e9cf95e1abfcfd93e765a79d777bb9bc1d121ef0",
   "files": [
+   {
+    "kind": "receipt",
+    "node_id": "receipt:receipts/graph/change-admission-14d5ee02.json",
+    "node_ids": [
+     "receipt:receipts/graph/change-admission-14d5ee02.json"
+    ],
+    "path": "receipts/graph/change-admission-14d5ee02.json",
+    "status": "A"
+   },
    {
     "kind": "test",
     "node_id": "code_unit:src/billing/credit-gate.spec.ts",
@@ -46,7 +55,7 @@
     "status": "M"
    }
   ],
-  "head": "c13a8eee68ec324e6ca85cd8619f13796e5bc55e",
+  "head": "f0569dd25e26010096a948df605a092171d62959",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -55,18 +64,18 @@
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:fd43f0ee27a21e8f20d83667eaff5828de21de6eea4c55d71883dc32c89d0313",
-  "path": "/tmp/arcana-verify-odtnlruv/verifier-out/graph-e9cf95e1abfc.json",
+  "path": "/tmp/arcana-verify-ldrrw_3k/verifier-out/graph-e9cf95e1abfc.json",
   "source_commit": "e9cf95e1abfcfd93e765a79d777bb9bc1d121ef0"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:3772a2ffff8cd87cba2c1a6c87785d438d9c073e730aae50461758ae9442371c",
-  "path": "/tmp/arcana-verify-odtnlruv/verifier-out/graph-head-c13a8eee68ec.json",
-  "source_commit": "c13a8eee68ec324e6ca85cd8619f13796e5bc55e",
+  "graph_digest": "sha256:ec6ad5dee4adf0fcef7aae67d3fff4c1a246befec29c17f26bf06a01bf30efe8",
+  "path": "/tmp/arcana-verify-ldrrw_3k/verifier-out/graph-head-f0569dd25e26.json",
+  "source_commit": "f0569dd25e26010096a948df605a092171d62959",
   "staleness": {
-   "checked_at_utc": "2026-11-10T13:16:24Z",
-   "checked_nodes": 970,
+   "checked_at_utc": "2026-11-10T13:39:50Z",
+   "checked_nodes": 971,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -454,7 +463,8 @@
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261110T131415Z-c13a8eee",
+ "receipt_id": "car-verify-20261110T133806Z-f0569dd2",
+ "receipt_path": "receipts/graph/change-admission-14d5ee02.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
   "path": "/home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector"
@@ -494,6 +504,7 @@
    "receipt:receipts/bench-source-ctx24/source-car.json",
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
    "receipt:receipts/graph/a2-319-rate-limit-admin.json",
+   "receipt:receipts/graph/change-admission-14d5ee02.json",
    "receipt:receipts/graph/change-admission-6206.json",
    "receipt:receipts/graph/change-admission-6664.json",
    "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
@@ -513,7 +524,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-10T13:16:24Z",
+  "checked_at_utc": "2026-11-10T13:39:49Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -551,6 +562,21 @@
    "path": "receipts/graph/a2-319-rate-limit-admin.json",
    "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
    "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": null,
+    "head": "sha256:87a345e797cfd898f229e5356960ac21cee0a9a80fc1607bca72e302011530c9"
+   },
+   "entity": "receipt:receipts/graph/change-admission-14d5ee02.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-14d5ee02.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it; superseded by construction — this run re-issues the receipt at receipts/graph/change-admission-14d5ee02.json for work item 14d5ee02-ecb8-4d76-a6cb-a69dd0beb8ca",
+   "rule": "DEC-AUP-0035",
+   "superseded": {
+    "receipt_path": "receipts/graph/change-admission-14d5ee02.json",
+    "work_item": "14d5ee02-ecb8-4d76-a6cb-a69dd0beb8ca"
+   }
   },
   {
    "content_hash": {
@@ -697,7 +723,7 @@
   }
  ],
  "tree": {
-  "commit": "c13a8eee68ec324e6ca85cd8619f13796e5bc55e",
+  "commit": "f0569dd25e26010096a948df605a092171d62959",
   "dirty": false
  },
  "verdicts": [
@@ -765,8 +791,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-odtnlruv/verifier-out/type-check-red9iujq/check.tsbuildinfo --listFiles",
-   "duration_s": 25.7,
+   "command": "/home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-ldrrw_3k/verifier-out/type-check-vr__9nkz/check.tsbuildinfo --listFiles",
+   "duration_s": 134.88,
    "entities": [
     "code_unit:src/billing/credit-gate.spec.ts",
     "code_unit:src/connectors/aborted-attempt-intent-path.spec.ts",
@@ -784,13 +810,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-odtnlruv/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-10T13:16:43Z",
+   "output_ref": "/tmp/arcana-verify-ldrrw_3k/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-10T13:40:27Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2865 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-odtnlruv/verifier-out/type-check-7f63e0ca/check.tsbuildinfo --listFiles",
-   "duration_s": 27.53,
+   "command": "/home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-ldrrw_3k/verifier-out/type-check-3dkxgdfq/check.tsbuildinfo --listFiles",
+   "duration_s": 19.96,
    "entities": [
     "deployable_unit:."
    ],
@@ -800,13 +826,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-odtnlruv/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-10T13:17:10Z",
+   "output_ref": "/tmp/arcana-verify-ldrrw_3k/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-10T13:42:43Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2134 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-odtnlruv/verifier-out/type-check-yoankfi_/check.tsbuildinfo --listFiles",
-   "duration_s": 2.95,
+   "command": "/home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-ldrrw_3k/verifier-out/type-check-ws6oevbl/check.tsbuildinfo --listFiles",
+   "duration_s": 1.05,
    "entities": [
     "deployable_unit:."
    ],
@@ -816,13 +842,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-odtnlruv/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-10T13:17:40Z",
+   "output_ref": "/tmp/arcana-verify-ldrrw_3k/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-10T13:43:03Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-odtnlruv/verifier-out/type-check-tqiy88_d/check.tsbuildinfo --listFiles",
-   "duration_s": 75.45,
+   "command": "/home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-ldrrw_3k/verifier-out/type-check-ouhmvta2/check.tsbuildinfo --listFiles",
+   "duration_s": 32.66,
    "entities": [
     "deployable_unit:."
    ],
@@ -832,13 +858,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-odtnlruv/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-10T13:17:44Z",
+   "output_ref": "/tmp/arcana-verify-ldrrw_3k/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-10T13:43:04Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2756 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-odtnlruv/verifier-out/type-check-r7zhpt0r/check.tsbuildinfo --listFiles",
-   "duration_s": 78.24,
+   "command": "/home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-14d5ee02-update-behind-20261110T1231Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-ldrrw_3k/verifier-out/type-check-xr0f208g/check.tsbuildinfo --listFiles",
+   "duration_s": 41.65,
    "entities": [
     "deployable_unit:."
    ],
@@ -848,13 +874,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-odtnlruv/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-10T13:19:00Z",
+   "output_ref": "/tmp/arcana-verify-ldrrw_3k/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-10T13:43:38Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2862 files listed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 2.82,
+   "duration_s": 2.15,
    "entities": [
     "code_unit:src/connectors/aborted-attempt-intent-path.spec.ts",
     "code_unit:src/connectors/cascade/cascade.module.di.spec.ts"
@@ -866,13 +892,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-odtnlruv/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-10T13:20:21Z",
+   "output_ref": "/tmp/arcana-verify-ldrrw_3k/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-10T13:44:21Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.46,
+   "duration_s": 0.47,
    "entities": [
     "code_unit:src/billing/credit-gate.spec.ts",
     "code_unit:src/connectors/aborted-attempt-intent-path.spec.ts",
@@ -890,8 +916,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/tmp/arcana-verify-odtnlruv/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-10T13:20:24Z",
+   "output_ref": "/tmp/arcana-verify-ldrrw_3k/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-10T13:44:23Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -906,17 +932,23 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/tmp/arcana-verify-odtnlruv/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-10T13:20:25Z",
+   "output_ref": "/tmp/arcana-verify-ldrrw_3k/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-10T13:44:24Z",
    "summary": "1 document(s), 0 failed"
   }
  ],
  "verify": {
   "events": [
    {
+    "code": "SUPERSEDED_SELF_EXCLUSION",
+    "entity": "receipt:receipts/graph/change-admission-14d5ee02.json",
+    "rule": "DEC-AUP-0035",
+    "text": "the receipt at receipts/graph/change-admission-14d5ee02.json is the previous version of the one this run is writing, for the same work item 14d5ee02-ecb8-4d76-a6cb-a69dd0beb8ca — superseded by construction, so it owes this change no verdict"
+   },
+   {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "16 affected entity(ies) owe no verdict (receipt: 16): unchanged at both revisions and given no verifier by the matrix"
+    "text": "17 affected entity(ies) owe no verdict (receipt: 17): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
@@ -948,6 +980,7 @@
    "receipt:receipts/bench-source-ctx24/source-car.json": [],
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json": [],
    "receipt:receipts/graph/a2-319-rate-limit-admin.json": [],
+   "receipt:receipts/graph/change-admission-14d5ee02.json": [],
    "receipt:receipts/graph/change-admission-6206.json": [],
    "receipt:receipts/graph/change-admission-6664.json": [],
    "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json": [],
@@ -963,9 +996,9 @@
    "receipt:receipts/graph/change-admission-jev-decision.json": []
   },
   "seconds": {
-   "prepare": 8.72,
-   "total": 369.39,
-   "verifiers": 213.15
+   "prepare": 15.66,
+   "total": 377.49,
+   "verifiers": 232.82
   }
  },
  "work_item": "14d5ee02-ecb8-4d76-a6cb-a69dd0beb8ca"
