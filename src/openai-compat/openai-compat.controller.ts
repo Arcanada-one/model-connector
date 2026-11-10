@@ -48,7 +48,11 @@ const HTTP_ERROR_STATUS: Record<string, HttpStatus> = {
   credit_depleted: HttpStatus.PAYMENT_REQUIRED,
   // CONN-1665 — per-key access policy denial / server-side policy misconfiguration.
   policy_violation: HttpStatus.FORBIDDEN,
-  config_error: HttpStatus.INTERNAL_SERVER_ERROR,
+  // Missing/unconfigured provider credentials and related config gaps are
+  // operational unavailability (same family as auth_error), not an application
+  // 500. Keep them off the generic 502 BAD_GATEWAY fallback used for unknown
+  // upstream failures (0a3f80e9 — unauthenticated OpenRouter/claude-code/cursor).
+  config_error: HttpStatus.SERVICE_UNAVAILABLE,
 };
 
 function nowUnixSeconds(): number {

@@ -275,6 +275,10 @@ const ERROR_ACTION_MAP: Record<string, { retryable: boolean; recommendation: Err
   model_not_found: { retryable: false, recommendation: 'abort' },
   api_error: { retryable: true, recommendation: 'retry' },
   unsupported_modality: { retryable: false, recommendation: 'abort' },
+  // Provider credential / policy configuration gap (e.g. OPENROUTER_API_KEY
+  // unset). Not retryable: repeating the same request cannot create the key.
+  config_error: { retryable: false, recommendation: 'abort' },
+  policy_violation: { retryable: false, recommendation: 'abort' },
   // ARAS-0058 — idempotency outcomes.
   //
   // `idempotency_conflict` is the one entry here that is retryable: the first
@@ -376,7 +380,7 @@ export type CatalogRefreshResult =
       status: 'failed';
       source: 'provider-api';
       checkedAt: Date;
-      reason: 'http' | 'network' | 'parse' | 'empty' | 'unexpected';
+      reason: 'http' | 'network' | 'parse' | 'empty' | 'unexpected' | 'auth';
     };
 
 export interface IConnector {
