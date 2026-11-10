@@ -4,6 +4,18 @@ The `typesafe-jev` connector accepts `DecisionRequest/v1` and returns `DecisionR
 
 The common request/result envelope separates decision type, policy and provenance from transport. Only the TypeSafe adapter is currently implemented. The sole admitted application mode is `shadow`; every result says `action: none`. This result never authorizes a tool, changes ACLs, loads a skill, delegates work or routes a production request. Native advice must not replace deterministic authorization.
 
+## Routes (CONN-JEV-02)
+
+Transport is expressed as a single `JevRoute` interface (`src/connectors/jev/jev.routes.ts`) with three implementations:
+
+| Route | Status | Request shape | Availability |
+|---|---|---|---|
+| `direct` | live path shape | `POST /v1/systemone` body `{state,model,questions}` | `available:true` only when a direct key is present and the route is enabled |
+| `openrouter` | stub | `POST /api/v1/systemone` same body; errors `{"error":…}` | `available:false` until `TYPESAFE_JEV_OPENROUTER_API_KEY` is set |
+| `cloudflare` | stub | `POST /accounts/{id}/ai/run` with `{model,input:{state,questions}}` (path-embedded fork behind a flag); version default `not_observable` | `available:false` until Cloudflare token + account id are set |
+
+An empty route key returns `route_not_configured` without calling the network. Measured envelope fixtures live in `jev.route-fixtures.ts`. OpenRouter/Cloudflare success bodies that were not live-measured are labelled as fixtures for CONN-JEV-09 to replace — the interface does not change. `TYPESAFE_JEV_ROUTES_ENABLED` defaults to `direct`.
+
 ## Request
 
 `prompt` is a JSON string containing this envelope:

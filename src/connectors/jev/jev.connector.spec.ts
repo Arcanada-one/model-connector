@@ -97,10 +97,26 @@ describe('native decision contract and adapter', () => {
       expect(fetchMock).not.toHaveBeenCalled();
     },
   );
-  it('missing provider credential refuses without a call', async () => {
+  it('missing provider credential refuses without a call as route_not_configured', async () => {
     vi.stubEnv('TYPESAFE_API_KEY', '');
-    expect((await execute()).status).toBe('error');
+    const response = await execute();
+    expect(response.status).toBe('error');
+    expect(response.error?.type).toBe('route_not_configured');
+    expect(response.error?.retryable).toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('CONN-JEV-02 route catalog keeps OpenRouter/Cloudflare available:false without keys', () => {
+    vi.stubEnv('TYPESAFE_API_KEY', 'synthetic-key');
+    vi.stubEnv('TYPESAFE_JEV_OPENROUTER_API_KEY', '');
+    vi.stubEnv('TYPESAFE_JEV_CLOUDFLARE_API_TOKEN', '');
+    const rows = connector.routeCatalogEntries();
+    expect(rows.filter((r) => r.route === 'openrouter').every((r) => r.available === false)).toBe(
+      true,
+    );
+    expect(rows.filter((r) => r.route === 'cloudflare').every((r) => r.available === false)).toBe(
+      true,
+    );
   });
   it('rejects malformed native envelopes before network and suppresses payloads', async () => {
     const response = await connector.execute({ prompt: '{"secret-task":', model: 'jev-latest' });

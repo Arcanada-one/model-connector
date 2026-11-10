@@ -4,39 +4,52 @@ import { z } from 'zod';
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
 import {
   CatalogRefreshResult,
+  classifyErrorAction,
   ConnectorCapabilities,
   ConnectorRequest,
   ConnectorResponse,
   ConnectorStatus,
 } from '../interfaces/connector.interface';
 import { DecisionRequestSchema, nativeRequest, normalizeDecision } from './decision.contract';
+import { DirectRoute, JevRouteEnv, jevRouteCatalogEntries } from './jev.routes';
 
 /** Native System-One adapter. Disabled unless the operator explicitly enables it. */
 export class JevConnector extends BaseApiConnector {
   readonly name = 'typesafe-jev';
+  private readonly direct = new DirectRoute();
+
+  private routeEnv(): JevRouteEnv {
+    const override = getProviderKeyOverride(this.name)?.trim();
+    return {
+      TYPESAFE_API_KEY: override || process.env.TYPESAFE_API_KEY,
+      TYPESAFE_JEV_API_KEY: process.env.TYPESAFE_JEV_API_KEY,
+      TYPESAFE_JEV_DIRECT_BASE_URL: process.env.TYPESAFE_JEV_DIRECT_BASE_URL,
+      TYPESAFE_JEV_ROUTES_ENABLED: process.env.TYPESAFE_JEV_ROUTES_ENABLED,
+      CONNECTOR_VERSION: process.env.npm_package_version,
+    };
+  }
 
   private enabled(): boolean {
     // Re-read before every attempt: an in-process kill switch must not be cached.
-    return (
-      process.env.JEV_ENABLED === 'true' &&
-      !!(getProviderKeyOverride(this.name) ?? process.env.TYPESAFE_API_KEY)?.trim()
-    );
+    return process.env.JEV_ENABLED === 'true' && this.direct.assertConfigured(this.routeEnv()).ok;
   }
 
   protected getBaseUrl(): string {
-    return 'https://api.typesafe.ai';
+    const url = this.direct.buildUrl(this.routeEnv());
+    return url.replace(/\/v1\/systemone$/, '') || 'https://api.typesafe.ai';
   }
   protected buildRequestUrl(): string {
-    return `${this.getBaseUrl()}/v1/systemone`;
+    return this.direct.buildUrl(this.routeEnv());
   }
   protected getRedirectPolicy(): RequestRedirect {
     return 'error';
   }
   protected getHeaders(): Record<string, string> {
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getProviderKeyOverride(this.name) ?? (process.env.TYPESAFE_API_KEY || '')}`,
-    };
+    const headers = this.direct.headers(this.routeEnv());
+    if ('ok' in headers) {
+      return { 'Content-Type': 'application/json' };
+    }
+    return headers;
   }
 
   private async readBounded(response: Response): Promise<string> {
@@ -93,13 +106,23 @@ export class JevConnector extends BaseApiConnector {
 
   protected buildRequestBody(request: ConnectorRequest): unknown {
     if (!this.enabled()) throw new Error('disabled');
-    return nativeRequest(this.readRequest(request));
+    const decision = this.readRequest(request);
+    // Live-direct path shape via JevRoute (CONN-JEV-02); nativeRequest stays the
+    // DecisionRequest → {state,model,questions} adapter for provenance hashing.
+    const native = nativeRequest(decision);
+    return this.direct.buildBody(native.state, native.questions, native.model);
   }
 
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
     let reason: string | undefined;
-    if (!this.enabled()) reason = 'disabled';
-    else {
+    let errorType: string = 'validation_error';
+    if (process.env.JEV_ENABLED !== 'true') {
+      reason = 'disabled';
+    } else if (!this.direct.assertConfigured(this.routeEnv()).ok) {
+      // Empty direct key → route_not_configured without network (TZ §11.6).
+      reason = 'route_not_configured';
+      errorType = 'route_not_configured';
+    } else {
       try {
         this.readRequest(request);
       } catch {
@@ -116,10 +139,9 @@ export class JevConnector extends BaseApiConnector {
         latencyMs: 0,
         status: 'error',
         error: {
-          type: 'validation_error',
+          type: errorType,
           message: `JEV ${reason}`,
-          retryable: false,
-          recommendation: 'abort',
+          ...classifyErrorAction(errorType),
         },
       };
     const response = await super.execute(request);
@@ -177,9 +199,10 @@ export class JevConnector extends BaseApiConnector {
 
   getCapabilities(): ConnectorCapabilities {
     // CONN-JEV-01 — publish the documented native model under modality=decision.
-    // The provider has no model-list API (refreshModels stays empty/failed); this
-    // static capability is the catalog source. Availability still follows enablement
-    // + reachability on the snapshot path; discovery does not invent alternate ids.
+    // CONN-JEV-02 — executable catalog row remains direct `jev-latest` only.
+    // OpenRouter/Cloudflare model ids stay on the JevRoute surface with
+    // `available:false` until keyed (see `jevRouteCatalogEntries`); publishing
+    // them here would invent catalog routability before CONN-JEV-05/09.
     const model = 'jev-latest';
     return {
       name: this.name,
@@ -192,5 +215,10 @@ export class JevConnector extends BaseApiConnector {
       supportsTools: false,
       maxTimeout: 15000,
     };
+  }
+
+  /** Route-level availability rows (stubs report available:false). */
+  routeCatalogEntries() {
+    return jevRouteCatalogEntries(this.routeEnv());
   }
 }

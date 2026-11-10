@@ -381,6 +381,17 @@ export const envSchema = z
       .default('false')
       .transform((v) => v === 'true'),
     TYPESAFE_API_KEY: z.string().optional(),
+    // CONN-JEV-02 — optional JevRoute env (stubs stay unavailable without keys).
+    TYPESAFE_JEV_API_KEY: z.string().optional(),
+    TYPESAFE_JEV_OPENROUTER_API_KEY: z.string().optional(),
+    TYPESAFE_JEV_CLOUDFLARE_API_TOKEN: z.string().optional(),
+    TYPESAFE_JEV_CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
+    TYPESAFE_JEV_DIRECT_BASE_URL: z.string().url().optional(),
+    TYPESAFE_JEV_OPENROUTER_BASE_URL: z.string().url().optional(),
+    TYPESAFE_JEV_CLOUDFLARE_BASE_URL: z.string().url().optional(),
+    TYPESAFE_JEV_ROUTES_ENABLED: z.string().optional(),
+    TYPESAFE_JEV_TIMEOUT_MS: z.coerce.number().min(1_000).max(120_000).optional(),
+    TYPESAFE_JEV_MAX_CONCURRENCY: z.coerce.number().min(1).max(20).optional(),
     // Metadata only; values are separately injected provider credentials.
     PROVIDER_CREDENTIAL_REGISTRY: z
       .string()

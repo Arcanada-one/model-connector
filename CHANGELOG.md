@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **JevRoute transport surface for `typesafe-jev` (CONN-JEV-02).**
+  One typed `JevRoute` interface covers live-direct URL/body/headers/parse plus
+  OpenRouter and Cloudflare stubs built from measured envelopes (TZ §2.2 / §2.4).
+  Stub or unkeyed routes report `available:false` and return `route_not_configured`
+  without a network call. Parameterized contract tests cover all three routes.
+  Executable catalog discovery remains direct `jev-latest` (CONN-JEV-01); stub
+  model ids stay on the route surface until keyed (CONN-JEV-05/09).
+
 - **Catalog modality `decision` for native System-One JEV (CONN-JEV-01).**
   `GET /connectors/catalog` can now filter and return `modality=decision`.
   The `typesafe-jev` connector publishes the documented `jev-latest` model under
