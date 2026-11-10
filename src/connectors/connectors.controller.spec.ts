@@ -172,6 +172,64 @@ describe('ConnectorsController', () => {
     });
   });
 
+  // ─── Muneral 709559c4 — default-composition strict-chat HTTP contract ───────
+  //
+  // STRICT_CHAT_BOUNDARY is deliberately unbound in ConnectorsModule. Authorized
+  // hits on intents/chat MUST return 503 {"error":"strict_chat_unavailable"} —
+  // intended contract, not a provider-unreachable / no-egress defect.
+
+  describe('strict chat unavailable contract (unbound boundary)', () => {
+    const unboundReply = {} as never;
+
+    it('GET intents/:intentId → 503 strict_chat_unavailable when boundary unbound', async () => {
+      const req = authenticatedRequest('key-1');
+      await expect(controller.strictIntentStatus('intent-1', req)).rejects.toMatchObject({
+        status: 503,
+        response: { error: 'strict_chat_unavailable' },
+      });
+    });
+
+    it('POST chat/completions → 503 strict_chat_unavailable when boundary unbound', async () => {
+      const req = authenticatedRequest('key-1');
+      await expect(
+        controller.strictChatStream('deepseek', {}, req, unboundReply),
+      ).rejects.toMatchObject({
+        status: 503,
+        response: { error: 'strict_chat_unavailable' },
+      });
+    });
+
+    it('GET intents/:intentId → 503 when apiKey.id is missing even if boundary were present', async () => {
+      const bound = new ConnectorsController(
+        mockService as unknown as ConnectorsService,
+        mockImageService,
+        mockCascadeService,
+        { status: vi.fn(), execute: vi.fn() } as never,
+      );
+      await expect(
+        bound.strictIntentStatus('intent-1', {} as AuthenticatedRequestStub),
+      ).rejects.toMatchObject({
+        status: 503,
+        response: { error: 'strict_chat_unavailable' },
+      });
+    });
+
+    it('POST chat/completions → 503 when apiKey.id is missing even if boundary were present', async () => {
+      const bound = new ConnectorsController(
+        mockService as unknown as ConnectorsService,
+        mockImageService,
+        mockCascadeService,
+        { status: vi.fn(), execute: vi.fn() } as never,
+      );
+      await expect(
+        bound.strictChatStream('deepseek', {}, {} as AuthenticatedRequestStub, unboundReply),
+      ).rejects.toMatchObject({
+        status: 503,
+        response: { error: 'strict_chat_unavailable' },
+      });
+    });
+  });
+
   // ─── CONN-0223 F3 — Cascade routing via profile (plan Phase 4) ───────────────
 
   describe('profile routing (cascade dispatch)', () => {

@@ -153,7 +153,11 @@ export class ConnectorsController {
     return this.connectorsService.getStatus(name);
   }
 
-  /** Source-only optional boundary; no module binds the token by default. */
+  /**
+   * Source-only optional boundary; no module binds the token by default.
+   * Intended contract (Muneral 709559c4): unbound boundary or missing apiKey.id
+   * → HTTP 503 `{"error":"strict_chat_unavailable"}` (not provider-unreachable).
+   */
   @Get('connectors/intents/:intentId')
   async strictIntentStatus(@Param('intentId') intent: string, @Req() req: AuthenticatedRequest) {
     if (!this.strictChat || !req.apiKey?.id)
@@ -165,6 +169,10 @@ export class ConnectorsController {
     }
   }
 
+  /**
+   * Same unbound/missing-key contract as `strictIntentStatus` (Muneral 709559c4):
+   * HTTP 503 `{"error":"strict_chat_unavailable"}` before any provider send.
+   */
   @Post('connectors/:name/chat/completions')
   async strictChatStream(
     @Param('name') name: string,
