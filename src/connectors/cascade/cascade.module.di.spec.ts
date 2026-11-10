@@ -29,20 +29,32 @@ describe('CascadeModule DI bootstrap (CONN-0223)', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let CascadeRouterService: any;
 
+  // AppModule import transforms the Nest graph; under host load this beforeAll
+  // measured ~37s (default hookTimeout 10s → empty/opaque suite failure).
   beforeAll(async () => {
-    // Minimal env so AppModule's eager getConfig() validation passes. Disable
-    // optional providers that would otherwise demand their own API keys — this
-    // test asserts DI wiring, not provider provisioning.
-    if (!process.env.DATABASE_URL) {
-      process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
+    try {
+      // Minimal env so AppModule's eager getConfig() validation passes. Disable
+      // optional providers that would otherwise demand their own API keys — this
+      // test asserts DI wiring, not provider provisioning.
+      if (!process.env.DATABASE_URL) {
+        process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
+      }
+      process.env.STT_PROVIDER_GROQ_ENABLED = 'false';
+      process.env.OPENMODEL_ENABLED = 'false';
+      process.env.CASCADE_PAID_ENABLED = 'false';
+      ({ AppModule } = await import('../../app.module'));
+      ({ PrismaService } = await import('../../prisma/prisma.service'));
+      ({ CascadeRouterService } = await import('./cascade-router.service'));
+    } catch (err) {
+      // Vitest JSON reporters have dropped empty Error.message on this hook;
+      // always rethrow a non-empty diagnostic so the suite failure names the cause.
+      const detail =
+        err instanceof Error ? err.message || err.name || 'Error with empty message' : String(err);
+      throw new Error(
+        `CascadeModule DI beforeAll failed while importing AppModule graph: ${detail}`,
+      );
     }
-    process.env.STT_PROVIDER_GROQ_ENABLED = 'false';
-    process.env.OPENMODEL_ENABLED = 'false';
-    process.env.CASCADE_PAID_ENABLED = 'false';
-    ({ AppModule } = await import('../../app.module'));
-    ({ PrismaService } = await import('../../prisma/prisma.service'));
-    ({ CascadeRouterService } = await import('./cascade-router.service'));
-  });
+  }, 60_000);
 
   it('resolves CascadeRouterService through the real module graph', async () => {
     const moduleRef = await Test.createTestingModule({
@@ -62,5 +74,5 @@ describe('CascadeModule DI bootstrap (CONN-0223)', () => {
     expect(cascade).toBeInstanceOf(CascadeRouterService);
 
     await moduleRef.close();
-  }, 30_000);
+  }, 60_000);
 });
