@@ -155,7 +155,10 @@ describe('OpenAiConnector Moderations extension', () => {
     expect(existsSync(PRODUCTION_PATH), 'production is intentionally absent in RED').toBe(true);
   });
 
-  describe('immutable completed Responses behavior', () => {
+  // CI cold-import of this connector under the full suite can exceed Vitest's
+  // default 5s when SWC transform contention is high (hosted lint-and-test
+  // 42849502658 timed out this case at 5000ms while 3780 other tests passed).
+  describe('immutable completed Responses behavior', { timeout: 20_000 }, () => {
     it('preserves endpoint, auth, request mapping, output, usage, and capabilities', async () => {
       expect(RESPONSES_FIXTURE_PROVENANCE).toContain('no provider call or capture');
       const { OpenAiConnector } = await loadModule();

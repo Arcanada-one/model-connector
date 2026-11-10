@@ -1432,6 +1432,26 @@ describe('ConnectorsService', () => {
       const result = await assembleFiltered(fullService, { ...noFilters, modality: 'rerank' });
       expect(result).toHaveLength(0);
     });
+
+    it('CONN-JEV-01: typesafe-jev surfaces modality=decision in the catalog snapshot', async () => {
+      const { JevConnector } = await import('./jev/jev.connector');
+      fullService.register(new JevConnector());
+      const result = await assembleFiltered(fullService, { ...noFilters, modality: 'decision' });
+      expect(result.length).toBeGreaterThan(0);
+      expect(result.every((m) => m.modality === 'decision')).toBe(true);
+      const jev = result.find((m) => m.connector === 'typesafe-jev' && m.model === 'jev-latest');
+      expect(jev).toMatchObject({
+        modality: 'decision',
+        tags: expect.arrayContaining(['modality:decision']),
+        routing: { connector: 'typesafe-jev', model: 'jev-latest' },
+        capabilities: {
+          supportsStreaming: false,
+          supportsJsonSchema: false,
+          supportsTools: false,
+        },
+      });
+      expect(jev?.routing.endpoint).toBeUndefined();
+    });
   });
 
   // ── CONN-0245: getCatalog() DB read path — reads ONLY the repo (+ cache), ──

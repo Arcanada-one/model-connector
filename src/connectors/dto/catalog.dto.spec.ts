@@ -5,8 +5,10 @@ import {
   CatalogFiltersSchema,
   CAPABILITY_FILTER_VALUES,
   MODEL_MODALITY_VALUES,
+  ModelModalitySchema,
   buildDerivedTags,
   entryMatchesFilters,
+  isModalityExecutableHere,
   normalizePerMTokPrice,
   type CatalogModelEntry,
 } from './catalog.dto';
@@ -275,6 +277,36 @@ describe('CONN-0238 — modality enum additions', () => {
   it('accepts a moderation modality entry', () => {
     const entry = { ...validEntry, modality: 'moderation' as const };
     expect(schemaAccepts(() => CatalogModelEntrySchema.parse(entry))).toBe(true);
+  });
+});
+
+// ─── CONN-JEV-01 — modality=decision (typesafe-jev System-One) ────────────────
+describe('CONN-JEV-01 — decision modality', () => {
+  it('includes decision in the catalog modality enum', () => {
+    expect(MODEL_MODALITY_VALUES).toContain('decision');
+  });
+
+  it('accepts a decision modality catalog entry (negative: remove enum member → red)', () => {
+    const entry = {
+      ...validEntry,
+      connector: 'typesafe-jev',
+      model: 'jev-latest',
+      modality: 'decision' as const,
+      tags: ['modality:decision'],
+      capabilities: {
+        supportsStreaming: false,
+        supportsJsonSchema: false,
+        supportsTools: false,
+      },
+      routing: { connector: 'typesafe-jev', model: 'jev-latest' },
+    };
+    const parsed = CatalogModelEntrySchema.parse(entry);
+    expect(parsed.modality).toBe('decision');
+    expect(ModelModalitySchema.safeParse('decision').success).toBe(true);
+  });
+
+  it('marks decision executable on the connector /execute path', () => {
+    expect(isModalityExecutableHere('decision')).toBe(true);
   });
 });
 

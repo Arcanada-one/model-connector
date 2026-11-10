@@ -176,13 +176,17 @@ export class JevConnector extends BaseApiConnector {
   }
 
   getCapabilities(): ConnectorCapabilities {
-    // Native decisions are callable explicitly, but cannot be mislabelled as chat
-    // in the existing closed catalog modality enum. Discovery needs a versioned contract.
+    // CONN-JEV-01 — publish the documented native model under modality=decision.
+    // The provider has no model-list API (refreshModels stays empty/failed); this
+    // static capability is the catalog source. Availability still follows enablement
+    // + reachability on the snapshot path; discovery does not invent alternate ids.
+    const model = 'jev-latest';
     return {
       name: this.name,
       type: 'api',
-      models: [],
-      modelMeta: [],
+      models: [model],
+      modality: 'decision',
+      modelMeta: [{ id: model, modality: 'decision' }],
       supportsStreaming: false,
       supportsJsonSchema: false,
       supportsTools: false,
