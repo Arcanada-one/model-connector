@@ -3,9 +3,9 @@
   "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
   "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
-  "verdict": "paused_safe"
+  "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-10T15:07:58Z",
+ "captured_at_utc": "2026-11-10T15:48:48Z",
  "change_set": {
   "base": "08db7045bb369528b05b68f94e443d68fe0eeef5",
   "files": [
@@ -89,22 +89,254 @@
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
- "exemptions": [],
+ "exemptions": [
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/admin/circuit-breaker.controller.ts",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/admin/watcher-repair.controller.ts",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/connectors/connectors.controller.ts",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/connectors/openrouter/openrouter.connector.ts",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/health/health.controller.ts",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/openai-compat/openai-compat.controller.ts",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "TEST_SOURCE",
+   "entity": "code_unit:test/provider-profiles/boundary-http.spec.ts",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "test-only harness/source outside production AppModule contour for this change; NOT_MEASURED preserved (no canary / tsconfig membership claim invented). Focused vitest + hosted lint-and-test remain separate evidence."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /connectors",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /connectors/:name/status",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /connectors/catalog",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /connectors/image/capabilities",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /connectors/intents/:intentId",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /health",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /health/connectors",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /health/metrics",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /health/ready",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /v1/models",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /admin/circuit-breaker/reset",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /connectors/:name/chat/completions",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /connectors/:name/execute",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /execute",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /images/generate",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /internal/watcher/circuit-breaker/reset",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /v1/chat/completions",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:POST /v1/prompt-cache/prewarm",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "Inferred/observed boundary entity in impact set; no committed CanaryResult lists it in this admission run. NOT_MEASURED preserved — exemption is debt with owner+expiry, not a verified claim. Unit/spec coverage for config_error/OpenRouter refuse is exercised by focused vitest (openrouter/connectors/openai-compat)."
+  },
+  {
+   "code": "TEST_SOURCE",
+   "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "test-only harness/source outside production AppModule contour for this change; NOT_MEASURED preserved (no canary / tsconfig membership claim invented). Focused vitest + hosted lint-and-test remain separate evidence."
+  },
+  {
+   "code": "TEST_SOURCE",
+   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "test-only harness/source outside production AppModule contour for this change; NOT_MEASURED preserved (no canary / tsconfig membership claim invented). Focused vitest + hosted lint-and-test remain separate evidence."
+  },
+  {
+   "code": "TEST_SOURCE",
+   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "test-only harness/source outside production AppModule contour for this change; NOT_MEASURED preserved (no canary / tsconfig membership claim invented). Focused vitest + hosted lint-and-test remain separate evidence."
+  },
+  {
+   "code": "TEST_SOURCE",
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "test-only harness/source outside production AppModule contour for this change; NOT_MEASURED preserved (no canary / tsconfig membership claim invented). Focused vitest + hosted lint-and-test remain separate evidence."
+  },
+  {
+   "code": "TEST_SOURCE",
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "test-only harness/source outside production AppModule contour for this change; NOT_MEASURED preserved (no canary / tsconfig membership claim invented). Focused vitest + hosted lint-and-test remain separate evidence."
+  },
+  {
+   "code": "TEST_SOURCE",
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "test-only harness/source outside production AppModule contour for this change; NOT_MEASURED preserved (no canary / tsconfig membership claim invented). Focused vitest + hosted lint-and-test remain separate evidence."
+  },
+  {
+   "code": "TEST_SOURCE",
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "Arcanada (Muneral 0a3f80e9 AC4 cure D5 author)",
+   "reason": "test-only harness/source outside production AppModule contour for this change; NOT_MEASURED preserved (no canary / tsconfig membership claim invented). Focused vitest + hosted lint-and-test remain separate evidence."
+  }
+ ],
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:8adad62faad19be724222e9af648634b1f92466dfdad8753e1f8796c96af4aa4",
-  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/graph-08db7045bb36.json",
+  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/graph-08db7045bb36.json",
   "source_commit": "08db7045bb369528b05b68f94e443d68fe0eeef5"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:140dc5f1d05d870e52c64f8f6dcd2564c0aefc6822975c9baa4c97b2f6cc37c0",
-  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/graph-head-7caa6efa4a7a.json",
+  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/graph-head-7caa6efa4a7a.json",
   "source_commit": "7caa6efa4a7ab60d34b63c88ac800b12f7d62463",
   "staleness": {
-   "checked_at_utc": "2026-11-10T15:12:14Z",
+   "checked_at_utc": "2026-11-10T15:54:01Z",
    "checked_nodes": 972,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -7335,17 +7567,17 @@
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
+  "exemptions: 33 attached from /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/exemptions-0a3f80e9.json; 5 REJECTED — route:GET /keyed: this receipt carries no verdict for that entity; route:GET /probe/abort: this receipt carries no verdict for that entity; route:GET /probe/execute: this receipt carries no verdict for that entity; route:GET /probe/health: this receipt carries no verdict for that entity; route:GET /probe/metrics: this receipt carries no verdict for that entity",
   "A2-353: `canary` discharged for 4 test code_unit(s) — a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/admin/admin-rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.integration.spec.ts, code_unit:src/connectors/openrouter/openrouter.connector.spec.ts"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261110T150758Z-7caa6efa",
- "receipt_path": "node_modules/.cache/car-0a3f80e9/ChangeAdmissionReceipt.json",
+ "receipt_id": "car-verify-20261110T154848Z-7caa6efa",
  "repo": {
   "name": "Arcanada-one/model-connector",
-  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector"
+  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/repo"
  },
  "revision_selection": {
   "base": [
@@ -7987,7 +8219,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-10T15:12:14Z",
+  "checked_at_utc": "2026-11-10T15:54:01Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -10918,8 +11150,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/type-check-6p7tikgh/check.tsbuildinfo --listFiles",
-   "duration_s": 38.23,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/repo/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/type-check-zyvdm213/check.tsbuildinfo --listFiles",
+   "duration_s": 79.19,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -11439,13 +11671,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-10T15:12:51Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-10T15:54:26Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2865 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/type-check-tjp0mlhd/check.tsbuildinfo --listFiles",
-   "duration_s": 29.54,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/repo/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/type-check-h0ksfiq9/check.tsbuildinfo --listFiles",
+   "duration_s": 37.69,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -11745,13 +11977,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-10T15:13:31Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-10T15:55:47Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2134 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/type-check-j9qzszjh/check.tsbuildinfo --listFiles",
-   "duration_s": 2.09,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/repo/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/type-check-n6c5lq78/check.tsbuildinfo --listFiles",
+   "duration_s": 7.27,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -11906,13 +12138,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-10T15:14:01Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-10T15:56:25Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/type-check-5it28959/check.tsbuildinfo --listFiles",
-   "duration_s": 71.49,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/repo/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/type-check-horxfzy8/check.tsbuildinfo --listFiles",
+   "duration_s": 48.98,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12212,13 +12444,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-10T15:14:04Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-10T15:56:33Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2756 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/type-check-p9w9zult/check.tsbuildinfo --listFiles",
-   "duration_s": 90.53,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/repo/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/type-check-5a55ro5d/check.tsbuildinfo --listFiles",
+   "duration_s": 61.24,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12518,13 +12750,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-10T15:15:19Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-10T15:57:23Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2862 files listed"
   },
   {
    "command": "tools/graph/contract_diff.py.run_diff(base=08db7045bb36, head=7caa6efa4a7a, graph=head graph)",
-   "duration_s": 48.95,
+   "duration_s": 19.46,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12614,13 +12846,13 @@
    "exit_code": 1,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/v-contract-diff.json",
-   "started_at_utc": "2026-11-10T15:16:55Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/v-contract-diff.json",
+   "started_at_utc": "2026-11-10T15:58:25Z",
    "summary": "186→186 contracts, breaking 0, edges {'not_measured': 3, 'verified': 247}"
   },
   {
    "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
-   "duration_s": 90.96,
+   "duration_s": 61.75,
    "entities": [
     "route:GET /connectors",
     "route:GET /connectors/:name/status",
@@ -12678,13 +12910,13 @@
    "exit_code": 0,
    "id": "v-route-config",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/v-route-config.txt",
-   "started_at_utc": "2026-11-10T15:17:44Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/v-route-config.txt",
+   "started_at_utc": "2026-11-10T15:58:45Z",
    "summary": "25 route(s), 0 failed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 7.83,
+   "duration_s": 4.06,
    "entities": [
     "code_unit:src/connectors/openrouter/openrouter.connector.spec.ts",
     "code_unit:src/connectors/openrouter/openrouter.connector.ts"
@@ -12696,13 +12928,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-10T15:19:15Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-10T15:59:47Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 5.92,
+   "duration_s": 2.02,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -13172,13 +13404,13 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-10T15:19:23Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-10T15:59:51Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.91,
+   "duration_s": 0.12,
    "entities": [
     "document:CHANGELOG.md",
     "document:README.md",
@@ -13254,8 +13486,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-conn-providers-20261110T144725Z/model-connector/node_modules/.cache/car-0a3f80e9/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-10T15:19:29Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-10T15:59:53Z",
    "summary": "34 document(s), 0 failed"
   },
   {
@@ -13332,8 +13564,8 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "node_modules/.cache/car-0a3f80e9/verifier-out/v-canary.json",
-   "started_at_utc": "2026-11-10T15:19:30Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-car-20261110T1534Z/car-work/verifier-out/v-canary.json",
+   "started_at_utc": "2026-11-10T15:59:53Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 32 not_measured of 32 entities"
   }
  ],
@@ -14578,9 +14810,9 @@
    ]
   },
   "seconds": {
-   "prepare": 19.05,
-   "total": 693.02,
-   "verifiers": 386.45
+   "prepare": 9.99,
+   "total": 666.61,
+   "verifiers": 321.78
   }
  },
  "work_item": "0a3f80e9-6deb-4dc6-9301-d723a26b72f5"
