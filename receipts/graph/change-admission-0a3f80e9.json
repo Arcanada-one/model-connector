@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-10T19:32:23Z",
+ "captured_at_utc": "2026-11-10T20:18:54Z",
  "change_set": {
   "base": "b69651f5ade9e3d3688b6bcce1a3423506e8f859",
   "files": [
@@ -94,7 +94,7 @@
     "status": "M"
    }
   ],
-  "head": "896a3cc1983401eb57735376170bdb30c3f2b9aa",
+  "head": "a5097a1284cb378fd3bc7de6f5586bf33bf01fa5",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -320,18 +320,18 @@
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:857af079ca89a0aadb79e5a3b02f31293cd1eb7bb4301e00e79a1a5858df7e73",
-  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/graph-b69651f5ade9.json",
+  "graph_digest": "sha256:d29d493e5ae27a4d6d381d25b7a3c4ea2dc168deac42ff4dc34634ab85119c12",
+  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/graph-b69651f5ade9.json",
   "source_commit": "b69651f5ade9e3d3688b6bcce1a3423506e8f859"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:b7f3d35b9f067886117b28ba6487e3ecc55f40636c803db3aeeca4ce8006ccec",
-  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/graph-head-896a3cc19834.json",
-  "source_commit": "896a3cc1983401eb57735376170bdb30c3f2b9aa",
+  "graph_digest": "sha256:73dff810d8c2d755c907827f6ca1425f1cc2d70fa6ee708b5f301b4b44ff1483",
+  "path": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/graph-head-a5097a1284cb.json",
+  "source_commit": "a5097a1284cb378fd3bc7de6f5586bf33bf01fa5",
   "staleness": {
-   "checked_at_utc": "2026-11-10T19:33:36Z",
+   "checked_at_utc": "2026-11-10T20:21:40Z",
    "checked_nodes": 975,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -340,7 +340,7 @@
  },
  "host": "conn-0a3f-author",
  "host_redacted": true,
- "host_sha256": "17f0e3391cff7b01a04cd40fd34c0274e9e9ce6446486af7c8dfe01babc096f6",
+ "host_sha256": "f74e9b8529254e460fe0889b18aa0d0d2e3d093e74657ca16e019ce25d7a0d53",
  "impact_set": {
   "deterministic_core": [
    {
@@ -7660,7 +7660,7 @@
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261110T193223Z-896a3cc1",
+ "receipt_id": "car-verify-20261110T201854Z-a5097a12",
  "receipt_path": "receipts/graph/change-admission-0a3f80e9.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -8311,7 +8311,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-10T19:33:36Z",
+  "checked_at_utc": "2026-11-10T20:21:38Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -8353,7 +8353,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:58dac010c0094b61a25c47ebf6b303f29916f27cb7c6ed4bdb14bff09ecb2c37"
+    "head": "sha256:f911225dcff982f116d8d0eafdf98cbff41250b2352f6c468e352ede49951006"
    },
    "entity": "receipt:receipts/graph/change-admission-0a3f80e9.json",
    "node_type": "receipt",
@@ -8598,7 +8598,7 @@
   }
  ],
  "tree": {
-  "commit": "896a3cc1983401eb57735376170bdb30c3f2b9aa",
+  "commit": "a5097a1284cb378fd3bc7de6f5586bf33bf01fa5",
   "dirty": false
  },
  "verdicts": [
@@ -11276,8 +11276,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/type-check-0579dbeg/check.tsbuildinfo --listFiles",
-   "duration_s": 75.98,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/type-check-8mtj_rin/check.tsbuildinfo --listFiles",
+   "duration_s": 69.23,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -11793,13 +11793,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-10T19:33:56Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-10T20:22:39Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2865 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/type-check-p4mafqso/check.tsbuildinfo --listFiles",
-   "duration_s": 37.71,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/type-check-1tdrlvjl/check.tsbuildinfo --listFiles",
+   "duration_s": 34.07,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12099,13 +12099,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-10T19:35:14Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-10T20:23:50Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2134 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/type-check-i_793bx4/check.tsbuildinfo --listFiles",
-   "duration_s": 2.41,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/type-check-w14az5a0/check.tsbuildinfo --listFiles",
+   "duration_s": 3.55,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12260,13 +12260,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-10T19:35:52Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-10T20:24:26Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/type-check-4zqeyu7c/check.tsbuildinfo --listFiles",
-   "duration_s": 49.45,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/type-check-bgozxdoa/check.tsbuildinfo --listFiles",
+   "duration_s": 36.08,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12566,13 +12566,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-10T19:35:55Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-10T20:24:30Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2756 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/type-check-76o03y6r/check.tsbuildinfo --listFiles",
-   "duration_s": 30.82,
+   "command": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/type-check-v0uezun2/check.tsbuildinfo --listFiles",
+   "duration_s": 149.33,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12872,13 +12872,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-10T19:36:45Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-10T20:25:08Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2862 files listed"
   },
   {
-   "command": "tools/graph/contract_diff.py.run_diff(base=b69651f5ade9, head=896a3cc19834, graph=head graph)",
-   "duration_s": 10.39,
+   "command": "tools/graph/contract_diff.py.run_diff(base=b69651f5ade9, head=a5097a1284cb, graph=head graph)",
+   "duration_s": 27.75,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -12964,13 +12964,13 @@
    "exit_code": 1,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/v-contract-diff.json",
-   "started_at_utc": "2026-11-10T19:37:17Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/v-contract-diff.json",
+   "started_at_utc": "2026-11-10T20:27:40Z",
    "summary": "186→186 contracts, breaking 0, edges {'not_measured': 4, 'verified': 247}"
   },
   {
    "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
-   "duration_s": 0.15,
+   "duration_s": 0.33,
    "entities": [
     "route:GET /connectors",
     "route:GET /connectors/:name/status",
@@ -13024,13 +13024,13 @@
    "exit_code": 0,
    "id": "v-route-config",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/v-route-config.txt",
-   "started_at_utc": "2026-11-10T19:37:27Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/v-route-config.txt",
+   "started_at_utc": "2026-11-10T20:28:08Z",
    "summary": "23 route(s), 0 failed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 1.14,
+   "duration_s": 2.75,
    "entities": [
     "code_unit:src/connectors/openrouter/openrouter.connector.spec.ts",
     "code_unit:src/connectors/openrouter/openrouter.connector.ts"
@@ -13042,13 +13042,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-10T19:37:27Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-10T20:28:08Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.28,
+   "duration_s": 0.87,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -13518,13 +13518,13 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-10T19:37:28Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-10T20:28:11Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.02,
+   "duration_s": 0.04,
    "entities": [
     "document:CHANGELOG.md",
     "document:README.md",
@@ -13602,8 +13602,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-10T19:37:29Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-10T20:28:12Z",
    "summary": "35 document(s), 0 failed"
   },
   {
@@ -13676,8 +13676,8 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass3/verifier-out/v-canary.json",
-   "started_at_utc": "2026-11-10T19:37:29Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-0a3f80e9-rc-cure-20261110T1914Z/verify-work/pass-yaml/verifier-out/v-canary.json",
+   "started_at_utc": "2026-11-10T20:28:12Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 30 not_measured of 30 entities"
   }
  ],
@@ -14923,9 +14923,9 @@
    ]
   },
   "seconds": {
-   "prepare": 10.09,
-   "total": 306.09,
-   "verifiers": 208.35
+   "prepare": 32.32,
+   "total": 561.11,
+   "verifiers": 324.0
   }
  },
  "work_item": "0a3f80e9-6deb-4dc6-9301-d723a26b72f5"
