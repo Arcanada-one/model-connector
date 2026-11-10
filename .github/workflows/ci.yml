@@ -98,6 +98,8 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 -B deploy/test_bench_receiving_package.py
           bash -n deploy/deploy.sh deploy/deploy.test.sh
           bash deploy/deploy.test.sh
+          bash -n deploy/digest-promotion-contract.test.sh
+          bash deploy/digest-promotion-contract.test.sh
           bash -n deploy/compose-network.test.sh
           bash deploy/compose-network.test.sh
       # INFRA-0462 — watcher/test/*.bats existed from the day the watcher landed
@@ -315,6 +317,101 @@ jobs:
       - name: Cleanup
         if: always()
         run: docker rm -f mc-e2e || true
+
+  # ARC-CI digest-promotion gap fill (Muneral 440d2499): build once to GHCR and
+  # emit published-image.json. Does not change the existing push-main broker
+  # deploy job below; production cutover by digest remains a later host-gated
+  # step (compose-broker has no REGISTRY_AUTH row for model-connector today).
+  publish-image:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [lint-and-test, docker-e2e]
+    runs-on: [self-hosted, Linux, ci-general]
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.publish.outputs.digest }}
+    concurrency:
+      group: publish-model-connector
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish exact image
+        id: publish
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            MC_BUILD_SHA=${{ github.sha }}
+          tags: ghcr.io/arcanada-one/model-connector:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            io.arcanada.release_sha=${{ github.sha }}
+          provenance: true
+          sbom: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Record immutable publication identity
+        env:
+          IMAGE_DIGEST: ${{ steps.publish.outputs.digest }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${IMAGE_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]
+          jq -n --arg release "${RELEASE_SHA}" --arg digest "${IMAGE_DIGEST}" \
+            '{schema_version: 1, release_sha: $release, image_digest: $digest}' \
+            > published-image.json
+          {
+            printf 'release_sha=%s\n' "${RELEASE_SHA}"
+            printf 'image=ghcr.io/arcanada-one/model-connector@%s\n' "${IMAGE_DIGEST}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+      - name: Upload immutable publication identity
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: model-connector-image-${{ github.sha }}
+          path: published-image.json
+          if-no-files-found: error
+          retention-days: 7
+
+  verify-published-image:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [publish-image]
+    runs-on: [self-hosted, Linux, ci-general]
+    permissions:
+      packages: read
+    concurrency:
+      group: verify-published-model-connector
+      cancel-in-progress: false
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull and verify exact registry artifact
+        env:
+          IMAGE_DIGEST: ${{ needs.publish-image.outputs.digest }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${IMAGE_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]
+          image="ghcr.io/arcanada-one/model-connector@${IMAGE_DIGEST}"
+          docker pull "${image}"
+          test "$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "${image}")" = "${RELEASE_SHA}"
+          test "$(docker image inspect --format '{{ index .Config.Labels "io.arcanada.release_sha" }}' "${image}")" = "${RELEASE_SHA}"
+          printf 'published image verification: PASS\n'
 
   deploy:
     needs: lint-and-test
