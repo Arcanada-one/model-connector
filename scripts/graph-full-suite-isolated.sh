@@ -32,7 +32,33 @@ mkdir -m 700 "$PRIVATE_TMP/home"
 # the checkout is still too long once graph_full_suite.py adds its own scratch
 # directory and the fixtures add their socket names, so use a private short
 # system-temp path. Preserve execution reports in PRIVATE_TMP after the run.
-EXEC_TMP=$(mktemp -d /tmp/mcgs.XXXXXXXX)
+# The private exec/home dir must NOT live under /tmp or any other world-writable directory:
+# deploy/prime-first-install.py protected() rejects every path chain with a group/other-writable
+# component, so a HOME below /tmp makes test_prime_first_install.py fail with Refusal(custody)
+# for a reason that has nothing to do with the code under test. Use the per-user runtime
+# directory (XDG_RUNTIME_DIR) or the CI runner temp directory (RUNNER_TEMP); fail closed otherwise.
+EXEC_BASE=
+for candidate in "${XDG_RUNTIME_DIR:-}" "${RUNNER_TEMP:-}"; do
+  if [[ -n "$candidate" && -d "$candidate" ]]; then
+    EXEC_BASE=$candidate
+    break
+  fi
+done
+if [[ -z "$EXEC_BASE" ]]; then
+  echo 'FULL_FALLBACK_TEST_REFUSED: set XDG_RUNTIME_DIR or RUNNER_TEMP to a private directory (the private exec dir may not live under /tmp)' >&2
+  exit 1
+fi
+EXEC_BASE=$(cd -- "$EXEC_BASE" && pwd -P)
+case "$EXEC_BASE" in
+  /tmp|/tmp/*|/var/tmp|/var/tmp/*)
+    echo 'FULL_FALLBACK_TEST_REFUSED: the private exec dir may not live under /tmp or /var/tmp' >&2
+    exit 1 ;;
+esac
+if [[ -L "$EXEC_BASE" || ! -O "$EXEC_BASE" ]] || (( 8#$(stat -c '%a' -- "$EXEC_BASE") & 8#022 )); then
+  echo 'FULL_FALLBACK_TEST_REFUSED: the private exec base must be owned by the caller and not group/other-writable' >&2
+  exit 1
+fi
+EXEC_TMP=$(mktemp -d "$EXEC_BASE/mcgs.XXXXXXXX")
 chmod 700 "$EXEC_TMP"
 trap 'rm -rf -- "$EXEC_TMP"' EXIT
 

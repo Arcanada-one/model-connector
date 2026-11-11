@@ -3,6 +3,8 @@ from pathlib import Path
 import importlib.util
 import json
 import os
+import pwd
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -305,10 +307,16 @@ class Controls(unittest.TestCase):
             '[[ -z "${FIXTURE_SECRET:-}" ]] || exit 10\n'
             'exit 23\n'
         )
+        # The private dir must live outside /tmp (world-writable); the base is a 0700 dir under the account home (not the patched HOME).
+        runtime = Path(tempfile.mkdtemp(prefix='.mcgs-runtime-', dir=pwd.getpwuid(os.getuid()).pw_dir))
+        self.addCleanup(shutil.rmtree, runtime, ignore_errors=True)
+        runtime.chmod(0o700)
+        self.assertFalse(str(runtime).startswith(('/tmp/', '/var/tmp/')), runtime)
         result = subprocess.run(
             ['bash', 'scripts/graph-full-suite-isolated.sh', '.'],
             cwd=self.root,
-            env={'PATH': os.defpath, 'HOME': str(self.root), 'FIXTURE_SECRET': 'must-not-leak'},
+            env={'PATH': os.defpath, 'HOME': str(self.root), 'FIXTURE_SECRET': 'must-not-leak',
+                 'XDG_RUNTIME_DIR': str(runtime)},
             capture_output=True,
             text=True,
             timeout=10,
@@ -318,7 +326,8 @@ class Controls(unittest.TestCase):
         self.assertEqual(mode, '700')
         self.assertEqual(Path(home).parent.parent, self.root / 'node_modules/.cache/graph-full-suite/runs')
         self.assertFalse(Path(tempdir).exists())
-        self.assertEqual(Path(tempdir).parent, Path('/tmp'))
+        self.assertEqual(Path(tempdir).parent, runtime.resolve())
+        self.assertFalse(str(Path(tempdir)).startswith(('/tmp/', '/var/tmp/')), tempdir)
         self.assertNotIn('must-not-leak', result.stdout + result.stderr)
 
     def test_actual_root_entrypoint_dispatches_local_regression_retains_app_hold(self):
