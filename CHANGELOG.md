@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (never invents `0`). Schema/migration/unit tests cover AC digests, idempotency and
   the append-only negative control. See `documentation/reference/jev-decisions.md`.
 
+- **JevRoute transport surface for `typesafe-jev` (CONN-JEV-02).**
+  One typed `JevRoute` interface covers live-direct URL/body/headers/parse plus
+  OpenRouter and Cloudflare stubs built from measured envelopes (TZ §2.2 / §2.4).
+  Stub or unkeyed routes report `available:false` and return `route_not_configured`
+  without a network call. Parameterized contract tests cover all three routes.
+  Executable catalog discovery remains direct `jev-latest` (CONN-JEV-01); stub
+  model ids stay on the route surface until keyed (CONN-JEV-05/09).
+
 - **Live smoke harness for direct typesafe-jev execute (CONN-JEV-04).**
   `scripts/smoke-typesafe-jev.mjs` calls `POST /connectors/typesafe-jev/execute`
   against a deployed MC, judges HTTP 201 + observed decision + ledger-mirrored

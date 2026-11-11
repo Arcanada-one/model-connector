@@ -137,6 +137,19 @@ describe('native decision contract and adapter', () => {
     const [, init] = fetchMock.mock.calls[0];
     expect(init.headers.Authorization).toBe('Bearer override-synthetic-key');
   });
+
+  it('CONN-JEV-02 route catalog keeps OpenRouter/Cloudflare available:false without keys', () => {
+    vi.stubEnv('TYPESAFE_API_KEY', 'synthetic-key');
+    vi.stubEnv('TYPESAFE_JEV_OPENROUTER_API_KEY', '');
+    vi.stubEnv('TYPESAFE_JEV_CLOUDFLARE_API_TOKEN', '');
+    const rows = connector.routeCatalogEntries();
+    expect(rows.filter((r) => r.route === 'openrouter').every((r) => r.available === false)).toBe(
+      true,
+    );
+    expect(rows.filter((r) => r.route === 'cloudflare').every((r) => r.available === false)).toBe(
+      true,
+    );
+  });
   it('rejects malformed native envelopes before network and suppresses payloads', async () => {
     const response = await connector.execute({ prompt: '{"secret-task":', model: 'jev-latest' });
     expectRefuse(response, 'invalid_request');
