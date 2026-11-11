@@ -1,13 +1,13 @@
 {
  "admission": {
-  "rule": "admitted requires every verdict = verified; failed without exemption \u21d2 refused; not_measured without exemption \u21d2 paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
-  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold \u2014 the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
-  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item \u2014 the ordinary case after a rebase or a second commit on a card \u2014 the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-11T00:10:29Z",
+ "captured_at_utc": "2026-11-11T00:57:51Z",
  "change_set": {
-  "base": "b60df8ac7671c780847f3fc8a67390d89a4b5408",
+  "base": "e450735ea2b474051b471bd431f84db5abd76423",
   "files": [
    {
     "kind": "doc",
@@ -62,10 +62,11 @@
     "status": "M"
    },
    {
-    "kind": "code",
+    "kind": "contract",
     "node_id": "code_unit:src/connectors/jev/jev.connector.ts",
     "node_ids": [
-     "code_unit:src/connectors/jev/jev.connector.ts"
+     "code_unit:src/connectors/jev/jev.connector.ts",
+     "contract:src/connectors/jev/jev.connector.ts#JevRefuseCode"
     ],
     "path": "src/connectors/jev/jev.connector.ts",
     "status": "M"
@@ -99,421 +100,435 @@
     "status": "A"
    }
   ],
-  "head": "1b5c99a83b5a1ec3ce7e209f6f78e629c5702abe",
+  "head": "8eecdfb65ea36e9e4428dda46ed817233a8875d3",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
  "exemptions": [
   {
    "entity": "code_unit:src/admin/admin.controller.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "code_unit:src/admin/circuit-breaker.controller.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "code_unit:src/admin/watcher-repair.controller.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "code_unit:src/billing/credits.controller.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "code_unit:src/connectors/connectors.controller.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "code_unit:src/connectors/jev/jev.connector.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (66+ PASS post-rebase); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "code_unit:src/health/health.controller.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "code_unit:src/openai-compat/openai-compat.controller.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "code_unit:src/speech/speech.controller.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "code_unit:src/speech/stt/stt-async.controller.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "code_unit:test/provider-profiles/boundary-http.spec.ts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "CONN-JEV-02 author exemption for measured non-verified verdict (fan-out): v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json does not include test/provider-profiles/boundary-http.spec.ts"
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "receipt:receipts/graph/change-admission-595b306c.json",
-   "evidence": "focused vitest: src/connectors/jev/ (66+ PASS post-rebase); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "DEC-AUP-0035 superseded-self / tip-bound CAR reissue for Muneral 595b306c: previous receipt bytes at this path are replaced by the current measurement; hosted graph-admission remains required_effective."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:DELETE /admin/keys/:id",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /admin/credits/:apiKeyId",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /admin/credits/:apiKeyId/history",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /admin/keys",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /admin/keys/:id",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /admin/keys/:id/policy",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /admin/keys/:id/usage",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /connectors",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /connectors/:name/status",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /connectors/catalog",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /connectors/image/capabilities",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /connectors/intents/:intentId",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /health",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /health/connectors",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /health/metrics",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /health/ready",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
-  },
-  {
-   "entity": "route:GET /keyed",
-   "evidence": "CI-parity graph route ids; focused vitest jev suite PASS; canary listing not produced in author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only. CI-parity route id (nomod graph)."
-  },
-  {
-   "entity": "route:GET /probe/abort",
-   "evidence": "CI-parity graph route ids; focused vitest jev suite PASS; canary listing not produced in author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only. CI-parity route id (nomod graph)."
-  },
-  {
-   "entity": "route:GET /probe/execute",
-   "evidence": "CI-parity graph route ids; focused vitest jev suite PASS; canary listing not produced in author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only. CI-parity route id (nomod graph)."
-  },
-  {
-   "entity": "route:GET /probe/health",
-   "evidence": "CI-parity graph route ids; focused vitest jev suite PASS; canary listing not produced in author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only. CI-parity route id (nomod graph)."
-  },
-  {
-   "entity": "route:GET /probe/metrics",
-   "evidence": "CI-parity graph route ids; focused vitest jev suite PASS; canary listing not produced in author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only. CI-parity route id (nomod graph)."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /v1/models",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:GET /v1/speech/stt/jobs/:id",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:PATCH /admin/keys/:id/policy",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:PATCH /admin/keys/:id/rate-limit",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /admin/circuit-breaker/reset",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /admin/credits/:apiKeyId",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /admin/credits/:apiKeyId/gift",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /admin/credits/holds/sweep",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /admin/credits/reconcile",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /admin/keys",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /connectors/:name/chat/completions",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /connectors/:name/execute",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /execute",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /images/generate",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /internal/watcher/circuit-breaker/reset",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /v1/chat/completions",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /v1/prompt-cache/prewarm",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /v1/speech/stt",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /v1/speech/stt/async",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /v1/speech/tts",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /v1/speech/vad",
-   "evidence": "focused vitest: src/connectors/jev/ (74 PASS); canary listing for live contour not produced in this author lane",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
    "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
-   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02). Entity was not edited in the change set; canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+  },
+  {
+   "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+  },
+  {
+   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+  },
+  {
+   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+  },
+  {
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+  },
+  {
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+  },
+  {
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+  },
+  {
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
+   "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#266 absorb); canary listing for live contour not produced in this author lane",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+   "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main e450735 (CONN-JEV-03). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   }
  ],
  "graph": {
   "builder_version": "1.0.6",
-  "built_at_utc": "2026-11-10T23:23:44Z",
-  "graph_digest": "sha256:f627e7f1a28433c25f042f92e74c63ab9aeb7d6638da9518943b5aeb6ebbaed0",
-  "path": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/graph-base-nomod.json",
-  "source_commit": "b60df8ac7671c780847f3fc8a67390d89a4b5408"
+  "built_at_utc": "2026-11-11T00:47:58Z",
+  "graph_digest": "sha256:15cd642a30bb0610cf20e6b3d536d8ca7b6be6a122fe636e8a96b7e3609073dc",
+  "path": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/graph-base-nomod.json",
+  "source_commit": "e450735ea2b474051b471bd431f84db5abd76423"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:0003e9b6f958944bd84d5f538bf7cb64b7d81d4c7bdea1bdd600bb1c8024a456",
-  "path": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/graph-head-1b5c99a83b5a.json",
-  "source_commit": "1b5c99a83b5a1ec3ce7e209f6f78e629c5702abe",
+  "graph_digest": "sha256:e79b5199946e39a956d87207a086fde85396e090fba7712037ffdab7dbeb7245",
+  "path": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/graph-head-8eecdfb65ea3.json",
+  "source_commit": "8eecdfb65ea36e9e4428dda46ed817233a8875d3",
   "staleness": {
-   "checked_at_utc": "2026-11-11T00:12:04Z",
-   "checked_nodes": 980,
+   "checked_at_utc": "2026-11-11T00:58:37Z",
+   "checked_nodes": 982,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
   }
  },
- "host": "author-cure-lane",
+ "host": "author-cure2-lane",
  "host_redacted": true,
- "host_sha256": "8e429ca143a4d4b27bbf7099ebab200ff5ec1149bc373cb2a73c31613846e695",
+ "host_sha256": "c6291ebc574b9ae0bfb0274da03865d60afd0c90bf59d5d77d29ca5e6a69429c",
  "impact_set": {
   "deterministic_core": [
    {
@@ -527,7 +542,7 @@
       "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
       "provenance": "deterministic",
       "to": "code_unit:src/config/env.schema.ts",
-      "via": "relative"
+      "via": "inline-harness-compiler-dependency"
      }
     ],
     "revisions": [
@@ -937,7 +952,7 @@
       "from": "code_unit:src/auth/rate-limit.app.spec.ts",
       "provenance": "deterministic",
       "to": "code_unit:src/config/env.schema.ts",
-      "via": "relative"
+      "via": "inline-harness-compiler-dependency"
      }
     ],
     "revisions": [
@@ -984,7 +999,7 @@
       "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
       "provenance": "deterministic",
       "to": "code_unit:src/config/env.schema.ts",
-      "via": "relative"
+      "via": "inline-harness-compiler-dependency"
      }
     ],
     "revisions": [
@@ -7569,7 +7584,7 @@
       "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
       "provenance": "deterministic",
       "to": "code_unit:src/config/env.schema.ts",
-      "via": "relative"
+      "via": "inline-harness-compiler-dependency"
      },
      {
       "edge_type": "verifies",
@@ -8067,6 +8082,26 @@
       "from": "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
       "provenance": "deterministic",
       "to": "code_unit:src/app.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-e8ab201d.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-e8ab201d.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
       "via": "explicit-path"
      }
     ],
@@ -8631,141 +8666,6 @@
       "from": "code_unit:src/health/health.controller.ts",
       "provenance": "deterministic",
       "to": "route:GET /health/ready",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:GET /keyed",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "relative"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:GET /keyed",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:GET /probe/abort",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "relative"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:GET /probe/abort",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:GET /probe/execute",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "relative"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:GET /probe/execute",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:GET /probe/health",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "relative"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:GET /probe/health",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:GET /probe/metrics",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "relative"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:GET /probe/metrics",
       "via": "nest-decorator"
      }
     ],
@@ -9488,6 +9388,195 @@
      "head"
     ],
     "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "inline-harness-compiler-dependency"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "inline-harness-compiler-dependency"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "inline-harness-compiler-dependency"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "inline-harness-compiler-dependency"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "inline-harness-compiler-dependency"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "inline-harness-compiler-dependency"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "inline-harness-compiler-dependency"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
    }
   ],
   "edge_types": "all",
@@ -9497,23 +9586,23 @@
   "inferred_tail": [],
   "max_depth": 3,
   "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
-  "total": 330
+  "total": 333
  },
  "notes": [
-  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = \u22c3 edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i\u2026",
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 55 attached from /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector/receipts/graph/exemptions-595b306c.json",
-  "A2-353: `canary` discharged for 3 test code_unit(s) \u2014 a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/admin/admin-rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.integration.spec.ts",
-  "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-595b306c.json: it declares this run's work item 595b306c-68dd-4c63-91ba-8f938c331bc9, but the receipt is being written to /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/change-admission-draft.json, which is outside this repository, so no path in the tree is the one this run supersedes."
+  "exemptions: 57 attached from /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector/receipts/graph/exemptions-595b306c.json",
+  "A2-353: `canary` discharged for 3 test code_unit(s) — a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/admin/admin-rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.integration.spec.ts",
+  "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-595b306c.json: it declares this run's work item 595b306c-68dd-4c63-91ba-8f938c331bc9, but the receipt is being written to /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/change-admission-draft.json, which is outside this repository, so no path in the tree is the one this run supersedes."
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261111T001029Z-1b5c99a8",
+ "receipt_id": "car-verify-20261111T005751Z-8eecdfb6",
  "repo": {
   "name": "Arcanada-one/model-connector",
-  "path": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector"
+  "path": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector"
  },
  "revision_selection": {
   "base": [
@@ -9758,6 +9847,7 @@
    "contract:src/billing/credits.controller.ts#GiftSchema",
    "contract:src/billing/credits.controller.ts#ReconcileSchema",
    "contract:src/config/env.schema.ts#envBool",
+   "contract:src/connectors/jev/jev.connector.ts#JevRefuseCode",
    "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationErrorType",
    "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationInputType",
    "contract:src/speech/transcribator.proxy.ts#SpeechEndpoint",
@@ -9810,6 +9900,7 @@
    "receipt:receipts/graph/change-admission-c5630203-mcci0-f1-oauth.json",
    "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json",
    "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
+   "receipt:receipts/graph/change-admission-e8ab201d.json",
    "receipt:receipts/graph/change-admission-jev-decision.json",
    "route:DELETE /admin/keys/:id",
    "route:GET /admin/credits/:apiKeyId",
@@ -9827,11 +9918,6 @@
    "route:GET /health/connectors",
    "route:GET /health/metrics",
    "route:GET /health/ready",
-   "route:GET /keyed",
-   "route:GET /probe/abort",
-   "route:GET /probe/execute",
-   "route:GET /probe/health",
-   "route:GET /probe/metrics",
    "route:GET /v1/models",
    "route:GET /v1/speech/stt/jobs/:id",
    "route:PATCH /admin/keys/:id/policy",
@@ -9852,7 +9938,14 @@
    "route:POST /v1/speech/stt",
    "route:POST /v1/speech/stt/async",
    "route:POST /v1/speech/tts",
-   "route:POST /v1/speech/vad"
+   "route:POST /v1/speech/vad",
+   "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
   ],
   "head": [
    "code_unit:src/admin/admin-rate-limit.app.spec.ts",
@@ -10099,6 +10192,7 @@
    "contract:src/billing/credits.controller.ts#GiftSchema",
    "contract:src/billing/credits.controller.ts#ReconcileSchema",
    "contract:src/config/env.schema.ts#envBool",
+   "contract:src/connectors/jev/jev.connector.ts#JevRefuseCode",
    "contract:src/connectors/jev/jev.routes.ts#JevRouteId",
    "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationErrorType",
    "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationInputType",
@@ -10153,6 +10247,7 @@
    "receipt:receipts/graph/change-admission-c5630203-mcci0-f1-oauth.json",
    "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json",
    "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
+   "receipt:receipts/graph/change-admission-e8ab201d.json",
    "receipt:receipts/graph/change-admission-jev-decision.json",
    "route:DELETE /admin/keys/:id",
    "route:GET /admin/credits/:apiKeyId",
@@ -10170,11 +10265,6 @@
    "route:GET /health/connectors",
    "route:GET /health/metrics",
    "route:GET /health/ready",
-   "route:GET /keyed",
-   "route:GET /probe/abort",
-   "route:GET /probe/execute",
-   "route:GET /probe/health",
-   "route:GET /probe/metrics",
    "route:GET /v1/models",
    "route:GET /v1/speech/stt/jobs/:id",
    "route:PATCH /admin/keys/:id/policy",
@@ -10195,14 +10285,21 @@
    "route:POST /v1/speech/stt",
    "route:POST /v1/speech/stt/async",
    "route:POST /v1/speech/tts",
-   "route:POST /v1/speech/vad"
+   "route:POST /v1/speech/vad",
+   "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
   ],
   "schema": "RevisionImpactSelection/v1",
   "unmeasured_head_files": []
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-11T00:12:02Z",
+  "checked_at_utc": "2026-11-11T00:58:37Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -10463,6 +10560,17 @@
   },
   {
    "content_hash": {
+    "base": "sha256:6a64c75ac0b42f55290ee4e460e0064f4344eea23de076780ca236615ca4c8c5",
+    "head": "sha256:6a64c75ac0b42f55290ee4e460e0064f4344eea23de076780ca236615ca4c8c5"
+   },
+   "entity": "receipt:receipts/graph/change-admission-e8ab201d.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-e8ab201d.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
     "base": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a",
     "head": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a"
    },
@@ -10474,7 +10582,7 @@
   }
  ],
  "tree": {
-  "commit": "1b5c99a83b5a1ec3ce7e209f6f78e629c5702abe",
+  "commit": "8eecdfb65ea36e9e4428dda46ed817233a8875d3",
   "dirty": false
  },
  "verdicts": [
@@ -10631,7 +10739,7 @@
   },
   {
    "entity": "code_unit:src/auth/key-rate-limit.service.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
    "verdict": "verified",
    "verifier_ids": [
     "v-contract-diff",
@@ -10807,7 +10915,7 @@
   },
   {
    "entity": "code_unit:src/config/env.schema.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
    "verdict": "verified",
    "verifier_ids": [
     "v-contract-diff",
@@ -11679,6 +11787,7 @@
    "verifier_ids": [
     "v-canary",
     "v-config-schema",
+    "v-contract-diff",
     "v-fitness",
     "v-type-check-tsconfig-mjs"
    ]
@@ -11703,7 +11812,7 @@
   },
   {
    "entity": "code_unit:src/connectors/jev/jev.routes.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
    "verdict": "verified",
    "verifier_ids": [
     "v-contract-diff",
@@ -11848,7 +11957,7 @@
   },
   {
    "entity": "code_unit:src/connectors/openai/openai.connector.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 2 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 2 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
    "verdict": "verified",
    "verifier_ids": [
     "v-contract-diff",
@@ -12307,7 +12416,7 @@
   },
   {
    "entity": "code_unit:src/speech/speech.service.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
    "verdict": "verified",
    "verifier_ids": [
     "v-contract-diff",
@@ -12317,7 +12426,7 @@
   },
   {
    "entity": "code_unit:src/speech/speech.service.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
    "verdict": "verified",
    "verifier_ids": [
     "v-contract-diff",
@@ -12581,7 +12690,7 @@
   },
   {
    "entity": "code_unit:src/speech/transcribator.proxy.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
    "verdict": "verified",
    "verifier_ids": [
     "v-contract-diff",
@@ -12600,7 +12709,7 @@
   },
   {
    "entity": "code_unit:src/speech/tts/deepgram-tts.connector.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
    "verdict": "verified",
    "verifier_ids": [
     "v-contract-diff",
@@ -12619,7 +12728,7 @@
   },
   {
    "entity": "code_unit:src/speech/tts/together-tts.connector.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
    "verdict": "verified",
    "verifier_ids": [
     "v-contract-diff",
@@ -12697,6 +12806,14 @@
   },
   {
    "entity": "contract:src/config/env.schema.ts#envBool",
+   "reason": "v-contract-diff: unchanged: no breaking change (0 change(s))",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-contract-diff"
+   ]
+  },
+  {
+   "entity": "contract:src/connectors/jev/jev.connector.ts#JevRefuseCode",
    "reason": "v-contract-diff: unchanged: no breaking change (0 change(s))",
    "verdict": "verified",
    "verifier_ids": [
@@ -12890,7 +13007,7 @@
   },
   {
    "entity": "document:documentation/reference/jev-decisions.md",
-   "reason": "v-doc-reference: 1 reference(s) resolve at head",
+   "reason": "v-doc-reference: 2 reference(s) resolve at head",
    "verdict": "verified",
    "verifier_ids": [
     "v-doc-reference"
@@ -13116,61 +13233,6 @@
   },
   {
    "entity": "route:GET /health/ready",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:GET /keyed",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:GET /probe/abort",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:GET /probe/execute",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:GET /probe/health",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:GET /probe/metrics",
    "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
    "verdict": "not_measured",
    "verifier_ids": [
@@ -13410,6 +13472,83 @@
     "v-route-config",
     "v-type-check-tsconfig-mjs"
    ]
+  },
+  {
+   "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
   }
  ],
  "verifier_selection": {
@@ -13420,8 +13559,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/type-check-niptoo0o/check.tsbuildinfo --listFiles",
-   "duration_s": 113.57,
+   "command": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/type-check-vxpvvro1/check.tsbuildinfo --listFiles",
+   "duration_s": 25.55,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.controller.spec.ts",
@@ -13679,11 +13818,6 @@
     "route:GET /health/connectors",
     "route:GET /health/metrics",
     "route:GET /health/ready",
-    "route:GET /keyed",
-    "route:GET /probe/abort",
-    "route:GET /probe/execute",
-    "route:GET /probe/health",
-    "route:GET /probe/metrics",
     "route:GET /v1/models",
     "route:GET /v1/speech/stt/jobs/:id",
     "route:PATCH /admin/keys/:id/policy",
@@ -13704,7 +13838,14 @@
     "route:POST /v1/speech/stt",
     "route:POST /v1/speech/stt/async",
     "route:POST /v1/speech/tts",
-    "route:POST /v1/speech/vad"
+    "route:POST /v1/speech/vad",
+    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
    ],
    "entity_verdicts": {
     "code_unit:src/admin/admin-rate-limit.app.spec.ts": "verified",
@@ -13963,11 +14104,6 @@
     "route:GET /health/connectors": "verified",
     "route:GET /health/metrics": "verified",
     "route:GET /health/ready": "verified",
-    "route:GET /keyed": "verified",
-    "route:GET /probe/abort": "verified",
-    "route:GET /probe/execute": "verified",
-    "route:GET /probe/health": "verified",
-    "route:GET /probe/metrics": "verified",
     "route:GET /v1/models": "verified",
     "route:GET /v1/speech/stt/jobs/:id": "verified",
     "route:PATCH /admin/keys/:id/policy": "verified",
@@ -13988,18 +14124,25 @@
     "route:POST /v1/speech/stt": "verified",
     "route:POST /v1/speech/stt/async": "verified",
     "route:POST /v1/speech/tts": "verified",
-    "route:POST /v1/speech/vad": "verified"
+    "route:POST /v1/speech/vad": "verified",
+    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "verified",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "verified"
    },
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-11T00:12:54Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-11T00:58:52Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2868 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/type-check-azefrptp/check.tsbuildinfo --listFiles",
-   "duration_s": 37.62,
+   "command": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/type-check-apquto8q/check.tsbuildinfo --listFiles",
+   "duration_s": 16.4,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -14341,13 +14484,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-11T00:14:49Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-11T00:59:19Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2136 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/type-check-du2lm8wi/check.tsbuildinfo --listFiles",
-   "duration_s": 2.63,
+   "command": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/type-check-51lw78dc/check.tsbuildinfo --listFiles",
+   "duration_s": 2.75,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -14523,13 +14666,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-11T00:15:28Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-11T00:59:36Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/type-check-9919ggig/check.tsbuildinfo --listFiles",
-   "duration_s": 50.87,
+   "command": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/type-check-7mriczab/check.tsbuildinfo --listFiles",
+   "duration_s": 25.17,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -14871,13 +15014,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-11T00:15:31Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-11T00:59:39Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2759 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/type-check-xpwxgd63/check.tsbuildinfo --listFiles",
-   "duration_s": 65.34,
+   "command": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/type-check-2_hszgaj/check.tsbuildinfo --listFiles",
+   "duration_s": 40.75,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -15219,13 +15362,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-11T00:16:22Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-11T01:00:05Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2865 files listed"
   },
   {
-   "command": "tools/graph/contract_diff.py.run_diff(base=b60df8ac7671, head=1b5c99a83b5a, graph=head graph)",
-   "duration_s": 29.67,
+   "command": "tools/graph/contract_diff.py.run_diff(base=e450735ea2b4, head=8eecdfb65ea3, graph=head graph)",
+   "duration_s": 14.21,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.controller.ts",
@@ -15237,6 +15380,7 @@
     "code_unit:src/billing/credits.controller.ts",
     "code_unit:src/config/env.schema.ts",
     "code_unit:src/connectors/connectors.controller.ts",
+    "code_unit:src/connectors/jev/jev.connector.ts",
     "code_unit:src/connectors/jev/jev.routes.ts",
     "code_unit:src/connectors/openai/openai.connector.ts",
     "code_unit:src/health/health.controller.ts",
@@ -15254,6 +15398,7 @@
     "contract:src/billing/credits.controller.ts#GiftSchema",
     "contract:src/billing/credits.controller.ts#ReconcileSchema",
     "contract:src/config/env.schema.ts#envBool",
+    "contract:src/connectors/jev/jev.connector.ts#JevRefuseCode",
     "contract:src/connectors/jev/jev.routes.ts#JevRouteId",
     "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationErrorType",
     "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationInputType",
@@ -15276,11 +15421,6 @@
     "route:GET /health/connectors",
     "route:GET /health/metrics",
     "route:GET /health/ready",
-    "route:GET /keyed",
-    "route:GET /probe/abort",
-    "route:GET /probe/execute",
-    "route:GET /probe/health",
-    "route:GET /probe/metrics",
     "route:GET /v1/models",
     "route:GET /v1/speech/stt/jobs/:id",
     "route:PATCH /admin/keys/:id/policy",
@@ -15301,7 +15441,14 @@
     "route:POST /v1/speech/stt",
     "route:POST /v1/speech/stt/async",
     "route:POST /v1/speech/tts",
-    "route:POST /v1/speech/vad"
+    "route:POST /v1/speech/vad",
+    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
    ],
    "entity_verdicts": {
     "code_unit:src/admin/admin-rate-limit.app.spec.ts": "verified",
@@ -15314,6 +15461,7 @@
     "code_unit:src/billing/credits.controller.ts": "verified",
     "code_unit:src/config/env.schema.ts": "verified",
     "code_unit:src/connectors/connectors.controller.ts": "verified",
+    "code_unit:src/connectors/jev/jev.connector.ts": "verified",
     "code_unit:src/connectors/jev/jev.routes.ts": "verified",
     "code_unit:src/connectors/openai/openai.connector.ts": "verified",
     "code_unit:src/health/health.controller.ts": "verified",
@@ -15331,6 +15479,7 @@
     "contract:src/billing/credits.controller.ts#GiftSchema": "verified",
     "contract:src/billing/credits.controller.ts#ReconcileSchema": "verified",
     "contract:src/config/env.schema.ts#envBool": "verified",
+    "contract:src/connectors/jev/jev.connector.ts#JevRefuseCode": "verified",
     "contract:src/connectors/jev/jev.routes.ts#JevRouteId": "verified",
     "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationErrorType": "verified",
     "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationInputType": "verified",
@@ -15353,11 +15502,6 @@
     "route:GET /health/connectors": "verified",
     "route:GET /health/metrics": "verified",
     "route:GET /health/ready": "verified",
-    "route:GET /keyed": "verified",
-    "route:GET /probe/abort": "verified",
-    "route:GET /probe/execute": "verified",
-    "route:GET /probe/health": "verified",
-    "route:GET /probe/metrics": "verified",
     "route:GET /v1/models": "verified",
     "route:GET /v1/speech/stt/jobs/:id": "verified",
     "route:PATCH /admin/keys/:id/policy": "verified",
@@ -15378,18 +15522,25 @@
     "route:POST /v1/speech/stt": "verified",
     "route:POST /v1/speech/stt/async": "verified",
     "route:POST /v1/speech/tts": "verified",
-    "route:POST /v1/speech/vad": "verified"
+    "route:POST /v1/speech/vad": "verified",
+    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "verified",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "verified"
    },
    "exit_code": 1,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/v-contract-diff.json",
-   "started_at_utc": "2026-11-11T00:17:32Z",
-   "summary": "186\u2192187 contracts, breaking 0, edges {'not_measured': 4, 'verified': 248}"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/v-contract-diff.json",
+   "started_at_utc": "2026-11-11T01:00:47Z",
+   "summary": "187→188 contracts, breaking 0, edges {'not_measured': 4, 'verified': 249}"
   },
   {
    "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
-   "duration_s": 1.01,
+   "duration_s": 23.47,
    "entities": [
     "route:DELETE /admin/keys/:id",
     "route:GET /admin/credits/:apiKeyId",
@@ -15407,11 +15558,6 @@
     "route:GET /health/connectors",
     "route:GET /health/metrics",
     "route:GET /health/ready",
-    "route:GET /keyed",
-    "route:GET /probe/abort",
-    "route:GET /probe/execute",
-    "route:GET /probe/health",
-    "route:GET /probe/metrics",
     "route:GET /v1/models",
     "route:GET /v1/speech/stt/jobs/:id",
     "route:PATCH /admin/keys/:id/policy",
@@ -15432,7 +15578,14 @@
     "route:POST /v1/speech/stt",
     "route:POST /v1/speech/stt/async",
     "route:POST /v1/speech/tts",
-    "route:POST /v1/speech/vad"
+    "route:POST /v1/speech/vad",
+    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
    ],
    "entity_verdicts": {
     "route:DELETE /admin/keys/:id": "verified",
@@ -15451,11 +15604,6 @@
     "route:GET /health/connectors": "verified",
     "route:GET /health/metrics": "verified",
     "route:GET /health/ready": "verified",
-    "route:GET /keyed": "verified",
-    "route:GET /probe/abort": "verified",
-    "route:GET /probe/execute": "verified",
-    "route:GET /probe/health": "verified",
-    "route:GET /probe/metrics": "verified",
     "route:GET /v1/models": "verified",
     "route:GET /v1/speech/stt/jobs/:id": "verified",
     "route:PATCH /admin/keys/:id/policy": "verified",
@@ -15476,18 +15624,25 @@
     "route:POST /v1/speech/stt": "verified",
     "route:POST /v1/speech/stt/async": "verified",
     "route:POST /v1/speech/tts": "verified",
-    "route:POST /v1/speech/vad": "verified"
+    "route:POST /v1/speech/vad": "verified",
+    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "verified",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "verified",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "verified"
    },
    "exit_code": 0,
    "id": "v-route-config",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/v-route-config.txt",
-   "started_at_utc": "2026-11-11T00:18:01Z",
-   "summary": "42 route(s), 0 failed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/v-route-config.txt",
+   "started_at_utc": "2026-11-11T01:01:01Z",
+   "summary": "44 route(s), 0 failed"
   },
   {
-   "command": "verify.py config_schema: keys read at head \u2286 declared keys",
-   "duration_s": 4.11,
+   "command": "verify.py config_schema: keys read at head ⊆ declared keys",
+   "duration_s": 1.09,
    "entities": [
     "code_unit:src/connectors/jev/jev.connector.ts"
    ],
@@ -15497,13 +15652,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-11T00:18:02Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-11T01:01:24Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.83,
+   "duration_s": 0.45,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.controller.spec.ts",
@@ -15991,13 +16146,13 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-11T00:18:07Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-11T01:01:25Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.17,
+   "duration_s": 0.02,
    "entities": [
     "document:CHANGELOG.md",
     "document:README.md",
@@ -16051,8 +16206,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-11T00:18:07Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-11T01:01:26Z",
    "summary": "23 document(s), 0 failed"
   },
   {
@@ -16086,11 +16241,6 @@
     "route:GET /health/connectors",
     "route:GET /health/metrics",
     "route:GET /health/ready",
-    "route:GET /keyed",
-    "route:GET /probe/abort",
-    "route:GET /probe/execute",
-    "route:GET /probe/health",
-    "route:GET /probe/metrics",
     "route:GET /v1/models",
     "route:GET /v1/speech/stt/jobs/:id",
     "route:PATCH /admin/keys/:id/policy",
@@ -16111,7 +16261,14 @@
     "route:POST /v1/speech/stt",
     "route:POST /v1/speech/stt/async",
     "route:POST /v1/speech/tts",
-    "route:POST /v1/speech/vad"
+    "route:POST /v1/speech/vad",
+    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
    ],
    "entity_verdicts": {
     "code_unit:src/admin/admin.controller.ts": "not_measured",
@@ -16141,11 +16298,6 @@
     "route:GET /health/connectors": "not_measured",
     "route:GET /health/metrics": "not_measured",
     "route:GET /health/ready": "not_measured",
-    "route:GET /keyed": "not_measured",
-    "route:GET /probe/abort": "not_measured",
-    "route:GET /probe/execute": "not_measured",
-    "route:GET /probe/health": "not_measured",
-    "route:GET /probe/metrics": "not_measured",
     "route:GET /v1/models": "not_measured",
     "route:GET /v1/speech/stt/jobs/:id": "not_measured",
     "route:PATCH /admin/keys/:id/policy": "not_measured",
@@ -16166,14 +16318,21 @@
     "route:POST /v1/speech/stt": "not_measured",
     "route:POST /v1/speech/stt/async": "not_measured",
     "route:POST /v1/speech/tts": "not_measured",
-    "route:POST /v1/speech/vad": "not_measured"
+    "route:POST /v1/speech/vad": "not_measured",
+    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "not_measured",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "not_measured",
+    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "not_measured",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "not_measured",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "not_measured",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "not_measured",
+    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "not_measured"
    },
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/verify-scratch/verifier-out/v-canary.json",
-   "started_at_utc": "2026-11-11T00:18:08Z",
-   "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 53 not_measured of 53 entities"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/verify-scratch/verifier-out/v-canary.json",
+   "started_at_utc": "2026-11-11T01:01:26Z",
+   "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 55 not_measured of 55 entities"
   }
  ],
  "verify": {
@@ -16181,12 +16340,12 @@
    {
     "code": "SUPERSEDED_SELF_NOT_APPLICABLE",
     "rule": "DEC-AUP-0035",
-    "text": "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-595b306c.json: it declares this run's work item 595b306c-68dd-4c63-91ba-8f938c331bc9, but the receipt is being written to /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb-cur-20261110T2313Z/verify-work/change-admission-draft.json, which is outside this repository, so no path in the tree is the one this run supersedes."
+    "text": "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-595b306c.json: it declares this run's work item 595b306c-68dd-4c63-91ba-8f938c331bc9, but the receipt is being written to /home/dev/aup/claude-work/d5-next-595b306c-rc-absorb2-cur-20261111T0042Z/verify-work/change-admission-draft.json, which is outside this repository, so no path in the tree is the one this run supersedes."
    },
    {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "24 affected entity(ies) owe no verdict (receipt: 24): unchanged at both revisions and given no verifier by the matrix"
+    "text": "25 affected entity(ies) owe no verdict (receipt: 25): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
@@ -16732,6 +16891,7 @@
    "code_unit:src/connectors/jev/jev.connector.ts": [
     "canary",
     "config_schema",
+    "contract_diff",
     "fitness_rules",
     "type_check"
    ],
@@ -17195,6 +17355,9 @@
    "contract:src/config/env.schema.ts#envBool": [
     "contract_diff"
    ],
+   "contract:src/connectors/jev/jev.connector.ts#JevRefuseCode": [
+    "contract_diff"
+   ],
    "contract:src/connectors/jev/jev.routes.ts#JevRouteId": [
     "contract_diff"
    ],
@@ -17310,6 +17473,7 @@
    "receipt:receipts/graph/change-admission-c5630203-mcci0-f1-oauth.json": [],
    "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json": [],
    "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json": [],
+   "receipt:receipts/graph/change-admission-e8ab201d.json": [],
    "receipt:receipts/graph/change-admission-jev-decision.json": [],
    "route:DELETE /admin/keys/:id": [
     "canary",
@@ -17402,36 +17566,6 @@
     "type_check"
    ],
    "route:GET /health/ready": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:GET /keyed": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:GET /probe/abort": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:GET /probe/execute": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:GET /probe/health": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:GET /probe/metrics": [
     "canary",
     "contract_diff",
     "route_config_consistency",
@@ -17562,12 +17696,54 @@
     "contract_diff",
     "route_config_consistency",
     "type_check"
+   ],
+   "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
    ]
   },
   "seconds": {
-   "prepare": 26.23,
-   "total": 462.35,
-   "verifiers": 305.82
+   "prepare": 7.32,
+   "total": 215.17,
+   "verifiers": 149.86
   }
  },
  "work_item": "595b306c-68dd-4c63-91ba-8f938c331bc9"
