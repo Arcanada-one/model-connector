@@ -16,7 +16,6 @@ import {
   classifyProtectedIntentReplay,
   retainedProtectedResultHash,
 } from './protected-lifecycle';
-import { sealProtectedResultIntegrity } from './protected-result-integrity';
 
 type IntentRow = {
   id: string;
@@ -42,9 +41,6 @@ type IntentRow = {
   amountPrecision: number | null;
   clientSupplied: boolean;
   createdAt: Date;
-  resultIntegrityProfile: string | null;
-  resultIntegrityDigest: string | null;
-  resultRetention: string | null;
 };
 
 function row(partial: Partial<IntentRow> & Pick<IntentRow, 'protectedPhase' | 'state'>): IntentRow {
@@ -70,9 +66,6 @@ function row(partial: Partial<IntentRow> & Pick<IntentRow, 'protectedPhase' | 's
     amountPrecision: 6,
     clientSupplied: true,
     createdAt: new Date(),
-    resultIntegrityProfile: null,
-    resultIntegrityDigest: null,
-    resultRetention: null,
     ...partial,
   };
 }
@@ -409,25 +402,12 @@ describe('P10-05 billing openIntent / prepare / reclaim refusals', () => {
 
   it('positive settled control: classified replay-eligible; openIntent returns replay (byte disclosure noted)', async () => {
     const body = { secret: 'private-bytes' };
-    const seal = sealProtectedResultIntegrity({
-      binding: {
-        operationKey: 'op-p1005',
-        apiKeyId: 'key-a',
-        payloadFingerprint: 'fp-p1005',
-        reservationRef: 'res-p1005',
-        settlementGeneration: 2,
-      },
-      retained: body,
-    });
     stored = row({
       protectedPhase: PROTECTED_PHASE.settled,
       state: 'completed',
       completedAt: new Date(),
       response: body,
       requestId: 'req-settled',
-      resultIntegrityProfile: seal.profile,
-      resultIntegrityDigest: seal.digest,
-      resultRetention: seal.retention,
     });
     const classified = classifyProtectedIntentReplay({
       row: stored,

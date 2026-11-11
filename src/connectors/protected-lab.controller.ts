@@ -204,19 +204,7 @@ export class ProtectedLabController {
         HttpStatus.CONFLICT,
       );
     }
-    if (result.outcome === 'integrity_refused') {
-      throw new HttpException(
-        {
-          error: result.reason,
-          message:
-            'Protected settled result failed retained integrity verification; no disclosure.',
-        },
-        HttpStatus.CONFLICT,
-      );
-    }
     if (result.outcome === 'replay') {
-      // Settled-replay byte return unchanged: integrity is one input to P10,
-      // not a read grant (Auth entitlement remains P10-01..04).
       return { replay: true, response: result.response, requestId: result.requestId };
     }
     throw new HttpException(

@@ -126,22 +126,15 @@ export function writeOffKeyForIntent(intentId: string): string {
  * can be reported instead.
  */
 export function intentPayloadFingerprint(payload: unknown): string {
-  return createHash('sha256').update(stableJsonStringify(payload)).digest('hex');
+  return createHash('sha256').update(stableStringify(payload)).digest('hex');
 }
 
-/**
- * JSON.stringify with deterministic key order, so equal objects hash equal.
- *
- * Also the `pri/v1` canonical serializer for protected retained-result integrity
- * (`protected-result-integrity.ts`): sorted object keys, `undefined` omitted,
- * compact separators. Exported so integrity reuses this billing boundary form
- * rather than inventing a second incompatible canonicalizer.
- */
-export function stableJsonStringify(value: unknown): string {
+/** JSON.stringify with deterministic key order, so equal objects hash equal. */
+function stableStringify(value: unknown): string {
   if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null';
-  if (Array.isArray(value)) return `[${value.map(stableJsonStringify).join(',')}]`;
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
   const entries = Object.entries(value as Record<string, unknown>)
     .filter(([, v]) => v !== undefined)
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-  return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableJsonStringify(v)}`).join(',')}}`;
+  return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(',')}}`;
 }

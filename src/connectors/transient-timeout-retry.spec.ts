@@ -68,11 +68,6 @@ interface IntentRow {
   requestId?: string | null;
   response?: unknown;
   completedAt?: Date | null;
-  lifecycleVersion?: number;
-  protectedPhase?: string | null;
-  generation?: number;
-  reservationRef?: string | null;
-  operationKey?: string | null;
 }
 
 interface LedgerRow {
@@ -136,13 +131,7 @@ function memoryDb(openingBalance = OPENING_BALANCE) {
           where,
           data,
         }: {
-          where: {
-            id: string;
-            state?: string | { in: string[] };
-            lifecycleVersion?: number;
-            protectedPhase?: string | { in: string[] };
-            generation?: number;
-          };
+          where: { id: string; state?: string | { in: string[] } };
           data: Record<string, unknown>;
         }) => {
           const row = intents.get(where.id);
@@ -153,37 +142,7 @@ function memoryDb(openingBalance = OPENING_BALANCE) {
           if (want && typeof want === 'object' && !want.in.includes(row.state)) {
             return { count: 0 };
           }
-          // Protected reclaim CAS also filters lifecycleVersion / phase /
-          // generation — honour them so a legacy released row is not claimed
-          // by the protected proven_no_dispatch branch.
-          if (
-            where.lifecycleVersion !== undefined &&
-            (row.lifecycleVersion ?? 0) !== where.lifecycleVersion
-          ) {
-            return { count: 0 };
-          }
-          if (typeof where.protectedPhase === 'string') {
-            if ((row.protectedPhase ?? null) !== where.protectedPhase) return { count: 0 };
-          } else if (where.protectedPhase && typeof where.protectedPhase === 'object') {
-            if (!where.protectedPhase.in.includes(row.protectedPhase as string)) {
-              return { count: 0 };
-            }
-          }
-          if (where.generation !== undefined && (row.generation ?? 0) !== where.generation) {
-            return { count: 0 };
-          }
-          const applied = { ...data };
-          if (
-            applied.generation &&
-            typeof applied.generation === 'object' &&
-            applied.generation !== null &&
-            'increment' in (applied.generation as object)
-          ) {
-            applied.generation =
-              (row.generation ?? 0) +
-              Number((applied.generation as { increment: number }).increment);
-          }
-          Object.assign(row, applied);
+          Object.assign(row, data);
           return { count: 1 };
         },
       ),
@@ -191,11 +150,8 @@ function memoryDb(openingBalance = OPENING_BALANCE) {
         async ({
           where,
         }: {
-          where: { apiKeyId_intentKey: { apiKeyId: string; intentKey: string } } | { id: string };
+          where: { apiKeyId_intentKey: { apiKeyId: string; intentKey: string } };
         }) => {
-          if ('id' in where) {
-            return intents.get(where.id) ?? null;
-          }
           const { apiKeyId, intentKey } = where.apiKeyId_intentKey;
           for (const row of intents.values()) {
             if (row.apiKeyId === apiKeyId && row.intentKey === intentKey) return row;
