@@ -185,13 +185,15 @@ export const PROTECTED_DISPATCH_FENCE_DECISIONS: readonly FenceAdmissionRecord[]
   },
   {
     className: 'OpenRouterConnector',
-    overridesExecute: false,
-    callsSuperExecute: null,
+    // Main grew an execute override (config gate + super.execute) after #255 landed;
+    // keep Stage A refusal, refresh structural flags to match the prototype.
+    overridesExecute: true,
+    callsSuperExecute: true,
     forwardsMaxTokens: true,
     forwardedExtraKeys: ['max_tokens', 'temperature', 'top_p'],
     decision: 'refused',
     reason:
-      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged.',
+      'Refused for the first protected Lab profile (PR #255 comment 6728979426): chat-message / request framing tokens are not covered by a provider-grounded whole-prompt upper bound for this class. Legacy unprotected path unchanged. Post-merge: own execute overrides BaseApiConnector.execute and calls super.execute.',
   },
   {
     className: 'OrqConnector',
