@@ -1,0 +1,31 @@
+{
+  "schema": "ConnJev04LiveSmoke/v1",
+  "task": "b8896c8e-7e40-4608-a547-263d8bb11fc0",
+  "card": "CONN-JEV-04",
+  "captured_at_utc": "2026-11-11T00:47:49.194Z",
+  "base_url": "https://connector.arcanada.ai",
+  "runtime_authorized": false,
+  "knowledge_admitted": false,
+  "verdict": "NOT_MEASURED",
+  "reasons": [
+    "MC_KEY/MC_API_KEY absent — fail-closed; live execute not attempted"
+  ],
+  "preflight": {
+    "build": {
+      "httpStatus": 200,
+      "build": {
+        "sha": "e450735ea2b474051b471bd431f84db5abd76423",
+        "source": "MC_BUILD_SHA"
+      }
+    },
+    "typesafe_jev_health": {
+      "name": "typesafe-jev",
+      "healthy": false,
+      "activeJobs": 0,
+      "queuedJobs": 0,
+      "rateLimitStatus": "ok",
+      "type": "api"
+    },
+    "health_http": 200
+  }
+}
