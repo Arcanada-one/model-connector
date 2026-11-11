@@ -26,18 +26,6 @@ export interface ConnectorRequest {
   // advance logic lives in the outer free-first failover chain (no compounded backoff).
   maxRetries?: number;
   extra?: Record<string, unknown>;
-  /**
-   * Internal only — set by ConnectorsService for the protected Lab profile.
-   * Invoked by BaseApiConnector after queue/header/body awaits and immediately
-   * before the provider `fetch`. Receives the actual pre-built request URL
-   * (never re-built inside the hook). Not a client field.
-   */
-  __beforeProviderFetch?: (ctx: { requestUrl: string }) => Promise<void>;
-  /**
-   * Internal only — after a crash/timeout past dispatch commit, mark the
-   * protected reservation unknown instead of releasing it.
-   */
-  __afterProviderAmbiguity?: () => Promise<void>;
 }
 
 export type ErrorAction = 'retry' | 'abort' | 'wait' | 'reauth';
@@ -411,16 +399,6 @@ export interface IConnector {
    * the default by omission.
    */
   readonly billingLane?: import('../../billing/measured-cost').BillingLane;
-
-  /**
-   * Protected Lab dispatch fence (stage A).
-   *
-   * For `BaseApiConnector` subclasses, admission is NOT this flag — it is the
-   * explicit per-class allow-list in `protected-dispatch-fence-admission.ts`.
-   * Plain (non-class) test doubles may set this own-property to true. Direct
-   * `IConnector` / `BaseCliConnector` implementations MUST leave this unset.
-   */
-  readonly supportsProtectedDispatchFence?: boolean;
 
   execute(request: ConnectorRequest): Promise<ConnectorResponse>;
   getStatus(): Promise<ConnectorStatus>;

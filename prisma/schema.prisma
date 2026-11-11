@@ -638,39 +638,11 @@ model RequestIntent {
   /// freeze funds forever.
   expiresAt DateTime @map("expires_at")
 
-  /// 0 = legacy held/released/expired/completed semantics.
-  /// 1 = protected Lab lifecycle (see protected_phase). Additive; old rows stay 0.
-  lifecycleVersion Int @default(0) @map("lifecycle_version")
-
-  /// Protected phases when lifecycleVersion = 1. Null for legacy rows.
-  /// reserved | dispatch_committed | unknown | settled | proven_no_dispatch
-  protectedPhase String? @map("protected_phase")
-
-  /// Compare-and-set fence for protected transitions. Legacy rows stay 0.
-  generation Int @default(0)
-
-  /// Opaque prepare/lookup reference. Not a credential. Unique when set.
-  reservationRef String? @unique @map("reservation_ref")
-
-  /// Exact operation key bound at prepare (protected profile).
-  operationKey String? @map("operation_key")
-
-  providerName String? @map("provider_name")
-  modelName    String? @map("model_name")
-  routeKey     String? @map("route_key")
-
-  /// Pinned price-policy revision that priced the hold.
-  pricePolicyRevision String? @map("price_policy_revision")
-
-  amountUnit      String? @map("amount_unit")
-  amountPrecision Int?    @map("amount_precision")
-
   createdAt   DateTime  @default(now()) @map("created_at")
   completedAt DateTime? @map("completed_at")
 
   @@unique([apiKeyId, intentKey])
   @@index([state, expiresAt])
-  @@index([protectedPhase, expiresAt])
   @@map("request_intent")
 }
 

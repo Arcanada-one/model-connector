@@ -28,43 +28,11 @@ import { BaseCliConnector } from './base-cli.connector';
 import { BaseApiConnector } from './base-api.connector';
 import { parseDeepSeekOptions } from './deepseek/deepseek-options';
 import { sanitizeJsonResponse, JsonSanitizeError } from '../core/utils/json-sanitizer';
-import { getConfig, parseEnvBool } from '../config/env.schema';
+import { getConfig } from '../config/env.schema';
 import { MetricsService } from '../metrics/metrics.service';
 import { OutputGuardMiddleware } from './output-guard/output-guard.middleware';
 import { BillingService, RequestIntentHandle } from '../billing/billing.service';
 import { estimateCostUsd, promptCharLength } from '../billing/cost-estimate';
-import {
-  azureOpenAiChatFramingTokenAllowance,
-  isAzureChatFramingModelAdmitted,
-  PROTECTED_AZURE_FRAMING_MODEL_UNSUPPORTED,
-  protectedInputTokenUpperBound,
-  protectedPromptContainsImageUrl,
-  protectedPromptContainsNonTextBlock,
-} from '../billing/protected-cost-estimate';
-import { assessProtectedForwardedExtras } from '../billing/protected-forwarded-extras';
-import {
-  ProtectedReservationStaleError,
-  PROTECTED_RESERVATION_STALE,
-  type ProtectedReservationView,
-} from '../billing/protected-lifecycle';
-import {
-  NATIVE_PRICING_UNAVAILABLE,
-  resolveProtectedPricePolicy,
-  type ProtectedCatalogAuthorityRow,
-} from '../billing/protected-price-policy';
-import {
-  classForwardsProtectedMaxTokens,
-  isNonBaseProtectedFenceAdmitted,
-  isProtectedDispatchFenceClassAdmitted,
-  nonBaseForwardsProtectedMaxTokens,
-} from './protected-dispatch-fence-admission';
-import {
-  AzureOpenAiConnector,
-  azureProtectedTargetsEqual,
-  decodeAzureTargetFromRouteKey,
-  encodeAzureTargetIntoRouteKey,
-  parseAzureOpenAiChatCompletionsUrl,
-} from './azure-openai/azure-openai.connector';
 import { mintServerIntentKey, intentPayloadFingerprint } from '../billing/intent';
 import {
   measureCostUsd,
@@ -143,15 +111,6 @@ export type ServiceExecuteRequest = ConnectorRequest & {
    * in this field must still reach the provider identically.
    */
   idempotencyKey?: string;
-  /**
-   * Internal — set only by the server-selected protected Lab route. A client
-   * body flag cannot enable or downgrade this profile.
-   */
-  protectedProfile?: true;
-  /** Opaque reservation_ref from prepare; required on the protected execute path. */
-  reservationRef?: string;
-  /** Pinned price-policy revision used when preparing the reservation. */
-  pricePolicyRevision?: string;
 };
 
 export const RETRYABLE_ERRORS = new Set([
@@ -1210,17 +1169,11 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    const protectedProfile = request.protectedProfile === true;
-
     // CONN-0243 — a per-request `maxRetries` (e.g. 0 from the failover gateway) overrides
     // the service-level CONNECTOR_MAX_RETRIES so the outer free-first chain owns retry/advance
     // and the inner loop does not compound exponential backoff on every failover hop.
-    // Protected Lab profile: internal retries / failover / output-guard redispatch
-    // are refused — one fenced attempt owns the exact request.
     let maxRetries: number;
-    if (protectedProfile) {
-      maxRetries = 0;
-    } else if (typeof request.maxRetries === 'number') {
+    if (typeof request.maxRetries === 'number') {
       maxRetries = Math.max(0, request.maxRetries);
     } else {
       try {
@@ -1235,28 +1188,13 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     // provider payload. Two requests differing only in this field have to be
     // byte-identical on the wire, or the connector-level caches and the
     // fingerprint above would disagree about what "the same request" means.
-    const {
-      firstDispatchMeasurement,
-      idempotencyKey: _intentKey,
-      protectedProfile: _protected,
-      reservationRef: _reservationRef,
-      pricePolicyRevision: _pricePolicy,
-      ...providerRequest
-    } = request;
+    const { firstDispatchMeasurement, idempotencyKey: _intentKey, ...providerRequest } = request;
     const validatedMeasurement =
       firstDispatchMeasurement === undefined
         ? undefined
         : firstDispatchMeasurementSchema.parse(firstDispatchMeasurement);
     if (validatedMeasurement !== undefined && providerRequest.output_format !== undefined) {
       throw new BadRequestException('firstDispatchMeasurement cannot use output-guard retries');
-    }
-    if (protectedProfile && providerRequest.output_format !== undefined) {
-      return this.gateErrorResponse(
-        connectorName,
-        request.model || 'unknown',
-        'protected_retry_refused',
-        'The protected Lab profile refuses output-guard redispatch; one fenced attempt only.',
-      );
     }
     const guardActive = Boolean(providerRequest.output_format);
     const attemptsForRequest = validatedMeasurement === undefined ? totalAttempts : 1;
@@ -1269,59 +1207,7 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     // constructs this service without an env fail environment validation
     // (CONN: 35 specs, once).
     let intent: RequestIntentHandle | null = null;
-    if (protectedProfile) {
-      // Fence check at execute (controller also checks at the route): an
-      // allow-listed but unfenced connector must never reach provider handoff.
-      if (!this.connectorSupportsProtectedDispatchFence(connectorName)) {
-        return this.gateErrorResponse(
-          connectorName,
-          request.model || 'unknown',
-          'protected_connector_unfenced',
-          `Connector '${connectorName}' does not support the protected dispatch fence.`,
-        );
-      }
-      const gate = await this.openProtectedRequestIntent(connectorName, request, apiKeyId);
-      if (gate.response) return gate.response;
-      intent = gate.intent;
-      if (!intent) {
-        return this.gateErrorResponse(
-          connectorName,
-          request.model || 'unknown',
-          'protected_intent_required',
-          'The protected Lab profile refuses the dark-billing / null-intent fallback.',
-        );
-      }
-      const reservedBinding = gate.reservation;
-      if (!reservedBinding) {
-        return this.gateErrorResponse(
-          connectorName,
-          request.model || 'unknown',
-          'protected_intent_required',
-          'The protected Lab profile refuses execute without a reserved binding.',
-        );
-      }
-      providerRequest.__beforeProviderFetch = async (ctx) => {
-        // P9: compare reserved effective target to the actual pre-built URL and
-        // re-resolve trusted price/route before CAS. Zero provider sends on mismatch.
-        await this.assertProtectedReservationStillCurrent(
-          connectorName,
-          request,
-          reservedBinding,
-          ctx?.requestUrl,
-        );
-        const committed = await this.billing!.commitProtectedDispatch(intent!);
-        if (!committed) {
-          throw new BadRequestException({
-            error: 'protected_dispatch_cas_lost',
-            message:
-              'Protected dispatch commit lost the compare-and-set race (sweeper or concurrent commit).',
-          });
-        }
-      };
-      providerRequest.__afterProviderAmbiguity = async () => {
-        await this.billing!.markProtectedUnknown(intent!);
-      };
-    } else if (this.billing) {
+    if (this.billing) {
       const gate = await this.openRequestIntent(connectorName, request, apiKeyId);
       if (gate.response) return gate.response;
       intent = gate.intent;
@@ -1472,38 +1358,13 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
           this.logger.error('Failed to mark first-dispatch observation indeterminate');
         });
       }
-      // P9: price/route recheck refused before CAS — hold stays reserved.
-      if (error instanceof ProtectedReservationStaleError) {
-        return this.gateErrorResponse(
-          connectorName,
-          request.model || 'unknown',
-          PROTECTED_RESERVATION_STALE,
-          error.message,
-        );
-      }
       // ARAS-0058 — hand the reservation back. A throw here means no response
       // was produced and so no charge will be, and a hold nobody releases is a
       // customer's money frozen until the expiry sweep. The sweep is the
       // backstop for a process that dies, not the normal path for one that
       // merely fails.
-      //
-      // Protected Lab backstop: if execute threw while still `reserved`, the
-      // dispatch hook never ran — handoff state is unknown. Mark unknown and
-      // never release (sweeper also skips unknown). Same for
-      // dispatch_committed / unknown (crash after commit).
-      if (intent?.lifecycleVersion === 1) {
-        await this.billing?.markProtectedUnknown(intent);
-      } else {
-        await this.releaseIntent(intent);
-      }
+      await this.releaseIntent(intent);
       throw error;
-    }
-
-    // Protected Lab backstop on the return path: an unfenced connector (or a
-    // BaseApiConnector subclass that bypassed the hook) can finish execute
-    // while the row is still `reserved`. Treat that as unknown — never release.
-    if (intent?.lifecycleVersion === 1 && intent.protectedPhase === 'reserved' && this.billing) {
-      await this.billing.markProtectedUnknown(intent);
     }
 
     const lastAttempt = lastResponse!;
@@ -2305,18 +2166,6 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
               'to continue.',
           ),
         };
-
-      case 'protected_unknown':
-        return {
-          intent: null,
-          response: this.gateErrorResponse(
-            connectorName,
-            model,
-            'protected_unknown',
-            'A prior protected attempt under this key committed dispatch (or is unknown). ' +
-              'It will not be released, reclaimed, or retried under a new key solely because time elapsed.',
-          ),
-        };
     }
   }
 
@@ -2382,582 +2231,9 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     const {
       idempotencyKey: _ignored,
       firstDispatchMeasurement: _measurement,
-      protectedProfile: _protected,
-      reservationRef: _ref,
-      pricePolicyRevision: _price,
-      __beforeProviderFetch: _before,
-      __afterProviderAmbiguity: _after,
       ...payload
     } = request;
     return intentPayloadFingerprint({ connector: connectorName, ...payload });
-  }
-
-  /**
-   * Protected Lab prepare/lookup/execute seam — server-selected profile only.
-   * Billing must be wired; null-intent / dark-billing fallback is refused.
-   */
-  isProtectedLabProfileEnabled(): boolean {
-    // Prefer live process.env so bare KEY= / empty disables the profile and so
-    // the relationship graph records config_key:PROTECTED_LAB_PROFILE (required
-    // for env_example_key_delta). Fall back to validated getConfig for specs
-    // that only seed the cache via validateEnv(...).
-    if (Object.prototype.hasOwnProperty.call(process.env, 'PROTECTED_LAB_PROFILE')) {
-      return parseEnvBool(process.env.PROTECTED_LAB_PROFILE);
-    }
-    try {
-      return getConfig().PROTECTED_LAB_PROFILE === true;
-    } catch {
-      return false;
-    }
-  }
-
-  protectedLabConnectors(): Set<string> {
-    let raw = '';
-    if (Object.prototype.hasOwnProperty.call(process.env, 'PROTECTED_LAB_CONNECTORS')) {
-      raw = process.env.PROTECTED_LAB_CONNECTORS ?? '';
-    } else {
-      try {
-        raw = getConfig().PROTECTED_LAB_CONNECTORS ?? '';
-      } catch {
-        return new Set();
-      }
-    }
-    return new Set(
-      raw
-        .split(',')
-        .map((s: string) => s.trim())
-        .filter(Boolean),
-    );
-  }
-
-  /**
-   * True only when the registered connector is admitted to the protected
-   * dispatch fence. `BaseApiConnector` subclasses are keyed by exact class
-   * name in `protected-dispatch-fence-admission.ts` — an inherited capability
-   * boolean alone is not enough. Non-Base connectors require an explicit
-   * reviewed admission record (production list is empty); an own-property
-   * `supportsProtectedDispatchFence === true` alone never admits. Missing
-   * connectors and unlisted subclasses return false — fail closed.
-   */
-  connectorSupportsProtectedDispatchFence(connectorName: string): boolean {
-    const connector = this.connectors.get(connectorName);
-    if (!connector) return false;
-    if (connector instanceof BaseApiConnector) {
-      return isProtectedDispatchFenceClassAdmitted(connector.constructor?.name);
-    }
-    // Own boolean is necessary but never sufficient for non-Base admission.
-    const ownFenceFlag =
-      Object.prototype.hasOwnProperty.call(connector, 'supportsProtectedDispatchFence') &&
-      connector.supportsProtectedDispatchFence === true;
-    if (!ownFenceFlag) return false;
-    return isNonBaseProtectedFenceAdmitted(connectorName);
-  }
-
-  /**
-   * Whether the registered connector class forwards caller `max_tokens` to the
-   * provider. Used only for the protected hard-cost ceiling.
-   */
-  private connectorForwardsProtectedMaxTokens(connectorName: string): boolean {
-    const connector = this.connectors.get(connectorName);
-    if (!connector) return false;
-    if (connector instanceof BaseApiConnector) {
-      return classForwardsProtectedMaxTokens(connector.constructor?.name);
-    }
-    return nonBaseForwardsProtectedMaxTokens(connectorName);
-  }
-
-  /**
-   * Fail-closed admission for the protected Lab profile: the connector must be
-   * explicitly listed AND declare the dispatch fence capability.
-   */
-  assertProtectedConnectorAdmitted(connectorName: string): void {
-    const allowed = this.protectedLabConnectors();
-    if (!allowed.has(connectorName)) {
-      throw new BadRequestException({
-        error: 'protected_connector_not_admitted',
-        message: `Connector '${connectorName}' is not admitted to the protected Lab profile.`,
-      });
-    }
-    if (!this.connectorSupportsProtectedDispatchFence(connectorName)) {
-      throw new BadRequestException({
-        error: 'protected_connector_unfenced',
-        message: `Connector '${connectorName}' does not support the protected dispatch fence.`,
-      });
-    }
-  }
-
-  async prepareProtectedReservation(
-    connectorName: string,
-    request: ServiceExecuteRequest,
-    apiKeyId: string,
-    clientPricePolicyRevision?: string,
-  ) {
-    if (!this.billing) {
-      throw new BadRequestException({
-        error: 'protected_billing_required',
-        message: 'Protected Lab prepare requires the billing authority.',
-      });
-    }
-    this.assertProtectedConnectorAdmitted(connectorName);
-    if (!request.idempotencyKey) {
-      throw new BadRequestException({
-        error: 'protected_operation_key_required',
-        message: 'Protected Lab prepare requires an Idempotency-Key / operation key.',
-      });
-    }
-    const modelName = request.model || 'unknown';
-    const authority = await this.resolveProtectedPriceAuthority(
-      connectorName,
-      modelName,
-      request,
-      clientPricePolicyRevision,
-    );
-    if (authority.outcome !== 'resolved') {
-      return {
-        outcome: 'refused' as const,
-        code: authority.code,
-        message: authority.message,
-      };
-    }
-    return this.billing.prepareProtectedReservation({
-      apiKeyId,
-      operationKey: request.idempotencyKey,
-      payloadFingerprint: ConnectorsService.requestFingerprint(connectorName, request),
-      providerName: connectorName,
-      modelName,
-      routeKey: authority.routeKey,
-      pricePolicyRevision: authority.pricePolicyRevision,
-      holdUsd: authority.holdUsd,
-      ttlMs: this.holdTtlMs(),
-    });
-  }
-
-  /**
-   * Trusted catalogue pin for protected prepare. Never falls back to the
-   * unknown-model estimate floor — that would admit an unpriced call.
-   *
-   * Azure OpenAI (protected only): refuse caller `extra.deployment` so the
-   * catalogue-priced `request.model` cannot diverge from the URL deployment.
-   * The effective server-configured deployment must equal the priced model and
-   * is bound into the route key (hence the price-policy revision).
-   */
-  private async resolveProtectedPriceAuthority(
-    connectorName: string,
-    modelName: string,
-    request: ServiceExecuteRequest,
-    clientPricePolicyRevision?: string,
-  ) {
-    const connectorClassName = this.protectedConnectorClassName(connectorName);
-    const azureBinding = this.resolveProtectedAzureDeploymentBinding(
-      connectorName,
-      connectorClassName,
-      modelName,
-      request,
-    );
-    if (azureBinding.outcome === 'unavailable') {
-      return azureBinding;
-    }
-    const routeKey = azureBinding.routeKey;
-
-    // M-IMAGE: no provider-grounded image upper bound — refuse image_url
-    // specifically (Agent-Brain comment 6728415319). Kept as its own branch so
-    // M-IMAGE (image check → false) is not equivalent to M-NONTEXT.
-    if (protectedPromptContainsImageUrl(request.prompt)) {
-      return {
-        outcome: 'unavailable' as const,
-        code: NATIVE_PRICING_UNAVAILABLE,
-        message:
-          'Protected prepare refuses image_url ContentBlocks; no provider-grounded image upper bound is admitted.',
-      };
-    }
-    // M-NONTEXT: other non-text blocks (unknown types) refuse before hold/send.
-    if (protectedPromptContainsNonTextBlock(request.prompt)) {
-      return {
-        outcome: 'unavailable' as const,
-        code: NATIVE_PRICING_UNAVAILABLE,
-        message:
-          'Protected prepare refuses non-text ContentBlocks; no provider-grounded non-text upper bound is admitted.',
-      };
-    }
-    // M-FRAMING-MODEL: Microsoft Learn documents the framing formula only for
-    // an exact/prefix model set. Refuse out-of-set Azure models before hold.
-    if (
-      connectorClassName === 'AzureOpenAiConnector' &&
-      !isAzureChatFramingModelAdmitted(modelName)
-    ) {
-      return {
-        outcome: 'unavailable' as const,
-        code: PROTECTED_AZURE_FRAMING_MODEL_UNSUPPORTED,
-        message: `Protected prepare refuses Azure model '${modelName}': chat framing is documented only for the Microsoft Learn gpt-4o/gpt-4.1/gpt-5/o-series set.`,
-      };
-    }
-    // Learn source does not bound response_format billed rendering — refuse
-    // server-set responseFormat on protected Azure (legacy path unchanged).
-    if (
-      connectorClassName === 'AzureOpenAiConnector' &&
-      request.responseFormat != null &&
-      request.responseFormat.type === 'json_object'
-    ) {
-      return {
-        outcome: 'unavailable' as const,
-        code: NATIVE_PRICING_UNAVAILABLE,
-        message:
-          'Protected prepare refuses Azure response_format: Microsoft Learn num_tokens_from_messages does not document its billed rendering.',
-      };
-    }
-    const extras = assessProtectedForwardedExtras({
-      connectorClassName,
-      extra: request.extra as Record<string, unknown> | undefined,
-    });
-    if (!extras.ok) {
-      return {
-        outcome: 'unavailable' as const,
-        code: NATIVE_PRICING_UNAVAILABLE,
-        message: extras.message,
-      };
-    }
-    // Content UTF-8 + counted extras. Azure adds a Microsoft-documented chat
-    // framing allowance (M-FRAMING) only for the admitted model set; other
-    // classes are fence-refused instead.
-    let inputTokenUpperBound =
-      protectedInputTokenUpperBound({
-        prompt: request.prompt,
-        systemPrompt: request.systemPrompt,
-        tools: request.tools,
-        // responseFormat already refused for protected Azure above; other
-        // admitted classes do not currently exist.
-        responseFormat: request.responseFormat,
-      }) + extras.countedInputBytes;
-    if (connectorClassName === 'AzureOpenAiConnector') {
-      inputTokenUpperBound += azureOpenAiChatFramingTokenAllowance({
-        systemPrompt: request.systemPrompt,
-      });
-    }
-    const maxTokens = request.extra?.max_tokens;
-    const connectorForwardsMaxTokens = this.connectorForwardsProtectedMaxTokens(connectorName);
-    let catalogReadable = true;
-    let row: ProtectedCatalogAuthorityRow | null = null;
-    try {
-      row = await this.lookupProtectedCatalogRow(connectorName, modelName);
-    } catch (err) {
-      catalogReadable = false;
-      this.logger.error(
-        `Protected prepare: catalogue lookup failed for ${connectorName}/${modelName}: ${
-          err instanceof Error ? err.message : String(err)
-        }`,
-      );
-    }
-    const priced = resolveProtectedPricePolicy({
-      catalogReadable,
-      row,
-      routeKey,
-      inputTokenUpperBound,
-      maxTokens,
-      connectorForwardsMaxTokens,
-      clientRevision: clientPricePolicyRevision,
-    });
-    if (priced.outcome !== 'resolved') {
-      return priced;
-    }
-    return { ...priced, routeKey };
-  }
-
-  /**
-   * Protected Azure effective-target ↔ priced-model binding.
-   * Non-protected traffic and non-Azure connectors are unchanged.
-   *
-   * Binds origin (endpoint), deployment, and api-version from the same
-   * `resolveRequestTarget` path `buildRequestUrl` uses, then persists that
-   * identity in `routeKey`. Account/environment is not a separate connector
-   * option — the Azure resource is identified by origin.
-   *
-   * LIMITATION (stated decision): binding trusts operator-configured endpoint /
-   * deployment *name* / api-version equalling the catalogue-priced
-   * `request.model` for the deployment field. It is not verified against
-   * provider deployment metadata — Azure deployment names are operator-chosen,
-   * and no authoritative server-side deployment→model map exists today.
-   */
-  private resolveProtectedAzureDeploymentBinding(
-    connectorName: string,
-    connectorClassName: string | null,
-    modelName: string,
-    request: ServiceExecuteRequest,
-  ):
-    | { outcome: 'bound'; routeKey: string }
-    | {
-        outcome: 'unavailable';
-        code: typeof NATIVE_PRICING_UNAVAILABLE;
-        message: string;
-      } {
-    const baseRouteKey = `connectors/${connectorName}/protected/execute`;
-    if (connectorClassName !== 'AzureOpenAiConnector') {
-      return { outcome: 'bound', routeKey: baseRouteKey };
-    }
-    // M-AZURE-DEPLOY-CALLER: refuse caller override of the URL deployment.
-    if (
-      request.extra != null &&
-      Object.prototype.hasOwnProperty.call(request.extra, 'deployment') &&
-      request.extra.deployment != null
-    ) {
-      return {
-        outcome: 'unavailable',
-        code: NATIVE_PRICING_UNAVAILABLE,
-        message:
-          'Protected prepare refuses Azure extra.deployment so the priced model cannot diverge from the URL deployment.',
-      };
-    }
-    const connector = this.connectors.get(connectorName);
-    if (!(connector instanceof AzureOpenAiConnector)) {
-      return {
-        outcome: 'unavailable',
-        code: NATIVE_PRICING_UNAVAILABLE,
-        message: 'Protected prepare requires a registered Azure OpenAI connector instance.',
-      };
-    }
-    // Same code path as buildRequestUrl (caller deployment already refused).
-    const target = connector.resolveRequestTarget(request);
-    if (!target) {
-      return {
-        outcome: 'unavailable',
-        code: NATIVE_PRICING_UNAVAILABLE,
-        message:
-          'Protected prepare cannot derive the Azure effective request target (origin, deployment, api-version).',
-      };
-    }
-    // M-AZURE-DEPLOY-BIND: effective server deployment must equal priced model.
-    if (target.deployment !== modelName) {
-      return {
-        outcome: 'unavailable',
-        code: NATIVE_PRICING_UNAVAILABLE,
-        message:
-          'Protected prepare requires the Azure server deployment to equal the catalogue-priced model.',
-      };
-    }
-    return {
-      outcome: 'bound',
-      routeKey: encodeAzureTargetIntoRouteKey(baseRouteKey, target),
-    };
-  }
-
-  /** Constructor name for BaseApi connectors; null for non-Base doubles. */
-  private protectedConnectorClassName(connectorName: string): string | null {
-    const connector = this.connectors.get(connectorName);
-    if (!connector) return null;
-    if (connector instanceof BaseApiConnector) {
-      return connector.constructor?.name ?? null;
-    }
-    return null;
-  }
-
-  private async lookupProtectedCatalogRow(
-    connectorName: string,
-    modelName: string,
-  ): Promise<ProtectedCatalogAuthorityRow | null> {
-    if (this.catalogRepo.findPricing) {
-      const priced = await this.catalogRepo.findPricing(connectorName, modelName);
-      if (!priced) return null;
-      return {
-        connector: priced.connector ?? connectorName,
-        model: priced.model ?? modelName,
-        tier: priced.tier,
-        free: priced.free,
-        inputPerMTok: priced.inputPerMTok,
-        outputPerMTok: priced.outputPerMTok,
-        contentFingerprint: priced.contentFingerprint ?? null,
-        snapshotId: priced.snapshotId ?? null,
-        observedAt: priced.observedAt ?? null,
-        freshness: priced.freshness ?? null,
-        authoritative: priced.authoritative ?? null,
-      };
-    }
-    const rows = await this.catalogRepo.findAll();
-    const hit = rows.find(
-      (entry: { connector?: string; model?: string }) =>
-        entry.connector === connectorName && entry.model === modelName,
-    );
-    if (!hit) return null;
-    // findAll rows carry freshness/observedAt but not snapshot.authoritative —
-    // leave authoritative unset so the protected gate fails closed.
-    return {
-      connector: hit.connector,
-      model: hit.model,
-      tier: hit.tier,
-      free: hit.free,
-      inputPerMTok: hit.inputPerMTok,
-      outputPerMTok: hit.outputPerMTok,
-      contentFingerprint: hit.contentFingerprint,
-      snapshotId: hit.snapshotId,
-      observedAt: hit.observedAt ?? null,
-      freshness: hit.freshness ?? null,
-      authoritative: null,
-    };
-  }
-
-  async lookupProtectedReservation(reservationRef: string, apiKeyId: string) {
-    if (!this.billing) {
-      throw new BadRequestException({
-        error: 'protected_billing_required',
-        message: 'Protected Lab lookup requires the billing authority.',
-      });
-    }
-    return this.billing.lookupProtectedReservation({ reservationRef, apiKeyId });
-  }
-
-  private async openProtectedRequestIntent(
-    connectorName: string,
-    request: ServiceExecuteRequest,
-    apiKeyId: string,
-  ): Promise<{
-    response?: ConnectorResponse;
-    intent: RequestIntentHandle | null;
-    reservation?: ProtectedReservationView;
-  }> {
-    const model = request.model || 'unknown';
-    if (!this.billing) {
-      return {
-        intent: null,
-        response: this.gateErrorResponse(
-          connectorName,
-          model,
-          'protected_billing_required',
-          'The protected Lab profile refuses the dark-billing / null-intent fallback.',
-        ),
-      };
-    }
-    if (!request.reservationRef) {
-      return {
-        intent: null,
-        response: this.gateErrorResponse(
-          connectorName,
-          model,
-          'protected_reservation_required',
-          'Protected execute requires a reservation_ref from prepare.',
-        ),
-      };
-    }
-
-    const looked = await this.billing.lookupProtectedReservation({
-      reservationRef: request.reservationRef,
-      apiKeyId,
-    });
-    if (looked.outcome === 'not_found') {
-      return {
-        intent: null,
-        response: this.gateErrorResponse(
-          connectorName,
-          model,
-          'protected_reservation_mismatch',
-          'reservation_ref does not resolve to a protected reservation.',
-        ),
-      };
-    }
-    if (looked.outcome === 'forbidden') {
-      return {
-        intent: null,
-        response: this.gateErrorResponse(
-          connectorName,
-          model,
-          'protected_reservation_forbidden',
-          'reservation_ref is not bound to this API key.',
-        ),
-      };
-    }
-
-    const fingerprint = ConnectorsService.requestFingerprint(connectorName, request);
-    const reservation = looked.reservation;
-    if (
-      reservation.payloadFingerprint !== fingerprint ||
-      reservation.providerName !== connectorName ||
-      (request.model && reservation.modelName !== request.model) ||
-      (request.idempotencyKey && reservation.operationKey !== request.idempotencyKey)
-    ) {
-      return {
-        intent: null,
-        response: this.gateErrorResponse(
-          connectorName,
-          model,
-          'protected_reservation_mismatch',
-          'reservation_ref does not match the authenticated key, operation, or payload.',
-        ),
-      };
-    }
-    if (reservation.protectedPhase !== 'reserved') {
-      return {
-        intent: null,
-        response: this.gateErrorResponse(
-          connectorName,
-          model,
-          reservation.protectedPhase === 'unknown' ||
-            reservation.protectedPhase === 'dispatch_committed'
-            ? 'protected_unknown'
-            : 'protected_reservation_not_ready',
-          `Protected reservation is in phase '${reservation.protectedPhase}' and cannot start a new dispatch.`,
-        ),
-      };
-    }
-    return { intent: looked.intent, reservation };
-  }
-
-  /**
-   * P9 — immediately before the dispatch CAS / provider fetch:
-   * (a) reserved effective-target identity,
-   * (b) target parsed from the actual pre-built request URL about to be fetched,
-   * (c) current authoritative route/price re-resolution.
-   * On mismatch or unavailable identity/proof: refuse with zero provider calls,
-   * do not CAS, leave the hold `reserved` (no release / reprice / reroute).
-   */
-  private async assertProtectedReservationStillCurrent(
-    connectorName: string,
-    request: ServiceExecuteRequest,
-    reserved: ProtectedReservationView,
-    requestUrl?: string,
-  ): Promise<void> {
-    const modelName = request.model || reserved.modelName || 'unknown';
-    const reservedTarget = decodeAzureTargetFromRouteKey(reserved.routeKey);
-    if (this.protectedConnectorClassName(connectorName) === 'AzureOpenAiConnector') {
-      if (!reservedTarget) {
-        throw new ProtectedReservationStaleError(
-          'Protected reservation is stale: Azure effective target was not bound at prepare.',
-        );
-      }
-      if (!requestUrl) {
-        throw new ProtectedReservationStaleError(
-          'Protected reservation is stale: actual provider request URL was not supplied to the fence.',
-        );
-      }
-      const urlTarget = parseAzureOpenAiChatCompletionsUrl(requestUrl);
-      if (!urlTarget || !azureProtectedTargetsEqual(reservedTarget, urlTarget)) {
-        throw new ProtectedReservationStaleError(
-          'Protected reservation is stale: actual request URL does not match the reserved Azure effective target.',
-        );
-      }
-    }
-
-    // Fresh re-derive — do not trust the reserved revision as a client hint.
-    const authority = await this.resolveProtectedPriceAuthority(connectorName, modelName, request);
-    if (authority.outcome !== 'resolved') {
-      throw new ProtectedReservationStaleError(
-        `Protected reservation is stale: trusted price/route proof is unavailable (${authority.code}).`,
-      );
-    }
-    if (
-      authority.pricePolicyRevision !== reserved.pricePolicyRevision ||
-      authority.routeKey !== reserved.routeKey ||
-      reserved.providerName !== connectorName ||
-      reserved.modelName !== modelName
-    ) {
-      throw new ProtectedReservationStaleError(
-        'Protected reservation is stale: trusted price policy or route no longer matches the hold.',
-      );
-    }
-    if (reservedTarget) {
-      const currentTarget = decodeAzureTargetFromRouteKey(authority.routeKey);
-      if (!currentTarget || !azureProtectedTargetsEqual(reservedTarget, currentTarget)) {
-        throw new ProtectedReservationStaleError(
-          'Protected reservation is stale: authoritative Azure effective target no longer matches the hold.',
-        );
-      }
-    }
   }
 
   /** Give a reservation back. Safe to call with null, and safe to repeat. */
