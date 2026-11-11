@@ -1,8 +1,8 @@
 {
  "admission": {
-  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
-  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
-  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+  "rule": "admitted requires every verdict = verified; failed without exemption \u21d2 refused; not_measured without exemption \u21d2 paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold \u2014 the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item \u2014 the ordinary case after a rebase or a second commit on a card \u2014 the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted"
  },
  "captured_at_utc": "2026-11-11T01:11:37Z",
@@ -45,15 +45,15 @@
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:15cd642a30bb0610cf20e6b3d536d8ca7b6be6a122fe636e8a96b7e3609073dc",
-  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/graph-e450735ea2b4.json",
+  "graph_digest": "sha256:7d52d85dc5793b6b34cf3cbe5564aefada5c22a5a82ebcc8e22ef623f71fcc03",
+  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/ciparity-graphs/graph-base-nomod.json",
   "source_commit": "e450735ea2b474051b471bd431f84db5abd76423"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:3433df85b33680a3db1b3a4bf333691391a69ae55c715c1e5bb5514d42d5457a",
-  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/graph-head-4cac5dfecb77.json",
+  "graph_digest": "sha256:a772bd685cfeddbab8f5771318fab8b9d8b22669c39d7ec54330c4d9bd86644d",
+  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/ciparity-graphs/graph-head-nomod.json",
   "source_commit": "4cac5dfecb77b282325bb36816b56b05ea6d828e",
   "staleness": {
    "checked_at_utc": "2026-11-11T01:13:22Z",
@@ -557,9 +557,9 @@
   "total": 24
  },
  "notes": [
-  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = \u22c3 edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i\u2026",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "A2-353: `canary` discharged for 1 test code_unit(s) — a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/connectors/cascade/cascade.module.di.spec.ts"
+  "A2-353: `canary` discharged for 1 test code_unit(s) \u2014 a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/connectors/cascade/cascade.module.di.spec.ts"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
@@ -857,7 +857,7 @@
    "entity": "receipt:receipts/graph/change-admission-b92d0523.json",
    "node_type": "receipt",
    "path": "receipts/graph/change-admission-b92d0523.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it; superseded by construction — this run re-issues the receipt at receipts/graph/change-admission-b92d0523.json for work item b92d0523-8ffb-418b-b198-7df81259e915",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it; superseded by construction \u2014 this run re-issues the receipt at receipts/graph/change-admission-b92d0523.json for work item b92d0523-8ffb-418b-b198-7df81259e915",
    "rule": "DEC-AUP-0035",
    "superseded": {
     "receipt_path": "receipts/graph/change-admission-b92d0523.json",
@@ -1037,7 +1037,7 @@
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2863 files listed"
   },
   {
-   "command": "verify.py config_schema: keys read at head ⊆ declared keys",
+   "command": "verify.py config_schema: keys read at head \u2286 declared keys",
    "duration_s": 1.0,
    "entities": [
     "code_unit:src/connectors/cascade/cascade.module.di.spec.ts"
@@ -1095,7 +1095,7 @@
     "code": "SUPERSEDED_SELF_EXCLUSION",
     "entity": "receipt:receipts/graph/change-admission-b92d0523.json",
     "rule": "DEC-AUP-0035",
-    "text": "the receipt at receipts/graph/change-admission-b92d0523.json is the previous version of the one this run is writing, for the same work item b92d0523-8ffb-418b-b198-7df81259e915 — superseded by construction, so it owes this change no verdict"
+    "text": "the receipt at receipts/graph/change-admission-b92d0523.json is the previous version of the one this run is writing, for the same work item b92d0523-8ffb-418b-b198-7df81259e915 \u2014 superseded by construction, so it owes this change no verdict"
    },
    {
     "code": "STRUCTURAL_EXCLUSION",
