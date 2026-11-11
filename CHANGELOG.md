@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **DecisionLedger/v1 in MC storage (CONN-JEV-06).** Append-only `decision_ledger`
+  table + Prisma model with digests of input (`state`), template (`questions`) and
+  route; idempotent insert on `identity_digest` (replay → one row); Postgres trigger
+  refuses `UPDATE`/`DELETE`. `persistAndSettle` records a row for `typesafe-jev`
+  alongside `Request`. `cost_usd` stays `null` when usage is missing or unpriced
+  (never invents `0`). Schema/migration/unit tests cover AC digests, idempotency and
+  the append-only negative control. See `documentation/reference/jev-decisions.md`.
+
 - **JevRoute transport surface for `typesafe-jev` (CONN-JEV-02).**
   One typed `JevRoute` interface covers live-direct URL/body/headers/parse plus
   OpenRouter and Cloudflare stubs built from measured envelopes (TZ §2.2 / §2.4).

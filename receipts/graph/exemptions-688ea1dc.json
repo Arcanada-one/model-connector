@@ -1,0 +1,480 @@
+{
+  "exemptions": [
+    {
+      "entity": "code_unit:src/admin/admin.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/admin/circuit-breaker.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/admin/watcher-repair.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/billing/credits.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/billing/payments.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.service.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/connectors/image-generation/jobs/image-job.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/health/health.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-compat.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/speech/speech.controller.ts",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-contract-diff: contract:src/speech/dto/tts-request.dto.ts#ttsRequestSchema: safeParse result/payload usage not proven: union requires bound safeParse and object variants; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:src/speech/stt/stt-async.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:test/provider-profiles/boundary-http.spec.ts",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json does not include test/provider-profiles/boundary-http.spec.ts Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "code_unit:test/provider-profiles/canary/admin-routes.cjs",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json does not include test/provider-profiles/canary/admin-routes.cjs Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "receipt:receipts/graph/change-admission-688ea1dc.json",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). historical receipt: asserted, never re-verified (I14); a new receipt supersedes it Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:DELETE /admin/keys/:id",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /admin/credits/:apiKeyId",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /admin/credits/:apiKeyId/history",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /admin/keys",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /admin/keys/:id",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /admin/keys/:id/policy",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /admin/keys/:id/usage",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /connectors",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /connectors/:name/status",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /connectors/catalog",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /connectors/image/capabilities",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /connectors/intents/:intentId",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /health",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /health/connectors",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /health/metrics",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /health/ready",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /jobs/:id",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /keyed",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /probe/abort",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /probe/execute",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /probe/health",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /probe/metrics",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /v1/models",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:GET /v1/speech/stt/jobs/:id",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:PATCH /admin/keys/:id/policy",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:PATCH /admin/keys/:id/rate-limit",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /admin/circuit-breaker/reset",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /admin/credits/:apiKeyId",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /admin/credits/:apiKeyId/gift",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /admin/credits/holds/sweep",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /admin/credits/reconcile",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /admin/keys",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /connectors/:name/chat/completions",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /connectors/:name/execute",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /execute",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /images/generate",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /internal/credits/:apiKeyId/payment",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /internal/credits/:apiKeyId/reverse",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /internal/watcher/circuit-breaker/reset",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /v1/chat/completions",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /v1/prompt-cache/prewarm",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /v1/speech/stt",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /v1/speech/stt/async",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /v1/speech/tts",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:POST /v1/speech/vad",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
+      "code": "VERIFIER_DEBT",
+      "owner": "CONN-JEV-06 absorb-cure author lane (Muneral 688ea1dc) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "reason": "CONN-JEV-06 DecisionLedger/v1 absorb-main impact fan-out (Muneral 688ea1dc). v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1) Hosted graph-admission/canary remeasure remains required when required_effective."
+    }
+  ]
+}
