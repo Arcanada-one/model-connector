@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted"
  },
- "captured_at_utc": "2026-11-11T01:04:54Z",
+ "captured_at_utc": "2026-11-11T01:11:37Z",
  "change_set": {
   "base": "e450735ea2b474051b471bd431f84db5abd76423",
   "files": [
@@ -37,7 +37,7 @@
     "status": "M"
    }
   ],
-  "head": "b47246b7fbf57914a7879ec2f9e88e4300acbf1b",
+  "head": "4cac5dfecb77b282325bb36816b56b05ea6d828e",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -46,17 +46,17 @@
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:15cd642a30bb0610cf20e6b3d536d8ca7b6be6a122fe636e8a96b7e3609073dc",
-  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/graph-e450735ea2b4.json",
+  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/graph-e450735ea2b4.json",
   "source_commit": "e450735ea2b474051b471bd431f84db5abd76423"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:791898535a02a6ca91d0df907dd720bcf27dc904ad75e387a695ff00e9cb0dbe",
-  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/graph-head-b47246b7fbf5.json",
-  "source_commit": "b47246b7fbf57914a7879ec2f9e88e4300acbf1b",
+  "graph_digest": "sha256:3433df85b33680a3db1b3a4bf333691391a69ae55c715c1e5bb5514d42d5457a",
+  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/graph-head-4cac5dfecb77.json",
+  "source_commit": "4cac5dfecb77b282325bb36816b56b05ea6d828e",
   "staleness": {
-   "checked_at_utc": "2026-11-11T01:06:33Z",
+   "checked_at_utc": "2026-11-11T01:13:22Z",
    "checked_nodes": 979,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -565,7 +565,7 @@
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261111T010454Z-b47246b7",
+ "receipt_id": "car-verify-20261111T011137Z-4cac5dfe",
  "receipt_path": "receipts/graph/change-admission-b92d0523.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -634,7 +634,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-11T01:06:33Z",
+  "checked_at_utc": "2026-11-11T01:13:22Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -852,7 +852,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:55049c626a5f78806b00544e9a296167d4e1c8945d3791d621c3e99b8575e517"
+    "head": "sha256:f2000d2fac3c24e24e203eea5ee9a811d40462cf71d2a1b8444ac1ecdf985167"
    },
    "entity": "receipt:receipts/graph/change-admission-b92d0523.json",
    "node_type": "receipt",
@@ -899,7 +899,7 @@
   }
  ],
  "tree": {
-  "commit": "b47246b7fbf57914a7879ec2f9e88e4300acbf1b",
+  "commit": "4cac5dfecb77b282325bb36816b56b05ea6d828e",
   "dirty": false
  },
  "verdicts": [
@@ -948,8 +948,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/type-check-ly8t5wun/check.tsbuildinfo --listFiles",
-   "duration_s": 26.1,
+   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/type-check-l_4arjzh/check.tsbuildinfo --listFiles",
+   "duration_s": 15.63,
    "entities": [
     "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
     "code_unit:vitest.config.ts",
@@ -963,13 +963,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-11T01:06:49Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-11T01:13:34Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2866 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/type-check-qct5mi8c/check.tsbuildinfo --listFiles",
-   "duration_s": 27.17,
+   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/type-check-nhjr5809/check.tsbuildinfo --listFiles",
+   "duration_s": 10.08,
    "entities": [
     "code_unit:vitest.config.ts",
     "deployable_unit:."
@@ -980,13 +980,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-11T01:07:16Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-11T01:13:50Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2135 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/type-check-0gc331o0/check.tsbuildinfo --listFiles",
-   "duration_s": 1.17,
+   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/type-check-9_1ogxs9/check.tsbuildinfo --listFiles",
+   "duration_s": 1.44,
    "entities": [
     "code_unit:vitest.config.ts",
     "deployable_unit:."
@@ -997,13 +997,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-11T01:07:43Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-11T01:14:01Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/type-check-f2y8kbzb/check.tsbuildinfo --listFiles",
-   "duration_s": 61.1,
+   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/type-check-sw517f_f/check.tsbuildinfo --listFiles",
+   "duration_s": 17.25,
    "entities": [
     "code_unit:vitest.config.ts",
     "deployable_unit:."
@@ -1014,13 +1014,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-11T01:07:44Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-11T01:14:02Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2757 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/type-check-50skq0zd/check.tsbuildinfo --listFiles",
-   "duration_s": 80.68,
+   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/type-check-8fjzt0_z/check.tsbuildinfo --listFiles",
+   "duration_s": 18.55,
    "entities": [
     "code_unit:vitest.config.ts",
     "deployable_unit:."
@@ -1032,13 +1032,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-11T01:08:48Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-11T01:14:20Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2863 files listed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 0.84,
+   "duration_s": 1.0,
    "entities": [
     "code_unit:src/connectors/cascade/cascade.module.di.spec.ts"
    ],
@@ -1048,13 +1048,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-11T01:10:10Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-11T01:14:40Z",
    "summary": "3 source(s), 0 new / 91 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.62,
+   "duration_s": 0.49,
    "entities": [
     "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
     "code_unit:vitest.config.ts",
@@ -1068,8 +1068,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-11T01:10:11Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-11T01:14:41Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -1084,8 +1084,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue2/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-11T01:10:11Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-rc-absorb-cur-20261111T0055Z/evidence/reissue3/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-11T01:14:41Z",
    "summary": "1 document(s), 0 failed"
   }
  ],
@@ -1145,9 +1145,9 @@
    "receipt:receipts/graph/change-admission-jev-decision.json": []
   },
   "seconds": {
-   "prepare": 6.57,
-   "total": 317.28,
-   "verifiers": 197.68
+   "prepare": 5.19,
+   "total": 183.74,
+   "verifiers": 64.44
   }
  },
  "work_item": "b92d0523-8ffb-418b-b198-7df81259e915"
