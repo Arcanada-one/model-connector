@@ -2,6 +2,18 @@
 
 The `typesafe-jev` connector accepts `DecisionRequest/v1` and returns `DecisionResult/v1` under the normal connector response's `structured` field. It uses the native System-One endpoint, not chat completions. `DecisionService` is exported by `ConnectorsModule` for internal callers; it always calls `ConnectorsService.execute` with the caller's API key identity and zero retries. External callers use the existing authenticated `POST /connectors/typesafe-jev/execute` path. Existing key policy, provider USE access, billing and timeout gates still apply.
 
+## Typed public route (CONN-JEV-07)
+
+Product callers should prefer authenticated `POST /v1/decisions` (`src/decisions/`). The body is ARCA-JEV-02-shaped:
+
+- `template` (string) **or** `template_ref: {id, version?}`
+- `state` — object `{trusted, untrusted}` for catalog templates, or a string for the `health` template only
+- optional `template_params`, `decision_type`, `risk_class`, `privacy_class`, `mode: "shadow"`
+
+The route resolves questions from the in-repo template registry (`src/decisions/templates/`), enforces the catalog state whitelist and the §7.4 evaluative deny-list, and refuses inline `questions` / `instructions` / `criteria` before any provider call. Unknown template → HTTP 400; out-of-whitelist or deny-list field (e.g. `reviewer_note`) → HTTP 400 with zero provider calls. Success → HTTP 201 with `schema: DecisionResult/v1`, `template_ref`, `state_digest`, and the shadow `decision` from `DecisionService`.
+
+Published npm package `@arcanada/jev-decision-templates` was absent at authoring (NOT_MEASURED); this registry is the local ARCA-JEV-02 contract binding until that package exists. The `/execute` path remains for debug and does not replace the typed route.
+
 ## Pre-network refusals (CONN-JEV-03)
 
 Execute refuses **before any network call** with a typed `error.details.code`:
