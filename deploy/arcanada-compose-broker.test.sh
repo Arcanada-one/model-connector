@@ -1622,3 +1622,153 @@ if kc_upgrade >"${fixture_dir}/kc-pair-running-foreign.out" 2>&1; then echo 'FAI
 grep -Fq 'wrong image' "${fixture_dir}/kc-pair-running-foreign.out" || exit 1
 echo 'PASS: kc_running_container_outside_pair_set_blocks_upgrade'
 unset FAKE_KC_IMAGE_FROM_CHECKOUT
+
+# ---------------------------------------------------------------------------
+# talomnia-backend rows. Self-contained: it builds its own broker copy from the
+# pristine script, its own fake docker and a real local git origin, so it does
+# not depend on the state the sections above leave behind. The service pulls a
+# pre-built private image whose tag is the checkout HEAD (like verdicus).
+# ---------------------------------------------------------------------------
+tb_root="${fixture_dir}/talomnia"
+tb_state="${tb_root}/state"; tb_env="${tb_root}/env"; tb_bin="${tb_root}/bin"
+tb_origin="${tb_root}/origin.git"; tb_seed="${tb_root}/seed"
+tb_docker_log="${tb_root}/docker.log"
+mkdir -p "$tb_state" "$tb_env" "$tb_bin" "${tb_root}/vlog"
+: >"$tb_docker_log"
+tb_image_id='sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd'
+
+tb_git() { git -c user.email=t@example.invalid -c user.name=t "$@"; }
+git init -q --bare -b main "$tb_origin"
+git init -q -b main "$tb_seed"
+mkdir -p "${tb_seed}/scripts"
+printf '%s\n' 'services: {}' >"${tb_seed}/docker-compose.prod.yml"
+cat >"${tb_seed}/scripts/broker-verify.sh" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$EXPECTED_IMAGE_SHA" =~ ^sha256:[0-9a-f]{64}$ ]]
+[[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
+[[ "$COMPOSE_FILE" == docker-compose.prod.yml ]]
+echo "RUNNING_IMAGE_DIGEST=${EXPECTED_IMAGE_SHA}"
+SH
+tb_git -C "$tb_seed" add -A
+tb_git -C "$tb_seed" commit -q -m c1
+tb_c1="$(git -C "$tb_seed" rev-parse HEAD)"
+printf '%s\n' 'two' >"${tb_seed}/other.txt"
+tb_git -C "$tb_seed" add -A
+tb_git -C "$tb_seed" commit -q -m c2
+tb_c2="$(git -C "$tb_seed" rev-parse HEAD)"
+git -C "$tb_seed" push -q "$tb_origin" main
+# A commit that exists in the repository but is NOT on main.
+tb_git -C "$tb_seed" checkout -q -b side "$tb_c1"
+printf '%s\n' 'off main' >"${tb_seed}/side.txt"
+tb_git -C "$tb_seed" add -A
+tb_git -C "$tb_seed" commit -q -m side
+tb_side="$(git -C "$tb_seed" rev-parse HEAD)"
+git -C "$tb_seed" push -q "$tb_origin" side
+# The checkout already exists, so sync fetches from the local origin instead of
+# cloning the real URL.
+git clone -q "$tb_origin" "${tb_state}/talomnia-backend"
+git -C "${tb_state}/talomnia-backend" checkout -q --detach "$tb_c1"
+printf '%s\n' 'TB_FIXTURE=1' >"${tb_env}/talomnia-backend.env"
+
+cat >"${tb_bin}/docker" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >>"$TB_DOCKER_LOG"
+case "$1" in
+  compose) printf 'IMAGE_TAG=%s\n' "${IMAGE_TAG:-unset}" ;;
+  image) [[ "$2" == inspect && "$3" == "ghcr.io/arcanada-one/talomnia-backend:${TB_EXPECT_TAG}" ]] || exit 1
+         printf '%s\n' "$TB_IMAGE_ID" ;;
+  inspect) [[ "$2" == talomnia-backend-talomnia-backend-1 ]] || exit 1
+           date -u +%Y-%m-%dT%H:%M:%SZ ;;
+  login|logout) cat >/dev/null || true ;;
+  *) exit 1 ;;
+esac
+SH
+chmod 0755 "${tb_bin}/docker"
+export TB_DOCKER_LOG="$tb_docker_log" TB_IMAGE_ID="$tb_image_id" TB_EXPECT_TAG="$tb_c2"
+
+tb_broker="${tb_root}/broker"
+sed \
+  -e "s#^readonly STATE_ROOT=.*#readonly STATE_ROOT='${tb_state}'#" \
+  -e "s#^readonly ENV_ROOT=.*#readonly ENV_ROOT='${tb_env}'#" \
+  -e "s#^readonly DOCKER=.*#readonly DOCKER='${tb_bin}/docker'#" \
+  -e "s#^readonly GIT=.*#readonly GIT='$(command -v git)'#" \
+  -e "s#== 'root'#== '${owner}'#g" \
+  -e "s#install -m 0600 -o root -g root#install -m 0600 -o ${owner} -g $(id -gn)#" \
+  -e "s#/var/log/arcanada-deploy#${tb_root}/vlog#g" \
+  "$subject" >"$tb_broker"
+chmod 0755 "$tb_broker"
+tb_token='tbtokentbtokentbtokentbtoken'
+
+tb_run() { # name, stdin, args...
+  local name="$1" in="$2"; shift 2
+  printf '%s' "$in" | "$tb_broker" "$@" >"${fixture_dir}/${name}.out" 2>&1
+}
+tb_pass() {
+  local name="$1" in="$2"; shift 2
+  if ! tb_run "$name" "$in" "$@"; then
+    echo "FAIL: ${name} unexpectedly failed" >&2; sed -n '1,40p' "${fixture_dir}/${name}.out" >&2; exit 1
+  fi
+  echo "PASS: ${name}"
+}
+tb_fail() { # name, expected message, stdin, args...
+  local name="$1" needle="$2" in="$3"; shift 3
+  if tb_run "$name" "$in" "$@"; then
+    echo "FAIL: ${name} unexpectedly passed" >&2; exit 1
+  fi
+  expect_message "$name" "$needle"
+  echo "PASS: ${name}"
+}
+
+# Allowlist, AUTH and the ancestor-of-origin/main rule.
+tb_fail talo_unknown_service_refused 'service not in allowlist' '' talomnia-backendx ps
+tb_fail talo_sync_needs_fetch_credential 'fetch credential on stdin' '' talomnia-backend sync "$tb_c2"
+tb_fail talo_sync_refuses_malformed_credential 'malformed fetch credential' 'short' talomnia-backend sync "$tb_c2"
+tb_fail talo_sync_refuses_sha_not_on_main 'not reachable from origin/main' "$tb_token" talomnia-backend sync "$tb_side"
+[[ "$(git -C "${tb_state}/talomnia-backend" rev-parse HEAD)" == "$tb_c1" ]] || { echo 'FAIL: refused sync moved HEAD' >&2; exit 1; }
+tb_fail talo_sync_takes_exactly_one_sha 'sync takes exactly one sha' "$tb_token" talomnia-backend sync
+tb_pass talo_sync_accepts_sha_on_main "$tb_token" talomnia-backend sync "$tb_c2"
+expect_message talo_sync_accepts_sha_on_main "BROKER_SYNC_PASS service=talomnia-backend sha=${tb_c2}"
+# ENVFILE: the root-owned file is installed beside the compose file (COMPOSE row).
+[[ "$(cat "${tb_state}/talomnia-backend/.env")" == 'TB_FIXTURE=1' ]] || { echo 'FAIL: env file was not installed beside the compose file' >&2; exit 1; }
+
+# Compose verbs use COMPOSE + PROJECT and pin IMAGE_TAG to the checkout HEAD.
+tb_pass talo_pull_accepted '' talomnia-backend pull
+expect_message talo_pull_accepted "IMAGE_TAG=${tb_c2}"
+grep -Fq "compose -p talomnia-backend -f ${tb_state}/talomnia-backend/docker-compose.prod.yml pull" "$tb_docker_log" || {
+  echo 'FAIL: pull did not use the COMPOSE/PROJECT rows' >&2; cat "$tb_docker_log" >&2; exit 1; }
+tb_pass talo_up_accepted '' talomnia-backend up
+tb_pass talo_ps_accepted '' talomnia-backend ps
+tb_fail talo_pull_takes_no_arguments 'pull takes no arguments' '' talomnia-backend pull extra
+
+# VERIFY + IMAGE: verify runs the row's script with the broker-derived image id.
+tb_pass talo_verify_accepted '' talomnia-backend verify
+expect_message talo_verify_accepted "RUNNING_IMAGE_DIGEST=${tb_image_id}"
+tb_fail talo_verify_takes_no_arguments 'verify takes no arguments' '' talomnia-backend verify "$tb_image_id"
+mv "${tb_state}/talomnia-backend/scripts/broker-verify.sh" "${tb_root}/broker-verify.sh.saved"
+tb_fail talo_verify_refuses_missing_script 'verify script missing' '' talomnia-backend verify
+mv "${tb_root}/broker-verify.sh.saved" "${tb_state}/talomnia-backend/scripts/broker-verify.sh"
+tb_pass talo_image_id_uses_image_row '' talomnia-backend image-id
+expect_message talo_image_id_uses_image_row "$tb_image_id"
+
+# CONTAINER + MAXAGE: freshness inspects the <project>-<service>-1 container.
+tb_pass talo_freshness_uses_container_and_maxage '' talomnia-backend freshness
+expect_message talo_freshness_uses_container_and_maxage 'BROKER_FRESHNESS_PASS service=talomnia-backend'
+
+# REGISTRY_AUTH.
+tb_pass talo_registry_login_accepted "$tb_token" talomnia-backend registry-login Arcanada
+grep -Fq 'login ghcr.io -u Arcanada --password-stdin' "$tb_docker_log" || { echo 'FAIL: registry-login did not reach docker login' >&2; exit 1; }
+tb_fail talo_registry_login_rejects_flag_username 'implausible registry username' "$tb_token" talomnia-backend registry-login --insecure
+tb_pass talo_registry_logout_accepted '' talomnia-backend registry-logout
+
+# No row means no capability: these verbs are unavailable for the new service,
+# and an unknown verb is refused. (build / image-id / tag-* stay reachable at
+# the broker level because they need no extra row; the sudoers grant, which
+# names the allowed actions, is what excludes them.)
+tb_fail talo_migrate_has_no_recipe 'service has no migration recipe' '' talomnia-backend migrate
+tb_fail talo_rollback_has_no_services 'talomnia-backend' '' talomnia-backend rollback
+tb_fail talo_smoke_has_no_row 'talomnia-backend' '' talomnia-backend smoke
+tb_fail talo_env_get_has_no_row 'talomnia-backend' '' talomnia-backend env-get SECRET
+tb_fail talo_aggregate_readback_refused 'aggregate' '' talomnia-backend aggregate-readback
+tb_fail talo_unknown_action_refused '' '' talomnia-backend not-an-action
