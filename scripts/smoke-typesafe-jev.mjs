@@ -116,8 +116,9 @@ export function judge(observation) {
 }
 
 export function parseArgs(argv) {
+  // Prefer argv; MC_BASE_URL is an optional declared client override (see .env.example).
   const out = {
-    baseUrl: process.env.MC_BASE_URL || DEFAULT_BASE,
+    baseUrl: process.env.MC_BASE_URL?.trim() || DEFAULT_BASE,
     receiptPath: null,
     state: 'CONN-JEV-04 live smoke synthetic task',
     dryJudge: null,
@@ -231,7 +232,7 @@ function writeReceipt(path, receipt) {
 
 export async function runSmoke(opts) {
   const capturedAt = new Date().toISOString();
-  const apiKey = process.env.MC_KEY || process.env.MC_API_KEY || '';
+  const apiKey = process.env.MC_KEY || '';
   const receiptBase = {
     schema: 'ConnJev04LiveSmoke/v1',
     task: 'b8896c8e-7e40-4608-a547-263d8bb11fc0',
@@ -264,7 +265,7 @@ export async function runSmoke(opts) {
       ...receiptBase,
       runtime_authorized: false,
       verdict: 'NOT_MEASURED',
-      reasons: ['MC_KEY/MC_API_KEY absent — fail-closed; live execute not attempted'],
+      reasons: ['MC_KEY absent — fail-closed; live execute not attempted'],
       preflight: {
         build,
         typesafe_jev_health: health.typesafeJev,
@@ -317,7 +318,7 @@ async function main(argv) {
   if (opts.help) {
     console.log(
       'Usage: smoke-typesafe-jev.mjs [--base-url URL] [--receipt PATH] [--state TEXT]\n' +
-        'Requires MC_KEY (or MC_API_KEY). Missing key → exit 10 (NOT_MEASURED).',
+        'Requires MC_KEY. Missing key → exit 10 (NOT_MEASURED).',
     );
     return 0;
   }

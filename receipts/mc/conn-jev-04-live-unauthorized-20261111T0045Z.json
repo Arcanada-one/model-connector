@@ -2,13 +2,13 @@
   "schema": "ConnJev04LiveSmoke/v1",
   "task": "b8896c8e-7e40-4608-a547-263d8bb11fc0",
   "card": "CONN-JEV-04",
-  "captured_at_utc": "2026-11-11T00:47:49.194Z",
+  "captured_at_utc": "2026-11-11T00:57:22.687Z",
   "base_url": "https://connector.arcanada.ai",
   "runtime_authorized": false,
   "knowledge_admitted": false,
   "verdict": "NOT_MEASURED",
   "reasons": [
-    "MC_KEY/MC_API_KEY absent — fail-closed; live execute not attempted"
+    "MC_KEY absent — fail-closed; live execute not attempted"
   ],
   "preflight": {
     "build": {

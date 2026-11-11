@@ -13,6 +13,8 @@
     "../vitest.config.ts",
     "../vitest.bench-reservation.config.ts",
     "../scripts/vault-provider-keys.mjs",
-    "../scripts/vault-provider-keys.spec.mjs"
+    "../scripts/vault-provider-keys.spec.mjs",
+    "../scripts/smoke-typesafe-jev.mjs",
+    "../scripts/smoke-typesafe-jev.spec.mjs"
   ]
 }

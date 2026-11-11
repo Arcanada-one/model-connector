@@ -14,8 +14,8 @@ gates (HTTP 201, observed decision, ledger-mirrored `usage.costUsd` /
    [enable-jev-shadow-decisions.md](./enable-jev-shadow-decisions.md).
 2. Caller API key with USE access for `typesafe-jev` / `jev-latest`. A free-only
    policy cannot use an unpriced model.
-3. Environment variable `MC_KEY` (or `MC_API_KEY`) set to that caller key. Do not
-   put the key in argv, source, logs or receipts.
+3. Environment variable `MC_KEY` set to that caller key. Do not put the key in
+   argv, source, logs or receipts.
 
 ## Run
 
