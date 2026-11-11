@@ -1452,6 +1452,24 @@ describe('ConnectorsService', () => {
       });
       expect(jev?.routing.endpoint).toBeUndefined();
     });
+
+    it('CONN-JEV-05: openrouter stub priced from fixture; available false until keyed', async () => {
+      const { JevConnector } = await import('./jev/jev.connector');
+      fullService.register(new JevConnector());
+      const result = await assembleFiltered(fullService, { ...noFilters, modality: 'decision' });
+      const priced = result.find(
+        (m) => m.connector === 'typesafe-jev' && m.model === 'typesafe/jev-1.13',
+      );
+      expect(priced).toMatchObject({
+        modality: 'decision',
+        available: false,
+        pricing: { inputPerMTok: 0.042, outputPerMTok: 0, unit: 'per_1m_tokens' },
+        contextWindow: 32_000,
+      });
+      const direct = result.find((m) => m.connector === 'typesafe-jev' && m.model === 'jev-latest');
+      expect(direct?.pricing).toBeNull();
+      expect(direct?.contextWindow).toBe(32_000);
+    });
   });
 
   // ── CONN-0245: getCatalog() DB read path — reads ONLY the repo (+ cache), ──

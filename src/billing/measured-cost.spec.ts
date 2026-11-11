@@ -60,6 +60,28 @@ describe('measureCostUsd', () => {
       });
       expect(measured.costUsd).toBe(2);
       expect(measured.source).toBe('catalog');
+      // CONN-JEV-05 — missing output tariff is null, not invented free output.
+      expect(measured.inputCostUsd).toBe(2);
+      expect(measured.outputCostUsd).toBeNull();
+    });
+
+    it('CONN-JEV-05: outputCostUsd is 0 only when outputPerMTok is a machine zero', () => {
+      const freeOut = measureCostUsd({
+        inputTokens: 1_000_000,
+        outputTokens: 1_000_000,
+        pricing: { inputPerMTok: 0.042, outputPerMTok: 0, tier: 'paid' },
+      });
+      expect(freeOut.outputCostUsd).toBe(0);
+      expect(freeOut.inputCostUsd).toBe(0.042);
+
+      const unknownOut = measureCostUsd({
+        inputTokens: 1_000_000,
+        outputTokens: 1_000_000,
+        pricing: { inputPerMTok: 0.042, outputPerMTok: null, tier: 'paid' },
+      });
+      expect(unknownOut.outputCostUsd).toBeNull();
+      expect(unknownOut.inputCostUsd).toBe(0.042);
+      expect(unknownOut.costUsd).toBe(0.042);
     });
 
     it('rounds to the six decimals the Decimal(10,6) column stores', () => {
