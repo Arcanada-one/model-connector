@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-10T23:24:39Z",
+ "captured_at_utc": "2026-11-11T00:10:17Z",
  "change_set": {
   "base": "b60df8ac7671c780847f3fc8a67390d89a4b5408",
   "files": [
@@ -120,7 +120,7 @@
    "entity": "code_unit:src/connectors/jev/jev.connector.ts",
    "expires_at_utc": "2026-12-10T00:00:00Z",
    "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
-   "reason": "CONN-JEV-03 edited typesafe-jev connector for kill switch + typed refusals. Focused vitest src/connectors/jev/jev.connector.spec.ts PASS (45). Canary live-contour listing not produced in author lane; hosted graph-admission remeasures canary."
+   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
   },
   {
    "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
@@ -162,14 +162,14 @@
    "entity": "code_unit:test/provider-profiles/boundary-http.spec.ts",
    "expires_at_utc": "2026-12-10T00:00:00Z",
    "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
-   "reason": "Pre-existing path not in .arcana/tsconfig.mjs.json; unchanged by CONN-JEV-03."
+   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Entity is outside .arcana/tsconfig.mjs.json include set; type-check path is NOT_MEASURED by matrix, not a silent pass."
   },
   {
    "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
    "entity": "config_key:TYPESAFE_JEV_DISABLED",
    "expires_at_utc": "2026-12-10T00:00:00Z",
    "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
-   "reason": "CONN-JEV-03 added config_key TYPESAFE_JEV_DISABLED (bare KEY= in .env.example + env.schema). Focused tests cover disabled path; canary listing for config_key not produced in author lane."
+   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
   },
   {
    "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
@@ -279,6 +279,41 @@
   {
    "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
    "entity": "route:GET /health/ready",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
+   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /keyed",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
+   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /probe/abort",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
+   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /probe/execute",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
+   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /probe/health",
+   "expires_at_utc": "2026-12-10T00:00:00Z",
+   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
+   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
+  },
+  {
+   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+   "entity": "route:GET /probe/metrics",
    "expires_at_utc": "2026-12-10T00:00:00Z",
    "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
    "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
@@ -429,73 +464,24 @@
    "expires_at_utc": "2026-12-10T00:00:00Z",
    "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
    "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
-  },
-  {
-   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
-   "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
-   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
-  },
-  {
-   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
-   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
-   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
-  },
-  {
-   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
-   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
-   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
-  },
-  {
-   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
-   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
-  },
-  {
-   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
-   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
-  },
-  {
-   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
-   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
-  },
-  {
-   "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
-   "expires_at_utc": "2026-12-10T00:00:00Z",
-   "owner": "CONN-JEV-03 author lane (Muneral e8ab201d) / Model Connector owner",
-   "reason": "Impact fan-out from TYPESAFE_JEV_DISABLED kill switch (CONN-JEV-03 Muneral e8ab201d). Canary live-contour listing was not produced in this author lane. Other verifiers on the entity did not fail. Hosted graph-admission/canary remeasure remains required when required_effective."
   }
  ],
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:b09803dd864a5d3bf6551052939fbf3ee5b0c2d9fdccd5315066edcef2049c5b",
-  "path": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/graph-b60df8ac7671.json",
+  "graph_digest": "sha256:f627e7f1a28433c25f042f92e74c63ab9aeb7d6638da9518943b5aeb6ebbaed0",
+  "path": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out7/graph-base-ci-parity.json",
   "source_commit": "b60df8ac7671c780847f3fc8a67390d89a4b5408"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:8c405ac2c89381bd13705bf63d8ffa96cf83bf0592881eb186670a983860e3b6",
-  "path": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/graph-head-bd51a5f174bb.json",
+  "graph_digest": "sha256:a61cd941555518699a126f698d08132dfca452ee3cbd6c547962f139e862d8f5",
+  "path": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/graph-head-bd51a5f174bb.json",
   "source_commit": "bd51a5f174bb0570680822ef28f21336cb78ef75",
   "staleness": {
-   "checked_at_utc": "2026-11-10T23:26:58Z",
-   "checked_nodes": 977,
+   "checked_at_utc": "2026-11-11T00:11:15Z",
+   "checked_nodes": 976,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -517,7 +503,7 @@
       "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
       "provenance": "deterministic",
       "to": "code_unit:src/config/env.schema.ts",
-      "via": "inline-harness-compiler-dependency"
+      "via": "relative"
      }
     ],
     "revisions": [
@@ -927,7 +913,7 @@
       "from": "code_unit:src/auth/rate-limit.app.spec.ts",
       "provenance": "deterministic",
       "to": "code_unit:src/config/env.schema.ts",
-      "via": "inline-harness-compiler-dependency"
+      "via": "relative"
      }
     ],
     "revisions": [
@@ -974,7 +960,7 @@
       "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
       "provenance": "deterministic",
       "to": "code_unit:src/config/env.schema.ts",
-      "via": "inline-harness-compiler-dependency"
+      "via": "relative"
      }
     ],
     "revisions": [
@@ -7559,7 +7545,7 @@
       "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
       "provenance": "deterministic",
       "to": "code_unit:src/config/env.schema.ts",
-      "via": "inline-harness-compiler-dependency"
+      "via": "relative"
      },
      {
       "edge_type": "verifies",
@@ -8632,6 +8618,141 @@
    },
    {
     "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:GET /keyed",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:GET /keyed",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:GET /probe/abort",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:GET /probe/abort",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:GET /probe/execute",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:GET /probe/execute",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:GET /probe/health",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:GET /probe/health",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "route:GET /probe/metrics",
+    "node_type": "route",
+    "path": [
+     {
+      "edge_type": "imports",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "code_unit:src/config/env.schema.ts",
+      "via": "relative"
+     },
+     {
+      "edge_type": "provides_route",
+      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "provenance": "deterministic",
+      "to": "route:GET /probe/metrics",
+      "via": "nest-decorator"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "controller compile + contract-diff + route/config consistency"
+   },
+   {
+    "boundary": "intra_unit",
     "depth": 3,
     "entity": "route:GET /v1/models",
     "node_type": "route",
@@ -9343,195 +9464,6 @@
      "head"
     ],
     "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.integration.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 2,
-    "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
-    "node_type": "route",
-    "path": [
-     {
-      "edge_type": "imports",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "code_unit:src/config/env.schema.ts",
-      "via": "inline-harness-compiler-dependency"
-     },
-     {
-      "edge_type": "provides_route",
-      "from": "code_unit:src/auth/rate-limit.app.spec.ts",
-      "provenance": "deterministic",
-      "to": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
-      "via": "nest-decorator"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "controller compile + contract-diff + route/config consistency"
    }
   ],
   "edge_types": "all",
@@ -9541,19 +9473,20 @@
   "inferred_tail": [],
   "max_depth": 3,
   "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
-  "total": 332
+  "total": 330
  },
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 57 attached from /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/exemptions-e8ab201d.json",
+  "exemptions: 55 attached from /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/exemptions-e8ab201d.ci.json",
+  "head tree bd51a5f174bb exported with git archive into /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/work/export-bd51a5f174bb (node_modules linked from the repository for ['.', 'packages/sdk-ts', 'watcher']; workspace packages built: ['packages/sdk-ts (tsc exit 0, 10.18s)']); the repository was not written",
   "A2-353: `canary` discharged for 3 test code_unit(s) — a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/admin/admin-rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.integration.spec.ts"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261110T232439Z-bd51a5f1",
+ "receipt_id": "car-verify-20261111T001017Z-bd51a5f1",
  "repo": {
   "name": "Arcanada-one/model-connector",
   "path": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/repo"
@@ -9871,6 +9804,11 @@
    "route:GET /health/connectors",
    "route:GET /health/metrics",
    "route:GET /health/ready",
+   "route:GET /keyed",
+   "route:GET /probe/abort",
+   "route:GET /probe/execute",
+   "route:GET /probe/health",
+   "route:GET /probe/metrics",
    "route:GET /v1/models",
    "route:GET /v1/speech/stt/jobs/:id",
    "route:PATCH /admin/keys/:id/policy",
@@ -9891,14 +9829,7 @@
    "route:POST /v1/speech/stt",
    "route:POST /v1/speech/stt/async",
    "route:POST /v1/speech/tts",
-   "route:POST /v1/speech/vad",
-   "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
+   "route:POST /v1/speech/vad"
   ],
   "head": [
    "code_unit:src/admin/admin-rate-limit.app.spec.ts",
@@ -10214,6 +10145,11 @@
    "route:GET /health/connectors",
    "route:GET /health/metrics",
    "route:GET /health/ready",
+   "route:GET /keyed",
+   "route:GET /probe/abort",
+   "route:GET /probe/execute",
+   "route:GET /probe/health",
+   "route:GET /probe/metrics",
    "route:GET /v1/models",
    "route:GET /v1/speech/stt/jobs/:id",
    "route:PATCH /admin/keys/:id/policy",
@@ -10234,21 +10170,14 @@
    "route:POST /v1/speech/stt",
    "route:POST /v1/speech/stt/async",
    "route:POST /v1/speech/tts",
-   "route:POST /v1/speech/vad",
-   "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
+   "route:POST /v1/speech/vad"
   ],
   "schema": "RevisionImpactSelection/v1",
   "unmeasured_head_files": []
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-10T23:26:57Z",
+  "checked_at_utc": "2026-11-11T00:11:14Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -10520,7 +10449,7 @@
   }
  ],
  "tree": {
-  "commit": "bd51a5f174bb0570680822ef28f21336cb78ef75",
+  "commit": "d6fdec6def05cbc569aabd621c0511d042f63441",
   "dirty": false
  },
  "verdicts": [
@@ -13157,6 +13086,61 @@
    ]
   },
   {
+   "entity": "route:GET /keyed",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:GET /probe/abort",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:GET /probe/execute",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:GET /probe/health",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "route:GET /probe/metrics",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-contract-diff",
+    "v-route-config",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
    "entity": "route:GET /v1/models",
    "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
    "verdict": "not_measured",
@@ -13386,83 +13370,6 @@
     "v-route-config",
     "v-type-check-tsconfig-mjs"
    ]
-  },
-  {
-   "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-contract-diff",
-    "v-route-config",
-    "v-type-check-tsconfig-mjs"
-   ]
   }
  ],
  "verifier_selection": {
@@ -13473,8 +13380,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/repo/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/type-check-uxr8pn7o/check.tsbuildinfo --listFiles",
-   "duration_s": 36.3,
+   "command": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/work/export-bd51a5f174bb/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/work/export-bd51a5f174bb/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/type-check-nlzw030g/check.tsbuildinfo --listFiles",
+   "duration_s": 95.21,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.controller.spec.ts",
@@ -13729,6 +13636,11 @@
     "route:GET /health/connectors",
     "route:GET /health/metrics",
     "route:GET /health/ready",
+    "route:GET /keyed",
+    "route:GET /probe/abort",
+    "route:GET /probe/execute",
+    "route:GET /probe/health",
+    "route:GET /probe/metrics",
     "route:GET /v1/models",
     "route:GET /v1/speech/stt/jobs/:id",
     "route:PATCH /admin/keys/:id/policy",
@@ -13749,14 +13661,7 @@
     "route:POST /v1/speech/stt",
     "route:POST /v1/speech/stt/async",
     "route:POST /v1/speech/tts",
-    "route:POST /v1/speech/vad",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
+    "route:POST /v1/speech/vad"
    ],
    "entity_verdicts": {
     "code_unit:src/admin/admin-rate-limit.app.spec.ts": "verified",
@@ -14012,6 +13917,11 @@
     "route:GET /health/connectors": "verified",
     "route:GET /health/metrics": "verified",
     "route:GET /health/ready": "verified",
+    "route:GET /keyed": "verified",
+    "route:GET /probe/abort": "verified",
+    "route:GET /probe/execute": "verified",
+    "route:GET /probe/health": "verified",
+    "route:GET /probe/metrics": "verified",
     "route:GET /v1/models": "verified",
     "route:GET /v1/speech/stt/jobs/:id": "verified",
     "route:PATCH /admin/keys/:id/policy": "verified",
@@ -14032,25 +13942,18 @@
     "route:POST /v1/speech/stt": "verified",
     "route:POST /v1/speech/stt/async": "verified",
     "route:POST /v1/speech/tts": "verified",
-    "route:POST /v1/speech/vad": "verified",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "verified"
+    "route:POST /v1/speech/vad": "verified"
    },
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-10T23:27:24Z",
-   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2865 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-11T00:12:20Z",
+   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2866 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/repo/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/type-check-7mmttkr_/check.tsbuildinfo --listFiles",
-   "duration_s": 16.13,
+   "command": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/work/export-bd51a5f174bb/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/work/export-bd51a5f174bb/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/type-check-qsqwob3v/check.tsbuildinfo --listFiles",
+   "duration_s": 47.3,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -14388,13 +14291,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-10T23:28:02Z",
-   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2134 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-11T00:13:58Z",
+   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2135 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/repo/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/type-check-_y1yt7o8/check.tsbuildinfo --listFiles",
-   "duration_s": 2.11,
+   "command": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/work/export-bd51a5f174bb/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/work/export-bd51a5f174bb/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/type-check-9mdbusb_/check.tsbuildinfo --listFiles",
+   "duration_s": 4.34,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -14568,13 +14471,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-10T23:28:18Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-11T00:14:46Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/repo/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/type-check-kydwryfm/check.tsbuildinfo --listFiles",
-   "duration_s": 25.85,
+   "command": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/work/export-bd51a5f174bb/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/work/export-bd51a5f174bb/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/type-check-7cnzdtth/check.tsbuildinfo --listFiles",
+   "duration_s": 46.6,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -14912,13 +14815,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-10T23:28:20Z",
-   "summary": "tsconfig.json: exit 0, 0 error(s), 2756 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-11T00:14:51Z",
+   "summary": "tsconfig.json: exit 0, 0 error(s), 2757 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/repo/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/type-check-a0zk8xvm/check.tsbuildinfo --listFiles",
-   "duration_s": 25.79,
+   "command": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/work/export-bd51a5f174bb/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/work/export-bd51a5f174bb/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/type-check-x2c1oin9/check.tsbuildinfo --listFiles",
+   "duration_s": 47.61,
    "entities": [
     "code_unit:src/admin/admin.controller.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -15256,13 +15159,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-10T23:28:47Z",
-   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2862 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-11T00:15:38Z",
+   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2863 files listed"
   },
   {
    "command": "tools/graph/contract_diff.py.run_diff(base=b60df8ac7671, head=bd51a5f174bb, graph=head graph)",
-   "duration_s": 18.85,
+   "duration_s": 22.01,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.controller.ts",
@@ -15313,6 +15216,11 @@
     "route:GET /health/connectors",
     "route:GET /health/metrics",
     "route:GET /health/ready",
+    "route:GET /keyed",
+    "route:GET /probe/abort",
+    "route:GET /probe/execute",
+    "route:GET /probe/health",
+    "route:GET /probe/metrics",
     "route:GET /v1/models",
     "route:GET /v1/speech/stt/jobs/:id",
     "route:PATCH /admin/keys/:id/policy",
@@ -15333,14 +15241,7 @@
     "route:POST /v1/speech/stt",
     "route:POST /v1/speech/stt/async",
     "route:POST /v1/speech/tts",
-    "route:POST /v1/speech/vad",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
+    "route:POST /v1/speech/vad"
    ],
    "entity_verdicts": {
     "code_unit:src/admin/admin-rate-limit.app.spec.ts": "verified",
@@ -15392,6 +15293,11 @@
     "route:GET /health/connectors": "verified",
     "route:GET /health/metrics": "verified",
     "route:GET /health/ready": "verified",
+    "route:GET /keyed": "verified",
+    "route:GET /probe/abort": "verified",
+    "route:GET /probe/execute": "verified",
+    "route:GET /probe/health": "verified",
+    "route:GET /probe/metrics": "verified",
     "route:GET /v1/models": "verified",
     "route:GET /v1/speech/stt/jobs/:id": "verified",
     "route:PATCH /admin/keys/:id/policy": "verified",
@@ -15412,25 +15318,18 @@
     "route:POST /v1/speech/stt": "verified",
     "route:POST /v1/speech/stt/async": "verified",
     "route:POST /v1/speech/tts": "verified",
-    "route:POST /v1/speech/vad": "verified",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "verified"
+    "route:POST /v1/speech/vad": "verified"
    },
    "exit_code": 1,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/v-contract-diff.json",
-   "started_at_utc": "2026-11-10T23:29:14Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/v-contract-diff.json",
+   "started_at_utc": "2026-11-11T00:16:28Z",
    "summary": "186→187 contracts, breaking 0, edges {'not_measured': 4, 'verified': 248}"
   },
   {
    "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
-   "duration_s": 29.15,
+   "duration_s": 0.25,
    "entities": [
     "route:DELETE /admin/keys/:id",
     "route:GET /admin/credits/:apiKeyId",
@@ -15448,6 +15347,11 @@
     "route:GET /health/connectors",
     "route:GET /health/metrics",
     "route:GET /health/ready",
+    "route:GET /keyed",
+    "route:GET /probe/abort",
+    "route:GET /probe/execute",
+    "route:GET /probe/health",
+    "route:GET /probe/metrics",
     "route:GET /v1/models",
     "route:GET /v1/speech/stt/jobs/:id",
     "route:PATCH /admin/keys/:id/policy",
@@ -15468,14 +15372,7 @@
     "route:POST /v1/speech/stt",
     "route:POST /v1/speech/stt/async",
     "route:POST /v1/speech/tts",
-    "route:POST /v1/speech/vad",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
+    "route:POST /v1/speech/vad"
    ],
    "entity_verdicts": {
     "route:DELETE /admin/keys/:id": "verified",
@@ -15494,6 +15391,11 @@
     "route:GET /health/connectors": "verified",
     "route:GET /health/metrics": "verified",
     "route:GET /health/ready": "verified",
+    "route:GET /keyed": "verified",
+    "route:GET /probe/abort": "verified",
+    "route:GET /probe/execute": "verified",
+    "route:GET /probe/health": "verified",
+    "route:GET /probe/metrics": "verified",
     "route:GET /v1/models": "verified",
     "route:GET /v1/speech/stt/jobs/:id": "verified",
     "route:PATCH /admin/keys/:id/policy": "verified",
@@ -15514,25 +15416,18 @@
     "route:POST /v1/speech/stt": "verified",
     "route:POST /v1/speech/stt/async": "verified",
     "route:POST /v1/speech/tts": "verified",
-    "route:POST /v1/speech/vad": "verified",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "verified",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "verified"
+    "route:POST /v1/speech/vad": "verified"
    },
    "exit_code": 0,
    "id": "v-route-config",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/v-route-config.txt",
-   "started_at_utc": "2026-11-10T23:29:33Z",
-   "summary": "44 route(s), 0 failed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/v-route-config.txt",
+   "started_at_utc": "2026-11-11T00:16:50Z",
+   "summary": "42 route(s), 0 failed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 1.1,
+   "duration_s": 2.04,
    "entities": [
     "code_unit:src/connectors/jev/jev.connector.ts",
     "config_key:TYPESAFE_JEV_DISABLED"
@@ -15544,13 +15439,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/v-config-schema.json",
-   "started_at_utc": "2026-11-10T23:30:02Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-11T00:16:50Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.46,
+   "duration_s": 0.62,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.controller.spec.ts",
@@ -16032,13 +15927,13 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/v-fitness.json",
-   "started_at_utc": "2026-11-10T23:30:03Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-11T00:16:52Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.02,
+   "duration_s": 0.03,
    "entities": [
     "document:CHANGELOG.md",
     "document:README.md",
@@ -16094,8 +15989,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/v-doc-reference.txt",
-   "started_at_utc": "2026-11-10T23:30:03Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-11T00:16:53Z",
    "summary": "24 document(s), 0 failed"
   },
   {
@@ -16130,6 +16025,11 @@
     "route:GET /health/connectors",
     "route:GET /health/metrics",
     "route:GET /health/ready",
+    "route:GET /keyed",
+    "route:GET /probe/abort",
+    "route:GET /probe/execute",
+    "route:GET /probe/health",
+    "route:GET /probe/metrics",
     "route:GET /v1/models",
     "route:GET /v1/speech/stt/jobs/:id",
     "route:PATCH /admin/keys/:id/policy",
@@ -16150,14 +16050,7 @@
     "route:POST /v1/speech/stt",
     "route:POST /v1/speech/stt/async",
     "route:POST /v1/speech/tts",
-    "route:POST /v1/speech/vad",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics"
+    "route:POST /v1/speech/vad"
    ],
    "entity_verdicts": {
     "code_unit:src/admin/admin.controller.ts": "not_measured",
@@ -16188,6 +16081,11 @@
     "route:GET /health/connectors": "not_measured",
     "route:GET /health/metrics": "not_measured",
     "route:GET /health/ready": "not_measured",
+    "route:GET /keyed": "not_measured",
+    "route:GET /probe/abort": "not_measured",
+    "route:GET /probe/execute": "not_measured",
+    "route:GET /probe/health": "not_measured",
+    "route:GET /probe/metrics": "not_measured",
     "route:GET /v1/models": "not_measured",
     "route:GET /v1/speech/stt/jobs/:id": "not_measured",
     "route:PATCH /admin/keys/:id/policy": "not_measured",
@@ -16208,21 +16106,14 @@
     "route:POST /v1/speech/stt": "not_measured",
     "route:POST /v1/speech/stt/async": "not_measured",
     "route:POST /v1/speech/tts": "not_measured",
-    "route:POST /v1/speech/vad": "not_measured",
-    "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": "not_measured",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "not_measured",
-    "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "not_measured",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": "not_measured",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": "not_measured",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": "not_measured",
-    "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": "not_measured"
+    "route:POST /v1/speech/vad": "not_measured"
    },
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out6/v-canary.json",
-   "started_at_utc": "2026-11-10T23:30:03Z",
-   "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 56 not_measured of 56 entities"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-e8ab201d-conn-jev-03-cur-20261110T2136Z/verifier-out9/verifier-out/v-canary.json",
+   "started_at_utc": "2026-11-11T00:16:53Z",
+   "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 54 not_measured of 54 entities"
   }
  ],
  "verify": {
@@ -17445,6 +17336,36 @@
     "route_config_consistency",
     "type_check"
    ],
+   "route:GET /keyed": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:GET /probe/abort": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:GET /probe/execute": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:GET /probe/health": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
+   "route:GET /probe/metrics": [
+    "canary",
+    "contract_diff",
+    "route_config_consistency",
+    "type_check"
+   ],
    "route:GET /v1/models": [
     "canary",
     "contract_diff",
@@ -17570,54 +17491,12 @@
     "contract_diff",
     "route_config_consistency",
     "type_check"
-   ],
-   "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
-   ],
-   "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics": [
-    "canary",
-    "contract_diff",
-    "route_config_consistency",
-    "type_check"
    ]
   },
   "seconds": {
-   "prepare": 13.59,
-   "total": 324.66,
-   "verifiers": 155.76
+   "prepare": 37.76,
+   "total": 396.75,
+   "verifiers": 266.01
   }
  },
  "work_item": "e8ab201d-88f5-4516-93bc-bb934cf888e8"
