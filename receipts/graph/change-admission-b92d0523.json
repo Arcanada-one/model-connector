@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted"
  },
- "captured_at_utc": "2026-11-11T00:07:12Z",
+ "captured_at_utc": "2026-11-11T00:38:29Z",
  "change_set": {
   "base": "b60df8ac7671c780847f3fc8a67390d89a4b5408",
   "files": [
@@ -37,7 +37,7 @@
     "status": "M"
    }
   ],
-  "head": "825e249b9a3518c02d4cca9de960289846054c56",
+  "head": "8d54234e0348098d67acb791865b4d7e3bfb9bb3",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -45,18 +45,18 @@
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:b09803dd864a5d3bf6551052939fbf3ee5b0c2d9fdccd5315066edcef2049c5b",
-  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/graph-b60df8ac7671.json",
+  "graph_digest": "sha256:f627e7f1a28433c25f042f92e74c63ab9aeb7d6638da9518943b5aeb6ebbaed0",
+  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/graph-b60df8ac7671.json",
   "source_commit": "b60df8ac7671c780847f3fc8a67390d89a4b5408"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:58df0f480ef904441e6673d17750498790344bd3192899a4c7059115d5609d4a",
-  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/graph-head-825e249b9a35.json",
-  "source_commit": "825e249b9a3518c02d4cca9de960289846054c56",
+  "graph_digest": "sha256:922d4ff74090153fde588582b01ce90e5c0b3d5f5c92768c20e079e2517d6f30",
+  "path": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/graph-head-8d54234e0348.json",
+  "source_commit": "8d54234e0348098d67acb791865b4d7e3bfb9bb3",
   "staleness": {
-   "checked_at_utc": "2026-11-11T00:11:14Z",
+   "checked_at_utc": "2026-11-11T00:40:13Z",
    "checked_nodes": 978,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -545,7 +545,7 @@
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261111T000712Z-825e249b",
+ "receipt_id": "car-verify-20261111T003829Z-8d54234e",
  "receipt_path": "receipts/graph/change-admission-b92d0523.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -612,7 +612,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-11T00:11:14Z",
+  "checked_at_utc": "2026-11-11T00:40:13Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -830,7 +830,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:9520893170ff8c08d95ef1bac571d535790f90a8af00c84e5d9fcc4f8bc82937"
+    "head": "sha256:f5279de6702002a9faf218099e315fab892cc81f9ca162d6ec781d5e5c1b223b"
    },
    "entity": "receipt:receipts/graph/change-admission-b92d0523.json",
    "node_type": "receipt",
@@ -866,7 +866,7 @@
   }
  ],
  "tree": {
-  "commit": "825e249b9a3518c02d4cca9de960289846054c56",
+  "commit": "8d54234e0348098d67acb791865b4d7e3bfb9bb3",
   "dirty": false
  },
  "verdicts": [
@@ -915,8 +915,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/type-check-lmji1ayf/check.tsbuildinfo --listFiles",
-   "duration_s": 118.24,
+   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/type-check-ba66icn9/check.tsbuildinfo --listFiles",
+   "duration_s": 20.14,
    "entities": [
     "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
     "code_unit:vitest.config.ts",
@@ -930,13 +930,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-11T00:12:23Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-11T00:40:26Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2865 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/type-check-uej49qon/check.tsbuildinfo --listFiles",
-   "duration_s": 41.6,
+   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/type-check-xy2uhc83/check.tsbuildinfo --listFiles",
+   "duration_s": 11.49,
    "entities": [
     "code_unit:vitest.config.ts",
     "deployable_unit:."
@@ -947,13 +947,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-11T00:14:24Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-11T00:40:47Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2134 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/type-check-292wzwia/check.tsbuildinfo --listFiles",
-   "duration_s": 6.59,
+   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/type-check-j1a9p6kz/check.tsbuildinfo --listFiles",
+   "duration_s": 1.16,
    "entities": [
     "code_unit:vitest.config.ts",
     "deployable_unit:."
@@ -964,13 +964,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-11T00:15:06Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-11T00:40:59Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/type-check-sxkn4oby/check.tsbuildinfo --listFiles",
-   "duration_s": 45.48,
+   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/type-check-188096jd/check.tsbuildinfo --listFiles",
+   "duration_s": 31.28,
    "entities": [
     "code_unit:vitest.config.ts",
     "deployable_unit:."
@@ -981,13 +981,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-11T00:15:13Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-11T00:41:00Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2756 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/type-check-tj2v87bz/check.tsbuildinfo --listFiles",
-   "duration_s": 65.65,
+   "command": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/type-check-15nn8fu7/check.tsbuildinfo --listFiles",
+   "duration_s": 22.02,
    "entities": [
     "code_unit:vitest.config.ts",
     "deployable_unit:."
@@ -999,13 +999,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-11T00:16:00Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-11T00:41:32Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2862 files listed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 1.16,
+   "duration_s": 1.14,
    "entities": [
     "code_unit:src/connectors/cascade/cascade.module.di.spec.ts"
    ],
@@ -1015,13 +1015,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-11T00:17:07Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-11T00:41:55Z",
    "summary": "3 source(s), 0 new / 91 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.59,
+   "duration_s": 0.44,
    "entities": [
     "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
     "code_unit:vitest.config.ts",
@@ -1035,8 +1035,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-11T00:17:08Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-11T00:41:57Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -1051,8 +1051,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-work/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-11T00:17:08Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b92d0523-conn-cascade-di-cur-20261110T2259Z/evidence/reissue-admitted/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-11T00:41:57Z",
    "summary": "1 document(s), 0 failed"
   }
  ],
@@ -1111,9 +1111,9 @@
    "receipt:receipts/graph/change-admission-jev-decision.json": []
   },
   "seconds": {
-   "prepare": 31.6,
-   "total": 596.2,
-   "verifiers": 279.31
+   "prepare": 6.49,
+   "total": 208.02,
+   "verifiers": 87.67
   }
  },
  "work_item": "b92d0523-8ffb-418b-b198-7df81259e915"
