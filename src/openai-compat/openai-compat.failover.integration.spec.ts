@@ -94,7 +94,7 @@ function buildStack(
   const prismaMock: Record<string, unknown> = { request: { create: () => Promise.resolve({}) } };
   prismaMock.$transaction = (fn: (tx: unknown) => unknown) => fn(prismaMock);
   const prisma = prismaMock as never;
-  const metrics = { record: () => undefined } as never;
+  const metrics = { record: () => undefined, recordFailoverHops: () => undefined } as never;
   const outputGuard = { wrapExecute: () => Promise.resolve({ response: null }) } as never;
 
   // Scope READ/USE to these fake connectors. Never depend on the host's
