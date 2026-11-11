@@ -3,7 +3,7 @@
   "verdict": "admitted_with_exemptions",
   "rule": "admitted_with_exemptions requires every non-verified entity to carry a valid exemption"
  },
- "captured_at_utc": "2026-11-11T16:49:37Z",
+ "captured_at_utc": "2026-11-11T17:10:21Z",
  "change_set": {
   "base": "dce861de57bc07c7c5e6be8aeb695617d2abeab8",
   "files": [
@@ -97,20 +97,20 @@
  ],
  "graph": {
   "builder_version": "1.0.6",
-  "built_at_utc": "2026-11-11T16:49:10Z",
-  "graph_digest": "sha256:056ea060bb0dbef2ff37b3a516a2c4d538c804db9d0396bd55da26b8f10dfdc5",
-  "path": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/base-graph.json",
+  "built_at_utc": "2026-11-11T17:09:58Z",
+  "graph_digest": "sha256:48bac668625457e69c1c5e5604afb93bf935fb5b93b37aa4b30e273ce2401b6b",
+  "path": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/base-graph.json",
   "source_commit": "dce861de57bc07c7c5e6be8aeb695617d2abeab8"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:e5bff5b36b1012aa427617b53a1c94b4d83f051810394559608124559bfe8344",
-  "path": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/graph-head-c59e860f5df6.json",
+  "graph_digest": "sha256:eaad7bf867bcbbdd1e6fc6a6c677a0b201f1f2b41a7ccc047e20b640cfdc5911",
+  "path": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/graph-head-c59e860f5df6.json",
   "source_commit": "c59e860f5df66a7ac375224fdddfbf878477e9c0",
   "staleness": {
-   "checked_at_utc": "2026-11-11T16:50:05Z",
-   "checked_nodes": 1010,
+   "checked_at_utc": "2026-11-11T17:10:45Z",
+   "checked_nodes": 1009,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -1132,16 +1132,16 @@
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "head tree c59e860f5df6 exported with git archive into /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/work/export-c59e860f5df6 (node_modules linked from the repository for ['.', 'packages/sdk-ts', 'watcher']; workspace packages built: ['packages/sdk-ts (tsc exit 0, 0.84s)']); the repository was not written"
+  "head tree c59e860f5df6 exported with git archive into /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/work/export-c59e860f5df6 (node_modules linked from the repository for ['.', 'packages/sdk-ts', 'watcher']; workspace packages built: ['packages/sdk-ts (tsc exit 0, 0.92s)']); the repository was not written"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261111T164937Z-c59e860f",
+ "receipt_id": "car-verify-20261111T171021Z-c59e860f",
  "repo": {
   "name": "Arcanada-one/model-connector",
-  "path": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/repo"
+  "path": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/wt/d48dcb43"
  },
  "revision_selection": {
   "base": [
@@ -1234,7 +1234,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-11T16:50:05Z",
+  "checked_at_utc": "2026-11-11T17:10:45Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -1528,7 +1528,7 @@
   }
  ],
  "tree": {
-  "commit": "10c3d9918d1d499392f686fefe46d1e283a7e342",
+  "commit": "d48dcb4302f370c450c4e5d1441baeac278eb052",
   "dirty": false
  },
  "verdicts": [
@@ -1673,8 +1673,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/work/export-c59e860f5df6/node_modules/.bin/tsc -p /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/work/export-c59e860f5df6/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/type-check-9hr9z0f2/check.tsbuildinfo --listFiles",
-   "duration_s": 10.68,
+   "command": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/work/export-c59e860f5df6/node_modules/.bin/tsc -p /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/work/export-c59e860f5df6/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/type-check-ysfkjlrd/check.tsbuildinfo --listFiles",
+   "duration_s": 11.23,
    "entities": [
     "deployable_unit:."
    ],
@@ -1684,13 +1684,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-11T16:50:15Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-11T17:10:54Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2890 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/work/export-c59e860f5df6/node_modules/.bin/tsc -p /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/work/export-c59e860f5df6/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/type-check-2u01eetl/check.tsbuildinfo --listFiles",
-   "duration_s": 6.38,
+   "command": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/work/export-c59e860f5df6/node_modules/.bin/tsc -p /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/work/export-c59e860f5df6/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/type-check-sv4_vvvk/check.tsbuildinfo --listFiles",
+   "duration_s": 6.97,
    "entities": [
     "deployable_unit:."
    ],
@@ -1700,13 +1700,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-11T16:50:26Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-11T17:11:06Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2148 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/work/export-c59e860f5df6/node_modules/.bin/tsc -p /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/work/export-c59e860f5df6/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/type-check-boi_ncgr/check.tsbuildinfo --listFiles",
-   "duration_s": 0.82,
+   "command": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/work/export-c59e860f5df6/node_modules/.bin/tsc -p /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/work/export-c59e860f5df6/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/type-check-e35n6k7d/check.tsbuildinfo --listFiles",
+   "duration_s": 0.94,
    "entities": [
     "deployable_unit:."
    ],
@@ -1716,13 +1716,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-11T16:50:33Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-11T17:11:13Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/work/export-c59e860f5df6/node_modules/.bin/tsc -p /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/work/export-c59e860f5df6/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/type-check-ppmnuo86/check.tsbuildinfo --listFiles",
-   "duration_s": 10.03,
+   "command": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/work/export-c59e860f5df6/node_modules/.bin/tsc -p /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/work/export-c59e860f5df6/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/type-check-vkz5jef4/check.tsbuildinfo --listFiles",
+   "duration_s": 9.49,
    "entities": [
     "deployable_unit:."
    ],
@@ -1732,13 +1732,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-11T16:50:34Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-11T17:11:14Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2779 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/work/export-c59e860f5df6/node_modules/.bin/tsc -p /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/work/export-c59e860f5df6/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/type-check-lm1yz91g/check.tsbuildinfo --listFiles",
-   "duration_s": 10.08,
+   "command": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/work/export-c59e860f5df6/node_modules/.bin/tsc -p /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/work/export-c59e860f5df6/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/type-check-u4n6mxlw/check.tsbuildinfo --listFiles",
+   "duration_s": 11.71,
    "entities": [
     "deployable_unit:."
    ],
@@ -1748,8 +1748,8 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-11T16:50:45Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-11T17:11:24Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2885 files listed"
   },
   {
@@ -1764,8 +1764,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-b803fcb7f17ed923",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-workflow-config-b803fcb7f17ed923.txt",
-   "started_at_utc": "2026-11-11T16:50:55Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-11-11T17:11:37Z",
    "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 2: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 7: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 12: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 13: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 14: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 14: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 1: command/process substitution closure is unresolved; job lint-and-test step 2: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 2: line 9: unsupported loader/interpreter options; job lint-and-test step 3: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 3: line 1: relative execution cwd is not declared; job lint-and-test step 4: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 4: line 1: unsupported loader/interpreter options; job lint-and-test step 4: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 5: line 1: unsupported loader/interpreter options; job lint-and-test step 5: line 2: relative execution cwd is not declared; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 13: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 14: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 15: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 16: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 17: unsupported loader/interpreter options; job lint-and-test step 6: line 18: relative execution cwd is not declared; job lint-and-test step 6: line 19: unsupported loader/interpreter options; job lint-and-test step 6: line 1: unsupported loader/interpreter options; job lint-and-test step 6: line 20: relative execution cwd is not declared; job lint-and-test step 6: line 21: unsupported loader/interpreter options; job lint-and-test step 6: line 22: relative execution cwd is not declared; job lint-and-test step 6: line 2: unsupported loader/interpreter options; job lint-and-test step 6: line 3: unsupported loader/interpreter options; job lint-and-test step 6: line 4: unsupported loader/interpreter options; job lint-and-test step 6: line 5: relative execution cwd is not declared; job lint-and-test step 6: line 6: relative execution cwd is not declared; job lint-and-test step 6: line 7: relative execution cwd is not declared; job lint-and-test step 6: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: heredoc/group/function/brace expansion closure is unresolved; job publish-image step 4: heredoc/group/function/brace expansion closure is unresolved; job publish-image step 5: local action/checkout path scope unresolved; job verify-published-image step 1: heredoc/group/function/brace expansion closure is unresolved; 53 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1780,8 +1780,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-2fe48d1021006468",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-workflow-config-2fe48d1021006468.txt",
-   "started_at_utc": "2026-11-11T16:50:55Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-workflow-config-2fe48d1021006468.txt",
+   "started_at_utc": "2026-11-11T17:11:37Z",
    "summary": "workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1796,8 +1796,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-6ceb21cf301c7eb2",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-workflow-config-6ceb21cf301c7eb2.txt",
-   "started_at_utc": "2026-11-11T16:50:55Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-workflow-config-6ceb21cf301c7eb2.txt",
+   "started_at_utc": "2026-11-11T17:11:37Z",
    "summary": "workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; job deploy step 7: command/process substitution closure is unresolved; job deploy step 8: checkout root or source-affecting workflow environment unresolved; job deploy step 8: command/process substitution closure is unresolved; job deploy step 9: checkout root or source-affecting workflow environment unresolved; job deploy step 9: line 1: wrapper execution scope/options unresolved; job network-exposure-lint: reusable/opaque shell context; 13 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1812,8 +1812,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-28802fbf11c83a2e",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-workflow-config-28802fbf11c83a2e.txt",
-   "started_at_utc": "2026-11-11T16:50:55Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-workflow-config-28802fbf11c83a2e.txt",
+   "started_at_utc": "2026-11-11T17:11:37Z",
    "summary": "workflow shell caller closure not measured: job guard step 0: heredoc/group/function/brace expansion closure is unresolved; job guard step 1: local action/checkout path scope unresolved; job guard step 2: command/process substitution closure is unresolved; job publication-post-state step 1: heredoc/group/function/brace expansion closure is unresolved; job publication-post-state step 2: local action/checkout path scope unresolved; 5 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1828,8 +1828,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-60a4bd100e640545",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-workflow-config-60a4bd100e640545.txt",
-   "started_at_utc": "2026-11-11T16:50:55Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-workflow-config-60a4bd100e640545.txt",
+   "started_at_utc": "2026-11-11T17:11:37Z",
    "summary": "workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1844,8 +1844,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-dc49cc771602c92b",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-workflow-config-dc49cc771602c92b.txt",
-   "started_at_utc": "2026-11-11T16:50:55Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-workflow-config-dc49cc771602c92b.txt",
+   "started_at_utc": "2026-11-11T17:11:37Z",
    "summary": "workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-affecting workflow environment unresolved; job graph-admission step 12: command/process substitution closure is unresolved; job graph-admission step 14: checkout root or source-affecting workflow environment unresolved; job graph-admission step 15: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 17: checkout root or source-affecting workflow environment unresolved; job graph-admission step 17: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 18: checkout root or source-affecting workflow environment unresolved; job graph-admission step 18: command/process substitution closure is unresolved; job graph-admission step 19: checkout root or source-affecting workflow environment unresolved; job graph-admission step 19: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 1: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 20: checkout root or source-affecting workflow environment unresolved; job graph-admission step 20: line 11: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 21: checkout root or source-affecting workflow environment unresolved; job graph-admission step 21: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 22: checkout root or source-affecting workflow environment unresolved; job graph-admission step 22: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 23: local action/checkout path scope unresolved; job graph-admission step 24: checkout root or source-affecting workflow environment unresolved; job graph-admission step 3: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 4: command/process substitution closure is unresolved; job graph-admission step 8: checkout root or source-affecting workflow environment unresolved; job graph-admission step 8: command/process substitution closure is unresolved; job graph-admission step 9: checkout root or source-affecting workflow environment unresolved; job graph-admission step 9: command/process substitution closure is unresolved; 31 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1860,13 +1860,13 @@
    "exit_code": 1,
    "id": "v-workflow-config-9de6bedb8518f82f",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-workflow-config-9de6bedb8518f82f.txt",
-   "started_at_utc": "2026-11-11T16:50:55Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-workflow-config-9de6bedb8518f82f.txt",
+   "started_at_utc": "2026-11-11T17:11:37Z",
    "summary": "workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.3,
+   "duration_s": 0.28,
    "entities": [
     "code_unit:.github/workflows/ci.yml",
     "code_unit:.github/workflows/dependabot-auto-merge.yml",
@@ -1896,8 +1896,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-fitness.json",
-   "started_at_utc": "2026-11-11T16:50:55Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-fitness.json",
+   "started_at_utc": "2026-11-11T17:11:37Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -1918,8 +1918,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-doc-reference.txt",
-   "started_at_utc": "2026-11-11T16:50:56Z",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-doc-reference.txt",
+   "started_at_utc": "2026-11-11T17:11:37Z",
    "summary": "4 document(s), 0 failed"
   },
   {
@@ -1934,9 +1934,9 @@
    "exit_code": 0,
    "id": "v-shell-syntax-a1de9832d14e1c41",
    "kind": "shell_syntax",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-shell-syntax-a1de9832d14e1c41.txt",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-shell-syntax-a1de9832d14e1c41.txt",
    "scope": "shell_source_validation",
-   "started_at_utc": "2026-11-11T16:50:58Z",
+   "started_at_utc": "2026-11-11T17:11:39Z",
    "summary": "shell syntax/closure: not_measured"
   },
   {
@@ -1951,9 +1951,9 @@
    "exit_code": 0,
    "id": "v-shell-syntax-c3d5477d551e9d94",
    "kind": "shell_syntax",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-shell-syntax-c3d5477d551e9d94.txt",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-shell-syntax-c3d5477d551e9d94.txt",
    "scope": "shell_source_validation",
-   "started_at_utc": "2026-11-11T16:50:59Z",
+   "started_at_utc": "2026-11-11T17:11:41Z",
    "summary": "shell syntax/closure: not_measured"
   },
   {
@@ -1968,9 +1968,9 @@
    "exit_code": 0,
    "id": "v-shell-behavior-a1de9832d14e1c41",
    "kind": "shell_behavior",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-shell-behavior-a1de9832d14e1c41.txt",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-shell-behavior-a1de9832d14e1c41.txt",
    "scope": "shell_fixture_behavior",
-   "started_at_utc": "2026-11-11T16:50:59Z",
+   "started_at_utc": "2026-11-11T17:11:41Z",
    "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 12: unsupported loader/interpreter options; line 16: directory transition has unresolved execution cwd; line 17: directory transition has unresolved execution cwd; line 18: wrapper options/child command unresolved; line 26: dynamic load/substitution; line 42: wrapper options/child command unresolved; line 51: directory transition has unresolved execution cwd; line 57: dynamic load/substitution; line 57: wrapper options/child command unresolved; line 61: dynamic load/substitution; line 66: dynamic load/substitution; line 68: wrapper options/child command unresolved; line 70: wrapper options/child command unresolved; line 71: wrapper options/child command unresolved; line 76: wrapper options/child command unresolved"
   },
   {
@@ -1985,9 +1985,9 @@
    "exit_code": 0,
    "id": "v-shell-behavior-c3d5477d551e9d94",
    "kind": "shell_behavior",
-   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-tsc-receipt/out/vout/v-shell-behavior-c3d5477d551e9d94.txt",
+   "output_ref": "/home/dev/aup/claude-work/arc2-pr-backlog-20261111T0949/conn-digest-fix/out/vout/v-shell-behavior-c3d5477d551e9d94.txt",
    "scope": "shell_fixture_behavior",
-   "started_at_utc": "2026-11-11T16:50:59Z",
+   "started_at_utc": "2026-11-11T17:11:41Z",
    "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 13: directory transition has unresolved execution cwd; line 26: dynamic command/alias/eval; line 38: heredoc data/generation closure not measured; line 52: wrapper options/child command unresolved; line 63: dynamic load/substitution; line 64: dynamic load/substitution; line 65: dynamic load/substitution"
   }
  ],
@@ -2085,9 +2085,9 @@
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
   },
   "seconds": {
-   "prepare": 5.2,
-   "total": 81.71,
-   "verifiers": 38.29
+   "prepare": 4.43,
+   "total": 79.4,
+   "verifiers": 40.62
   }
  }
 }
