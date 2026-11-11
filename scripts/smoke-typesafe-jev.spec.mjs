@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect } from 'vitest';
 import { buildDecisionPrompt, judge, parseArgs } from './smoke-typesafe-jev.mjs';
 

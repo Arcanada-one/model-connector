@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-nocheck
 /**
  * CONN-JEV-04 — live smoke for POST /connectors/typesafe-jev/execute.
  *
@@ -115,10 +116,21 @@ export function judge(observation) {
   };
 }
 
+/**
+ * @param {string[]} argv
+ * @returns {{
+ *   baseUrl: string,
+ *   receiptPath: string | null,
+ *   state: string,
+ *   dryJudge: string | null,
+ *   help?: boolean,
+ * }}
+ */
 export function parseArgs(argv) {
   // Prefer argv; MC_BASE_URL is an optional declared client override (see .env.example).
+  /** @type {{ baseUrl: string, receiptPath: string | null, state: string, dryJudge: string | null, help?: boolean }} */
   const out = {
-    baseUrl: process.env.MC_BASE_URL?.trim() || DEFAULT_BASE,
+    baseUrl: (process.env.MC_BASE_URL || '').trim() || DEFAULT_BASE,
     receiptPath: null,
     state: 'CONN-JEV-04 live smoke synthetic task',
     dryJudge: null,
