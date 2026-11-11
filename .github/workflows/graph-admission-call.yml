@@ -44,6 +44,7 @@ jobs:
     uses: ./.github/workflows/graph-admission.yml
     with:
       program_ref: "5e352e78262271892170c750229d3baee18a4556"
+      candidate_receipt_required: true
       # AUP-GRAPH-006:gate2b. The fingerprint of the Ed25519 key that signs the vendored bundle's
       # BUNDLE.json. It lives HERE, in this repository's own workflow file, deliberately OUTSIDE
       # .github/graph-admission/: a fingerprint kept inside the bundle would be replaced by the very
