@@ -386,6 +386,11 @@ export const envSchema = z
     // every attempt (not cached at boot).
     TYPESAFE_JEV_DISABLED: envBool.default(false),
     TYPESAFE_API_KEY: z.string().optional(),
+    // CONN-JEV-04 — declare client live-smoke vars beside .env.example so
+    // v-config-schema / impact classify the pair as config (not global_config
+    // fallback). Nest does not read these; scripts/smoke-typesafe-jev.mjs does.
+    MC_KEY: z.string().optional(),
+    MC_BASE_URL: z.string().optional(),
     // Metadata only; values are separately injected provider credentials.
     PROVIDER_CREDENTIAL_REGISTRY: z
       .string()
