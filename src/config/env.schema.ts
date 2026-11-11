@@ -380,6 +380,11 @@ export const envSchema = z
       .enum(['true', 'false'])
       .default('false')
       .transform((v) => v === 'true'),
+    // CONN-JEV-03 — incident kill switch for typesafe-jev. When true (`1`/`true`),
+    // execute refuses with code `jev_disabled` before any network call, even if
+    // JEV_ENABLED=true and a credential is present. Re-read by the connector on
+    // every attempt (not cached at boot).
+    TYPESAFE_JEV_DISABLED: envBool.default(false),
     TYPESAFE_API_KEY: z.string().optional(),
     // Metadata only; values are separately injected provider credentials.
     PROVIDER_CREDENTIAL_REGISTRY: z
