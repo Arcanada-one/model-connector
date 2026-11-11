@@ -10,6 +10,7 @@
     "../src/**/*",
     "../test/app.e2e-spec.ts",
     "../test/bench-reservation/**/*.ts",
+    "../test/watcher/*.spec.ts",
     "../vitest.config.ts",
     "../vitest.bench-reservation.config.ts",
     "../scripts/vault-provider-keys.mjs",
