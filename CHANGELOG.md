@@ -19,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   calls. Published `@arcanada/jev-decision-templates` remains NOT_MEASURED
   (npm 404 at authoring); `/connectors/typesafe-jev/execute` stays for debug.
 
+- **Catalog and meter pricing without invention for `typesafe-jev` (CONN-JEV-05).**
+  Direct models keep `pricing: null` until an ARCA-JEV-01-shaped `/v1/models`
+  probe publishes machine fields (AC-22). OpenRouter `typesafe/*` prices come
+  from a fixture-marked `/api/v1/models` fragment (`0.000000042` → 0.042 $/MTok);
+  Cloudflare stays null. Every route model carries `contextWindow ≥ 32000`.
+  Stub routes remain `available:false` until keyed. `measureCostUsd` reports
+  `outputCostUsd: 0` only when `outputPerMTok` is a machine zero; a missing
+  output tariff is `null`, not invented free output. OpenRouter refresh labels
+  `typesafe/*` as `modality=decision` so they do not pollute the chat catalog.
+
 - **DecisionLedger/v1 in MC storage (CONN-JEV-06).** Append-only `decision_ledger`
   table + Prisma model with digests of input (`state`), template (`questions`) and
   route; idempotent insert on `identity_digest` (replay → one row); Postgres trigger

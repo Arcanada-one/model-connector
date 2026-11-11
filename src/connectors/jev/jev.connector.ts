@@ -11,7 +11,13 @@ import {
   ConnectorStatus,
 } from '../interfaces/connector.interface';
 import { DecisionRequestSchema, nativeRequest, normalizeDecision } from './decision.contract';
-import { DirectRoute, JevRouteEnv, jevRouteCatalogEntries } from './jev.routes';
+import {
+  buildJevCapabilityModelMeta,
+  buildJevCatalogPriceRows,
+  JevCatalogPriceEnv,
+  JevPriceRouteId,
+} from './jev.catalog-pricing';
+import { DirectRoute, JevRouteEnv } from './jev.routes';
 
 /** Typed pre-network refusal codes for the typesafe-jev execute path (CONN-JEV-03). */
 export type JevRefuseCode = 'jev_disabled' | 'route_not_configured' | 'invalid_request';
@@ -222,18 +228,20 @@ export class JevConnector extends BaseApiConnector {
   }
 
   getCapabilities(): ConnectorCapabilities {
-    // CONN-JEV-01 — publish the documented native model under modality=decision.
-    // CONN-JEV-02 — executable catalog row remains direct `jev-latest` only.
-    // OpenRouter/Cloudflare model ids stay on the JevRoute surface with
-    // `available:false` until keyed (see `jevRouteCatalogEntries`); publishing
-    // them here would invent catalog routability before CONN-JEV-05/09.
-    const model = 'jev-latest';
+    // CONN-JEV-01/05 — publish route model ids under modality=decision with
+    // machine/fixture pricing (never invented) and contextWindow ≥ 32k.
+    // OpenRouter/Cloudflare stubs stay available:false until keyed
+    // (see `routeCatalogEntries` / connectors.service intersection).
+    // Transport remains JevRoute/DirectRoute (CONN-JEV-02).
+    const modelMeta = buildJevCapabilityModelMeta({
+      env: process.env as JevCatalogPriceEnv,
+    });
     return {
       name: this.name,
       type: 'api',
-      models: [model],
+      models: modelMeta.map((m) => m.id),
       modality: 'decision',
-      modelMeta: [{ id: model, modality: 'decision' }],
+      modelMeta,
       supportsStreaming: false,
       supportsJsonSchema: false,
       supportsTools: false,
@@ -241,8 +249,16 @@ export class JevConnector extends BaseApiConnector {
     };
   }
 
-  /** Route-level availability rows (stubs report available:false). */
-  routeCatalogEntries() {
-    return jevRouteCatalogEntries(this.routeEnv());
+  /** Route-level availability rows (stubs report available:false until keyed). */
+  routeCatalogEntries(): Array<{
+    route: JevPriceRouteId;
+    model: string;
+    available: boolean;
+  }> {
+    return buildJevCatalogPriceRows({ env: process.env as JevCatalogPriceEnv }).map((row) => ({
+      route: row.route,
+      model: row.model,
+      available: row.available,
+    }));
   }
 }

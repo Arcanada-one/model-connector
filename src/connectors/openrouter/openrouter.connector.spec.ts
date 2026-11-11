@@ -475,6 +475,29 @@ describe('OpenRouterConnector', () => {
       const freeSample = OPENROUTER_MODELS_FIXTURE.data.find((e) => e.id.endsWith(':free'))!;
       expect(metaFor(caps, freeSample.id)?.free).toBe(true);
     });
+
+    it('CONN-JEV-05: classifies typesafe/* as decision without changing chat models', async () => {
+      const mixed = {
+        data: [
+          ...OPENROUTER_MODELS_FIXTURE.data.slice(0, 2),
+          {
+            id: 'typesafe/jev-1.13',
+            context_length: 32000,
+            pricing: { prompt: '0.000000042', completion: '0' },
+            top_provider: { context_length: 32000, max_completion_tokens: null },
+          },
+        ],
+      };
+      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(mixed), { status: 200 }));
+      await connector.refreshFreeModels();
+      const caps = connector.getCapabilities();
+      expect(metaFor(caps, 'typesafe/jev-1.13')).toMatchObject({
+        modality: 'decision',
+        pricing: { inputPerMTok: 0.042, outputPerMTok: 0, unit: 'per_1m_tokens' },
+      });
+      const chatSample = mixed.data[0]!;
+      expect(metaFor(caps, chatSample.id)?.modality).toBe('chat');
+    });
   });
 
   // --- ARCA-0011 multi-modal (ContentBlock[] prompt forwarding) ---
