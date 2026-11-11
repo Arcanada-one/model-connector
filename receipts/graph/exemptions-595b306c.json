@@ -1,0 +1,391 @@
+{
+  "schema": "DecisionExemptionList/v1",
+  "work_item": "595b306c-68dd-4c63-91ba-8f938c331bc9",
+  "exemptions": [
+    {
+      "entity": "code_unit:src/admin/admin.controller.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/admin/circuit-breaker.controller.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/admin/watcher-repair.controller.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/billing/credits.controller.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.controller.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/jev.connector.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/health/health.controller.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-compat.controller.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/speech/speech.controller.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:src/speech/stt/stt-async.controller.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "code_unit:test/provider-profiles/boundary-http.spec.ts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "receipt:receipts/graph/change-admission-595b306c.json",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:DELETE /admin/keys/:id",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /admin/credits/:apiKeyId",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /admin/credits/:apiKeyId/history",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /admin/keys",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /admin/keys/:id",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /admin/keys/:id/policy",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /admin/keys/:id/usage",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /connectors",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /connectors/:name/status",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /connectors/catalog",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /connectors/image/capabilities",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /connectors/intents/:intentId",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /health",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /health/connectors",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /health/metrics",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /health/ready",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /keyed",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /probe/abort",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /probe/execute",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /probe/health",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /probe/metrics",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /v1/models",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:GET /v1/speech/stt/jobs/:id",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:PATCH /admin/keys/:id/policy",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:PATCH /admin/keys/:id/rate-limit",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /admin/circuit-breaker/reset",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /admin/credits/:apiKeyId",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /admin/credits/:apiKeyId/gift",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /admin/credits/holds/sweep",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /admin/credits/reconcile",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /admin/keys",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /connectors/:name/chat/completions",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /connectors/:name/execute",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /execute",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /images/generate",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /internal/watcher/circuit-breaker/reset",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /v1/chat/completions",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /v1/prompt-cache/prewarm",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /v1/speech/stt",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /v1/speech/stt/async",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /v1/speech/tts",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    },
+    {
+      "entity": "route:POST /v1/speech/vad",
+      "owner": "CONN-JEV-02 author lane (Muneral 595b306c) / Model Connector owner",
+      "expires_at_utc": "2026-12-11T00:00:00Z",
+      "evidence": "focused vitest: src/connectors/jev/ (69 PASS post-MC#268 absorb); canary listing for live contour not produced in this author lane; CI-parity nomod graphs with typescript aside",
+      "reason": "Impact fan-out from typesafe-jev JevRoute (CONN-JEV-02) after absorbing origin/main b7dd06b0 (MC#268 typesafe-jev live-smoke). CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Entity was not edited in the change set (or is a canary-gated live-contour neighbour); canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+    }
+  ]
+}

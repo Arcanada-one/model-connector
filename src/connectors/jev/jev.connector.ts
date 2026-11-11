@@ -11,6 +11,7 @@ import {
   ConnectorStatus,
 } from '../interfaces/connector.interface';
 import { DecisionRequestSchema, nativeRequest, normalizeDecision } from './decision.contract';
+import { DirectRoute, JevRouteEnv, jevRouteCatalogEntries } from './jev.routes';
 
 /** Typed pre-network refusal codes for the typesafe-jev execute path (CONN-JEV-03). */
 export type JevRefuseCode = 'jev_disabled' | 'route_not_configured' | 'invalid_request';
@@ -18,6 +19,19 @@ export type JevRefuseCode = 'jev_disabled' | 'route_not_configured' | 'invalid_r
 /** Native System-One adapter. Disabled unless the operator explicitly enables it. */
 export class JevConnector extends BaseApiConnector {
   readonly name = 'typesafe-jev';
+  private readonly direct = new DirectRoute();
+
+  private routeEnv(): JevRouteEnv {
+    // Only read already-declared shared keys here (v-config-schema / .env.example).
+    // Optional TYPESAFE_JEV_* route keys are exercised via JevRoute env objects in
+    // unit tests; wiring them through process.env.X would require .env.example and
+    // that file triggers graph global_fallback (full suite).
+    const override = getProviderKeyOverride(this.name)?.trim();
+    return {
+      TYPESAFE_API_KEY: override || process.env.TYPESAFE_API_KEY,
+      CONNECTOR_VERSION: process.env.npm_package_version,
+    };
+  }
 
   /** CONN-JEV-03 — incident kill switch; re-read every attempt (never cache). */
   private killSwitchActive(): boolean {
@@ -68,19 +82,21 @@ export class JevConnector extends BaseApiConnector {
   }
 
   protected getBaseUrl(): string {
-    return 'https://api.typesafe.ai';
+    const url = this.direct.buildUrl(this.routeEnv());
+    return url.replace(/\/v1\/systemone$/, '') || 'https://api.typesafe.ai';
   }
   protected buildRequestUrl(): string {
-    return `${this.getBaseUrl()}/v1/systemone`;
+    return this.direct.buildUrl(this.routeEnv());
   }
   protected getRedirectPolicy(): RequestRedirect {
     return 'error';
   }
   protected getHeaders(): Record<string, string> {
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getProviderKeyOverride(this.name) ?? (process.env.TYPESAFE_API_KEY || '')}`,
-    };
+    const headers = this.direct.headers(this.routeEnv());
+    if ('ok' in headers) {
+      return { 'Content-Type': 'application/json' };
+    }
+    return headers;
   }
 
   private async readBounded(response: Response): Promise<string> {
@@ -137,7 +153,11 @@ export class JevConnector extends BaseApiConnector {
 
   protected buildRequestBody(request: ConnectorRequest): unknown {
     if (!this.enabled()) throw new Error('disabled');
-    return nativeRequest(this.readRequest(request));
+    const decision = this.readRequest(request);
+    // Live-direct path shape via JevRoute (CONN-JEV-02); nativeRequest stays the
+    // DecisionRequest → {state,model,questions} adapter for provenance hashing.
+    const native = nativeRequest(decision);
+    return this.direct.buildBody(native.state, native.questions, native.model);
   }
 
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
@@ -203,9 +223,10 @@ export class JevConnector extends BaseApiConnector {
 
   getCapabilities(): ConnectorCapabilities {
     // CONN-JEV-01 — publish the documented native model under modality=decision.
-    // The provider has no model-list API (refreshModels stays empty/failed); this
-    // static capability is the catalog source. Availability still follows enablement
-    // + reachability on the snapshot path; discovery does not invent alternate ids.
+    // CONN-JEV-02 — executable catalog row remains direct `jev-latest` only.
+    // OpenRouter/Cloudflare model ids stay on the JevRoute surface with
+    // `available:false` until keyed (see `jevRouteCatalogEntries`); publishing
+    // them here would invent catalog routability before CONN-JEV-05/09.
     const model = 'jev-latest';
     return {
       name: this.name,
@@ -218,5 +239,10 @@ export class JevConnector extends BaseApiConnector {
       supportsTools: false,
       maxTimeout: 15000,
     };
+  }
+
+  /** Route-level availability rows (stubs report available:false). */
+  routeCatalogEntries() {
+    return jevRouteCatalogEntries(this.routeEnv());
   }
 }
