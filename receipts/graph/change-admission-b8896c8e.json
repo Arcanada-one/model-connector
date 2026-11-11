@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-11T01:17:12Z",
+ "captured_at_utc": "2026-11-11T01:23:55Z",
  "change_set": {
   "base": "e450735ea2b474051b471bd431f84db5abd76423",
   "files": [
@@ -58,6 +58,15 @@
    },
    {
     "kind": "receipt",
+    "node_id": "receipt:receipts/graph/change-admission-b8896c8e.json",
+    "node_ids": [
+     "receipt:receipts/graph/change-admission-b8896c8e.json"
+    ],
+    "path": "receipts/graph/change-admission-b8896c8e.json",
+    "status": "A"
+   },
+   {
+    "kind": "receipt",
     "new": true,
     "path": "receipts/mc/conn-jev-04-live-unauthorized-20261111T0045Z.json",
     "status": "A"
@@ -81,7 +90,7 @@
     "status": "A"
    }
   ],
-  "head": "eadb3c483e89d9443285bf0157b83950eda4d15e",
+  "head": "495687b18bbc0c2e3fd5cb9737d317aaf0a6bfcb",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -113,18 +122,18 @@
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:7d52d85dc5793b6b34cf3cbe5564aefada5c22a5a82ebcc8e22ef623f71fcc03",
-  "path": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/graph-e450735ea2b4.json",
+  "path": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/graph-e450735ea2b4.json",
   "source_commit": "e450735ea2b474051b471bd431f84db5abd76423"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:c0e0b60f2ab8a6bbea708b38b612041aa6227c55a77a15db2b991a7868a905a9",
-  "path": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/graph-head-eadb3c483e89.json",
-  "source_commit": "eadb3c483e89d9443285bf0157b83950eda4d15e",
+  "graph_digest": "sha256:d3c893b2318b6004d2f7f916dedb3c183e5c4f81e626a7f809cc02ca89071c26",
+  "path": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/graph-head-495687b18bbc.json",
+  "source_commit": "495687b18bbc0c2e3fd5cb9737d317aaf0a6bfcb",
   "staleness": {
-   "checked_at_utc": "2026-11-11T01:18:06Z",
-   "checked_nodes": 980,
+   "checked_at_utc": "2026-11-11T01:24:58Z",
+   "checked_nodes": 981,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -132,7 +141,7 @@
  },
  "host": "conn-jev-04-lane",
  "host_redacted": true,
- "host_sha256": "ed5c346831b5f3b2fe9bfd7df11835135866d7dbaa134032421ee34a3a8e200a",
+ "host_sha256": "c0d4e11370ebaf342147f9171c9a9bc2c846713222739eead857289672ebc7ce",
  "impact_set": {
   "deterministic_core": [
    {
@@ -27430,7 +27439,8 @@
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261111T011712Z-eadb3c48",
+ "receipt_id": "car-verify-20261111T012355Z-495687b1",
+ "receipt_path": "receipts/graph/change-admission-b8896c8e.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
   "path": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector"
@@ -27462,6 +27472,7 @@
    "document:documentation/reference/jev-decisions.md",
    "receipt:receipts/bench-source-ctx24/source-car.json",
    "receipt:receipts/graph/change-admission-11159be7.json",
+   "receipt:receipts/graph/change-admission-b8896c8e.json",
    "receipt:receipts/graph/change-admission-e8ab201d.json",
    "receipt:receipts/graph/change-admission-jev-decision.json"
   ],
@@ -27470,7 +27481,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-11T01:18:06Z",
+  "checked_at_utc": "2026-11-11T01:24:58Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -27500,6 +27511,21 @@
   },
   {
    "content_hash": {
+    "base": null,
+    "head": "sha256:79f5a266c60e78af2c5245c5b6b01d381071fb7826aa76d7fa6817a57de1e1ed"
+   },
+   "entity": "receipt:receipts/graph/change-admission-b8896c8e.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-b8896c8e.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it; superseded by construction — this run re-issues the receipt at receipts/graph/change-admission-b8896c8e.json for work item b8896c8e-7e40-4608-a547-263d8bb11fc0",
+   "rule": "DEC-AUP-0035",
+   "superseded": {
+    "receipt_path": "receipts/graph/change-admission-b8896c8e.json",
+    "work_item": "b8896c8e-7e40-4608-a547-263d8bb11fc0"
+   }
+  },
+  {
+   "content_hash": {
     "base": "sha256:6a64c75ac0b42f55290ee4e460e0064f4344eea23de076780ca236615ca4c8c5",
     "head": "sha256:6a64c75ac0b42f55290ee4e460e0064f4344eea23de076780ca236615ca4c8c5"
    },
@@ -27522,7 +27548,7 @@
   }
  ],
  "tree": {
-  "commit": "eadb3c483e89d9443285bf0157b83950eda4d15e",
+  "commit": "495687b18bbc0c2e3fd5cb9737d317aaf0a6bfcb",
   "dirty": false
  },
  "verdicts": [
@@ -27626,8 +27652,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/type-check-2feq8opg/check.tsbuildinfo --listFiles",
-   "duration_s": 12.47,
+   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/type-check-w3ixzmxu/check.tsbuildinfo --listFiles",
+   "duration_s": 12.69,
    "entities": [
     "code_unit:scripts/smoke-typesafe-jev.mjs",
     "code_unit:scripts/smoke-typesafe-jev.spec.mjs",
@@ -27641,13 +27667,13 @@
    "exit_code": 2,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-11T01:18:19Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-11T01:25:11Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 2, 233 error(s), 2863 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/type-check-od0as1wi/check.tsbuildinfo --listFiles",
-   "duration_s": 7.44,
+   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/type-check-75zuq9uz/check.tsbuildinfo --listFiles",
+   "duration_s": 7.83,
    "entities": [
     "code_unit:scripts/smoke-typesafe-jev.mjs",
     "deployable_unit:."
@@ -27658,13 +27684,13 @@
    "exit_code": 2,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-11T01:18:32Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-11T01:25:24Z",
    "summary": "tsconfig.build.json: exit 2, 79 error(s), 2130 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/type-check-6om7xmfb/check.tsbuildinfo --listFiles",
-   "duration_s": 1.07,
+   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/type-check-tuvdahbl/check.tsbuildinfo --listFiles",
+   "duration_s": 0.96,
    "entities": [
     "code_unit:scripts/smoke-typesafe-jev.mjs",
     "deployable_unit:."
@@ -27675,13 +27701,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-11T01:18:40Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-11T01:25:33Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/type-check-ylpb95n9/check.tsbuildinfo --listFiles",
-   "duration_s": 10.96,
+   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/type-check-zoy8il9n/check.tsbuildinfo --listFiles",
+   "duration_s": 13.12,
    "entities": [
     "code_unit:scripts/smoke-typesafe-jev.mjs",
     "deployable_unit:."
@@ -27692,13 +27718,13 @@
    "exit_code": 2,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-11T01:18:41Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-11T01:25:34Z",
    "summary": "tsconfig.json: exit 2, 233 error(s), 2752 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/type-check-0fdhnk8a/check.tsbuildinfo --listFiles",
-   "duration_s": 13.25,
+   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/type-check-7frg89bl/check.tsbuildinfo --listFiles",
+   "duration_s": 13.64,
    "entities": [
     "code_unit:scripts/smoke-typesafe-jev.mjs",
     "deployable_unit:."
@@ -27709,13 +27735,13 @@
    "exit_code": 2,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-11T01:18:52Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-11T01:25:47Z",
    "summary": "tsconfig.test.json: exit 2, 233 error(s), 2858 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/packages/sdk-ts/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/packages/sdk-ts/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/type-check-yksd9dq4/check.tsbuildinfo --listFiles",
-   "duration_s": 1.41,
+   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/packages/sdk-ts/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/packages/sdk-ts/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/type-check-htpjleap/check.tsbuildinfo --listFiles",
+   "duration_s": 1.07,
    "entities": [
     "deployable_unit:packages/sdk-ts"
    ],
@@ -27725,13 +27751,13 @@
    "exit_code": 0,
    "id": "v-type-check-packages-sdk-ts-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-type-check-packages-sdk-ts-tsconfig.txt",
-   "started_at_utc": "2026-11-11T01:19:06Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-type-check-packages-sdk-ts-tsconfig.txt",
+   "started_at_utc": "2026-11-11T01:26:01Z",
    "summary": "packages/sdk-ts/tsconfig.json: exit 0, 0 error(s), 167 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/watcher/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/watcher/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/type-check-zfg_00ps/check.tsbuildinfo --listFiles",
-   "duration_s": 2.85,
+   "command": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/watcher/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/model-connector/watcher/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/type-check-2ch4r316/check.tsbuildinfo --listFiles",
+   "duration_s": 2.1,
    "entities": [
     "deployable_unit:watcher"
    ],
@@ -27741,13 +27767,13 @@
    "exit_code": 0,
    "id": "v-type-check-watcher-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-type-check-watcher-tsconfig.txt",
-   "started_at_utc": "2026-11-11T01:19:07Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-type-check-watcher-tsconfig.txt",
+   "started_at_utc": "2026-11-11T01:26:02Z",
    "summary": "watcher/tsconfig.json: exit 0, 0 error(s), 396 files listed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 1.24,
+   "duration_s": 0.72,
    "entities": [
     "code_unit:scripts/smoke-typesafe-jev.mjs"
    ],
@@ -27757,13 +27783,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-config-schema.json",
-   "started_at_utc": "2026-11-11T01:19:10Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-config-schema.json",
+   "started_at_utc": "2026-11-11T01:26:05Z",
    "summary": "3 source(s), 0 new / 92 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.27,
+   "duration_s": 0.24,
    "entities": [
     "code_unit:scripts/smoke-typesafe-jev.mjs",
     "code_unit:scripts/smoke-typesafe-jev.spec.mjs",
@@ -27783,13 +27809,13 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-fitness.json",
-   "started_at_utc": "2026-11-11T01:19:12Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-fitness.json",
+   "started_at_utc": "2026-11-11T01:26:05Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.0,
+   "duration_s": 0.01,
    "entities": [
     "document:CHANGELOG.md",
     "document:documentation/how-to/enable-jev-shadow-decisions.md",
@@ -27805,8 +27831,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-doc-reference.txt",
-   "started_at_utc": "2026-11-11T01:19:12Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-11T01:26:06Z",
    "summary": "4 document(s), 0 failed"
   },
   {
@@ -27821,14 +27847,14 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-canary.json",
-   "started_at_utc": "2026-11-11T01:19:12Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-canary.json",
+   "started_at_utc": "2026-11-11T01:26:06Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 1 not_measured of 1 entities"
   },
   {
    "arms_not_carried": "harness execution document unreadable",
    "command": "bash scripts/graph-full-suite-isolated.sh .",
-   "duration_s": 209.39,
+   "duration_s": 142.73,
    "entities": [
     "deployable_unit:."
    ],
@@ -27838,16 +27864,16 @@
    "exit_code": 1,
    "id": "v-global-fallback-test-root",
    "kind": "targeted_test",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-global-fallback-test-root.txt",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-global-fallback-test-root.txt",
    "scope": "global_fallback_full_suite",
-   "started_at_utc": "2026-11-11T01:19:12Z",
+   "started_at_utc": "2026-11-11T01:26:06Z",
    "summary": "complete fallback suite: failed",
    "timeout_seconds": 900
   },
   {
    "arms_not_carried": "harness execution document unreadable",
    "command": "bash ../../scripts/graph-full-suite-isolated.sh packages/sdk-python",
-   "duration_s": 20.09,
+   "duration_s": 24.6,
    "entities": [
     "deployable_unit:packages/sdk-python"
    ],
@@ -27857,16 +27883,16 @@
    "exit_code": 0,
    "id": "v-global-fallback-test-packages-sdk-python",
    "kind": "targeted_test",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-global-fallback-test-packages-sdk-python.txt",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-global-fallback-test-packages-sdk-python.txt",
    "scope": "global_fallback_full_suite",
-   "started_at_utc": "2026-11-11T01:22:41Z",
+   "started_at_utc": "2026-11-11T01:28:28Z",
    "summary": "complete fallback suite: verified",
    "timeout_seconds": 900
   },
   {
    "arms_not_carried": "harness execution document unreadable",
    "command": "bash ../../scripts/graph-full-suite-isolated.sh packages/sdk-ts",
-   "duration_s": 3.5,
+   "duration_s": 4.3,
    "entities": [
     "deployable_unit:packages/sdk-ts"
    ],
@@ -27876,16 +27902,16 @@
    "exit_code": 0,
    "id": "v-global-fallback-test-packages-sdk-ts",
    "kind": "targeted_test",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-global-fallback-test-packages-sdk-ts.txt",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-global-fallback-test-packages-sdk-ts.txt",
    "scope": "global_fallback_full_suite",
-   "started_at_utc": "2026-11-11T01:23:01Z",
+   "started_at_utc": "2026-11-11T01:28:53Z",
    "summary": "complete fallback suite: verified",
    "timeout_seconds": 900
   },
   {
    "arms_not_carried": "harness execution document unreadable",
    "command": "bash ../scripts/graph-full-suite-isolated.sh watcher",
-   "duration_s": 8.59,
+   "duration_s": 8.58,
    "entities": [
     "deployable_unit:watcher"
    ],
@@ -27895,9 +27921,9 @@
    "exit_code": 0,
    "id": "v-global-fallback-test-watcher",
    "kind": "targeted_test",
-   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/verifier-out6/v-global-fallback-test-watcher.txt",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-b8896c8e-conn-jev-04-cur-20261111T0040Z/reissue-out/v-global-fallback-test-watcher.txt",
    "scope": "global_fallback_full_suite",
-   "started_at_utc": "2026-11-11T01:23:05Z",
+   "started_at_utc": "2026-11-11T01:28:57Z",
    "summary": "complete fallback suite: verified",
    "timeout_seconds": 900
   }
@@ -27905,9 +27931,15 @@
  "verify": {
   "events": [
    {
+    "code": "SUPERSEDED_SELF_EXCLUSION",
+    "entity": "receipt:receipts/graph/change-admission-b8896c8e.json",
+    "rule": "DEC-AUP-0035",
+    "text": "the receipt at receipts/graph/change-admission-b8896c8e.json is the previous version of the one this run is writing, for the same work item b8896c8e-7e40-4608-a547-263d8bb11fc0 — superseded by construction, so it owes this change no verdict"
+   },
+   {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "4 affected entity(ies) owe no verdict (receipt: 4): unchanged at both revisions and given no verifier by the matrix"
+    "text": "5 affected entity(ies) owe no verdict (receipt: 5): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
@@ -27954,13 +27986,14 @@
    ],
    "receipt:receipts/bench-source-ctx24/source-car.json": [],
    "receipt:receipts/graph/change-admission-11159be7.json": [],
+   "receipt:receipts/graph/change-admission-b8896c8e.json": [],
    "receipt:receipts/graph/change-admission-e8ab201d.json": [],
    "receipt:receipts/graph/change-admission-jev-decision.json": []
   },
   "seconds": {
-   "prepare": 6.66,
-   "total": 361.5,
-   "verifiers": 292.53
+   "prepare": 6.34,
+   "total": 311.41,
+   "verifiers": 232.59
   }
  },
  "work_item": "b8896c8e-7e40-4608-a547-263d8bb11fc0"
