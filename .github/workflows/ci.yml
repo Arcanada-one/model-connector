@@ -326,15 +326,29 @@ jobs:
           e2e="model-connector-e2e:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           rate_limit="model-connector-rate-limit-test:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           echo "=== images before removal ==="
-          docker image ls --filter "reference=$e2e" --filter "reference=$rate_limit" || true
+          for ref in "$e2e" "$rate_limit"; do
+            docker image ls "$ref" || true
+            if docker image inspect "$ref" >/dev/null 2>&1; then
+              echo "present before removal: $ref"
+            else
+              echo "absent before removal: $ref"
+            fi
+          done
           docker image rm -f "$e2e" || true
           docker image rm -f "$rate_limit" || true
           echo "=== images after removal (expect none) ==="
-          docker image ls --filter "reference=$e2e" --filter "reference=$rate_limit" || true
+          left=""
+          for ref in "$e2e" "$rate_limit"; do
+            if docker image inspect "$ref" >/dev/null 2>&1; then
+              echo "STILL PRESENT after removal: $ref"
+              left="$left $ref"
+            else
+              echo "absent after removal: $ref"
+            fi
+          done
           # Proof the step exists for: fail only if a per-run image is still present.
-          left="$(docker image ls -q --filter "reference=$e2e" --filter "reference=$rate_limit" 2>/dev/null || true)"
           if [ -n "$left" ]; then
-            echo "ERROR: per-run images still present after removal: $left" >&2
+            echo "ERROR: per-run images still present after removal:$left" >&2
             exit 1
           fi
           echo "per-run images removed: none left"
