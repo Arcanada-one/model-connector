@@ -6,6 +6,7 @@ Keep `JEV_ENABLED=false` until the deployment's admission and provider budget ar
 2. Set `JEV_ENABLED=true` (exact literal). Allow USE access for `typesafe-jev` through the existing provider policy and authorize the calling API key for this provider/model. A free-only policy cannot use an unpriced model.
 3. Send an authenticated request to `POST /connectors/typesafe-jev/execute`. Set `model` to `jev-latest` and `prompt` to the JSON-stringified request in [the contract reference](../reference/jev-decisions.md). Preserve existing billing/idempotency headers. Do not use chat system prompts, tools or `extra` settings with this connector.
 4. Inspect the normal connector status and `structured.status`, then retain the request digest, policy ID and observed model with the shadow record. Missing metadata stays unknown. Do not apply the classification as an authorization decision.
+5. For a fail-closed **live** product smoke (HTTP 201 + observed decision + ledger-mirrored `usage.costUsd` / A2-223 zero-cost control), run [live-smoke-typesafe-jev.md](./live-smoke-typesafe-jev.md) (`scripts/smoke-typesafe-jev.mjs`). Missing `MC_KEY` exits `NOT_MEASURED` and never invents PASS.
 
 The endpoint is fixed to `https://api.typesafe.ai/v1/systemone`; redirects are rejected. Each attempt is capped at 15 seconds. Internal `DecisionService` callers disable retries; the generic endpoint retains its existing configured service retry policy. No live model-list endpoint is assumed.
 

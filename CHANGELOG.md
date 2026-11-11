@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Live smoke harness for direct typesafe-jev execute (CONN-JEV-04).**
+  `scripts/smoke-typesafe-jev.mjs` calls `POST /connectors/typesafe-jev/execute`
+  against a deployed MC, judges HTTP 201 + observed decision + ledger-mirrored
+  `usage.costUsd`/`costSource`, and fails closed on A2-223 zero-cost paid/unpriced
+  settles. Missing `MC_KEY` exits `NOT_MEASURED` (never invents PASS). Unit tests
+  cover `judge`/`parseArgs`; how-to:
+  `documentation/how-to/live-smoke-typesafe-jev.md`.
+
 - **typesafe-jev kill switch and typed pre-network refusals (CONN-JEV-03).**
   `TYPESAFE_JEV_DISABLED=1` (or `true`) refuses execute with
   `error.details.code=jev_disabled` before any network call. Missing
