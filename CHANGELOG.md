@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Typed `POST /v1/decisions` route (CONN-JEV-07).**
+  New `src/decisions/` module (controller + Zod DTO + service) accepts
+  `{template|template_ref, state}` , resolves questions from an in-repo
+  ARCA-JEV-02-shaped template registry, enforces state whitelist + evaluative
+  deny-list before any provider call, and returns HTTP 201 `DecisionResult/v1`
+  via the existing `DecisionService` choke point. Unknown template and
+  out-of-whitelist / deny-list state fields return HTTP 400 with zero provider
+  calls. Published `@arcanada/jev-decision-templates` remains NOT_MEASURED
+  (npm 404 at authoring); `/connectors/typesafe-jev/execute` stays for debug.
+
 - **JevRoute transport surface for `typesafe-jev` (CONN-JEV-02).**
   One typed `JevRoute` interface covers live-direct URL/body/headers/parse plus
   OpenRouter and Cloudflare stubs built from measured envelopes (TZ §2.2 / §2.4).
