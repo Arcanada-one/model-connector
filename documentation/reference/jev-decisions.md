@@ -66,4 +66,6 @@ Usage is separate from decision confidence. Bounded numeric provider usage is re
 
 The executable fixtures are synthetic and exercise a real `DecisionService → ConnectorsService → JevConnector` path with transport and persistence doubles. They prove native serialization, policy denials, normalization and shadow delivery. They do not establish provider availability, deployed integration, model quality, production consumer action or a measured price. The frozen benchmark is unchanged. Real deployment and consumer adoption require separate admission evidence.
 
+CONN-JEV-04 adds a fail-closed **live** smoke (`scripts/smoke-typesafe-jev.mjs`, see `documentation/how-to/live-smoke-typesafe-jev.md`) against `POST /connectors/typesafe-jev/execute`. It measures HTTP 201, `structured.status=observed`, and ledger-mirrored `usage.costUsd`/`costSource` (A2-223 negative control on paid/unpriced zeros). Absent `MC_KEY` is `NOT_MEASURED`, never PASS.
+
 The native wire shape follows the audited standalone JEV producer at Datarim base `730962198bde99c548cc0c803c3f6bb9cdb03c6f` (`plugins/dr-jev-control/scripts/route.py` and `jev_client.py`). The API was not probed during this offline implementation; fixture conformance is not live provider verification.
