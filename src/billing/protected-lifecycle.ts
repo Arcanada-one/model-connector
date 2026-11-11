@@ -16,6 +16,13 @@
 
 import { createHash } from 'node:crypto';
 
+import {
+  INTEGRITY_REFUSAL_REASON,
+  RESULT_RETENTION,
+  type IntegrityRefusalReason,
+  verifyProtectedResultIntegrity,
+} from './protected-result-integrity';
+
 export const PROTECTED_LIFECYCLE_VERSION = 1 as const;
 
 export const PROTECTED_PHASE = {
@@ -130,6 +137,10 @@ export interface ProtectedIntentReplayRow {
   intentKey?: string;
   reservationRef?: string | null;
   generation?: number;
+  apiKeyId?: string;
+  resultIntegrityProfile?: string | null;
+  resultIntegrityDigest?: string | null;
+  resultRetention?: string | null;
 }
 
 /**
@@ -181,6 +192,12 @@ export type ProtectedReplayClassification =
       marker: 'protected_settled_replay_eligible';
     }
   | {
+      kind: 'integrity_refused';
+      reason: IntegrityRefusalReason;
+      openOutcome: 'integrity_refused';
+      replayEligible: false;
+    }
+  | {
       kind: 'proven_no_dispatch';
       openOutcome: 'reclaimable';
       replayEligible: false;
@@ -207,19 +224,15 @@ export function classifyProtectedIntentReplay(params: {
    */
   operationKey?: string;
   /**
-   * Optional expected retained-result hash. A mismatch is corrupt settled.
-   * Production resolveReplay never passes this: no column stores a hash at
-   * settlement, so the classifier hashes row.response itself and a retained
-   * mismatch cannot occur until a migration adds one (out of scope).
+   * Optional expected retained-result hash (legacy classifier probe).
+   * Production resolveReplay does not pass this: integrity is verified from
+   * independently retained `result_integrity_*` columns instead.
    */
   expectedResultHash?: string;
 }): ProtectedReplayClassification {
   const { row, payloadFingerprint, operationKey, expectedResultHash } = params;
 
-  if (
-    row.lifecycleVersion !== PROTECTED_LIFECYCLE_VERSION ||
-    row.protectedPhase == null
-  ) {
+  if (row.lifecycleVersion !== PROTECTED_LIFECYCLE_VERSION || row.protectedPhase == null) {
     return { kind: 'not_protected', openOutcome: 'delegate_legacy', replayEligible: false };
   }
 
@@ -271,14 +284,72 @@ export function classifyProtectedIntentReplay(params: {
   }
 
   if (phase === PROTECTED_PHASE.settled) {
-    const hash = retainedProtectedResultHash(row.response);
-    const incomplete =
-      row.state !== 'completed' ||
-      row.response == null ||
-      row.completedAt == null ||
-      hash == null;
+    // Not-retainable settle: charge kept, body absent — honest not_replayable.
+    if (row.resultRetention === RESULT_RETENTION.not_retainable) {
+      return {
+        kind: 'corrupt_settled',
+        reason: 'result_not_retainable',
+        openOutcome: 'not_replayable',
+        replayEligible: false,
+      };
+    }
+
+    const incomplete = row.state !== 'completed' || row.response == null || row.completedAt == null;
 
     if (incomplete) {
+      return {
+        kind: 'corrupt_settled',
+        reason: 'missing_settlement_fields_or_result_hash',
+        openOutcome: 'not_replayable',
+        replayEligible: false,
+      };
+    }
+
+    const operationBound = row.operationKey ?? row.intentKey;
+    const reservationRef = row.reservationRef;
+    const apiKeyId = row.apiKeyId;
+    const generation = row.generation;
+
+    if (
+      operationBound == null ||
+      reservationRef == null ||
+      apiKeyId == null ||
+      generation == null
+    ) {
+      return {
+        kind: 'integrity_refused',
+        reason: INTEGRITY_REFUSAL_REASON.integrity_binding_mismatch,
+        openOutcome: 'integrity_refused',
+        replayEligible: false,
+      };
+    }
+
+    const verified = verifyProtectedResultIntegrity({
+      profile: row.resultIntegrityProfile,
+      digest: row.resultIntegrityDigest,
+      retention: row.resultRetention,
+      binding: {
+        operationKey: operationBound,
+        apiKeyId,
+        payloadFingerprint: row.payloadFingerprint,
+        reservationRef,
+        settlementGeneration: generation,
+      },
+      storedResponse: row.response,
+    });
+
+    if (!verified.ok) {
+      // Never hash-on-read to certify historical rows (integrity_unverified).
+      return {
+        kind: 'integrity_refused',
+        reason: verified.reason,
+        openOutcome: 'integrity_refused',
+        replayEligible: false,
+      };
+    }
+
+    const hash = retainedProtectedResultHash(row.response);
+    if (hash == null) {
       return {
         kind: 'corrupt_settled',
         reason: 'missing_settlement_fields_or_result_hash',
@@ -298,7 +369,7 @@ export function classifyProtectedIntentReplay(params: {
 
     return {
       kind: 'replay_eligible',
-      resultHash: hash,
+      resultHash: verified.digest,
       openOutcome: 'replay',
       replayEligible: true,
       marker: 'protected_settled_replay_eligible',

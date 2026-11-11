@@ -2317,6 +2317,18 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
               'It will not be released, reclaimed, or retried under a new key solely because time elapsed.',
           ),
         };
+
+      case 'integrity_refused':
+        return {
+          intent: null,
+          response: this.gateErrorResponse(
+            connectorName,
+            model,
+            result.reason,
+            'Protected settled result failed retained integrity verification; ' +
+              'no disclosure, no new reservation, and no additional charge.',
+          ),
+        };
     }
   }
 

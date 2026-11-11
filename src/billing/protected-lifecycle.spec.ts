@@ -20,6 +20,11 @@ import {
   type ProtectedIntentReplayRow,
   type ProtectedPhase,
 } from './protected-lifecycle';
+import {
+  PROTECTED_RESULT_INTEGRITY_PROFILE,
+  RESULT_RETENTION,
+  sealProtectedResultIntegrity,
+} from './protected-result-integrity';
 
 function baseRow(
   overrides: Partial<ProtectedIntentReplayRow> &
@@ -27,6 +32,7 @@ function baseRow(
 ): ProtectedIntentReplayRow {
   return {
     lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+    apiKeyId: 'key-a',
     payloadFingerprint: 'fp-a',
     operationKey: 'op-a',
     intentKey: 'op-a',
@@ -36,8 +42,40 @@ function baseRow(
     holdUsd: '1.000000',
     reservationRef: 'res-1',
     generation: 1,
+    resultIntegrityProfile: null,
+    resultIntegrityDigest: null,
+    resultRetention: null,
     ...overrides,
   };
+}
+
+function sealedSettledRow(
+  body: unknown,
+  overrides: Partial<ProtectedIntentReplayRow> = {},
+): ProtectedIntentReplayRow {
+  const generation = overrides.generation ?? 2;
+  const seal = sealProtectedResultIntegrity({
+    binding: {
+      operationKey: 'op-a',
+      apiKeyId: 'key-a',
+      payloadFingerprint: 'fp-a',
+      reservationRef: 'res-1',
+      settlementGeneration: generation,
+    },
+    retained: body,
+  });
+  return baseRow({
+    protectedPhase: PROTECTED_PHASE.settled,
+    state: 'completed',
+    response: body,
+    completedAt: new Date('2026-11-09T00:00:00Z'),
+    requestId: 'req-1',
+    generation,
+    resultIntegrityProfile: seal.profile,
+    resultIntegrityDigest: seal.digest,
+    resultRetention: seal.retention,
+    ...overrides,
+  });
 }
 
 describe('immutable protected phase membership', () => {
@@ -53,10 +91,7 @@ describe('immutable protected phase membership', () => {
   it('protectedSettleablePhases returns a fresh frozen copy without reserved', () => {
     const a = protectedSettleablePhases();
     const b = protectedSettleablePhases();
-    expect(a).toEqual([
-      PROTECTED_PHASE.dispatch_committed,
-      PROTECTED_PHASE.unknown,
-    ]);
+    expect(a).toEqual([PROTECTED_PHASE.dispatch_committed, PROTECTED_PHASE.unknown]);
     expect(a).not.toBe(b);
     expect(Object.isFrozen(a)).toBe(true);
     expect(a.includes(PROTECTED_PHASE.reserved)).toBe(false);
@@ -72,8 +107,7 @@ describe('immutable protected phase membership', () => {
     // If a live Set were re-exported and consulted by the predicate, deleting
     // unknown would flip this false — that is the M-PHASE-NONEXPIRE-LIVE kill.
     const mod = await import('./protected-lifecycle');
-    const live = (mod as { PROTECTED_NON_EXPIRE_PHASES?: Set<string> })
-      .PROTECTED_NON_EXPIRE_PHASES;
+    const live = (mod as { PROTECTED_NON_EXPIRE_PHASES?: Set<string> }).PROTECTED_NON_EXPIRE_PHASES;
     if (live instanceof Set) {
       live.delete(PROTECTED_PHASE.unknown);
     }
@@ -101,10 +135,7 @@ describe('immutable protected phase membership', () => {
   });
 
   it('billing.service production path uses phase predicates, not live exported collections', () => {
-    const billingSrc = readFileSync(
-      path.join(__dirname, 'billing.service.ts'),
-      'utf8',
-    );
+    const billingSrc = readFileSync(path.join(__dirname, 'billing.service.ts'), 'utf8');
     expect(billingSrc).toMatch(/isProtectedNonExpirePhase\(/);
     expect(billingSrc).toMatch(/protectedSettleablePhases\(\)/);
     expect(billingSrc).not.toMatch(/PROTECTED_NON_EXPIRE_PHASES\.has/);
@@ -113,10 +144,7 @@ describe('immutable protected phase membership', () => {
 
   it('M-DEFENCE-OFF: defence-in-depth non-expire gate is present as source text', () => {
     // Reachable only when classification is bypassed; kill is source-text only.
-    const billingSrc = readFileSync(
-      path.join(__dirname, 'billing.service.ts'),
-      'utf8',
-    );
+    const billingSrc = readFileSync(path.join(__dirname, 'billing.service.ts'), 'utf8');
     expect(billingSrc).toMatch(
       /if \(isProtectedNonExpirePhase\(existing\.protectedPhase\)\) \{\s*return \{ outcome: 'protected_unknown' \};/s,
     );
@@ -139,10 +167,7 @@ describe('P10-05 protected replay classification', () => {
   });
 
   it('M-P1005-NONTERMINAL: dispatch_committed and unknown refuse completed-result replay', () => {
-    for (const phase of [
-      PROTECTED_PHASE.dispatch_committed,
-      PROTECTED_PHASE.unknown,
-    ] as const) {
+    for (const phase of [PROTECTED_PHASE.dispatch_committed, PROTECTED_PHASE.unknown] as const) {
       const c = classifyProtectedIntentReplay({
         row: baseRow({ protectedPhase: phase, state: 'held' }),
         payloadFingerprint: 'fp-a',
@@ -221,13 +246,7 @@ describe('P10-05 protected replay classification', () => {
     const hash = retainedProtectedResultHash(body);
     expect(hash).toMatch(/^[a-f0-9]{64}$/);
     const mismatched = classifyProtectedIntentReplay({
-      row: baseRow({
-        protectedPhase: PROTECTED_PHASE.settled,
-        state: 'completed',
-        response: body,
-        completedAt: new Date('2026-11-09T00:00:00Z'),
-        requestId: 'req-1',
-      }),
+      row: sealedSettledRow(body),
       payloadFingerprint: 'fp-a',
       expectedResultHash: '0'.repeat(64),
     });
@@ -235,6 +254,25 @@ describe('P10-05 protected replay classification', () => {
     if (mismatched.kind === 'corrupt_settled') {
       expect(mismatched.reason).toBe('retained_result_hash_mismatch');
     }
+
+    // Historical protected settled row (no integrity columns) is integrity_unverified.
+    const historical = classifyProtectedIntentReplay({
+      row: baseRow({
+        protectedPhase: PROTECTED_PHASE.settled,
+        state: 'completed',
+        response: body,
+        completedAt: new Date('2026-11-09T00:00:00Z'),
+        requestId: 'req-1',
+        generation: 2,
+      }),
+      payloadFingerprint: 'fp-a',
+    });
+    expect(historical.kind).toBe('integrity_refused');
+    if (historical.kind === 'integrity_refused') {
+      expect(historical.reason).toBe('integrity_unverified');
+    }
+    expect(PROTECTED_RESULT_INTEGRITY_PROFILE).toBe('pri/v1');
+    expect(RESULT_RETENTION.retained).toBe('retained');
   });
 
   it('M-UNKNOWN-PHASE-LEGACY: unrecognised phase is corrupt_settled, never not_protected', () => {
@@ -259,21 +297,16 @@ describe('P10-05 protected replay classification', () => {
   it('positive control: complete settled with matching hash is replay-eligible (redacted marker)', () => {
     const body = { answer: 'paid-result' };
     const hash = retainedProtectedResultHash(body)!;
+    const sealed = sealedSettledRow(body);
     const c = classifyProtectedIntentReplay({
-      row: baseRow({
-        protectedPhase: PROTECTED_PHASE.settled,
-        state: 'completed',
-        response: body,
-        completedAt: new Date('2026-11-09T00:00:00Z'),
-        requestId: 'req-1',
-      }),
+      row: sealed,
       payloadFingerprint: 'fp-a',
       expectedResultHash: hash,
     });
     expect(c.kind).toBe('replay_eligible');
     if (c.kind === 'replay_eligible') {
       expect(c.replayEligible).toBe(true);
-      expect(c.resultHash).toBe(hash);
+      expect(c.resultHash).toBe(sealed.resultIntegrityDigest);
       expect(c.marker).toBe('protected_settled_replay_eligible');
       expect(JSON.stringify(c)).not.toContain('paid-result');
     }
