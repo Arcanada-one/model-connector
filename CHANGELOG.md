@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **DecisionLedger/v1 in MC storage (CONN-JEV-06).** Append-only `decision_ledger`
+  table + Prisma model with digests of input (`state`), template (`questions`) and
+  route; idempotent insert on `identity_digest` (replay → one row); Postgres trigger
+  refuses `UPDATE`/`DELETE`. `persistAndSettle` records a row for `typesafe-jev`
+  alongside `Request`. `cost_usd` stays `null` when usage is missing or unpriced
+  (never invents `0`). Schema/migration/unit tests cover AC digests, idempotency and
+  the append-only negative control. See `documentation/reference/jev-decisions.md`.
+
 - **Live smoke harness for direct typesafe-jev execute (CONN-JEV-04).**
   `scripts/smoke-typesafe-jev.mjs` calls `POST /connectors/typesafe-jev/execute`
   against a deployed MC, judges HTTP 201 + observed decision + ledger-mirrored

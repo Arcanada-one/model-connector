@@ -88,6 +88,7 @@ import {
   type ProviderCredentialHealthLike,
   type ProviderCredentialHealth,
 } from './provider-credential-health';
+import { recordDecisionLedgerIfApplicable } from './jev/decision-ledger';
 
 // CONN-0238 — capability mask for non-chat families surfaced via a chat connector.
 const NO_CAPS = {
@@ -1872,6 +1873,16 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
             costSource,
             repairReport: repairReport ? (repairReport as unknown as object) : undefined,
           },
+        });
+
+        // CONN-JEV-06 — DecisionLedger/v1 for typesafe-jev. Same transaction as
+        // Request; identical input/template/route digests skipDuplicates to one row.
+        await recordDecisionLedgerIfApplicable(tx, {
+          response,
+          request,
+          apiKeyId,
+          requestId: created.id,
+          costSource,
         });
 
         if (!this.billing) return;

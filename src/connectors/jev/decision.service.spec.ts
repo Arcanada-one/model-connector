@@ -22,7 +22,10 @@ import type { ApiKeyPolicy } from '../../policy/policy.schema';
 // Real public service -> real policy choke point -> real native adapter -> synthetic transport.
 function stack(policy: ApiKeyPolicy | null = null) {
   const prisma = {
-    request: { create: vi.fn().mockResolvedValue({}) },
+    request: {
+      create: vi.fn().mockResolvedValue({ id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee' }),
+    },
+    decisionLedger: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
     apiKey: { findUnique: vi.fn().mockResolvedValue({ policy }) },
     modelCatalog: { findUnique: vi.fn().mockResolvedValue(null) },
     $transaction: async (fn: (tx: unknown) => unknown): Promise<unknown> => fn(prisma),
@@ -72,6 +75,8 @@ describe('decision consumer wiring', () => {
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(prisma.request.create).toHaveBeenCalled();
+    expect(prisma.decisionLedger.createMany).toHaveBeenCalled();
+    expect(prisma.decisionLedger.createMany.mock.calls[0][0].skipDuplicates).toBe(true);
   });
   it('accepts the external execute DTO and returns native structured output through the existing controller', async () => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify(nativeResponse)));

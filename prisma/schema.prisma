@@ -71,6 +71,8 @@ model Request {
   // CONN-0089 output-guard middleware envelope (nullable for backward-compat)
   repairReport Json?
   createdAt    DateTime @default(now())
+  // CONN-JEV-06 — DecisionLedger/v1 rows keyed off this request when connector=typesafe-jev.
+  decisionLedger DecisionLedger?
 
   @@index([connector, createdAt])
   @@index([apiKeyId, createdAt])
@@ -86,6 +88,7 @@ model ApiKey {
   rateLimit         Int                @default(60)
   active            Boolean            @default(true)
   requests          Request[]
+  decisionLedgers   DecisionLedger[]
   imageGenerations  ImageGeneration[]
   sttTranscriptions SttTranscription[]
   firstDispatchObservations FirstDispatchObservation[]
@@ -693,3 +696,50 @@ model StrictSupplierIntent {
   @@id([apiKeyId,intentKey])
   @@map("strict_supplier_intent")
 }
+
+// CONN-JEV-06 — DecisionLedger/v1. Append-only decision facts for typesafe-jev.
+// Digests of input (state), template, and route identify a material decision;
+// identical identityDigest inserts are skipped (idempotent). UPDATE/DELETE are
+// refused by a Postgres trigger in the migration.
+model DecisionLedger {
+  id                   String   @id @default(uuid())
+  version              String   @default("DecisionLedger/v1")
+  // Idempotency key: sha256(stateDigest|templateDigest|route). Unique.
+  identityDigest       String   @unique @map("identity_digest")
+  decisionType         String   @map("decision_type")
+  templateRef          String   @map("template_ref")
+  policyVersion        String   @map("policy_version")
+  route                String
+  modelRequested       String   @map("model_requested")
+  modelObserved        String?  @map("model_observed")
+  providerRequestId    String?  @map("provider_request_id")
+  stateDigest          String   @map("state_digest")
+  templateDigest       String   @map("template_digest")
+  routeDigest          String   @map("route_digest")
+  candidateSetDigest   String?  @map("candidate_set_digest")
+  answers              Json
+  verdict              String
+  policyAction         String   @map("policy_action")
+  suppressedPermissive Boolean  @map("suppressed_permissive")
+  abstained            Boolean
+  latencyMs            Int      @map("latency_ms")
+  usageMissing         Boolean  @map("usage_missing")
+  // NULL when no machine price (AC-15). Never invent 0 for unpriced.
+  costUsd              Decimal? @map("cost_usd") @db.Decimal(10, 6)
+  cacheHit             String   @map("cache_hit")
+  traceId              String?  @map("trace_id")
+  caller               String?
+  stateLang            String   @map("state_lang")
+  outcome              String?
+  requestId            String?  @unique @map("request_id")
+  request              Request? @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  apiKeyId             String   @map("api_key_id")
+  apiKey               ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Restrict)
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@index([apiKeyId, createdAt])
+  @@index([route, createdAt])
+  @@index([decisionType, createdAt])
+  @@map("decision_ledger")
+}
+
