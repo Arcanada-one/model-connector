@@ -2,6 +2,22 @@
 
 The `typesafe-jev` connector accepts `DecisionRequest/v1` and returns `DecisionResult/v1` under the normal connector response's `structured` field. It uses the native System-One endpoint, not chat completions. `DecisionService` is exported by `ConnectorsModule` for internal callers; it always calls `ConnectorsService.execute` with the caller's API key identity and zero retries. External callers use the existing authenticated `POST /connectors/typesafe-jev/execute` path. Existing key policy, provider USE access, billing and timeout gates still apply.
 
+## Pre-network refusals (CONN-JEV-03)
+
+Execute refuses **before any network call** with a typed `error.details.code`:
+
+| Condition | `error.details.code` |
+|-----------|----------------------|
+| `TYPESAFE_JEV_DISABLED` truthy (`1` / `true` / `yes`) | `jev_disabled` |
+| `JEV_ENABLED` is not the exact literal `true`, or no credential | `route_not_configured` |
+| Malformed envelope / unsupported chat options | `invalid_request` |
+
+The kill switch is re-read on every attempt and wins over an enabled+credentialed configuration: it never invents a live success. Missing key/config is `route_not_configured`, not a fabricated observed decision.
+
+## KEY_OVERRIDE_CAPABLE
+
+`typesafe-jev` is listed in `KEY_OVERRIDE_CAPABLE` (`src/policy/policy.schema.ts`). Per-request credential overrides via `providerKeyContext` / key-policy `providerKeys` are honoured by `getProviderKeyOverride('typesafe-jev')` before falling back to `TYPESAFE_API_KEY`. Connectors that are not in that list reject such policy at write time (fail-closed).
+
 The common request/result envelope separates decision type, policy and provenance from transport. Only the TypeSafe adapter is currently implemented. The sole admitted application mode is `shadow`; every result says `action: none`. This result never authorizes a tool, changes ACLs, loads a skill, delegates work or routes a production request. Native advice must not replace deterministic authorization.
 
 ## Request

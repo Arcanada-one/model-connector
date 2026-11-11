@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { KEY_OVERRIDE_CAPABLE } from '../../policy/policy.schema';
+import { providerKeyContext } from '../../policy/provider-key.context';
 import { DecisionRequestSchema, normalizeDecision } from './decision.contract';
 import { JevConnector } from './jev.connector';
 
@@ -19,6 +21,7 @@ describe('native decision contract and adapter', () => {
   const execute = () => connector.execute({ prompt: JSON.stringify(request), model: 'jev-latest' });
   beforeEach(() => {
     vi.stubEnv('JEV_ENABLED', 'true');
+    vi.stubEnv('TYPESAFE_JEV_DISABLED', 'false');
     vi.stubEnv('TYPESAFE_API_KEY', 'synthetic-key');
     connector = new JevConnector();
     fetchMock.mockReset();
@@ -30,6 +33,17 @@ describe('native decision contract and adapter', () => {
   });
   function reply(body: unknown, status = 200) {
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(body), { status }));
+  }
+  function expectRefuse(response: Awaited<ReturnType<JevConnector['execute']>>, code: string) {
+    expect(response.status).toBe('error');
+    expect(response.error).toMatchObject({
+      type: 'validation_error',
+      message: `JEV ${code}`,
+      retryable: false,
+      recommendation: 'abort',
+      details: { code },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   }
 
   it('sends exact native primitives without inventing Noul criteria; returns provenance and full precision', async () => {
@@ -88,25 +102,45 @@ describe('native decision contract and adapter', () => {
     'is off for flag %s, including status and catalog refresh',
     async (flag) => {
       vi.stubEnv('JEV_ENABLED', flag);
-      expect((await execute()).status).toBe('error');
+      expectRefuse(await execute(), 'route_not_configured');
       expect((await connector.getStatus()).healthy).toBe(false);
       expect((await connector.refreshCatalogModels()).status).toBe('failed');
-      // Discovery stays published; execute/status remain gated by JEV_ENABLED.
+      // Discovery stays published; execute/status remain gated by configuration.
       expect(connector.getCapabilities().models).toEqual(['jev-latest']);
       expect(connector.getCapabilities().modality).toBe('decision');
-      expect(fetchMock).not.toHaveBeenCalled();
     },
   );
-  it('missing provider credential refuses without a call', async () => {
+  it('CONN-JEV-03: TYPESAFE_JEV_DISABLED=1 refuses with jev_disabled before any network call', async () => {
+    vi.stubEnv('TYPESAFE_JEV_DISABLED', '1');
+    expectRefuse(await execute(), 'jev_disabled');
+    expect((await connector.getStatus()).healthy).toBe(false);
+  });
+  it('CONN-JEV-03: kill switch wins over enabled+credential (no invented live success)', async () => {
+    vi.stubEnv('JEV_ENABLED', 'true');
+    vi.stubEnv('TYPESAFE_API_KEY', 'synthetic-key');
+    vi.stubEnv('TYPESAFE_JEV_DISABLED', 'true');
+    expectRefuse(await execute(), 'jev_disabled');
+  });
+  it('CONN-JEV-03: missing provider credential is route_not_configured without a call', async () => {
     vi.stubEnv('TYPESAFE_API_KEY', '');
-    expect((await execute()).status).toBe('error');
-    expect(fetchMock).not.toHaveBeenCalled();
+    expectRefuse(await execute(), 'route_not_configured');
+  });
+  it('CONN-JEV-03: KEY_OVERRIDE_CAPABLE lists typesafe-jev and override supplies credential', async () => {
+    expect(KEY_OVERRIDE_CAPABLE).toContain('typesafe-jev');
+    vi.stubEnv('TYPESAFE_API_KEY', '');
+    reply(nativeResponse);
+    const response = await providerKeyContext.run(
+      { provider: 'typesafe-jev', apiKey: 'override-synthetic-key' },
+      () => execute(),
+    );
+    expect(response.status).toBe('success');
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init.headers.Authorization).toBe('Bearer override-synthetic-key');
   });
   it('rejects malformed native envelopes before network and suppresses payloads', async () => {
     const response = await connector.execute({ prompt: '{"secret-task":', model: 'jev-latest' });
-    expect(response.error?.retryable).toBe(false);
+    expectRefuse(response, 'invalid_request');
     expect(JSON.stringify(response)).not.toContain('secret-task');
-    expect(fetchMock).not.toHaveBeenCalled();
   });
   it('rejects executable mode, unsupported native types, empty criteria and unknown request fields', () => {
     const bad = [

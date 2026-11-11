@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **typesafe-jev kill switch and typed pre-network refusals (CONN-JEV-03).**
+  `TYPESAFE_JEV_DISABLED=1` (or `true`) refuses execute with
+  `error.details.code=jev_disabled` before any network call. Missing
+  `JEV_ENABLED=true` / credential yields `route_not_configured` (no invented
+  live success). `typesafe-jev` remains in `KEY_OVERRIDE_CAPABLE`; focused
+  tests cover kill switch, missing config, and override credential paths.
+
 - **Catalog modality `decision` for native System-One JEV (CONN-JEV-01).**
   `GET /connectors/catalog` can now filter and return `modality=decision`.
   The `typesafe-jev` connector publishes the documented `jev-latest` model under
