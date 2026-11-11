@@ -1,13 +1,13 @@
 {
  "admission": {
-  "rule": "admitted requires every verdict = verified; failed without exemption \u21d2 refused; not_measured without exemption \u21d2 paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
-  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold \u2014 the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
-  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item \u2014 the ordinary case after a rebase or a second commit on a card \u2014 the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-11T04:08:49Z",
+ "captured_at_utc": "2026-11-11T04:50:41Z",
  "change_set": {
-  "base": "47da2dd819c33ce1dca1c69d8d42a5b764873f41",
+  "base": "49a9fbf8d75fd70a2f38c7daa4a3ea13443f8169",
   "files": [
    {
     "kind": "doc",
@@ -26,6 +26,15 @@
     ],
     "path": "documentation/reference/jev-decisions.md",
     "status": "M"
+   },
+   {
+    "kind": "receipt",
+    "node_id": "receipt:receipts/graph/change-admission-75d5342f.json",
+    "node_ids": [
+     "receipt:receipts/graph/change-admission-75d5342f.json"
+    ],
+    "path": "receipts/graph/change-admission-75d5342f.json",
+    "status": "A"
    },
    {
     "kind": "code",
@@ -147,50 +156,48 @@
     "status": "A"
    }
   ],
-  "head": "c3b99a7fcd397b790b2caf89437b67817ea9b2f5",
+  "head": "ee218af483a26ce56ced8a67be4806cf320afe87",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
  "exemptions": [
   {
    "entity": "code_unit:src/decisions/decisions.controller.ts",
-   "evidence": "focused vitest src/decisions/ 17 PASS after absorb origin/main 47da2dd (merge tip c3b99a7); CI-parity nomod graphs with typescript aside; canary listing not produced in author lane",
+   "evidence": "focused vitest src/decisions/ 17 PASS after absorb origin/main 49a9fbf (merge tip ee218af); CI-parity clean WT + typescript aside; canary listing not produced in author lane",
    "expires_at_utc": "2026-12-11T00:00:00Z",
-   "owner": "CONN-JEV-07 author lane (Muneral 75d5342f) / Model Connector owner",
-   "reason": "Impact fan-out from typed POST /v1/decisions (CONN-JEV-07) after absorb of CONN-JEV-06 DecisionLedger (#270) into origin/main. CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "owner": "CONN-JEV-07 absorb author lane (Muneral 75d5342f) / Model Connector owner",
+   "reason": "Impact fan-out from typed POST /v1/decisions (CONN-JEV-07) after absorb of CONN-JEV-05 catalog/price (#269) into origin/main. CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   },
   {
    "entity": "route:POST /v1/decisions",
-   "evidence": "focused vitest src/decisions/ 17 PASS after absorb origin/main 47da2dd (merge tip c3b99a7); CI-parity nomod graphs with typescript aside; canary listing not produced in author lane",
+   "evidence": "focused vitest src/decisions/ 17 PASS after absorb origin/main 49a9fbf (merge tip ee218af); CI-parity clean WT + typescript aside; canary listing not produced in author lane",
    "expires_at_utc": "2026-12-11T00:00:00Z",
-   "owner": "CONN-JEV-07 author lane (Muneral 75d5342f) / Model Connector owner",
-   "reason": "Impact fan-out from typed POST /v1/decisions (CONN-JEV-07) after absorb of CONN-JEV-06 DecisionLedger (#270) into origin/main. CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
+   "owner": "CONN-JEV-07 absorb author lane (Muneral 75d5342f) / Model Connector owner",
+   "reason": "Impact fan-out from typed POST /v1/decisions (CONN-JEV-07) after absorb of CONN-JEV-05 catalog/price (#269) into origin/main. CI-parity nomod graphs (typescript package aside so inline-harness fixture projection matches hosted rebuild). Canary listing for the live contour was not produced in this author lane. Other verifiers on the entity (where present) did not fail. Hosted graph-admission/canary remeasure remains required when required_effective. This exemption stands in for missing canary listing only."
   }
  ],
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:242ee81fa50de5c21986e217a19118c1283492b2825da6103655f737a781b18c",
-  "path": "/tmp/arcana-verify-omoh43_k/verifier-out/graph-47da2dd819c3.json",
-  "source_commit": "47da2dd819c33ce1dca1c69d8d42a5b764873f41"
+  "graph_digest": "sha256:a33d502658d7455b1f5c8c12180c6ab62cf246db32fcfe20dee9403195e68ad9",
+  "path": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/graph-49a9fbf8d75f.json",
+  "source_commit": "49a9fbf8d75fd70a2f38c7daa4a3ea13443f8169"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:795e679fe7eaf904cf10619564c394575f0ed1f0473a3a5e6dd4aeeffbf7e1a3",
-  "path": "/tmp/arcana-verify-omoh43_k/verifier-out/graph-head-c3b99a7fcd39.json",
-  "source_commit": "c3b99a7fcd397b790b2caf89437b67817ea9b2f5",
+  "graph_digest": "sha256:f9c26aa3e0e96eecaf87c8f358c563911b5d818cd0192b099353286fc6d25a50",
+  "path": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/graph-head-ee218af483a2.json",
+  "source_commit": "ee218af483a26ce56ced8a67be4806cf320afe87",
   "staleness": {
-   "checked_at_utc": "2026-11-11T04:09:51Z",
-   "checked_nodes": 1004,
+   "checked_at_utc": "2026-11-11T04:51:46Z",
+   "checked_nodes": 1008,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
   }
  },
- "host": "conn-jev-07-lane",
- "host_redacted": true,
- "host_sha256": "92e7fe2d97924ebdc9233ad4549c4d570d0f56857c950d5c70738cbf5948d95f",
+ "host": "arcana-devs",
  "impact_set": {
   "deterministic_core": [
    {
@@ -850,6 +857,26 @@
    {
     "boundary": "intra_unit",
     "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-fa0a791c.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-fa0a791c.json",
+      "provenance": "deterministic",
+      "to": "code_unit:src/app.module.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
     "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
     "node_type": "receipt",
     "path": [
@@ -875,21 +902,22 @@
   "inferred_tail": [],
   "max_depth": 3,
   "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
-  "total": 33
+  "total": 34
  },
  "notes": [
-  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = \u22c3 edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i\u2026",
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 2 attached from verifier-out/exemptions-75d5342f.json"
+  "exemptions: 2 attached from /home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/exemptions-75d5342f.json"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261111T040849Z-c3b99a7f",
+ "receipt_id": "car-verify-20261111T045041Z-ee218af4",
+ "receipt_path": "receipts/graph/change-admission-75d5342f.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
-  "path": "/home/dev/aup/claude-work/d5-next-75d5342f-conn-jev-07-cur-20261111T0316Z/code"
+  "path": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/model-connector"
  },
  "revision_selection": {
   "base": [
@@ -928,6 +956,7 @@
    "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json",
    "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
    "receipt:receipts/graph/change-admission-e8ab201d.json",
+   "receipt:receipts/graph/change-admission-fa0a791c.json",
    "receipt:receipts/graph/change-admission-jev-decision.json"
   ],
   "head": [
@@ -964,6 +993,7 @@
    "receipt:receipts/graph/change-admission-688ea1dc.json",
    "receipt:receipts/graph/change-admission-709559c4-strict-chat.json",
    "receipt:receipts/graph/change-admission-7148.json",
+   "receipt:receipts/graph/change-admission-75d5342f.json",
    "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json",
    "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
    "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
@@ -979,6 +1009,7 @@
    "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json",
    "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json",
    "receipt:receipts/graph/change-admission-e8ab201d.json",
+   "receipt:receipts/graph/change-admission-fa0a791c.json",
    "receipt:receipts/graph/change-admission-jev-decision.json",
    "route:POST /v1/decisions"
   ],
@@ -987,7 +1018,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-11T04:09:50Z",
+  "checked_at_utc": "2026-11-11T04:51:46Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -1113,6 +1144,21 @@
    "path": "receipts/graph/change-admission-7148.json",
    "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
    "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": null,
+    "head": "sha256:84e5fb852bbb50d6ab71b2a7a3e25058be2a08e7c32f7101fb9a9d086dc0a355"
+   },
+   "entity": "receipt:receipts/graph/change-admission-75d5342f.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-75d5342f.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it; superseded by construction — this run re-issues the receipt at receipts/graph/change-admission-75d5342f.json for work item 75d5342f-8472-47a7-b8fb-ff418571f733",
+   "rule": "DEC-AUP-0035",
+   "superseded": {
+    "receipt_path": "receipts/graph/change-admission-75d5342f.json",
+    "work_item": "75d5342f-8472-47a7-b8fb-ff418571f733"
+   }
   },
   {
    "content_hash": {
@@ -1281,6 +1327,17 @@
   },
   {
    "content_hash": {
+    "base": "sha256:c71d590dc74305b29dfaeb4d3a9a5df6924d6c49e5d3bc680fe48ad92540aea5",
+    "head": "sha256:c71d590dc74305b29dfaeb4d3a9a5df6924d6c49e5d3bc680fe48ad92540aea5"
+   },
+   "entity": "receipt:receipts/graph/change-admission-fa0a791c.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-fa0a791c.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
     "base": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a",
     "head": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a"
    },
@@ -1292,7 +1349,7 @@
   }
  ],
  "tree": {
-  "commit": "c3b99a7fcd397b790b2caf89437b67817ea9b2f5",
+  "commit": "ee218af483a26ce56ced8a67be4806cf320afe87",
   "dirty": false
  },
  "verdicts": [
@@ -1390,7 +1447,7 @@
   },
   {
    "entity": "code_unit:src/decisions/templates/index.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
    "verdict": "verified",
    "verifier_ids": [
     "v-contract-diff",
@@ -1400,7 +1457,7 @@
   },
   {
    "entity": "code_unit:src/decisions/templates/registry.ts",
-   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer \u2286 provider); v-fitness: no new fitness violation",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: project compiles, 0 errors; v-contract-diff: 1 contract edge(s) verified (consumer ⊆ provider); v-fitness: no new fitness violation",
    "verdict": "verified",
    "verifier_ids": [
     "v-contract-diff",
@@ -1480,7 +1537,7 @@
   },
   {
    "entity": "document:documentation/reference/jev-decisions.md",
-   "reason": "v-doc-reference: 3 reference(s) resolve at head",
+   "reason": "v-doc-reference: 4 reference(s) resolve at head",
    "verdict": "verified",
    "verifier_ids": [
     "v-doc-reference"
@@ -1514,8 +1571,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/d5-next-75d5342f-conn-jev-07-cur-20261111T0316Z/code/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-75d5342f-conn-jev-07-cur-20261111T0316Z/code/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-omoh43_k/verifier-out/type-check-evzyyzpu/check.tsbuildinfo --listFiles",
-   "duration_s": 17.25,
+   "command": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/type-check-a65u_r1i/check.tsbuildinfo --listFiles",
+   "duration_s": 12.53,
    "entities": [
     "code_unit:src/app.module.ts",
     "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
@@ -1561,13 +1618,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-omoh43_k/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-11T04:10:06Z",
-   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2887 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-11T04:51:58Z",
+   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2889 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-75d5342f-conn-jev-07-cur-20261111T0316Z/code/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-75d5342f-conn-jev-07-cur-20261111T0316Z/code/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-omoh43_k/verifier-out/type-check-8xyi2dsa/check.tsbuildinfo --listFiles",
-   "duration_s": 11.01,
+   "command": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/type-check-26klu3hf/check.tsbuildinfo --listFiles",
+   "duration_s": 7.51,
    "entities": [
     "code_unit:src/app.module.ts",
     "code_unit:src/decisions/decisions.controller.ts",
@@ -1599,13 +1656,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-omoh43_k/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-11T04:10:24Z",
-   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2146 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-11T04:52:11Z",
+   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2147 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-75d5342f-conn-jev-07-cur-20261111T0316Z/code/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-75d5342f-conn-jev-07-cur-20261111T0316Z/code/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-omoh43_k/verifier-out/type-check-avlcfdnm/check.tsbuildinfo --listFiles",
-   "duration_s": 1.54,
+   "command": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/type-check-4tt8bwgp/check.tsbuildinfo --listFiles",
+   "duration_s": 1.08,
    "entities": [
     "code_unit:src/app.module.ts",
     "code_unit:src/decisions/decisions.controller.ts",
@@ -1626,13 +1683,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-omoh43_k/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-11T04:10:36Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-11T04:52:19Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-75d5342f-conn-jev-07-cur-20261111T0316Z/code/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-75d5342f-conn-jev-07-cur-20261111T0316Z/code/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-omoh43_k/verifier-out/type-check-7vt1gyqz/check.tsbuildinfo --listFiles",
-   "duration_s": 29.57,
+   "command": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/type-check-6x7jjel0/check.tsbuildinfo --listFiles",
+   "duration_s": 14.94,
    "entities": [
     "code_unit:src/app.module.ts",
     "code_unit:src/decisions/decisions.controller.ts",
@@ -1664,13 +1721,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-omoh43_k/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-11T04:10:37Z",
-   "summary": "tsconfig.json: exit 0, 0 error(s), 2776 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-11T04:52:20Z",
+   "summary": "tsconfig.json: exit 0, 0 error(s), 2778 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/d5-next-75d5342f-conn-jev-07-cur-20261111T0316Z/code/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-75d5342f-conn-jev-07-cur-20261111T0316Z/code/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-omoh43_k/verifier-out/type-check-ylb0_ves/check.tsbuildinfo --listFiles",
-   "duration_s": 22.96,
+   "command": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/type-check-2rre1677/check.tsbuildinfo --listFiles",
+   "duration_s": 18.47,
    "entities": [
     "code_unit:src/app.module.ts",
     "code_unit:src/decisions/decisions.controller.ts",
@@ -1702,13 +1759,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-omoh43_k/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-11T04:11:08Z",
-   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2882 files listed"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-11T04:52:36Z",
+   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2884 files listed"
   },
   {
-   "command": "tools/graph/contract_diff.py.run_diff(base=47da2dd819c3, head=c3b99a7fcd39, graph=head graph)",
-   "duration_s": 11.53,
+   "command": "tools/graph/contract_diff.py.run_diff(base=49a9fbf8d75f, head=ee218af483a2, graph=head graph)",
+   "duration_s": 20.38,
    "entities": [
     "code_unit:src/decisions/decisions.controller.ts",
     "code_unit:src/decisions/templates/index.ts",
@@ -1726,13 +1783,13 @@
    "exit_code": 1,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/tmp/arcana-verify-omoh43_k/verifier-out/v-contract-diff.json",
-   "started_at_utc": "2026-11-11T04:11:32Z",
-   "summary": "189\u2192190 contracts, breaking 0, edges {'not_measured': 4, 'verified': 253}"
+   "output_ref": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/v-contract-diff.json",
+   "started_at_utc": "2026-11-11T04:52:55Z",
+   "summary": "191→192 contracts, breaking 0, edges {'not_measured': 4, 'verified': 256}"
   },
   {
    "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
-   "duration_s": 0.16,
+   "duration_s": 0.28,
    "entities": [
     "route:POST /v1/decisions"
    ],
@@ -1742,13 +1799,13 @@
    "exit_code": 0,
    "id": "v-route-config",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-omoh43_k/verifier-out/v-route-config.txt",
-   "started_at_utc": "2026-11-11T04:11:43Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/v-route-config.txt",
+   "started_at_utc": "2026-11-11T04:53:15Z",
    "summary": "1 route(s), 0 failed"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.3,
+   "duration_s": 1.27,
    "entities": [
     "code_unit:src/app.module.ts",
     "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
@@ -1792,13 +1849,13 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/tmp/arcana-verify-omoh43_k/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-11T04:11:44Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/v-fitness.json",
+   "started_at_utc": "2026-11-11T04:53:16Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.01,
+   "duration_s": 0.02,
    "entities": [
     "document:CHANGELOG.md",
     "document:documentation/reference/jev-decisions.md",
@@ -1812,8 +1869,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/tmp/arcana-verify-omoh43_k/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-11T04:11:44Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/v-doc-reference.txt",
+   "started_at_utc": "2026-11-11T04:53:17Z",
    "summary": "3 document(s), 0 failed"
   },
   {
@@ -1830,17 +1887,23 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/tmp/arcana-verify-omoh43_k/verifier-out/v-canary.json",
-   "started_at_utc": "2026-11-11T04:11:44Z",
+   "output_ref": "/home/dev/aup/claude-work/d5-next-75d5342f-absorb-cur-20261111T0438Z/verifier-out/reissue/v-canary.json",
+   "started_at_utc": "2026-11-11T04:53:17Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 2 not_measured of 2 entities"
   }
  ],
  "verify": {
   "events": [
    {
+    "code": "SUPERSEDED_SELF_EXCLUSION",
+    "entity": "receipt:receipts/graph/change-admission-75d5342f.json",
+    "rule": "DEC-AUP-0035",
+    "text": "the receipt at receipts/graph/change-admission-75d5342f.json is the previous version of the one this run is writing, for the same work item 75d5342f-8472-47a7-b8fb-ff418571f733 — superseded by construction, so it owes this change no verdict"
+   },
+   {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "27 affected entity(ies) owe no verdict (receipt: 27): unchanged at both revisions and given no verifier by the matrix"
+    "text": "29 affected entity(ies) owe no verdict (receipt: 29): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
@@ -1943,6 +2006,7 @@
    "receipt:receipts/graph/change-admission-688ea1dc.json": [],
    "receipt:receipts/graph/change-admission-709559c4-strict-chat.json": [],
    "receipt:receipts/graph/change-admission-7148.json": [],
+   "receipt:receipts/graph/change-admission-75d5342f.json": [],
    "receipt:receipts/graph/change-admission-a2-201-20260923T123300Z.json": [],
    "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": [],
    "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json": [],
@@ -1958,6 +2022,7 @@
    "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json": [],
    "receipt:receipts/graph/change-admission-conv-ac5-price-coverage.json": [],
    "receipt:receipts/graph/change-admission-e8ab201d.json": [],
+   "receipt:receipts/graph/change-admission-fa0a791c.json": [],
    "receipt:receipts/graph/change-admission-jev-decision.json": [],
    "route:POST /v1/decisions": [
     "canary",
@@ -1967,11 +2032,10 @@
    ]
   },
   "seconds": {
-   "prepare": 6.18,
-   "total": 176.05,
-   "verifiers": 94.33
+   "prepare": 5.18,
+   "total": 156.77,
+   "verifiers": 76.48
   }
  },
- "work_item": "75d5342f-8472-47a7-b8fb-ff418571f733",
- "receipt_path": "receipts/graph/change-admission-75d5342f.json"
+ "work_item": "75d5342f-8472-47a7-b8fb-ff418571f733"
 }
