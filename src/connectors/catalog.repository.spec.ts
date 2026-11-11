@@ -102,6 +102,29 @@ describe('CatalogRepository CONN-1646', () => {
     repository = new CatalogRepository(prisma as unknown as PrismaService);
   });
 
+  it('M-REPOAUTH: missing snapshot join maps authoritative to null (not true)', async () => {
+    prisma.modelCatalog.findFirst.mockResolvedValue({
+      connector: 'groq',
+      model: 'llama',
+      inputPerMTok: 10,
+      outputPerMTok: 30,
+      cachedInputPerMTok: null,
+      cacheWrite5mPerMTok: null,
+      cacheWrite1hPerMTok: null,
+      tier: 'paid',
+      free: false,
+      contentFingerprint: 'a'.repeat(64),
+      snapshotId: null,
+      observedAt: new Date('2026-11-08T21:00:00.000Z'),
+      freshness: 'fresh',
+      snapshot: null,
+    });
+    const priced = await repository.findPricing('groq', 'llama');
+    expect(priced).not.toBeNull();
+    expect(priced?.authoritative).toBeNull();
+    expect(priced?.authoritative).not.toBe(true);
+  });
+
   it('CACHE-003b selects all cache tariffs on the per-request pricing path', async () => {
     const pricing = {
       inputPerMTok: 10,
@@ -111,17 +134,39 @@ describe('CatalogRepository CONN-1646', () => {
       cacheWrite5mPerMTok: 12.5,
       cacheWrite1hPerMTok: 20,
     };
-    prisma.modelCatalog.findFirst.mockResolvedValue(pricing);
-    expect(await repository.findPricing('anthropic', 'claude-fable-5-1')).toEqual(pricing);
+    prisma.modelCatalog.findFirst.mockResolvedValue({
+      ...pricing,
+      observedAt: new Date('2026-11-08T21:00:00.000Z'),
+      freshness: 'fresh',
+      snapshot: { authoritative: true },
+    });
+    expect(await repository.findPricing('anthropic', 'claude-fable-5-1')).toEqual({
+      ...pricing,
+      observedAt: new Date('2026-11-08T21:00:00.000Z'),
+      freshness: 'fresh',
+      authoritative: true,
+    });
     expect(prisma.modelCatalog.findFirst).toHaveBeenCalledWith({
       where: { connector: 'anthropic', model: 'claude-fable-5-1', absent: false },
       select: {
+        connector: true,
+        model: true,
         inputPerMTok: true,
         outputPerMTok: true,
-        tier: true,
         cachedInputPerMTok: true,
         cacheWrite5mPerMTok: true,
         cacheWrite1hPerMTok: true,
+        tier: true,
+        free: true,
+        contentFingerprint: true,
+        snapshotId: true,
+        observedAt: true,
+        freshness: true,
+        snapshot: {
+          select: {
+            authoritative: true,
+          },
+        },
       },
     });
   });

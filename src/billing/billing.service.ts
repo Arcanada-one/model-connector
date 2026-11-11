@@ -52,6 +52,17 @@ import {
   ledgerKeyForIntent,
   writeOffKeyForIntent,
 } from './intent';
+import {
+  PROTECTED_LIFECYCLE_VERSION,
+  PROTECTED_PHASE,
+  classifyProtectedIntentReplay,
+  isProtectedNonExpirePhase,
+  protectedSettleablePhases,
+  type ProtectedPhase,
+  type ProtectedReservationView,
+  ProtectedProfileError,
+} from './protected-lifecycle';
+import { randomUUID } from 'node:crypto';
 
 /**
  * ARAS-0071 — what kind of movement a ledger entry records.
@@ -186,6 +197,11 @@ export interface RequestIntentHandle {
    * path reads it to grant a transient timeout exactly one retry per key.
    */
   reclaimed?: true;
+  /** Present only for protected Lab reservations (lifecycleVersion = 1). */
+  lifecycleVersion?: number;
+  protectedPhase?: ProtectedPhase | null;
+  generation?: number;
+  reservationRef?: string | null;
 }
 
 /**
@@ -208,7 +224,12 @@ export type IntentOpenResult =
   /** Completed, but the response was too large to store. */
   | { outcome: 'not_replayable' }
   /** The reservation lost the race, or the account is empty. */
-  | { outcome: 'insufficient'; balanceUsd: string; requiredUsd: string };
+  | { outcome: 'insufficient'; balanceUsd: string; requiredUsd: string }
+  /**
+   * Protected lifecycle: the prior attempt under this key committed dispatch
+   * (or is unknown). Never reclaim / mint a fresh attempt solely on elapsed time.
+   */
+  | { outcome: 'protected_unknown' };
 
 /**
  * Internal signal that the conditional reservation matched no row.
@@ -934,6 +955,46 @@ export class BillingService {
       // a clean open.
       return { outcome: 'in_flight' };
     }
+
+    // Protected Lab P10-05: classify before the legacy completed→replay path so
+    // nonterminal / corrupt settled rows never look like a paid completed replay,
+    // and unknown stays typed apart from ordinary in_flight.
+    if (
+      existing.lifecycleVersion === PROTECTED_LIFECYCLE_VERSION &&
+      existing.protectedPhase != null
+    ) {
+      // expectedResultHash intentionally omitted: production has no retained
+      // hash column at settlement (NOT_IMPLEMENTED until a migration).
+      // operationKey is the same intentKey used to load `existing`, so the
+      // classifier's op-key inequality is unreachable here; fingerprint binds.
+      const classified = classifyProtectedIntentReplay({
+        row: existing,
+        payloadFingerprint,
+        operationKey: intentKey,
+      });
+      switch (classified.kind) {
+        case 'binding_mismatch':
+          return { outcome: 'payload_mismatch' };
+        case 'nonterminal':
+          return { outcome: classified.openOutcome };
+        case 'corrupt_settled':
+          return { outcome: 'not_replayable' };
+        case 'replay_eligible':
+          // Internally replay-eligible (see classification marker). Returning
+          // stored bytes here is the pre-Auth-read behaviour: P10-01..04 own
+          // entitlement gating; this round only refuses nonterminal/corrupt.
+          return {
+            outcome: 'replay',
+            response: existing.response,
+            requestId: existing.requestId ?? undefined,
+          };
+        case 'proven_no_dispatch':
+          return this.reclaimIntent(existing.id, params);
+        case 'not_protected':
+          break;
+      }
+    }
+
     if (existing.payloadFingerprint !== payloadFingerprint) {
       // Checked BEFORE the state, deliberately. Reusing a key for a different
       // request is a caller bug whether or not the first attempt succeeded.
@@ -948,14 +1009,20 @@ export class BillingService {
             requestId: existing.requestId ?? undefined,
           };
     }
+    // Defence in depth: non-expire protected phases must never fall through to
+    // ordinary in_flight / reclaim even if classification is bypassed.
+    if (isProtectedNonExpirePhase(existing.protectedPhase)) {
+      return { outcome: 'protected_unknown' };
+    }
     if (existing.state === 'held') {
       return { outcome: 'in_flight' };
     }
-    // 'released' or 'expired': the first attempt under this key did NOT
-    // complete and was NOT charged. Refusing the retry would be the worst of
-    // both worlds — the caller is blocked for the whole retention window
-    // BECAUSE they asked for idempotency, and the request they wanted was never
-    // performed. Reclaim the key and let them through.
+    // 'released' or 'expired' (and protected proven_no_dispatch mapped to
+    // those states): the first attempt under this key did NOT complete and was
+    // NOT charged. Refusing the retry would be the worst of both worlds —
+    // the caller is blocked for the whole retention window BECAUSE they asked
+    // for idempotency, and the request they wanted was never performed.
+    // Reclaim the key and let them through.
     return this.reclaimIntent(existing.id, params);
   }
 
@@ -979,8 +1046,44 @@ export class BillingService {
   ): Promise<IntentOpenResult> {
     try {
       const reclaimed = await this.prisma.$transaction(async (tx) => {
+        // Prefer a protected proven_no_dispatch reclaim (CAS on phase). This
+        // never matches dispatch_committed / unknown, and needs no prior read —
+        // so legacy unit mocks that only implement findUnique(apiKeyId_intentKey)
+        // keep working.
+        const reservationRef = randomUUID();
+        const protectedClaimed = await tx.requestIntent.updateMany({
+          where: {
+            id: intentId,
+            state: { in: ['released', 'expired'] },
+            lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+            protectedPhase: PROTECTED_PHASE.proven_no_dispatch,
+          },
+          data: {
+            state: 'held',
+            holdUsd: params.holdUsd,
+            expiresAt: params.expiresAt,
+            requestId: null,
+            response: Prisma.DbNull,
+            completedAt: null,
+            protectedPhase: PROTECTED_PHASE.reserved,
+            generation: 1,
+            reservationRef,
+          },
+        });
+        if (protectedClaimed.count === 1) {
+          await BillingService.reserveInTx(tx, params.apiKeyId, params.holdUsd);
+          return {
+            kind: 'protected' as const,
+            reservationRef,
+          };
+        }
+
         const claimed = await tx.requestIntent.updateMany({
-          where: { id: intentId, state: { in: ['released', 'expired'] } },
+          where: {
+            id: intentId,
+            state: { in: ['released', 'expired'] },
+            lifecycleVersion: 0,
+          },
           data: {
             state: 'held',
             holdUsd: params.holdUsd,
@@ -994,7 +1097,7 @@ export class BillingService {
         });
         if (claimed.count !== 1) return null;
         await BillingService.reserveInTx(tx, params.apiKeyId, params.holdUsd);
-        return true;
+        return { kind: 'legacy' as const };
       });
       if (!reclaimed) return { outcome: 'in_flight' };
       return {
@@ -1005,6 +1108,14 @@ export class BillingService {
           intentKey: params.intentKey,
           holdUsd: params.holdUsd,
           reclaimed: true,
+          ...(reclaimed.kind === 'protected'
+            ? {
+                lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+                protectedPhase: PROTECTED_PHASE.reserved,
+                generation: 1,
+                reservationRef: reclaimed.reservationRef,
+              }
+            : {}),
         },
       };
     } catch (err) {
@@ -1080,6 +1191,40 @@ export class BillingService {
     }
     const response = BillingService.storableResponse(params.response);
 
+    // Protected Lab: settle through the versioned phase CAS so a late result
+    // and a concurrent release race the SAME transition (charge exactly once).
+    if (params.intent.lifecycleVersion === PROTECTED_LIFECYCLE_VERSION) {
+      const expectedGeneration = params.intent.generation;
+      const claimed = await tx.requestIntent.updateMany({
+        where: {
+          id: params.intent.id,
+          lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+          protectedPhase: { in: [...protectedSettleablePhases()] },
+          ...(expectedGeneration === undefined ? {} : { generation: expectedGeneration }),
+        },
+        data: {
+          state: 'completed',
+          protectedPhase: PROTECTED_PHASE.settled,
+          generation: { increment: 1 },
+          requestId: params.requestId,
+          response: response === undefined ? undefined : (response as Prisma.InputJsonValue),
+          completedAt: new Date(),
+        },
+      });
+      if (claimed.count !== 1) return false;
+
+      await BillingService.releaseHoldInTx(tx, params.intent);
+
+      return this.chargeInTx(tx, {
+        apiKeyId: params.intent.apiKeyId,
+        amountUsd: amount,
+        idempotencyKey: ledgerKeyForIntent(params.intent.id),
+        writeOffKey: writeOffKeyForIntent(params.intent.id),
+        requestId: params.requestId,
+        reason: params.reason ?? 'model-request',
+      });
+    }
+
     // The state transition IS the concurrency control: whoever moves the intent
     // off `held` is the one that charges, and a second caller gets a count of
     // zero and does nothing. A read-then-write here would race with itself.
@@ -1121,6 +1266,11 @@ export class BillingService {
     tx: Prisma.TransactionClient,
     intent: RequestIntentHandle,
   ): Promise<boolean> {
+    if (intent.lifecycleVersion === PROTECTED_LIFECYCLE_VERSION) {
+      // Only a positively pre-dispatch reserved hold may be released. After
+      // dispatch_committed / unknown the hold stays until settle.
+      return this.releaseProtectedReservedInTx(tx, intent, 'released');
+    }
     const claimed = await tx.requestIntent.updateMany({
       where: { id: intent.id, state: 'held' },
       data: { state: 'released', completedAt: new Date() },
@@ -1143,6 +1293,9 @@ export class BillingService {
     state: 'released' | 'expired' = 'released',
   ): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
+      if (intent.lifecycleVersion === PROTECTED_LIFECYCLE_VERSION) {
+        return this.releaseProtectedReservedInTx(tx, intent, state);
+      }
       const claimed = await tx.requestIntent.updateMany({
         where: { id: intent.id, state: 'held' },
         data: { state, completedAt: new Date() },
@@ -1151,6 +1304,36 @@ export class BillingService {
       await BillingService.releaseHoldInTx(tx, intent);
       return true;
     });
+  }
+
+  /**
+   * Protected release: CAS reserved → proven_no_dispatch (legacy state column
+   * becomes released/expired). Never touches dispatch_committed or unknown.
+   */
+  private async releaseProtectedReservedInTx(
+    tx: Prisma.TransactionClient,
+    intent: RequestIntentHandle,
+    legacyState: 'released' | 'expired',
+  ): Promise<boolean> {
+    const expectedGeneration = intent.generation;
+    const claimed = await tx.requestIntent.updateMany({
+      where: {
+        id: intent.id,
+        lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+        protectedPhase: PROTECTED_PHASE.reserved,
+        state: 'held',
+        ...(expectedGeneration === undefined ? {} : { generation: expectedGeneration }),
+      },
+      data: {
+        state: legacyState,
+        protectedPhase: PROTECTED_PHASE.proven_no_dispatch,
+        generation: { increment: 1 },
+        completedAt: new Date(),
+      },
+    });
+    if (claimed.count !== 1) return false;
+    await BillingService.releaseHoldInTx(tx, intent);
+    return true;
   }
 
   /**
@@ -1210,6 +1393,326 @@ export class BillingService {
   }
 
   /**
+   * Prepare a protected Lab reservation on the same request-intent authority.
+   *
+   * Returns an opaque `reservation_ref` bound to account, operation key, payload
+   * fingerprint, provider/model/route, price-policy revision, amount and
+   * generation. The ref is not a credential.
+   *
+   * A zero hold is admitted only when `pricePolicyRevision` positively pins a
+   * zero-price policy (`zero:` prefix). Unknown / unpinned pricing refuses.
+   *
+   * Callers on the protected Lab route MUST pass a server-derived revision from
+   * `resolveProtectedPricePolicy` — a client `zero:` string is not authority.
+   */
+  async prepareProtectedReservation(params: {
+    apiKeyId: string;
+    operationKey: string;
+    payloadFingerprint: string;
+    providerName: string;
+    modelName: string;
+    routeKey: string;
+    pricePolicyRevision: string;
+    holdUsd: Prisma.Decimal | number | string;
+    amountUnit?: string;
+    amountPrecision?: number;
+    ttlMs?: number;
+  }): Promise<
+    | { outcome: 'opened'; reservation: ProtectedReservationView; intent: RequestIntentHandle }
+    | { outcome: 'insufficient'; balanceUsd: string; requiredUsd: string }
+    | { outcome: 'in_flight' }
+    | { outcome: 'payload_mismatch' }
+    | { outcome: 'protected_unknown' }
+    | { outcome: 'replay'; response: unknown; requestId?: string }
+    | { outcome: 'not_replayable' }
+    | { outcome: 'refused'; code: string; message: string }
+  > {
+    const hold = new Prisma.Decimal(params.holdUsd);
+    if (hold.isNegative()) {
+      throw new Error(
+        'prepareProtectedReservation() reserves funds; a negative hold would release them',
+      );
+    }
+    if (!params.operationKey || !params.payloadFingerprint) {
+      return {
+        outcome: 'refused',
+        code: 'protected_binding_incomplete',
+        message: 'Protected prepare requires an operation key and payload fingerprint.',
+      };
+    }
+    if (!params.pricePolicyRevision) {
+      return {
+        outcome: 'refused',
+        code: 'protected_price_unknown',
+        message: 'Protected prepare refuses unknown pricing; pin a price-policy revision.',
+      };
+    }
+    if (hold.isZero() && !params.pricePolicyRevision.startsWith('zero:')) {
+      return {
+        outcome: 'refused',
+        code: 'protected_zero_unpinned',
+        message:
+          'A zero hold on the protected profile requires a positively pinned zero-price policy.',
+      };
+    }
+
+    const expiresAt = new Date(Date.now() + (params.ttlMs ?? DEFAULT_HOLD_TTL_MS));
+    const reservationRef = randomUUID();
+    const amountUnit = params.amountUnit ?? 'usd';
+    const amountPrecision = params.amountPrecision ?? 6;
+
+    try {
+      const intent = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.requestIntent.create({
+          data: {
+            apiKeyId: params.apiKeyId,
+            intentKey: params.operationKey,
+            clientSupplied: true,
+            payloadFingerprint: params.payloadFingerprint,
+            holdUsd: hold,
+            state: 'held',
+            expiresAt,
+            lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+            protectedPhase: PROTECTED_PHASE.reserved,
+            generation: 1,
+            reservationRef,
+            operationKey: params.operationKey,
+            providerName: params.providerName,
+            modelName: params.modelName,
+            routeKey: params.routeKey,
+            pricePolicyRevision: params.pricePolicyRevision,
+            amountUnit,
+            amountPrecision,
+          },
+        });
+        await BillingService.reserveInTx(tx, params.apiKeyId, hold);
+        return created;
+      });
+
+      const handle: RequestIntentHandle = {
+        id: intent.id,
+        apiKeyId: intent.apiKeyId,
+        intentKey: intent.intentKey,
+        holdUsd: new Prisma.Decimal(intent.holdUsd),
+        lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+        protectedPhase: PROTECTED_PHASE.reserved,
+        generation: 1,
+        reservationRef: intent.reservationRef,
+      };
+      return {
+        outcome: 'opened',
+        intent: handle,
+        reservation: BillingService.toProtectedView(intent),
+      };
+    } catch (err) {
+      if (err instanceof HoldRejected) {
+        const current = await this.available(params.apiKeyId);
+        return {
+          outcome: 'insufficient',
+          balanceUsd: current.toString(),
+          requiredUsd: hold.toString(),
+        };
+      }
+      if (BillingService.isDuplicateKey(err)) {
+        const replay = await this.resolveReplay({
+          apiKeyId: params.apiKeyId,
+          intentKey: params.operationKey,
+          payloadFingerprint: params.payloadFingerprint,
+          holdUsd: hold,
+          expiresAt,
+        });
+        if (replay.outcome === 'opened') {
+          const row = await this.prisma.requestIntent.findUnique({
+            where: { id: replay.intent.id },
+          });
+          if (
+            !row ||
+            row.lifecycleVersion !== PROTECTED_LIFECYCLE_VERSION ||
+            !row.reservationRef ||
+            row.protectedPhase == null
+          ) {
+            return { outcome: 'in_flight' };
+          }
+          const intent: RequestIntentHandle = {
+            id: row.id,
+            apiKeyId: row.apiKeyId,
+            intentKey: row.intentKey,
+            holdUsd: new Prisma.Decimal(row.holdUsd),
+            reclaimed: true,
+            lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+            protectedPhase: row.protectedPhase as ProtectedPhase,
+            generation: row.generation,
+            reservationRef: row.reservationRef,
+          };
+          return {
+            outcome: 'opened',
+            intent,
+            reservation: BillingService.toProtectedView(row),
+          };
+        }
+        if (
+          replay.outcome === 'insufficient' ||
+          replay.outcome === 'in_flight' ||
+          replay.outcome === 'payload_mismatch' ||
+          replay.outcome === 'protected_unknown' ||
+          replay.outcome === 'replay' ||
+          replay.outcome === 'not_replayable'
+        ) {
+          return replay;
+        }
+        return { outcome: 'in_flight' };
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Resolve an opaque reservation_ref back to the bound protected record.
+   * Wrong account refuses; missing ref refuses. The ref itself is not a secret
+   * that grants spend — the caller must still authenticate as the owning key.
+   */
+  async lookupProtectedReservation(params: {
+    reservationRef: string;
+    apiKeyId: string;
+  }): Promise<
+    | { outcome: 'found'; reservation: ProtectedReservationView; intent: RequestIntentHandle }
+    | { outcome: 'not_found' }
+    | { outcome: 'forbidden' }
+  > {
+    const row = await this.prisma.requestIntent.findUnique({
+      where: { reservationRef: params.reservationRef },
+    });
+    if (!row || row.lifecycleVersion !== PROTECTED_LIFECYCLE_VERSION) {
+      return { outcome: 'not_found' };
+    }
+    if (row.apiKeyId !== params.apiKeyId) {
+      return { outcome: 'forbidden' };
+    }
+    const intent: RequestIntentHandle = {
+      id: row.id,
+      apiKeyId: row.apiKeyId,
+      intentKey: row.intentKey,
+      holdUsd: new Prisma.Decimal(row.holdUsd),
+      lifecycleVersion: row.lifecycleVersion,
+      protectedPhase: row.protectedPhase as ProtectedPhase | null,
+      generation: row.generation,
+      reservationRef: row.reservationRef,
+    };
+    return { outcome: 'found', reservation: BillingService.toProtectedView(row), intent };
+  }
+
+  /**
+   * Compare-and-set reserved → dispatch_committed with a generation check.
+   * Exactly one of {this, sweeper expire} wins.
+   */
+  async commitProtectedDispatch(intent: RequestIntentHandle): Promise<boolean> {
+    if (intent.lifecycleVersion !== PROTECTED_LIFECYCLE_VERSION) {
+      throw new ProtectedProfileError(
+        'not_protected',
+        'commitProtectedDispatch requires a protected lifecycle reservation',
+      );
+    }
+    const expected = intent.generation ?? 1;
+    const claimed = await this.prisma.requestIntent.updateMany({
+      where: {
+        id: intent.id,
+        lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+        protectedPhase: PROTECTED_PHASE.reserved,
+        generation: expected,
+        state: 'held',
+      },
+      data: {
+        protectedPhase: PROTECTED_PHASE.dispatch_committed,
+        generation: { increment: 1 },
+      },
+    });
+    if (claimed.count === 1) {
+      intent.protectedPhase = PROTECTED_PHASE.dispatch_committed;
+      intent.generation = expected + 1;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Retain the operation as unknown. Never releases the hold and never mints a
+   * new key. Two admission paths land here:
+   * - `dispatch_committed` → `unknown` after crash / timeout / lost response;
+   * - `reserved` → `unknown` when `connector.execute` returned or threw without
+   *   running the dispatch fence (hook never ran; handoff state unknown).
+   *
+   * Already-`unknown` / settled rows are a no-op (CAS miss).
+   */
+  async markProtectedUnknown(intent: RequestIntentHandle): Promise<boolean> {
+    if (intent.lifecycleVersion !== PROTECTED_LIFECYCLE_VERSION) return false;
+    if (intent.protectedPhase === PROTECTED_PHASE.unknown) return true;
+    const expected = intent.generation;
+    const claimed = await this.prisma.requestIntent.updateMany({
+      where: {
+        id: intent.id,
+        lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+        protectedPhase: {
+          in: [PROTECTED_PHASE.dispatch_committed, PROTECTED_PHASE.reserved],
+        },
+        ...(expected === undefined ? {} : { generation: expected }),
+      },
+      data: {
+        protectedPhase: PROTECTED_PHASE.unknown,
+        generation: { increment: 1 },
+      },
+    });
+    if (claimed.count === 1) {
+      intent.protectedPhase = PROTECTED_PHASE.unknown;
+      if (expected !== undefined) intent.generation = expected + 1;
+      return true;
+    }
+    return false;
+  }
+
+  private static toProtectedView(row: {
+    id: string;
+    apiKeyId: string;
+    intentKey: string;
+    reservationRef: string | null;
+    payloadFingerprint: string;
+    providerName: string | null;
+    modelName: string | null;
+    routeKey: string | null;
+    pricePolicyRevision: string | null;
+    holdUsd: Prisma.Decimal | string;
+    amountUnit: string | null;
+    amountPrecision: number | null;
+    expiresAt: Date;
+    generation: number;
+    protectedPhase: string | null;
+    lifecycleVersion: number;
+    operationKey: string | null;
+  }): ProtectedReservationView {
+    if (!row.reservationRef) {
+      throw new ProtectedProfileError('missing_ref', 'Protected row is missing reservation_ref');
+    }
+    return {
+      reservationRef: row.reservationRef,
+      intentId: row.id,
+      intentKey: row.intentKey,
+      apiKeyId: row.apiKeyId,
+      operationKey: row.operationKey ?? row.intentKey,
+      payloadFingerprint: row.payloadFingerprint,
+      providerName: row.providerName ?? '',
+      modelName: row.modelName ?? '',
+      routeKey: row.routeKey ?? '',
+      pricePolicyRevision: row.pricePolicyRevision ?? '',
+      holdUsd: new Prisma.Decimal(row.holdUsd).toFixed(row.amountPrecision ?? 6),
+      amountUnit: row.amountUnit ?? 'usd',
+      amountPrecision: row.amountPrecision ?? 6,
+      expiresAt: row.expiresAt.toISOString(),
+      generation: row.generation,
+      protectedPhase: (row.protectedPhase ?? PROTECTED_PHASE.reserved) as ProtectedPhase,
+      lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+    };
+  }
+
+  /**
    * Release holds whose owner never came back.
    *
    * A hold is a claim on a customer's money. A process SIGKILLed between
@@ -1217,10 +1720,25 @@ export class BillingService {
    * customer's only symptom would be a balance that says one thing and a
    * spendable balance that says another. Bounded per sweep so one pathological
    * backlog cannot turn a maintenance tick into a long transaction.
+   *
+   * Protected fence: only `reserved` (pre-dispatch) rows may expire, through
+   * the same CAS/generation step as dispatch commitment. dispatch_committed
+   * and unknown are never touched.
    */
   async sweepExpiredIntents(limit = 500): Promise<{ swept: number; releasedUsd: string }> {
+    const now = new Date();
     const stale = await this.prisma.requestIntent.findMany({
-      where: { state: 'held', expiresAt: { lt: new Date() } },
+      where: {
+        state: 'held',
+        expiresAt: { lt: now },
+        OR: [
+          { lifecycleVersion: 0 },
+          {
+            lifecycleVersion: PROTECTED_LIFECYCLE_VERSION,
+            protectedPhase: PROTECTED_PHASE.reserved,
+          },
+        ],
+      },
       orderBy: { expiresAt: 'asc' },
       take: Math.min(Math.max(limit, 1), 5_000),
     });
@@ -1233,6 +1751,10 @@ export class BillingService {
         apiKeyId: intent.apiKeyId,
         intentKey: intent.intentKey,
         holdUsd: new Prisma.Decimal(intent.holdUsd),
+        lifecycleVersion: intent.lifecycleVersion,
+        protectedPhase: intent.protectedPhase as ProtectedPhase | null,
+        generation: intent.generation,
+        reservationRef: intent.reservationRef,
       };
       if (await this.releaseIntent(handle, 'expired')) {
         swept += 1;

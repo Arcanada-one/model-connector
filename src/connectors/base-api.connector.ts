@@ -2,6 +2,10 @@ import { redactProviderSecrets } from '../policy/provider-key.context';
 import { randomUUID } from 'crypto';
 import { Logger } from '@nestjs/common';
 import {
+  PROTECTED_RESERVATION_STALE,
+  ProtectedReservationStaleError,
+} from '../billing/protected-lifecycle';
+import {
   CircuitBreakerResetEntry,
   ConnectorCapabilities,
   ConnectorRequest,
@@ -114,6 +118,15 @@ export interface ParsedHttpError {
 export abstract class BaseApiConnector implements IConnector {
   readonly type = 'api' as const;
   abstract readonly name: string;
+
+  /**
+   * Inherited capability booleans are NOT admission proof. Protected Lab
+   * admission is keyed to `protected-dispatch-fence-admission.ts` (exact class
+   * allow-list). The base `execute` path still invokes `__beforeProviderFetch`
+   * immediately before the single provider `fetch`; subclasses that override
+   * `execute` stay refused until individually listed.
+   */
+  readonly supportsProtectedDispatchFence: boolean = false;
 
   protected activeJobs = 0;
   private _semaphore?: Semaphore;
@@ -541,14 +554,40 @@ export abstract class BaseApiConnector implements IConnector {
     try {
       const url = this.buildRequestUrl(request);
       const body = this.buildRequestBody(request);
+      // Finish queue + header + body awaits before the protected dispatch CAS.
+      const headers = await this.getRequestHeaders(request);
 
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: await this.getRequestHeaders(request),
-        body: JSON.stringify(body),
-        redirect: this.getRedirectPolicy(),
-        signal: AbortSignal.timeout(timeout),
-      });
+      if (request.__beforeProviderFetch) {
+        // Pass the exact URL that will be fetched — the P9 hook must not rebuild it.
+        await request.__beforeProviderFetch({ requestUrl: url });
+      }
+
+      let res: Response;
+      try {
+        // Protected dispatch has already CAS'd (inside __beforeProviderFetch).
+        // Do not follow redirects: a 307/308 would re-POST to a host that was
+        // never compared by the P9 URL check. redirect:'error' throws into the
+        // catch below → __afterProviderAmbiguity → unknown (post-commit
+        // ambiguity), same as crash/timeout after dispatch_committed.
+        // Legacy / unprotected traffic keeps getRedirectPolicy() (usually 'follow').
+        const redirect: RequestRedirect = request.__beforeProviderFetch
+          ? 'error'
+          : this.getRedirectPolicy();
+        res = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          redirect,
+          signal: AbortSignal.timeout(timeout),
+        });
+      } catch (err) {
+        // Crash / timeout / lost response after a protected dispatch commit is
+        // conservatively ambiguous: retain unknown, do not release/reclaim.
+        if (request.__afterProviderAmbiguity) {
+          await request.__afterProviderAmbiguity().catch(() => undefined);
+        }
+        throw err;
+      }
 
       if (!res.ok) {
         const text = redactProviderSecrets(await this.readResponseError(res));
@@ -629,6 +668,16 @@ export abstract class BaseApiConnector implements IConnector {
 
       return base;
     } catch (err) {
+      // P9 stale refuse must propagate so ConnectorsService can return a typed
+      // error while leaving the hold `reserved` (no fetch, no CAS, no unknown).
+      if (
+        err instanceof ProtectedReservationStaleError ||
+        (err instanceof Error &&
+          'code' in err &&
+          (err as { code?: string }).code === PROTECTED_RESERVATION_STALE)
+      ) {
+        throw err;
+      }
       const latencyMs = Date.now() - start;
       // A2-210 — `AbortSignal.timeout()` (the only thing that aborts the fetch
       // above) rejects with a DOMException named 'TimeoutError'. This asked for
