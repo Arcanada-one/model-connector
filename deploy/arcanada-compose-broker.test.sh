@@ -1712,20 +1712,27 @@ tb_pass() {
   fi
   echo "PASS: ${name}"
 }
-tb_fail() { # name, expected message, stdin, args...
-  local name="$1" needle="$2" in="$3"; shift 3
-  if tb_run "$name" "$in" "$@"; then
-    echo "FAIL: ${name} unexpectedly passed" >&2; exit 1
+tb_fail() { # name, exact refusal message (without prefix), stdin, args...
+  # A refusal is asserted by exit code 1 AND the exact whole stderr line the
+  # broker's die() prints, so a different refusal, or a substring of a longer
+  # one, cannot satisfy it.
+  local name="$1" msg="$2" in="$3" rc=0; shift 3
+  [[ -n "$msg" ]] || { echo "FAIL: ${name}: tb_fail needs an exact message" >&2; exit 1; }
+  tb_run "$name" "$in" "$@" || rc=$?
+  if [[ "$rc" -ne 1 ]]; then
+    echo "FAIL: ${name}: expected exit code 1, got ${rc}" >&2; sed -n '1,40p' "${fixture_dir}/${name}.out" >&2; exit 1
   fi
-  expect_message "$name" "$needle"
+  if ! grep -Fxq -- "arcanada-compose-broker: ${msg}" "${fixture_dir}/${name}.out"; then
+    echo "FAIL: ${name}: exact refusal line not found: ${msg}" >&2; sed -n '1,40p' "${fixture_dir}/${name}.out" >&2; exit 1
+  fi
   echo "PASS: ${name}"
 }
 
 # Allowlist, AUTH and the ancestor-of-origin/main rule.
-tb_fail talo_unknown_service_refused 'service not in allowlist' '' talomnia-backendx ps
-tb_fail talo_sync_needs_fetch_credential 'fetch credential on stdin' '' talomnia-backend sync "$tb_c2"
+tb_fail talo_unknown_service_refused 'service not in allowlist: talomnia-backendx' '' talomnia-backendx ps
+tb_fail talo_sync_needs_fetch_credential 'this service needs a fetch credential on stdin' '' talomnia-backend sync "$tb_c2"
 tb_fail talo_sync_refuses_malformed_credential 'malformed fetch credential' 'short' talomnia-backend sync "$tb_c2"
-tb_fail talo_sync_refuses_sha_not_on_main 'not reachable from origin/main' "$tb_token" talomnia-backend sync "$tb_side"
+tb_fail talo_sync_refuses_sha_not_on_main 'refusing: sha is not reachable from origin/main' "$tb_token" talomnia-backend sync "$tb_side"
 [[ "$(git -C "${tb_state}/talomnia-backend" rev-parse HEAD)" == "$tb_c1" ]] || { echo 'FAIL: refused sync moved HEAD' >&2; exit 1; }
 tb_fail talo_sync_takes_exactly_one_sha 'sync takes exactly one sha' "$tb_token" talomnia-backend sync
 tb_pass talo_sync_accepts_sha_on_main "$tb_token" talomnia-backend sync "$tb_c2"
@@ -1747,7 +1754,7 @@ tb_pass talo_verify_accepted '' talomnia-backend verify
 expect_message talo_verify_accepted "RUNNING_IMAGE_DIGEST=${tb_image_id}"
 tb_fail talo_verify_takes_no_arguments 'verify takes no arguments' '' talomnia-backend verify "$tb_image_id"
 mv "${tb_state}/talomnia-backend/scripts/broker-verify.sh" "${tb_root}/broker-verify.sh.saved"
-tb_fail talo_verify_refuses_missing_script 'verify script missing' '' talomnia-backend verify
+tb_fail talo_verify_refuses_missing_script 'verify script missing or not a regular file' '' talomnia-backend verify
 mv "${tb_root}/broker-verify.sh.saved" "${tb_state}/talomnia-backend/scripts/broker-verify.sh"
 tb_pass talo_image_id_uses_image_row '' talomnia-backend image-id
 expect_message talo_image_id_uses_image_row "$tb_image_id"
@@ -1766,9 +1773,9 @@ tb_pass talo_registry_logout_accepted '' talomnia-backend registry-logout
 # and an unknown verb is refused. (build / image-id / tag-* stay reachable at
 # the broker level because they need no extra row; the sudoers grant, which
 # names the allowed actions, is what excludes them.)
-tb_fail talo_migrate_has_no_recipe 'service has no migration recipe' '' talomnia-backend migrate
-tb_fail talo_rollback_has_no_services 'talomnia-backend' '' talomnia-backend rollback
-tb_fail talo_smoke_has_no_row 'talomnia-backend' '' talomnia-backend smoke
-tb_fail talo_env_get_has_no_row 'talomnia-backend' '' talomnia-backend env-get SECRET
-tb_fail talo_aggregate_readback_refused 'aggregate' '' talomnia-backend aggregate-readback
-tb_fail talo_unknown_action_refused '' '' talomnia-backend not-an-action
+tb_fail talo_migrate_has_no_recipe 'service has no migration recipe: talomnia-backend' '' talomnia-backend migrate
+tb_fail talo_rollback_has_no_services 'service has no rollback recipe: talomnia-backend' '' talomnia-backend rollback
+tb_fail talo_smoke_has_no_row 'service has no smoke check: talomnia-backend' '' talomnia-backend smoke
+tb_fail talo_env_get_has_no_row 'service exposes no environment keys: talomnia-backend' '' talomnia-backend env-get SECRET
+tb_fail talo_aggregate_readback_refused 'service has no aggregate readback: talomnia-backend' '' talomnia-backend aggregate-readback
+tb_fail talo_unknown_action_refused 'unknown action: not-an-action' '' talomnia-backend not-an-action
