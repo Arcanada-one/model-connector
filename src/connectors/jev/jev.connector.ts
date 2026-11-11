@@ -13,8 +13,9 @@ import {
 import { DecisionRequestSchema, nativeRequest, normalizeDecision } from './decision.contract';
 import {
   buildJevCapabilityModelMeta,
+  buildJevCatalogPriceRows,
   JevCatalogPriceEnv,
-  jevRouteAvailabilityMap,
+  JevPriceRouteId,
 } from './jev.catalog-pricing';
 import { DirectRoute, JevRouteEnv } from './jev.routes';
 
@@ -249,9 +250,15 @@ export class JevConnector extends BaseApiConnector {
   }
 
   /** Route-level availability rows (stubs report available:false until keyed). */
-  routeCatalogEntries(): Array<{ model: string; available: boolean }> {
-    return [...jevRouteAvailabilityMap(process.env as JevCatalogPriceEnv).entries()].map(
-      ([model, available]) => ({ model, available }),
-    );
+  routeCatalogEntries(): Array<{
+    route: JevPriceRouteId;
+    model: string;
+    available: boolean;
+  }> {
+    return buildJevCatalogPriceRows({ env: process.env as JevCatalogPriceEnv }).map((row) => ({
+      route: row.route,
+      model: row.model,
+      available: row.available,
+    }));
   }
 }
