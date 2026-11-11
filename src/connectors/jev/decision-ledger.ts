@@ -16,13 +16,10 @@ import { DecisionRequestSchema, type DecisionResult } from './decision.contract'
 /** Default route id for the native typesafe-jev execute path (CONN-JEV-02 direct). */
 export const TYPESAFE_JEV_DIRECT_ROUTE = 'typesafe-jev/direct';
 
+/** Minimal transaction surface used by persistAndSettle (Prisma tx or test double). */
 export type DecisionLedgerTx = {
-  decisionLedger: {
-    createMany: (args: {
-      data: Array<Record<string, unknown>>;
-      skipDuplicates?: boolean;
-    }) => Promise<{ count: number }>;
-  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  decisionLedger: { createMany: (args: any) => Promise<{ count: number }> };
 };
 
 /**
