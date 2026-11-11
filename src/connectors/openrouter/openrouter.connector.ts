@@ -157,9 +157,12 @@ export class OpenRouterConnector extends BaseApiConnector {
           ? { inputPerMTok, outputPerMTok, unit: 'per_1m_tokens' }
           : null;
       const contextWindow = entry.top_provider?.context_length ?? entry.context_length ?? null;
+      // CONN-JEV-05 — typesafe/* are System-One decision models, not chat.
+      // Mislabeling them as chat polluted the chat catalog from live /models.
+      const modality = entry.id.startsWith('typesafe/') ? 'decision' : 'chat';
       metas.push({
         id: entry.id,
-        modality: 'chat',
+        modality,
         free: isFreeById || isFreeByPricing,
         pricing,
         contextWindow: typeof contextWindow === 'number' ? contextWindow : null,

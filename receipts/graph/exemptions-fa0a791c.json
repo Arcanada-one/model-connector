@@ -1,0 +1,1817 @@
+{
+ "exemptions": [
+  {
+   "entity": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/admin/admin.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/admin/circuit-breaker.controller.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/admin/circuit-breaker.controller.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/admin/watcher-repair.controller.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/admin/watcher-repair.controller.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/app.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/auth/abort-budget-signal.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/auth/auth.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/auth/rate-limit.app.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/auth/rate-limit.guard.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/auth/rate-limit.integration.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/billing.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/cache-invoice.integration.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/cost-estimate.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/credit-gate.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/credits.controller.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/credits.controller.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/idempotency.integration.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/measured-cost.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/measured-cost.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/metering.integration.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/price-coverage.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/price-coverage.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/price-sources-2026-11.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/reconciler-unbillable.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/reconciler.integration.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/billing/reconciler.service.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/aborted-attempt-intent-path.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/aborted-attempt-is-our-cost.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/anthropic/anthropic.connector.prompt-cache.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/anthropic/anthropic.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/anthropic/anthropic.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/azure-openai/azure-openai.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/azure-openai/azure-openai.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/azure-openai/index.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/base-api.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/base-api.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/base-cli.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/base-cli.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/bedrock/bedrock.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/bedrock/bedrock.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/bedrock/bedrock.module.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cascade/cascade-router.fallback.integration.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cascade/cascade-router.service.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cascade/cascade-router.service.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/catalog-refresh.service.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/catalog-refresh.service.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cerebras/cerebras.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cerebras/cerebras.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/claude-code/claude-code.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/claude-code/claude-code.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/claude-code/index.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/codex/codex.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/codex/codex.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/codex/codex.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cohere/cohere.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cohere/cohere.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cohere/cohere.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/connector-budget-and-retry-after.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/connectors.controller.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/connectors.controller.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/connectors.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/connectors.service.metering.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/connectors.service.policy.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/connectors.service.showcase-alarm.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/connectors.service.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/connectors.service.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cursor/cursor.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cursor/cursor.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cursor/cursor.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/cursor/index.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/deepseek/deepseek-prefinancial.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/deepseek/deepseek-thinking.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/embedding/embedding.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/embedding/embedding.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/embedding/embedding.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/failover/failover-router.service.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/failover/failover-router.service.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/failover/failover.candidates.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/failover/failover.candidates.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/failover/failover.chain.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/failover/failover.chain.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/fireworks/fireworks.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/fireworks/fireworks.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/first-dispatch-observation.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/first-dispatch-observation.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/gemini-api/index.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/gemini/gemini.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/gemini/gemini.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/gemini/gemini.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/grok/grok.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/grok/grok.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/grok/grok.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/groq/groq.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/groq/groq.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/groq/groq.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/groq/groqcloud-native.extension.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/huggingface/huggingface.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/huggingface/huggingface.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/image-generation/image-generation.e2e.integration.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/interfaces/connector.interface.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/jev/decision-ledger.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/jev/decision-ledger.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/jev/decision.service.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/jev/decision.service.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/jev/jev.catalog-pricing.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/jev/jev.catalog-pricing.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/jev/jev.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/jev/jev.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/jina-ai/jina-ai.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/jina-ai/jina-ai.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/mistral/mistral.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/mistral/mistral.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/mistral/mistral.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/modal/modal.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/modal/modal.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/modal/modal.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/multimodal-rejection.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/nvidia-nim/index.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/nvidia-nim/nvidia-nim.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/nvidia-nim/nvidia-retrieval.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/nvidia-nim/nvidia-retrieval.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/ollama/ollama.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/ollama/ollama.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/ollama/ollama.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/openai/openai.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/openai/openai.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/openmodel/openmodel.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/openmodel/openmodel.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/openrouter/openrouter.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/openrouter/openrouter.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/orq/orq.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/orq/orq.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/orq/orq.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/output-guard/output-guard.middleware.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/output-guard/output-guard.middleware.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/output-guard/output-guard.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/output-guard/schema-injectors/anthropic.injector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/output-guard/schema-injectors/cli.injector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/output-guard/schema-injectors/gemini.injector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/output-guard/schema-injectors/index.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/output-guard/schema-injectors/injectors.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/output-guard/schema-injectors/openai.injector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/output-guard/schema-injectors/openrouter.injector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/perplexity/index.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/perplexity/perplexity.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/perplexity/perplexity.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/pinecone-inference/pinecone-inference.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/pinecone-inference/pinecone-inference.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/retried-attempt-metering.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/sambanova-cloud/sambanova-cloud.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/sambanova-cloud/sambanova-cloud.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/timeout-classification.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/timeout-not-retried.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/together/together.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/together/together.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/together/together.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/transient-timeout-retry.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/voyage-ai/voyage-ai.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/voyage-ai/voyage-ai.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/zai-global/zai-global.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/connectors/zai-global/zai-global.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/health/health.controller.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/health/health.controller.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/health/health.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/main.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/openai-compat/openai-compat.controller.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/openai-compat/openai-compat.controller.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/openai-compat/openai-compat.failover.integration.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/openai-compat/openai-compat.models-policy.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/openai-compat/openai-compat.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/openai-compat/openai-translate.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/openai-compat/openai-translate.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/queue/connector-job.processor.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/queue/connector-job.processor.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/queue/queue.module.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/assemblyai-stt.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/assemblyai-stt.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/base-stt.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/base-stt.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/deepgram-stt.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/deepgram-stt.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/groq-stt.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/groq-stt.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/interfaces/stt-connector.interface.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/local-whisper-stt.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/local-whisper-stt.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/openai-stt.connector.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/openai-stt.connector.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/stt-job.processor.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/stt-pilot.integration.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/stt-router.policy.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/stt-router.service.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:src/speech/stt/stt-router.service.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:test/app.e2e-spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:test/bench-reservation/boundary-http.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "code_unit:test/provider-profiles/boundary-http.spec.ts",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "deployable_unit:.",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /admin/credits/:apiKeyId",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /admin/credits/:apiKeyId/history",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /connectors",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /connectors/:name/status",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /connectors/catalog",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /connectors/image/capabilities",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /connectors/intents/:intentId",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /health",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /health/connectors",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /health/metrics",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /health/ready",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:GET /v1/models",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /admin/circuit-breaker/reset",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /admin/credits/:apiKeyId",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /admin/credits/:apiKeyId/gift",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /admin/credits/holds/sweep",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /admin/credits/reconcile",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /connectors/:name/chat/completions",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /connectors/:name/execute",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /execute",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /images/generate",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /internal/watcher/circuit-breaker/reset",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /v1/chat/completions",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  },
+  {
+   "entity": "route:POST /v1/prompt-cache/prewarm",
+   "owner": "CONN-JEV-05 author lane (Muneral fa0a791c) / Model Connector owner",
+   "expires_at_utc": "2026-12-11T00:00:00Z",
+   "evidence": "focused vitest 252 PASS incl decision-ledger; CI-parity nomod graphs (clean WT); canary listing not produced in author lane",
+   "reason": "Impact fan-out from CONN-JEV-05 catalog/price honesty (Muneral fa0a791c) on tip over origin/main base 47da2dd (absorb MC#265+#270; CI-parity nomod graphs). Entity not edited or canary-gated neighbour; hosted graph-admission/canary remeasure required when required_effective. Exemption for not_measured/tsc-unavailable/canary only."
+  }
+ ]
+}

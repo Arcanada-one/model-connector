@@ -566,6 +566,17 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
       // declares one (e.g. embedding). Never overloads transport `type`.
       const connectorModality: ModelModality = caps.modality ?? 'chat';
       const freeModelSet = new Set<string>(caps.freeModels ?? []);
+      // CONN-JEV-05 — optional per-route availability (typesafe-jev stubs stay
+      // available:false until keyed). Duck-typed so non-JEV connectors are untouched.
+      const routeCatalogEntries = (
+        connector as {
+          routeCatalogEntries?: () => Array<{ model: string; available: boolean }>;
+        }
+      ).routeCatalogEntries;
+      const routeAvailable =
+        typeof routeCatalogEntries === 'function'
+          ? new Map(routeCatalogEntries.call(connector).map((row) => [row.model, row.available]))
+          : null;
       // CONN-0238: per-model metadata (modality/pricing/context/free). Derived from
       // the same source as `models`, so iterate metas when NON-EMPTY (single source —
       // no drift); otherwise wrap the flat id list. The `.length` guard (not just
@@ -597,6 +608,7 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
         });
         const capabilities = present.capabilities;
         const pricing: ModelPricing | null = meta.pricing ?? null;
+        const routeOk = routeAvailable ? Boolean(routeAvailable.get(model)) : true;
 
         const entry: CatalogModelEntry = {
           connector: connector.name,
@@ -620,7 +632,9 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
           // Credential availability is key-specific and enforced on the request path. This
           // persisted snapshot describes only route, execution, connector health and breaker
           // state, so a mapped client key can be evaluated independently of a shared key.
-          available: routable && present.executableHere && reachable && !modelBreakerOpen,
+          // CONN-JEV-05 intersects JEV route availability so stub models never claim live.
+          available:
+            routeOk && routable && present.executableHere && reachable && !modelBreakerOpen,
         };
 
         entries.push(entry);

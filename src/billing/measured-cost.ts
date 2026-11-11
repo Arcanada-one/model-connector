@@ -397,14 +397,19 @@ export function measureCostUsd(input: {
     // up would require storing a half that is not the correctly-rounded price
     // of its own tokens — falsifying a measurement to satisfy an arithmetic
     // identity. Reconciliation queries must therefore allow a 1e-6 tolerance.
+    //
+    // CONN-JEV-05 — a missing output tariff must not report `outputCostUsd: 0`.
+    // Zero is only honest when the machine price is explicitly `outputPerMTok: 0`
+    // (free output). Otherwise the half is null (unknown), while the TOTAL still
+    // charges the known input side.
     return {
       costUsd: roundToStorage(inputCost + outputCost),
       // A2-295 — the tariff came from the catalogue either way; the source says
       // whether the TOKENS did. An estimated count charged as `'catalog'` would
       // be indistinguishable from a metered one in every reconciliation query.
       source: input.estimatedUsage ? 'estimated-input-unbilled' : 'catalog',
-      inputCostUsd: roundToStorage(inputCost),
-      outputCostUsd: roundToStorage(outputCost),
+      inputCostUsd: inputPerMTok !== null ? roundToStorage(inputCost) : null,
+      outputCostUsd: outputPerMTok !== null ? roundToStorage(outputCost) : null,
     };
   }
 

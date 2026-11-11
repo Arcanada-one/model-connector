@@ -1,0 +1,17 @@
+{
+  "_fixture_provenance": "CONN-JEV-05 measured OpenRouter /api/v1/models fragment for typesafe/* decision models. pricing.prompt=\"0.000000042\" from JEV-DECISION-LAYER-SPEC §2.4 / §11.2 (normalizePerMTokPrice → 0.042). Fixture-marked — not a live probe claim. Live re-check is CONN-JEV-09.",
+  "data": [
+    {
+      "id": "typesafe/jev-1.13",
+      "context_length": 32000,
+      "pricing": { "prompt": "0.000000042", "completion": "0" },
+      "top_provider": { "context_length": 32000, "max_completion_tokens": null }
+    },
+    {
+      "id": "~typesafe/jev-latest",
+      "context_length": 32000,
+      "pricing": { "prompt": "0.000000042", "completion": "0" },
+      "top_provider": { "context_length": 32000, "max_completion_tokens": null }
+    }
+  ]
+}

@@ -91,11 +91,30 @@ describe('native decision contract and adapter', () => {
     });
   });
 
-  it('CONN-JEV-01 publishes jev-latest under modality=decision for catalog discovery', () => {
+  it('CONN-JEV-01/05 publishes decision models with machine/fixture pricing (no invention)', () => {
     const caps = connector.getCapabilities();
-    expect(caps.models).toEqual(['jev-latest']);
     expect(caps.modality).toBe('decision');
-    expect(caps.modelMeta).toEqual([{ id: 'jev-latest', modality: 'decision' }]);
+    expect(caps.models).toContain('jev-latest');
+    expect(caps.models).toContain('typesafe/jev-1.13');
+    expect(caps.models).toContain('typesafe/jev');
+    const latest = caps.modelMeta?.find((m) => m.id === 'jev-latest');
+    expect(latest).toMatchObject({
+      id: 'jev-latest',
+      modality: 'decision',
+      pricing: null, // AC-22: direct unconfirmed until /v1/models probe
+      contextWindow: 32_000,
+    });
+    const openrouter = caps.modelMeta?.find((m) => m.id === 'typesafe/jev-1.13');
+    expect(openrouter?.modality).toBe('decision');
+    expect(openrouter?.pricing).toEqual({
+      inputPerMTok: 0.042,
+      outputPerMTok: 0,
+      unit: 'per_1m_tokens',
+    });
+    expect(openrouter?.contextWindow).toBe(32_000);
+    const rows = connector.routeCatalogEntries();
+    expect(rows.find((r) => r.model === 'typesafe/jev-1.13')?.available).toBe(false);
+    expect(rows.find((r) => r.model === 'typesafe/jev')?.available).toBe(false);
   });
 
   it.each(['', 'false', '1'])(
@@ -106,7 +125,7 @@ describe('native decision contract and adapter', () => {
       expect((await connector.getStatus()).healthy).toBe(false);
       expect((await connector.refreshCatalogModels()).status).toBe('failed');
       // Discovery stays published; execute/status remain gated by configuration.
-      expect(connector.getCapabilities().models).toEqual(['jev-latest']);
+      expect(connector.getCapabilities().models).toContain('jev-latest');
       expect(connector.getCapabilities().modality).toBe('decision');
     },
   );
