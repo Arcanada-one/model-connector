@@ -198,28 +198,28 @@ jobs:
           for file in .env .env.local .env.integration .env.integration.local; do
             { test ! -e "$file" && test ! -L "$file"; } || { echo "Unexpected dotenv override in test checkout" >&2; exit 1; }
           done
-          docker buildx build --target build --load -t model-connector-rate-limit-test .
+          docker buildx build --target build --load -t "model-connector-rate-limit-test:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" .
 
       - name: Build Docker image
-        run: docker buildx build --load --build-arg MC_BUILD_SHA="$GITHUB_SHA" -t model-connector-e2e .
+        run: docker buildx build --load --build-arg MC_BUILD_SHA="$GITHUB_SHA" -t "model-connector-e2e:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" .
 
       - name: Verify disabled receiver image provenance
         run: |
           docker run --rm --network=none --read-only --entrypoint python3 \
-            model-connector-e2e -B /app/deploy/bench-receiving-package.py verify "$GITHUB_SHA"
+            "model-connector-e2e:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" -B /app/deploy/bench-receiving-package.py verify "$GITHUB_SHA"
 
       - name: Create DB schema
         run: |
           docker run --rm --network=host \
             -e DATABASE_URL=postgresql://test:test@localhost:15432/connector_test \
-            model-connector-e2e npx prisma migrate deploy
+            "model-connector-e2e:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" npx prisma migrate deploy
 
       - name: Verify first-dispatch PostgreSQL invariants
         run: |
           docker run --rm --network=host --entrypoint node \
             -e DATABASE_URL=postgresql://test:test@localhost:15432/connector_test \
             -v "$PWD/dev-tools/first-dispatch-observation-db-contract.mjs:/app/first-dispatch-observation-db-contract.mjs:ro" \
-            model-connector-e2e /app/first-dispatch-observation-db-contract.mjs
+            "model-connector-e2e:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" /app/first-dispatch-observation-db-contract.mjs
 
       - name: Six rate-limit assertions against disposable stores
         run: |
@@ -241,7 +241,7 @@ jobs:
             -e REDIS_HOST=127.0.0.1 \
             -e REDIS_PORT=16379 \
             -e REDIS_PREFIX="mc-rate-limit-ci:${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}:" \
-            model-connector-rate-limit-test -ec '
+            "model-connector-rate-limit-test:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" -ec '
               for file in .env .env.local .env.integration .env.integration.local; do
                 { test ! -e "$file" && test ! -L "$file"; } || { echo "Unexpected dotenv override in test image" >&2; exit 1; }
               done
@@ -260,7 +260,7 @@ jobs:
             -e NODE_ENV=test \
             -e PORT=3900 \
             -e STT_PROVIDER_GROQ_ENABLED=false \
-            model-connector-e2e
+            "model-connector-e2e:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           # STT_PROVIDER_GROQ_ENABLED defaults true (env.schema), which makes the
           # boot-time env validation require STT_GROQ_API_KEY. The e2e harness does
           # not exercise STT and injects no provider key, so disable the Groq STT
@@ -317,6 +317,19 @@ jobs:
       - name: Cleanup
         if: always()
         run: docker rm -f mc-e2e || true
+
+      - name: Remove this run's images
+        if: always()
+        run: |
+          # Per-run tags (unique per run id + attempt) built above; only these two
+          # images are removed - no global prune on the shared self-hosted host.
+          e2e="model-connector-e2e:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          rate_limit="model-connector-rate-limit-test:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "=== images before removal ==="
+          docker image ls "$e2e" "$rate_limit"
+          docker image rm -f "$e2e" "$rate_limit" || true
+          echo "=== images after removal (expect none) ==="
+          docker image ls "$e2e" "$rate_limit"
 
   # ARC-CI digest-promotion gap fill (Muneral 440d2499): build once to GHCR and
   # emit published-image.json. Does not change the existing push-main broker
