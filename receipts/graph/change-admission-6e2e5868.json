@@ -1,9 +1,7 @@
 {
  "admission": {
-  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
-  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
-  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
-  "verdict": "paused_safe"
+  "verdict": "admitted_with_exemptions",
+  "rule": "admitted_with_exemptions requires every non-verified entity to carry a valid exemption"
  },
  "captured_at_utc": "2026-11-12T00:00:42Z",
  "change_set": {
@@ -32,7 +30,62 @@
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
- "exemptions": [],
+ "exemptions": [
+  {
+   "entity": "code_unit:.github/workflows/ci.yml",
+   "reason": "Workflow file unchanged by this pull request (pulled in by the impact set): git blob 7069a1b36683 is identical at base c873bf416e2d and at head d5a4d48eee89, re-measured by Root; its shell-caller closure is outside what the graph verifier measures. Same class as the unchanged-closure entries of model-connector#276. Recorded by Claude Root as admitting agent under the interim route pending DEC-AUP-0187.",
+   "owner": "D5 (Muneral 266b985e-22c2-4139-84e6-d932794e9c8b)",
+   "expires_at_utc": "2026-11-19T09:00:00Z"
+  },
+  {
+   "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
+   "reason": "Workflow file unchanged by this pull request (pulled in by the impact set): git blob af653a112178 is identical at base c873bf416e2d and at head d5a4d48eee89, re-measured by Root; its shell-caller closure is outside what the graph verifier measures. Same class as the unchanged-closure entries of model-connector#276. Recorded by Claude Root as admitting agent under the interim route pending DEC-AUP-0187.",
+   "owner": "D5 (Muneral 266b985e-22c2-4139-84e6-d932794e9c8b)",
+   "expires_at_utc": "2026-11-19T09:00:00Z"
+  },
+  {
+   "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+   "reason": "Workflow file unchanged by this pull request (pulled in by the impact set): git blob f584383e4908 is identical at base c873bf416e2d and at head d5a4d48eee89, re-measured by Root; its shell-caller closure is outside what the graph verifier measures. Same class as the unchanged-closure entries of model-connector#276. Recorded by Claude Root as admitting agent under the interim route pending DEC-AUP-0187.",
+   "owner": "D5 (Muneral 266b985e-22c2-4139-84e6-d932794e9c8b)",
+   "expires_at_utc": "2026-11-19T09:00:00Z"
+  },
+  {
+   "entity": "code_unit:.github/workflows/deploy.yml",
+   "reason": "Workflow file unchanged by this pull request (pulled in by the impact set): git blob 77be62096edc is identical at base c873bf416e2d and at head d5a4d48eee89, re-measured by Root; its shell-caller closure is outside what the graph verifier measures. Same class as the unchanged-closure entries of model-connector#276. Recorded by Claude Root as admitting agent under the interim route pending DEC-AUP-0187.",
+   "owner": "D5 (Muneral 266b985e-22c2-4139-84e6-d932794e9c8b)",
+   "expires_at_utc": "2026-11-19T09:00:00Z"
+  },
+  {
+   "entity": "code_unit:.github/workflows/graph-admission-call.yml",
+   "reason": "Workflow file unchanged by this pull request (pulled in by the impact set): git blob ab9392171aa4 is identical at base c873bf416e2d and at head d5a4d48eee89, re-measured by Root; its shell-caller closure is outside what the graph verifier measures. Same class as the unchanged-closure entries of model-connector#276. Recorded by Claude Root as admitting agent under the interim route pending DEC-AUP-0187.",
+   "owner": "D5 (Muneral 266b985e-22c2-4139-84e6-d932794e9c8b)",
+   "expires_at_utc": "2026-11-19T09:00:00Z"
+  },
+  {
+   "entity": "code_unit:.github/workflows/graph-admission.yml",
+   "reason": "Workflow file unchanged by this pull request (pulled in by the impact set): git blob 30c8441c2742 is identical at base c873bf416e2d and at head d5a4d48eee89, re-measured by Root; its shell-caller closure is outside what the graph verifier measures. Same class as the unchanged-closure entries of model-connector#276. Recorded by Claude Root as admitting agent under the interim route pending DEC-AUP-0187.",
+   "owner": "D5 (Muneral 266b985e-22c2-4139-84e6-d932794e9c8b)",
+   "expires_at_utc": "2026-11-19T09:00:00Z"
+  },
+  {
+   "entity": "code_unit:.github/workflows/public-surface.yml",
+   "reason": "Workflow file unchanged by this pull request (pulled in by the impact set): git blob 8f4f63f87c5c is identical at base c873bf416e2d and at head d5a4d48eee89, re-measured by Root; its shell-caller closure is outside what the graph verifier measures. Same class as the unchanged-closure entries of model-connector#276. Recorded by Claude Root as admitting agent under the interim route pending DEC-AUP-0187.",
+   "owner": "D5 (Muneral 266b985e-22c2-4139-84e6-d932794e9c8b)",
+   "expires_at_utc": "2026-11-19T09:00:00Z"
+  },
+  {
+   "entity": "code_unit:deploy/arcanada-compose-broker.sh",
+   "reason": "Changed shell file (root deploy broker; +16/-0) that the graph verifier cannot measure. Compensating measurements on the exact head d5a4d48eee8994594167f2d65edf37acc072816b, re-measured by Root: CI run 43125327975 job lint-and-test (id 130875821806) concluded success on this sha and its log shows `bash deploy/arcanada-compose-broker.test.sh` executed in that job; independent exact-head APPROVE in Muneral 266b985e comment 5a8317d1 (reviewer ran the broker suite: 416 PASS, 0 FAIL; row-drop mutants fail). Root read the diff of deploy/arcanada-compose-broker.sh itself: 16 added lines, 0 removed, only new talomnia-backend rows in existing declare -rA tables (REPOS, COMPOSE, AUTH, PROJECT, ENVFILE, IMAGETAG, IMAGE, VERIFY, CONTAINER, MAXAGE, REGISTRY_AUTH), no existing service row and no function body changed. shellcheck: clean on the broker script per the reviewer, NOT_MEASURED on the test file. Recorded by Claude Root as admitting agent under the interim route (per-PR decision; verifier cannot measure shell).",
+   "owner": "D5 (Muneral 266b985e-22c2-4139-84e6-d932794e9c8b)",
+   "expires_at_utc": "2026-11-19T09:00:00Z"
+  },
+  {
+   "entity": "code_unit:deploy/arcanada-compose-broker.test.sh",
+   "reason": "Changed shell test file (+157/-0, one pure-addition hunk) that the graph verifier cannot measure; it is itself the test executed as compensating evidence. Compensating measurements on the exact head d5a4d48eee8994594167f2d65edf37acc072816b, re-measured by Root: CI run 43125327975 job lint-and-test (id 130875821806) concluded success on this sha and its log shows `bash deploy/arcanada-compose-broker.test.sh` executed in that job; independent exact-head APPROVE in Muneral 266b985e comment 5a8317d1 (reviewer ran the broker suite: 416 PASS, 0 FAIL; row-drop mutants fail). Root read the diff of deploy/arcanada-compose-broker.sh itself: 16 added lines, 0 removed, only new talomnia-backend rows in existing declare -rA tables (REPOS, COMPOSE, AUTH, PROJECT, ENVFILE, IMAGETAG, IMAGE, VERIFY, CONTAINER, MAXAGE, REGISTRY_AUTH), no existing service row and no function body changed. shellcheck: clean on the broker script per the reviewer, NOT_MEASURED on the test file. Recorded by Claude Root as admitting agent under the interim route (per-PR decision; verifier cannot measure shell).",
+   "owner": "D5 (Muneral 266b985e-22c2-4139-84e6-d932794e9c8b)",
+   "expires_at_utc": "2026-11-19T09:00:00Z"
+  }
+ ],
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-11-11T23:59:02Z",
