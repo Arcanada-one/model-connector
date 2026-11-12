@@ -28,6 +28,10 @@ export class EmbeddingConnector extends BaseApiConnector {
   readonly name = 'embedding';
 
   async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
+    if (Array.isArray(request.prompt)) {
+      return super.execute(request);
+    }
+
     if (!process.env.EMBEDDING_API_URL?.trim()) {
       return {
         id: randomUUID(),
