@@ -1,6 +1,11 @@
+import { randomUUID } from 'crypto';
 import { BaseApiConnector, ParsedApiOutput } from '../base-api.connector';
-import { ConnectorCapabilities, ConnectorRequest } from '../interfaces/connector.interface';
-import { DEFAULT_EMBEDDING_API_URL } from '../../config/env.schema';
+import {
+  classifyErrorAction,
+  ConnectorCapabilities,
+  ConnectorRequest,
+  ConnectorResponse,
+} from '../interfaces/connector.interface';
 
 interface EmbeddingApiResponse {
   object: string;
@@ -22,11 +27,34 @@ const ENDPOINT_PATHS: Record<string, string> = {
 export class EmbeddingConnector extends BaseApiConnector {
   readonly name = 'embedding';
 
+  async execute(request: ConnectorRequest): Promise<ConnectorResponse> {
+    if (!process.env.EMBEDDING_API_URL?.trim()) {
+      return {
+        id: randomUUID(),
+        connector: this.name,
+        model: request.model || 'unknown',
+        result: '',
+        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0 },
+        latencyMs: 0,
+        queueWaitMs: 0,
+        status: 'error',
+        error: {
+          type: 'config_error',
+          message: 'EMBEDDING_API_URL must be configured to use the embedding connector',
+          ...classifyErrorAction('config_error'),
+        },
+      };
+    }
+
+    return super.execute(request);
+  }
+
   protected getBaseUrl(): string {
-    // SEC-0045: the default comes from env.schema.ts, not a second literal.
-    // Both copies had to be edited when the service moved and only one was, so
-    // this connector went on dialling the decommissioned host.
-    return process.env.EMBEDDING_API_URL || DEFAULT_EMBEDDING_API_URL;
+    const configuredUrl = process.env.EMBEDDING_API_URL?.trim();
+    if (!configuredUrl) {
+      throw new Error('EMBEDDING_API_URL must be configured to use the embedding connector');
+    }
+    return configuredUrl;
   }
 
   /**
