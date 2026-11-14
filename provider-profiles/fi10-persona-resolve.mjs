@@ -15,6 +15,10 @@ const CATALOG_PATH = join(HERE, 'fi10-persona-catalog.json');
 const PROFILE_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 
 export class Fi10PersonaResolveError extends Error {
+  /**
+   * @param {string} code
+   * @param {string} message
+   */
   constructor(code, message) {
     super(message);
     this.name = 'Fi10PersonaResolveError';
@@ -30,18 +34,24 @@ function loadCatalog(catalogPath = CATALOG_PATH) {
   return catalog;
 }
 
+/** @param {unknown} tag */
 function normalizeTag(tag) {
   if (typeof tag !== 'string') return '';
   return tag.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+/**
+ * @param {unknown} tag
+ * @param {any} catalog
+ */
 function isForbiddenItPersona(tag, catalog) {
   const n = normalizeTag(tag);
   if (!n) return true;
   const prefixes = catalog.it_profiles?.forbidden_persona_prefixes ?? ['it', 'it-', 'it.', 'it/'];
-  return prefixes.some((p) => n === p.replace(/[-./]$/, '') || n.startsWith(p));
+  return prefixes.some((/** @type {string} */ p) => n === p.replace(/[-./]$/, '') || n.startsWith(p));
 }
 
+/** @param {any} catalog */
 function indexPersonas(catalog) {
   const byTag = new Map();
   for (const row of catalog.personas ?? []) {
@@ -58,6 +68,10 @@ function indexPersonas(catalog) {
   return byTag;
 }
 
+/**
+ * @param {unknown} bucket
+ * @param {any} catalog
+ */
 function assertFi10Accounting(bucket, catalog) {
   if (typeof bucket !== 'string' || !PROFILE_ID_RE.test(bucket)) {
     throw new Fi10PersonaResolveError('ACCOUNTING_SHAPE', 'accountingBucket shape invalid');
@@ -66,7 +80,7 @@ function assertFi10Accounting(bucket, catalog) {
     throw new Fi10PersonaResolveError('ACCOUNTING_NOT_FI10', 'accountingBucket must be fi10-*');
   }
   const forbidden = catalog.it_profiles?.forbidden_accounting_prefixes ?? ['it', 'it-', 'it.'];
-  if (forbidden.some((p) => bucket === p.replace(/[-.]$/, '') || bucket.startsWith(p))) {
+  if (forbidden.some((/** @type {string} */ p) => bucket === p.replace(/[-.]$/, '') || bucket.startsWith(p))) {
     throw new Fi10PersonaResolveError('ACCOUNTING_IT_LEAK', 'IT accounting bucket refused');
   }
 }
@@ -74,6 +88,9 @@ function assertFi10Accounting(bucket, catalog) {
 /**
  * Resolve a request persona tag to its dedicated FI10 provider profile binding.
  * Unknown / IT / empty tags fail closed and never fall back to an IT profile.
+ *
+ * @param {unknown} personaTag
+ * @param {{ catalog?: any, catalogPath?: string, _index?: Map<string, any> }} [options]
  */
 export function resolveFi10Persona(personaTag, options = {}) {
   const catalog = options.catalog ?? loadCatalog(options.catalogPath);
@@ -127,9 +144,13 @@ export function resolveFi10Persona(personaTag, options = {}) {
   };
 }
 
+/**
+ * @param {{ catalog?: any, catalogPath?: string }} [options]
+ * @returns {{ persona: string, label: string, profileId: string, accountingBucket: string }[]}
+ */
 export function listFi10Personas(options = {}) {
   const catalog = options.catalog ?? loadCatalog(options.catalogPath);
-  return (catalog.personas ?? []).map((p) => ({
+  return (catalog.personas ?? []).map((/** @type {any} */ p) => ({
     persona: p.persona,
     label: p.label,
     profileId: p.profileId,
