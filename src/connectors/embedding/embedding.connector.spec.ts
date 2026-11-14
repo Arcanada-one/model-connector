@@ -211,7 +211,7 @@ describe('EmbeddingConnector', () => {
       expect(fetchSpy).not.toHaveBeenCalled();
 
       const status = await connector.getStatus();
-      expect(status.circuitBreaker.consecutiveFailures).toBe(0);
+      expect(status.circuitBreaker!.consecutiveFailures).toBe(0);
     });
 
     it('does not probe health when the URL is unset', async () => {
