@@ -9,7 +9,7 @@ describe('EmbeddingConnector', () => {
     connector = new EmbeddingConnector();
     fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);
-    delete process.env.EMBEDDING_API_URL;
+    process.env.EMBEDDING_API_URL = 'http://127.0.0.1:8300';
     delete process.env.EMBEDDING_TIMEOUT_MS;
   });
 
@@ -17,7 +17,8 @@ describe('EmbeddingConnector', () => {
     vi.restoreAllMocks();
   });
 
-  // --- Fixtures from CONN-0006-fixtures.md ---
+  // Synthetic mock inputs for connector parsing tests; provenance from CONN-0006 fixtures is unverified.
+  // These shapes do not establish compatibility with any external service response.
 
   const denseResponse = {
     object: 'list',
@@ -78,31 +79,31 @@ describe('EmbeddingConnector', () => {
     it('should use /v1/embeddings for dense (default)', async () => {
       mockOk(denseResponse);
       await connector.execute({ prompt: 'test' });
-      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.90.7.20:8300/v1/embeddings');
+      expect(fetchSpy.mock.calls[0][0]).toBe('http://127.0.0.1:8300/v1/embeddings');
     });
 
     it('should use /v1/embeddings/sparse for sparse', async () => {
       mockOk(sparseResponse);
       await connector.execute({ prompt: 'test', extra: { embeddingType: 'sparse' } });
-      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.90.7.20:8300/v1/embeddings/sparse');
+      expect(fetchSpy.mock.calls[0][0]).toBe('http://127.0.0.1:8300/v1/embeddings/sparse');
     });
 
     it('should use /v1/embeddings/colbert for colbert', async () => {
       mockOk(denseResponse);
       await connector.execute({ prompt: 'test', extra: { embeddingType: 'colbert' } });
-      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.90.7.20:8300/v1/embeddings/colbert');
+      expect(fetchSpy.mock.calls[0][0]).toBe('http://127.0.0.1:8300/v1/embeddings/colbert');
     });
 
     it('should use /v1/embeddings/hybrid for hybrid', async () => {
       mockOk(hybridResponse);
       await connector.execute({ prompt: 'test', extra: { embeddingType: 'hybrid' } });
-      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.90.7.20:8300/v1/embeddings/hybrid');
+      expect(fetchSpy.mock.calls[0][0]).toBe('http://127.0.0.1:8300/v1/embeddings/hybrid');
     });
 
     it('should fall back to dense for unknown type', async () => {
       mockOk(denseResponse);
       await connector.execute({ prompt: 'test', extra: { embeddingType: 'invalid' } });
-      expect(fetchSpy.mock.calls[0][0]).toBe('http://100.90.7.20:8300/v1/embeddings');
+      expect(fetchSpy.mock.calls[0][0]).toBe('http://127.0.0.1:8300/v1/embeddings');
     });
   });
 
@@ -196,18 +197,51 @@ describe('EmbeddingConnector', () => {
   // --- Config ---
 
   describe('configuration', () => {
-    it('should use default base URL', async () => {
-      mockOk(denseResponse);
-      await connector.execute({ prompt: 'test' });
-      expect(fetchSpy.mock.calls[0][0]).toContain('100.90.7.20:8300');
+    it('does not make a request when the URL is unset', async () => {
+      delete process.env.EMBEDDING_API_URL;
+      connector = new EmbeddingConnector();
+
+      const response = await connector.execute({ prompt: 'test' });
+
+      expect(response.status).toBe('error');
+      expect(response.error?.type).toBe('config_error');
+      expect(response.error?.retryable).toBe(false);
+      expect(response.error?.recommendation).toBe('abort');
+      expect(response.error?.message).toContain('EMBEDDING_API_URL must be configured');
+      expect(fetchSpy).not.toHaveBeenCalled();
+
+      const status = await connector.getStatus();
+      expect(status.circuitBreaker!.consecutiveFailures).toBe(0);
     });
 
-    it('should use EMBEDDING_API_URL from env', async () => {
+    it('does not probe health when the URL is unset', async () => {
+      delete process.env.EMBEDDING_API_URL;
+      connector = new EmbeddingConnector();
+
+      const status = await connector.getStatus();
+
+      expect(status.healthy).toBe(false);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('should use an explicitly configured EMBEDDING_API_URL', async () => {
       process.env.EMBEDDING_API_URL = 'http://custom:9999';
       connector = new EmbeddingConnector();
       mockOk(denseResponse);
       await connector.execute({ prompt: 'test' });
       expect(fetchSpy.mock.calls[0][0]).toContain('custom:9999');
+    });
+
+    it('accepts a well-formed but unusably low port and passes it to the transport', async () => {
+      process.env.EMBEDDING_API_URL = 'http://127.0.0.1:1';
+      connector = new EmbeddingConnector();
+      mockOk(denseResponse);
+
+      await connector.execute({ prompt: 'test' });
+
+      // Port 1 is a valid URL port but not the embedding service port. The
+      // connector does not range-check explicit endpoints; this fetch is mocked.
+      expect(fetchSpy.mock.calls[0][0]).toBe('http://127.0.0.1:1/v1/embeddings');
     });
 
     it('should use EMBEDDING_TIMEOUT_MS from env', async () => {
