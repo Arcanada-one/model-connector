@@ -1,0 +1,33 @@
+{
+  "policyVersion": 2,
+  "profile": {
+    "id": "fi10-engineering-physical",
+    "revision": "1",
+    "accountingBucket": "fi10-engineering-physical"
+  },
+  "providers": [
+    "deepseek",
+    "typesafe-jev"
+  ],
+  "models": {
+    "mode": "list",
+    "list": [
+      "deepseek-v4-flash",
+      "jev-latest"
+    ]
+  },
+  "providerKeys": {
+    "deepseek": [
+      {
+        "credentialRef": "fi10ep-deepseek",
+        "version": "1"
+      }
+    ],
+    "typesafe-jev": [
+      {
+        "credentialRef": "fi10ep-jev",
+        "version": "1"
+      }
+    ]
+  }
+}
