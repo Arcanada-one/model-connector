@@ -357,6 +357,41 @@
   "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
  },
  {
+  "entity": "route:GET /keyed",
+  "code": "PYDANTIC_NOT_MEASURED",
+  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
+  "expires_at_utc": "2026-11-28T00:00:00Z",
+  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
+ },
+ {
+  "entity": "route:GET /probe/abort",
+  "code": "PYDANTIC_NOT_MEASURED",
+  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
+  "expires_at_utc": "2026-11-28T00:00:00Z",
+  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
+ },
+ {
+  "entity": "route:GET /probe/execute",
+  "code": "PYDANTIC_NOT_MEASURED",
+  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
+  "expires_at_utc": "2026-11-28T00:00:00Z",
+  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
+ },
+ {
+  "entity": "route:GET /probe/health",
+  "code": "PYDANTIC_NOT_MEASURED",
+  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
+  "expires_at_utc": "2026-11-28T00:00:00Z",
+  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
+ },
+ {
+  "entity": "route:GET /probe/metrics",
+  "code": "PYDANTIC_NOT_MEASURED",
+  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
+  "expires_at_utc": "2026-11-28T00:00:00Z",
+  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
+ },
+ {
   "entity": "route:GET /v1/models",
   "code": "PYDANTIC_NOT_MEASURED",
   "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
@@ -498,55 +533,6 @@
  },
  {
   "entity": "route:POST /v1/speech/vad",
-  "code": "PYDANTIC_NOT_MEASURED",
-  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
-  "expires_at_utc": "2026-11-28T00:00:00Z",
-  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
- },
- {
-  "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
-  "code": "PYDANTIC_NOT_MEASURED",
-  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
-  "expires_at_utc": "2026-11-28T00:00:00Z",
-  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
- },
- {
-  "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-  "code": "PYDANTIC_NOT_MEASURED",
-  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
-  "expires_at_utc": "2026-11-28T00:00:00Z",
-  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
- },
- {
-  "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-  "code": "PYDANTIC_NOT_MEASURED",
-  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
-  "expires_at_utc": "2026-11-28T00:00:00Z",
-  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
- },
- {
-  "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
-  "code": "PYDANTIC_NOT_MEASURED",
-  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
-  "expires_at_utc": "2026-11-28T00:00:00Z",
-  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
- },
- {
-  "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
-  "code": "PYDANTIC_NOT_MEASURED",
-  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
-  "expires_at_utc": "2026-11-28T00:00:00Z",
-  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
- },
- {
-  "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
-  "code": "PYDANTIC_NOT_MEASURED",
-  "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
-  "expires_at_utc": "2026-11-28T00:00:00Z",
-  "reason": "Verifier limitation: contract_diff cannot model pydantic ConfigDict populate_by_name and Field wire alias (pass_) in packages/sdk-python/arcanada_model_connector/models.py, so it refuses with PYDANTIC_NOT_MEASURED even with the exact pin CONTRACT_DIFF_PYDANTIC_EXACT_VERSION=2.14.2, which the verifier accepted (2.14.2 is the version hosted Python job 132300831208 of run 43547090535 used). git diff origin/main..head for packages/sdk-python is EMPTY (proved). Evidence instead: sdk-python pytest passes in that hosted job and in the local fallback suite (20 passed). Follow-up Muneral eb5e6d1d-4c8f-45fc-a4fe-3a86ffd2aec4. This entity also lists INFERRED_BOUNDARY_WITHOUT_CANARY: no live contour in this lane; evidence instead is the hosted lint-and-test and docker-e2e jobs of this pull request."
- },
- {
-  "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
   "code": "PYDANTIC_NOT_MEASURED",
   "owner": "FINISH-20261114 Root (Muneral 254a607a-abfb-4699-9386-1ef07b8a83a4) / Model Connector owner",
   "expires_at_utc": "2026-11-28T00:00:00Z",
