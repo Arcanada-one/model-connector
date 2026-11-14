@@ -1,6 +1,6 @@
 # Embedding Connector
 
-API connector for the self-hosted **BGE-M3** embedding service running on Arcanada DB server (`arcana-db:8300`). Free, fast, no rate limits.
+API connector for a BGE-M3 embedding service. The endpoint must be configured explicitly; without it, embedding requests return a non-retryable `config_error` and connector health reports unhealthy without making a network request.
 
 ## Overview
 
@@ -8,8 +8,8 @@ API connector for the self-hosted **BGE-M3** embedding service running on Arcana
 |-------|-------|
 | **Name** | `embedding` |
 | **Type** | `api` (HTTP) |
-| **Base URL** | `http://arcana-db:8300` (internal, Tailscale-only) |
-| **Auth** | None (Tailscale network ACL) |
+| **Base URL** | `EMBEDDING_API_URL` (required to make requests; no default) |
+| **Auth** | No connector-level auth; endpoint authentication and network controls depend on the configured service and must be provided separately when required |
 | **Default model** | `bge-m3` |
 | **Default concurrency** | 8 (`EMBEDDING_MAX_CONCURRENCY`) |
 | **Default timeout** | 30 000 ms (`EMBEDDING_TIMEOUT_MS`) |
@@ -31,6 +31,16 @@ API connector for the self-hosted **BGE-M3** embedding service running on Arcana
 - `embeddingType` — `"dense"` (default), `"sparse"`, `"colbert"`, `"hybrid"`
 
 ## Examples
+
+### Local development
+
+Run an embedding service on the same machine and set this explicit local-only URL:
+
+```bash
+EMBEDDING_API_URL=http://127.0.0.1:8300
+```
+
+Production and shared environments must set `EMBEDDING_API_URL` to their approved service endpoint explicitly. An unset or empty value leaves the connector disabled; `/health` remains a process liveness check, while `/health/connectors` reports this connector as unhealthy.
 
 ### Dense embedding (default)
 
@@ -64,9 +74,8 @@ Returns all three vector representations — used by Scrutator hybrid search.
 
 ## Operational Notes
 
-- Self-hosted on `arcana-db:8300` — bypass Cloudflare entirely (use Tailscale IP `100.121.155.54:3900` for MC, or call MC directly which routes internally).
-- Free — no quota, no per-token cost.
-- Latency ~0.2s for short text, scales linearly with token count.
+- Configure the endpoint explicitly for each environment. The connector does not select a shared or production endpoint when `EMBEDDING_API_URL` is unset.
+- Capacity, pricing, and latency depend on the configured embedding service.
 
 ## Source
 

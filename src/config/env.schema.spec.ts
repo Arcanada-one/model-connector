@@ -105,11 +105,35 @@ describe('envSchema', () => {
     expect(config.EMBEDDING_MAX_CONCURRENCY).toBe(8);
     expect(config.CIRCUIT_BREAKER_THRESHOLD).toBe(5);
     expect(config.CIRCUIT_BREAKER_COOLDOWN_MS).toBe(30_000);
+    expect(config.EMBEDDING_API_URL).toBeUndefined();
     expect(config.BEDROCK_REGION).toBe('us-east-1');
     expect(config.BEDROCK_MODELS).toEqual([
       'amazon.nova-lite-v1:0',
       'anthropic.claude-3-5-sonnet-20241022-v2:0',
     ]);
+  });
+
+  it('accepts an explicitly configured embedding URL', () => {
+    const config = validateEnv({
+      ...validEnv,
+      EMBEDDING_API_URL: 'http://127.0.0.1:1',
+    });
+    expect(config.EMBEDDING_API_URL).toBe('http://127.0.0.1:1');
+  });
+
+  it('treats a blank embedding URL as unset', () => {
+    const config = validateEnv({ ...validEnv, EMBEDDING_API_URL: '' });
+    expect(config.EMBEDDING_API_URL).toBeUndefined();
+  });
+
+  it.each([
+    ['EMBEDDING_TIMEOUT_MS', '999'],
+    ['EMBEDDING_MAX_CONCURRENCY', '999'],
+    ['CONNECTOR_QUEUE_TIMEOUT_MS', '999'],
+    ['CIRCUIT_BREAKER_THRESHOLD', '999'],
+    ['CIRCUIT_BREAKER_COOLDOWN_MS', '999'],
+  ])('rejects absurd but numeric %s value %s', (key, value) => {
+    expect(() => validateEnv({ ...validEnv, [key]: value })).toThrow('Invalid environment variables');
   });
 
   it('parses a deterministic configured Bedrock model list', () => {
