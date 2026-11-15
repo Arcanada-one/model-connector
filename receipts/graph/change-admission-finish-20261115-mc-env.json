@@ -3,9 +3,9 @@
   "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
   "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
-  "verdict": "paused_safe"
+  "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-15T13:55:08Z",
+ "captured_at_utc": "2026-11-15T14:20:40Z",
  "change_set": {
   "base": "0d662a38a9cbd632186470ce0d421b468f8575bc",
   "files": [
@@ -32,22 +32,86 @@
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
- "exemptions": [],
+ "exemptions": [
+  {
+   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/ci.yml",
+   "expires_at_utc": "2026-12-08T00:00:00Z",
+   "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
+   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers. Hosted CI remains separate evidence. No shell caller behavior is claimed verified. Verifier: v-workflow-config-b803fcb7f17ed923: workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 2: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 7: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: command/process substitution closure i"
+  },
+  {
+   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
+   "expires_at_utc": "2026-12-08T00:00:00Z",
+   "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
+   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers. Hosted CI remains separate evidence. No shell caller behavior is claimed verified. Verifier: v-workflow-config-2fe48d1021006468: workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
+  },
+  {
+   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+   "expires_at_utc": "2026-12-08T00:00:00Z",
+   "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
+   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers. Hosted CI remains separate evidence. No shell caller behavior is claimed verified. Verifier: v-workflow-config-6ceb21cf301c7eb2: workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; "
+  },
+  {
+   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/deploy.yml",
+   "expires_at_utc": "2026-12-08T00:00:00Z",
+   "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
+   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers. Hosted CI remains separate evidence. No shell caller behavior is claimed verified. Verifier: v-workflow-config-28802fbf11c83a2e: workflow shell caller closure not measured: job guard step 0: heredoc/group/function/brace expansion closure is unresolved; job guard step 2: command/process substitution closure is unresolved; job publication-post-state step 1: heredoc/group/function/brace expansion closure is unresolved; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
+  },
+  {
+   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/graph-admission-call.yml",
+   "expires_at_utc": "2026-12-08T00:00:00Z",
+   "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
+   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers. Hosted CI remains separate evidence. No shell caller behavior is claimed verified. Verifier: v-workflow-config-60a4bd100e640545: workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
+  },
+  {
+   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/graph-admission.yml",
+   "expires_at_utc": "2026-12-08T00:00:00Z",
+   "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
+   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers. Hosted CI remains separate evidence. No shell caller behavior is claimed verified. Verifier: v-workflow-config-dc49cc771602c92b: workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-affecting workflow environment unresolved; job graph-admission step 12: command/process substitution cl"
+  },
+  {
+   "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:.github/workflows/public-surface.yml",
+   "expires_at_utc": "2026-12-08T00:00:00Z",
+   "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
+   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers. Hosted CI remains separate evidence. No shell caller behavior is claimed verified. Verifier: v-workflow-config-9de6bedb8518f82f: workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; wo"
+  },
+  {
+   "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:deploy/deploy.sh",
+   "expires_at_utc": "2026-12-08T00:00:00Z",
+   "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
+   "reason": "Static shell checker cannot resolve dynamic/opaque statements in the production deploy script and its offline test (cd \"$(dirname \"$0\")/..\", command substitutions, multiline statements, heredoc mocks); most of them pre-date this change. Out-of-band mutation sweep of deploy/deploy.sh against deploy/deploy.test.sh for the new EMBEDDING_API_URL step: 9 of 9 mutants detected, control passes (fin-mc-embed-canary REPORT.md section 1, mut/sweep.json); it is separate evidence and does not claim dynamic closure. Offline bash deploy/deploy.test.sh PASS and shellcheck -S warning clean are likewise separate evidence. Verifier: v-shell-syntax-4b07d55fa0c743fd: shell syntax/closure: not_measured; v-shell-behavior-4b07d55fa0c743fd: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 110: dynamic load/substitution; line 120: dynamic load/substitution; line 25: directory transition has unresolved execution cwd; line 37: multiline/opaque shell statement; line 48: multiline/opaque shell statement; line 51: dynamic load/substitution; line 54: multiline/opaque shell statement; line 72: dynamic command/alias/eval; line 73: dynamic command/alias/eval; line 89: multiline/opaque shell statement; line 90: multiline/opaque shell statement; l"
+  },
+  {
+   "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
+   "entity": "code_unit:deploy/deploy.test.sh",
+   "expires_at_utc": "2026-12-08T00:00:00Z",
+   "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
+   "reason": "Static shell checker cannot resolve dynamic/opaque statements in the production deploy script and its offline test (cd \"$(dirname \"$0\")/..\", command substitutions, multiline statements, heredoc mocks); most of them pre-date this change. Out-of-band mutation sweep of deploy/deploy.sh against deploy/deploy.test.sh for the new EMBEDDING_API_URL step: 9 of 9 mutants detected, control passes (fin-mc-embed-canary REPORT.md section 1, mut/sweep.json); it is separate evidence and does not claim dynamic closure. Offline bash deploy/deploy.test.sh PASS and shellcheck -S warning clean are likewise separate evidence. Verifier: v-shell-syntax-71bdc0481076ca5e: shell syntax/closure: not_measured; v-shell-behavior-71bdc0481076ca5e: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 11: heredoc data/generation closure not measured; line 23: heredoc data/generation closure not measured; line 27: heredoc data/generation closure not measured; line 31: heredoc data/generation closure not measured; line 39: dynamic load/substitution; line 46: dynamic load/substitution; line 4: directory transition has unresolved execution cwd; line 52: dynamic load/substitution; line 64: multiline/opaque shell statement; line 69: dynamic load/substitu"
+  }
+ ],
  "graph": {
   "builder_version": "1.0.6",
-  "built_at_utc": "2026-11-15T13:49:56Z",
+  "built_at_utc": "2026-11-15T14:16:56Z",
   "graph_digest": "sha256:564b06a502d664118b3f4e8a53615ba8fbab4b9252f39da37c32b098011c4d83",
-  "path": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/real/base-graph.json",
+  "path": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/base-graph.json",
   "source_commit": "0d662a38a9cbd632186470ce0d421b468f8575bc"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:f77e46c5b8f6532e51c46c1f77c5d7d92f6b3c4a8411abbaf72723858e426dc7",
-  "path": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/graph-head-6dc2ea72dbe9.json",
+  "path": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/graph-head-6dc2ea72dbe9.json",
   "source_commit": "6dc2ea72dbe946f3abd7095d199419b1044f589c",
   "staleness": {
-   "checked_at_utc": "2026-11-15T13:55:33Z",
+   "checked_at_utc": "2026-11-15T14:21:02Z",
    "checked_nodes": 1018,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -1181,16 +1245,17 @@
  },
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
-  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none"
+  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
+  "exemptions: 9 attached from /home/dev/aup/claude-work/fin-mc-288-exempt/out/exemptions.json"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261115T135508Z-6dc2ea72",
+ "receipt_id": "car-verify-20261115T142040Z-6dc2ea72",
  "repo": {
   "name": "Arcanada-one/model-connector",
-  "path": "/home/dev/aup/claude-work/fin-mc-embed/wt-receipt"
+  "path": "/home/dev/aup/claude-work/fin-mc-288-exempt/wt"
  },
  "revision_selection": {
   "base": [
@@ -1290,7 +1355,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-15T13:55:33Z",
+  "checked_at_utc": "2026-11-15T14:21:01Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -1768,8 +1833,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/fin-mc-embed/wt-receipt/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-embed/wt-receipt/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/type-check-pp1h0pcv/check.tsbuildinfo --listFiles",
-   "duration_s": 12.83,
+   "command": "/home/dev/aup/claude-work/fin-mc-288-exempt/wt/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-288-exempt/wt/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/type-check-mx7gyczs/check.tsbuildinfo --listFiles",
+   "duration_s": 10.38,
    "entities": [
     "deployable_unit:."
    ],
@@ -1779,13 +1844,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-15T13:55:45Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-15T14:21:11Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2892 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-mc-embed/wt-receipt/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-embed/wt-receipt/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/type-check-ckowzvep/check.tsbuildinfo --listFiles",
-   "duration_s": 8.76,
+   "command": "/home/dev/aup/claude-work/fin-mc-288-exempt/wt/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-288-exempt/wt/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/type-check-3fss9lpg/check.tsbuildinfo --listFiles",
+   "duration_s": 5.92,
    "entities": [
     "deployable_unit:."
    ],
@@ -1795,13 +1860,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-15T13:55:58Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-15T14:21:22Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2148 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-mc-embed/wt-receipt/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-embed/wt-receipt/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/type-check-hptowdum/check.tsbuildinfo --listFiles",
-   "duration_s": 1.61,
+   "command": "/home/dev/aup/claude-work/fin-mc-288-exempt/wt/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-288-exempt/wt/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/type-check-fh_3xbyo/check.tsbuildinfo --listFiles",
+   "duration_s": 0.74,
    "entities": [
     "deployable_unit:."
    ],
@@ -1811,13 +1876,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-15T13:56:07Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-15T14:21:28Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-mc-embed/wt-receipt/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-embed/wt-receipt/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/type-check-fehdj246/check.tsbuildinfo --listFiles",
-   "duration_s": 28.9,
+   "command": "/home/dev/aup/claude-work/fin-mc-288-exempt/wt/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-288-exempt/wt/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/type-check-r4qp9r6v/check.tsbuildinfo --listFiles",
+   "duration_s": 9.42,
    "entities": [
     "deployable_unit:."
    ],
@@ -1827,13 +1892,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-15T13:56:09Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-15T14:21:29Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2779 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-mc-embed/wt-receipt/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-embed/wt-receipt/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/type-check-k3ggoud3/check.tsbuildinfo --listFiles",
-   "duration_s": 38.9,
+   "command": "/home/dev/aup/claude-work/fin-mc-288-exempt/wt/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-288-exempt/wt/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/type-check-dcbmlt1j/check.tsbuildinfo --listFiles",
+   "duration_s": 9.75,
    "entities": [
     "deployable_unit:."
    ],
@@ -1843,8 +1908,8 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-15T13:56:39Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-15T14:21:39Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2885 files listed"
   },
   {
@@ -1859,8 +1924,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-b803fcb7f17ed923",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
-   "started_at_utc": "2026-11-15T13:57:19Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-11-15T14:21:49Z",
    "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 2: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 7: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 12: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 13: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 15: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 16: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 1: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 3: command/process substitution closure is unresolved; job lint-and-test step 4: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 4: line 9: unsupported loader/interpreter options; job lint-and-test step 5: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 5: line 1: relative execution cwd is not declared; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 1: unsupported loader/interpreter options; job lint-and-test step 6: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: line 1: unsupported loader/interpreter options; job lint-and-test step 7: line 2: relative execution cwd is not declared; job lint-and-test step 8: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 8: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 13: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 14: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 15: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 16: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 17: unsupported loader/interpreter options; job lint-and-test step 8: line 18: relative execution cwd is not declared; job lint-and-test step 8: line 19: unsupported loader/interpreter options; job lint-and-test step 8: line 1: unsupported loader/interpreter options; job lint-and-test step 8: line 20: relative execution cwd is not declared; job lint-and-test step 8: line 21: unsupported loader/interpreter options; job lint-and-test step 8: line 22: relative execution cwd is not declared; job lint-and-test step 8: line 2: unsupported loader/interpreter options; job lint-and-test step 8: line 3: unsupported loader/interpreter options; job lint-and-test step 8: line 4: unsupported loader/interpreter options; job lint-and-test step 8: line 5: relative execution cwd is not declared; job lint-and-test step 8: line 6: relative execution cwd is not declared; job lint-and-test step 8: line 7: relative execution cwd is not declared; job lint-and-test step 8: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 9: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 9: heredoc/group/function/brace expansion closure is unresolved; job publish-image step 4: heredoc/group/function/brace expansion closure is unresolved; job verify-published-image step 1: heredoc/group/function/brace expansion closure is unresolved; 54 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1875,8 +1940,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-2fe48d1021006468",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-workflow-config-2fe48d1021006468.txt",
-   "started_at_utc": "2026-11-15T13:57:19Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-workflow-config-2fe48d1021006468.txt",
+   "started_at_utc": "2026-11-15T14:21:49Z",
    "summary": "workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1891,8 +1956,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-6ceb21cf301c7eb2",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
-   "started_at_utc": "2026-11-15T13:57:19Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
+   "started_at_utc": "2026-11-15T14:21:49Z",
    "summary": "workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; job deploy step 7: command/process substitution closure is unresolved; job deploy step 8: checkout root or source-affecting workflow environment unresolved; job deploy step 8: command/process substitution closure is unresolved; job deploy step 9: checkout root or source-affecting workflow environment unresolved; job deploy step 9: line 1: wrapper execution scope/options unresolved; job network-exposure-lint: reusable/opaque shell context; 13 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1907,8 +1972,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-28802fbf11c83a2e",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-workflow-config-28802fbf11c83a2e.txt",
-   "started_at_utc": "2026-11-15T13:57:19Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-workflow-config-28802fbf11c83a2e.txt",
+   "started_at_utc": "2026-11-15T14:21:49Z",
    "summary": "workflow shell caller closure not measured: job guard step 0: heredoc/group/function/brace expansion closure is unresolved; job guard step 2: command/process substitution closure is unresolved; job publication-post-state step 1: heredoc/group/function/brace expansion closure is unresolved; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1923,8 +1988,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-60a4bd100e640545",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-workflow-config-60a4bd100e640545.txt",
-   "started_at_utc": "2026-11-15T13:57:19Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-workflow-config-60a4bd100e640545.txt",
+   "started_at_utc": "2026-11-15T14:21:49Z",
    "summary": "workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1939,8 +2004,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-dc49cc771602c92b",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-workflow-config-dc49cc771602c92b.txt",
-   "started_at_utc": "2026-11-15T13:57:19Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-workflow-config-dc49cc771602c92b.txt",
+   "started_at_utc": "2026-11-15T14:21:49Z",
    "summary": "workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-affecting workflow environment unresolved; job graph-admission step 12: command/process substitution closure is unresolved; job graph-admission step 14: checkout root or source-affecting workflow environment unresolved; job graph-admission step 15: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 19: checkout root or source-affecting workflow environment unresolved; job graph-admission step 19: command/process substitution closure is unresolved; job graph-admission step 1: command/process substitution closure is unresolved; job graph-admission step 20: checkout root or source-affecting workflow environment unresolved; job graph-admission step 20: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 21: checkout root or source-affecting workflow environment unresolved; job graph-admission step 21: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 22: checkout root or source-affecting workflow environment unresolved; job graph-admission step 22: command/process substitution closure is unresolved; job graph-admission step 23: checkout root or source-affecting workflow environment unresolved; job graph-admission step 23: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 24: checkout root or source-affecting workflow environment unresolved; job graph-admission step 24: line 11: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 25: checkout root or source-affecting workflow environment unresolved; job graph-admission step 25: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 26: checkout root or source-affecting workflow environment unresolved; job graph-admission step 26: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 28: checkout root or source-affecting workflow environment unresolved; job graph-admission step 2: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 5: command/process substitution closure is unresolved; job graph-admission step 9: checkout root or source-affecting workflow environment unresolved; job graph-admission step 9: command/process substitution closure is unresolved; 33 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1955,13 +2020,13 @@
    "exit_code": 1,
    "id": "v-workflow-config-9de6bedb8518f82f",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-workflow-config-9de6bedb8518f82f.txt",
-   "started_at_utc": "2026-11-15T13:57:19Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-workflow-config-9de6bedb8518f82f.txt",
+   "started_at_utc": "2026-11-15T14:21:49Z",
    "summary": "workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.24,
+   "duration_s": 0.22,
    "entities": [
     "code_unit:.github/workflows/ci.yml",
     "code_unit:.github/workflows/dependabot-auto-merge.yml",
@@ -1989,8 +2054,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-15T13:57:19Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-15T14:21:49Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -2009,8 +2074,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-15T13:57:19Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-15T14:21:49Z",
    "summary": "3 document(s), 0 failed"
   },
   {
@@ -2025,9 +2090,9 @@
    "exit_code": 0,
    "id": "v-shell-syntax-4b07d55fa0c743fd",
    "kind": "shell_syntax",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-shell-syntax-4b07d55fa0c743fd.txt",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-shell-syntax-4b07d55fa0c743fd.txt",
    "scope": "shell_source_validation",
-   "started_at_utc": "2026-11-15T13:57:22Z",
+   "started_at_utc": "2026-11-15T14:21:51Z",
    "summary": "shell syntax/closure: not_measured"
   },
   {
@@ -2042,9 +2107,9 @@
    "exit_code": 0,
    "id": "v-shell-syntax-71bdc0481076ca5e",
    "kind": "shell_syntax",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-shell-syntax-71bdc0481076ca5e.txt",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-shell-syntax-71bdc0481076ca5e.txt",
    "scope": "shell_source_validation",
-   "started_at_utc": "2026-11-15T13:57:24Z",
+   "started_at_utc": "2026-11-15T14:21:54Z",
    "summary": "shell syntax/closure: not_measured"
   },
   {
@@ -2059,9 +2124,9 @@
    "exit_code": 0,
    "id": "v-shell-behavior-4b07d55fa0c743fd",
    "kind": "shell_behavior",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-shell-behavior-4b07d55fa0c743fd.txt",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-shell-behavior-4b07d55fa0c743fd.txt",
    "scope": "shell_fixture_behavior",
-   "started_at_utc": "2026-11-15T13:57:24Z",
+   "started_at_utc": "2026-11-15T14:21:54Z",
    "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 110: dynamic load/substitution; line 120: dynamic load/substitution; line 25: directory transition has unresolved execution cwd; line 37: multiline/opaque shell statement; line 48: multiline/opaque shell statement; line 51: dynamic load/substitution; line 54: multiline/opaque shell statement; line 72: dynamic command/alias/eval; line 73: dynamic command/alias/eval; line 89: multiline/opaque shell statement; line 90: multiline/opaque shell statement; line 93: multiline/opaque shell statement; line 94: multiline/opaque shell statement"
   },
   {
@@ -2076,9 +2141,9 @@
    "exit_code": 0,
    "id": "v-shell-behavior-71bdc0481076ca5e",
    "kind": "shell_behavior",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-embed/gate-out/env/verifier-out/v-shell-behavior-71bdc0481076ca5e.txt",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-288-exempt/out/p2/verifier-out/v-shell-behavior-71bdc0481076ca5e.txt",
    "scope": "shell_fixture_behavior",
-   "started_at_utc": "2026-11-15T13:57:24Z",
+   "started_at_utc": "2026-11-15T14:21:54Z",
    "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 11: heredoc data/generation closure not measured; line 23: heredoc data/generation closure not measured; line 27: heredoc data/generation closure not measured; line 31: heredoc data/generation closure not measured; line 39: dynamic load/substitution; line 46: dynamic load/substitution; line 4: directory transition has unresolved execution cwd; line 52: dynamic load/substitution; line 64: multiline/opaque shell statement; line 69: dynamic load/substitution; line 72: multiline/opaque shell statement; line 75: multiline/opaque shell statement; line 78: dynamic load/substitution; line 80: dynamic load/substitution; line 82: dynamic load/substitution; line 83: dynamic load/substitution"
   }
  ],
@@ -2175,9 +2240,9 @@
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
   },
   "seconds": {
-   "prepare": 5.37,
-   "total": 135.86,
-   "verifiers": 91.24
+   "prepare": 4.48,
+   "total": 73.18,
+   "verifiers": 36.43
   }
  }
 }
