@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "paused_safe"
  },
- "captured_at_utc": "2026-11-15T11:59:54Z",
+ "captured_at_utc": "2026-11-15T12:19:27Z",
  "change_set": {
   "base": "a62336f7a4c6152c377a34bb2fdcf9b95bc984b6",
   "files": [
@@ -162,26 +162,28 @@
  "exemptions": [],
  "graph": {
   "builder_version": "1.0.6",
-  "built_at_utc": "2026-11-15T11:55:11Z",
-  "graph_digest": "sha256:c8157b15e38bd50cc8fd0ace8fa8d771131a770fe5a312553e81a432cef60393",
-  "path": "/home/dev/aup/claude-work/fin-pr-b/gate-out/base-graph.json",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:87c3577667513db0f35f9d19bed0e1b29baba63eafa936d7531ad095aab7ebe9",
+  "path": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/graph-a62336f7a4c6.json",
   "source_commit": "a62336f7a4c6152c377a34bb2fdcf9b95bc984b6"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:5056c77bee87bda3e4161f95dbd2277e6e27d81e8dd235169ee3809fa1a62cca",
-  "path": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/graph-head-06619ae008cf.json",
+  "graph_digest": "sha256:99726907e81ed93668705eec92f4a3ac3c96a7f2efb6a3c86eb8654e00732768",
+  "path": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/graph-head-06619ae008cf.json",
   "source_commit": "06619ae008cf3ea2f44d09ea84d1f28f3a30343e",
   "staleness": {
-   "checked_at_utc": "2026-11-15T12:00:23Z",
-   "checked_nodes": 1018,
+   "checked_at_utc": "2026-11-15T12:20:09Z",
+   "checked_nodes": 1017,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
   }
  },
- "host": "arcana-devs",
+ "host": "fin-pr-b-lane",
+ "host_redacted": true,
+ "host_sha256": "94bd1b7e0d7d2f2000b227043d17071f8a34d8135cc0b9dbbb24561ac39e9e6c",
  "impact_set": {
   "deterministic_core": [
    {
@@ -816,16 +818,17 @@
  },
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
-  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none"
+  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
+  "head tree 06619ae008cf exported with git archive into /home/dev/aup/claude-work/fin-pr-b/gate-out3/work/export-06619ae008cf (node_modules linked from the repository for ['.']; workspace packages built: ['packages/sdk-ts (tsc exit 0, 0.69s)']); the repository was not written"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261115T115954Z-06619ae0",
+ "receipt_id": "car-verify-20261115T121927Z-06619ae0",
  "repo": {
   "name": "Arcanada-one/model-connector",
-  "path": "/home/dev/aup/claude-work/fin-pr-b/repo-model-connector"
+  "path": "/home/dev/aup/claude-work/fin-pr-b/wt-mc-clean"
  },
  "revision_selection": {
   "base": [
@@ -916,7 +919,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-15T12:00:23Z",
+  "checked_at_utc": "2026-11-15T12:20:08Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -1210,7 +1213,7 @@
   }
  ],
  "tree": {
-  "commit": "06619ae008cf3ea2f44d09ea84d1f28f3a30343e",
+  "commit": "4337c82ec891629f723c828de3d5f9baae3463d9",
   "dirty": false
  },
  "verdicts": [
@@ -1381,8 +1384,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/fin-pr-b/repo-model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-pr-b/repo-model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/type-check-m5424hfx/check.tsbuildinfo --listFiles",
-   "duration_s": 12.54,
+   "command": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/work/export-06619ae008cf/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-pr-b/gate-out3/work/export-06619ae008cf/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/type-check-po37yim8/check.tsbuildinfo --listFiles",
+   "duration_s": 10.51,
    "entities": [
     "code_unit:provider-profiles/fi10-persona-resolve.mjs",
     "code_unit:provider-profiles/fi10-persona-resolve.spec.mjs",
@@ -1396,13 +1399,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-15T12:00:34Z",
-   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2891 files listed"
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-15T12:20:19Z",
+   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2892 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-pr-b/repo-model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-pr-b/repo-model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/type-check-285h40o1/check.tsbuildinfo --listFiles",
-   "duration_s": 6.37,
+   "command": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/work/export-06619ae008cf/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-pr-b/gate-out3/work/export-06619ae008cf/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/type-check-ybo8kr1p/check.tsbuildinfo --listFiles",
+   "duration_s": 6.05,
    "entities": [
     "code_unit:provider-profiles/fi10-persona-resolve.mjs",
     "deployable_unit:."
@@ -1413,13 +1416,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-15T12:00:47Z",
-   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2147 files listed"
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-15T12:20:30Z",
+   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2148 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-pr-b/repo-model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-pr-b/repo-model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/type-check-m8o7p_2n/check.tsbuildinfo --listFiles",
-   "duration_s": 0.76,
+   "command": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/work/export-06619ae008cf/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-pr-b/gate-out3/work/export-06619ae008cf/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/type-check-16nwakd_/check.tsbuildinfo --listFiles",
+   "duration_s": 0.81,
    "entities": [
     "code_unit:provider-profiles/fi10-persona-resolve.mjs",
     "deployable_unit:."
@@ -1430,13 +1433,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-15T12:00:53Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-15T12:20:36Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-pr-b/repo-model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-pr-b/repo-model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/type-check-lu8omgg7/check.tsbuildinfo --listFiles",
-   "duration_s": 11.07,
+   "command": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/work/export-06619ae008cf/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-pr-b/gate-out3/work/export-06619ae008cf/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/type-check-69bmag93/check.tsbuildinfo --listFiles",
+   "duration_s": 9.68,
    "entities": [
     "code_unit:provider-profiles/fi10-persona-resolve.mjs",
     "deployable_unit:."
@@ -1447,13 +1450,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-15T12:00:54Z",
-   "summary": "tsconfig.json: exit 0, 0 error(s), 2778 files listed"
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-15T12:20:37Z",
+   "summary": "tsconfig.json: exit 0, 0 error(s), 2779 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-pr-b/repo-model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-pr-b/repo-model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/type-check-j3_12748/check.tsbuildinfo --listFiles",
-   "duration_s": 11.31,
+   "command": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/work/export-06619ae008cf/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-pr-b/gate-out3/work/export-06619ae008cf/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/type-check-3_j1uobi/check.tsbuildinfo --listFiles",
+   "duration_s": 9.37,
    "entities": [
     "code_unit:provider-profiles/fi10-persona-resolve.mjs",
     "deployable_unit:."
@@ -1464,9 +1467,9 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-15T12:01:06Z",
-   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2884 files listed"
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-15T12:20:47Z",
+   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2885 files listed"
   },
   {
    "command": "workflow_config.validate exact head bytes",
@@ -1480,8 +1483,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-b803fcb7f17ed923",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
-   "started_at_utc": "2026-11-15T12:01:18Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-11-15T12:20:57Z",
    "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 2: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 7: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 12: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 13: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 15: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 16: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 1: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 3: command/process substitution closure is unresolved; job lint-and-test step 4: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 4: line 9: unsupported loader/interpreter options; job lint-and-test step 5: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 5: line 1: relative execution cwd is not declared; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 1: unsupported loader/interpreter options; job lint-and-test step 6: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: line 1: unsupported loader/interpreter options; job lint-and-test step 7: line 2: relative execution cwd is not declared; job lint-and-test step 8: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 8: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 13: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 14: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 15: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 16: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 17: unsupported loader/interpreter options; job lint-and-test step 8: line 18: relative execution cwd is not declared; job lint-and-test step 8: line 19: unsupported loader/interpreter options; job lint-and-test step 8: line 1: unsupported loader/interpreter options; job lint-and-test step 8: line 20: relative execution cwd is not declared; job lint-and-test step 8: line 21: unsupported loader/interpreter options; job lint-and-test step 8: line 22: relative execution cwd is not declared; job lint-and-test step 8: line 2: unsupported loader/interpreter options; job lint-and-test step 8: line 3: unsupported loader/interpreter options; job lint-and-test step 8: line 4: unsupported loader/interpreter options; job lint-and-test step 8: line 5: relative execution cwd is not declared; job lint-and-test step 8: line 6: relative execution cwd is not declared; job lint-and-test step 8: line 7: relative execution cwd is not declared; job lint-and-test step 8: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 8: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 9: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 9: heredoc/group/function/brace expansion closure is unresolved; job publish-image step 4: heredoc/group/function/brace expansion closure is unresolved; job verify-published-image step 1: heredoc/group/function/brace expansion closure is unresolved; 54 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1496,8 +1499,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-6ceb21cf301c7eb2",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
-   "started_at_utc": "2026-11-15T12:01:18Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
+   "started_at_utc": "2026-11-15T12:20:57Z",
    "summary": "workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; job deploy step 7: command/process substitution closure is unresolved; job deploy step 8: checkout root or source-affecting workflow environment unresolved; job deploy step 8: command/process substitution closure is unresolved; job deploy step 9: checkout root or source-affecting workflow environment unresolved; job deploy step 9: line 1: wrapper execution scope/options unresolved; job network-exposure-lint: reusable/opaque shell context; 13 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1512,8 +1515,8 @@
    "exit_code": 0,
    "id": "v-workflow-config-5844296ae241614c",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-workflow-config-5844296ae241614c.txt",
-   "started_at_utc": "2026-11-15T12:01:18Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-workflow-config-5844296ae241614c.txt",
+   "started_at_utc": "2026-11-15T12:20:57Z",
    "summary": "bounded workflow configuration shape valid; expressions, shell, actions, callee interface compatibility and hosted execution NOT_MEASURED"
   },
   {
@@ -1528,13 +1531,13 @@
    "exit_code": 0,
    "id": "v-workflow-config-506797d1671524f2",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-workflow-config-506797d1671524f2.txt",
-   "started_at_utc": "2026-11-15T12:01:18Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-workflow-config-506797d1671524f2.txt",
+   "started_at_utc": "2026-11-15T12:20:57Z",
    "summary": "bounded workflow configuration shape valid; expressions, shell, actions, callee interface compatibility and hosted execution NOT_MEASURED"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 0.65,
+   "duration_s": 0.54,
    "entities": [
     "code_unit:dev-tools/docker-e2e-path-filter.py",
     "config_key:GITHUB_EVENT_NAME",
@@ -1554,13 +1557,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-15T12:01:18Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-15T12:20:57Z",
    "summary": "3 source(s), 0 new / 91 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.53,
+   "duration_s": 0.38,
    "entities": [
     "code_unit:.github/workflows/ci.yml",
     "code_unit:.github/workflows/deploy-stt-whisper.yml",
@@ -1586,8 +1589,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-15T12:01:18Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-15T12:20:57Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -1608,8 +1611,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-15T12:01:19Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-15T12:20:58Z",
    "summary": "4 document(s), 0 failed"
   },
   {
@@ -1634,8 +1637,8 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out/verifier-out/v-canary.json",
-   "started_at_utc": "2026-11-15T12:01:19Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-pr-b/gate-out3/verifier-out/v-canary.json",
+   "started_at_utc": "2026-11-15T12:20:58Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 6 not_measured of 6 entities"
   }
  ],
@@ -1744,9 +1747,9 @@
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
   },
   "seconds": {
-   "prepare": 4.77,
-   "total": 85.23,
-   "verifiers": 43.23
+   "prepare": 4.95,
+   "total": 90.53,
+   "verifiers": 37.34
   }
  }
 }
