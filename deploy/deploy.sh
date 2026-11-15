@@ -37,6 +37,23 @@ fi
 grep -qx 'REDIS_HOST=100.97.136.74' .env \
   || { echo 'FAIL: REDIS_HOST does not point to Arcana-DBS'; exit 1; }
 
+# Embedding endpoint declaration. The container env is the root-owned file the
+# broker installs as .env; nothing in the repository declared EMBEDDING_API_URL
+# for production, so the service ran on a code default that is being removed.
+# Declare today's effective value here, in reviewed code, instead of editing the
+# host file. Only an ABSENT or BLANK key is filled: a value an operator set is
+# kept, and the old default also applied to a blank value, so a blank is filled
+# too. The value is a mesh address, not a secret; only presence is asserted.
+EMBEDDING_API_URL_DECLARED='http://100.90.7.20:8300'
+embedding_blank=$'^EMBEDDING_API_URL=(""|\'\'|[[:space:]]*)$'
+sed -i -E "/${embedding_blank}/d" .env
+if ! grep -q '^EMBEDDING_API_URL=' .env; then
+  [[ -z "$(tail -c1 .env)" ]] || printf '\n' >> .env
+  printf 'EMBEDDING_API_URL=%s\n' "${EMBEDDING_API_URL_DECLARED}" >> .env
+fi
+[[ "$(grep -c '^EMBEDDING_API_URL=.\+' .env)" == 1 ]] \
+  || { echo 'FAIL: EMBEDDING_API_URL must be declared exactly once with a value'; exit 1; }
+
 # CONN-0073: layer the codex overlay so codex env (CODEX_BINARY_PATH,
 # CODEX_HOME, CODEX_VAULT_ROLE_ID, CODEX_VAULT_SECRET_ID) and the codex-bin /
 # dev-shm volumes are applied to the model-connector container alongside the
@@ -91,5 +108,13 @@ docker exec model-connector-model-connector-1 sh -c 'test -n "$BILLING_ENFORCED"
   exit 1
 }
 echo "ARAS-0058: BILLING_ENFORCED=$(docker exec model-connector-model-connector-1 printenv BILLING_ENFORCED)"
+
+# The embedding endpoint is declared above; assert it reached the running
+# container. Presence only: the check never prints the value.
+docker exec model-connector-model-connector-1 sh -c 'test -n "$EMBEDDING_API_URL"' || {
+  echo "FAIL: EMBEDDING_API_URL is not set in the container env." >&2
+  exit 1
+}
+echo "EMBEDDING_API_URL: present in container env"
 
 echo "Deploy successful: $("${COMPOSE[@]}" ps --format '{{.Name}} {{.Status}}')"
