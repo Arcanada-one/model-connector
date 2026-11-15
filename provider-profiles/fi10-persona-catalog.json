@@ -1,0 +1,99 @@
+{
+  "schema": "ModelConnectorFi10CriticPersonaCatalog/v1",
+  "revision": "1",
+  "task": "FI10-T3.8",
+  "pattern": "DEC-AUP-0143 dedicated provider profiles",
+  "limits": "Source-only profile definitions and fail-closed persona routing. No credential values. Credential provisioning is an OWNER INPUT (credentials_ref). runtime_authorized=false; knowledge_admitted=false; effect_authorized=false.",
+  "it_profiles": {
+    "note": "IT critic provider profiles are out of write ceiling for this task. This catalog must never resolve an unknown or IT persona to an IT accounting bucket.",
+    "forbidden_persona_prefixes": [
+      "it",
+      "it-",
+      "it.",
+      "it/"
+    ],
+    "forbidden_accounting_prefixes": [
+      "it",
+      "it-",
+      "it."
+    ]
+  },
+  "personas": [
+    {
+      "persona": "fi10-humanitarian-field",
+      "aliases": [
+        "humanitarian/field",
+        "humanitarian-field"
+      ],
+      "label": "humanitarian/field",
+      "profileId": "fi10-humanitarian-field",
+      "accountingBucket": "fi10-humanitarian-field",
+      "policyFile": "fi10-humanitarian-field.policy.json",
+      "credentialRefs": {
+        "deepseek": "fi10hf-deepseek",
+        "typesafe-jev": "fi10hf-jev"
+      }
+    },
+    {
+      "persona": "fi10-engineering-physical",
+      "aliases": [
+        "engineering/physical",
+        "engineering-physical"
+      ],
+      "label": "engineering/physical",
+      "profileId": "fi10-engineering-physical",
+      "accountingBucket": "fi10-engineering-physical",
+      "policyFile": "fi10-engineering-physical.policy.json",
+      "credentialRefs": {
+        "deepseek": "fi10ep-deepseek",
+        "typesafe-jev": "fi10ep-jev"
+      }
+    },
+    {
+      "persona": "fi10-supply-finance",
+      "aliases": [
+        "supply/finance",
+        "supply-finance"
+      ],
+      "label": "supply/finance",
+      "profileId": "fi10-supply-finance",
+      "accountingBucket": "fi10-supply-finance",
+      "policyFile": "fi10-supply-finance.policy.json",
+      "credentialRefs": {
+        "deepseek": "fi10sf-deepseek",
+        "typesafe-jev": "fi10sf-jev"
+      }
+    },
+    {
+      "persona": "fi10-statistics-indicators",
+      "aliases": [
+        "statistics/indicators",
+        "statistics-indicators"
+      ],
+      "label": "statistics/indicators",
+      "profileId": "fi10-statistics-indicators",
+      "accountingBucket": "fi10-statistics-indicators",
+      "policyFile": "fi10-statistics-indicators.policy.json",
+      "credentialRefs": {
+        "deepseek": "fi10si-deepseek",
+        "typesafe-jev": "fi10si-jev"
+      }
+    },
+    {
+      "persona": "fi10-legal-external-bodies",
+      "aliases": [
+        "legal/external bodies",
+        "legal/external-bodies",
+        "legal-external-bodies"
+      ],
+      "label": "legal/external bodies",
+      "profileId": "fi10-legal-external-bodies",
+      "accountingBucket": "fi10-legal-external-bodies",
+      "policyFile": "fi10-legal-external-bodies.policy.json",
+      "credentialRefs": {
+        "deepseek": "fi10le-deepseek",
+        "typesafe-jev": "fi10le-jev"
+      }
+    }
+  ]
+}
