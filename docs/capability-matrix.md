@@ -19,7 +19,7 @@ Single-glance comparison of all Model Connector backends. Use this to pick the r
 | `fireworks` | API | `accounts/fireworks/models/llama-v3p1-8b-instruct` | ❌ | ❌ | ❌ | 10 | `FIREWORKS_API_KEY` | provider-dependent | usage-based; adaptive limits |
 | `grok` | API | `grok-4.3` | ✅ | ✅ | ✅ | 10 | `XAI_API_KEY` | ~0.5–2s | per-token (xAI pricing) |
 | `mistral` | API | `mistral-small-latest` | ❌ | ✅ | ❌ | 10 | `MISTRAL_API_KEY` | provider-dependent | per-token |
-| `embedding` | API | `bge-m3` | n/a | n/a | ❌ | 8 | Tailscale internal | ~0.2s | free (self-hosted) |
+| `embedding` | API | `bge-m3` | n/a | n/a | ❌ | 8 | Explicit `EMBEDDING_API_URL` | provider-dependent | configured service |
 
 ¹ Codex CLI supports `--output-schema` via raw flag, but Model Connector doesn't surface it through `responseFormat` yet; treat as `❌` for now.
 
@@ -51,7 +51,7 @@ CLI connectors that prompt-inject JSON instructions (`cursor`, `gemini`, `codex`
 
 ### "I need embeddings (search, similarity)"
 
-→ **`embedding`** (BGE-M3, dense + sparse + ColBERT + hybrid modes). Self-hosted on `arcana-db:8300` — free, no rate limit.
+→ **`embedding`** (BGE-M3, dense + sparse + ColBERT + hybrid modes) when `EMBEDDING_API_URL` is explicitly configured; unset means no embedding endpoint is selected.
 
 ### "I need parallel high-throughput requests"
 
@@ -63,7 +63,7 @@ CLI connectors that prompt-inject JSON instructions (`cursor`, `gemini`, `codex`
 
 | Tier | Connectors | Notes |
 |------|-----------|-------|
-| **Free (self-hosted)** | `embedding` | BGE-M3 on Arcanada DB server |
+| **Configured service** | `embedding` | Cost and limits depend on the explicitly configured endpoint |
 | **Free (provider quota)** | `groq` | 28 800 min/day, 7 200 req/day |
 | **Subscription** | `claude-code`, `cursor` | Max plan / Cursor subscription |
 | **OAuth tier** | `gemini`, `codex` | Google free tier / ChatGPT-tier |
