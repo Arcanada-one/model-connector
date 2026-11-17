@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **docker-e2e is concurrency-safe on the shared Docker host.**
+  ci-general runners share one Docker daemon (Machine/Docker Name
+  `arcana-prd`). Fixed host ports (`15432`/`16379`/`3900`) and the fixed
+  container name `mc-e2e` collided when jobs overlapped; the old shared
+  concurrency group existed to serialize them, but GitHub still cancels
+  previously pending jobs in a group (incident main run 44160477798).
+  Service ports are now ephemeral (`ports: - 5432` / `- 6379`, read via
+  `job.services.*.ports`), the app listens on an ephemeral host port, the
+  e2e container name is suffixed with `run_id`/`run_attempt`, and every
+  event uses a unique-per-run concurrency group so nothing pending is
+  cancelled. Contract: `dev-tools/docker-e2e-concurrency-contract.test.py`.
+
+- **Dockerfile pins Cursor CLI with checksum and download retry.**
+  Replaces `curl https://cursor.com/install | bash` (HTTP 500 failed
+  publish-image run 44168125203 on 2026-11-17) with pinned
+  `2026.11.13-eacade1` linux/x64 `agent-cli-package.tar.gz`, sha256 verified
+  before extract, curl `--retry` on transient errors. Same
+  `/opt/cursor-agent` + `/usr/local/bin/cursor-agent` layout. Contract:
+  `dev-tools/dockerfile-cursor-cli-pin.test.py`.
+
 - **Catalogue OpenRouter `-1` sentinel (#106).** `normalizePerMTokPrice` now
   returns `null` for negative / sentinel provider prices instead of persisting
   `-1000000` USD per 1M tokens. Read paths sanitize historical negatives; a
