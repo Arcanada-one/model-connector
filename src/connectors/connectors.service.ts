@@ -58,7 +58,11 @@ import {
 } from './dto/catalog.dto';
 import { ModalityCatalogService } from './modality-catalog.service';
 // CONN-0245 — DB-as-source-of-truth catalog read path.
-import { CatalogRepository, type CatalogRepositoryLike } from './catalog.repository';
+import {
+  CatalogRepository,
+  catalogPricingIsKnown,
+  type CatalogRepositoryLike,
+} from './catalog.repository';
 import { rowToEntry } from './catalog-mapper';
 import { CATALOG_REDIS_CLIENT, type ICatalogRedis } from './catalog-redis.token';
 import { ProviderAccessService, type ProviderAccessLike } from './provider-access.service';
@@ -1711,7 +1715,14 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * The catalogue row for one model. Prefers the indexed single-row lookup; the
+   * The catalogue tariff for one model.
+   *
+   * Prefers the serving connector's `(connector, model)` row when it carries a
+   * known price. Issue #107: when that row is missing or unusable, fall back to
+   * any other catalogue row for the same model id — `unpriced` is a property of
+   * the requested model, not of which connector happened to serve the request.
+   *
+   * The indexed `findPricing` / `findPricingByModel` path is preferred; the
    * `findAll()` scan is the fallback for the narrow `{ findAll }` mocks specs
    * inject (see `CatalogRepositoryLike`).
    */
@@ -1720,16 +1731,41 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     model: string | undefined,
   ): Promise<MeasuredCostPricing | null> {
     if (!model) return null;
+
+    let exact: MeasuredCostPricing | null = null;
     if (this.catalogRepo.findPricing) {
-      return await this.catalogRepo.findPricing(connectorName, model);
+      exact = await this.catalogRepo.findPricing(connectorName, model);
+    } else {
+      const rows = await this.catalogRepo.findAll();
+      exact =
+        rows.find(
+          (row: { connector?: string; model?: string }) =>
+            row.connector === connectorName && row.model === model,
+        ) ?? null;
     }
-    const rows = await this.catalogRepo.findAll();
-    return (
-      rows.find(
-        (row: { connector?: string; model?: string }) =>
-          row.connector === connectorName && row.model === model,
-      ) ?? null
-    );
+    if (catalogPricingIsKnown(exact)) return exact;
+
+    if (this.catalogRepo.findPricingByModel) {
+      const byModel = await this.catalogRepo.findPricingByModel(model);
+      if (catalogPricingIsKnown(byModel)) return byModel;
+    } else {
+      const rows = await this.catalogRepo.findAll();
+      const candidates = rows.filter(
+        (row: { model?: string }) => row.model === model,
+      ) as MeasuredCostPricing[];
+      const paid = candidates.find(
+        (row) =>
+          catalogPricingIsKnown(row) &&
+          row.tier !== 'free' &&
+          ((typeof row.inputPerMTok === 'number' && row.inputPerMTok >= 0) ||
+            (typeof row.outputPerMTok === 'number' && row.outputPerMTok >= 0)),
+      );
+      if (paid) return paid;
+      const anyKnown = candidates.find((row) => catalogPricingIsKnown(row));
+      if (anyKnown) return anyKnown;
+    }
+
+    return exact;
   }
 
   /**
@@ -2189,11 +2225,8 @@ export class ConnectorsService implements OnModuleInit, OnModuleDestroy {
     // saw, driven by a parameter the caller chooses.
     const maxTokens = request.extra?.max_tokens;
     try {
-      const catalog = await this.catalogRepo.findAll();
-      const row = catalog.find(
-        (entry: { connector?: string; model?: string }) =>
-          entry.connector === connectorName && entry.model === request.model,
-      );
+      // Issue #107 — same cross-connector model lookup as the post-call meter.
+      const row = await this.lookupPricing(connectorName, request.model);
       return estimateCostUsd(promptLength, row, { maxTokens });
     } catch {
       return estimateCostUsd(promptLength, null, { maxTokens });

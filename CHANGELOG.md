@@ -29,6 +29,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `/opt/cursor-agent` + `/usr/local/bin/cursor-agent` layout. Contract:
   `dev-tools/dockerfile-cursor-cli-pin.test.py`.
 
+- **Catalogue OpenRouter `-1` sentinel (#106).** `normalizePerMTokPrice` now
+  returns `null` for negative / sentinel provider prices instead of persisting
+  `-1000000` USD per 1M tokens. Read paths sanitize historical negatives; a
+  reviewed data migration nulls existing negative `model_catalog` tariffs and
+  re-marks inconsistent `paid`+NULL rows as `unknown`.
+- **`unpriced` follows the requested model (#107).** Metering and the pre-call
+  estimate look up a known catalogue tariff by model id across connectors when
+  the serving connector has none, so failover onto an uncatalogued connector no
+  longer silently settles `costSource: 'unpriced'` for a model that is priced
+  elsewhere. Still `unpriced` when no connector catalogues the model.
 - **`reasoningOutputTokens` subset invariant (#105).** Providers that report
   reasoning as additive (`reasoning > completion_tokens` — measured on orq/grok-3
   and several OpenRouter free models) no longer leave those tokens unbilled.
