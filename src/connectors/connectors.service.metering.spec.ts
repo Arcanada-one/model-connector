@@ -210,16 +210,14 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
   });
 
   it('CACHE-003b carries provider TTL usage into the request and ledger settlement', async () => {
-    findPricing = vi
-      .fn<FindPricing>()
-      .mockResolvedValue({
-        inputPerMTok: 10,
-        outputPerMTok: 50,
-        cachedInputPerMTok: 0.25,
-        cacheWrite5mPerMTok: 12.5,
-        cacheWrite1hPerMTok: 20,
-        tier: 'paid',
-      });
+    findPricing = vi.fn<FindPricing>().mockResolvedValue({
+      inputPerMTok: 10,
+      outputPerMTok: 50,
+      cachedInputPerMTok: 0.25,
+      cacheWrite5mPerMTok: 12.5,
+      cacheWrite1hPerMTok: 20,
+      tier: 'paid',
+    });
     const connector = groqShapedConnector({ inputTokens: 10_000, outputTokens: 100 });
     const response = await connector.execute({ prompt: 'fixture' });
     response.usage.cachedInputTokens = 6_000;
@@ -281,6 +279,104 @@ describe('ConnectorsService — ARAS-0058 metering', () => {
     // never mistaken for one that means "this model is free".
     expect(settled[0].reason).toBe('model-request:unpriced');
     expect(Number(settled[0].amountUsd)).toBe(0);
+  });
+
+  it('issue #107: prices from another connector when the serving one has no tariff', async () => {
+    // deepseek-v4-flash on openmodel has no tariff; orq publishes $0.14/$0.28.
+    // Metering must follow the model, not the serving connector.
+    const openmodelConnector: IConnector = {
+      name: 'openmodel',
+      type: 'api',
+      execute: vi.fn().mockResolvedValue({
+        id: 'resp-om-1',
+        connector: 'openmodel',
+        model: 'deepseek-v4-flash',
+        result: 'ok',
+        usage: {
+          inputTokens: 1_000_000,
+          outputTokens: 1_000_000,
+          totalTokens: 2_000_000,
+          costUsd: 0,
+        },
+        latencyMs: 42,
+        status: 'success',
+      }),
+      getStatus: vi.fn(),
+      getCapabilities: vi.fn().mockReturnValue({
+        name: 'openmodel',
+        type: 'api',
+        models: ['deepseek-v4-flash'],
+        supportsStreaming: false,
+        supportsJsonSchema: true,
+        supportsTools: true,
+        maxTimeout: 300_000,
+      }),
+    } as unknown as IConnector;
+
+    findPricing = vi.fn<FindPricing>().mockResolvedValue(null);
+    const service = new ConnectorsService(
+      { add: vi.fn() } as unknown as Queue,
+      mockPrisma as unknown as PrismaService,
+      mockMetrics as unknown as MetricsService,
+      new OutputGuardMiddleware({ enabled: false, maxRetries: 0, timeoutMs: 1_000 }),
+      emptyModalityCatalog,
+      {
+        findAll: vi.fn().mockResolvedValue([
+          {
+            connector: 'orq',
+            model: 'deepseek-v4-flash',
+            inputPerMTok: 0.14,
+            outputPerMTok: 0.28,
+            tier: 'paid',
+          },
+        ]),
+        findPricing,
+      } as unknown as CatalogRepositoryLike,
+      null,
+      undefined,
+      undefined,
+      mockBilling as unknown as BillingService,
+    );
+    service.register(openmodelConnector);
+
+    await service.execute('openmodel', { prompt: 'hello', model: 'deepseek-v4-flash' }, 'key-1');
+
+    expect(created[0].costSource).toBe('catalog');
+    expect(Number(created[0].costUsd)).toBeCloseTo(0.42, 6);
+    expect(settled[0].reason).toBe('model-request');
+  });
+
+  it('issue #107: stays unpriced when no connector catalogues the model', async () => {
+    findPricing = vi.fn<FindPricing>().mockResolvedValue(null);
+    const service = new ConnectorsService(
+      { add: vi.fn() } as unknown as Queue,
+      mockPrisma as unknown as PrismaService,
+      mockMetrics as unknown as MetricsService,
+      new OutputGuardMiddleware({ enabled: false, maxRetries: 0, timeoutMs: 1_000 }),
+      emptyModalityCatalog,
+      {
+        findAll: vi.fn().mockResolvedValue([
+          {
+            connector: 'orq',
+            model: 'some-other-model',
+            inputPerMTok: 1,
+            outputPerMTok: 2,
+            tier: 'paid',
+          },
+        ]),
+        findPricing,
+      } as unknown as CatalogRepositoryLike,
+      null,
+      undefined,
+      undefined,
+      mockBilling as unknown as BillingService,
+    );
+    service.register(groqShapedConnector({ inputTokens: 1_000, outputTokens: 500 }));
+
+    await service.execute('groq', { prompt: 'hello' }, 'key-1');
+
+    expect(created[0].costSource).toBe('unpriced');
+    expect(settled[0].reason).toBe('model-request:unpriced');
   });
 
   it('records a catalogued free-tier model as free, not as unpriced', async () => {

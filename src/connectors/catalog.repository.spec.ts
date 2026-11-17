@@ -126,6 +126,66 @@ describe('CatalogRepository CONN-1646', () => {
     });
   });
 
+  it('issue #106: findPricing nulls a negative OpenRouter sentinel tariff', async () => {
+    prisma.modelCatalog.findFirst.mockResolvedValue({
+      inputPerMTok: -1_000_000,
+      outputPerMTok: -1_000_000,
+      tier: 'paid',
+      cachedInputPerMTok: null,
+      cacheWrite5mPerMTok: null,
+      cacheWrite1hPerMTok: null,
+    });
+    expect(await repository.findPricing('openrouter', 'openrouter/auto')).toEqual({
+      inputPerMTok: null,
+      outputPerMTok: null,
+      tier: 'paid',
+      cachedInputPerMTok: null,
+      cacheWrite5mPerMTok: null,
+      cacheWrite1hPerMTok: null,
+    });
+  });
+
+  it('issue #107: findPricingByModel returns a paid tariff from any connector', async () => {
+    prisma.modelCatalog.findMany.mockResolvedValue([
+      {
+        inputPerMTok: null,
+        outputPerMTok: null,
+        tier: 'unknown',
+        cachedInputPerMTok: null,
+        cacheWrite5mPerMTok: null,
+        cacheWrite1hPerMTok: null,
+      },
+      {
+        inputPerMTok: 0.14,
+        outputPerMTok: 0.28,
+        tier: 'paid',
+        cachedInputPerMTok: null,
+        cacheWrite5mPerMTok: null,
+        cacheWrite1hPerMTok: null,
+      },
+    ]);
+    expect(await repository.findPricingByModel('deepseek-v4-flash')).toEqual({
+      inputPerMTok: 0.14,
+      outputPerMTok: 0.28,
+      tier: 'paid',
+      cachedInputPerMTok: null,
+      cacheWrite5mPerMTok: null,
+      cacheWrite1hPerMTok: null,
+    });
+    expect(prisma.modelCatalog.findMany).toHaveBeenCalledWith({
+      where: { model: 'deepseek-v4-flash', absent: false },
+      select: {
+        inputPerMTok: true,
+        outputPerMTok: true,
+        cachedInputPerMTok: true,
+        cacheWrite5mPerMTok: true,
+        cacheWrite1hPerMTok: true,
+        tier: true,
+      },
+      orderBy: [{ tier: 'asc' }],
+    });
+  });
+
   it('rejects a connector mismatch before opening a transaction', async () => {
     const promise = repository.applyProviderSnapshot({
       connector: 'groq',
