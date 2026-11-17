@@ -25,6 +25,8 @@ jobs:
     # 2026-09-24/25). The lane's runners carry ONLY that label (--no-default-labels): nothing else lands there.
     # DEC-AUP-0101 O3: pull requests use the existing unprivileged ci-nodocker lane.
     # Main pre-deploy checks retain deploy-gate; Docker e2e retains ci-general.
+    # Datarim fork deny: refuse untrusted fork PR code on org self-hosted runners.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && fromJSON('["deploy-gate"]') || fromJSON('["ci-nodocker"]') }}
     outputs:
       docker_e2e_required: ${{ steps.docker_e2e_filter.outputs.required }}
@@ -175,7 +177,8 @@ jobs:
   docker-e2e:
     # Skipped only when a same-repository PR changes Docker-ignored files alone.
     # Missing output, unknown event, fork, or source-read failure keeps the job enabled.
-    if: needs.lint-and-test.outputs.docker_e2e_required != 'false'
+    # Datarim fork deny: refuse untrusted fork PR code on org self-hosted runners.
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && (needs.lint-and-test.outputs.docker_e2e_required != 'false')
     runs-on: [self-hosted, Linux, ci-general]
     needs: lint-and-test
     concurrency:

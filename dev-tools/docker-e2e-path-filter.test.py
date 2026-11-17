@@ -125,7 +125,10 @@ class WorkflowContract(unittest.TestCase):
     def test_selector_is_fail_open_and_only_controls_docker_job(self):
         self.assertIn("docker_e2e_required: ${{ steps.docker_e2e_filter.outputs.required }}", WORKFLOW_TEXT)
         self.assertIn("id: docker_e2e_filter\n        continue-on-error: true\n        run: python3 -B dev-tools/docker-e2e-path-filter.py", WORKFLOW_TEXT)
-        self.assertIn("if: needs.lint-and-test.outputs.docker_e2e_required != 'false'", WORKFLOW_TEXT)
+        self.assertIn(
+            "if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && (needs.lint-and-test.outputs.docker_e2e_required != 'false')",
+            WORKFLOW_TEXT,
+        )
         self.assertRegex(WORKFLOW_TEXT, r"(?ms)^  docker-e2e:\n.*?^    runs-on: \[self-hosted, Linux, ci-general\]$")
 
     def test_pr_supersession_and_deploy_serialization_are_preserved(self):
