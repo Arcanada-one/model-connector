@@ -24,6 +24,8 @@ jobs:
   # accepts, and OIDC is how we authenticate now that NPM_TOKEN is gone.
   build-ts:
     name: TypeScript — build + test + dry-run
+    # Datarim fork deny: refuse untrusted fork PR code on org self-hosted runners.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, ci-general]
     permissions:
       contents: read
@@ -110,6 +112,8 @@ jobs:
 
   build-python:
     name: Python — build + test + twine check
+    # Datarim fork deny: refuse untrusted fork PR code on org self-hosted runners.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64, ci-general]
     permissions:
       id-token: write

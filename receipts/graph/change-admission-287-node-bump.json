@@ -1,0 +1,240 @@
+{
+  "admission": {
+    "rule": "admitted requires every verdict = verified; failed without exemption \u21d2 refused; not_measured without exemption \u21d2 paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+    "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold \u2014 the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+    "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item \u2014 the ordinary case after a rebase or a second commit on a card \u2014 the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+    "verdict": "admitted"
+  },
+  "captured_at_utc": "2026-11-17T17:41:43Z",
+  "change_set": {
+    "base": "7ce917af42d4d85ede120e1651e09f05c066c069",
+    "files": [
+      {
+        "kind": "config",
+        "path": "Dockerfile",
+        "status": "M",
+        "uncovered": true
+      }
+    ],
+    "head": "1f46a97f5a34be8c8287ec1ceba7248ad4756c19",
+    "mode": "diff"
+  },
+  "decision_ref": "DEC-AUP-0008",
+  "empty_impact_explanation": {
+    "binding": {
+      "input": {
+        "base": "7ce917af42d4d85ede120e1651e09f05c066c069",
+        "base_graph_digest": "sha256:2a37b1b56b02826685d644422609cad1a6c7dd499120fbea24bfa6f07c51a879",
+        "head": "1f46a97f5a34be8c8287ec1ceba7248ad4756c19",
+        "head_graph_digest": "sha256:e4147e65ee0768607cdbb08096254e357c0e29967b710ecaff76f0e75bf958e5",
+        "reason": "Dockerfile is an uncovered config file: the relationship-graph builder yields no node for it (manifest.language_coverage has no Dockerfile extractor). The only change is the node base image tag/digest bump 22.23.4-slim -> 22.23.5-slim. No TypeScript/Python/source entity is touched, so the dependent impact set is empty by construction, not by missing traversal.",
+        "schema": "EmptyImpactExplanation/v1",
+        "scope": "graph_non_seed_dependents"
+      },
+      "input_sha256": "sha256:e3ac14ece8c6dc71fd8566040f889993665f24017c7530a45a8bca059675693d",
+      "schema": "BoundEmptyImpactExplanation/v1"
+    },
+    "graph_metadata": {
+      "revisions": {
+        "base": {
+          "changed_node_known_to_graph": false,
+          "edge_types": "all",
+          "external_reverse_edges": 0,
+          "extractors": [
+            "imports",
+            "routes",
+            "contracts",
+            "prisma",
+            "config",
+            "reuse",
+            "di",
+            "queue",
+            "tests",
+            "http_client",
+            "deployables",
+            "docs",
+            "work_items",
+            "receipts",
+            "rust",
+            "python",
+            "systemd",
+            "trust_anchor"
+          ],
+          "files": [
+            {
+              "kind": "config",
+              "path": "Dockerfile",
+              "status": "M",
+              "uncovered": true
+            }
+          ],
+          "graph_digest": "sha256:2a37b1b56b02826685d644422609cad1a6c7dd499120fbea24bfa6f07c51a879",
+          "internal_reverse_edges": 0,
+          "language_coverage": [
+            "typescript",
+            "javascript",
+            "prisma",
+            "markdown",
+            "json-receipts",
+            "rust",
+            "python",
+            "bash",
+            "bats"
+          ],
+          "max_depth": 3,
+          "seeds": [],
+          "source_commit": "7ce917af42d4d85ede120e1651e09f05c066c069"
+        },
+        "head": {
+          "changed_node_known_to_graph": false,
+          "edge_types": "all",
+          "external_reverse_edges": 0,
+          "extractors": [
+            "imports",
+            "routes",
+            "contracts",
+            "prisma",
+            "config",
+            "reuse",
+            "di",
+            "queue",
+            "tests",
+            "http_client",
+            "deployables",
+            "docs",
+            "work_items",
+            "receipts",
+            "rust",
+            "python",
+            "systemd",
+            "trust_anchor"
+          ],
+          "files": [
+            {
+              "kind": "config",
+              "path": "Dockerfile",
+              "status": "M",
+              "uncovered": true
+            }
+          ],
+          "graph_digest": "sha256:e4147e65ee0768607cdbb08096254e357c0e29967b710ecaff76f0e75bf958e5",
+          "internal_reverse_edges": 0,
+          "language_coverage": [
+            "typescript",
+            "javascript",
+            "prisma",
+            "markdown",
+            "json-receipts",
+            "rust",
+            "python",
+            "bash",
+            "bats"
+          ],
+          "max_depth": 3,
+          "seeds": [],
+          "source_commit": "1f46a97f5a34be8c8287ec1ceba7248ad4756c19"
+        }
+      },
+      "scope": "graph_non_seed_dependents"
+    },
+    "reason": "Dockerfile is an uncovered config file: the relationship-graph builder yields no node for it (manifest.language_coverage has no Dockerfile extractor). The only change is the node base image tag/digest bump 22.23.4-slim -> 22.23.5-slim. No TypeScript/Python/source entity is touched, so the dependent impact set is empty by construction, not by missing traversal.",
+    "schema": "BoundEmptyImpactExplanation/v1"
+  },
+  "exemptions": [],
+  "graph": {
+    "builder_version": "1.0.6",
+    "built_at_utc": "2026-09-05T00:00:00Z",
+    "graph_digest": "sha256:2a37b1b56b02826685d644422609cad1a6c7dd499120fbea24bfa6f07c51a879",
+    "path": "/tmp/arcana-verify-eb33ck1l/verifier-out/graph-7ce917af42d4.json",
+    "source_commit": "7ce917af42d4d85ede120e1651e09f05c066c069"
+  },
+  "head_graph": {
+    "builder_version": "1.0.6",
+    "built_at_utc": "2026-09-05T00:00:00Z",
+    "graph_digest": "sha256:e4147e65ee0768607cdbb08096254e357c0e29967b710ecaff76f0e75bf958e5",
+    "path": "/tmp/arcana-verify-eb33ck1l/verifier-out/graph-head-1f46a97f5a34.json",
+    "source_commit": "1f46a97f5a34be8c8287ec1ceba7248ad4756c19",
+    "staleness": {
+      "checked_at_utc": "2026-11-17T17:43:08Z",
+      "checked_nodes": 1020,
+      "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+      "mismatched_nodes": [],
+      "verdict": "fresh"
+    }
+  },
+  "host": "arcana-devs",
+  "impact_set": {
+    "deterministic_core": [],
+    "edge_types": "all",
+    "global_fallback": {
+      "triggered": false
+    },
+    "inferred_tail": [],
+    "max_depth": 3,
+    "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+    "total": 0
+  },
+  "notes": [
+    "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = \u22c3 edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i\u2026",
+    "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
+    "Author-confirmed BoundEmptyImpactExplanation/v1 for Dockerfile-only node base digest bump; empty impact is by construction (uncovered Dockerfile), not missing traversal."
+  ],
+  "producer": {
+    "tool": "tools/graph/verify.py",
+    "version": "1.4.1"
+  },
+  "receipt_id": "car-verify-20261117T174143Z-1f46a97f",
+  "repo": {
+    "name": "Arcanada-one/model-connector"
+  },
+  "revision_selection": {
+    "base": [],
+    "head": [],
+    "schema": "RevisionImpactSelection/v1",
+    "unmeasured_head_files": []
+  },
+  "schema": "ChangeAdmissionReceipt/v1",
+  "staleness": {
+    "checked_at_utc": "2026-11-17T17:43:08Z",
+    "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+    "mismatched_nodes": [],
+    "verdict": "fresh"
+  },
+  "structural_exclusions": [],
+  "tree": {
+    "commit": "1f46a97f5a34be8c8287ec1ceba7248ad4756c19",
+    "dirty": false
+  },
+  "verdicts": [],
+  "verifier_selection": {
+    "applied": {},
+    "not_applied": [],
+    "requested": [],
+    "schema": "VerifierSelection/v1"
+  },
+  "verifiers": [],
+  "verify": {
+    "events": [
+      {
+        "code": {
+          "code": "EMPTY_IMPACT_REQUIRES_EXPLANATION",
+          "revision": "base",
+          "text": "non-documentation change with an empty impact set: a prediction that must be explained in the receipt (empty_impact_explanation), never an approval"
+        }
+      },
+      {
+        "code": {
+          "code": "EMPTY_IMPACT_REQUIRES_EXPLANATION",
+          "revision": "head",
+          "text": "non-documentation change with an empty impact set: a prediction that must be explained in the receipt (empty_impact_explanation), never an approval"
+        }
+      }
+    ],
+    "required_by_entity": {},
+    "seconds": {
+      "prepare": 8.01,
+      "total": 101.56,
+      "verifiers": 0
+    }
+  }
+}
