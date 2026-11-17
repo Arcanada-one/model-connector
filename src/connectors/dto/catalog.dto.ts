@@ -56,15 +56,32 @@ export type ModelPricing = z.infer<typeof ModelPricingSchema>;
  * rounded to 6 decimals to kill IEEE-754 noise (0.00000059 × 1e6 = 0.5899999…).
  * Returns null for an absent/empty/non-numeric input (anti-fabrication — never
  * invents a price). A literal "0" maps to 0 (genuinely free), not null.
+ *
+ * Negative / sentinel values (OpenRouter publishes `"-1"` for auto-routed
+ * models whose price depends on the chosen backend) become null — unknown /
+ * unpriced — never a negative per-1M tariff such as `-1000000`.
  */
 export function normalizePerMTokPrice(raw: unknown): number | null {
   if (typeof raw === 'number') {
-    return Number.isFinite(raw) ? Number((raw * 1_000_000).toFixed(6)) : null;
+    if (!Number.isFinite(raw)) return null;
+    const perM = Number((raw * 1_000_000).toFixed(6));
+    return perM >= 0 ? perM : null;
   }
   if (typeof raw !== 'string' || raw.trim() === '') return null;
   const perToken = Number(raw);
   if (!Number.isFinite(perToken)) return null;
-  return Number((perToken * 1_000_000).toFixed(6));
+  const perM = Number((perToken * 1_000_000).toFixed(6));
+  return perM >= 0 ? perM : null;
+}
+
+/**
+ * Drop a negative or non-finite catalogue tariff. Used when reading rows that
+ * may still hold a historical OpenRouter `-1` → `-1000000` sentinel until the
+ * data migration / next provider refresh clears them.
+ */
+export function sanitizeCatalogTariff(value: number | null | undefined): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
+  return value;
 }
 
 /**

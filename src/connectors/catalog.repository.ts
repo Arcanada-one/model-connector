@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { sanitizeCatalogTariff } from './dto/catalog.dto';
 import {
   diffCatalogRows,
   fingerprintProviderSnapshot,
@@ -121,6 +122,39 @@ export class CatalogSnapshotValidationError extends Error {
  * needs. Lets specs inject a `{ findAll: vi.fn() }` mock without depending on
  * the concrete Prisma-backed class.
  */
+/**
+ * True when a catalogue pricing row is a known price for metering: a free-tier
+ * declaration, or at least one non-negative finite per-1M tariff. Negative
+ * sentinel leftovers (OpenRouter `-1` → `-1000000`) do not count.
+ */
+export function catalogPricingIsKnown(row: CatalogPricingRow | null | undefined): boolean {
+  if (!row) return false;
+  if (row.tier === 'free') return true;
+  const input = sanitizeCatalogTariff(row.inputPerMTok);
+  const output = sanitizeCatalogTariff(row.outputPerMTok);
+  return input !== null || output !== null;
+}
+
+function sanitizePricingRow(row: CatalogPricingRow): CatalogPricingRow {
+  return {
+    ...row,
+    inputPerMTok: sanitizeCatalogTariff(row.inputPerMTok),
+    outputPerMTok: sanitizeCatalogTariff(row.outputPerMTok),
+    cachedInputPerMTok:
+      row.cachedInputPerMTok === undefined
+        ? undefined
+        : sanitizeCatalogTariff(row.cachedInputPerMTok),
+    cacheWrite5mPerMTok:
+      row.cacheWrite5mPerMTok === undefined
+        ? undefined
+        : sanitizeCatalogTariff(row.cacheWrite5mPerMTok),
+    cacheWrite1hPerMTok:
+      row.cacheWrite1hPerMTok === undefined
+        ? undefined
+        : sanitizeCatalogTariff(row.cacheWrite1hPerMTok),
+  };
+}
+
 export interface CatalogRepositoryLike {
   findAll(): Promise<ModelCatalogRow[]>;
   /**
@@ -137,6 +171,12 @@ export interface CatalogRepositoryLike {
    * index.
    */
   findPricing?(connector: string, model: string): Promise<CatalogPricingRow | null>;
+  /**
+   * Issue #107 — look up a known catalogue price by model id across connectors.
+   * Used when the serving connector has no usable tariff for the requested
+   * model but another connector does.
+   */
+  findPricingByModel?(model: string): Promise<CatalogPricingRow | null>;
 }
 
 /**
@@ -244,7 +284,39 @@ export class CatalogRepository implements CatalogRepositoryLike {
         tier: true,
       },
     });
-    return row ?? null;
+    return row ? sanitizePricingRow(row) : null;
+  }
+
+  /**
+   * Issue #107 — any non-absent catalogue row for this model id that carries a
+   * known price (paid tariff or free tier). Prefers a paid tariff over free /
+   * unknown so a failover onto an uncatalogued connector still bills the
+   * published list price of the model the user asked for.
+   */
+  async findPricingByModel(model: string): Promise<CatalogPricingRow | null> {
+    const rows = (await this.prisma.modelCatalog.findMany({
+      where: { model, absent: false },
+      select: {
+        inputPerMTok: true,
+        outputPerMTok: true,
+        cachedInputPerMTok: true,
+        cacheWrite5mPerMTok: true,
+        cacheWrite1hPerMTok: true,
+        tier: true,
+      },
+      orderBy: [{ tier: 'asc' }],
+    })) as CatalogPricingRow[];
+
+    const sanitized = rows.map(sanitizePricingRow);
+    const paid = sanitized.find(
+      (row) =>
+        catalogPricingIsKnown(row) &&
+        row.tier !== 'free' &&
+        (sanitizeCatalogTariff(row.inputPerMTok) !== null ||
+          sanitizeCatalogTariff(row.outputPerMTok) !== null),
+    );
+    if (paid) return paid;
+    return sanitized.find((row) => catalogPricingIsKnown(row)) ?? null;
   }
 
   /**

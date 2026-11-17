@@ -453,19 +453,31 @@ describe('OpenRouterConnector', () => {
       mockModelsOk();
       await connector.refreshFreeModels();
       const caps = connector.getCapabilities();
-      // pick the first paid entry that publishes numeric prompt+completion pricing
+      // pick the first paid entry that publishes a non-sentinel numeric price
       const sample = OPENROUTER_MODELS_FIXTURE.data.find(
         (e) =>
           !e.id.endsWith(':free') &&
           e.pricing?.prompt &&
           e.pricing.prompt !== '0' &&
-          e.pricing?.completion,
+          Number(e.pricing.prompt) > 0 &&
+          e.pricing?.completion &&
+          Number(e.pricing.completion) >= 0,
       )!;
       const m = metaFor(caps, sample.id);
       expect(m?.pricing?.unit).toBe('per_1m_tokens');
       expect(m?.pricing?.inputPerMTok).toBeCloseTo(Number(sample.pricing.prompt) * 1e6, 6);
       const expectedCtx = sample.top_provider?.context_length ?? sample.context_length ?? null;
       expect(m?.contextWindow).toBe(expectedCtx);
+    });
+
+    it('stores OpenRouter "-1" auto-route pricing as unpriced (null), never -1000000', async () => {
+      mockModelsOk();
+      await connector.refreshFreeModels();
+      const caps = connector.getCapabilities();
+      const auto = metaFor(caps, 'openrouter/auto');
+      expect(auto).toBeDefined();
+      expect(auto?.pricing).toBeNull();
+      expect(auto?.free).toBe(false);
     });
 
     it('marks a :free model free in its per-model meta', async () => {
