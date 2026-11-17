@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-17T22:50:12Z",
+ "captured_at_utc": "2026-11-17T23:08:06Z",
  "change_set": {
   "base": "2dbed9ef38b8362576b8f863061570d6340c4723",
   "files": [
@@ -76,19 +76,19 @@
  ],
  "graph": {
   "builder_version": "1.0.6",
-  "built_at_utc": "2026-11-17T22:49:21Z",
-  "graph_digest": "sha256:97761d9a5a14ff2a88a860cac6e5d10c265f2dbf5aa2324296a3ae3afb1f06af",
-  "path": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/clean-base-graph.json",
+  "built_at_utc": "2026-11-17T23:07:37Z",
+  "graph_digest": "sha256:a8b4fb9f966eac315815c9633af5580efc833a89e21a5dabf04edd5e21bd5a14",
+  "path": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/clean-base-graph2.json",
   "source_commit": "2dbed9ef38b8362576b8f863061570d6340c4723"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:9270e7c3a19b0a39b297157a4293ee35cee7a8173b5124d88ee307ab80599830",
-  "path": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout/graph-head-4cc83e65aef0.json",
+  "graph_digest": "sha256:e801bc851eb69331ecb36a7f11efecf39a3b2977a6910e30954fed71ffe9642e",
+  "path": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout2/graph-head-4cc83e65aef0.json",
   "source_commit": "4cc83e65aef0364dbfadba5b7431e90fa6567fbf",
   "staleness": {
-   "checked_at_utc": "2026-11-17T22:50:46Z",
+   "checked_at_utc": "2026-11-17T23:08:33Z",
    "checked_nodes": 1032,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -757,9 +757,9 @@
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261117T225012Z-4cc83e65",
+ "receipt_id": "car-verify-20261117T230806Z-4cc83e65",
  "repo": {
-  "name": "dev-mc-ci3/model-connector",
+  "name": "Arcanada-one/model-connector",
   "path": "/home/dev/aup/claude-work/dev-mc-ci3/clean"
  },
  "revision_selection": {
@@ -842,7 +842,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-17T22:50:46Z",
+  "checked_at_utc": "2026-11-17T23:08:33Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -1251,8 +1251,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-17T22:51:02Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout2/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-17T23:08:47Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1267,8 +1267,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-17T22:51:02Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout2/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-17T23:08:47Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1283,8 +1283,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-17T22:51:02Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout2/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-17T23:08:47Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1299,8 +1299,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-17T22:51:02Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout2/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-17T23:08:47Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1315,8 +1315,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-17T22:51:02Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout2/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-17T23:08:47Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1331,13 +1331,13 @@
    "exit_code": 1,
    "id": "v-workflow-config-b803fcb7f17ed923",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout/v-workflow-config-b803fcb7f17ed923.txt",
-   "started_at_utc": "2026-11-17T22:51:02Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout2/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-11-17T23:08:47Z",
    "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 11: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 12: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 2: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 7: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 8: command/process substitution closure is unresolved; job docker-e2e step 9: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 10: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 13: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 14: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 15: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 16: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 17: unsupported loader/interpreter options; job lint-and-test step 10: line 18: relative execution cwd is not declared; job lint-and-test step 10: line 19: unsupported loader/interpreter options; job lint-and-test step 10: line 1: unsupported loader/interpreter options; job lint-and-test step 10: line 20: relative execution cwd is not declared; job lint-and-test step 10: line 21: unsupported loader/interpreter options; job lint-and-test step 10: line 22: relative execution cwd is not declared; job lint-and-test step 10: line 2: unsupported loader/interpreter options; job lint-and-test step 10: line 3: unsupported loader/interpreter options; job lint-and-test step 10: line 4: unsupported loader/interpreter options; job lint-and-test step 10: line 5: relative execution cwd is not declared; job lint-and-test step 10: line 6: relative execution cwd is not declared; job lint-and-test step 10: line 7: relative execution cwd is not declared; job lint-and-test step 10: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: heredoc/group/function/brace expansion closure is unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 15: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 17: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 18: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 18: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 18: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 1: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 3: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: command/process substitution closure is unresolved; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 9: unsupported loader/interpreter options; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: line 1: relative execution cwd is not declared; job lint-and-test step 8: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 8: line 1: unsupported loader/interpreter options; job lint-and-test step 8: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 9: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 9: line 1: unsupported loader/interpreter options; job lint-and-test step 9: line 2: relative execution cwd is not declared; job publish-image step 4: heredoc/group/function/brace expansion closure is unresolved; job verify-published-image step 1: heredoc/group/function/brace expansion closure is unresolved; 61 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.32,
+   "duration_s": 0.25,
    "entities": [
     "code_unit:.github/workflows/ci.yml",
     "code_unit:dev-tools/docker-e2e-concurrency-contract.test.py",
@@ -1353,8 +1353,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout/v-fitness.json",
-   "started_at_utc": "2026-11-17T22:51:02Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout2/v-fitness.json",
+   "started_at_utc": "2026-11-17T23:08:47Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -1373,8 +1373,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout/v-doc-reference.txt",
-   "started_at_utc": "2026-11-17T22:51:02Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-mc-ci3/receipts-work/verify-clean-vout2/v-doc-reference.txt",
+   "started_at_utc": "2026-11-17T23:08:48Z",
    "summary": "3 document(s), 0 failed"
   }
  ],
@@ -1441,9 +1441,9 @@
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
   },
   "seconds": {
-   "prepare": 7.38,
-   "total": 50.65,
-   "verifiers": 0.33
+   "prepare": 6.36,
+   "total": 41.31,
+   "verifiers": 0.26
   }
  }
 }
