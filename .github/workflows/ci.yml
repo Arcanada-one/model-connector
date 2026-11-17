@@ -187,15 +187,15 @@ jobs:
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && (needs.lint-and-test.outputs.docker_e2e_required != 'false')
     runs-on: [self-hosted, Linux, ci-general]
     needs: lint-and-test
-    # History (1d9f979): repo-global lock so only one docker-e2e uses the fixed
-    # host ports / container name at a time, with cancel-in-progress: false so an
-    # in-progress job is kept. GitHub still cancels previously PENDING jobs in a
-    # group when a newer job joins; a PR joining therefore cancelled pending main
-    # run 44160477798 (2026-11-17). Push-to-main therefore uses a unique-per-run
-    # group so a PR can never cancel or displace it; pull_request runs keep the
-    # historical shared group so they still serialize against each other.
+    # ci-general runners share one Docker host (measured: Machine/Docker Name
+    # arcana-prd across arcana-prd-general-*). Fixed host ports and container
+    # names therefore collide when two docker-e2e jobs overlap. History
+    # (1d9f979 / 44160477798): a shared concurrency group cancelled pending
+    # peers even with cancel-in-progress: false. Remove the resource collision
+    # (ephemeral service ports, unique names/ports) so every event can use a
+    # unique-per-run group and nothing pending is cancelled.
     concurrency:
-      group: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && format('docker-e2e-arcana-prod-main-{0}', github.run_id) || 'docker-e2e-arcana-prod' }}
+      group: docker-e2e-arcana-prod-${{ github.run_id }}-${{ github.run_attempt }}
       cancel-in-progress: false
     services:
       postgres:
@@ -205,7 +205,7 @@ jobs:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: connector_test
         ports:
-          - 15432:5432
+          - 5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -214,12 +214,15 @@ jobs:
       redis:
         image: redis:7
         ports:
-          - 16379:6379
+          - 6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      MC_E2E_PG_PORT: ${{ job.services.postgres.ports[5432] }}
+      MC_E2E_REDIS_PORT: ${{ job.services.redis.ports[6379] }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -246,13 +249,13 @@ jobs:
       - name: Create DB schema
         run: |
           docker run --rm --network=host \
-            -e DATABASE_URL=postgresql://test:test@localhost:15432/connector_test \
+            -e DATABASE_URL="postgresql://test:test@localhost:${MC_E2E_PG_PORT}/connector_test" \
             "model-connector-e2e:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" npx prisma migrate deploy
 
       - name: Verify first-dispatch PostgreSQL invariants
         run: |
           docker run --rm --network=host --entrypoint node \
-            -e DATABASE_URL=postgresql://test:test@localhost:15432/connector_test \
+            -e DATABASE_URL="postgresql://test:test@localhost:${MC_E2E_PG_PORT}/connector_test" \
             -v "$PWD/dev-tools/first-dispatch-observation-db-contract.mjs:/app/first-dispatch-observation-db-contract.mjs:ro" \
             "model-connector-e2e:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" /app/first-dispatch-observation-db-contract.mjs
 
@@ -272,9 +275,9 @@ jobs:
             -e HOME=/tmp \
             -e NODE_ENV=test \
             -e CI=1 \
-            -e DATABASE_URL=postgresql://test:test@localhost:15432/connector_test \
+            -e DATABASE_URL="postgresql://test:test@localhost:${MC_E2E_PG_PORT}/connector_test" \
             -e REDIS_HOST=127.0.0.1 \
-            -e REDIS_PORT=16379 \
+            -e REDIS_PORT="${MC_E2E_REDIS_PORT}" \
             -e REDIS_PREFIX="mc-rate-limit-ci:${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}:" \
             "model-connector-rate-limit-test:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" -ec '
               for file in .env .env.local .env.integration .env.integration.local; do
@@ -288,12 +291,18 @@ jobs:
 
       - name: Start container
         run: |
-          docker run -d --name mc-e2e --network=host \
-            -e DATABASE_URL=postgresql://test:test@localhost:15432/connector_test \
+          set -euo pipefail
+          name="mc-e2e-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          # Ephemeral host listen port: --network=host would collide on fixed 3900.
+          app_port="$(python3 -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')"
+          echo "MC_E2E_NAME=${name}" >> "$GITHUB_ENV"
+          echo "MC_E2E_APP_PORT=${app_port}" >> "$GITHUB_ENV"
+          docker run -d --name "$name" --network=host \
+            -e DATABASE_URL="postgresql://test:test@localhost:${MC_E2E_PG_PORT}/connector_test" \
             -e REDIS_HOST=localhost \
-            -e REDIS_PORT=16379 \
+            -e REDIS_PORT="${MC_E2E_REDIS_PORT}" \
             -e NODE_ENV=test \
-            -e PORT=3900 \
+            -e PORT="${app_port}" \
             -e STT_PROVIDER_GROQ_ENABLED=false \
             "model-connector-e2e:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           # STT_PROVIDER_GROQ_ENABLED defaults true (env.schema), which makes the
@@ -303,24 +312,27 @@ jobs:
 
       - name: Wait for healthy
         run: |
+          set -euo pipefail
           for i in $(seq 1 30); do
-            if curl -fsS http://localhost:3900/health > /dev/null 2>&1; then
-              echo "Health check passed on attempt $i"
+            if curl -fsS "http://localhost:${MC_E2E_APP_PORT}/health" > /dev/null 2>&1; then
+              echo "Health check passed on attempt $i (port ${MC_E2E_APP_PORT})"
               exit 0
             fi
             sleep 2
           done
           echo "Health check failed after 60s"
-          docker logs mc-e2e
+          docker logs "${MC_E2E_NAME}"
           exit 1
 
       - name: Smoke tests
         run: |
+          set -euo pipefail
+          base="http://localhost:${MC_E2E_APP_PORT}"
           echo "=== GET /health ==="
-          curl -fsS http://localhost:3900/health | jq .
+          curl -fsS "${base}/health" | jq .
 
           echo "=== GET /health/ready ==="
-          READY_HTTP=$(curl -sS -o /tmp/mc-health-ready.json -w '%{http_code}' http://localhost:3900/health/ready)
+          READY_HTTP=$(curl -sS -o /tmp/mc-health-ready.json -w '%{http_code}' "${base}/health/ready")
           jq . /tmp/mc-health-ready.json
           if [ "$READY_HTTP" = "200" ]; then
             jq -e '(.status == "ok" or .status == "degraded") and .checks.database == "ok"' /tmp/mc-health-ready.json > /dev/null
@@ -332,7 +344,7 @@ jobs:
           fi
 
           echo "=== POST /execute without auth → expect 401 ==="
-          STATUS=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3900/execute \
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' -X POST "${base}/execute" \
             -H 'Content-Type: application/json' \
             -d '{"connector":"claude-code","prompt":"test"}')
           if [ "$STATUS" != "401" ]; then
@@ -342,7 +354,7 @@ jobs:
           echo "Auth guard OK: 401"
 
           echo "=== GET /connectors → expect 401 ==="
-          STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3900/connectors)
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' "${base}/connectors")
           if [ "$STATUS" != "401" ]; then
             echo "Expected 401, got $STATUS"
             exit 1
@@ -351,7 +363,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker rm -f mc-e2e || true
+        run: docker rm -f "${MC_E2E_NAME:-mc-e2e-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}}" || true
 
       - name: Remove this run's images
         if: always()

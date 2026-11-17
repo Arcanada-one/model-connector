@@ -9,13 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **docker-e2e concurrency no longer lets a PR displace a push-to-main run.**
-  Job-level group `docker-e2e-arcana-prod` was shared by every event; GitHub
-  cancels previously pending jobs in a concurrency group when a newer job
-  joins (even with `cancel-in-progress: false`), so a PR cancelled pending
-  main docker-e2e on run 44160477798 (2026-11-17). Push-to-main now uses a
-  unique-per-run group; pull_request keeps the shared lock. Contract:
-  `dev-tools/docker-e2e-concurrency-contract.test.py`.
+- **docker-e2e is concurrency-safe on the shared Docker host.**
+  ci-general runners share one Docker daemon (Machine/Docker Name
+  `arcana-prd`). Fixed host ports (`15432`/`16379`/`3900`) and the fixed
+  container name `mc-e2e` collided when jobs overlapped; the old shared
+  concurrency group existed to serialize them, but GitHub still cancels
+  previously pending jobs in a group (incident main run 44160477798).
+  Service ports are now ephemeral (`ports: - 5432` / `- 6379`, read via
+  `job.services.*.ports`), the app listens on an ephemeral host port, the
+  e2e container name is suffixed with `run_id`/`run_attempt`, and every
+  event uses a unique-per-run concurrency group so nothing pending is
+  cancelled. Contract: `dev-tools/docker-e2e-concurrency-contract.test.py`.
 
 - **Dockerfile pins Cursor CLI with checksum and download retry.**
   Replaces `curl https://cursor.com/install | bash` (HTTP 500 failed
