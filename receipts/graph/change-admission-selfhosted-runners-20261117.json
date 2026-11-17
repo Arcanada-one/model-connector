@@ -1,0 +1,39 @@
+{
+ "captured_at_utc": "2026-11-17T08:22:29Z",
+ "change_set": {
+  "files": [],
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "events": [],
+ "graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:795ac08891a10722704981c52895e0d6490c7dee60f9090c4948230a40cb65ca",
+  "path": "/tmp/arcana-verify-jz6p78sb/verifier-out/graph-3a55c33592c8.json",
+  "source_commit": "3a55c33592c8f4fbeda07a45128507f7949d8be4"
+ },
+ "impact_set": null,
+ "refusal": {
+  "code": "STALE_GRAPH",
+  "details": {
+   "tree_dirty": true
+  },
+  "reason": "working tree is dirty in --diff mode; commit or stash before issuing a receipt"
+ },
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/home/dev/aup/claude-work/fin-selfhosted-receipts/model-connector"
+ },
+ "schema": "ImpactQuery/v1",
+ "staleness": {
+  "method": "see refusal",
+  "verdict": "stale"
+ },
+ "tool": "tools/graph/impact.py",
+ "tree": {
+  "commit": null,
+  "dirty": null
+ },
+ "version": "1.0.0"
+}
