@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-17T07:44:41Z",
+ "captured_at_utc": "2026-11-17T07:47:33Z",
  "change_set": {
   "base": "3a55c33592c8f4fbeda07a45128507f7949d8be4",
   "files": [
@@ -37,7 +37,7 @@
     "status": "A"
    }
   ],
-  "head": "35a85fdb813f66a5e613b65991387d3734fc6eca",
+  "head": "05fae54d001795dca3aacdc6ca2ece3bd88c8bfc",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -47,45 +47,45 @@
    "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
    "expires_at_utc": "2026-12-08T00:00:00Z",
    "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
-   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers. Hosted CI remains separate evidence. No shell caller behavior is claimed verified. v-workflow-config-2fe48d1021006468: workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
+   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers / tsc unavailable on author host. Hosted CI remains separate evidence. No shell caller behavior is claimed verified."
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/graph-admission-call.yml",
    "expires_at_utc": "2026-12-08T00:00:00Z",
    "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
-   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers. Hosted CI remains separate evidence. No shell caller behavior is claimed verified. v-workflow-config-60a4bd100e640545: workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
+   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers / tsc unavailable on author host. Hosted CI remains separate evidence. No shell caller behavior is claimed verified."
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/graph-admission.yml",
    "expires_at_utc": "2026-12-08T00:00:00Z",
    "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
-   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers. Hosted CI remains separate evidence. No shell caller behavior is claimed verified. v-workflow-config-dc49cc771602c92b: workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-aff"
+   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers / tsc unavailable on author host. Hosted CI remains separate evidence. No shell caller behavior is claimed verified."
   },
   {
    "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
    "entity": "deployable_unit:.",
    "expires_at_utc": "2026-12-08T00:00:00Z",
    "owner": "Arcanada (Muneral 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 author fix)",
-   "reason": "Typecheck not measured on this author host (tsc unavailable); repository CI remains separate evidence. v-type-check-tsconfig-mjs: tsc unavailable on this host"
+   "reason": "Pinned workflow YAML validates; graph verifier cannot close dynamic/opaque workflow shell callers / tsc unavailable on author host. Hosted CI remains separate evidence. No shell caller behavior is claimed verified."
   }
  ],
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:795ac08891a10722704981c52895e0d6490c7dee60f9090c4948230a40cb65ca",
-  "path": "/tmp/arcana-verify-_z8qh9xl/verifier-out/graph-3a55c33592c8.json",
+  "path": "/tmp/arcana-verify-onzqnxa6/verifier-out/graph-3a55c33592c8.json",
   "source_commit": "3a55c33592c8f4fbeda07a45128507f7949d8be4"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:35b0b3f85a78fbabe1f23e3a16a5aff17eecd05de2e3666fefc55bf71f09dfe8",
-  "path": "/tmp/arcana-verify-_z8qh9xl/verifier-out/graph-head-35a85fdb813f.json",
-  "source_commit": "35a85fdb813f66a5e613b65991387d3734fc6eca",
+  "graph_digest": "sha256:7d8445222010d5ec57cf42a5bafdcad0a10510340462a157d923ca10c68999f6",
+  "path": "/tmp/arcana-verify-onzqnxa6/verifier-out/graph-head-05fae54d0017.json",
+  "source_commit": "05fae54d001795dca3aacdc6ca2ece3bd88c8bfc",
   "staleness": {
-   "checked_at_utc": "2026-11-17T07:45:22Z",
+   "checked_at_utc": "2026-11-17T07:48:18Z",
    "checked_nodes": 1020,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -635,13 +635,13 @@
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 4 attached from /home/dev/aup/claude-work/fin-selfhosted-public/mc-exemptions.json; 1 REJECTED — receipt:receipts/graph/change-admission-selfhosted-runners-20261117.json: this receipt carries no verdict for that entity"
+  "exemptions: 4 attached from /home/dev/aup/claude-work/fin-selfhosted-public/mc-exemptions.json"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261117T074441Z-35a85fdb",
+ "receipt_id": "car-verify-20261117T074733Z-05fae54d",
  "receipt_path": "receipts/graph/change-admission-selfhosted-runners-20261117.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -714,7 +714,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-17T07:45:22Z",
+  "checked_at_utc": "2026-11-17T07:48:17Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -987,7 +987,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:e6610f652ee5a76a667db404ea1d9b930f43337ea9fc3c500fd0d4d23c452aaf"
+    "head": "sha256:f2a4e5afafbc530d2adec2fecf880218d790c8fc395adb096358e4eb0fc4bc96"
    },
    "entity": "receipt:receipts/graph/change-admission-selfhosted-runners-20261117.json",
    "node_type": "receipt",
@@ -1001,7 +1001,7 @@
   }
  ],
  "tree": {
-  "commit": "35a85fdb813f66a5e613b65991387d3734fc6eca",
+  "commit": "05fae54d001795dca3aacdc6ca2ece3bd88c8bfc",
   "dirty": false
  },
  "verdicts": [
@@ -1061,8 +1061,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-_z8qh9xl/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-17T07:45:32Z",
+   "output_ref": "/tmp/arcana-verify-onzqnxa6/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-17T07:48:28Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1077,8 +1077,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-_z8qh9xl/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-17T07:45:32Z",
+   "output_ref": "/tmp/arcana-verify-onzqnxa6/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-17T07:48:28Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1093,8 +1093,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-_z8qh9xl/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-17T07:45:32Z",
+   "output_ref": "/tmp/arcana-verify-onzqnxa6/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-17T07:48:28Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1109,8 +1109,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-_z8qh9xl/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-17T07:45:32Z",
+   "output_ref": "/tmp/arcana-verify-onzqnxa6/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-17T07:48:28Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1125,8 +1125,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-_z8qh9xl/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-17T07:45:32Z",
+   "output_ref": "/tmp/arcana-verify-onzqnxa6/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-17T07:48:28Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1141,8 +1141,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-2fe48d1021006468",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-_z8qh9xl/verifier-out/v-workflow-config-2fe48d1021006468.txt",
-   "started_at_utc": "2026-11-17T07:45:32Z",
+   "output_ref": "/tmp/arcana-verify-onzqnxa6/verifier-out/v-workflow-config-2fe48d1021006468.txt",
+   "started_at_utc": "2026-11-17T07:48:28Z",
    "summary": "workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1157,8 +1157,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-60a4bd100e640545",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-_z8qh9xl/verifier-out/v-workflow-config-60a4bd100e640545.txt",
-   "started_at_utc": "2026-11-17T07:45:32Z",
+   "output_ref": "/tmp/arcana-verify-onzqnxa6/verifier-out/v-workflow-config-60a4bd100e640545.txt",
+   "started_at_utc": "2026-11-17T07:48:28Z",
    "summary": "workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -1173,13 +1173,13 @@
    "exit_code": 1,
    "id": "v-workflow-config-dc49cc771602c92b",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-_z8qh9xl/verifier-out/v-workflow-config-dc49cc771602c92b.txt",
-   "started_at_utc": "2026-11-17T07:45:32Z",
+   "output_ref": "/tmp/arcana-verify-onzqnxa6/verifier-out/v-workflow-config-dc49cc771602c92b.txt",
+   "started_at_utc": "2026-11-17T07:48:28Z",
    "summary": "workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-affecting workflow environment unresolved; job graph-admission step 12: command/process substitution closure is unresolved; job graph-admission step 14: checkout root or source-affecting workflow environment unresolved; job graph-admission step 15: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 19: checkout root or source-affecting workflow environment unresolved; job graph-admission step 19: command/process substitution closure is unresolved; job graph-admission step 1: command/process substitution closure is unresolved; job graph-admission step 20: checkout root or source-affecting workflow environment unresolved; job graph-admission step 20: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 21: checkout root or source-affecting workflow environment unresolved; job graph-admission step 21: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 22: checkout root or source-affecting workflow environment unresolved; job graph-admission step 22: command/process substitution closure is unresolved; job graph-admission step 23: checkout root or source-affecting workflow environment unresolved; job graph-admission step 23: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 24: checkout root or source-affecting workflow environment unresolved; job graph-admission step 24: line 11: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 25: checkout root or source-affecting workflow environment unresolved; job graph-admission step 25: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 26: checkout root or source-affecting workflow environment unresolved; job graph-admission step 26: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 28: checkout root or source-affecting workflow environment unresolved; job graph-admission step 2: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 5: command/process substitution closure is unresolved; job graph-admission step 9: checkout root or source-affecting workflow environment unresolved; job graph-admission step 9: command/process substitution closure is unresolved; 33 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.25,
+   "duration_s": 0.3,
    "entities": [
     "code_unit:.github/workflows/dependabot-auto-merge.yml",
     "code_unit:.github/workflows/graph-admission-call.yml",
@@ -1195,8 +1195,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/tmp/arcana-verify-_z8qh9xl/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-17T07:45:32Z",
+   "output_ref": "/tmp/arcana-verify-onzqnxa6/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-17T07:48:28Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   }
  ],
@@ -1258,9 +1258,9 @@
    "receipt:receipts/graph/change-admission-selfhosted-runners-20261117.json": []
   },
   "seconds": {
-   "prepare": 4.49,
-   "total": 51.09,
-   "verifiers": 0.25
+   "prepare": 4.9,
+   "total": 55.31,
+   "verifiers": 0.3
   }
  },
  "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
