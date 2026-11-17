@@ -441,6 +441,27 @@ describe('OrqConnector', () => {
       expect(res.usage.inputTokens).toBe(10);
       expect(res.usage.outputTokens).toBe(4);
     });
+
+    // #105 — prod shape from issue (orq/grok-3-latest end-to-end row):
+    // inputTokens 205, outputTokens 16, reasoningOutputTokens 357.
+    it('folds additive reasoning into outputTokens (grok-3 prod shape)', async () => {
+      mockOk(
+        chatReply({
+          prompt_tokens: 205,
+          completion_tokens: 16,
+          total_tokens: 221,
+          completion_tokens_details: { reasoning_tokens: 357 },
+        }),
+      );
+
+      const res = await connector.execute({ model: 'grok-3-latest', prompt: 'x' } as never);
+
+      expect(res.usage.inputTokens).toBe(205);
+      expect(res.usage.reasoningOutputTokens).toBe(357);
+      expect(res.usage.outputTokens).toBe(16 + 357);
+      expect(res.usage.reasoningOutputTokens as number).toBeLessThanOrEqual(res.usage.outputTokens);
+      expect(res.usage.totalTokens).toBe(res.usage.inputTokens + res.usage.outputTokens);
+    });
   });
 
   // --- Pricing (CONN-0271) ---

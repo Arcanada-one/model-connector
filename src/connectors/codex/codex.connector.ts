@@ -10,6 +10,7 @@ import {
   ConnectorResponse,
 } from '../interfaces/connector.interface';
 import { normalizeSchema } from './schema-normalizer';
+import { normalizeReasoningSubset } from '../normalize-reasoning-usage';
 
 interface CodexEvent {
   type: string;
@@ -226,16 +227,25 @@ export class CodexConnector extends BaseCliConnector implements OnModuleDestroy 
     }
 
     const cachedInputTokens = usage?.cached_input_tokens ?? 0;
-    const reasoningOutputTokens = usage?.reasoning_output_tokens ?? 0;
     const inputTokens = usage?.input_tokens ?? 0;
-    const outputTokens = usage?.output_tokens ?? 0;
+    // Codex reports reasoning_output_tokens as ADDITIVE to output_tokens
+    // (total_tokens = in + out + reasoning). #105 folds that into outputTokens
+    // so the documented subset invariant holds and metering counts once.
+    const reasoningNorm = normalizeReasoningSubset({
+      outputTokens: usage?.output_tokens ?? 0,
+      reasoningOutputTokens: usage?.reasoning_output_tokens ?? 0,
+      additive: true,
+    });
+    const outputTokens = reasoningNorm.outputTokens;
+    const reasoningOutputTokens = reasoningNorm.reasoningOutputTokens ?? 0;
 
     const structured: Record<string, unknown> = {};
     if (threadId) structured.threadId = threadId;
     if (cachedInputTokens > 0) structured.cachedInputTokens = cachedInputTokens;
     if (reasoningOutputTokens > 0) {
       structured.reasoningOutputTokens = reasoningOutputTokens;
-      structured.totalTokens = inputTokens + outputTokens + reasoningOutputTokens;
+      // After the fold, outputTokens already includes reasoning — do not add again.
+      structured.totalTokens = inputTokens + outputTokens;
     }
 
     return {

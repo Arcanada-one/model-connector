@@ -131,7 +131,11 @@ export interface ConnectorResponse {
      * Output tokens spent on reasoning rather than the visible answer
      * (CONN-0272). Billed at the output rate but absent from the reply the
      * customer reads, so a request can cost many times what its visible output
-     * suggests. Included in `outputTokens`.
+     * suggests. Included in `outputTokens` (a SUBSET, never an addition).
+     * Connectors that receive an additive provider report MUST fold via
+     * `normalizeReasoningSubset` (#105) before this field is persisted, so
+     * `reasoningOutputTokens <= outputTokens` always holds and
+     * `measureCostUsd` counts those tokens exactly once.
      */
     reasoningOutputTokens?: number;
     /**

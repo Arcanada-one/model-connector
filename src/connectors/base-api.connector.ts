@@ -20,6 +20,7 @@ import { isTimeoutAbort } from '../core/utils/abort';
 import { estimateInputTokens } from '../billing/cost-estimate';
 import { CircuitOpenError } from '../core/resilience/circuit-breaker';
 import { CircuitBreakerManager } from '../core/resilience/circuit-breaker-manager';
+import { normalizeReasoningSubset } from './normalize-reasoning-usage';
 
 /**
  * A2-295 — what a caller can actually DO about an aborted attempt.
@@ -576,6 +577,11 @@ export abstract class BaseApiConnector implements IConnector {
 
       const json = await this.readResponseJson(res);
       const parsed = this.parseResponse(redactProviderSecrets(json), request);
+      // #105 — belt-and-suspenders: enforce subset even if a connector forgets.
+      const reasoningNorm = normalizeReasoningSubset({
+        outputTokens: parsed.outputTokens,
+        reasoningOutputTokens: parsed.reasoningOutputTokens,
+      });
 
       const base: ConnectorResponse = {
         id,
@@ -585,14 +591,14 @@ export abstract class BaseApiConnector implements IConnector {
         structured: parsed.structured,
         usage: {
           inputTokens: parsed.inputTokens,
-          outputTokens: parsed.outputTokens,
-          totalTokens: parsed.inputTokens + parsed.outputTokens,
+          outputTokens: reasoningNorm.outputTokens,
+          totalTokens: parsed.inputTokens + reasoningNorm.outputTokens,
           costUsd: parsed.costUsd,
           // CONN-0272 — forwarded only when the provider reported them.
           // `undefined` (provider is silent) and `0` (provider reported a miss)
           // are different facts and are kept different all the way to the row.
           cachedInputTokens: parsed.cachedInputTokens,
-          reasoningOutputTokens: parsed.reasoningOutputTokens,
+          reasoningOutputTokens: reasoningNorm.reasoningOutputTokens,
           // AUP-CACHE-003 / DEC-AUP-0028 — cache writes, TTL breakdown, the
           // verbatim provider usage and the third verdict. Spread only when
           // present so connectors that do not report them leave no key behind.

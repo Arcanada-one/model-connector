@@ -473,18 +473,35 @@ describe('CodexConnector', () => {
         '{"type":"thread.started","thread_id":"tid-1"}',
         '{"type":"turn.started"}',
         '{"type":"message.completed","message":{"id":"m","role":"assistant","content":"ok"}}',
+        // Codex reports reasoning as ADDITIVE (total_tokens = in+out+reasoning).
         '{"type":"turn.completed","usage":{"input_tokens":100,"cached_input_tokens":40,"output_tokens":20,"reasoning_output_tokens":15,"total_tokens":135}}',
       ].join('\n');
       const parsed = connector.testParseOutput(jsonl, '');
       expect(parsed.isError).toBe(false);
       expect(parsed.inputTokens).toBe(100);
-      expect(parsed.outputTokens).toBe(20);
+      // #105 — fold additive reasoning into outputTokens (subset invariant).
+      expect(parsed.outputTokens).toBe(20 + 15);
+      expect(parsed.reasoningOutputTokens).toBe(15);
+      expect(parsed.reasoningOutputTokens as number).toBeLessThanOrEqual(parsed.outputTokens);
       expect(parsed.structured).toMatchObject({
         threadId: 'tid-1',
         cachedInputTokens: 40,
         reasoningOutputTokens: 15,
+        // totalTokens must not double-count reasoning after the fold.
         totalTokens: 100 + 20 + 15,
       });
+    });
+
+    it('folds additive reasoning when reasoning exceeds visible output (#105)', () => {
+      const jsonl = [
+        '{"type":"thread.started","thread_id":"tid-r"}',
+        '{"type":"message.completed","message":{"id":"m","role":"assistant","content":"ok"}}',
+        '{"type":"turn.completed","usage":{"input_tokens":205,"output_tokens":16,"reasoning_output_tokens":357,"total_tokens":578}}',
+      ].join('\n');
+      const parsed = connector.testParseOutput(jsonl, '');
+      expect(parsed.outputTokens).toBe(16 + 357);
+      expect(parsed.reasoningOutputTokens).toBe(357);
+      expect(parsed.reasoningOutputTokens as number).toBeLessThanOrEqual(parsed.outputTokens);
     });
 
     it('should omit reasoning fields from structured when not present', () => {
