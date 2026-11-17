@@ -127,6 +127,28 @@ describe('OpenRouterConnector', () => {
       expect(res.usage.inputTokens).toBe(10);
       expect(res.usage.outputTokens).toBe(8);
     });
+
+    // #105 — prod shape: reasoning_tokens > completion_tokens (additive report).
+    // Fixture numbers from issue #105 openrouter free-tier row.
+    it('folds additive reasoning into outputTokens so the subset invariant holds', async () => {
+      mockOk({
+        ...chatResponse,
+        model: 'dots-studio/dots-3-note-preview:free',
+        usage: {
+          prompt_tokens: 100,
+          completion_tokens: 7051,
+          total_tokens: 7151,
+          completion_tokens_details: { reasoning_tokens: 7436 },
+        },
+      });
+
+      const res = await connector.execute({ prompt: 'hello' });
+
+      expect(res.usage.reasoningOutputTokens).toBe(7436);
+      expect(res.usage.outputTokens).toBe(7051 + 7436);
+      expect(res.usage.reasoningOutputTokens as number).toBeLessThanOrEqual(res.usage.outputTokens);
+      expect(res.usage.totalTokens).toBe(res.usage.inputTokens + res.usage.outputTokens);
+    });
   });
 
   // --- URL building ---

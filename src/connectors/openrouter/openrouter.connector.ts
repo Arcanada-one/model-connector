@@ -10,6 +10,7 @@ import {
   ProviderModelMeta,
 } from '../interfaces/connector.interface';
 import { normalizePerMTokPrice } from '../dto/catalog.dto';
+import { normalizeReasoningSubset } from '../normalize-reasoning-usage';
 // CONN-1665 — per-request provider-key override (set by ConnectorsService.execute).
 import { getProviderKeyOverride } from '../../policy/provider-key.context';
 
@@ -282,16 +283,22 @@ export class OpenRouterConnector extends BaseApiConnector {
       };
     }
 
+    // #105 — fold additive reasoning into outputTokens so the subset invariant
+    // holds and catalog metering bills reasoning exactly once.
+    const reasoningNorm = normalizeReasoningSubset({
+      outputTokens: json.usage?.completion_tokens ?? 0,
+      reasoningOutputTokens: json.usage?.completion_tokens_details?.reasoning_tokens ?? undefined,
+    });
     return {
       text: choice.message.content || '',
       model: json.model || request.model || DEFAULT_MODEL,
       inputTokens: json.usage?.prompt_tokens ?? 0,
-      outputTokens: json.usage?.completion_tokens ?? 0,
+      outputTokens: reasoningNorm.outputTokens,
       // CONN-0274 — `undefined` when the provider omits the block, which stays
       // distinct from a reported 0 all the way to the column. An absent block
       // therefore leaves the row exactly as it is today: this cannot regress.
       cachedInputTokens: json.usage?.prompt_tokens_details?.cached_tokens ?? undefined,
-      reasoningOutputTokens: json.usage?.completion_tokens_details?.reasoning_tokens ?? undefined,
+      reasoningOutputTokens: reasoningNorm.reasoningOutputTokens,
       costUsd: json.usage?.total_cost ?? 0,
       isError: false,
     };

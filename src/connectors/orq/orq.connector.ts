@@ -10,6 +10,7 @@ import {
   ConnectorRequest,
   ProviderModelMeta,
 } from '../interfaces/connector.interface';
+import { normalizeReasoningSubset } from '../normalize-reasoning-usage';
 
 interface OrqChatResponse {
   id: string;
@@ -147,18 +148,23 @@ export class OrqConnector extends BaseApiConnector {
       };
     }
 
+    // #105 — fold additive reasoning (seen on orq/grok-3) into outputTokens.
+    const reasoningNorm = normalizeReasoningSubset({
+      outputTokens: response.usage?.completion_tokens ?? 0,
+      reasoningOutputTokens:
+        response.usage?.completion_tokens_details?.reasoning_tokens ?? undefined,
+    });
     return {
       text: choice.message.content || '',
       model: response.model || request.model || DEFAULT_MODEL,
       inputTokens: response.usage?.prompt_tokens ?? 0,
-      outputTokens: response.usage?.completion_tokens ?? 0,
+      outputTokens: reasoningNorm.outputTokens,
       // CONN-0273 — carried so `Request.cachedInputTokens` and
       // `reasoningOutputTokens` stop being NULL on every orq row. `undefined`
       // when the provider omits the block entirely, which is a different fact
       // from a reported zero and is kept different all the way to the column.
       cachedInputTokens: response.usage?.prompt_tokens_details?.cached_tokens ?? undefined,
-      reasoningOutputTokens:
-        response.usage?.completion_tokens_details?.reasoning_tokens ?? undefined,
+      reasoningOutputTokens: reasoningNorm.reasoningOutputTokens,
       // orq is a paid gateway that does not echo per-call cost in the response.
       // Never invent a cost figure — always 0.
       costUsd: 0,
