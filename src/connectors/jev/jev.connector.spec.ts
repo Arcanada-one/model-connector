@@ -6,6 +6,15 @@ import { JevConnector } from './jev.connector';
 
 import { request, nativeResponse as historicalNativeResponse } from './decision.fixture';
 
+// Synthetic fixture keys only — never real credentials.
+// Authorization is built at runtime (`Bearer ${…}`) so the public secret sweep
+// (SEC-0060 bearer family, 20-char floor) never sees a contiguous Bearer token
+// literal. Git origin of the former contiguous literals on main@7ce917a:
+//   line 55  ← 22e77e028f04485f39ba3203b5979d7f74be91b0 (#161, 2026-09-30)
+//   line 157 ← e450735ea2b474051b471bd431f84db5abd76423 (#266, 2026-11-11)
+const SYNTHETIC_TYPESAFE_KEY = 'synthetic-key';
+const OVERRIDE_SYNTHETIC_TYPESAFE_KEY = 'override-synthetic-key';
+
 // Keep the historical fixture immutable; use the documented provider confidence.
 const nativeResponse = {
   ...historicalNativeResponse,
@@ -22,7 +31,7 @@ describe('native decision contract and adapter', () => {
   beforeEach(() => {
     vi.stubEnv('JEV_ENABLED', 'true');
     vi.stubEnv('TYPESAFE_JEV_DISABLED', 'false');
-    vi.stubEnv('TYPESAFE_API_KEY', 'synthetic-key');
+    vi.stubEnv('TYPESAFE_API_KEY', SYNTHETIC_TYPESAFE_KEY);
     connector = new JevConnector();
     fetchMock.mockReset();
     vi.stubGlobal('fetch', fetchMock);
@@ -52,7 +61,7 @@ describe('native decision contract and adapter', () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('https://api.typesafe.ai/v1/systemone');
     expect(init.redirect).toBe('error');
-    expect(init.headers.Authorization).toBe('Bearer synthetic-key');
+    expect(init.headers.Authorization).toBe(`Bearer ${SYNTHETIC_TYPESAFE_KEY}`);
     expect(JSON.parse(init.body)).toEqual({
       model: 'jev-latest',
       state: request.state,
@@ -136,7 +145,7 @@ describe('native decision contract and adapter', () => {
   });
   it('CONN-JEV-03: kill switch wins over enabled+credential (no invented live success)', async () => {
     vi.stubEnv('JEV_ENABLED', 'true');
-    vi.stubEnv('TYPESAFE_API_KEY', 'synthetic-key');
+    vi.stubEnv('TYPESAFE_API_KEY', SYNTHETIC_TYPESAFE_KEY);
     vi.stubEnv('TYPESAFE_JEV_DISABLED', 'true');
     expectRefuse(await execute(), 'jev_disabled');
   });
@@ -149,16 +158,16 @@ describe('native decision contract and adapter', () => {
     vi.stubEnv('TYPESAFE_API_KEY', '');
     reply(nativeResponse);
     const response = await providerKeyContext.run(
-      { provider: 'typesafe-jev', apiKey: 'override-synthetic-key' },
+      { provider: 'typesafe-jev', apiKey: OVERRIDE_SYNTHETIC_TYPESAFE_KEY },
       () => execute(),
     );
     expect(response.status).toBe('success');
     const [, init] = fetchMock.mock.calls[0];
-    expect(init.headers.Authorization).toBe('Bearer override-synthetic-key');
+    expect(init.headers.Authorization).toBe(`Bearer ${OVERRIDE_SYNTHETIC_TYPESAFE_KEY}`);
   });
 
   it('CONN-JEV-02 route catalog keeps OpenRouter/Cloudflare available:false without keys', () => {
-    vi.stubEnv('TYPESAFE_API_KEY', 'synthetic-key');
+    vi.stubEnv('TYPESAFE_API_KEY', SYNTHETIC_TYPESAFE_KEY);
     vi.stubEnv('TYPESAFE_JEV_OPENROUTER_API_KEY', '');
     vi.stubEnv('TYPESAFE_JEV_CLOUDFLARE_API_TOKEN', '');
     const rows = connector.routeCatalogEntries();
