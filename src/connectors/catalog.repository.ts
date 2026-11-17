@@ -122,12 +122,19 @@ export class CatalogSnapshotValidationError extends Error {
  * needs. Lets specs inject a `{ findAll: vi.fn() }` mock without depending on
  * the concrete Prisma-backed class.
  */
+/** Minimal tariff shape shared by catalogue rows and the meter. */
+export type CatalogPriceKnownInput = {
+  inputPerMTok?: number | null;
+  outputPerMTok?: number | null;
+  tier?: string | null;
+};
+
 /**
  * True when a catalogue pricing row is a known price for metering: a free-tier
  * declaration, or at least one non-negative finite per-1M tariff. Negative
  * sentinel leftovers (OpenRouter `-1` → `-1000000`) do not count.
  */
-export function catalogPricingIsKnown(row: CatalogPricingRow | null | undefined): boolean {
+export function catalogPricingIsKnown(row: CatalogPriceKnownInput | null | undefined): boolean {
   if (!row) return false;
   if (row.tier === 'free') return true;
   const input = sanitizeCatalogTariff(row.inputPerMTok);
