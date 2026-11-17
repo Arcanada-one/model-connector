@@ -1,9 +1,0 @@
-[
-  {
-    "entity": "code_unit:scripts/graph_full_suite.py",
-    "code": "CANARY_INFERRED_BOUNDARY_NOT_MEASURED",
-    "owner": "FINISH-20261117 fin-w2-mc / Model Connector owner",
-    "expires_at_utc": "2026-12-17T00:00:00Z",
-    "reason": "scripts/graph_full_suite.py is an offline root full-suite runner declaration change (FullSuiteArmEvidence + full_test_arms). It is reached through an inferred boundary hop so v-canary is mandatory, but this change does not alter a live HTTP route or deployable service boundary: no CanaryResult/v1 is owed for a scripts/ offline harness. Hosted lint-and-test and docker-e2e remain the exercised gates; follow-up can attach a canary only if a live boundary is later introduced."
-  }
-]
