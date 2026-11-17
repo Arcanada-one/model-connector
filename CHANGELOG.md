@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **docker-e2e concurrency no longer lets a PR displace a push-to-main run.**
+  Job-level group `docker-e2e-arcana-prod` was shared by every event; GitHub
+  cancels previously pending jobs in a concurrency group when a newer job
+  joins (even with `cancel-in-progress: false`), so a PR cancelled pending
+  main docker-e2e on run 44160477798 (2026-11-17). Push-to-main now uses a
+  unique-per-run group; pull_request keeps the shared lock. Contract:
+  `dev-tools/docker-e2e-concurrency-contract.test.py`.
+
+- **Dockerfile pins Cursor CLI with checksum and download retry.**
+  Replaces `curl https://cursor.com/install | bash` (HTTP 500 failed
+  publish-image run 44168125203 on 2026-11-17) with pinned
+  `2026.11.13-eacade1` linux/x64 `agent-cli-package.tar.gz`, sha256 verified
+  before extract, curl `--retry` on transient errors. Same
+  `/opt/cursor-agent` + `/usr/local/bin/cursor-agent` layout. Contract:
+  `dev-tools/dockerfile-cursor-cli-pin.test.py`.
+
 ### Added
 
 - **Typed `POST /v1/decisions` route (CONN-JEV-07).**

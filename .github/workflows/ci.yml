@@ -47,6 +47,12 @@ jobs:
       - name: Docker e2e path filter controls
         run: PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/docker-e2e-path-filter.test.py
 
+      - name: Docker e2e concurrency contract
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/docker-e2e-concurrency-contract.test.py
+
+      - name: Dockerfile Cursor CLI pin contract
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/dockerfile-cursor-cli-pin.test.py
+
       - name: Provision pinned Compose CLI in PR job temp (no daemon)
         if: github.event_name == 'pull_request'
         run: |
@@ -181,8 +187,15 @@ jobs:
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && (needs.lint-and-test.outputs.docker_e2e_required != 'false')
     runs-on: [self-hosted, Linux, ci-general]
     needs: lint-and-test
+    # History (1d9f979): repo-global lock so only one docker-e2e uses the fixed
+    # host ports / container name at a time, with cancel-in-progress: false so an
+    # in-progress job is kept. GitHub still cancels previously PENDING jobs in a
+    # group when a newer job joins; a PR joining therefore cancelled pending main
+    # run 44160477798 (2026-11-17). Push-to-main therefore uses a unique-per-run
+    # group so a PR can never cancel or displace it; pull_request runs keep the
+    # historical shared group so they still serialize against each other.
     concurrency:
-      group: docker-e2e-arcana-prod
+      group: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && format('docker-e2e-arcana-prod-main-{0}', github.run_id) || 'docker-e2e-arcana-prod' }}
       cancel-in-progress: false
     services:
       postgres:
