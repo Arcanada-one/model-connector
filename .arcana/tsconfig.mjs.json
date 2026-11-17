@@ -16,6 +16,8 @@
     "../scripts/vault-provider-keys.mjs",
     "../scripts/vault-provider-keys.spec.mjs",
     "../scripts/smoke-typesafe-jev.mjs",
-    "../scripts/smoke-typesafe-jev.spec.mjs"
+    "../scripts/smoke-typesafe-jev.spec.mjs",
+    "../provider-profiles/fi10-persona-resolve.mjs",
+    "../provider-profiles/fi10-persona-resolve.spec.mjs"
   ]
 }

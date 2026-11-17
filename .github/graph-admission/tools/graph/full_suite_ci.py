@@ -830,6 +830,18 @@ def receipt_errors(repo, head, repository, rows):
     return errors
 
 
+# Qualified action pins for the Auth compiler job (DEC-AUP-0187 follow-up). The older pins stay valid;
+# the newer ones are ADDITIONAL. Keep identical to AUTH_QUALIFIED_*_PINS in ci_gate.py (a unit test
+# asserts equality). Each entry is the full commit of the named release tag.
+AUTH_QUALIFIED_PNPM_SETUP_PINS = (
+    "pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413",  # v6.1.0
+    "pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115",  # v6.1.1
+)
+AUTH_QUALIFIED_NODE_SETUP_PINS = (
+    "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",  # v7.0.0
+    "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",  # v7.1.0
+)
+
 # A distinct typed input. It never uses the full-suite scope, profile declaration or consumer.
 ROOT_TYPECHECK_SCHEMA = "GitHubTypecheckEvidence/v1"
 ROOT_TYPECHECK_REPO = "Arcanada-one/auth-arcana"
@@ -868,8 +880,15 @@ ROOT_TYPECHECK_RECORD_KEYS = ROOT_TYPECHECK_BASE_KEYS | {
 }
 
 
+# Cached per process: None until probed, then True/False. Older gh (e.g. 2.62.0) lacks
+# --allow-escape-sequences; job logs with ANSI then need the flag on newer gh, but the
+# unknown-flag path must keep today's argv so collectors do not regress on old runners.
+_GH_API_ALLOW_ESCAPE_SEQUENCES = None
+
+
 def _github_with_token(endpoint, token):
     """Read one GitHub endpoint with only the explicitly supplied ephemeral token."""
+    global _GH_API_ALLOW_ESCAPE_SEQUENCES
     if not isinstance(token, str) or not token:
         raise ValueError("explicit Auth GITHUB_TOKEN is absent; ambient credentials are not a fallback")
     cli = shutil.which("gh")
@@ -878,8 +897,19 @@ def _github_with_token(endpoint, token):
     env = {key: value for key, value in os.environ.items()
            if key not in {"GH_TOKEN", "GITHUB_TOKEN", "GH_ENTERPRISE_TOKEN"}}
     env["GH_TOKEN"] = token
-    proc = subprocess.run([cli, "api", "--hostname", "github.com", endpoint], capture_output=True,
-                          timeout=60, env=env)
+    argv = [cli, "api", "--hostname", "github.com"]
+    if _GH_API_ALLOW_ESCAPE_SEQUENCES is False:
+        proc = subprocess.run(argv + [endpoint], capture_output=True, timeout=60, env=env)
+    else:
+        # Prefer the flag so ANSI-bearing job logs are printable; fall back only when gh
+        # itself rejects the flag (unknown), never on ordinary API/auth failures.
+        proc = subprocess.run(argv + ["--allow-escape-sequences", endpoint],
+                              capture_output=True, timeout=60, env=env)
+        if proc.returncode and b"unknown flag: --allow-escape-sequences" in (proc.stderr or b""):
+            _GH_API_ALLOW_ESCAPE_SEQUENCES = False
+            proc = subprocess.run(argv + [endpoint], capture_output=True, timeout=60, env=env)
+        elif proc.returncode == 0:
+            _GH_API_ALLOW_ESCAPE_SEQUENCES = True
     if proc.returncode:
         raise ValueError("explicit-token GitHub read refused or unavailable")
     if len(proc.stdout) > MAX_BYTES:
@@ -962,11 +992,9 @@ def root_typecheck_source_binding(repo, source):
                   and isinstance(s.get("uses"), str) and s["uses"].startswith("pnpm/action-setup@")]
     node_setup = [s for s in steps if isinstance(s, dict)
                   and isinstance(s.get("uses"), str) and s["uses"].startswith("actions/setup-node@")]
-    if (len(pnpm_setup) != 1 or pnpm_setup[0]["uses"] !=
-            "pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413"
+    if (len(pnpm_setup) != 1 or pnpm_setup[0]["uses"] not in AUTH_QUALIFIED_PNPM_SETUP_PINS
             or pnpm_setup[0].get("with") != {"dest": "${{ runner.temp }}/setup-pnpm"}
-            or len(node_setup) != 1 or node_setup[0]["uses"] !=
-            "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020"
+            or len(node_setup) != 1 or node_setup[0]["uses"] not in AUTH_QUALIFIED_NODE_SETUP_PINS
             or node_setup[0].get("with") != {"node-version-file": ".nvmrc", "cache": "pnpm"}):
         raise ValueError("Auth compiler toolchain setup differs from the exact qualified pinned actions")
     by_command = {}
@@ -1110,6 +1138,8 @@ def collect_root_typecheck(repo, repository, source, base, event_file, evidence_
     root = _typecheck_record(repo, evidence_root)
     record = {"schema": ROOT_TYPECHECK_SCHEMA, "scope": "root_tsconfig_typecheck",
               "repository": repository, "source_commit": source, "base": base, "head": source,
+              "entity": "deployable_unit:.", "workflow": ROOT_TYPECHECK_WORKFLOW,
+              "job_key": ROOT_TYPECHECK_JOB, "command": ROOT_TYPECHECK_COMMAND, "cwd": ".",
               "verdict": "not_measured", "errors": []}
     log_raw = None
     try:

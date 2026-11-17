@@ -1,0 +1,33 @@
+{
+  "policyVersion": 2,
+  "profile": {
+    "id": "fi10-legal-external-bodies",
+    "revision": "1",
+    "accountingBucket": "fi10-legal-external-bodies"
+  },
+  "providers": [
+    "deepseek",
+    "typesafe-jev"
+  ],
+  "models": {
+    "mode": "list",
+    "list": [
+      "deepseek-v4-flash",
+      "jev-latest"
+    ]
+  },
+  "providerKeys": {
+    "deepseek": [
+      {
+        "credentialRef": "fi10le-deepseek",
+        "version": "1"
+      }
+    ],
+    "typesafe-jev": [
+      {
+        "credentialRef": "fi10le-jev",
+        "version": "1"
+      }
+    ]
+  }
+}

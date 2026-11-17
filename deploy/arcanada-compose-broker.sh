@@ -153,6 +153,8 @@ declare -rA REPOS=(
   # /srv/agent-mailbox). Broker checkout is the standard STATE_ROOT path; PROJECT
   # pin adopts the running stack and its named volume. Private repo → AUTH row.
   [agent-mailbox]='https://github.com/Arcanada-one/agent-mailbox.git'
+  # Private repository (AUTH row). Pre-built private GHCR image, like verdicus.
+  [talomnia-backend]='https://github.com/Arcanada-one/talomnia-backend.git'
 )
 declare -rA COMPOSE=(
   # INFRA-0417: model-connector's OWN stack, not the whisper side-stack. The
@@ -176,6 +178,7 @@ declare -rA COMPOSE=(
   [kc-corpus-scrutator]='instances/kc-corpus/docker-compose.yml'
   [observability-stack]='docker-compose.yml'
   [agent-mailbox]='docker-compose.yml'
+  [talomnia-backend]='docker-compose.prod.yml'
 )
 # Private repositories whose fetch needs a credential on stdin.
 declare -rA AUTH=(
@@ -197,6 +200,7 @@ declare -rA AUTH=(
   [knowledge-contract-scrutator]='github-token'
   [observability-stack]='github-token'
   [agent-mailbox]='github-token'
+  [talomnia-backend]='github-token'
 )
 # Pin the compose project name. Unset means Compose derives it from the
 # checkout directory, which is what the whisper stack has always done —
@@ -252,6 +256,7 @@ declare -rA PROJECT=(
   [observability-stack]='observability-stack'
   # Live container labels: com.docker.compose.project=agent-mailbox (measured).
   [agent-mailbox]='agent-mailbox'
+  [talomnia-backend]='talomnia-backend'
 )
 # Root-owned environment file. A bare name resolves under ENV_ROOT; an absolute
 # path is used as given, so a service whose env is already root-owned somewhere
@@ -294,6 +299,8 @@ declare -rA ENVFILE=(
   # Operator-maintained root env already on host (also mirrored historically at
   # /srv/agent-mailbox/.env). Absolute path — do not duplicate secrets.
   [agent-mailbox]='/etc/arcanada/deploy-env/agent-mailbox.env'
+  # Root-owned, installed by the operator; the host port is chosen at installation.
+  [talomnia-backend]='talomnia-backend.env'
 )
 # A release script inside the checkout that already encapsulates the whole
 # deploy. Running it as root is the same trust boundary the broker already
@@ -343,11 +350,15 @@ declare -rA BUILDSHA=(
 # than to a floating `latest`.
 declare -rA IMAGETAG=(
   [verdicus]='yes'
+  [talomnia-backend]='yes'
 )
 # Locally built image name for tag rotation and digest resolution.
 declare -rA IMAGE=(
   [muneral]='muneral-api'
   [transcribator-api]='transcribator-api'
+  # Registry image name; the tag is the checkout HEAD sha (IMAGE_TAG). `verify`
+  # resolves its expected image id through this row.
+  [talomnia-backend]='ghcr.io/arcanada-one/talomnia-backend'
 )
 # Services to force-recreate on rollback.
 declare -rA ROLLBACK_SERVICES=(
@@ -358,6 +369,7 @@ declare -rA ROLLBACK_SERVICES=(
 declare -rA VERIFY=(
   [muneral]='@broker:muneral'
   [transcribator-api]='scripts/post-deploy-verify.sh'
+  [talomnia-backend]='scripts/broker-verify.sh'
 )
 # Single container to inspect for freshness / smoke checks.
 declare -rA CONTAINER=(
@@ -371,6 +383,8 @@ declare -rA CONTAINER=(
   # Conversion Arcana: container_name is pinned in docker-compose.arcanada.yml.
   [doc-md-html]='doc-md-html-api'
   [kc-corpus-scrutator]='kc-corpus-scrutator-scrutator-1'
+  # <project>-<service>-1
+  [talomnia-backend]='talomnia-backend-talomnia-backend-1'
 )
 declare -rA MAXAGE=(
   [opsbot]='300'
@@ -385,6 +399,7 @@ declare -rA MAXAGE=(
   # `up` follows `build` in the same deploy; 600s still fails a deploy that recreated nothing.
   [doc-md-html]='600'
   [kc-corpus-scrutator]='600'
+  [talomnia-backend]='600'
 )
 # Fixed argv for the module-load smoke check. Compiled in, so the word
 # splitting below is on a constant, not on caller input.
@@ -883,6 +898,7 @@ cmd_prune() { "$DOCKER" image prune --filter 'until=336h' -f; }
 readonly REGISTRY='ghcr.io'
 declare -rA REGISTRY_AUTH=(
   [verdicus]='yes'
+  [talomnia-backend]='yes'
 )
 
 cmd_registry_login() {
