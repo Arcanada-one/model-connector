@@ -5,7 +5,35 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-17T21:12:48Z",
+ "caller_graph_compatibility": {
+  "base": "9ae35ee0582eb3cffb09f17efdf8de4576a39e69",
+  "bundle_digest": "sha256:aeb5c081c930f25f05efb1a1109dce22e3342abaa1d75847e1fd95a1cd6470f7",
+  "bundle_path": ".github/graph-admission",
+  "current_producer_files_sha256": "sha256:89398f4485e9072a62c96cfc7363ee42b8ad5676262e479c74231c41d566b514",
+  "graphs": {
+   "base": {
+    "body_sha256": "sha256:146b7aa7e15f0a8ca61b5559632ce8a9754ca3ae1f9663017a7830ec4cd3881f",
+    "current_builder_version": "1.0.6",
+    "current_graph_digest": "sha256:14bf9f831dded4d6354da8df880da62e3a96d58a35ec3e4f351a5efaf01f3e05",
+    "installed_builder_version": "1.0.6",
+    "installed_graph_digest": "sha256:14bf9f831dded4d6354da8df880da62e3a96d58a35ec3e4f351a5efaf01f3e05",
+    "source_commit": "9ae35ee0582eb3cffb09f17efdf8de4576a39e69"
+   },
+   "head": {
+    "body_sha256": "sha256:a7463338a03b6bc5472f173625fcb464cbc5eb0f5b8314b2db3772683f843836",
+    "current_builder_version": "1.0.6",
+    "current_graph_digest": "sha256:a78dce54671278d41ba73a96e0451ee710330ff12676b0e302bdb0ef49be8703",
+    "installed_builder_version": "1.0.6",
+    "installed_graph_digest": "sha256:a78dce54671278d41ba73a96e0451ee710330ff12676b0e302bdb0ef49be8703",
+    "source_commit": "d4f9dedb5ac74647649f67d7087e3f70bc7c33f2"
+   }
+  },
+  "head": "d4f9dedb5ac74647649f67d7087e3f70bc7c33f2",
+  "program_ref": "cdbf3b4e4920a68f08136dca510a0b0c8d2dbec5",
+  "schema": "CallerGraphCompatibility/v1",
+  "trusted_key_fingerprint": "SHA256:9QFqysn44UjA8rXyfHjItP3b2Oadhnbf1bDNqXrsCig"
+ },
+ "captured_at_utc": "2026-11-17T21:41:12Z",
  "change_set": {
   "base": "9ae35ee0582eb3cffb09f17efdf8de4576a39e69",
   "files": [
@@ -69,17 +97,17 @@
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:14bf9f831dded4d6354da8df880da62e3a96d58a35ec3e4f351a5efaf01f3e05",
-  "path": "/tmp/arcana-verify-3n2a30ne/verifier-out/graph-9ae35ee0582e.json",
+  "path": "/tmp/arcana-verify-o0t32lw8/verifier-out/graph-9ae35ee0582e.json",
   "source_commit": "9ae35ee0582eb3cffb09f17efdf8de4576a39e69"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:a78dce54671278d41ba73a96e0451ee710330ff12676b0e302bdb0ef49be8703",
-  "path": "/tmp/arcana-verify-3n2a30ne/verifier-out/graph-head-d4f9dedb5ac7.json",
+  "path": "/tmp/arcana-verify-o0t32lw8/verifier-out/graph-head-d4f9dedb5ac7.json",
   "source_commit": "d4f9dedb5ac74647649f67d7087e3f70bc7c33f2",
   "staleness": {
-   "checked_at_utc": "2026-11-17T21:14:14Z",
+   "checked_at_utc": "2026-11-17T21:43:45Z",
    "checked_nodes": 1028,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
@@ -743,13 +771,14 @@
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
   "exemptions: 1 attached from /home/dev/aup/claude-work/dev-mc-ci/receipts-work/exemptions-dev-mc-ci.json",
-  "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-fork-deny-20261117.json: it declares this run's work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0, but the receipt is being written to /home/dev/aup/claude-work/dev-mc-ci/receipts-work/car-final-dev-mc-ci.json, which is outside this repository, so no path in the tree is the one this run supersedes."
+  "head tree d4f9dedb5ac7 exported with git archive into /tmp/arcana-verify-o0t32lw8/export-d4f9dedb5ac7 (node_modules linked from the repository for ['.', 'packages/sdk-ts', 'watcher']; workspace packages built: ['packages/sdk-ts (tsc exit 0, 1.14s)']); the repository was not written",
+  "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-fork-deny-20261117.json: it declares this run's work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0, but the receipt is being written to /home/dev/aup/claude-work/dev-mc-ci/receipts-work/car-compat-dev-mc-ci.json, which is outside this repository, so no path in the tree is the one this run supersedes."
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261117T211248Z-d4f9dedb",
+ "receipt_id": "car-verify-20261117T214112Z-d4f9dedb",
  "repo": {
   "name": "Arcanada-one/model-connector",
   "path": "/home/dev/aup/claude-work/dev-mc-ci/model-connector"
@@ -834,7 +863,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-17T21:14:14Z",
+  "checked_at_utc": "2026-11-17T21:43:45Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -1161,7 +1190,7 @@
   }
  ],
  "tree": {
-  "commit": "d4f9dedb5ac74647649f67d7087e3f70bc7c33f2",
+  "commit": "a444732884abfdcee67810b85fe5bd51f6af2ae4",
   "dirty": false
  },
  "verdicts": [
@@ -1232,8 +1261,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/dev-mc-ci/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-ci/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-3n2a30ne/verifier-out/type-check-qvmwd0dt/check.tsbuildinfo --listFiles",
-   "duration_s": 24.06,
+   "command": "/tmp/arcana-verify-o0t32lw8/export-d4f9dedb5ac7/node_modules/.bin/tsc -p /tmp/arcana-verify-o0t32lw8/export-d4f9dedb5ac7/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-o0t32lw8/verifier-out/type-check-97iyhb5d/check.tsbuildinfo --listFiles",
+   "duration_s": 26.68,
    "entities": [
     "deployable_unit:."
    ],
@@ -1243,13 +1272,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-3n2a30ne/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-17T21:14:33Z",
-   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2891 files listed"
+   "output_ref": "/tmp/arcana-verify-o0t32lw8/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-17T21:44:47Z",
+   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2892 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/dev-mc-ci/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-ci/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-3n2a30ne/verifier-out/type-check-0wrrfqkb/check.tsbuildinfo --listFiles",
-   "duration_s": 35.3,
+   "command": "/tmp/arcana-verify-o0t32lw8/export-d4f9dedb5ac7/node_modules/.bin/tsc -p /tmp/arcana-verify-o0t32lw8/export-d4f9dedb5ac7/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-o0t32lw8/verifier-out/type-check-0vk_a972/check.tsbuildinfo --listFiles",
+   "duration_s": 13.14,
    "entities": [
     "deployable_unit:."
    ],
@@ -1259,13 +1288,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-3n2a30ne/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-17T21:14:58Z",
-   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2147 files listed"
+   "output_ref": "/tmp/arcana-verify-o0t32lw8/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-17T21:45:15Z",
+   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2148 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/dev-mc-ci/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-ci/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-3n2a30ne/verifier-out/type-check-3z9grgg5/check.tsbuildinfo --listFiles",
-   "duration_s": 6.48,
+   "command": "/tmp/arcana-verify-o0t32lw8/export-d4f9dedb5ac7/node_modules/.bin/tsc -p /tmp/arcana-verify-o0t32lw8/export-d4f9dedb5ac7/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-o0t32lw8/verifier-out/type-check-u3pk2ndd/check.tsbuildinfo --listFiles",
+   "duration_s": 1.52,
    "entities": [
     "deployable_unit:."
    ],
@@ -1275,13 +1304,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-3n2a30ne/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-17T21:15:35Z",
+   "output_ref": "/tmp/arcana-verify-o0t32lw8/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-17T21:45:28Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/dev-mc-ci/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-ci/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-3n2a30ne/verifier-out/type-check-lb1e05e3/check.tsbuildinfo --listFiles",
-   "duration_s": 56.88,
+   "command": "/tmp/arcana-verify-o0t32lw8/export-d4f9dedb5ac7/node_modules/.bin/tsc -p /tmp/arcana-verify-o0t32lw8/export-d4f9dedb5ac7/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-o0t32lw8/verifier-out/type-check-dh5ep258/check.tsbuildinfo --listFiles",
+   "duration_s": 22.47,
    "entities": [
     "deployable_unit:."
    ],
@@ -1291,13 +1320,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-3n2a30ne/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-17T21:15:41Z",
-   "summary": "tsconfig.json: exit 0, 0 error(s), 2778 files listed"
+   "output_ref": "/tmp/arcana-verify-o0t32lw8/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-17T21:45:30Z",
+   "summary": "tsconfig.json: exit 0, 0 error(s), 2779 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/dev-mc-ci/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-ci/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-3n2a30ne/verifier-out/type-check-jr77m2k2/check.tsbuildinfo --listFiles",
-   "duration_s": 20.08,
+   "command": "/tmp/arcana-verify-o0t32lw8/export-d4f9dedb5ac7/node_modules/.bin/tsc -p /tmp/arcana-verify-o0t32lw8/export-d4f9dedb5ac7/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-o0t32lw8/verifier-out/type-check-0zk72txu/check.tsbuildinfo --listFiles",
+   "duration_s": 62.0,
    "entities": [
     "deployable_unit:."
    ],
@@ -1307,9 +1336,9 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-3n2a30ne/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-17T21:16:39Z",
-   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2884 files listed"
+   "output_ref": "/tmp/arcana-verify-o0t32lw8/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-17T21:45:53Z",
+   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2885 files listed"
   },
   {
    "command": "workflow_config.validate exact head bytes",
@@ -1323,13 +1352,13 @@
    "exit_code": 1,
    "id": "v-workflow-config-b803fcb7f17ed923",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-3n2a30ne/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
-   "started_at_utc": "2026-11-17T21:17:00Z",
+   "output_ref": "/tmp/arcana-verify-o0t32lw8/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-11-17T21:46:57Z",
    "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 2: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 7: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 10: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 13: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 14: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 15: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 16: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 17: unsupported loader/interpreter options; job lint-and-test step 10: line 18: relative execution cwd is not declared; job lint-and-test step 10: line 19: unsupported loader/interpreter options; job lint-and-test step 10: line 1: unsupported loader/interpreter options; job lint-and-test step 10: line 20: relative execution cwd is not declared; job lint-and-test step 10: line 21: unsupported loader/interpreter options; job lint-and-test step 10: line 22: relative execution cwd is not declared; job lint-and-test step 10: line 2: unsupported loader/interpreter options; job lint-and-test step 10: line 3: unsupported loader/interpreter options; job lint-and-test step 10: line 4: unsupported loader/interpreter options; job lint-and-test step 10: line 5: relative execution cwd is not declared; job lint-and-test step 10: line 6: relative execution cwd is not declared; job lint-and-test step 10: line 7: relative execution cwd is not declared; job lint-and-test step 10: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: heredoc/group/function/brace expansion closure is unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 15: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 17: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 18: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 18: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 18: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 1: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 3: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: command/process substitution closure is unresolved; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 9: unsupported loader/interpreter options; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: line 1: relative execution cwd is not declared; job lint-and-test step 8: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 8: line 1: unsupported loader/interpreter options; job lint-and-test step 8: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 9: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 9: line 1: unsupported loader/interpreter options; job lint-and-test step 9: line 2: relative execution cwd is not declared; job publish-image step 4: heredoc/group/function/brace expansion closure is unresolved; job verify-published-image step 1: heredoc/group/function/brace expansion closure is unresolved; 56 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.54,
+   "duration_s": 1.13,
    "entities": [
     "code_unit:.github/workflows/ci.yml",
     "code_unit:dev-tools/docker-e2e-concurrency-contract.test.py",
@@ -1345,8 +1374,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/tmp/arcana-verify-3n2a30ne/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-17T21:17:00Z",
+   "output_ref": "/tmp/arcana-verify-o0t32lw8/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-17T21:46:57Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -1365,8 +1394,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/tmp/arcana-verify-3n2a30ne/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-17T21:17:01Z",
+   "output_ref": "/tmp/arcana-verify-o0t32lw8/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-17T21:46:58Z",
    "summary": "3 document(s), 0 failed"
   }
  ],
@@ -1375,7 +1404,7 @@
    {
     "code": "SUPERSEDED_SELF_NOT_APPLICABLE",
     "rule": "DEC-AUP-0035",
-    "text": "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-fork-deny-20261117.json: it declares this run's work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0, but the receipt is being written to /home/dev/aup/claude-work/dev-mc-ci/receipts-work/car-final-dev-mc-ci.json, which is outside this repository, so no path in the tree is the one this run supersedes."
+    "text": "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-fork-deny-20261117.json: it declares this run's work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0, but the receipt is being written to /home/dev/aup/claude-work/dev-mc-ci/receipts-work/car-compat-dev-mc-ci.json, which is outside this repository, so no path in the tree is the one this run supersedes."
    },
    {
     "code": "STRUCTURAL_EXCLUSION",
@@ -1438,9 +1467,9 @@
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
   },
   "seconds": {
-   "prepare": 8.68,
-   "total": 252.55,
-   "verifiers": 143.35
+   "prepare": 51.8,
+   "total": 346.39,
+   "verifiers": 126.95
   }
  },
  "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0",
