@@ -19,6 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the serving connector has none, so failover onto an uncatalogued connector no
   longer silently settles `costSource: 'unpriced'` for a model that is priced
   elsewhere. Still `unpriced` when no connector catalogues the model.
+- **`reasoningOutputTokens` subset invariant (#105).** Providers that report
+  reasoning as additive (`reasoning > completion_tokens` — measured on orq/grok-3
+  and several OpenRouter free models) no longer leave those tokens unbilled.
+  `normalizeReasoningSubset` folds additive reasoning into `outputTokens` in
+  openrouter, orq and codex (plus base-api/base-cli safety net) so
+  `reasoningOutputTokens <= outputTokens` always holds and catalog metering via
+  `measureCostUsd` charges reasoning exactly once at the output rate. Already-
+  subset reports are unchanged. OpenRouter rows with a provider `total_cost`
+  still bill from the provider invoice (unchanged).
 
 ### Added
 
