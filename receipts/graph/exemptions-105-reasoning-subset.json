@@ -1,0 +1,406 @@
+{
+  "schema": "AdmissionExemptions/v1",
+  "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0",
+  "exemptions": [
+    {
+      "entity": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/admin/circuit-breaker.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:src/admin/watcher-repair.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/auth/rate-limit.integration.spec.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/connectors/codex/codex.connector.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:src/connectors/failover/failover.chain.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/connectors/interfaces/connector.interface.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/jev.catalog-pricing.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/jev.connector.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/connectors/openai/openai.connector.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/connectors/openrouter/openrouter.connector.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:src/connectors/orq/orq.connector.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:src/health/health.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-compat.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:test/provider-profiles/boundary-http.spec.ts",
+      "code": "TEST_SOURCE",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "test-only harness/source outside production AppModule contour for this change; NOT_MEASURED preserved honestly. Underlying verifier note: v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json does not include test/provider-profiles/boundary-http.spec.ts"
+    },
+    {
+      "entity": "contract:src/connectors/failover/failover.chain.ts#FailoverOutcome",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/interfaces/connector.interface.ts#ErrorAction",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/jev/jev.catalog-pricing.ts#JevPriceProvenance",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/jev/jev.catalog-pricing.ts#JevPriceRouteId",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/jev/jev.connector.ts#JevRefuseCode",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationErrorType",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationInputType",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "v-contract-diff refused PYDANTIC_NOT_MEASURED on author host. No contract schema files were edited in this change set; fan-out only. Hosted graph-admission remains separate evidence. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "route:GET /connectors",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:GET /connectors/:name/status",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:GET /connectors/catalog",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:GET /connectors/image/capabilities",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:GET /connectors/intents/:intentId",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:GET /health",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:GET /health/connectors",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:GET /health/metrics",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:GET /health/ready",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:GET /v1/models",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:POST /admin/circuit-breaker/reset",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:POST /connectors/:name/chat/completions",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:POST /connectors/:name/execute",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:POST /execute",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:POST /images/generate",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:POST /internal/watcher/circuit-breaker/reset",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:POST /v1/chat/completions",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:POST /v1/prompt-cache/prewarm",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:sample:KeyedRouteController:src%2Fadmin%2Fadmin-rate-limit.app.spec.ts:head:route%3AGET%20%2Fkeyed",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:sample:LiveProbeController:src%2Fauth%2Frate-limit.integration.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fabort",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fexecute",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fhealth",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "route:sample:ProbeController:src%2Fauth%2Frate-limit.app.spec.ts:head:route%3AGET%20%2Fprobe%2Fmetrics",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest: normalize-reasoning-usage + openrouter/orq/codex connector specs; full pnpm test 3883 passed; tsc/lint clean",
+      "reason": "Impact fan-out from #105 reasoning-subset normalisation. No committed CanaryResult lists this entity in this admission run. Focused connector/unit tests measured the change; live-contour canary NOT_MEASURED. Underlying verifier note: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    }
+  ]
+}
