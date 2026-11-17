@@ -14,6 +14,36 @@
         "bash",
         "scripts/graph-full-suite-isolated.sh",
         "."
+      ],
+      "full_test_arms": [
+        {
+          "name": "vitest-default",
+          "requires": "stub_ok"
+        },
+        {
+          "name": "integration-offline-contracts",
+          "requires": "stub_ok"
+        },
+        {
+          "name": "authored-template",
+          "requires": "stub_ok"
+        },
+        {
+          "name": "regression",
+          "requires": "stub_ok"
+        },
+        {
+          "name": "integration-disposable-store",
+          "requires": "real_disposable"
+        },
+        {
+          "name": "integration-external-provider",
+          "requires": "real_external"
+        },
+        {
+          "name": "app-e2e",
+          "requires": "real_disposable"
+        }
       ]
     },
     "packages/sdk-python": {

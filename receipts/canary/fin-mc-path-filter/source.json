@@ -1,0 +1,9 @@
+{
+  "schema": "MeasuredGitSource/v1",
+  "commit": "fd66d73755140c50a1f5eb6592f6536fbdd72924",
+  "tree": "89faaf5c46e96e90a868524595635a54bb8c58a3",
+  "dirty": false,
+  "producer": "git rev-parse on the isolated Arcana DEVS clone of Arcanada-one/model-connector (branch finish/20261115-prs)",
+  "captured_at_utc": "2026-11-15T12:54:44Z",
+  "repository_path": "/home/dev/aup/claude-work/fin-mc-canary/repo"
+}

@@ -512,6 +512,77 @@ def run_root_suites(root, suites, scratch, executor=execute):
     return results
 
 
+# KCP-0027 arm evidence (FullSuiteArmEvidence/v1). The arm set and each slot are declared in
+# .arcana/verify.json deployables["."].full_test_arms; the gate recomputes the verdict from the BASE
+# definition, so nothing here is a verdict. Only arms that actually executed carry counts. Held arms
+# (real disposable stores, real providers, the unconditional AppE2E skip) are listed in `not_run`
+# and keep the whole root suite not_measured. No environment flag changes that disposition.
+ARMS_SCHEMA = 'FullSuiteArmEvidence/v1'
+ARM_DEFINITION_PATH = '.arcana/verify.json'
+HELD_STORE_PREFIXES = ('src/auth/', 'src/bench-reservation/', 'src/billing/')
+HELD_PROVIDER_PREFIXES = ('src/connectors/image-generation/',)
+ARM_OF_SUITE = {'maintained-vitest': 'vitest-default',
+                'maintained-authored-template': 'authored-template',
+                'maintained-regression': 'regression'}
+
+
+def classify_held(member):
+    if member.endswith('.e2e-spec.ts'):
+        return 'app-e2e'
+    if member.startswith(HELD_STORE_PREFIXES):
+        return 'integration-disposable-store'
+    if member.startswith(HELD_PROVIDER_PREFIXES):
+        return 'integration-external-provider'
+    raise Refusal('unclassified held member: new held members must be assigned to an arm')
+
+
+def sum_counts(rows):
+    total = {'passed': 0, 'failed': 0, 'skipped': 0}
+    for row in rows:
+        counts = row.get('counts')
+        if counts is None:
+            # Exit-status shell validator: its exit 0 is its whole result contract (one check).
+            if row.get('verdict') != 'verified':
+                return None
+            counts = {'passed': 1, 'failed': 0, 'skipped': 0}
+        for key in total:
+            total[key] += counts[key]
+    return {'total': sum(total.values()), **total}
+
+
+def build_arms(root, results, head):
+    raw = subprocess.run(['git', '-C', str(root), 'show', 'HEAD:' + ARM_DEFINITION_PATH],
+                         capture_output=True, check=True).stdout
+    arms, ran, not_run = [], set(), set()
+    for row in results:
+        name = row['suite']
+        executions = row.get('executions', [])
+        if name == 'maintained-app-e2e':
+            not_run.add('app-e2e')
+            continue
+        if name == 'maintained-integration':
+            arm_name = 'integration-offline-contracts'
+        else:
+            arm_name = ARM_OF_SUITE[name]
+        held = row.get('held_members', [])
+        if name == 'maintained-integration':
+            not_run.update(classify_held(m) for m in held)
+        counts = None
+        if executions and all(e.get('verdict') in ('verified', 'failed') for e in executions):
+            counts = sum_counts(executions)
+        if name == 'maintained-regression' and held:
+            counts = None  # an unexecuted regression suffix keeps the arm unmeasured
+        if counts is None:
+            not_run.add(arm_name)
+            continue
+        arms.append({'name': arm_name, 'backend': 'stub', 'counts': counts, 'head': head,
+                     'verdict': 'failed' if counts['failed'] else 'passed'})
+        ran.add(arm_name)
+    return {'schema': ARMS_SCHEMA, 'head': head,
+            'definition': {'path': ARM_DEFINITION_PATH, 'sha256': hashlib.sha256(raw).hexdigest()},
+            'arms': arms, 'not_run': sorted(not_run - ran)}
+
+
 def execution_code(results):
     executions = [r for row in results for r in row.get('executions', [row])]
     return (1 if any(r['verdict'] == 'failed' for r in results) else
@@ -554,6 +625,11 @@ def main():
         code = 1
     else:
         code = execution_code(document['results'])
+        if unit == '.':
+            try:
+                document['arms'] = build_arms(ROOT, document['results'], head)
+            except (Refusal, OSError, subprocess.CalledProcessError) as error:
+                document['arms_refused'] = str(error)[:200]
     document['exit_code'] = code
     target = scratch / 'execution.json'
     with target.open('x') as stream:
