@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-17T20:59:51Z",
+ "captured_at_utc": "2026-11-17T21:04:17Z",
  "change_set": {
   "base": "7bee8d2697103e30a1271b1769b170615c9c7a28",
   "files": [
@@ -17,6 +17,21 @@
     ],
     "path": "CHANGELOG.md",
     "status": "M"
+   },
+   {
+    "kind": "receipt",
+    "node_id": "receipt:receipts/graph/change-admission-105-reasoning-subset.json",
+    "node_ids": [
+     "receipt:receipts/graph/change-admission-105-reasoning-subset.json"
+    ],
+    "path": "receipts/graph/change-admission-105-reasoning-subset.json",
+    "status": "A"
+   },
+   {
+    "kind": "receipt",
+    "new": true,
+    "path": "receipts/graph/exemptions-105-reasoning-subset.json",
+    "status": "A"
    },
    {
     "kind": "code",
@@ -119,7 +134,7 @@
     "status": "M"
    }
   ],
-  "head": "e8eea6bb68c87fcde5767b47786af89bbae19a8e",
+  "head": "1a5cfeccd1445c2c1720b1ae077db6465b029b20",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -529,18 +544,18 @@
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:275b0d92ffdf2b9b00265d4bfcd4521f243ec6aa9e05900bb56e8d252893fe1b",
-  "path": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/graph-7bee8d269710.json",
+  "path": "/tmp/arcana-verify-jvu4etv7/verifier-out/graph-7bee8d269710.json",
   "source_commit": "7bee8d2697103e30a1271b1769b170615c9c7a28"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:4602de4a36237dee40579d54dcdaf5c13a3c4d171de2eb4ccd157bb121df7fe7",
-  "path": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/graph-head-e8eea6bb68c8.json",
-  "source_commit": "e8eea6bb68c87fcde5767b47786af89bbae19a8e",
+  "graph_digest": "sha256:0172e05153e497e7d9e7d4c1940f1e726e5b1113ec320aa881aae4958cc6da2c",
+  "path": "/tmp/arcana-verify-jvu4etv7/verifier-out/graph-head-1a5cfeccd144.json",
+  "source_commit": "1a5cfeccd1445c2c1720b1ae077db6465b029b20",
   "staleness": {
-   "checked_at_utc": "2026-11-17T21:01:35Z",
-   "checked_nodes": 1027,
+   "checked_at_utc": "2026-11-17T21:05:59Z",
+   "checked_nodes": 1028,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -548,7 +563,7 @@
  },
  "host": "mc-reason-lane",
  "host_redacted": true,
- "host_sha256": "f0955572018a983d8e23d0b17b95f88432712548c91143c726db04e38c4b797c",
+ "host_sha256": "a018538a0421bdfee08ac709776529c768013daefe5dfe93a593182724e9106e",
  "impact_set": {
   "deterministic_core": [
    {
@@ -8670,14 +8685,15 @@
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 50 attached from /home/dev/aup/claude-work/dev-mc-reason/tmp-verify/exemptions-105-reasoning-subset.json",
+  "exemptions: 50 attached from receipts/graph/exemptions-105-reasoning-subset.json",
   "A2-353: `canary` discharged for 5 test code_unit(s) — a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/admin/admin-rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.app.spec.ts, code_unit:src/auth/rate-limit.integration.spec.ts, code_unit:src/connectors/openrouter/openrouter.connector.spec.ts, code_unit:src/connectors/orq/orq.connector.spec.ts"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261117T205951Z-e8eea6bb",
+ "receipt_id": "car-verify-20261117T210417Z-1a5cfecc",
+ "receipt_path": "receipts/graph/change-admission-105-reasoning-subset.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
   "path": "/home/dev/aup/claude-work/dev-mc-reason/model-connector"
@@ -9302,6 +9318,7 @@
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
    "receipt:receipts/graph/a2-319-rate-limit-admin.json",
    "receipt:receipts/graph/change-admission-0a3f80e9.json",
+   "receipt:receipts/graph/change-admission-105-reasoning-subset.json",
    "receipt:receipts/graph/change-admission-11159be7.json",
    "receipt:receipts/graph/change-admission-14d5ee02.json",
    "receipt:receipts/graph/change-admission-595b306c.json",
@@ -9360,7 +9377,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-17T21:01:35Z",
+  "checked_at_utc": "2026-11-17T21:05:58Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -9409,6 +9426,21 @@
    "path": "receipts/graph/change-admission-0a3f80e9.json",
    "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
    "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": null,
+    "head": "sha256:75c5964bc9da09cbf28442f61b17c535a75e69585abc769697553ba74ffc7df7"
+   },
+   "entity": "receipt:receipts/graph/change-admission-105-reasoning-subset.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-105-reasoning-subset.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it; superseded by construction — this run re-issues the receipt at receipts/graph/change-admission-105-reasoning-subset.json for work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0",
+   "rule": "DEC-AUP-0035",
+   "superseded": {
+    "receipt_path": "receipts/graph/change-admission-105-reasoning-subset.json",
+    "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
+   }
   },
   {
    "content_hash": {
@@ -9709,7 +9741,7 @@
   }
  ],
  "tree": {
-  "commit": "e8eea6bb68c87fcde5767b47786af89bbae19a8e",
+  "commit": "1a5cfeccd1445c2c1720b1ae077db6465b029b20",
   "dirty": false
  },
  "verdicts": [
@@ -12493,8 +12525,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/dev-mc-reason/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-reason/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/type-check-t9cw1pvb/check.tsbuildinfo --listFiles",
-   "duration_s": 14.36,
+   "command": "/home/dev/aup/claude-work/dev-mc-reason/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-reason/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-jvu4etv7/verifier-out/type-check-hd2evg4c/check.tsbuildinfo --listFiles",
+   "duration_s": 18.32,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -13024,13 +13056,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-17T21:01:54Z",
+   "output_ref": "/tmp/arcana-verify-jvu4etv7/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-17T21:06:17Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2893 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/dev-mc-reason/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-reason/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/type-check-8kqmnap3/check.tsbuildinfo --listFiles",
-   "duration_s": 20.07,
+   "command": "/home/dev/aup/claude-work/dev-mc-reason/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-reason/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-jvu4etv7/verifier-out/type-check-r1ue4if4/check.tsbuildinfo --listFiles",
+   "duration_s": 10.44,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -13338,13 +13370,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-17T21:02:09Z",
+   "output_ref": "/tmp/arcana-verify-jvu4etv7/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-17T21:06:36Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2148 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/dev-mc-reason/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-reason/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/type-check-lp8lf0kj/check.tsbuildinfo --listFiles",
-   "duration_s": 1.72,
+   "command": "/home/dev/aup/claude-work/dev-mc-reason/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-reason/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-jvu4etv7/verifier-out/type-check-s4q9cnjk/check.tsbuildinfo --listFiles",
+   "duration_s": 1.22,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -13503,13 +13535,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-17T21:02:30Z",
+   "output_ref": "/tmp/arcana-verify-jvu4etv7/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-17T21:06:47Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/dev-mc-reason/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-reason/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/type-check-8wihqd5c/check.tsbuildinfo --listFiles",
-   "duration_s": 28.58,
+   "command": "/home/dev/aup/claude-work/dev-mc-reason/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-reason/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-jvu4etv7/verifier-out/type-check-olrz4up3/check.tsbuildinfo --listFiles",
+   "duration_s": 17.91,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -13817,13 +13849,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-17T21:02:32Z",
+   "output_ref": "/tmp/arcana-verify-jvu4etv7/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-17T21:06:48Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2780 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/dev-mc-reason/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-reason/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/type-check-bbolyf0n/check.tsbuildinfo --listFiles",
-   "duration_s": 25.62,
+   "command": "/home/dev/aup/claude-work/dev-mc-reason/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-mc-reason/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-jvu4etv7/verifier-out/type-check-ekicauel/check.tsbuildinfo --listFiles",
+   "duration_s": 25.59,
    "entities": [
     "code_unit:src/admin/admin.module.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -14131,13 +14163,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-17T21:03:01Z",
+   "output_ref": "/tmp/arcana-verify-jvu4etv7/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-17T21:07:07Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2886 files listed"
   },
   {
-   "command": "tools/graph/contract_diff.py.run_diff(base=7bee8d269710, head=e8eea6bb68c8, graph=head graph)",
-   "duration_s": 12.58,
+   "command": "tools/graph/contract_diff.py.run_diff(base=7bee8d269710, head=1a5cfeccd144, graph=head graph)",
+   "duration_s": 26.63,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/circuit-breaker.controller.ts",
@@ -14237,13 +14269,13 @@
    "exit_code": 2,
    "id": "v-contract-diff",
    "kind": "contract_diff",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/v-contract-diff.txt",
-   "started_at_utc": "2026-11-17T21:03:27Z",
+   "output_ref": "/tmp/arcana-verify-jvu4etv7/verifier-out/v-contract-diff.txt",
+   "started_at_utc": "2026-11-17T21:07:34Z",
    "summary": "refusal PYDANTIC_NOT_MEASURED"
   },
   {
    "command": "verify.py route_config_consistency RC-01 prefix / RC-02 registration / RC-03 served",
-   "duration_s": 17.34,
+   "duration_s": 34.16,
    "entities": [
     "route:GET /connectors",
     "route:GET /connectors/:name/status",
@@ -14301,13 +14333,13 @@
    "exit_code": 0,
    "id": "v-route-config",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/v-route-config.txt",
-   "started_at_utc": "2026-11-17T21:03:40Z",
+   "output_ref": "/tmp/arcana-verify-jvu4etv7/verifier-out/v-route-config.txt",
+   "started_at_utc": "2026-11-17T21:08:00Z",
    "summary": "25 route(s), 0 failed"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 1.28,
+   "duration_s": 1.93,
    "entities": [
     "code_unit:src/connectors/codex/codex.connector.ts",
     "code_unit:src/connectors/openrouter/openrouter.connector.spec.ts",
@@ -14325,13 +14357,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/v-config-schema.json",
-   "started_at_utc": "2026-11-17T21:03:57Z",
+   "output_ref": "/tmp/arcana-verify-jvu4etv7/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-17T21:08:35Z",
    "summary": "3 source(s), 0 new / 91 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.44,
+   "duration_s": 0.62,
    "entities": [
     "code_unit:src/admin/admin-rate-limit.app.spec.ts",
     "code_unit:src/admin/admin.module.ts",
@@ -14811,13 +14843,13 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-17T21:03:59Z",
+   "output_ref": "/tmp/arcana-verify-jvu4etv7/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-17T21:08:37Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.02,
+   "duration_s": 0.03,
    "entities": [
     "document:CHANGELOG.md",
     "document:README.md",
@@ -14897,8 +14929,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-17T21:03:59Z",
+   "output_ref": "/tmp/arcana-verify-jvu4etv7/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-17T21:08:37Z",
    "summary": "36 document(s), 0 failed"
   },
   {
@@ -14979,17 +15011,23 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/dev-mc-reason/tmp-verify/workdir4/verifier-out/v-canary.json",
-   "started_at_utc": "2026-11-17T21:03:59Z",
+   "output_ref": "/tmp/arcana-verify-jvu4etv7/verifier-out/v-canary.json",
+   "started_at_utc": "2026-11-17T21:08:37Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 34 not_measured of 34 entities"
   }
  ],
  "verify": {
   "events": [
    {
+    "code": "SUPERSEDED_SELF_EXCLUSION",
+    "entity": "receipt:receipts/graph/change-admission-105-reasoning-subset.json",
+    "rule": "DEC-AUP-0035",
+    "text": "the receipt at receipts/graph/change-admission-105-reasoning-subset.json is the previous version of the one this run is writing, for the same work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 — superseded by construction, so it owes this change no verdict"
+   },
+   {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "31 affected entity(ies) owe no verdict (receipt: 31): unchanged at both revisions and given no verifier by the matrix"
+    "text": "32 affected entity(ies) owe no verdict (receipt: 32): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
@@ -16098,6 +16136,7 @@
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json": [],
    "receipt:receipts/graph/a2-319-rate-limit-admin.json": [],
    "receipt:receipts/graph/change-admission-0a3f80e9.json": [],
+   "receipt:receipts/graph/change-admission-105-reasoning-subset.json": [],
    "receipt:receipts/graph/change-admission-11159be7.json": [],
    "receipt:receipts/graph/change-admission-14d5ee02.json": [],
    "receipt:receipts/graph/change-admission-595b306c.json": [],
@@ -16277,9 +16316,9 @@
    ]
   },
   "seconds": {
-   "prepare": 8.95,
-   "total": 248.68,
-   "verifiers": 122.01
+   "prepare": 7.68,
+   "total": 260.57,
+   "verifiers": 136.85
   }
  },
  "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
