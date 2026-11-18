@@ -5,7 +5,7 @@
     "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
     "verdict": "paused_safe"
   },
-  "captured_at_utc": "2026-11-18T23:32:29Z",
+  "captured_at_utc": "2026-11-18T23:53:13Z",
   "change_set": {
     "base": "341758531ddfc53f89adac3fcade2ca5cb83ffd0",
     "files": [
@@ -53,20 +53,20 @@
   "exemptions": [],
   "graph": {
     "builder_version": "1.0.6",
-    "built_at_utc": "2026-11-18T23:25:25Z",
-    "graph_digest": "sha256:86396b892dcc543ac14a7ef069ff7d545bda8260ac9d5c96a2d5cee9a2040fc4",
-    "path": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/base-graph.json",
+    "built_at_utc": "2026-11-18T23:46:41Z",
+    "graph_digest": "sha256:ce9f4198260918172c34a81a19d011efebd2ba0987531615bcf8e9acd7e47b77",
+    "path": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/base-graph.json",
     "source_commit": "341758531ddfc53f89adac3fcade2ca5cb83ffd0"
   },
   "head_graph": {
     "builder_version": "1.0.6",
     "built_at_utc": "2026-09-05T00:00:00Z",
-    "graph_digest": "sha256:dc54d2818466824311407cc33a24afea95cd07598dd035f930d50aacd6d3d1e8",
-    "path": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/graph-head-83d18d37651a.json",
+    "graph_digest": "sha256:46a84c71358f02d50b47099268eba1546e1f9fda6c975138daad866e60b722b6",
+    "path": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/graph-head-83d18d37651a.json",
     "source_commit": "83d18d37651a03b625af89ea7750b78c327d0521",
     "staleness": {
-      "checked_at_utc": "2026-11-18T23:33:24Z",
-      "checked_nodes": 1036,
+      "checked_at_utc": "2026-11-18T23:53:43Z",
+      "checked_nodes": 1035,
       "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
       "mismatched_nodes": [],
       "verdict": "fresh"
@@ -753,7 +753,7 @@
     "tool": "tools/graph/verify.py",
     "version": "1.4.1"
   },
-  "receipt_id": "car-verify-20261118T233229Z-83d18d37",
+  "receipt_id": "car-verify-20261118T235313Z-83d18d37",
   "repo": {
     "name": "Arcanada-one/model-connector",
     "path": "/home/dev/aup/claude-work/dev-npm-token/clones/model-connector"
@@ -841,7 +841,7 @@
   },
   "schema": "ChangeAdmissionReceipt/v1",
   "staleness": {
-    "checked_at_utc": "2026-11-18T23:33:24Z",
+    "checked_at_utc": "2026-11-18T23:53:43Z",
     "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
     "mismatched_nodes": [],
     "verdict": "fresh"
@@ -1251,8 +1251,8 @@
   },
   "verifiers": [
     {
-      "command": "/home/dev/aup/claude-work/dev-npm-token/clones/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-npm-token/clones/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/type-check-w1xz6d73/check.tsbuildinfo --listFiles",
-      "duration_s": 24.11,
+      "command": "/home/dev/aup/claude-work/dev-npm-token/clones/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-npm-token/clones/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/type-check-zv8lo7xt/check.tsbuildinfo --listFiles",
+      "duration_s": 15.3,
       "entities": [
         "deployable_unit:."
       ],
@@ -1262,13 +1262,13 @@
       "exit_code": 0,
       "id": "v-type-check-tsconfig-mjs",
       "kind": "type_check",
-      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/v-type-check-tsconfig-mjs.txt",
-      "started_at_utc": "2026-11-18T23:33:43Z",
+      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/v-type-check-tsconfig-mjs.txt",
+      "started_at_utc": "2026-11-18T23:53:57Z",
       "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2894 files listed"
     },
     {
-      "command": "/home/dev/aup/claude-work/dev-npm-token/clones/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-npm-token/clones/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/type-check-_hde6uqe/check.tsbuildinfo --listFiles",
-      "duration_s": 13.96,
+      "command": "/home/dev/aup/claude-work/dev-npm-token/clones/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-npm-token/clones/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/type-check-t9t8i7ce/check.tsbuildinfo --listFiles",
+      "duration_s": 8.47,
       "entities": [
         "deployable_unit:."
       ],
@@ -1278,13 +1278,13 @@
       "exit_code": 0,
       "id": "v-type-check-tsconfig-build",
       "kind": "type_check",
-      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/v-type-check-tsconfig-build.txt",
-      "started_at_utc": "2026-11-18T23:34:08Z",
+      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/v-type-check-tsconfig-build.txt",
+      "started_at_utc": "2026-11-18T23:54:13Z",
       "summary": "tsconfig.build.json: exit 0, 0 error(s), 2148 files listed"
     },
     {
-      "command": "/home/dev/aup/claude-work/dev-npm-token/clones/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-npm-token/clones/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/type-check-qd9oihyg/check.tsbuildinfo --listFiles",
-      "duration_s": 1.49,
+      "command": "/home/dev/aup/claude-work/dev-npm-token/clones/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-npm-token/clones/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/type-check-cukvu9h_/check.tsbuildinfo --listFiles",
+      "duration_s": 1.15,
       "entities": [
         "deployable_unit:."
       ],
@@ -1294,13 +1294,13 @@
       "exit_code": 0,
       "id": "v-type-check-tsconfig-ci",
       "kind": "type_check",
-      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/v-type-check-tsconfig-ci.txt",
-      "started_at_utc": "2026-11-18T23:34:22Z",
+      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/v-type-check-tsconfig-ci.txt",
+      "started_at_utc": "2026-11-18T23:54:22Z",
       "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
     },
     {
-      "command": "/home/dev/aup/claude-work/dev-npm-token/clones/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-npm-token/clones/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/type-check-tmdmca_1/check.tsbuildinfo --listFiles",
-      "duration_s": 25.16,
+      "command": "/home/dev/aup/claude-work/dev-npm-token/clones/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-npm-token/clones/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/type-check-hokffqnc/check.tsbuildinfo --listFiles",
+      "duration_s": 15.34,
       "entities": [
         "deployable_unit:."
       ],
@@ -1310,13 +1310,13 @@
       "exit_code": 0,
       "id": "v-type-check-tsconfig",
       "kind": "type_check",
-      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/v-type-check-tsconfig.txt",
-      "started_at_utc": "2026-11-18T23:34:24Z",
+      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/v-type-check-tsconfig.txt",
+      "started_at_utc": "2026-11-18T23:54:23Z",
       "summary": "tsconfig.json: exit 0, 0 error(s), 2781 files listed"
     },
     {
-      "command": "/home/dev/aup/claude-work/dev-npm-token/clones/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-npm-token/clones/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/type-check-dt52jt4i/check.tsbuildinfo --listFiles",
-      "duration_s": 63.93,
+      "command": "/home/dev/aup/claude-work/dev-npm-token/clones/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-npm-token/clones/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/type-check-o2ijtt_z/check.tsbuildinfo --listFiles",
+      "duration_s": 18.15,
       "entities": [
         "deployable_unit:."
       ],
@@ -1326,8 +1326,8 @@
       "exit_code": 0,
       "id": "v-type-check-tsconfig-test",
       "kind": "type_check",
-      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/v-type-check-tsconfig-test.txt",
-      "started_at_utc": "2026-11-18T23:34:50Z",
+      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/v-type-check-tsconfig-test.txt",
+      "started_at_utc": "2026-11-18T23:54:39Z",
       "summary": "tsconfig.test.json: exit 0, 0 error(s), 2887 files listed"
     },
     {
@@ -1342,8 +1342,8 @@
       "exit_code": 1,
       "id": "v-workflow-config-b803fcb7f17ed923",
       "kind": "config_schema",
-      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
-      "started_at_utc": "2026-11-18T23:35:56Z",
+      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/v-workflow-config-b803fcb7f17ed923.txt",
+      "started_at_utc": "2026-11-18T23:54:58Z",
       "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 11: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 11: command/process substitution closure is unresolved; job docker-e2e step 12: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 13: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 1: opaque input/interpolated workflow source; job docker-e2e step 3: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 3: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 4: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 5: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 6: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 7: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 10: line 1: unsupported loader/interpreter options; job lint-and-test step 10: line 2: relative execution cwd is not declared; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: line 13: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: line 14: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: line 15: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: line 16: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: line 17: unsupported loader/interpreter options; job lint-and-test step 11: line 18: relative execution cwd is not declared; job lint-and-test step 11: line 19: unsupported loader/interpreter options; job lint-and-test step 11: line 1: unsupported loader/interpreter options; job lint-and-test step 11: line 20: relative execution cwd is not declared; job lint-and-test step 11: line 21: unsupported loader/interpreter options; job lint-and-test step 11: line 22: relative execution cwd is not declared; job lint-and-test step 11: line 2: unsupported loader/interpreter options; job lint-and-test step 11: line 3: unsupported loader/interpreter options; job lint-and-test step 11: line 4: unsupported loader/interpreter options; job lint-and-test step 11: line 5: relative execution cwd is not declared; job lint-and-test step 11: line 6: relative execution cwd is not declared; job lint-and-test step 11: line 7: relative execution cwd is not declared; job lint-and-test step 11: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 12: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 12: heredoc/group/function/brace expansion closure is unresolved; job lint-and-test step 15: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 17: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 18: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 19: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 19: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 19: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 1: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 3: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 6: command/process substitution closure is unresolved; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: line 9: unsupported loader/interpreter options; job lint-and-test step 8: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 8: line 1: relative execution cwd is not declared; job lint-and-test step 9: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 9: line 1: unsupported loader/interpreter options; job lint-and-test step 9: line 2: unsupported interpreter script/module/stdin dispatch closure; job publish-image step 4: heredoc/group/function/brace expansion closure is unresolved; job verify-published-image step 1: heredoc/group/function/brace expansion closure is unresolved; 70 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
     },
     {
@@ -1358,13 +1358,13 @@
       "exit_code": 0,
       "id": "v-workflow-config-506797d1671524f2",
       "kind": "config_schema",
-      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/v-workflow-config-506797d1671524f2.txt",
-      "started_at_utc": "2026-11-18T23:35:56Z",
+      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/v-workflow-config-506797d1671524f2.txt",
+      "started_at_utc": "2026-11-18T23:54:58Z",
       "summary": "bounded workflow configuration shape valid; expressions, shell, actions, callee interface compatibility and hosted execution NOT_MEASURED"
     },
     {
       "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-      "duration_s": 2.4,
+      "duration_s": 0.52,
       "entities": [
         "code_unit:.github/workflows/ci.yml",
         "code_unit:.github/workflows/publish-sdks.yml",
@@ -1380,8 +1380,8 @@
       "exit_code": 0,
       "id": "v-fitness",
       "kind": "fitness_rules",
-      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/v-fitness.json",
-      "started_at_utc": "2026-11-18T23:35:56Z",
+      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/v-fitness.json",
+      "started_at_utc": "2026-11-18T23:54:58Z",
       "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
     },
     {
@@ -1400,8 +1400,8 @@
       "exit_code": 0,
       "id": "v-doc-reference",
       "kind": "doc_reference",
-      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build4/verifier-out/v-doc-reference.txt",
-      "started_at_utc": "2026-11-18T23:35:58Z",
+      "output_ref": "/home/dev/aup/claude-work/dev-npm-token/mc-receipt-build8/verifier-out/v-doc-reference.txt",
+      "started_at_utc": "2026-11-18T23:54:59Z",
       "summary": "3 document(s), 0 failed"
     }
   ],
@@ -1470,9 +1470,9 @@
       "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
     },
     "seconds": {
-      "prepare": 8.71,
-      "total": 209.22,
-      "verifiers": 131.06
+      "prepare": 6.42,
+      "total": 105.32,
+      "verifiers": 58.94
     }
   },
   "receipt_path": "receipts/graph/change-admission-npm-publish-self-hosted-token-20261118.json"
