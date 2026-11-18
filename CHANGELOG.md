@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **npm publish-ts moves to self-hosted + `NPM_TOKEN`.** Operator decision
+  2026-11-18: Trusted Publishing / OIDC is accepted only from GitHub-hosted
+  runners, so `publish-sdks.yml` `publish-ts` now runs on
+  `[self-hosted, Linux, ci-general]` with `NODE_AUTH_TOKEN` from
+  `secrets.NPM_TOKEN`, drops `id-token: write`, and omits `--provenance`
+  (unsupported off GitHub-hosted). PR dry-run is unchanged. Contract:
+  `dev-tools/publish-sdks-npm-token.test.py`.
+
 - **packages/sdk-ts vitest ^3.2.4 → ^4.1.11.** Nested manifest-only bump;
   measured non-fallback for graph admission; frozen-lockfile install stays green
   without a lockfile edit (deferred from #273).

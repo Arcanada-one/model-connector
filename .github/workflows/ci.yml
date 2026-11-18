@@ -53,6 +53,9 @@ jobs:
       - name: Dockerfile Cursor CLI pin contract
         run: PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/dockerfile-cursor-cli-pin.test.py
 
+      - name: publish-sdks npm token / self-hosted contract
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/publish-sdks-npm-token.test.py
+
       - name: Provision pinned Compose CLI in PR job temp (no daemon)
         if: github.event_name == 'pull_request'
         run: |
