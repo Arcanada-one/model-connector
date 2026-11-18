@@ -1,0 +1,2200 @@
+{
+ "admission": {
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+  "verdict": "admitted_with_exemptions"
+ },
+ "captured_at_utc": "2026-11-18T22:58:48Z",
+ "change_set": {
+  "base": "341758531ddfc53f89adac3fcade2ca5cb83ffd0",
+  "files": [
+   {
+    "kind": "doc",
+    "node_id": "document:CHANGELOG.md",
+    "node_ids": [
+     "document:CHANGELOG.md"
+    ],
+    "path": "CHANGELOG.md",
+    "status": "M"
+   },
+   {
+    "kind": "config",
+    "node_id": "deployable_unit:watcher",
+    "node_ids": [
+     "deployable_unit:watcher"
+    ],
+    "path": "watcher/package.json",
+    "scoped_fallback": "watcher/package.json changed ⇒ every unit shipped inside deployable_unit:watcher is affected",
+    "status": "M"
+   }
+  ],
+  "head": "be802aed9c3a37c5f8c4e4d7a94b8bb68afd4d57",
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "exemptions": [
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:watcher/deploy/evidence-analyzer.js",
+   "evidence": "max_depth=1 impact; scoped_fallback on watcher/package.json; frozen-lockfile green; CI digests with typescript hidden",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273 / Model Connector #300 narrow CAR (Muneral 597f92c3)",
+   "reason": "scoped_fallback: watcher/package.json change marks every unit shipped inside deployable_unit:watcher as affected; this unchanged file is owed a verdict and the verifier answered not_measured. Measured at max_depth=1 (no workflow fan-out). verifier: v-type-check-watcher-tsconfig: watcher/tsconfig.json not listed in watcher/deploy/evidence-analyzer.js"
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:watcher/deploy/evidence-day7-check.sh",
+   "evidence": "max_depth=1 impact; scoped_fallback on watcher/package.json; frozen-lockfile green; CI digests with typescript hidden",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273 / Model Connector #300 narrow CAR (Muneral 597f92c3)",
+   "reason": "scoped_fallback: watcher/package.json change marks every unit shipped inside deployable_unit:watcher as affected; this unchanged file is owed a verdict and the verifier answered not_measured. Measured at max_depth=1 (no workflow fan-out). verifier: v-shell-syntax-a8fe4630d79dd17f: shell syntax/closure: not_measured; v-shell-behavior-a8fe4630d79dd17f: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 10: dynamic loa"
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:watcher/deploy/health-selfcheck.sh",
+   "evidence": "max_depth=1 impact; scoped_fallback on watcher/package.json; frozen-lockfile green; CI digests with typescript hidden",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273 / Model Connector #300 narrow CAR (Muneral 597f92c3)",
+   "reason": "scoped_fallback: watcher/package.json change marks every unit shipped inside deployable_unit:watcher as affected; this unchanged file is owed a verdict and the verifier answered not_measured. Measured at max_depth=1 (no workflow fan-out). verifier: v-shell-syntax-e24f28f62e9ba6d3: shell syntax/closure: not_measured; v-shell-behavior-e24f28f62e9ba6d3: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 17: dynamic loa"
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:watcher/deploy/test-fixtures/gen-fixtures.js",
+   "evidence": "max_depth=1 impact; scoped_fallback on watcher/package.json; frozen-lockfile green; CI digests with typescript hidden",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273 / Model Connector #300 narrow CAR (Muneral 597f92c3)",
+   "reason": "scoped_fallback: watcher/package.json change marks every unit shipped inside deployable_unit:watcher as affected; this unchanged file is owed a verdict and the verifier answered not_measured. Measured at max_depth=1 (no workflow fan-out). verifier: v-type-check-watcher-tsconfig: watcher/tsconfig.json not listed in watcher/deploy/test-fixtures/gen-fixtures.js"
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:watcher/eslint.config.mjs",
+   "evidence": "max_depth=1 impact; scoped_fallback on watcher/package.json; frozen-lockfile green; CI digests with typescript hidden",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273 / Model Connector #300 narrow CAR (Muneral 597f92c3)",
+   "reason": "scoped_fallback: watcher/package.json change marks every unit shipped inside deployable_unit:watcher as affected; this unchanged file is owed a verdict and the verifier answered not_measured. Measured at max_depth=1 (no workflow fan-out). verifier: v-type-check-watcher-tsconfig: watcher/tsconfig.json not listed in watcher/eslint.config.mjs"
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:watcher/scripts/install-local.sh",
+   "evidence": "max_depth=1 impact; scoped_fallback on watcher/package.json; frozen-lockfile green; CI digests with typescript hidden",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273 / Model Connector #300 narrow CAR (Muneral 597f92c3)",
+   "reason": "scoped_fallback: watcher/package.json change marks every unit shipped inside deployable_unit:watcher as affected; this unchanged file is owed a verdict and the verifier answered not_measured. Measured at max_depth=1 (no workflow fan-out). verifier: v-shell-syntax-874d82e98fb2f5c4: shell syntax/closure: not_measured; v-shell-behavior-874d82e98fb2f5c4: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 18: wrapper opt"
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:watcher/test/classification.bats",
+   "evidence": "max_depth=1 impact; scoped_fallback on watcher/package.json; frozen-lockfile green; CI digests with typescript hidden",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273 / Model Connector #300 narrow CAR (Muneral 597f92c3)",
+   "reason": "scoped_fallback: watcher/package.json change marks every unit shipped inside deployable_unit:watcher as affected; this unchanged file is owed a verdict and the verifier answered not_measured. Measured at max_depth=1 (no workflow fan-out). verifier: v-shell-syntax-946bfd1a8336ee85: shell syntax/closure: not_measured; v-shell-behavior-946bfd1a8336ee85: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: Bats inventory is em"
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:watcher/test/health-selfcheck.bats",
+   "evidence": "max_depth=1 impact; scoped_fallback on watcher/package.json; frozen-lockfile green; CI digests with typescript hidden",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273 / Model Connector #300 narrow CAR (Muneral 597f92c3)",
+   "reason": "scoped_fallback: watcher/package.json change marks every unit shipped inside deployable_unit:watcher as affected; this unchanged file is owed a verdict and the verifier answered not_measured. Measured at max_depth=1 (no workflow fan-out). verifier: v-shell-syntax-b3044e7ca1c67b7c: shell syntax/closure: not_measured; v-shell-behavior-b3044e7ca1c67b7c: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: Bats run lacks an im"
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:watcher/vitest.config.ts",
+   "evidence": "max_depth=1 impact; scoped_fallback on watcher/package.json; frozen-lockfile green; CI digests with typescript hidden",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273 / Model Connector #300 narrow CAR (Muneral 597f92c3)",
+   "reason": "watcher vitest bump changes the vitest toolchain for deployable_unit:watcher; vitest.config.ts is in scoped impact and type-check cannot measure it (tsconfig gap). verifier: v-type-check-watcher-tsconfig: watcher/tsconfig.json not listed in watcher/vitest.config.ts"
+  }
+ ],
+ "graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:ce9f4198260918172c34a81a19d011efebd2ba0987531615bcf8e9acd7e47b77",
+  "path": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/graph-341758531ddf.json",
+  "source_commit": "341758531ddfc53f89adac3fcade2ca5cb83ffd0"
+ },
+ "head_graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:0a8405bb88b2a84d95dd6d09b64ca4d7146e612eab177702e375eeaa6f4eb0bc",
+  "path": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/graph-head-be802aed9c3a.json",
+  "source_commit": "be802aed9c3a37c5f8c4e4d7a94b8bb68afd4d57",
+  "staleness": {
+   "checked_at_utc": "2026-11-18T23:00:00Z",
+   "checked_nodes": 1034,
+   "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+   "mismatched_nodes": [],
+   "verdict": "fresh"
+  }
+ },
+ "host": "arcana-devs",
+ "impact_set": {
+  "deterministic_core": [
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/deploy/evidence-analyzer.d.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/deploy/evidence-analyzer.d.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/deploy/evidence-analyzer.js",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/deploy/evidence-analyzer.js",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/deploy/evidence-day7-check.sh",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/deploy/evidence-day7-check.sh",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/deploy/health-selfcheck.sh",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/deploy/health-selfcheck.sh",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/deploy/test-fixtures/gen-fixtures.js",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/deploy/test-fixtures/gen-fixtures.js",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/eslint.config.mjs",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/eslint.config.mjs",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/scripts/install-local.sh",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/scripts/install-local.sh",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/audit-log.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/audit-log.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/catalog/catalog-sync.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/catalog/catalog-sync.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/catalog/openrouter.adapter.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/catalog/openrouter.adapter.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/catalog/provider-adapter.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/catalog/provider-adapter.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/classifier.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/classifier.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/config.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/config.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/contracts/cascade.adapter.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/contracts/cascade.adapter.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/contracts/catalog-writer.adapter.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/contracts/catalog-writer.adapter.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/deadman-cli.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/deadman-cli.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/deadman.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/deadman.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/health-server.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/health-server.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/latency-window.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/latency-window.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/main.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/main.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/model-connector.client.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/model-connector.client.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/observation.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/observation.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/opsbot.client.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/opsbot.client.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/rate-window.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/rate-window.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/recovery-policy.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/recovery-policy.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/state-store.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/state-store.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/src/types.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/src/types.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/autonomy-boundary.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/autonomy-boundary.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/catalog-refresh.schema.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/catalog-refresh.schema.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/catalog-sync.integration.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/catalog-sync.integration.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/classification.bats",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/classification.bats",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/config.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/config.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/entrypoint-guard.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/entrypoint-guard.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/evidence-analyzer.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/evidence-analyzer.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/failure-detection.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/failure-detection.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/health-selfcheck.bats",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/health-selfcheck.bats",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/integration-force-fail.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/integration-force-fail.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/latency-window.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/latency-window.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/main-loop.e2e.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/main-loop.e2e.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/ops-alert.integration.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/ops-alert.integration.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/recovery-policy.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/recovery-policy.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/shadow-start.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/shadow-start.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/state-audit.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/state-audit.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/test/windowed-error-rate.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/test/windowed-error-rate.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:watcher/vitest.config.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:watcher/vitest.config.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:watcher",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   }
+  ],
+  "edge_types": "all",
+  "global_fallback": {
+   "triggered": false
+  },
+  "inferred_tail": [],
+  "max_depth": 1,
+  "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 1",
+  "total": 45
+ },
+ "notes": [
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
+  "exemptions: 9 attached from /home/dev/aup/claude-work/fin-mc-273/deps-split/exemptions-watcher-vitest-narrow.json"
+ ],
+ "producer": {
+  "tool": "tools/graph/verify.py",
+  "version": "1.4.1"
+ },
+ "receipt_id": "car-verify-20261118T225848Z-be802aed",
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/home/dev/aup/claude-work/fin-mc-273/deps-split/wt-watcher-vitest-clean"
+ },
+ "revision_selection": {
+  "base": [
+   "code_unit:watcher/deploy/evidence-analyzer.d.ts",
+   "code_unit:watcher/deploy/evidence-analyzer.js",
+   "code_unit:watcher/deploy/evidence-day7-check.sh",
+   "code_unit:watcher/deploy/health-selfcheck.sh",
+   "code_unit:watcher/deploy/test-fixtures/gen-fixtures.js",
+   "code_unit:watcher/eslint.config.mjs",
+   "code_unit:watcher/scripts/install-local.sh",
+   "code_unit:watcher/src/audit-log.ts",
+   "code_unit:watcher/src/catalog/catalog-sync.ts",
+   "code_unit:watcher/src/catalog/openrouter.adapter.ts",
+   "code_unit:watcher/src/catalog/provider-adapter.ts",
+   "code_unit:watcher/src/classifier.ts",
+   "code_unit:watcher/src/config.ts",
+   "code_unit:watcher/src/contracts/cascade.adapter.ts",
+   "code_unit:watcher/src/contracts/catalog-writer.adapter.ts",
+   "code_unit:watcher/src/deadman-cli.ts",
+   "code_unit:watcher/src/deadman.ts",
+   "code_unit:watcher/src/health-server.ts",
+   "code_unit:watcher/src/latency-window.ts",
+   "code_unit:watcher/src/main.ts",
+   "code_unit:watcher/src/model-connector.client.ts",
+   "code_unit:watcher/src/observation.ts",
+   "code_unit:watcher/src/opsbot.client.ts",
+   "code_unit:watcher/src/rate-window.ts",
+   "code_unit:watcher/src/recovery-policy.ts",
+   "code_unit:watcher/src/state-store.ts",
+   "code_unit:watcher/src/types.ts",
+   "code_unit:watcher/test/autonomy-boundary.spec.ts",
+   "code_unit:watcher/test/catalog-refresh.schema.spec.ts",
+   "code_unit:watcher/test/catalog-sync.integration.spec.ts",
+   "code_unit:watcher/test/classification.bats",
+   "code_unit:watcher/test/config.spec.ts",
+   "code_unit:watcher/test/entrypoint-guard.spec.ts",
+   "code_unit:watcher/test/evidence-analyzer.spec.ts",
+   "code_unit:watcher/test/failure-detection.spec.ts",
+   "code_unit:watcher/test/health-selfcheck.bats",
+   "code_unit:watcher/test/integration-force-fail.spec.ts",
+   "code_unit:watcher/test/latency-window.spec.ts",
+   "code_unit:watcher/test/main-loop.e2e.spec.ts",
+   "code_unit:watcher/test/ops-alert.integration.spec.ts",
+   "code_unit:watcher/test/recovery-policy.spec.ts",
+   "code_unit:watcher/test/shadow-start.spec.ts",
+   "code_unit:watcher/test/state-audit.spec.ts",
+   "code_unit:watcher/test/windowed-error-rate.spec.ts",
+   "code_unit:watcher/vitest.config.ts",
+   "deployable_unit:watcher",
+   "document:CHANGELOG.md"
+  ],
+  "head": [
+   "code_unit:watcher/deploy/evidence-analyzer.d.ts",
+   "code_unit:watcher/deploy/evidence-analyzer.js",
+   "code_unit:watcher/deploy/evidence-day7-check.sh",
+   "code_unit:watcher/deploy/health-selfcheck.sh",
+   "code_unit:watcher/deploy/test-fixtures/gen-fixtures.js",
+   "code_unit:watcher/eslint.config.mjs",
+   "code_unit:watcher/scripts/install-local.sh",
+   "code_unit:watcher/src/audit-log.ts",
+   "code_unit:watcher/src/catalog/catalog-sync.ts",
+   "code_unit:watcher/src/catalog/openrouter.adapter.ts",
+   "code_unit:watcher/src/catalog/provider-adapter.ts",
+   "code_unit:watcher/src/classifier.ts",
+   "code_unit:watcher/src/config.ts",
+   "code_unit:watcher/src/contracts/cascade.adapter.ts",
+   "code_unit:watcher/src/contracts/catalog-writer.adapter.ts",
+   "code_unit:watcher/src/deadman-cli.ts",
+   "code_unit:watcher/src/deadman.ts",
+   "code_unit:watcher/src/health-server.ts",
+   "code_unit:watcher/src/latency-window.ts",
+   "code_unit:watcher/src/main.ts",
+   "code_unit:watcher/src/model-connector.client.ts",
+   "code_unit:watcher/src/observation.ts",
+   "code_unit:watcher/src/opsbot.client.ts",
+   "code_unit:watcher/src/rate-window.ts",
+   "code_unit:watcher/src/recovery-policy.ts",
+   "code_unit:watcher/src/state-store.ts",
+   "code_unit:watcher/src/types.ts",
+   "code_unit:watcher/test/autonomy-boundary.spec.ts",
+   "code_unit:watcher/test/catalog-refresh.schema.spec.ts",
+   "code_unit:watcher/test/catalog-sync.integration.spec.ts",
+   "code_unit:watcher/test/classification.bats",
+   "code_unit:watcher/test/config.spec.ts",
+   "code_unit:watcher/test/entrypoint-guard.spec.ts",
+   "code_unit:watcher/test/evidence-analyzer.spec.ts",
+   "code_unit:watcher/test/failure-detection.spec.ts",
+   "code_unit:watcher/test/health-selfcheck.bats",
+   "code_unit:watcher/test/integration-force-fail.spec.ts",
+   "code_unit:watcher/test/latency-window.spec.ts",
+   "code_unit:watcher/test/main-loop.e2e.spec.ts",
+   "code_unit:watcher/test/ops-alert.integration.spec.ts",
+   "code_unit:watcher/test/recovery-policy.spec.ts",
+   "code_unit:watcher/test/shadow-start.spec.ts",
+   "code_unit:watcher/test/state-audit.spec.ts",
+   "code_unit:watcher/test/windowed-error-rate.spec.ts",
+   "code_unit:watcher/vitest.config.ts",
+   "deployable_unit:watcher",
+   "document:CHANGELOG.md"
+  ],
+  "schema": "RevisionImpactSelection/v1",
+  "unmeasured_head_files": []
+ },
+ "schema": "ChangeAdmissionReceipt/v1",
+ "staleness": {
+  "checked_at_utc": "2026-11-18T23:00:00Z",
+  "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+  "mismatched_nodes": [],
+  "verdict": "fresh"
+ },
+ "structural_exclusions": [],
+ "tree": {
+  "commit": "be802aed9c3a37c5f8c4e4d7a94b8bb68afd4d57",
+  "dirty": false
+ },
+ "verdicts": [
+  {
+   "entity": "code_unit:watcher/deploy/evidence-analyzer.d.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/deploy/evidence-analyzer.js",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json does not include watcher/deploy/evidence-analyzer.js",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/deploy/evidence-day7-check.sh",
+   "reason": "v-shell-syntax-a8fe4630d79dd17f: shell syntax/closure: not_measured; v-shell-behavior-a8fe4630d79dd17f: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 10: dynamic load/substitution; line 16: dynamic load/substitution; line 17: dynamic load/substitution; line 23: dynamic load/substitution; line 26: dynamic load/substitution; line 27: multiline/opaque shell statement; line 28: multiline/opaque shell statement; line 29: multiline/opaque shell statement",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-shell-behavior-a8fe4630d79dd17f",
+    "v-shell-syntax-a8fe4630d79dd17f"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/deploy/health-selfcheck.sh",
+   "reason": "v-shell-syntax-e24f28f62e9ba6d3: shell syntax/closure: not_measured; v-shell-behavior-e24f28f62e9ba6d3: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 17: dynamic load/substitution; line 21: dynamic load/substitution; line 42: dynamic load/substitution; line 46: dynamic load/substitution; line 49: dynamic load/substitution; line 60: dynamic load/substitution; line 62: dynamic load/substitution; line 71: dynamic load/substitution; line 73: dynamic load/substitution; line 79: dynamic load/substitution; line 83: dynamic load/substitution; line 85: dynamic load/substitution; line 95: dynamic load/substi",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-shell-behavior-e24f28f62e9ba6d3",
+    "v-shell-syntax-e24f28f62e9ba6d3"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/deploy/test-fixtures/gen-fixtures.js",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json does not include watcher/deploy/test-fixtures/gen-fixtures.js",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/eslint.config.mjs",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json does not include watcher/eslint.config.mjs",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/scripts/install-local.sh",
+   "reason": "v-shell-syntax-874d82e98fb2f5c4: shell syntax/closure: not_measured; v-shell-behavior-874d82e98fb2f5c4: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 18: wrapper options/child command unresolved; line 23: dynamic command/alias/eval; line 55: directory transition has unresolved execution cwd; line 66: directory transition has unresolved execution cwd",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-shell-behavior-874d82e98fb2f5c4",
+    "v-shell-syntax-874d82e98fb2f5c4"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/audit-log.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/catalog/catalog-sync.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/catalog/openrouter.adapter.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/catalog/provider-adapter.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/classifier.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/config.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/contracts/cascade.adapter.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/contracts/catalog-writer.adapter.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/deadman-cli.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/deadman.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/health-server.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/latency-window.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/main.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/model-connector.client.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/observation.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/opsbot.client.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/rate-window.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/recovery-policy.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/state-store.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/src/types.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/autonomy-boundary.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/catalog-refresh.schema.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/catalog-sync.integration.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/classification.bats",
+   "reason": "v-shell-syntax-946bfd1a8336ee85: shell syntax/closure: not_measured; v-shell-behavior-946bfd1a8336ee85: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: Bats inventory is empty or unmeasured; line 16: unsupported/dynamic Bats registration; line 17: unsupported/dynamic Bats registration; line 18: unsupported/dynamic Bats registration; line 19: unsupported/dynamic Bats registration; line 20: unsupported/dynamic Bats registration; line 21: unsupported/dynamic Bats registration",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-shell-behavior-946bfd1a8336ee85",
+    "v-shell-syntax-946bfd1a8336ee85"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/config.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/entrypoint-guard.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/evidence-analyzer.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/failure-detection.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/health-selfcheck.bats",
+   "reason": "v-shell-syntax-b3044e7ca1c67b7c: shell syntax/closure: not_measured; v-shell-behavior-b3044e7ca1c67b7c: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: Bats run lacks an immediate unconditional child status assertion; line 100: dynamic load/substitution; line 113: dynamic load/substitution; line 123: dynamic load/substitution; line 136: dynamic load/substitution; line 149: dynamic load/substitution; line 158: dynamic load/substitution; line 169: dynamic load/substitution; line 175: unsupported loader/interpreter options; line 36: heredoc data/generation closure not measured; line 43: heredoc data/generati",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-shell-behavior-b3044e7ca1c67b7c",
+    "v-shell-syntax-b3044e7ca1c67b7c"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/integration-force-fail.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/latency-window.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/main-loop.e2e.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/ops-alert.integration.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/recovery-policy.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/shadow-start.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/state-audit.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/test/windowed-error-rate.spec.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:watcher/vitest.config.ts",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json does not include watcher/vitest.config.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "deployable_unit:watcher",
+   "reason": "v-type-check-watcher-tsconfig: watcher/tsconfig.json: 0 errors; v-fitness: no new violation in watcher",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-watcher-tsconfig"
+   ]
+  },
+  {
+   "entity": "document:CHANGELOG.md",
+   "reason": "v-doc-reference: 29 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  }
+ ],
+ "verifier_selection": {
+  "applied": {},
+  "not_applied": [],
+  "requested": [],
+  "schema": "VerifierSelection/v1"
+ },
+ "verifiers": [
+  {
+   "command": "/home/dev/aup/claude-work/fin-mc-273/deps-split/wt-watcher-vitest-clean/watcher/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/deps-split/wt-watcher-vitest-clean/watcher/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/type-check-ipkuxhqs/check.tsbuildinfo --listFiles",
+   "duration_s": 2.86,
+   "entities": [
+    "code_unit:watcher/deploy/evidence-analyzer.d.ts",
+    "code_unit:watcher/deploy/evidence-analyzer.js",
+    "code_unit:watcher/deploy/test-fixtures/gen-fixtures.js",
+    "code_unit:watcher/eslint.config.mjs",
+    "code_unit:watcher/src/audit-log.ts",
+    "code_unit:watcher/src/catalog/catalog-sync.ts",
+    "code_unit:watcher/src/catalog/openrouter.adapter.ts",
+    "code_unit:watcher/src/catalog/provider-adapter.ts",
+    "code_unit:watcher/src/classifier.ts",
+    "code_unit:watcher/src/config.ts",
+    "code_unit:watcher/src/contracts/cascade.adapter.ts",
+    "code_unit:watcher/src/contracts/catalog-writer.adapter.ts",
+    "code_unit:watcher/src/deadman-cli.ts",
+    "code_unit:watcher/src/deadman.ts",
+    "code_unit:watcher/src/health-server.ts",
+    "code_unit:watcher/src/latency-window.ts",
+    "code_unit:watcher/src/main.ts",
+    "code_unit:watcher/src/model-connector.client.ts",
+    "code_unit:watcher/src/observation.ts",
+    "code_unit:watcher/src/opsbot.client.ts",
+    "code_unit:watcher/src/rate-window.ts",
+    "code_unit:watcher/src/recovery-policy.ts",
+    "code_unit:watcher/src/state-store.ts",
+    "code_unit:watcher/src/types.ts",
+    "code_unit:watcher/test/autonomy-boundary.spec.ts",
+    "code_unit:watcher/test/catalog-refresh.schema.spec.ts",
+    "code_unit:watcher/test/catalog-sync.integration.spec.ts",
+    "code_unit:watcher/test/config.spec.ts",
+    "code_unit:watcher/test/entrypoint-guard.spec.ts",
+    "code_unit:watcher/test/evidence-analyzer.spec.ts",
+    "code_unit:watcher/test/failure-detection.spec.ts",
+    "code_unit:watcher/test/integration-force-fail.spec.ts",
+    "code_unit:watcher/test/latency-window.spec.ts",
+    "code_unit:watcher/test/main-loop.e2e.spec.ts",
+    "code_unit:watcher/test/ops-alert.integration.spec.ts",
+    "code_unit:watcher/test/recovery-policy.spec.ts",
+    "code_unit:watcher/test/shadow-start.spec.ts",
+    "code_unit:watcher/test/state-audit.spec.ts",
+    "code_unit:watcher/test/windowed-error-rate.spec.ts",
+    "code_unit:watcher/vitest.config.ts",
+    "deployable_unit:watcher"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/deploy/evidence-analyzer.d.ts": "verified",
+    "code_unit:watcher/deploy/evidence-analyzer.js": "not_measured",
+    "code_unit:watcher/deploy/test-fixtures/gen-fixtures.js": "not_measured",
+    "code_unit:watcher/eslint.config.mjs": "not_measured",
+    "code_unit:watcher/src/audit-log.ts": "verified",
+    "code_unit:watcher/src/catalog/catalog-sync.ts": "verified",
+    "code_unit:watcher/src/catalog/openrouter.adapter.ts": "verified",
+    "code_unit:watcher/src/catalog/provider-adapter.ts": "verified",
+    "code_unit:watcher/src/classifier.ts": "verified",
+    "code_unit:watcher/src/config.ts": "verified",
+    "code_unit:watcher/src/contracts/cascade.adapter.ts": "verified",
+    "code_unit:watcher/src/contracts/catalog-writer.adapter.ts": "verified",
+    "code_unit:watcher/src/deadman-cli.ts": "verified",
+    "code_unit:watcher/src/deadman.ts": "verified",
+    "code_unit:watcher/src/health-server.ts": "verified",
+    "code_unit:watcher/src/latency-window.ts": "verified",
+    "code_unit:watcher/src/main.ts": "verified",
+    "code_unit:watcher/src/model-connector.client.ts": "verified",
+    "code_unit:watcher/src/observation.ts": "verified",
+    "code_unit:watcher/src/opsbot.client.ts": "verified",
+    "code_unit:watcher/src/rate-window.ts": "verified",
+    "code_unit:watcher/src/recovery-policy.ts": "verified",
+    "code_unit:watcher/src/state-store.ts": "verified",
+    "code_unit:watcher/src/types.ts": "verified",
+    "code_unit:watcher/test/autonomy-boundary.spec.ts": "verified",
+    "code_unit:watcher/test/catalog-refresh.schema.spec.ts": "verified",
+    "code_unit:watcher/test/catalog-sync.integration.spec.ts": "verified",
+    "code_unit:watcher/test/config.spec.ts": "verified",
+    "code_unit:watcher/test/entrypoint-guard.spec.ts": "verified",
+    "code_unit:watcher/test/evidence-analyzer.spec.ts": "verified",
+    "code_unit:watcher/test/failure-detection.spec.ts": "verified",
+    "code_unit:watcher/test/integration-force-fail.spec.ts": "verified",
+    "code_unit:watcher/test/latency-window.spec.ts": "verified",
+    "code_unit:watcher/test/main-loop.e2e.spec.ts": "verified",
+    "code_unit:watcher/test/ops-alert.integration.spec.ts": "verified",
+    "code_unit:watcher/test/recovery-policy.spec.ts": "verified",
+    "code_unit:watcher/test/shadow-start.spec.ts": "verified",
+    "code_unit:watcher/test/state-audit.spec.ts": "verified",
+    "code_unit:watcher/test/windowed-error-rate.spec.ts": "verified",
+    "code_unit:watcher/vitest.config.ts": "not_measured",
+    "deployable_unit:watcher": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-watcher-tsconfig",
+   "kind": "type_check",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-type-check-watcher-tsconfig.txt",
+   "started_at_utc": "2026-11-18T23:00:19Z",
+   "summary": "watcher/tsconfig.json: exit 0, 0 error(s), 396 files listed"
+  },
+  {
+   "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+   "duration_s": 0.38,
+   "entities": [
+    "code_unit:watcher/deploy/evidence-analyzer.d.ts",
+    "code_unit:watcher/deploy/evidence-analyzer.js",
+    "code_unit:watcher/deploy/evidence-day7-check.sh",
+    "code_unit:watcher/deploy/health-selfcheck.sh",
+    "code_unit:watcher/deploy/test-fixtures/gen-fixtures.js",
+    "code_unit:watcher/eslint.config.mjs",
+    "code_unit:watcher/scripts/install-local.sh",
+    "code_unit:watcher/src/audit-log.ts",
+    "code_unit:watcher/src/catalog/catalog-sync.ts",
+    "code_unit:watcher/src/catalog/openrouter.adapter.ts",
+    "code_unit:watcher/src/catalog/provider-adapter.ts",
+    "code_unit:watcher/src/classifier.ts",
+    "code_unit:watcher/src/config.ts",
+    "code_unit:watcher/src/contracts/cascade.adapter.ts",
+    "code_unit:watcher/src/contracts/catalog-writer.adapter.ts",
+    "code_unit:watcher/src/deadman-cli.ts",
+    "code_unit:watcher/src/deadman.ts",
+    "code_unit:watcher/src/health-server.ts",
+    "code_unit:watcher/src/latency-window.ts",
+    "code_unit:watcher/src/main.ts",
+    "code_unit:watcher/src/model-connector.client.ts",
+    "code_unit:watcher/src/observation.ts",
+    "code_unit:watcher/src/opsbot.client.ts",
+    "code_unit:watcher/src/rate-window.ts",
+    "code_unit:watcher/src/recovery-policy.ts",
+    "code_unit:watcher/src/state-store.ts",
+    "code_unit:watcher/src/types.ts",
+    "code_unit:watcher/test/autonomy-boundary.spec.ts",
+    "code_unit:watcher/test/catalog-refresh.schema.spec.ts",
+    "code_unit:watcher/test/catalog-sync.integration.spec.ts",
+    "code_unit:watcher/test/classification.bats",
+    "code_unit:watcher/test/config.spec.ts",
+    "code_unit:watcher/test/entrypoint-guard.spec.ts",
+    "code_unit:watcher/test/evidence-analyzer.spec.ts",
+    "code_unit:watcher/test/failure-detection.spec.ts",
+    "code_unit:watcher/test/health-selfcheck.bats",
+    "code_unit:watcher/test/integration-force-fail.spec.ts",
+    "code_unit:watcher/test/latency-window.spec.ts",
+    "code_unit:watcher/test/main-loop.e2e.spec.ts",
+    "code_unit:watcher/test/ops-alert.integration.spec.ts",
+    "code_unit:watcher/test/recovery-policy.spec.ts",
+    "code_unit:watcher/test/shadow-start.spec.ts",
+    "code_unit:watcher/test/state-audit.spec.ts",
+    "code_unit:watcher/test/windowed-error-rate.spec.ts",
+    "code_unit:watcher/vitest.config.ts",
+    "deployable_unit:watcher"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/deploy/evidence-analyzer.d.ts": "verified",
+    "code_unit:watcher/deploy/evidence-analyzer.js": "verified",
+    "code_unit:watcher/deploy/evidence-day7-check.sh": "verified",
+    "code_unit:watcher/deploy/health-selfcheck.sh": "verified",
+    "code_unit:watcher/deploy/test-fixtures/gen-fixtures.js": "verified",
+    "code_unit:watcher/eslint.config.mjs": "verified",
+    "code_unit:watcher/scripts/install-local.sh": "verified",
+    "code_unit:watcher/src/audit-log.ts": "verified",
+    "code_unit:watcher/src/catalog/catalog-sync.ts": "verified",
+    "code_unit:watcher/src/catalog/openrouter.adapter.ts": "verified",
+    "code_unit:watcher/src/catalog/provider-adapter.ts": "verified",
+    "code_unit:watcher/src/classifier.ts": "verified",
+    "code_unit:watcher/src/config.ts": "verified",
+    "code_unit:watcher/src/contracts/cascade.adapter.ts": "verified",
+    "code_unit:watcher/src/contracts/catalog-writer.adapter.ts": "verified",
+    "code_unit:watcher/src/deadman-cli.ts": "verified",
+    "code_unit:watcher/src/deadman.ts": "verified",
+    "code_unit:watcher/src/health-server.ts": "verified",
+    "code_unit:watcher/src/latency-window.ts": "verified",
+    "code_unit:watcher/src/main.ts": "verified",
+    "code_unit:watcher/src/model-connector.client.ts": "verified",
+    "code_unit:watcher/src/observation.ts": "verified",
+    "code_unit:watcher/src/opsbot.client.ts": "verified",
+    "code_unit:watcher/src/rate-window.ts": "verified",
+    "code_unit:watcher/src/recovery-policy.ts": "verified",
+    "code_unit:watcher/src/state-store.ts": "verified",
+    "code_unit:watcher/src/types.ts": "verified",
+    "code_unit:watcher/test/autonomy-boundary.spec.ts": "verified",
+    "code_unit:watcher/test/catalog-refresh.schema.spec.ts": "verified",
+    "code_unit:watcher/test/catalog-sync.integration.spec.ts": "verified",
+    "code_unit:watcher/test/classification.bats": "verified",
+    "code_unit:watcher/test/config.spec.ts": "verified",
+    "code_unit:watcher/test/entrypoint-guard.spec.ts": "verified",
+    "code_unit:watcher/test/evidence-analyzer.spec.ts": "verified",
+    "code_unit:watcher/test/failure-detection.spec.ts": "verified",
+    "code_unit:watcher/test/health-selfcheck.bats": "verified",
+    "code_unit:watcher/test/integration-force-fail.spec.ts": "verified",
+    "code_unit:watcher/test/latency-window.spec.ts": "verified",
+    "code_unit:watcher/test/main-loop.e2e.spec.ts": "verified",
+    "code_unit:watcher/test/ops-alert.integration.spec.ts": "verified",
+    "code_unit:watcher/test/recovery-policy.spec.ts": "verified",
+    "code_unit:watcher/test/shadow-start.spec.ts": "verified",
+    "code_unit:watcher/test/state-audit.spec.ts": "verified",
+    "code_unit:watcher/test/windowed-error-rate.spec.ts": "verified",
+    "code_unit:watcher/vitest.config.ts": "verified",
+    "deployable_unit:watcher": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-fitness",
+   "kind": "fitness_rules",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-18T23:00:22Z",
+   "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+  },
+  {
+   "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+   "duration_s": 0.01,
+   "entities": [
+    "document:CHANGELOG.md"
+   ],
+   "entity_verdicts": {
+    "document:CHANGELOG.md": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-doc-reference",
+   "kind": "doc_reference",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-18T23:00:23Z",
+   "summary": "1 document(s), 0 failed"
+  },
+  {
+   "command": "bash -n + pinned ShellCheck on syntax projection; no caller/Bats execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:watcher/deploy/evidence-day7-check.sh"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/deploy/evidence-day7-check.sh": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-syntax-a8fe4630d79dd17f",
+   "kind": "shell_syntax",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-shell-syntax-a8fe4630d79dd17f.txt",
+   "scope": "shell_source_validation",
+   "started_at_utc": "2026-11-18T23:00:27Z",
+   "summary": "shell syntax/closure: not_measured"
+  },
+  {
+   "command": "bash -n + pinned ShellCheck on syntax projection; no caller/Bats execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:watcher/deploy/health-selfcheck.sh"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/deploy/health-selfcheck.sh": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-syntax-e24f28f62e9ba6d3",
+   "kind": "shell_syntax",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-shell-syntax-e24f28f62e9ba6d3.txt",
+   "scope": "shell_source_validation",
+   "started_at_utc": "2026-11-18T23:00:32Z",
+   "summary": "shell syntax/closure: not_measured"
+  },
+  {
+   "command": "bash -n + pinned ShellCheck on syntax projection; no caller/Bats execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:watcher/scripts/install-local.sh"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/scripts/install-local.sh": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-syntax-874d82e98fb2f5c4",
+   "kind": "shell_syntax",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-shell-syntax-874d82e98fb2f5c4.txt",
+   "scope": "shell_source_validation",
+   "started_at_utc": "2026-11-18T23:00:38Z",
+   "summary": "shell syntax/closure: not_measured"
+  },
+  {
+   "command": "bash -n + pinned ShellCheck on syntax projection; no caller/Bats execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:watcher/test/classification.bats"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/test/classification.bats": "not_measured"
+   },
+   "exit_code": 125,
+   "id": "v-shell-syntax-946bfd1a8336ee85",
+   "kind": "shell_syntax",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-shell-syntax-946bfd1a8336ee85.txt",
+   "scope": "shell_source_validation",
+   "started_at_utc": "2026-11-18T23:00:42Z",
+   "summary": "shell syntax/closure: not_measured"
+  },
+  {
+   "command": "bash -n + pinned ShellCheck on syntax projection; no caller/Bats execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:watcher/test/health-selfcheck.bats"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/test/health-selfcheck.bats": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-syntax-b3044e7ca1c67b7c",
+   "kind": "shell_syntax",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-shell-syntax-b3044e7ca1c67b7c.txt",
+   "scope": "shell_source_validation",
+   "started_at_utc": "2026-11-18T23:00:46Z",
+   "summary": "shell syntax/closure: not_measured"
+  },
+  {
+   "command": "consume source-bound native process fixture; no local execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:watcher/deploy/evidence-day7-check.sh"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/deploy/evidence-day7-check.sh": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-behavior-a8fe4630d79dd17f",
+   "kind": "shell_behavior",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-shell-behavior-a8fe4630d79dd17f.txt",
+   "scope": "shell_fixture_behavior",
+   "started_at_utc": "2026-11-18T23:00:46Z",
+   "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 10: dynamic load/substitution; line 16: dynamic load/substitution; line 17: dynamic load/substitution; line 23: dynamic load/substitution; line 26: dynamic load/substitution; line 27: multiline/opaque shell statement; line 28: multiline/opaque shell statement; line 29: multiline/opaque shell statement"
+  },
+  {
+   "command": "consume source-bound native process fixture; no local execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:watcher/deploy/health-selfcheck.sh"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/deploy/health-selfcheck.sh": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-behavior-e24f28f62e9ba6d3",
+   "kind": "shell_behavior",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-shell-behavior-e24f28f62e9ba6d3.txt",
+   "scope": "shell_fixture_behavior",
+   "started_at_utc": "2026-11-18T23:00:46Z",
+   "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 17: dynamic load/substitution; line 21: dynamic load/substitution; line 42: dynamic load/substitution; line 46: dynamic load/substitution; line 49: dynamic load/substitution; line 60: dynamic load/substitution; line 62: dynamic load/substitution; line 71: dynamic load/substitution; line 73: dynamic load/substitution; line 79: dynamic load/substitution; line 83: dynamic load/substitution; line 85: dynamic load/substitution; line 95: dynamic load/substitution; line 97: multiline/opaque shell statement; line 98: multiline/opaque shell statement; line 99: multiline/opaque shell statement"
+  },
+  {
+   "command": "consume source-bound native process fixture; no local execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:watcher/scripts/install-local.sh"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/scripts/install-local.sh": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-behavior-874d82e98fb2f5c4",
+   "kind": "shell_behavior",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-shell-behavior-874d82e98fb2f5c4.txt",
+   "scope": "shell_fixture_behavior",
+   "started_at_utc": "2026-11-18T23:00:46Z",
+   "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 18: wrapper options/child command unresolved; line 23: dynamic command/alias/eval; line 55: directory transition has unresolved execution cwd; line 66: directory transition has unresolved execution cwd"
+  },
+  {
+   "command": "consume source-bound native process fixture; no local execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:watcher/test/classification.bats"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/test/classification.bats": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-behavior-946bfd1a8336ee85",
+   "kind": "shell_behavior",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-shell-behavior-946bfd1a8336ee85.txt",
+   "scope": "shell_fixture_behavior",
+   "started_at_utc": "2026-11-18T23:00:46Z",
+   "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: Bats inventory is empty or unmeasured; line 16: unsupported/dynamic Bats registration; line 17: unsupported/dynamic Bats registration; line 18: unsupported/dynamic Bats registration; line 19: unsupported/dynamic Bats registration; line 20: unsupported/dynamic Bats registration; line 21: unsupported/dynamic Bats registration"
+  },
+  {
+   "command": "consume source-bound native process fixture; no local execution",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:watcher/test/health-selfcheck.bats"
+   ],
+   "entity_verdicts": {
+    "code_unit:watcher/test/health-selfcheck.bats": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-shell-behavior-b3044e7ca1c67b7c",
+   "kind": "shell_behavior",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-w300-clean-d1b/verifier-out/v-shell-behavior-b3044e7ca1c67b7c.txt",
+   "scope": "shell_fixture_behavior",
+   "started_at_utc": "2026-11-18T23:00:46Z",
+   "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: Bats run lacks an immediate unconditional child status assertion; line 100: dynamic load/substitution; line 113: dynamic load/substitution; line 123: dynamic load/substitution; line 136: dynamic load/substitution; line 149: dynamic load/substitution; line 158: dynamic load/substitution; line 169: dynamic load/substitution; line 175: unsupported loader/interpreter options; line 36: heredoc data/generation closure not measured; line 43: heredoc data/generation closure not measured; line 58: heredoc data/generation closure not measured; line 73: dynamic load/substitution; line 89: dynamic load/substitution"
+  }
+ ],
+ "verify": {
+  "events": [],
+  "required_by_entity": {
+   "code_unit:watcher/deploy/evidence-analyzer.d.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/deploy/evidence-analyzer.js": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/deploy/evidence-day7-check.sh": [
+    "fitness_rules",
+    "shell_behavior",
+    "shell_syntax"
+   ],
+   "code_unit:watcher/deploy/health-selfcheck.sh": [
+    "fitness_rules",
+    "shell_behavior",
+    "shell_syntax"
+   ],
+   "code_unit:watcher/deploy/test-fixtures/gen-fixtures.js": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/eslint.config.mjs": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/scripts/install-local.sh": [
+    "fitness_rules",
+    "shell_behavior",
+    "shell_syntax"
+   ],
+   "code_unit:watcher/src/audit-log.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/catalog/catalog-sync.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/catalog/openrouter.adapter.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/catalog/provider-adapter.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/classifier.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/config.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/contracts/cascade.adapter.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/contracts/catalog-writer.adapter.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/deadman-cli.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/deadman.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/health-server.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/latency-window.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/main.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/model-connector.client.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/observation.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/opsbot.client.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/rate-window.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/recovery-policy.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/state-store.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/src/types.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/autonomy-boundary.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/catalog-refresh.schema.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/catalog-sync.integration.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/classification.bats": [
+    "fitness_rules",
+    "shell_behavior",
+    "shell_syntax"
+   ],
+   "code_unit:watcher/test/config.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/entrypoint-guard.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/evidence-analyzer.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/failure-detection.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/health-selfcheck.bats": [
+    "fitness_rules",
+    "shell_behavior",
+    "shell_syntax"
+   ],
+   "code_unit:watcher/test/integration-force-fail.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/latency-window.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/main-loop.e2e.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/ops-alert.integration.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/recovery-policy.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/shadow-start.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/state-audit.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/test/windowed-error-rate.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:watcher/vitest.config.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "deployable_unit:watcher": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "document:CHANGELOG.md": [
+    "doc_reference"
+   ]
+  },
+  "seconds": {
+   "prepare": 8.51,
+   "total": 117.97,
+   "verifiers": 3.25
+  }
+ },
+ "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
+}
