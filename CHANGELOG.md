@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **watcher yaml bump (deferred from #273).** Nested manifest + lockfile update required for frozen-lockfile CI. Measured: pnpm-lock.yaml change forces graph global_fallback (own PR).
+
 ### Fixed
+
 
 - **docker-e2e is concurrency-safe on the shared Docker host.**
   ci-general runners share one Docker daemon (Machine/Docker Name
