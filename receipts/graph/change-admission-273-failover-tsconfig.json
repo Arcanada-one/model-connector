@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted"
  },
- "captured_at_utc": "2026-11-18T15:12:51Z",
+ "captured_at_utc": "2026-11-18T15:47:19Z",
  "change_set": {
   "base": "cf28d8ce417f2d7b30215057d55db6bada852b29",
   "files": [
@@ -42,19 +42,19 @@
  "graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:9b23b12dc1bffdd79ffae6a7368f63a7defd52c706dd2b6d2db7ca7075a76566",
-  "path": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/graph-cf28d8ce417f.json",
+  "graph_digest": "sha256:1df0d04ff38e23329576ea13099a9d03a2cf745f2aa4d4101d2423453c59e5ce",
+  "path": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/graph-cf28d8ce417f.json",
   "source_commit": "cf28d8ce417f2d7b30215057d55db6bada852b29"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:1f38c1ad5259dc4ab9912dd6ae562090d46e276c0bd8a48c260744e0e45dc9c6",
-  "path": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/graph-head-88a0fe103eb1.json",
+  "graph_digest": "sha256:d4bc42021a227af11c1f0cd42713a3e92bcb55b5b5c5bc3cfa45a7359202d70a",
+  "path": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/graph-head-88a0fe103eb1.json",
   "source_commit": "88a0fe103eb15c4c81a2fe484a7805650344a6bb",
   "staleness": {
-   "checked_at_utc": "2026-11-18T15:14:57Z",
-   "checked_nodes": 1034,
+   "checked_at_utc": "2026-11-18T15:48:20Z",
+   "checked_nodes": 1033,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -535,17 +535,18 @@
  },
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
-  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none"
+  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
+  "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-105-reasoning-subset.json: it declares this run's work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0, but the receipt is being written to /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/car-out/change-admission-273-failover-tsconfig.json, which is outside this repository, so no path in the tree is the one this run supersedes.",
+  "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-mc-price-106-107.json: it declares this run's work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0, but the receipt is being written to /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/car-out/change-admission-273-failover-tsconfig.json, which is outside this repository, so no path in the tree is the one this run supersedes."
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261118T151251Z-88a0fe10",
- "receipt_path": "receipts/graph/change-admission-273-failover-tsconfig.json",
+ "receipt_id": "car-verify-20261118T154719Z-88a0fe10",
  "repo": {
   "name": "Arcanada-one/model-connector",
-  "path": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/repo"
+  "path": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/clean-export"
  },
  "revision_selection": {
   "base": [
@@ -607,7 +608,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-18T15:14:57Z",
+  "checked_at_utc": "2026-11-18T15:48:20Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -896,8 +897,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/repo/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/type-check-x50402cf/check.tsbuildinfo --listFiles",
-   "duration_s": 27.61,
+   "command": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/clean-export/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/clean-export/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/type-check-gblqytop/check.tsbuildinfo --listFiles",
+   "duration_s": 17.66,
    "entities": [
     "code_unit:src/openai-compat/openai-compat.failover.integration.spec.ts",
     "deployable_unit:."
@@ -909,13 +910,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-18T15:15:17Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-18T15:48:37Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2972 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/repo/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/type-check-lervri1p/check.tsbuildinfo --listFiles",
-   "duration_s": 17.11,
+   "command": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/clean-export/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/clean-export/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/type-check-j2bevb86/check.tsbuildinfo --listFiles",
+   "duration_s": 9.04,
    "entities": [
     "deployable_unit:."
    ],
@@ -925,13 +926,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-18T15:15:46Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-18T15:48:55Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2148 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/repo/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/type-check-798eg7v7/check.tsbuildinfo --listFiles",
-   "duration_s": 1.98,
+   "command": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/clean-export/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/clean-export/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/type-check-cml1g9ux/check.tsbuildinfo --listFiles",
+   "duration_s": 1.13,
    "entities": [
     "deployable_unit:."
    ],
@@ -941,13 +942,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-18T15:16:04Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-18T15:49:05Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/repo/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/type-check-atg9he7x/check.tsbuildinfo --listFiles",
-   "duration_s": 29.5,
+   "command": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/clean-export/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/clean-export/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/type-check-uuyi9acg/check.tsbuildinfo --listFiles",
+   "duration_s": 13.24,
    "entities": [
     "deployable_unit:."
    ],
@@ -957,13 +958,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-18T15:16:06Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-18T15:49:06Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2781 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/repo/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/repo/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/type-check-i8seg36h/check.tsbuildinfo --listFiles",
-   "duration_s": 34.76,
+   "command": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/clean-export/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/clean-export/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/type-check-fl87yaus/check.tsbuildinfo --listFiles",
+   "duration_s": 13.97,
    "entities": [
     "deployable_unit:."
    ],
@@ -973,13 +974,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-18T15:16:37Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-18T15:49:20Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2887 files listed"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.58,
+   "duration_s": 0.29,
    "entities": [
     "code_unit:src/openai-compat/openai-compat.failover.integration.spec.ts",
     "deployable_unit:."
@@ -991,8 +992,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-18T15:17:13Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-18T15:49:34Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -1007,13 +1008,23 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-work4/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-18T15:17:14Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/verify-clean-work5/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-18T15:49:35Z",
    "summary": "1 document(s), 0 failed"
   }
  ],
  "verify": {
   "events": [
+   {
+    "code": "SUPERSEDED_SELF_NOT_APPLICABLE",
+    "rule": "DEC-AUP-0035",
+    "text": "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-105-reasoning-subset.json: it declares this run's work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0, but the receipt is being written to /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/car-out/change-admission-273-failover-tsconfig.json, which is outside this repository, so no path in the tree is the one this run supersedes."
+   },
+   {
+    "code": "SUPERSEDED_SELF_NOT_APPLICABLE",
+    "rule": "DEC-AUP-0035",
+    "text": "DEC-AUP-0035 not applied to receipt:receipts/graph/change-admission-mc-price-106-107.json: it declares this run's work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0, but the receipt is being written to /home/dev/aup/claude-work/fin-mc-273/sweep/model-connector/car-out/change-admission-273-failover-tsconfig.json, which is outside this repository, so no path in the tree is the one this run supersedes."
+   },
    {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
@@ -1056,9 +1067,9 @@
    "receipt:receipts/graph/change-admission-mc-price-106-107.json": []
   },
   "seconds": {
-   "prepare": 8.86,
-   "total": 262.93,
-   "verifiers": 111.55
+   "prepare": 7.67,
+   "total": 135.78,
+   "verifiers": 55.34
   }
  },
  "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
