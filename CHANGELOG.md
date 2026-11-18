@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **packages/sdk-ts vitest ^3.2.4 → ^4.1.11.** Nested manifest-only bump;
+  measured non-fallback for graph admission; frozen-lockfile install stays green
+  without a lockfile edit (deferred from #273).
+
 ### Fixed
 
 - **OpenAI-compat failover integration stub includes `recordFailoverHops`.**
@@ -14,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the integration harness mock now provides a no-op so hop settlement does not
   throw. Also include `test/watcher/*.spec.ts` in `.arcana/tsconfig.mjs.json`
   for the graph typecheck profile.
+
 
 - **docker-e2e is concurrency-safe on the shared Docker host.**
   ci-general runners share one Docker daemon (Machine/Docker Name
