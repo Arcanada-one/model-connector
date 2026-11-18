@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **packages/sdk-ts vitest ^3.2.4 → ^4.1.11.** Nested manifest-only bump;
+  measured non-fallback for graph admission; frozen-lockfile install stays green
+  without a lockfile edit (deferred from #273).
+
 ### Fixed
+
 
 - **docker-e2e is concurrency-safe on the shared Docker host.**
   ci-general runners share one Docker daemon (Machine/Docker Name
