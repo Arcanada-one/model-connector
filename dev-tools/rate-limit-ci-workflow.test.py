@@ -40,8 +40,12 @@ if a[0]=='run':
  expected='mc-rate-limit-123-2'
  assert name==expected
  assert '--network=host' in a and '--env-file' not in a
- assert 'DATABASE_URL=postgresql://test:test@localhost:15432/connector_test' in a
- assert 'REDIS_HOST=127.0.0.1' in a and 'REDIS_PORT=16379' in a
+ # Host ports come from job.services.*.ports via MC_E2E_* (never fixed 15432/16379).
+ pg=os.environ['MC_E2E_PG_PORT']
+ redis=os.environ['MC_E2E_REDIS_PORT']
+ assert pg and redis and pg!='15432' and redis!='16379'
+ assert f'DATABASE_URL=postgresql://test:test@localhost:{pg}/connector_test' in a
+ assert 'REDIS_HOST=127.0.0.1' in a and f'REDIS_PORT={redis}' in a
  assert 'REDIS_PREFIX=mc-rate-limit-ci:123:2:' in a
  script=a[-1]
  assert script.count('src/auth/rate-limit.integration.spec.ts')==1
@@ -57,7 +61,9 @@ if a[0]=='run':sys.exit(int(os.environ.get('MC_TEST_RUN_EXIT','0')))
         docker.chmod(0o700)
         self.env = {**os.environ, 'PATH': str(self.bin) + ':' + os.environ['PATH'],
                     'MC_TEST_EVENTS': str(self.events), 'GITHUB_RUN_ID': '123',
-                    'GITHUB_RUN_ATTEMPT': '2', 'PYTHONDONTWRITEBYTECODE': '1'}
+                    'GITHUB_RUN_ATTEMPT': '2', 'PYTHONDONTWRITEBYTECODE': '1',
+                    # Stand-ins for ephemeral GHA-mapped host ports (not the old fixed binds).
+                    'MC_E2E_PG_PORT': '34567', 'MC_E2E_REDIS_PORT': '34568'}
 
     def execute(self, name, **extra):
         return subprocess.run(['bash', '-c', step(name)], cwd=self.root,

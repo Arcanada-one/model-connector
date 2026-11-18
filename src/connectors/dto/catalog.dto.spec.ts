@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { describe, it, expect } from 'vitest';
 import {
   CatalogModelEntrySchema,
@@ -366,6 +368,24 @@ describe('normalizePerMTokPrice (CONN-0238)', () => {
     expect(normalizePerMTokPrice('not-a-number')).toBeNull();
     expect(normalizePerMTokPrice(Number.NaN)).toBeNull();
     expect(normalizePerMTokPrice(Number.POSITIVE_INFINITY)).toBeNull();
+  });
+
+  it('treats OpenRouter\'s "-1" auto-route sentinel as unpriced, never -1000000', () => {
+    // Real OpenRouter /api/v1/models shape for openrouter/auto (committed fixture).
+    const fixture = JSON.parse(
+      readFileSync(
+        resolve(__dirname, '../../..', 'test/fixtures/connectors/openrouter-models.json'),
+        'utf8',
+      ),
+    ) as {
+      data: Array<{ id: string; pricing?: { prompt?: string; completion?: string } }>;
+    };
+    const auto = fixture.data.find((e) => e.id === 'openrouter/auto');
+    expect(auto?.pricing).toEqual({ prompt: '-1', completion: '-1' });
+    expect(normalizePerMTokPrice(auto!.pricing!.prompt)).toBeNull();
+    expect(normalizePerMTokPrice(auto!.pricing!.completion)).toBeNull();
+    expect(normalizePerMTokPrice('-1')).toBeNull();
+    expect(normalizePerMTokPrice(-1)).toBeNull();
   });
 });
 

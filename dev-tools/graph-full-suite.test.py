@@ -492,5 +492,74 @@ class Controls(unittest.TestCase):
             'Ran 1 test in 0.1s\nOK (expected failures=1)\n')['skipped'], 1)
 
 
+class ArmEvidence(unittest.TestCase):
+    """KCP-0027 arm evidence emitted by the root runner: data only, never a verdict."""
+
+    def repo(self, tmp):
+        root = Path(tmp)
+        (root / '.arcana').mkdir()
+        (root / '.arcana/verify.json').write_text('{"schema":"VerifyProfile/v1"}\n')
+        git = ['git', '-C', str(root), '-c', 'user.name=t', '-c', 'user.email=t@example.invalid']
+        subprocess.run(['git', '-C', str(root), 'init', '-q'], check=True)
+        subprocess.run([*git, 'add', '.'], check=True)
+        subprocess.run([*git, 'commit', '-qm', 'x'], check=True)
+        return root, subprocess.run(['git', '-C', str(root), 'rev-parse', 'HEAD'],
+                                    capture_output=True, check=True).stdout.decode().strip()
+
+    def results(self):
+        ok = {'verdict': 'verified', 'counts': {'passed': 3, 'failed': 0, 'skipped': 0}}
+        return [
+            {'suite': 'maintained-app-e2e', 'verdict': 'not_measured', 'held_members': ['test/app.e2e-spec.ts']},
+            {'suite': 'maintained-authored-template', 'executions': [dict(ok)]},
+            {'suite': 'maintained-integration', 'executions': [dict(ok)],
+             'held_members': ['src/billing/hold.integration.spec.ts',
+                              'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts']},
+            {'suite': 'maintained-regression',
+             'executions': [dict(ok), {'verdict': 'verified', 'counts': None}]},
+            {'suite': 'maintained-vitest', 'executions': [dict(ok)]},
+        ]
+
+    def test_executed_arms_carry_counts_and_held_arms_are_not_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, head = self.repo(tmp)
+            arms = subject.build_arms(root, self.results(), head)
+        self.assertEqual(set(arms), {'schema', 'head', 'definition', 'arms', 'not_run'})
+        self.assertEqual(arms['not_run'], ['app-e2e', 'integration-disposable-store',
+                                           'integration-external-provider'])
+        by_name = {a['name']: a for a in arms['arms']}
+        self.assertEqual(set(by_name), {'authored-template', 'integration-offline-contracts',
+                                        'regression', 'vitest-default'})
+        # An exit-status validator counts as exactly one passed check; nothing is invented beyond that.
+        self.assertEqual(by_name['regression']['counts'], {'total': 4, 'passed': 4, 'failed': 0, 'skipped': 0})
+        for arm in arms['arms']:
+            self.assertEqual((arm['backend'], arm['head']), ('stub', head))
+        self.assertEqual(len(arms['definition']['sha256']), 64)
+
+    def test_unexecuted_or_skipped_or_unclassified_never_becomes_an_executed_arm(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, head = self.repo(tmp)
+            results = self.results()
+            results[4] = {'suite': 'maintained-vitest', 'executions': [{'verdict': 'not_measured', 'exit_code': 127}]}
+            results[3]['held_members'] = ['deploy/x.sh']
+            arms = subject.build_arms(root, results, head)
+            self.assertNotIn('vitest-default', {a['name'] for a in arms['arms']})
+            self.assertNotIn('regression', {a['name'] for a in arms['arms']})
+            self.assertIn('vitest-default', arms['not_run'])
+            self.assertIn('regression', arms['not_run'])
+            results = self.results()
+            results[2]['held_members'] = ['src/new-area/thing.integration.spec.ts']
+            with self.assertRaises(subject.Refusal):
+                subject.build_arms(root, results, head)
+
+    def test_committed_definition_names_every_arm_the_runner_can_emit(self):
+        profile = json.loads((ROOT / '.arcana/verify.json').read_text())
+        defined = {a['name']: a['requires'] for a in profile['deployables']['.']['full_test_arms']}
+        self.assertEqual(defined, {
+            'vitest-default': 'stub_ok', 'integration-offline-contracts': 'stub_ok',
+            'authored-template': 'stub_ok', 'regression': 'stub_ok',
+            'integration-disposable-store': 'real_disposable',
+            'integration-external-provider': 'real_external', 'app-e2e': 'real_disposable'})
+
+
 if __name__ == '__main__':
     unittest.main()

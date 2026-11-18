@@ -1,0 +1,432 @@
+{
+ "admission": {
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+  "verdict": "admitted_with_exemptions"
+ },
+ "captured_at_utc": "2026-11-17T18:42:40Z",
+ "change_set": {
+  "base": "7ce917af42d4d85ede120e1651e09f05c066c069",
+  "files": [
+   {
+    "kind": "config",
+    "path": ".arcana/verify.json",
+    "status": "M",
+    "uncovered": true
+   },
+   {
+    "kind": "other",
+    "node_id": "code_unit:dev-tools/graph-full-suite.test.py",
+    "node_ids": [
+     "code_unit:dev-tools/graph-full-suite.test.py"
+    ],
+    "path": "dev-tools/graph-full-suite.test.py",
+    "status": "M"
+   },
+   {
+    "kind": "other",
+    "node_id": "code_unit:scripts/graph_full_suite.py",
+    "node_ids": [
+     "code_unit:scripts/graph_full_suite.py"
+    ],
+    "path": "scripts/graph_full_suite.py",
+    "status": "M"
+   }
+  ],
+  "head": "c741224ef9347121ab401a0b75f4f5311d72f6f8",
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "exemptions": [
+  {
+   "code": "CANARY_INFERRED_BOUNDARY_NOT_MEASURED",
+   "entity": "code_unit:scripts/graph_full_suite.py",
+   "expires_at_utc": "2026-12-17T00:00:00Z",
+   "owner": "FINISH-20261117 fin-w2-mc / Model Connector owner",
+   "reason": "Offline full-suite harness; no live HTTP boundary canary owed."
+  },
+  {
+   "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+   "entity": "deployable_unit:.",
+   "expires_at_utc": "2026-12-17T00:00:00Z",
+   "owner": "FINISH-20261117 fin-w2-mc / Model Connector owner",
+   "reason": "Receipt author host builds graphs without node_modules so graph digests match CI (node_modules presence changes git-object graph extraction). Hosted lint-and-test runs tsc -p tsconfig.ci.json separately."
+  }
+ ],
+ "graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:2a37b1b56b02826685d644422609cad1a6c7dd499120fbea24bfa6f07c51a879",
+  "path": "/tmp/arcana-verify-h0ttbe86/verifier-out/graph-7ce917af42d4.json",
+  "source_commit": "7ce917af42d4d85ede120e1651e09f05c066c069"
+ },
+ "head_graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:c55fc5375f3aed79839b1d522fe7d044d55ca70e534c74f199524c8a362f8176",
+  "path": "/tmp/arcana-verify-h0ttbe86/verifier-out/graph-head-c741224ef934.json",
+  "source_commit": "c741224ef9347121ab401a0b75f4f5311d72f6f8",
+  "staleness": {
+   "checked_at_utc": "2026-11-17T18:43:39Z",
+   "checked_nodes": 1020,
+   "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+   "mismatched_nodes": [],
+   "verdict": "fresh"
+  }
+ },
+ "host": "arcana-devs",
+ "impact_set": {
+  "deterministic_core": [
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "deployable_unit:.",
+    "node_type": "deployable_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:dev-tools/graph-full-suite.test.py",
+      "provenance": "deterministic",
+      "to": "deployable_unit:.",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:docs/reference/full-suite-declarations.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:docs/reference/full-suite-declarations.md",
+      "provenance": "deterministic",
+      "to": "code_unit:dev-tools/graph-full-suite.test.py",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-c59e860f.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-c59e860f.json",
+      "provenance": "deterministic",
+      "to": "code_unit:dev-tools/graph-full-suite.test.py",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   }
+  ],
+  "edge_types": "all",
+  "global_fallback": {
+   "triggered": false
+  },
+  "inferred_tail": [],
+  "max_depth": 3,
+  "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+  "total": 3
+ },
+ "notes": [
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
+  "exemptions: 2 attached from /home/dev/aup/claude-work/fin-w2-mc/work/exemptions-290-ci.json"
+ ],
+ "producer": {
+  "tool": "tools/graph/verify.py",
+  "version": "1.4.1"
+ },
+ "receipt_id": "car-verify-20261117T184240Z-c741224e",
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/home/dev/aup/claude-work/fin-w2-mc/work/mc-290-wt"
+ },
+ "revision_selection": {
+  "base": [
+   "code_unit:dev-tools/graph-full-suite.test.py",
+   "code_unit:scripts/graph_full_suite.py",
+   "deployable_unit:.",
+   "document:docs/reference/full-suite-declarations.md",
+   "receipt:receipts/graph/change-admission-c59e860f.json"
+  ],
+  "head": [
+   "code_unit:dev-tools/graph-full-suite.test.py",
+   "code_unit:scripts/graph_full_suite.py",
+   "deployable_unit:.",
+   "document:docs/reference/full-suite-declarations.md",
+   "receipt:receipts/graph/change-admission-c59e860f.json"
+  ],
+  "schema": "RevisionImpactSelection/v1",
+  "unmeasured_head_files": []
+ },
+ "schema": "ChangeAdmissionReceipt/v1",
+ "staleness": {
+  "checked_at_utc": "2026-11-17T18:43:39Z",
+  "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+  "mismatched_nodes": [],
+  "verdict": "fresh"
+ },
+ "structural_exclusions": [
+  {
+   "content_hash": {
+    "base": "sha256:21a7b0a88525a82847e39d2ea15aa9bc2d70bc39e8f023d9ad8e6b3732c60fdd",
+    "head": "sha256:21a7b0a88525a82847e39d2ea15aa9bc2d70bc39e8f023d9ad8e6b3732c60fdd"
+   },
+   "entity": "receipt:receipts/graph/change-admission-c59e860f.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-c59e860f.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  }
+ ],
+ "tree": {
+  "commit": "c741224ef9347121ab401a0b75f4f5311d72f6f8",
+  "dirty": false
+ },
+ "verdicts": [
+  {
+   "entity": "code_unit:dev-tools/graph-full-suite.test.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:scripts/graph_full_suite.py",
+   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-canary",
+    "v-config-schema",
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "deployable_unit:.",
+   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "document:docs/reference/full-suite-declarations.md",
+   "reason": "v-doc-reference: 1 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  }
+ ],
+ "verifier_selection": {
+  "applied": {},
+  "not_applied": [],
+  "requested": [],
+  "schema": "VerifierSelection/v1"
+ },
+ "verifiers": [
+  {
+   "command": "tsc -p /home/dev/aup/claude-work/fin-w2-mc/work/mc-290-wt/.arcana/tsconfig.mjs.json (tsc not found)",
+   "duration_s": 0.0,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "not_measured"
+   },
+   "exit_code": 127,
+   "id": "v-type-check-tsconfig-mjs",
+   "kind": "type_check",
+   "output_ref": "/tmp/arcana-verify-h0ttbe86/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-17T18:43:52Z",
+   "summary": "not_measured: tsc unavailable"
+  },
+  {
+   "command": "tsc -p /home/dev/aup/claude-work/fin-w2-mc/work/mc-290-wt/tsconfig.build.json (tsc not found)",
+   "duration_s": 0.0,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "not_measured"
+   },
+   "exit_code": 127,
+   "id": "v-type-check-tsconfig-build",
+   "kind": "type_check",
+   "output_ref": "/tmp/arcana-verify-h0ttbe86/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-17T18:43:52Z",
+   "summary": "not_measured: tsc unavailable"
+  },
+  {
+   "command": "tsc -p /home/dev/aup/claude-work/fin-w2-mc/work/mc-290-wt/tsconfig.ci.json (tsc not found)",
+   "duration_s": 0.0,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "not_measured"
+   },
+   "exit_code": 127,
+   "id": "v-type-check-tsconfig-ci",
+   "kind": "type_check",
+   "output_ref": "/tmp/arcana-verify-h0ttbe86/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-17T18:43:52Z",
+   "summary": "not_measured: tsc unavailable"
+  },
+  {
+   "command": "tsc -p /home/dev/aup/claude-work/fin-w2-mc/work/mc-290-wt/tsconfig.json (tsc not found)",
+   "duration_s": 0.0,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "not_measured"
+   },
+   "exit_code": 127,
+   "id": "v-type-check-tsconfig",
+   "kind": "type_check",
+   "output_ref": "/tmp/arcana-verify-h0ttbe86/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-17T18:43:52Z",
+   "summary": "not_measured: tsc unavailable"
+  },
+  {
+   "command": "tsc -p /home/dev/aup/claude-work/fin-w2-mc/work/mc-290-wt/tsconfig.test.json (tsc not found)",
+   "duration_s": 0.0,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "not_measured"
+   },
+   "exit_code": 127,
+   "id": "v-type-check-tsconfig-test",
+   "kind": "type_check",
+   "output_ref": "/tmp/arcana-verify-h0ttbe86/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-17T18:43:52Z",
+   "summary": "not_measured: tsc unavailable"
+  },
+  {
+   "command": "verify.py config_schema: keys read at head ⊆ declared keys",
+   "duration_s": 0.78,
+   "entities": [
+    "code_unit:scripts/graph_full_suite.py"
+   ],
+   "entity_verdicts": {
+    "code_unit:scripts/graph_full_suite.py": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-config-schema",
+   "kind": "config_schema",
+   "output_ref": "/tmp/arcana-verify-h0ttbe86/verifier-out/v-config-schema.json",
+   "started_at_utc": "2026-11-17T18:43:52Z",
+   "summary": "3 source(s), 0 new / 91 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
+  },
+  {
+   "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+   "duration_s": 0.33,
+   "entities": [
+    "code_unit:dev-tools/graph-full-suite.test.py",
+    "code_unit:scripts/graph_full_suite.py",
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "code_unit:dev-tools/graph-full-suite.test.py": "verified",
+    "code_unit:scripts/graph_full_suite.py": "verified",
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-fitness",
+   "kind": "fitness_rules",
+   "output_ref": "/tmp/arcana-verify-h0ttbe86/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-17T18:43:53Z",
+   "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+  },
+  {
+   "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+   "duration_s": 0.0,
+   "entities": [
+    "document:docs/reference/full-suite-declarations.md"
+   ],
+   "entity_verdicts": {
+    "document:docs/reference/full-suite-declarations.md": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-doc-reference",
+   "kind": "doc_reference",
+   "output_ref": "/tmp/arcana-verify-h0ttbe86/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-17T18:43:54Z",
+   "summary": "1 document(s), 0 failed"
+  },
+  {
+   "command": "tools/graph/deploy_gate.py canary --plan <plan> --phase pre|post (results supplied with --canary)",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:scripts/graph_full_suite.py"
+   ],
+   "entity_verdicts": {
+    "code_unit:scripts/graph_full_suite.py": "not_measured"
+   },
+   "exit_code": 0,
+   "id": "v-canary",
+   "kind": "canary",
+   "output_ref": "/tmp/arcana-verify-h0ttbe86/verifier-out/v-canary.json",
+   "started_at_utc": "2026-11-17T18:43:54Z",
+   "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 1 not_measured of 1 entities"
+  }
+ ],
+ "verify": {
+  "events": [
+   {
+    "code": "STRUCTURAL_EXCLUSION",
+    "rule": "DEC-AUP-0034",
+    "text": "1 affected entity(ies) owe no verdict (receipt: 1): unchanged at both revisions and given no verifier by the matrix"
+   }
+  ],
+  "required_by_entity": {
+   "code_unit:dev-tools/graph-full-suite.test.py": [
+    "fitness_rules"
+   ],
+   "code_unit:scripts/graph_full_suite.py": [
+    "canary",
+    "config_schema",
+    "fitness_rules"
+   ],
+   "deployable_unit:.": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "document:docs/reference/full-suite-declarations.md": [
+    "doc_reference"
+   ],
+   "receipt:receipts/graph/change-admission-c59e860f.json": []
+  },
+  "seconds": {
+   "prepare": 6.25,
+   "total": 73.19,
+   "verifiers": 1.11
+  }
+ }
+}

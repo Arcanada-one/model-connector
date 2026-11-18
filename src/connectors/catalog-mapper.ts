@@ -2,6 +2,7 @@ import type { ModelCatalogRow, ModelCatalogUpsert } from './catalog.repository';
 import {
   buildDerivedTags,
   isModalityExecutableHere,
+  sanitizeCatalogTariff,
   type CatalogModelEntry,
   type ModelModality,
   type ModelPricing,
@@ -142,25 +143,25 @@ export function rowToEntry(row: ModelCatalogRow): CatalogModelEntry {
     supportsTools: row.supportsTools,
   };
   const modality = row.modality as ModelModality;
+  // Issue #106 — never surface a negative sentinel tariff on the public catalog.
+  const inputPerMTok = sanitizeCatalogTariff(row.inputPerMTok);
+  const outputPerMTok = sanitizeCatalogTariff(row.outputPerMTok);
+  const cachedInputPerMTok = sanitizeCatalogTariff(row.cachedInputPerMTok ?? null);
+  const cacheWrite5mPerMTok = sanitizeCatalogTariff(row.cacheWrite5mPerMTok ?? null);
+  const cacheWrite1hPerMTok = sanitizeCatalogTariff(row.cacheWrite1hPerMTok ?? null);
   const pricing: ModelPricing | null =
-    row.inputPerMTok === null &&
-    row.outputPerMTok === null &&
-    (row.cachedInputPerMTok ?? null) === null &&
-    (row.cacheWrite5mPerMTok ?? null) === null &&
-    (row.cacheWrite1hPerMTok ?? null) === null
+    inputPerMTok === null &&
+    outputPerMTok === null &&
+    cachedInputPerMTok === null &&
+    cacheWrite5mPerMTok === null &&
+    cacheWrite1hPerMTok === null
       ? null
       : {
-          inputPerMTok: row.inputPerMTok,
-          outputPerMTok: row.outputPerMTok,
-          ...(row.cachedInputPerMTok !== undefined
-            ? { cachedInputPerMTok: row.cachedInputPerMTok }
-            : {}),
-          ...(row.cacheWrite5mPerMTok !== undefined
-            ? { cacheWrite5mPerMTok: row.cacheWrite5mPerMTok }
-            : {}),
-          ...(row.cacheWrite1hPerMTok !== undefined
-            ? { cacheWrite1hPerMTok: row.cacheWrite1hPerMTok }
-            : {}),
+          inputPerMTok,
+          outputPerMTok,
+          ...(row.cachedInputPerMTok !== undefined ? { cachedInputPerMTok } : {}),
+          ...(row.cacheWrite5mPerMTok !== undefined ? { cacheWrite5mPerMTok } : {}),
+          ...(row.cacheWrite1hPerMTok !== undefined ? { cacheWrite1hPerMTok } : {}),
           unit: row.priceUnit,
         };
   const priceMultiplier = row.priceMultiplier;

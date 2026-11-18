@@ -40,7 +40,9 @@ Model Connector wraps AI CLI tools as connectors behind a REST API. Each connect
 | `cloudflare-workers-ai` | Native API | Cloudflare Workers AI text-generation models | `CLOUDFLARE_WORKERS_AI_ACCOUNT_ID` + `CLOUDFLARE_WORKERS_AI_API_TOKEN` | provider-dependent |
 | `grok` | API | grok-4-fast (+reasoning), grok-3, grok-3-mini, grok-code-fast-1 | `XAI_API_KEY` | ~0.5–2s |
 | `mistral` | API | dynamic Mistral chat catalog | `MISTRAL_API_KEY` | provider-dependent |
-| `embedding` | API | bge-m3 (dense, sparse, ColBERT, hybrid) | Internal (Tailscale) | ~0.2s |
+| `embedding` | API | bge-m3 (dense, sparse, ColBERT, hybrid) | No connector-level auth; endpoint controls depend on the configured service | service-dependent |
+
+`EMBEDDING_API_URL` must be set explicitly for each environment; without it, the embedding connector is disabled. Endpoint authentication and network controls, capacity, pricing, and latency depend on the configured service. See [Embedding Connector](docs/connectors/embedding.md).
 
 Per-connector docs: `docs/connectors/<name>.md`, including [Amazon Bedrock](docs/connectors/bedrock.md). Architecture: `docs/architecture.md`.
 
@@ -801,7 +803,7 @@ curl -X POST https://connector.arcanada.one/connectors/claude-code/execute \
   -H "Content-Type: application/json" \
   -d '{"prompt": "What is 2+2?", "maxTurns": 1}'
 
-# Embedding (BGE-M3, ~0.2s, self-hosted на arcana-db)
+# Embedding (BGE-M3; the Model Connector instance needs EMBEDDING_API_URL configured)
 curl -X POST https://connector.arcanada.one/connectors/embedding/execute \
   -H "Authorization: Bearer $MC_API_KEY" \
   -H "Content-Type: application/json" \
@@ -831,7 +833,7 @@ curl -X POST https://connector.arcanada.one/execute \
 | Reasoning (математика, планирование) | `grok` | `grok-4-fast-reasoning` | ~1–2s | xAI per-token |
 | Структурированный вывод (json_schema) | `openrouter` / `groq` / `grok` | любая | ~0.5–1s | per-model |
 | Работа с файлами / code exec | `claude-code` | sonnet / haiku | ~4s | subscription |
-| Embeddings (поиск, similarity) | `embedding` | `bge-m3` | ~0.2s | free (self-hosted) |
+| Embeddings (поиск, similarity) | `embedding` | `bge-m3` | service-dependent | depends on configured service |
 | Agent с Cursor tools | `cursor` | `auto` | ~10s | subscription |
 | OpenAI reasoning (`o3`, `o4-mini`) | `codex` | `o4-mini` | ~6–12s | ChatGPT-tier |
 
@@ -929,7 +931,7 @@ curl -X DELETE https://connector.arcanada.one/admin/keys/<id> \
 
 ### Benchmark (PROD)
 
-Snapshot 2026-04-20:
+Snapshot 2026-04-20. Embedding latency is a historical production measurement, not a connector default; current latency depends on the configured service.
 
 | Connector | R1 | R2 | R3 | Avg |
 |-----------|----|----|-----|-----|

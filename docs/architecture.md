@@ -35,7 +35,7 @@ IConnector implementation
         ├── GroqConnector        (api.groq.com/openai/v1)
         ├── GrokConnector        (api.x.ai/v1)
         ├── MistralConnector     (api.mistral.ai/v1)
-        └── EmbeddingConnector   (arcana-db:8300, BGE-M3)
+        └── EmbeddingConnector   (explicit EMBEDDING_API_URL, BGE-M3)
 ```
 
 ## Connector Hierarchy

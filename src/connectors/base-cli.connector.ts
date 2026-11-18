@@ -17,6 +17,7 @@ import { resolveAttemptBudget } from './attempt-budget';
 import { getConfig } from '../config/env.schema';
 import { CircuitOpenError } from '../core/resilience/circuit-breaker';
 import { CircuitBreakerManager } from '../core/resilience/circuit-breaker-manager';
+import { normalizeReasoningSubset } from './normalize-reasoning-usage';
 
 export class QueueTimeoutError extends Error {
   constructor(public readonly timeoutMs: number) {
@@ -332,6 +333,11 @@ export abstract class BaseCliConnector implements IConnector {
 
       const latencyMs = Date.now() - start;
       const parsed = this.parseOutput(stdout, stderr, request);
+      // #105 — belt-and-suspenders: enforce subset even if a connector forgets.
+      const reasoningNorm = normalizeReasoningSubset({
+        outputTokens: parsed.outputTokens,
+        reasoningOutputTokens: parsed.reasoningOutputTokens,
+      });
 
       const base: ConnectorResponse = {
         id,
@@ -341,14 +347,14 @@ export abstract class BaseCliConnector implements IConnector {
         structured: parsed.structured,
         usage: {
           inputTokens: parsed.inputTokens,
-          outputTokens: parsed.outputTokens,
-          totalTokens: parsed.inputTokens + parsed.outputTokens,
+          outputTokens: reasoningNorm.outputTokens,
+          totalTokens: parsed.inputTokens + reasoningNorm.outputTokens,
           costUsd: parsed.costUsd,
           // CONN-0272 — forwarded only when the provider reported them.
           // `undefined` (provider is silent) and `0` (provider reported a miss)
           // are different facts and are kept different all the way to the row.
           cachedInputTokens: parsed.cachedInputTokens,
-          reasoningOutputTokens: parsed.reasoningOutputTokens,
+          reasoningOutputTokens: reasoningNorm.reasoningOutputTokens,
           // DEC-AUP-0028 R3/A3 — forwarded only when the CLI reported them;
           // same shape and same rule as BaseApiConnector.
           ...(parsed.cacheCreationInputTokens !== undefined

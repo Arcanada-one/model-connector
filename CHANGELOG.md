@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **docker-e2e is concurrency-safe on the shared Docker host.**
+  ci-general runners share one Docker daemon (Machine/Docker Name
+  `arcana-prd`). Fixed host ports (`15432`/`16379`/`3900`) and the fixed
+  container name `mc-e2e` collided when jobs overlapped; the old shared
+  concurrency group existed to serialize them, but GitHub still cancels
+  previously pending jobs in a group (incident main run 44160477798).
+  Service ports are now ephemeral (`ports: - 5432` / `- 6379`, read via
+  `job.services.*.ports`), the app listens on an ephemeral host port, the
+  e2e container name is suffixed with `run_id`/`run_attempt`, and every
+  event uses a unique-per-run concurrency group so nothing pending is
+  cancelled. Contract: `dev-tools/docker-e2e-concurrency-contract.test.py`.
+
+- **Dockerfile pins Cursor CLI with checksum and download retry.**
+  Replaces `curl https://cursor.com/install | bash` (HTTP 500 failed
+  publish-image run 44168125203 on 2026-11-17) with pinned
+  `2026.11.13-eacade1` linux/x64 `agent-cli-package.tar.gz`, sha256 verified
+  before extract, curl `--retry` on transient errors. Same
+  `/opt/cursor-agent` + `/usr/local/bin/cursor-agent` layout. Contract:
+  `dev-tools/dockerfile-cursor-cli-pin.test.py`.
+
+- **Catalogue OpenRouter `-1` sentinel (#106).** `normalizePerMTokPrice` now
+  returns `null` for negative / sentinel provider prices instead of persisting
+  `-1000000` USD per 1M tokens. Read paths sanitize historical negatives; a
+  reviewed data migration nulls existing negative `model_catalog` tariffs and
+  re-marks inconsistent `paid`+NULL rows as `unknown`.
+- **`unpriced` follows the requested model (#107).** Metering and the pre-call
+  estimate look up a known catalogue tariff by model id across connectors when
+  the serving connector has none, so failover onto an uncatalogued connector no
+  longer silently settles `costSource: 'unpriced'` for a model that is priced
+  elsewhere. Still `unpriced` when no connector catalogues the model.
+- **`reasoningOutputTokens` subset invariant (#105).** Providers that report
+  reasoning as additive (`reasoning > completion_tokens` — measured on orq/grok-3
+  and several OpenRouter free models) no longer leave those tokens unbilled.
+  `normalizeReasoningSubset` folds additive reasoning into `outputTokens` in
+  openrouter, orq and codex (plus base-api/base-cli safety net) so
+  `reasoningOutputTokens <= outputTokens` always holds and catalog metering via
+  `measureCostUsd` charges reasoning exactly once at the output rate. Already-
+  subset reports are unchanged. OpenRouter rows with a provider `total_cost`
+  still bill from the provider invoice (unchanged).
+
 ### Added
 
 - **Typed `POST /v1/decisions` route (CONN-JEV-07).**

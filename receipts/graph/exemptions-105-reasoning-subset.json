@@ -1,0 +1,2134 @@
+{
+  "schema": "AdmissionExemptions/v1",
+  "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0",
+  "exemptions": [
+    {
+      "entity": "code_unit:src/admin/admin-rate-limit.app.spec.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/admin/admin.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/admin/circuit-breaker.controller.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/admin/circuit-breaker.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "code_unit:src/admin/watcher-repair.controller.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/admin/watcher-repair.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "code_unit:src/app.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/auth/abort-budget-signal.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/auth/auth.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/auth/rate-limit.app.spec.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/auth/rate-limit.guard.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/auth/rate-limit.integration.spec.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/billing/cache-invoice.integration.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/billing/cost-estimate.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/billing/credit-gate.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/billing/idempotency.integration.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/billing/metering.integration.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/billing/price-coverage.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/billing/price-sources-2026-11.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/aborted-attempt-intent-path.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/aborted-attempt-is-our-cost.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/anthropic/anthropic.connector.prompt-cache.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/anthropic/anthropic.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/anthropic/anthropic.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/anthropic/anthropic.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/azure-openai/azure-openai.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/azure-openai/azure-openai.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/azure-openai/azure-openai.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/azure-openai/index.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/base-api.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/base-api.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/base-cli.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/base-cli.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/bedrock/bedrock.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/bedrock/bedrock.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/bedrock/bedrock.module.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/bedrock/bedrock.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/bedrock/nova-media/nova-media.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cascade/cascade-router.fallback.integration.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cascade/cascade-router.service.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cascade/cascade-router.service.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cascade/cascade.module.di.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cascade/cascade.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/catalog-refresh.service.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/catalog-refresh.service.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cerebras/cerebras.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cerebras/cerebras.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cerebras/cerebras.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/claude-code/claude-code.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/claude-code/claude-code.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/claude-code/claude-code.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/claude-code/index.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cloudflare-workers-ai/cloudflare-workers-ai.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/codex/codex.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/codex/codex.connector.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:src/connectors/codex/codex.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cohere/cohere.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cohere/cohere.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cohere/cohere.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/connector-budget-and-retry-after.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.controller.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.service.metering.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.service.policy.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.service.showcase-alarm.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.service.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/connectors.service.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cursor/cursor.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cursor/cursor.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cursor/cursor.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/cursor/index.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/deepseek/deepseek-prefinancial.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/deepseek/deepseek-thinking.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/deepseek/deepseek.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/deepseek/deepseek.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/deepseek/deepseek.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/embedding/embedding.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/embedding/embedding.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/embedding/embedding.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/failover/failover-router.service.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/failover/failover-router.service.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/failover/failover.candidates.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/failover/failover.candidates.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/failover/failover.chain.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/failover/failover.chain.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/connectors/fireworks/fireworks.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/fireworks/fireworks.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/fireworks/fireworks.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/first-dispatch-observation.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/first-dispatch-observation.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/gemini-api/gemini-api.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/gemini-api/gemini-api.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/gemini-api/index.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/gemini/gemini.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/gemini/gemini.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/gemini/gemini.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/grok/grok.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/grok/grok.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/grok/grok.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/groq/groq.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/groq/groq.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/groq/groq.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/groq/groqcloud-native.extension.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/huggingface/huggingface.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/huggingface/huggingface.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/huggingface/huggingface.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/interfaces/connector.interface.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/decision-ledger.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/decision-ledger.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/decision.service.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/decision.service.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/jev.catalog-pricing.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/jev.catalog-pricing.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/jev.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/jev/jev.connector.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/connectors/jina-ai/jina-ai.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/jina-ai/jina-ai.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/mistral/mistral.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/mistral/mistral.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/mistral/mistral.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/modal/modal.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/modal/modal.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/modal/modal.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/multimodal-rejection.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/normalize-reasoning-usage.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/normalize-reasoning-usage.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/nvidia-nim/index.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/nvidia-nim/nvidia-nim.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/nvidia-nim/nvidia-nim.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/nvidia-nim/nvidia-retrieval.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/nvidia-nim/nvidia-retrieval.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/ollama-cloud/ollama-cloud.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/ollama/ollama.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/ollama/ollama.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/ollama/ollama.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/openai/openai.connector.ts",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "code_unit:src/connectors/openai/openai.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/openmodel/openmodel.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/openmodel/openmodel.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/openmodel/openmodel.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/openrouter/openrouter.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/openrouter/openrouter.connector.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:src/connectors/openrouter/openrouter.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/orq/orq.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/orq/orq.connector.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
+    },
+    {
+      "entity": "code_unit:src/connectors/orq/orq.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/output-guard/output-guard.middleware.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/output-guard/output-guard.middleware.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/output-guard/output-guard.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/output-guard/schema-injectors/anthropic.injector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/output-guard/schema-injectors/cli.injector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/output-guard/schema-injectors/gemini.injector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/output-guard/schema-injectors/index.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/output-guard/schema-injectors/injectors.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/output-guard/schema-injectors/openai.injector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/output-guard/schema-injectors/openrouter.injector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/perplexity/index.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/perplexity/perplexity.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/perplexity/perplexity.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/perplexity/perplexity.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/pinecone-inference/pinecone-inference.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/pinecone-inference/pinecone-inference.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/retried-attempt-metering.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/sambanova-cloud/sambanova-cloud.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/sambanova-cloud/sambanova-cloud.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/timeout-classification.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/timeout-not-retried.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/together/together.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/together/together.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/together/together.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/transient-timeout-retry.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/vertex-generative/vertex-generative.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/voyage-ai/voyage-ai.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/voyage-ai/voyage-ai.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/zai-global/zai-global.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/connectors/zai-global/zai-global.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/decisions/decisions.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/decisions/decisions.service.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/health/health.controller.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/health/health.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "code_unit:src/health/health.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-compat.controller.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-compat.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-compat.failover.integration.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-compat.models-policy.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-compat.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-translate.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/openai-compat/openai-translate.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.controller.ts",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "code_unit:src/prompt-cache/prompt-cache-prewarm.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/queue/connector-job.processor.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/queue/connector-job.processor.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/queue/queue.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/speech.controller.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/speech.controller.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/speech.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/assemblyai-stt.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/assemblyai-stt.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/assemblyai-stt.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/base-stt.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/base-stt.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/deepgram-stt.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/deepgram-stt.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/deepgram-stt.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/groq-stt.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/groq-stt.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/groq-stt.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/interfaces/stt-connector.interface.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/local-whisper-stt.connector.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/local-whisper-stt.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/local-whisper-stt.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/openai-stt.connector.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/openai-stt.connector.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/openai-stt.module.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/stt-job.processor.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/stt-job.processor.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/stt-pilot.integration.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/stt-router.policy.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/stt-router.service.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:src/speech/stt/stt-router.service.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:test/bench-reservation/boundary-http.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "code_unit:test/provider-profiles/boundary-http.spec.ts",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "contract:src/connectors/failover/failover.chain.ts#FailoverOutcome",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/interfaces/connector.interface.ts#ErrorAction",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/jev/jev.catalog-pricing.ts#JevPriceProvenance",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/jev/jev.catalog-pricing.ts#JevPriceRouteId",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/jev/jev.connector.ts#JevRefuseCode",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationErrorType",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "contract:src/connectors/openai/openai.connector.ts#OpenAiModerationInputType",
+      "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "v-contract-diff PYDANTIC_NOT_MEASURED on author host; no contract files edited in change set. Verifier: v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+    },
+    {
+      "entity": "deployable_unit:.",
+      "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Graph built without node_modules to match CI digests; tsc not run inside CAR contour. Hosted lint-and-test is separate evidence. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host"
+    },
+    {
+      "entity": "route:GET /connectors",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /connectors/:name/status",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /connectors/catalog",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /connectors/image/capabilities",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /connectors/intents/:intentId",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /health",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /health/connectors",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /health/metrics",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /health/ready",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /keyed",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /probe/abort",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /probe/execute",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /probe/health",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /probe/metrics",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:GET /v1/models",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:POST /admin/circuit-breaker/reset",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:POST /connectors/:name/chat/completions",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:POST /connectors/:name/execute",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:POST /execute",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:POST /images/generate",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:POST /internal/watcher/circuit-breaker/reset",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:POST /v1/chat/completions",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    },
+    {
+      "entity": "route:POST /v1/prompt-cache/prewarm",
+      "code": "INFERRED_BOUNDARY_WITHOUT_CANARY",
+      "owner": "dev-mc-reason / Model Connector #105 (Muneral 597f92c3)",
+      "expires_at_utc": "2026-12-17T00:00:00Z",
+      "evidence": "local vitest/tsc/lint measured with node_modules; CAR graphs rebuilt without node_modules to match CI digests",
+      "reason": "Impact fan-out from #105; no committed CanaryResult lists this entity. Live canary NOT_MEASURED. Verifier: v-type-check-tsconfig-mjs: tsc unavailable on this host; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity ("
+    }
+  ]
+}
