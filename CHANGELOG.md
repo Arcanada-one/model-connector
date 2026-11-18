@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **uuid ^13.0.0 → ^14.0.3.** Root package.json only (frozen-lockfile still green).
+  Measured: graph `global_fallback` true because root `package.json` changed
+  (deferred from #273; own PR).
+
 ### Fixed
+
 
 - **docker-e2e is concurrency-safe on the shared Docker host.**
   ci-general runners share one Docker daemon (Machine/Docker Name
