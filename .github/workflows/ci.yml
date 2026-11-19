@@ -441,6 +441,26 @@ jobs:
         env:
           DATABASE_URL: postgresql://dummy:dummy@127.0.0.1:5432/dummy
 
+      # Same pin as lint-and-test PR Compose CLI. ci-general may lack a system
+      # compose plugin; without DOCKER_CONFIG, regression `docker compose -f`
+      # collapses to `docker -f` (unknown shorthand flag). Forwarded through
+      # graph-full-suite-isolated.sh → clean_environment.
+      - name: Provision pinned Compose CLI for full-suite regression
+        run: |
+          set -euo pipefail
+          [ "$(uname -m)" = x86_64 ] || { echo "Unsupported Compose CLI architecture" >&2; exit 1; }
+          compose_root="${RUNNER_TEMP}/mc-fs-compose-cli"
+          mkdir -p "$compose_root/cli-plugins"
+          curl --fail --silent --show-error --location --retry 2 --connect-timeout 10 --max-time 120 \
+            https://github.com/docker/compose/releases/download/v5.6.0/docker-compose-linux-x86_64 \
+            --output "$compose_root/cli-plugins/docker-compose"
+          printf '%s  %s\n' \
+            40343e21ca777173e69cff5dbafeb37c6f81f3b0d57d9e597f036e95eb63e76a \
+            "$compose_root/cli-plugins/docker-compose" | sha256sum --check --strict
+          chmod 700 "$compose_root/cli-plugins/docker-compose"
+          printf 'DOCKER_CONFIG=%s\n' "$compose_root" >> "$GITHUB_ENV"
+          DOCKER_CONFIG="$compose_root" docker compose version
+
       # Same pin as graph-admission.yml — regression member test_source_input_contract.py.
       # Debian PEP 668 blocks system pip; use a job-local venv and forward its python.
       - name: jsonschema for root regression membership

@@ -94,6 +94,15 @@ fi
 if [[ -n "${RUNNER_TEMP:-}" ]]; then
   RUNTIME_ARGS+=(RUNNER_TEMP="$RUNNER_TEMP")
 fi
+# Pinned Compose CLI (DOCKER_CONFIG=…/cli-plugins/docker-compose). env -i would
+# otherwise drop it and regression members that call `docker compose -f` fail as
+# `unknown shorthand flag: 'f' in -f` on runners without a system plugin.
+if [[ -n "${DOCKER_CONFIG:-}" ]]; then
+  RUNTIME_ARGS+=(DOCKER_CONFIG="$DOCKER_CONFIG")
+fi
+if [[ -n "${DOCKER_HOST:-}" ]]; then
+  RUNTIME_ARGS+=(DOCKER_HOST="$DOCKER_HOST")
+fi
 
 set +e
 env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 \

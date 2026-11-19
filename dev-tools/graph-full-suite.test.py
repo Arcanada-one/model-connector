@@ -223,6 +223,13 @@ class Controls(unittest.TestCase):
             with self.assertRaises(subject.Refusal):
                 subject.bats_counts(text)
 
+    def test_docker_config_forwarded_for_compose_plugin(self):
+        with patch.dict(os.environ, {'DOCKER_CONFIG': '/tmp/mc-fs-compose-cli-fixture',
+                                     'DOCKER_HOST': 'unix:///var/run/docker.sock'}, clear=False):
+            env = subject.clean_environment(self.root, self.root)
+        self.assertEqual(env.get('DOCKER_CONFIG'), '/tmp/mc-fs-compose-cli-fixture')
+        self.assertEqual(env.get('DOCKER_HOST'), 'unix:///var/run/docker.sock')
+
     def test_environment_sentinel_never_in_child_argv_or_output(self):
         sentinel = 'fixture-secret-must-not-escape'
         with patch.dict(os.environ, {'PROVIDER_API_KEY': sentinel, 'NODE_OPTIONS': sentinel}):

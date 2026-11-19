@@ -256,6 +256,13 @@ def clean_environment(scratch, unit_root, grant=None):
            'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1',
            'NODE_ENV': 'test',
            'DATABASE_URL': 'postgresql://suite:suite@127.0.0.1:65535/suite_placeholder'}
+    # Forward pinned Compose CLI discovery (lint-and-test / graph-full-suite job
+    # install under DOCKER_CONFIG). Without this, `docker compose -f` becomes
+    # `docker -f` on runners that lack a system compose plugin.
+    for key in ('DOCKER_CONFIG', 'DOCKER_HOST'):
+        value = os.environ.get(key)
+        if value:
+            env[key] = value
     if any(not Path(part).is_absolute() for part in env['PATH'].split(os.pathsep)):
         raise Refusal('relative PATH entry')
     (scratch / 'home').mkdir(mode=0o700)
@@ -646,8 +653,10 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
         if not code:
             try:
                 counts = parser(raw)
-            except (Refusal, ValueError, KeyError, OSError, TypeError):
-                result.update(verdict='not_measured', reason='missing or invalid exact execution evidence')
+            except (Refusal, ValueError, KeyError, OSError, TypeError) as exc:
+                detail = str(exc).strip() or type(exc).__name__
+                result.update(verdict='not_measured',
+                              reason='missing or invalid exact execution evidence: ' + detail[:160])
             else:
                 result['counts'] = counts
                 if counts and (counts['failed'] or counts['skipped'] or not counts['passed']):
@@ -997,8 +1006,15 @@ def main():
                       'verdict=' + str(ex.get('verdict')),
                       'exit=' + str(ex.get('exit_code')),
                       'reason=' + str(ex.get('reason', ''))[:160])
-            # PASS_RED control failures are expected; print tails for other fails.
-            if ex.get('verdict') == 'failed' and 'pass-red' not in log_name:
+            # PASS_RED control failures are expected; print tails for other fails
+            # and for not_measured evidence gaps (Root: job log, not Actions artifacts).
+            if 'pass-red' in log_name:
+                continue
+            if ex.get('verdict') == 'failed':
+                emit_failure_log_tail(ex.get('raw_log'), log_name)
+                if ex.get('vitest_report'):
+                    emit_vitest_json_failures(ex['vitest_report'])
+            elif ex.get('verdict') == 'not_measured':
                 emit_failure_log_tail(ex.get('raw_log'), log_name)
                 if ex.get('vitest_report'):
                     emit_vitest_json_failures(ex['vitest_report'])
