@@ -128,10 +128,10 @@ def plan(unit, members):
                 group = 'maintained-integration'
             elif name.endswith('.e2e-spec.ts'):
                 group = 'maintained-app-e2e'
-            elif name.endswith('.spec.mjs'):
-                # node:test membership (e.g. FI10 persona controls), never Vitest JSON.
+            elif name == 'provider-profiles/fi10-persona-resolve.spec.mjs':
+                # node:test membership — must not enter Vitest JSON evidence.
                 group = 'maintained-regression'
-            elif name.endswith('.spec.ts'):
+            elif name.endswith('.spec.ts') or name.endswith('.spec.mjs'):
                 group = 'maintained-vitest'
             else:
                 group = 'maintained-regression'
