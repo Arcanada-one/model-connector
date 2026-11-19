@@ -1,0 +1,1041 @@
+{
+ "admission": {
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+  "verdict": "admitted_with_exemptions"
+ },
+ "captured_at_utc": "2026-11-18T16:24:20Z",
+ "change_set": {
+  "base": "cf28d8ce417f2d7b30215057d55db6bada852b29",
+  "files": [
+   {
+    "kind": "doc",
+    "node_id": "document:CHANGELOG.md",
+    "node_ids": [
+     "document:CHANGELOG.md"
+    ],
+    "path": "CHANGELOG.md",
+    "status": "M"
+   },
+   {
+    "kind": "config",
+    "node_id": "deployable_unit:packages/sdk-ts",
+    "node_ids": [
+     "deployable_unit:packages/sdk-ts"
+    ],
+    "path": "packages/sdk-ts/package.json",
+    "scoped_fallback": "packages/sdk-ts/package.json changed ⇒ every unit shipped inside deployable_unit:packages/sdk-ts is affected",
+    "status": "M"
+   }
+  ],
+  "head": "710c117d2e126f1b8752c3e196221682fa4375f9",
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "exemptions": [
+  {
+   "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+   "entity": "code_unit:packages/sdk-ts/src/index.ts",
+   "evidence": "packages/sdk-ts vitest manifest-only bump; frozen-lockfile green; pnpm test green on sibling tree; graphs rebuilt with typescript hidden for CI digests",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273-2 / Model Connector deps split (Muneral 597f92c3)",
+   "reason": "deferred #273 sdk-ts vitest; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+  },
+  {
+   "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+   "entity": "code_unit:packages/sdk-ts/src/types.ts",
+   "evidence": "packages/sdk-ts vitest manifest-only bump; frozen-lockfile green; pnpm test green on sibling tree; graphs rebuilt with typescript hidden for CI digests",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273-2 / Model Connector deps split (Muneral 597f92c3)",
+   "reason": "deferred #273 sdk-ts vitest; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:packages/sdk-ts/test/client.spec.ts",
+   "evidence": "packages/sdk-ts vitest manifest-only bump; frozen-lockfile green; pnpm test green on sibling tree; graphs rebuilt with typescript hidden for CI digests",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273-2 / Model Connector deps split (Muneral 597f92c3)",
+   "reason": "deferred #273 sdk-ts vitest; v-type-check-packages-sdk-ts-tsconfig: packages/sdk-ts/tsconfig.json does not include packages/sdk-ts/test/client.spec.ts"
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:packages/sdk-ts/tsup.config.ts",
+   "evidence": "packages/sdk-ts vitest manifest-only bump; frozen-lockfile green; pnpm test green on sibling tree; graphs rebuilt with typescript hidden for CI digests",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273-2 / Model Connector deps split (Muneral 597f92c3)",
+   "reason": "deferred #273 sdk-ts vitest; v-type-check-packages-sdk-ts-tsconfig: packages/sdk-ts/tsconfig.json does not include packages/sdk-ts/tsup.config.ts"
+  },
+  {
+   "code": "VERIFIER_DEBT",
+   "entity": "code_unit:packages/sdk-ts/vitest.config.ts",
+   "evidence": "packages/sdk-ts vitest manifest-only bump; frozen-lockfile green; pnpm test green on sibling tree; graphs rebuilt with typescript hidden for CI digests",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273-2 / Model Connector deps split (Muneral 597f92c3)",
+   "reason": "deferred #273 sdk-ts vitest; v-type-check-packages-sdk-ts-tsconfig: packages/sdk-ts/tsconfig.json does not include packages/sdk-ts/vitest.config.ts"
+  },
+  {
+   "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+   "entity": "contract:packages/sdk-ts/src/types.ts#ErrorAction",
+   "evidence": "packages/sdk-ts vitest manifest-only bump; frozen-lockfile green; pnpm test green on sibling tree; graphs rebuilt with typescript hidden for CI digests",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273-2 / Model Connector deps split (Muneral 597f92c3)",
+   "reason": "deferred #273 sdk-ts vitest; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+  },
+  {
+   "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+   "entity": "contract:packages/sdk-ts/src/types.ts#ErrorType",
+   "evidence": "packages/sdk-ts vitest manifest-only bump; frozen-lockfile green; pnpm test green on sibling tree; graphs rebuilt with typescript hidden for CI digests",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273-2 / Model Connector deps split (Muneral 597f92c3)",
+   "reason": "deferred #273 sdk-ts vitest; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+  },
+  {
+   "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+   "entity": "contract:packages/sdk-ts/src/types.ts#ExecuteStatus",
+   "evidence": "packages/sdk-ts vitest manifest-only bump; frozen-lockfile green; pnpm test green on sibling tree; graphs rebuilt with typescript hidden for CI digests",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273-2 / Model Connector deps split (Muneral 597f92c3)",
+   "reason": "deferred #273 sdk-ts vitest; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+  },
+  {
+   "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+   "entity": "contract:packages/sdk-ts/src/types.ts#OutputFormat",
+   "evidence": "packages/sdk-ts vitest manifest-only bump; frozen-lockfile green; pnpm test green on sibling tree; graphs rebuilt with typescript hidden for CI digests",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273-2 / Model Connector deps split (Muneral 597f92c3)",
+   "reason": "deferred #273 sdk-ts vitest; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+  },
+  {
+   "code": "CONTRACT_DIFF_PYDANTIC_NOT_MEASURED",
+   "entity": "contract:packages/sdk-ts/src/types.ts#OutputGuardPass",
+   "evidence": "packages/sdk-ts vitest manifest-only bump; frozen-lockfile green; pnpm test green on sibling tree; graphs rebuilt with typescript hidden for CI digests",
+   "expires_at_utc": "2026-12-18T00:00:00Z",
+   "owner": "fin-mc-273-2 / Model Connector deps split (Muneral 597f92c3)",
+   "reason": "deferred #273 sdk-ts vitest; v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED"
+  }
+ ],
+ "graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:1df0d04ff38e23329576ea13099a9d03a2cf745f2aa4d4101d2423453c59e5ce",
+  "path": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-sdk-ts-work2/verifier-out/graph-cf28d8ce417f.json",
+  "source_commit": "cf28d8ce417f2d7b30215057d55db6bada852b29"
+ },
+ "head_graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:60a60fb6a8bc5b4e6a123ebdf48a028b63f8d1771ee7822d74626d6498cc1442",
+  "path": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-sdk-ts-work2/verifier-out/graph-head-710c117d2e12.json",
+  "source_commit": "710c117d2e126f1b8752c3e196221682fa4375f9",
+  "staleness": {
+   "checked_at_utc": "2026-11-18T16:25:25Z",
+   "checked_nodes": 1033,
+   "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+   "mismatched_nodes": [],
+   "verdict": "fresh"
+  }
+ },
+ "host": "arcana-devs",
+ "impact_set": {
+  "deterministic_core": [
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:packages/sdk-ts/src/client.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/client.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:packages/sdk-ts/src/errors.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/errors.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:packages/sdk-ts/src/index.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/index.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:packages/sdk-ts/src/types.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/types.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:packages/sdk-ts/test/client.spec.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/test/client.spec.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:packages/sdk-ts/tsup.config.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/tsup.config.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:packages/sdk-ts/vitest.config.ts",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/vitest.config.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "contract:packages/sdk-ts/src/types.ts#ErrorAction",
+    "node_type": "contract",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/types.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     },
+     {
+      "edge_type": "implements_contract",
+      "from": "code_unit:packages/sdk-ts/src/types.ts",
+      "provenance": "deterministic",
+      "to": "contract:packages/sdk-ts/src/types.ts#ErrorAction",
+      "via": "declaration"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "contract-diff provider side + type-check"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "contract:packages/sdk-ts/src/types.ts#ErrorType",
+    "node_type": "contract",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/types.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     },
+     {
+      "edge_type": "implements_contract",
+      "from": "code_unit:packages/sdk-ts/src/types.ts",
+      "provenance": "deterministic",
+      "to": "contract:packages/sdk-ts/src/types.ts#ErrorType",
+      "via": "declaration"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "contract-diff provider side + type-check"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "contract:packages/sdk-ts/src/types.ts#ExecuteStatus",
+    "node_type": "contract",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/types.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     },
+     {
+      "edge_type": "implements_contract",
+      "from": "code_unit:packages/sdk-ts/src/types.ts",
+      "provenance": "deterministic",
+      "to": "contract:packages/sdk-ts/src/types.ts#ExecuteStatus",
+      "via": "declaration"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "contract-diff provider side + type-check"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "contract:packages/sdk-ts/src/types.ts#OutputFormat",
+    "node_type": "contract",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/types.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     },
+     {
+      "edge_type": "implements_contract",
+      "from": "code_unit:packages/sdk-ts/src/types.ts",
+      "provenance": "deterministic",
+      "to": "contract:packages/sdk-ts/src/types.ts#OutputFormat",
+      "via": "declaration"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "contract-diff provider side + type-check"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "contract:packages/sdk-ts/src/types.ts#OutputGuardPass",
+    "node_type": "contract",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/types.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     },
+     {
+      "edge_type": "implements_contract",
+      "from": "code_unit:packages/sdk-ts/src/types.ts",
+      "provenance": "deterministic",
+      "to": "contract:packages/sdk-ts/src/types.ts#OutputGuardPass",
+      "via": "declaration"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "contract-diff provider side + type-check"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/client.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/bench-source-ctx24/source-car.json",
+      "provenance": "deterministic",
+      "to": "code_unit:packages/sdk-ts/src/client.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/client.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:packages/sdk-ts/src/client.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/client.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:packages/sdk-ts/src/client.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-432.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/client.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-432.json",
+      "provenance": "deterministic",
+      "to": "code_unit:packages/sdk-ts/src/client.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-443.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/client.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-443.json",
+      "provenance": "deterministic",
+      "to": "code_unit:packages/sdk-ts/src/client.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:packages/sdk-ts/src/client.ts",
+      "provenance": "deterministic",
+      "to": "deployable_unit:packages/sdk-ts",
+      "via": "containment"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-jev-decision.json",
+      "provenance": "deterministic",
+      "to": "code_unit:packages/sdk-ts/src/client.ts",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   }
+  ],
+  "edge_types": "all",
+  "global_fallback": {
+   "triggered": false
+  },
+  "inferred_tail": [],
+  "max_depth": 3,
+  "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+  "total": 18
+ },
+ "notes": [
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
+  "exemptions: 10 attached from /home/dev/aup/claude-work/fin-mc-273/deps-split/exemptions-sdk-ts.json"
+ ],
+ "producer": {
+  "tool": "tools/graph/verify.py",
+  "version": "1.4.1"
+ },
+ "receipt_id": "car-verify-20261118T162420Z-710c117d",
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/home/dev/aup/claude-work/fin-mc-273/deps-split/wt-sdk-ts-vitest"
+ },
+ "revision_selection": {
+  "base": [
+   "code_unit:packages/sdk-ts/src/client.ts",
+   "code_unit:packages/sdk-ts/src/errors.ts",
+   "code_unit:packages/sdk-ts/src/index.ts",
+   "code_unit:packages/sdk-ts/src/types.ts",
+   "code_unit:packages/sdk-ts/test/client.spec.ts",
+   "code_unit:packages/sdk-ts/tsup.config.ts",
+   "code_unit:packages/sdk-ts/vitest.config.ts",
+   "contract:packages/sdk-ts/src/types.ts#ErrorAction",
+   "contract:packages/sdk-ts/src/types.ts#ErrorType",
+   "contract:packages/sdk-ts/src/types.ts#ExecuteStatus",
+   "contract:packages/sdk-ts/src/types.ts#OutputFormat",
+   "contract:packages/sdk-ts/src/types.ts#OutputGuardPass",
+   "deployable_unit:packages/sdk-ts",
+   "document:CHANGELOG.md",
+   "receipt:receipts/bench-source-ctx24/source-car.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "receipt:receipts/graph/change-admission-a2-432.json",
+   "receipt:receipts/graph/change-admission-a2-443.json",
+   "receipt:receipts/graph/change-admission-jev-decision.json"
+  ],
+  "head": [
+   "code_unit:packages/sdk-ts/src/client.ts",
+   "code_unit:packages/sdk-ts/src/errors.ts",
+   "code_unit:packages/sdk-ts/src/index.ts",
+   "code_unit:packages/sdk-ts/src/types.ts",
+   "code_unit:packages/sdk-ts/test/client.spec.ts",
+   "code_unit:packages/sdk-ts/tsup.config.ts",
+   "code_unit:packages/sdk-ts/vitest.config.ts",
+   "contract:packages/sdk-ts/src/types.ts#ErrorAction",
+   "contract:packages/sdk-ts/src/types.ts#ErrorType",
+   "contract:packages/sdk-ts/src/types.ts#ExecuteStatus",
+   "contract:packages/sdk-ts/src/types.ts#OutputFormat",
+   "contract:packages/sdk-ts/src/types.ts#OutputGuardPass",
+   "deployable_unit:packages/sdk-ts",
+   "document:CHANGELOG.md",
+   "receipt:receipts/bench-source-ctx24/source-car.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "receipt:receipts/graph/change-admission-a2-432.json",
+   "receipt:receipts/graph/change-admission-a2-443.json",
+   "receipt:receipts/graph/change-admission-jev-decision.json"
+  ],
+  "schema": "RevisionImpactSelection/v1",
+  "unmeasured_head_files": []
+ },
+ "schema": "ChangeAdmissionReceipt/v1",
+ "staleness": {
+  "checked_at_utc": "2026-11-18T16:25:25Z",
+  "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+  "mismatched_nodes": [],
+  "verdict": "fresh"
+ },
+ "structural_exclusions": [
+  {
+   "content_hash": {
+    "base": "sha256:1bf9d4ab170eee11a6e10ae667a923438765d8fb168561ffbc1480555c77ad94",
+    "head": "sha256:1bf9d4ab170eee11a6e10ae667a923438765d8fb168561ffbc1480555c77ad94"
+   },
+   "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
+   "node_type": "receipt",
+   "path": "receipts/bench-source-ctx24/source-car.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf",
+    "head": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:55aa15f55fa943313632f398f2934cfc9fa99c25fcae2cca6cda20e14a00eb9a",
+    "head": "sha256:55aa15f55fa943313632f398f2934cfc9fa99c25fcae2cca6cda20e14a00eb9a"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-209-20260923T141817Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:47947b97d33ab3f837dc83a1fc71d3594e4c7df6351cd20e146d08e282ddda1e",
+    "head": "sha256:47947b97d33ab3f837dc83a1fc71d3594e4c7df6351cd20e146d08e282ddda1e"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-432.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-432.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:b8b7f231eb201c9a12810ec8f88f172ce525a0498c12bbb70b89f1f0390f0dda",
+    "head": "sha256:b8b7f231eb201c9a12810ec8f88f172ce525a0498c12bbb70b89f1f0390f0dda"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-443.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-443.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a",
+    "head": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a"
+   },
+   "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-jev-decision.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  }
+ ],
+ "tree": {
+  "commit": "710c117d2e126f1b8752c3e196221682fa4375f9",
+  "dirty": false
+ },
+ "verdicts": [
+  {
+   "entity": "code_unit:packages/sdk-ts/src/client.ts",
+   "reason": "v-type-check-packages-sdk-ts-tsconfig: packages/sdk-ts/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-packages-sdk-ts-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:packages/sdk-ts/src/errors.ts",
+   "reason": "v-type-check-packages-sdk-ts-tsconfig: packages/sdk-ts/tsconfig.json: project compiles, 0 errors; v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-packages-sdk-ts-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:packages/sdk-ts/src/index.ts",
+   "reason": "v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-contract-diff",
+    "v-fitness",
+    "v-type-check-packages-sdk-ts-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:packages/sdk-ts/src/types.ts",
+   "reason": "v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-contract-diff",
+    "v-fitness",
+    "v-type-check-packages-sdk-ts-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:packages/sdk-ts/test/client.spec.ts",
+   "reason": "v-type-check-packages-sdk-ts-tsconfig: packages/sdk-ts/tsconfig.json does not include packages/sdk-ts/test/client.spec.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-packages-sdk-ts-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:packages/sdk-ts/tsup.config.ts",
+   "reason": "v-type-check-packages-sdk-ts-tsconfig: packages/sdk-ts/tsconfig.json does not include packages/sdk-ts/tsup.config.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-packages-sdk-ts-tsconfig"
+   ]
+  },
+  {
+   "entity": "code_unit:packages/sdk-ts/vitest.config.ts",
+   "reason": "v-type-check-packages-sdk-ts-tsconfig: packages/sdk-ts/tsconfig.json does not include packages/sdk-ts/vitest.config.ts",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-packages-sdk-ts-tsconfig"
+   ]
+  },
+  {
+   "entity": "contract:packages/sdk-ts/src/types.ts#ErrorAction",
+   "reason": "v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-contract-diff"
+   ]
+  },
+  {
+   "entity": "contract:packages/sdk-ts/src/types.ts#ErrorType",
+   "reason": "v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-contract-diff"
+   ]
+  },
+  {
+   "entity": "contract:packages/sdk-ts/src/types.ts#ExecuteStatus",
+   "reason": "v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-contract-diff"
+   ]
+  },
+  {
+   "entity": "contract:packages/sdk-ts/src/types.ts#OutputFormat",
+   "reason": "v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-contract-diff"
+   ]
+  },
+  {
+   "entity": "contract:packages/sdk-ts/src/types.ts#OutputGuardPass",
+   "reason": "v-contract-diff: contract_diff refused: PYDANTIC_NOT_MEASURED",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-contract-diff"
+   ]
+  },
+  {
+   "entity": "deployable_unit:packages/sdk-ts",
+   "reason": "v-type-check-packages-sdk-ts-tsconfig: packages/sdk-ts/tsconfig.json: 0 errors; v-fitness: no new violation in packages/sdk-ts",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-packages-sdk-ts-tsconfig"
+   ]
+  },
+  {
+   "entity": "document:CHANGELOG.md",
+   "reason": "v-doc-reference: 29 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  }
+ ],
+ "verifier_selection": {
+  "applied": {},
+  "not_applied": [],
+  "requested": [],
+  "schema": "VerifierSelection/v1"
+ },
+ "verifiers": [
+  {
+   "command": "/home/dev/aup/claude-work/fin-mc-273/deps-split/wt-sdk-ts-vitest/packages/sdk-ts/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-mc-273/deps-split/wt-sdk-ts-vitest/packages/sdk-ts/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-mc-273/deps-split/verify-sdk-ts-work2/verifier-out/type-check-qe08ap8m/check.tsbuildinfo --listFiles",
+   "duration_s": 1.18,
+   "entities": [
+    "code_unit:packages/sdk-ts/src/client.ts",
+    "code_unit:packages/sdk-ts/src/errors.ts",
+    "code_unit:packages/sdk-ts/src/index.ts",
+    "code_unit:packages/sdk-ts/src/types.ts",
+    "code_unit:packages/sdk-ts/test/client.spec.ts",
+    "code_unit:packages/sdk-ts/tsup.config.ts",
+    "code_unit:packages/sdk-ts/vitest.config.ts",
+    "deployable_unit:packages/sdk-ts"
+   ],
+   "entity_verdicts": {
+    "code_unit:packages/sdk-ts/src/client.ts": "verified",
+    "code_unit:packages/sdk-ts/src/errors.ts": "verified",
+    "code_unit:packages/sdk-ts/src/index.ts": "verified",
+    "code_unit:packages/sdk-ts/src/types.ts": "verified",
+    "code_unit:packages/sdk-ts/test/client.spec.ts": "not_measured",
+    "code_unit:packages/sdk-ts/tsup.config.ts": "not_measured",
+    "code_unit:packages/sdk-ts/vitest.config.ts": "not_measured",
+    "deployable_unit:packages/sdk-ts": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-packages-sdk-ts-tsconfig",
+   "kind": "type_check",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-sdk-ts-work2/verifier-out/v-type-check-packages-sdk-ts-tsconfig.txt",
+   "started_at_utc": "2026-11-18T16:25:39Z",
+   "summary": "packages/sdk-ts/tsconfig.json: exit 0, 0 error(s), 167 files listed"
+  },
+  {
+   "command": "tools/graph/contract_diff.py.run_diff(base=cf28d8ce417f, head=710c117d2e12, graph=head graph)",
+   "duration_s": 9.94,
+   "entities": [
+    "code_unit:packages/sdk-ts/src/index.ts",
+    "code_unit:packages/sdk-ts/src/types.ts",
+    "contract:packages/sdk-ts/src/types.ts#ErrorAction",
+    "contract:packages/sdk-ts/src/types.ts#ErrorType",
+    "contract:packages/sdk-ts/src/types.ts#ExecuteStatus",
+    "contract:packages/sdk-ts/src/types.ts#OutputFormat",
+    "contract:packages/sdk-ts/src/types.ts#OutputGuardPass"
+   ],
+   "entity_verdicts": {
+    "code_unit:packages/sdk-ts/src/index.ts": "not_measured",
+    "code_unit:packages/sdk-ts/src/types.ts": "not_measured",
+    "contract:packages/sdk-ts/src/types.ts#ErrorAction": "not_measured",
+    "contract:packages/sdk-ts/src/types.ts#ErrorType": "not_measured",
+    "contract:packages/sdk-ts/src/types.ts#ExecuteStatus": "not_measured",
+    "contract:packages/sdk-ts/src/types.ts#OutputFormat": "not_measured",
+    "contract:packages/sdk-ts/src/types.ts#OutputGuardPass": "not_measured"
+   },
+   "exit_code": 2,
+   "id": "v-contract-diff",
+   "kind": "contract_diff",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-sdk-ts-work2/verifier-out/v-contract-diff.txt",
+   "started_at_utc": "2026-11-18T16:25:41Z",
+   "summary": "refusal PYDANTIC_NOT_MEASURED"
+  },
+  {
+   "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+   "duration_s": 0.46,
+   "entities": [
+    "code_unit:packages/sdk-ts/src/client.ts",
+    "code_unit:packages/sdk-ts/src/errors.ts",
+    "code_unit:packages/sdk-ts/src/index.ts",
+    "code_unit:packages/sdk-ts/src/types.ts",
+    "code_unit:packages/sdk-ts/test/client.spec.ts",
+    "code_unit:packages/sdk-ts/tsup.config.ts",
+    "code_unit:packages/sdk-ts/vitest.config.ts",
+    "deployable_unit:packages/sdk-ts"
+   ],
+   "entity_verdicts": {
+    "code_unit:packages/sdk-ts/src/client.ts": "verified",
+    "code_unit:packages/sdk-ts/src/errors.ts": "verified",
+    "code_unit:packages/sdk-ts/src/index.ts": "verified",
+    "code_unit:packages/sdk-ts/src/types.ts": "verified",
+    "code_unit:packages/sdk-ts/test/client.spec.ts": "verified",
+    "code_unit:packages/sdk-ts/tsup.config.ts": "verified",
+    "code_unit:packages/sdk-ts/vitest.config.ts": "verified",
+    "deployable_unit:packages/sdk-ts": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-fitness",
+   "kind": "fitness_rules",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-sdk-ts-work2/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-18T16:25:51Z",
+   "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+  },
+  {
+   "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+   "duration_s": 0.01,
+   "entities": [
+    "document:CHANGELOG.md"
+   ],
+   "entity_verdicts": {
+    "document:CHANGELOG.md": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-doc-reference",
+   "kind": "doc_reference",
+   "output_ref": "/home/dev/aup/claude-work/fin-mc-273/deps-split/verify-sdk-ts-work2/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-18T16:25:51Z",
+   "summary": "1 document(s), 0 failed"
+  }
+ ],
+ "verify": {
+  "events": [
+   {
+    "code": "STRUCTURAL_EXCLUSION",
+    "rule": "DEC-AUP-0034",
+    "text": "6 affected entity(ies) owe no verdict (receipt: 6): unchanged at both revisions and given no verifier by the matrix"
+   }
+  ],
+  "required_by_entity": {
+   "code_unit:packages/sdk-ts/src/client.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:packages/sdk-ts/src/errors.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:packages/sdk-ts/src/index.ts": [
+    "contract_diff",
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:packages/sdk-ts/src/types.ts": [
+    "contract_diff",
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:packages/sdk-ts/test/client.spec.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:packages/sdk-ts/tsup.config.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "code_unit:packages/sdk-ts/vitest.config.ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "contract:packages/sdk-ts/src/types.ts#ErrorAction": [
+    "contract_diff"
+   ],
+   "contract:packages/sdk-ts/src/types.ts#ErrorType": [
+    "contract_diff"
+   ],
+   "contract:packages/sdk-ts/src/types.ts#ExecuteStatus": [
+    "contract_diff"
+   ],
+   "contract:packages/sdk-ts/src/types.ts#OutputFormat": [
+    "contract_diff"
+   ],
+   "contract:packages/sdk-ts/src/types.ts#OutputGuardPass": [
+    "contract_diff"
+   ],
+   "deployable_unit:packages/sdk-ts": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "document:CHANGELOG.md": [
+    "doc_reference"
+   ],
+   "receipt:receipts/bench-source-ctx24/source-car.json": [],
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-209-20260923T141817Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-432.json": [],
+   "receipt:receipts/graph/change-admission-a2-443.json": [],
+   "receipt:receipts/graph/change-admission-jev-decision.json": []
+  },
+  "seconds": {
+   "prepare": 6.41,
+   "total": 91.71,
+   "verifiers": 11.59
+  }
+ },
+ "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
+}
