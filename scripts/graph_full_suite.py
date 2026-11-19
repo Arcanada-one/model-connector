@@ -470,12 +470,13 @@ def root_regression_command(root, member):
     path = str(checked_file(root, member))
     if member.endswith('.py'):
         # Optional CI venv python (MC_FULL_SUITE_PYTHON) carries jsonschema etc.
+        # venv/bin/python is often a symlink; resolve and require an executable file.
         python = os.environ.get('MC_FULL_SUITE_PYTHON') or sys.executable
         if python != sys.executable:
-            py_path = Path(python)
-            if (py_path.is_symlink() or not py_path.is_file()
-                    or not os.access(py_path, os.X_OK)):
-                raise Refusal('MC_FULL_SUITE_PYTHON must be an executable file')
+            resolved = Path(python).resolve()
+            if not resolved.is_file() or not os.access(resolved, os.X_OK):
+                raise Refusal('MC_FULL_SUITE_PYTHON must resolve to an executable file')
+            python = str(resolved)
         return [python, '-B', path], 'unittest'
     if member.endswith('.test.mjs'):
         return ['node', '--test', '--test-reporter=tap', path], 'node-tap'
