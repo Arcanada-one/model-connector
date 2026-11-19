@@ -20,21 +20,40 @@ PG_NAME="mc-fs-pg-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 REDIS_NAME="mc-fs-redis-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 GRANT_PATH="$RUNNER_TEMP/mc-full-suite-grant.json"
 
+# Ports/grant stdout must be source-safe: only KEY=VALUE, never docker IDs.
+assert_ports_env_file() {
+  local file=$1
+  if [[ ! -f "$file" ]]; then
+    printf 'ci-full-suite-disposable-services: missing ports env file\n' >&2
+    return 1
+  fi
+  if grep -Eqv '^MC_FS_[A-Z_]+=[0-9]+$' "$file"; then
+    printf 'ci-full-suite-disposable-services: ports env has non KEY=digits lines:\n' >&2
+    grep -Ev '^MC_FS_[A-Z_]+=[0-9]+$' "$file" >&2 || true
+    return 1
+  fi
+  if ! grep -Eq '^MC_FS_PG_PORT=[0-9]+$' "$file" \
+    || ! grep -Eq '^MC_FS_REDIS_PORT=[0-9]+$' "$file"; then
+    printf 'ci-full-suite-disposable-services: required MC_FS_*_PORT lines missing\n' >&2
+    return 1
+  fi
+  return 0
+}
+
 start_services() {
   mkdir -p "$STATE_DIR"
   chmod 700 "$STATE_DIR"
-  # Ephemeral host ports, loopback-only. Docker container IDs go to stderr so
-  # callers can `source` stdout as KEY=value without executing hex IDs.
+  # Container IDs go to /dev/null; docker errors stay on stderr. Stdout is
+  # only KEY=value so the workflow can tee/source without executing hex IDs.
   docker run -d --name "$PG_NAME" \
     -e POSTGRES_USER=test \
     -e POSTGRES_PASSWORD=test \
     -e POSTGRES_DB=connector_test \
     -p 127.0.0.1::5432 \
-    postgres:16 >&2
+    postgres:16 >/dev/null
   docker run -d --name "$REDIS_NAME" \
     -p 127.0.0.1::6379 \
-    redis:7 >&2
-  # Wait for health.
+    redis:7 >/dev/null
   for _ in $(seq 1 60); do
     if docker exec "$PG_NAME" pg_isready -U test >/dev/null 2>&1 \
       && docker exec "$REDIS_NAME" redis-cli ping 2>/dev/null | grep -q PONG; then
@@ -50,9 +69,12 @@ start_services() {
   printf '%s\n' "$REDIS_PORT" >"$STATE_DIR/redis.port"
   printf '%s\n' "$PG_NAME" >"$STATE_DIR/pg.name"
   printf '%s\n' "$REDIS_NAME" >"$STATE_DIR/redis.name"
-  # Only KEY=value lines on stdout (sourced by the workflow).
-  printf 'MC_FS_PG_PORT=%s\n' "$PG_PORT"
-  printf 'MC_FS_REDIS_PORT=%s\n' "$REDIS_PORT"
+  {
+    printf 'MC_FS_PG_PORT=%s\n' "$PG_PORT"
+    printf 'MC_FS_REDIS_PORT=%s\n' "$REDIS_PORT"
+  } >"$STATE_DIR/ports.env"
+  assert_ports_env_file "$STATE_DIR/ports.env" || exit 1
+  cat "$STATE_DIR/ports.env"
 }
 
 write_grant() {
@@ -77,7 +99,6 @@ write_grant() {
 }
 EOF
   chmod 600 "$GRANT_PATH"
-  # Only KEY=value on stdout for workflow source.
   printf 'MC_FULL_SUITE_GRANT=%s\n' "$GRANT_PATH"
 }
 

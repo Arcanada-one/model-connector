@@ -89,6 +89,8 @@ jobs:
       - name: Full-suite declaration boundary controls
         run: |
           bash -n scripts/graph-full-suite.sh
+          bash -n scripts/ci-full-suite-disposable-services.sh
+          bash scripts/ci-full-suite-disposable-services.test.sh
           PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/graph-full-suite.test.py
 
       # ARAS-0058 — BILLING_ENFORCED was declared nowhere outside src/: not in
@@ -442,12 +444,16 @@ jobs:
       - name: Start 127.0.0.1 disposable Postgres and Redis
         run: |
           set -euo pipefail
-          # Script stdout is KEY=value only; docker IDs go to stderr.
+          # Script stdout is KEY=digits only; docker run IDs go to /dev/null.
           bash scripts/ci-full-suite-disposable-services.sh start \
             | tee "$RUNNER_TEMP/mc-fs-ports.env"
-          grep -E '^MC_FS_(PG|REDIS)_PORT=' "$RUNNER_TEMP/mc-fs-ports.env" >"$RUNNER_TEMP/mc-fs-ports.source"
+          if grep -Eqv '^MC_FS_[A-Z_]+=[0-9]+$' "$RUNNER_TEMP/mc-fs-ports.env"; then
+            printf 'ports env has non KEY=digits lines\n' >&2
+            cat "$RUNNER_TEMP/mc-fs-ports.env" >&2
+            exit 1
+          fi
           # shellcheck disable=SC1091
-          source "$RUNNER_TEMP/mc-fs-ports.source"
+          source "$RUNNER_TEMP/mc-fs-ports.env"
           printf 'MC_FS_PG_PORT=%s\n' "$MC_FS_PG_PORT" >> "$GITHUB_ENV"
           printf 'MC_FS_REDIS_PORT=%s\n' "$MC_FS_REDIS_PORT" >> "$GITHUB_ENV"
 
