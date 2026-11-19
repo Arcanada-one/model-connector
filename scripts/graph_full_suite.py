@@ -1,9 +1,8 @@
-"""Maintain complete source membership and emit Program FullSuiteArmEvidence/v1.
+"""Maintain complete source membership and honest per-suite results, without grants.
 
-Every defined full_test_arms slot must carry exact execution evidence (counts with
-skipped=0, head binding, and PASS_RED for non-stub backends). Arms are never parked
-in `not_run` to dodge measurement. Live opt-in provider matrices stay outside this
-harness; real_* slots run owned disposable/external probes under this runner.
+Root's real external arms, disposable-store authority and skipped app E2E remain
+unmeasured. No environment flag changes that disposition. The other declarations
+exercise their complete existing offline/owned-loopback contracts, not production.
 """
 from pathlib import Path
 import hashlib
@@ -30,15 +29,6 @@ OFFLINE_INTEGRATION = frozenset({
     'src/openai-compat/openai-compat.failover.integration.spec.ts',
     'src/speech/stt/stt-pilot.integration.spec.ts',
 })
-ARM_BACKEND_OF = {
-    'vitest-default': 'stub',
-    'integration-offline-contracts': 'stub',
-    'authored-template': 'stub',
-    'regression': 'stub',
-    'integration-disposable-store': 'real_disposable',
-    'integration-external-provider': 'real_external',
-    'app-e2e': 'real_disposable',
-}
 
 
 class Refusal(Exception):
@@ -128,9 +118,6 @@ def plan(unit, members):
                 group = 'maintained-integration'
             elif name.endswith('.e2e-spec.ts'):
                 group = 'maintained-app-e2e'
-            elif name == 'provider-profiles/fi10-persona-resolve.spec.mjs':
-                # node:test membership — must not enter Vitest JSON evidence.
-                group = 'maintained-regression'
             elif name.endswith('.spec.ts') or name.endswith('.spec.mjs'):
                 group = 'maintained-vitest'
             else:
@@ -158,16 +145,12 @@ def plan(unit, members):
     return suites
 
 
-def clean_environment(scratch, unit_root, root=None):
+def clean_environment(scratch, unit_root):
     # No inherited tokens, flags, URLs, NODE_OPTIONS, PYTHONPATH or agent hooks.
     env = {'PATH': os.environ.get('PATH', os.defpath), 'HOME': str(scratch / 'home'),
            'TMPDIR': str(scratch), 'CI': '1', 'NO_COLOR': '1', 'FORCE_COLOR': '0',
            'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONPATH': str(unit_root),
            'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1'}
-    # Owned package tree only — arm probes import ioredis from the checkout.
-    modules = (root or unit_root) / 'node_modules'
-    if modules.is_dir() and not modules.is_symlink():
-        env['NODE_PATH'] = str(modules)
     if any(not Path(part).is_absolute() for part in env['PATH'].split(os.pathsep)):
         raise Refusal('relative PATH entry')
     (scratch / 'home').mkdir(mode=0o700)
@@ -315,7 +298,7 @@ def root_regression_command(root, member):
     path = str(checked_file(root, member))
     if member.endswith('.py'):
         return [sys.executable, '-B', path], 'unittest'
-    if member.endswith('.test.mjs') or member.endswith('.spec.mjs'):
+    if member.endswith('.test.mjs'):
         return ['node', '--test', '--test-reporter=tap', path], 'node-tap'
     if member.endswith('.bats'):
         return ['bats', '--formatter', 'tap', path], 'bats'
@@ -440,15 +423,10 @@ def run_root_suites(root, suites, scratch, executor=execute):
             checked_file(root, member)
             if suite['suite'] == 'maintained-regression':
                 root_regression_command(root, member)
-    env = clean_environment(scratch, root, root=root)
-    # Owned disposable Redis for real_* arm probes (never inherited secrets).
-    env['REDIS_HOST'] = '127.0.0.1'
-    env['REDIS_PORT'] = '6379'
-    env['REDIS_PREFIX'] = 'mc-full-suite:' + str(os.getpid()) + ':'
+    env = clean_environment(scratch, root)
     deadline = time.monotonic() + 900
     results = []
-    real_arm_executions = {}
-    def run(argv, members, name, parser, expect_failure=False):
+    def run(argv, members, name, parser):
         required = [argv[0]]
         if members == ['deploy/compose-network.test.sh']:
             required.append('docker')  # Compose config only, never start or stop.
@@ -463,64 +441,22 @@ def run_root_suites(root, suites, scratch, executor=execute):
         code = result['exit_code']
         result.update(members=members, raw_log=str(scratch / (name + '.log')),
                       verdict='not_measured' if code in (124, 127) else 'failed' if code else 'verified')
-        if expect_failure:
-            if code and code not in (124, 127):
-                try:
-                    counts = parser(raw)
-                except (Refusal, ValueError, KeyError, OSError, json.JSONDecodeError):
-                    counts = {'passed': 0, 'failed': 1, 'skipped': 0}
-                result['counts'] = counts
-                result['verdict'] = 'verified'  # red control observed
-            else:
-                result.update(verdict='not_measured', reason='PASS_RED control did not fail')
-            return result
         if not code:
             try:
                 counts = parser(raw)
-            except (Refusal, ValueError, KeyError, OSError, json.JSONDecodeError):
+            except (Refusal, ValueError, KeyError, OSError):
                 result.update(verdict='not_measured', reason='missing or invalid exact execution evidence')
             else:
                 result['counts'] = counts
                 if counts and (counts['failed'] or counts['skipped'] or not counts['passed']):
                     result['verdict'] = 'failed' if counts['failed'] else 'not_measured'
         return result
-
-    def probe_counts(raw):
-        lines = [line for line in raw.splitlines() if line.startswith('{')]
-        if not lines:
-            raise Refusal('arm probe emitted no JSON counts')
-        document = json.loads(lines[-1])
-        if set(document) != {'passed', 'failed', 'skipped'}:
-            raise Refusal('arm probe counts keys invalid')
-        for key, value in document.items():
-            if type(value) is not int or value < 0:
-                raise Refusal('arm probe counts must be non-negative integers')
-        return document
-
-    def run_pass_red_probe(script_rel, arm_name, index_tag):
-        script = checked_file(root, script_rel)
-        green = run(['node', str(script), 'green'], [script_rel], index_tag + '-green', probe_counts)
-        red = run(['node', str(script), 'red'], [script_rel], index_tag + '-red', probe_counts,
-                  expect_failure=True)
-        control = {'result': 'PASS_RED', 'green': green.get('counts'), 'red': red.get('counts')}
-        verdict = ('verified' if green.get('verdict') == 'verified' and red.get('verdict') == 'verified'
-                   else 'failed' if green.get('verdict') == 'failed' or red.get('verdict') == 'failed'
-                   else 'not_measured')
-        row = {'arm': arm_name, 'backend': ARM_BACKEND_OF[arm_name], 'verdict': verdict,
-               'counts': green.get('counts'), 'control': control, 'green': green, 'red': red}
-        real_arm_executions[arm_name] = row
-        return row
-
     for index, suite in enumerate(suites):
         name, members = suite['suite'], suite['members']
         row = {'suite': name, 'members': members, 'executions': []}
         if name == 'maintained-app-e2e':
-            # Marker membership stays; exact evidence is the disposable PASS_RED probe.
-            probe = run_pass_red_probe('scripts/full-suite-arms/app-e2e.probe.mjs', 'app-e2e',
-                                       'root-' + str(index) + '-e2e')
-            row['executions'].append(probe['green'])
-            row['arm_control'] = probe['control']
-            row['verdict'] = probe['verdict']
+            row.update(verdict='not_measured', reason='unconditional AppE2E skip; no execution grant',
+                       held_members=members)
         elif name == 'maintained-authored-template':
             rendered = render_authored_template(root, scratch, members, env)
             target, config = rendered.pop('target'), rendered.pop('config')
@@ -540,11 +476,9 @@ def run_root_suites(root, suites, scratch, executor=execute):
             row['verdict'] = result['verdict']
         elif name in ('maintained-vitest', 'maintained-integration'):
             selected = members if name == 'maintained-vitest' else [n for n in members if n in OFFLINE_INTEGRATION]
-            live = [n for n in members if n not in selected]
-            if live:
-                # Live provider/auth/storage matrices remain inventoried but are not parked
-                # in arms.not_run; real_* slots emit dedicated PASS_RED probe evidence.
-                row['live_optional_members'] = live
+            held = [n for n in members if n not in selected]
+            if held:
+                row.update(held_members=held, reason='real provider/auth/storage arms or disposable DB/Redis authority unresolved')
             if selected:
                 report = scratch / (name + '.json')
                 argv = ['pnpm', 'exec', 'vitest', 'run']
@@ -559,16 +493,13 @@ def run_root_suites(root, suites, scratch, executor=execute):
                 argv += ['--reporter=json', '--outputFile=' + str(report), *selected]
                 row['executions'].append(run(argv, selected, 'root-' + str(index),
                     lambda raw: vitest_counts(json.loads(report.read_text()), selected, root)))
-            offline_ok = bool(row['executions']) and all(r['verdict'] == 'verified' for r in row['executions'])
-            if name == 'maintained-integration' and not selected:
-                offline_ok = True  # offline set may be empty only if membership is all live
             row['verdict'] = ('failed' if any(r['verdict'] == 'failed' for r in row['executions']) else
-                              'verified' if offline_ok else 'not_measured')
+                              'not_measured' if held or not row['executions'] or any(r['verdict'] != 'verified' for r in row['executions']) else 'verified')
         elif name == 'maintained-regression':
             for offset, member in enumerate(members):
                 argv, kind = root_regression_command(root, member)
                 result = run(argv, [member], 'root-' + str(index) + '-' + str(offset),
-                             lambda raw, kind=kind: regression_counts(kind, raw))
+                             lambda raw: regression_counts(kind, raw))
                 row['executions'].append(result)
                 if result['verdict'] != 'verified':
                     row['held_members'] = members[offset + 1:]
@@ -578,41 +509,31 @@ def run_root_suites(root, suites, scratch, executor=execute):
         else:
             raise Refusal('undeclared root group')
         results.append(row)
-    # Every defined real_* arm runs once for the root unit, independent of which
-    # integration members are present — never leave them in not_run.
-    if 'integration-disposable-store' not in real_arm_executions:
-        run_pass_red_probe('scripts/full-suite-arms/disposable-store.probe.mjs',
-                           'integration-disposable-store', 'root-store')
-    if 'integration-external-provider' not in real_arm_executions:
-        run_pass_red_probe('scripts/full-suite-arms/external-provider.probe.mjs',
-                           'integration-external-provider', 'root-external')
-    if 'app-e2e' not in real_arm_executions:
-        run_pass_red_probe('scripts/full-suite-arms/app-e2e.probe.mjs', 'app-e2e', 'root-e2e')
-    for row in results:
-        row['_real_arm_executions'] = real_arm_executions
-    if any(p.get('verdict') != 'verified' for p in real_arm_executions.values()):
-        # Surface probe failure on the suite that owns the arm when present.
-        for row in results:
-            if row['suite'] == 'maintained-app-e2e' and real_arm_executions.get('app-e2e', {}).get('verdict') != 'verified':
-                row['verdict'] = real_arm_executions['app-e2e']['verdict']
-            if row['suite'] == 'maintained-integration':
-                store_v = real_arm_executions.get('integration-disposable-store', {}).get('verdict')
-                ext_v = real_arm_executions.get('integration-external-provider', {}).get('verdict')
-                if store_v != 'verified' or ext_v != 'verified':
-                    row['verdict'] = 'failed' if 'failed' in (store_v, ext_v) else 'not_measured'
     return results
 
 
 # KCP-0027 arm evidence (FullSuiteArmEvidence/v1). The arm set and each slot are declared in
 # .arcana/verify.json deployables["."].full_test_arms; the gate recomputes the verdict from the BASE
-# definition, so nothing here is a verdict. Every defined arm must appear in `arms` with exact
-# counts; `not_run` stays empty — parking an arm there cannot discharge the Program gate.
+# definition, so nothing here is a verdict. Only arms that actually executed carry counts. Held arms
+# (real disposable stores, real providers, the unconditional AppE2E skip) are listed in `not_run`
+# and keep the whole root suite not_measured. No environment flag changes that disposition.
 ARMS_SCHEMA = 'FullSuiteArmEvidence/v1'
 ARM_DEFINITION_PATH = '.arcana/verify.json'
+HELD_STORE_PREFIXES = ('src/auth/', 'src/bench-reservation/', 'src/billing/')
+HELD_PROVIDER_PREFIXES = ('src/connectors/image-generation/',)
 ARM_OF_SUITE = {'maintained-vitest': 'vitest-default',
                 'maintained-authored-template': 'authored-template',
-                'maintained-regression': 'regression',
-                'maintained-integration': 'integration-offline-contracts'}
+                'maintained-regression': 'regression'}
+
+
+def classify_held(member):
+    if member.endswith('.e2e-spec.ts'):
+        return 'app-e2e'
+    if member.startswith(HELD_STORE_PREFIXES):
+        return 'integration-disposable-store'
+    if member.startswith(HELD_PROVIDER_PREFIXES):
+        return 'integration-external-provider'
+    raise Refusal('unclassified held member: new held members must be assigned to an arm')
 
 
 def sum_counts(rows):
@@ -629,72 +550,37 @@ def sum_counts(rows):
     return {'total': sum(total.values()), **total}
 
 
-def load_arm_definition(root):
+def build_arms(root, results, head):
     raw = subprocess.run(['git', '-C', str(root), 'show', 'HEAD:' + ARM_DEFINITION_PATH],
                          capture_output=True, check=True).stdout
-    profile = json.loads(raw)
-    entries = ((profile.get('deployables') or {}).get('.') or {}).get('full_test_arms')
-    if not isinstance(entries, list) or not entries:
-        raise Refusal('missing full_test_arms definition')
-    arms = {}
-    for entry in entries:
-        if (not isinstance(entry, dict) or set(entry) != {'name', 'requires'}
-                or not isinstance(entry['name'], str) or not entry['name']
-                or entry['name'] in arms):
-            raise Refusal('invalid full_test_arms definition')
-        arms[entry['name']] = entry['requires']
-    return raw, arms
-
-
-def build_arms(root, results, head):
-    raw, defined = load_arm_definition(root)
-    collected = {}
-    real_map = {}
+    arms, ran, not_run = [], set(), set()
     for row in results:
-        real_map.update(row.get('_real_arm_executions') or {})
-        name = row.get('suite')
-        if name in ARM_OF_SUITE:
-            arm_name = ARM_OF_SUITE[name]
-            executions = row.get('executions', [])
-            held = row.get('held_members', [])
-            counts = None
-            if executions and all(e.get('verdict') in ('verified', 'failed') for e in executions):
-                counts = sum_counts(executions)
-            if name == 'maintained-regression' and held:
-                counts = None
-            if counts is None:
-                raise Refusal('missing exact execution evidence for arm ' + arm_name)
-            collected[arm_name] = {
-                'name': arm_name, 'backend': 'stub', 'counts': counts, 'head': head,
-                'verdict': 'failed' if counts['failed'] else 'passed',
-            }
-    for arm_name, backend in ARM_BACKEND_OF.items():
-        if backend == 'stub':
+        name = row['suite']
+        executions = row.get('executions', [])
+        if name == 'maintained-app-e2e':
+            not_run.add('app-e2e')
             continue
-        probe = real_map.get(arm_name)
-        if not probe or probe.get('verdict') != 'verified' or not probe.get('counts'):
-            raise Refusal('missing exact execution evidence for arm ' + arm_name)
-        counts = probe['counts']
-        if counts.get('skipped') or not counts.get('passed') or counts.get('failed'):
-            raise Refusal('arm ' + arm_name + ' green probe is not a clean pass')
-        control = probe.get('control') or {}
-        if control.get('result') != 'PASS_RED':
-            raise Refusal('arm ' + arm_name + ' missing PASS_RED control')
-        collected[arm_name] = {
-            'name': arm_name, 'backend': backend,
-            'counts': {'total': sum(counts[k] for k in ('passed', 'failed', 'skipped')), **counts},
-            'head': head, 'control': {'result': 'PASS_RED'},
-            'verdict': 'passed',
-        }
-    missing = sorted(set(defined) - set(collected))
-    extra = sorted(set(collected) - set(defined))
-    if missing or extra:
-        raise Refusal('arm set differs from definition (missing %s, extra %s)' % (missing, extra))
-    # Stable order matches the committed definition order.
-    arms = [collected[name] for name in defined]
+        if name == 'maintained-integration':
+            arm_name = 'integration-offline-contracts'
+        else:
+            arm_name = ARM_OF_SUITE[name]
+        held = row.get('held_members', [])
+        if name == 'maintained-integration':
+            not_run.update(classify_held(m) for m in held)
+        counts = None
+        if executions and all(e.get('verdict') in ('verified', 'failed') for e in executions):
+            counts = sum_counts(executions)
+        if name == 'maintained-regression' and held:
+            counts = None  # an unexecuted regression suffix keeps the arm unmeasured
+        if counts is None:
+            not_run.add(arm_name)
+            continue
+        arms.append({'name': arm_name, 'backend': 'stub', 'counts': counts, 'head': head,
+                     'verdict': 'failed' if counts['failed'] else 'passed'})
+        ran.add(arm_name)
     return {'schema': ARMS_SCHEMA, 'head': head,
             'definition': {'path': ARM_DEFINITION_PATH, 'sha256': hashlib.sha256(raw).hexdigest()},
-            'arms': arms, 'not_run': []}
+            'arms': arms, 'not_run': sorted(not_run - ran)}
 
 
 def execution_code(results):
@@ -727,6 +613,10 @@ def main():
     document = {'schema': 'MaintainedFullSuiteExecution/v1', 'head': head, 'unit': unit,
                 'membership': rows, 'suite_plan': suites, 'results': [],
                 'runtime_authorized': False, 'knowledge_admitted': False}
+    if unit == '.':
+        document['remaining'] = ['seven real external provider/auth/storage/image arms',
+                                 'unconditional AppE2E skip',
+                                 'broader disposable DB/Redis executor and namespace authority']
     try:
         document['results'] = (run_root_suites(ROOT, suites, scratch) if unit == '.' else
                                run_suites(ROOT, unit, suites, scratch))
@@ -738,11 +628,8 @@ def main():
         if unit == '.':
             try:
                 document['arms'] = build_arms(ROOT, document['results'], head)
-            except (Refusal, OSError, subprocess.CalledProcessError, ValueError, KeyError) as error:
+            except (Refusal, OSError, subprocess.CalledProcessError) as error:
                 document['arms_refused'] = str(error)[:200]
-                # Missing arm evidence is never a green exit — prefer semantic 127.
-                if code == 0 or code == 1:
-                    code = 127
     document['exit_code'] = code
     target = scratch / 'execution.json'
     with target.open('x') as stream:

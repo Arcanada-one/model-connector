@@ -154,19 +154,10 @@ class Controls(unittest.TestCase):
 
     def test_authored_template_rendered_tamper_cannot_be_verified(self):
         scratch = self.template_source_fixture()
-        self.ensure_arm_probes()
         runner = self.root / 'node_modules/.bin/vitest'
-        runner.parent.mkdir(parents=True, exist_ok=True)
+        runner.parent.mkdir(parents=True)
         runner.touch()
         def executor(argv, cwd, env, deadline, private, name):
-            if argv[0] == 'node' and argv[-1] in ('green', 'red'):
-                if argv[-1] == 'red':
-                    return {'argv': argv, 'exit_code': 1,
-                            'output': json.dumps({'passed': 0, 'failed': 1, 'skipped': 0}) + '\n',
-                            'duration_s': 0}
-                return {'argv': argv, 'exit_code': 0,
-                        'output': json.dumps({'passed': 1, 'failed': 0, 'skipped': 0}) + '\n',
-                        'duration_s': 0}
             target = private / 'authored-template'
             report = {'success': True, 'numTotalTests': 1, 'numPassedTests': 1,
                       'numFailedTests': 0, 'testResults': [{
@@ -274,19 +265,11 @@ class Controls(unittest.TestCase):
         scripts.mkdir()
         for name in ['graph-full-suite.sh', 'graph_full_suite.py']:
             (scripts / name).write_bytes((ROOT / 'scripts' / name).read_bytes())
-        arms = scripts / 'full-suite-arms'
-        arms.mkdir()
-        for name in ['app-e2e.probe.mjs', 'disposable-store.probe.mjs', 'external-provider.probe.mjs']:
-            (arms / name).write_bytes((ROOT / 'scripts/full-suite-arms' / name).read_bytes())
-        (self.root / '.arcana').mkdir()
-        (self.root / '.arcana/verify.json').write_text((ROOT / '.arcana/verify.json').read_text())
         (self.root / 'test_contract.py').write_text('import unittest\nclass Fixture(unittest.TestCase):\n def test_boundary(self): self.assertTrue(True)\nif __name__ == "__main__": unittest.main()\n')
         (self.root / 'test').mkdir()
-        (self.root / 'test/app.e2e-spec.ts').write_text(
-            "import { describe, it, expect } from 'vitest';\n"
-            "describe('marker', () => { it('stays in membership', () => { expect(true).toBe(true); }); });\n")
+        (self.root / 'test/app.e2e-spec.ts').write_text('throw new Error("must never execute")')
         subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
-        subprocess.run(['git', '-C', str(self.root), 'add', 'scripts', 'test_contract.py', 'test', '.arcana'], check=True)
+        subprocess.run(['git', '-C', str(self.root), 'add', 'scripts', 'test_contract.py', 'test'], check=True)
         subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture',
                         '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture'], check=True)
 
@@ -347,9 +330,8 @@ class Controls(unittest.TestCase):
         self.assertFalse(str(Path(tempdir)).startswith(('/tmp/', '/var/tmp/')), tempdir)
         self.assertNotIn('must-not-leak', result.stdout + result.stderr)
 
-    def test_actual_root_entrypoint_dispatches_local_regression_and_app_probe(self):
+    def test_actual_root_entrypoint_dispatches_local_regression_retains_app_hold(self):
         self.root_entrypoint_fixture()
-        # Fixture has no owned node_modules/ioredis; app-e2e probe stays not_measured, regression verifies.
         temp = self.root / 'private'
         temp.mkdir(mode=0o700)
         result = subprocess.run(['bash', 'scripts/graph-full-suite.sh', '.'], cwd=self.root,
@@ -360,32 +342,20 @@ class Controls(unittest.TestCase):
         paths = list(temp.glob('mc-full-*/execution.json'))
         self.assertEqual(len(paths), 1)
         report = json.loads(paths[0].read_text())
-        by_suite = {r['suite']: r for r in report['results']}
-        self.assertEqual(by_suite['maintained-regression']['verdict'], 'verified')
-        self.assertEqual(by_suite['maintained-regression']['executions'][0]['counts']['passed'], 1)
-        # No owned ioredis in the fixture tree → real disposable probes cannot verify.
-        self.assertIn(by_suite['maintained-app-e2e']['verdict'], ('not_measured', 'failed'))
-        self.assertNotIn('held_members', by_suite['maintained-app-e2e'])
+        self.assertEqual([r['verdict'] for r in report['results']], ['not_measured', 'verified'])
+        self.assertEqual(report['results'][1]['executions'][0]['counts']['passed'], 1)
+        self.assertEqual(report['results'][0]['held_members'], ['test/app.e2e-spec.ts'])
         self.assertEqual(report['exit_code'], 127)
-        self.assertTrue(report.get('arms_refused') or by_suite['maintained-app-e2e']['verdict'] != 'verified')
-
-    def ensure_arm_probes(self):
-        for name in ['app-e2e.probe.mjs', 'disposable-store.probe.mjs', 'external-provider.probe.mjs']:
-            path = self.root / 'scripts/full-suite-arms' / name
-            path.parent.mkdir(parents=True, exist_ok=True)
-            if not path.exists():
-                path.write_text('fixture probe\n')
+        self.assertEqual(len(list(temp.glob('mc-full-*/*.log'))), 1)
 
     def root_dispatch_fixture(self, members):
         for member in members:
             p = self.root / member
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text('fixture only')
-        self.ensure_arm_probes()
         runner = self.root / 'node_modules/.bin/vitest'
-        runner.parent.mkdir(parents=True, exist_ok=True)
-        if not runner.exists():
-            runner.write_text('fixture only')
+        runner.parent.mkdir(parents=True)
+        runner.write_text('fixture only')
         return subject.plan('.', members)
 
     def root_child(self, calls, status='passed', missing=False):
@@ -394,14 +364,6 @@ class Controls(unittest.TestCase):
             self.assertNotIn('PROVIDER_API_KEY', env)
             self.assertNotIn('DATABASE_URL', env)
             self.assertNotIn('NODE_OPTIONS', env)
-            if argv[0] == 'node' and len(argv) >= 3 and argv[-1] in ('green', 'red'):
-                if argv[-1] == 'red':
-                    return {'argv': argv, 'exit_code': 1,
-                            'output': json.dumps({'passed': 0, 'failed': 1, 'skipped': 0}) + '\n',
-                            'duration_s': 0}
-                return {'argv': argv, 'exit_code': 0,
-                        'output': json.dumps({'passed': 1, 'failed': 0, 'skipped': 0}) + '\n',
-                        'duration_s': 0}
             if argv[0] == 'pnpm':
                 output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
                 members = [a for a in argv[argv.index('--outputFile=' + output) + 1:]
@@ -417,7 +379,7 @@ class Controls(unittest.TestCase):
             return {'argv': argv, 'exit_code': 0, 'output': '', 'duration_s': 0}
         return child
 
-    def test_root_dispatches_exact_local_members_and_live_optional_without_not_run_hold(self):
+    def test_root_dispatches_exact_local_members_and_retains_live_and_app(self):
         offline = sorted(subject.OFFLINE_INTEGRATION)[0]
         members = ['src/a.spec.ts', offline, 'src/auth/live.integration.spec.ts',
                    'test/app.e2e-spec.ts', 'scripts/control.test.sh']
@@ -427,30 +389,21 @@ class Controls(unittest.TestCase):
                 'PROVIDER_API_KEY': 'sentinel-secret', 'DATABASE_URL': 'sentinel-secret',
                 'MC_ALLOW_LIVE': '1', 'NODE_OPTIONS': 'sentinel-secret'}):
             result = subject.run_root_suites(self.root, suites, self.root, self.root_child(calls))
-        probe_calls = [args for args in calls if args[0] == 'node']
-        self.assertEqual(len(probe_calls), 6)  # three arms × green+red
+        self.assertEqual(len(calls), 3)
         full_vitest_calls = [args for args in calls if args[0] == 'pnpm' and '--maxWorkers=4' in args]
         self.assertEqual(len(full_vitest_calls), 1)
         self.assertEqual(sorted(n for r in result for n in r['members']), sorted(members))
-        live = [n for r in result for n in r.get('live_optional_members', [])]
-        self.assertEqual(set(live), {'src/auth/live.integration.spec.ts'})
-        self.assertFalse(any(r.get('held_members') for r in result if r['suite'] != 'maintained-regression'))
+        held = [n for r in result for n in r.get('held_members', [])]
+        self.assertEqual(set(held), {'src/auth/live.integration.spec.ts', 'test/app.e2e-spec.ts'})
         self.assertFalse(any('live.integration.spec.ts' in a or 'app.e2e-spec.ts' in a for args in calls for a in args))
-        by_suite = {r['suite']: r['verdict'] for r in result}
-        self.assertEqual(by_suite['maintained-vitest'], 'verified')
-        self.assertEqual(by_suite['maintained-integration'], 'verified')
-        self.assertEqual(by_suite['maintained-app-e2e'], 'verified')
-        self.assertEqual(by_suite['maintained-regression'], 'verified')
-        self.assertEqual(subject.execution_code(result), 0)
+        self.assertEqual([r['verdict'] for r in result], ['not_measured', 'not_measured', 'verified', 'verified'])
+        self.assertEqual(subject.execution_code(result), 127)
 
     def test_root_missing_runner_refuses_before_spawn(self):
         suites = self.root_dispatch_fixture(['src/a.spec.ts'])
-        def child(*args):
-            self.fail('missing runner spawned a child')
-        with patch.object(subject.shutil, 'which', side_effect=lambda tool, path=None: (
-                '/fixture/node' if tool == 'node' else None)):
-            # Vitest missing via which=None; node present so probes can still be attempted.
-            result = subject.run_root_suites(self.root, suites, self.root, self.root_child([]))
+        with patch.object(subject.shutil, 'which', return_value=None):
+            result = subject.run_root_suites(self.root, suites, self.root,
+                lambda *args: self.fail('missing runner spawned a child'))
         self.assertEqual(result[0]['verdict'], 'not_measured')
         self.assertEqual(subject.execution_code(result), 127)
 
@@ -491,27 +444,15 @@ class Controls(unittest.TestCase):
                     p = self.root / member
                     p.parent.mkdir(parents=True, exist_ok=True)
                     p.write_text('fixture only')
-                self.ensure_arm_probes()
                 calls = []
                 def child(argv, *args):
                     calls.append(argv)
-                    if argv[0] == 'node' and argv[-1] in ('green', 'red'):
-                        if argv[-1] == 'red':
-                            return {'argv': argv, 'exit_code': 1,
-                                    'output': json.dumps({'passed': 0, 'failed': 1, 'skipped': 0}) + '\n',
-                                    'duration_s': 0}
-                        return {'argv': argv, 'exit_code': 0,
-                                'output': json.dumps({'passed': 1, 'failed': 0, 'skipped': 0}) + '\n',
-                                'duration_s': 0}
                     return {'argv': argv, 'exit_code': code, 'output': 'fixture failure', 'duration_s': 0}
                 with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
                     result = subject.run_root_suites(self.root, subject.plan('.', members), scratch, child)
-                # app-e2e probe (green+red) then first regression member fails and retains suffix.
-                self.assertEqual(len([c for c in calls if c[0] == 'bash']), 1)
-                by_suite = {r['suite']: r for r in result}
-                self.assertEqual(by_suite['maintained-app-e2e']['verdict'], 'verified')
-                self.assertEqual(by_suite['maintained-regression']['held_members'], ['scripts/b.test.sh'])
-                self.assertEqual(by_suite['maintained-regression']['executions'][0]['exit_code'], code)
+                self.assertEqual(len(calls), 1)
+                self.assertEqual(result[1]['held_members'], ['scripts/b.test.sh'])
+                self.assertEqual(result[1]['executions'][0]['exit_code'], code)
                 self.assertEqual(subject.execution_code(result), 1 if code == 9 else 124)
 
     def test_root_maintained_regression_commands_and_real_count_parsers(self):
@@ -534,7 +475,8 @@ class Controls(unittest.TestCase):
         suites = self.root_dispatch_fixture(['src/a.spec.ts'])
         (self.root / 'node_modules/.bin/vitest').unlink()
         with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
-            result = subject.run_root_suites(self.root, suites, self.root, self.root_child([]))
+            result = subject.run_root_suites(self.root, suites, self.root,
+                lambda *args: self.fail('missing dependency spawned a child'))
         self.assertEqual(result[0]['verdict'], 'not_measured')
         self.assertIn('owned Vitest dependency', result[0]['executions'][0]['reason'])
 
@@ -551,25 +493,12 @@ class Controls(unittest.TestCase):
 
 
 class ArmEvidence(unittest.TestCase):
-    """KCP-0027 arm evidence: Exact FullSuiteArmEvidence/v1 for every defined arm."""
-
-    PROFILE = json.dumps({
-        'schema': 'VerifyProfile/v1',
-        'deployables': {'.': {'full_test_arms': [
-            {'name': 'vitest-default', 'requires': 'stub_ok'},
-            {'name': 'integration-offline-contracts', 'requires': 'stub_ok'},
-            {'name': 'authored-template', 'requires': 'stub_ok'},
-            {'name': 'regression', 'requires': 'stub_ok'},
-            {'name': 'integration-disposable-store', 'requires': 'real_disposable'},
-            {'name': 'integration-external-provider', 'requires': 'real_external'},
-            {'name': 'app-e2e', 'requires': 'real_disposable'},
-        ]}}
-    })
+    """KCP-0027 arm evidence emitted by the root runner: data only, never a verdict."""
 
     def repo(self, tmp):
         root = Path(tmp)
         (root / '.arcana').mkdir()
-        (root / '.arcana/verify.json').write_text(self.PROFILE + '\n')
+        (root / '.arcana/verify.json').write_text('{"schema":"VerifyProfile/v1"}\n')
         git = ['git', '-C', str(root), '-c', 'user.name=t', '-c', 'user.email=t@example.invalid']
         subprocess.run(['git', '-C', str(root), 'init', '-q'], check=True)
         subprocess.run([*git, 'add', '.'], check=True)
@@ -577,95 +506,50 @@ class ArmEvidence(unittest.TestCase):
         return root, subprocess.run(['git', '-C', str(root), 'rev-parse', 'HEAD'],
                                     capture_output=True, check=True).stdout.decode().strip()
 
-    def real(self, name, backend):
-        return {name: {
-            'arm': name, 'backend': backend, 'verdict': 'verified',
-            'counts': {'passed': 2, 'failed': 0, 'skipped': 0},
-            'control': {'result': 'PASS_RED'},
-        }}
-
     def results(self):
         ok = {'verdict': 'verified', 'counts': {'passed': 3, 'failed': 0, 'skipped': 0}}
-        reals = {}
-        reals.update(self.real('integration-disposable-store', 'real_disposable'))
-        reals.update(self.real('integration-external-provider', 'real_external'))
-        reals.update(self.real('app-e2e', 'real_disposable'))
         return [
-            {'suite': 'maintained-app-e2e', 'verdict': 'verified', 'executions': [dict(ok)],
-             '_real_arm_executions': reals},
-            {'suite': 'maintained-authored-template', 'executions': [dict(ok)],
-             '_real_arm_executions': reals},
+            {'suite': 'maintained-app-e2e', 'verdict': 'not_measured', 'held_members': ['test/app.e2e-spec.ts']},
+            {'suite': 'maintained-authored-template', 'executions': [dict(ok)]},
             {'suite': 'maintained-integration', 'executions': [dict(ok)],
-             'live_optional_members': ['src/billing/hold.integration.spec.ts'],
-             '_real_arm_executions': reals},
+             'held_members': ['src/billing/hold.integration.spec.ts',
+                              'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts']},
             {'suite': 'maintained-regression',
-             'executions': [dict(ok), {'verdict': 'verified', 'counts': None}],
-             '_real_arm_executions': reals},
-            {'suite': 'maintained-vitest', 'executions': [dict(ok)],
-             '_real_arm_executions': reals},
+             'executions': [dict(ok), {'verdict': 'verified', 'counts': None}]},
+            {'suite': 'maintained-vitest', 'executions': [dict(ok)]},
         ]
 
-    def test_all_defined_arms_emit_exact_evidence_with_empty_not_run(self):
+    def test_executed_arms_carry_counts_and_held_arms_are_not_run(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, head = self.repo(tmp)
             arms = subject.build_arms(root, self.results(), head)
         self.assertEqual(set(arms), {'schema', 'head', 'definition', 'arms', 'not_run'})
-        self.assertEqual(arms['schema'], 'FullSuiteArmEvidence/v1')
-        self.assertEqual(arms['not_run'], [])
-        self.assertEqual(arms['head'], head)
+        self.assertEqual(arms['not_run'], ['app-e2e', 'integration-disposable-store',
+                                           'integration-external-provider'])
         by_name = {a['name']: a for a in arms['arms']}
-        self.assertEqual(set(by_name), set(json.loads(self.PROFILE)['deployables']['.']['full_test_arms'][i]['name']
-                                           for i in range(7)))
-        self.assertEqual([a['name'] for a in arms['arms']], [
-            'vitest-default', 'integration-offline-contracts', 'authored-template', 'regression',
-            'integration-disposable-store', 'integration-external-provider', 'app-e2e'])
-        self.assertEqual(by_name['regression']['counts'],
-                         {'total': 4, 'passed': 4, 'failed': 0, 'skipped': 0})
-        for name in ('vitest-default', 'integration-offline-contracts', 'authored-template', 'regression'):
-            self.assertEqual(by_name[name]['backend'], 'stub')
-            self.assertNotIn('control', by_name[name])
-        for name, backend in (('integration-disposable-store', 'real_disposable'),
-                              ('integration-external-provider', 'real_external'),
-                              ('app-e2e', 'real_disposable')):
-            self.assertEqual(by_name[name]['backend'], backend)
-            self.assertEqual(by_name[name]['control'], {'result': 'PASS_RED'})
-            self.assertEqual(by_name[name]['counts']['skipped'], 0)
-            self.assertGreater(by_name[name]['counts']['passed'], 0)
+        self.assertEqual(set(by_name), {'authored-template', 'integration-offline-contracts',
+                                        'regression', 'vitest-default'})
+        # An exit-status validator counts as exactly one passed check; nothing is invented beyond that.
+        self.assertEqual(by_name['regression']['counts'], {'total': 4, 'passed': 4, 'failed': 0, 'skipped': 0})
+        for arm in arms['arms']:
+            self.assertEqual((arm['backend'], arm['head']), ('stub', head))
+        self.assertEqual(len(arms['definition']['sha256']), 64)
 
-    def test_missing_arm_evidence_refuses_instead_of_not_run_dodge(self):
+    def test_unexecuted_or_skipped_or_unclassified_never_becomes_an_executed_arm(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, head = self.repo(tmp)
             results = self.results()
-            results[4] = {'suite': 'maintained-vitest',
-                          'executions': [{'verdict': 'not_measured', 'exit_code': 127}],
-                          '_real_arm_executions': results[0]['_real_arm_executions']}
-            with self.assertRaises(subject.Refusal) as caught:
-                subject.build_arms(root, results, head)
-            self.assertIn('vitest-default', str(caught.exception))
-            results = self.results()
-            # Drop a real arm probe entirely — must refuse, never emit not_run.
-            for row in results:
-                row['_real_arm_executions'].pop('app-e2e', None)
-            with self.assertRaises(subject.Refusal) as caught:
-                subject.build_arms(root, results, head)
-            self.assertIn('app-e2e', str(caught.exception))
-            results = self.results()
+            results[4] = {'suite': 'maintained-vitest', 'executions': [{'verdict': 'not_measured', 'exit_code': 127}]}
             results[3]['held_members'] = ['deploy/x.sh']
-            with self.assertRaises(subject.Refusal) as caught:
+            arms = subject.build_arms(root, results, head)
+            self.assertNotIn('vitest-default', {a['name'] for a in arms['arms']})
+            self.assertNotIn('regression', {a['name'] for a in arms['arms']})
+            self.assertIn('vitest-default', arms['not_run'])
+            self.assertIn('regression', arms['not_run'])
+            results = self.results()
+            results[2]['held_members'] = ['src/new-area/thing.integration.spec.ts']
+            with self.assertRaises(subject.Refusal):
                 subject.build_arms(root, results, head)
-            self.assertIn('regression', str(caught.exception))
-
-    def test_program_arms_verdict_accepts_emitted_evidence(self):
-        # Match Program tools/graph/schema_check.arms_verdict exactly (vendored copy).
-        sys.path.insert(0, str(ROOT / '.github/graph-admission/tools/graph'))
-        import schema_check  # noqa: E402
-        with tempfile.TemporaryDirectory() as tmp:
-            root, head = self.repo(tmp)
-            evidence = subject.build_arms(root, self.results(), head)
-            definition = schema_check.arm_definition((root / '.arcana/verify.json').read_bytes())
-            verdict, reasons = schema_check.arms_verdict(evidence, head, definition)
-        self.assertEqual(verdict, 'verified', reasons)
-        self.assertEqual(reasons, [])
 
     def test_committed_definition_names_every_arm_the_runner_can_emit(self):
         profile = json.loads((ROOT / '.arcana/verify.json').read_text())
@@ -675,7 +559,6 @@ class ArmEvidence(unittest.TestCase):
             'authored-template': 'stub_ok', 'regression': 'stub_ok',
             'integration-disposable-store': 'real_disposable',
             'integration-external-provider': 'real_external', 'app-e2e': 'real_disposable'})
-        self.assertEqual(set(subject.ARM_BACKEND_OF), set(defined))
 
 
 if __name__ == '__main__':
