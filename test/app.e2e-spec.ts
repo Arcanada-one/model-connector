@@ -1,18 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import type { NestFastifyApplication } from '@nestjs/platform-fastify';
-
-/**
- * Membership marker always executes so the maintained-app-e2e inventory is not
- * an unconditional-skip suite. Nest AppModule contracts below stay under
- * describe.skip (same as base) and are loaded by `pnpm test:e2e` in CI.
- * AppModule is imported only inside the skipped suite so env validation does
- * not fail the always-on marker when infra credentials are absent.
- */
-describe('App E2E membership marker', () => {
-  it('declares the app-e2e arm remains in the maintained union', () => {
-    expect('app-e2e').toBe('app-e2e');
-  });
-});
+import { Test } from '@nestjs/testing';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { AppModule } from '../src/app.module';
 
 // E2E tests require Redis + PostgreSQL — skip in CI without infra
 // Run locally with: DATABASE_URL=... REDIS_HOST=... pnpm test:e2e
@@ -20,9 +9,6 @@ describe.skip('App E2E (requires infra)', () => {
   let app: NestFastifyApplication;
 
   beforeAll(async () => {
-    const { Test } = await import('@nestjs/testing');
-    const { FastifyAdapter } = await import('@nestjs/platform-fastify');
-    const { AppModule } = await import('../src/app.module');
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();

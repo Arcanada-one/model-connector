@@ -174,20 +174,6 @@ jobs:
       - name: Test
         run: pnpm test
 
-      # Hermetic Billing3a fixture (test/fixtures/billing-3a-hermetic) makes these
-      # four preserves cases always execute — verbose titles required for Root log proof.
-      - name: Journal custodian preserves (4/4 titles)
-        run: >
-          pnpm exec vitest run
-          src/bench-reservation/journal-bridge.spec.ts
-          -t "preserves real Journal liabilities and refusal for"
-          --reporter=verbose
-
-      - name: E2E suite inventory (Nest contracts stay describe.skip without infra)
-        run: pnpm test:e2e
-        env:
-          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
-
       - name: Rate-limit CI report negative controls
         run: |
           pnpm exec tsc --noEmit --project tsconfig.ci.json

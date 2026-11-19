@@ -1,7 +1,0 @@
-{
-  "schema": "HermeticBilling3aFixture/v1",
-  "billing_source": "3a169ddfd2efd1af6ca160247430ffab41df0c64",
-  "source_path": "dev-tools/jevbench/instrument",
-  "module_pins_file": "test/fixtures/billing-3a-module-pins.json",
-  "purpose": "CI-executable journal-bridge custodian preserves cases; fixture_only offline Journal only"
-}
