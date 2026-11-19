@@ -442,18 +442,15 @@ jobs:
           DATABASE_URL: postgresql://dummy:dummy@127.0.0.1:5432/dummy
 
       # Same pin as graph-admission.yml — regression member test_source_input_contract.py.
-      # Debian ci-general images disable ensurepip and may lack python3-pip; use get-pip.py --user.
+      # Debian PEP 668 blocks system pip; use a job-local venv and forward its python.
       - name: jsonschema for root regression membership
         run: |
           set -euo pipefail
-          if python3 -c 'import jsonschema' >/dev/null 2>&1; then
-            python3 -c 'import jsonschema; print("jsonschema", jsonschema.__version__)'
-            exit 0
-          fi
-          curl -fsSL https://bootstrap.pypa.io/get-pip.py -o "$RUNNER_TEMP/get-pip.py"
-          python3 "$RUNNER_TEMP/get-pip.py" --user --disable-pip-version-check
-          python3 -m pip install --user --disable-pip-version-check --no-input 'jsonschema==4.23.0'
-          python3 -c 'import jsonschema; print("jsonschema", jsonschema.__version__)'
+          VENV="$RUNNER_TEMP/mc-fs-py"
+          python3 -m venv "$VENV"
+          "$VENV/bin/pip" install --disable-pip-version-check --no-input 'jsonschema==4.23.0'
+          "$VENV/bin/python" -c 'import jsonschema; print("jsonschema", jsonschema.__version__)'
+          printf 'MC_FULL_SUITE_PYTHON=%s\n' "$VENV/bin/python" >>"$GITHUB_ENV"
 
       - name: Start 127.0.0.1 disposable Postgres and Redis
         run: |

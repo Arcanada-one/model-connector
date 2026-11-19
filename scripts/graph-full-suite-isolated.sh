@@ -78,6 +78,10 @@ GRANT_ARGS=()
 if [[ -n "${MC_FULL_SUITE_GRANT:-}" ]]; then
   GRANT_ARGS+=(MC_FULL_SUITE_GRANT="$MC_FULL_SUITE_GRANT")
 fi
+# Optional job-local venv python (jsonschema etc.) for root .py regression members.
+if [[ -n "${MC_FULL_SUITE_PYTHON:-}" ]]; then
+  GRANT_ARGS+=(MC_FULL_SUITE_PYTHON="$MC_FULL_SUITE_PYTHON")
+fi
 # Private temp roots must also reach the child so grant path confinement can be checked.
 RUNTIME_ARGS=()
 if [[ -n "${XDG_RUNTIME_DIR:-}" ]]; then
