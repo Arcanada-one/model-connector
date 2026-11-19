@@ -491,6 +491,52 @@ class Controls(unittest.TestCase):
         self.assertEqual(subject.regression_counts('unittest',
             'Ran 1 test in 0.1s\nOK (expected failures=1)\n')['skipped'], 1)
 
+    def test_app_e2e_pass_red_control_does_not_fail_suite(self):
+        members = ['test/app.e2e-spec.ts']
+        suites = self.root_dispatch_fixture(members)
+        grant = {
+            'arms': ['app-e2e'],
+            'env': {
+                'DATABASE_URL': 'postgresql://test:test@127.0.0.1:5432/connector_test',
+                'MC_FULL_SUITE_APP_E2E': '1',
+                'REDIS_HOST': '127.0.0.1',
+                'REDIS_PORT': '6379',
+                'NODE_ENV': 'test',
+                'PORT': '3000',
+            },
+            'path': '/fixture/grant.json',
+            'sha256': '0' * 64,
+        }
+        calls = []
+
+        def child(argv, cwd, env, deadline, scratch, name):
+            calls.append(name)
+            output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
+            selected = [a for a in argv[argv.index('--outputFile=' + output) + 1:]
+                        if not a.startswith('-')]
+            red = env.get('DATABASE_URL', '').endswith('/pass_red')
+            status = 'failed' if red else 'passed'
+            document = {
+                'numTotalTests': len(selected),
+                'numPassedTests': 0 if red else len(selected),
+                'numFailedTests': len(selected) if red else 0,
+                'testResults': [{'name': str(self.root / m),
+                                 'assertionResults': [{'status': status}]} for m in selected],
+            }
+            Path(output).write_text(json.dumps(document))
+            return {'argv': argv, 'exit_code': 1 if red else 0, 'output': '', 'duration_s': 0}
+
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'), \
+                tempfile.TemporaryDirectory() as directory:
+            result = subject.run_root_suites(
+                self.root, suites, Path(directory), child, grant=grant)
+        e2e = next(row for row in result if row['suite'] == 'maintained-app-e2e')
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(e2e['executions'][0]['verdict'], 'failed')
+        self.assertEqual(e2e['executions'][0]['control']['result'], 'PASS_RED')
+        self.assertEqual(e2e['executions'][1]['verdict'], 'verified')
+        self.assertEqual(e2e['verdict'], 'verified')
+
 
 class ArmEvidence(unittest.TestCase):
     """KCP-0027 arm evidence emitted by the root runner: data only, never a verdict."""

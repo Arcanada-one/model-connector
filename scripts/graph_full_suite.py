@@ -589,8 +589,12 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
                     ['--config', 'vitest.e2e.config.ts'], members,
                     'root-' + str(index), report)
                 row['executions'].extend([red] + ([real] if real else []))
-                row['verdict'] = ('failed' if any(r['verdict'] == 'failed' for r in row['executions']) else
-                                  'not_measured' if not real or real['verdict'] != 'verified' else 'verified')
+                # PASS_RED control is intentionally failed; suite verdict uses real run only.
+                real_only = _real_executions(row['executions'])
+                row['verdict'] = (
+                    'failed' if any(r['verdict'] == 'failed' for r in real_only) else
+                    'not_measured' if (not real_only or any(r['verdict'] != 'verified' for r in real_only))
+                    else 'verified')
                 row['arm'] = 'app-e2e'
             else:
                 row.update(verdict='not_measured', reason='AppE2E held; no disposable grant',
@@ -862,10 +866,25 @@ def main():
     target.chmod(0o600)
     print('Full-suite evidence:', target)
     for row in document['results']:
-        counts = row.get('counts')
-        if counts:
-            print(row['suite'], ':', counts['passed'], 'passed,', counts['failed'],
-                  'failed,', counts['skipped'], 'skipped; raw exit', row.get('exit_code'))
+        held_n = len(row.get('held_members') or [])
+        print(row['suite'], 'verdict=' + str(row.get('verdict')),
+              'held_members=' + str(held_n),
+              'executions=' + str(len(row.get('executions') or [])))
+        for ex in row.get('executions') or []:
+            counts = ex.get('counts')
+            if counts:
+                print(' ', Path(ex.get('raw_log', 'x')).name + ':',
+                      counts['passed'], 'passed,', counts['failed'],
+                      'failed,', counts['skipped'], 'skipped; raw exit',
+                      ex.get('exit_code'), 'verdict=' + str(ex.get('verdict')))
+            else:
+                print(' ', Path(ex.get('raw_log', 'x')).name + ':',
+                      'verdict=' + str(ex.get('verdict')),
+                      'exit=' + str(ex.get('exit_code')),
+                      'reason=' + str(ex.get('reason', ''))[:160])
+        reasons = row.get('held_reasons') or {}
+        for path_name, reason in sorted(reasons.items()):
+            print('  held:', path_name, '->', reason)
     if code == 127:
         print('FULL_FALLBACK_TEST_NOT_MEASURED: complete maintained obligations not executed')
     return code
