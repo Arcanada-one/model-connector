@@ -9,7 +9,7 @@ import { mkdtemp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createServer } from 'node:http';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { classifyFailure } from '../src/classifier.js';
 import { parseConfig } from '../src/config.js';
 import { runWatcher } from '../src/main.js';
