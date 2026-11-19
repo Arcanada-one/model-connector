@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item \u2014 the ordinary case after a rebase or a second commit on a card \u2014 the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-19T12:12:46Z",
+ "captured_at_utc": "2026-11-19T12:18:26Z",
  "change_set": {
   "base": "cfd57cef686da9b0782db08ab08cfce196bf4c3c",
   "files": [
@@ -17,9 +17,18 @@
     ],
     "path": ".github/workflows/deploy-stt-whisper.yml",
     "status": "M"
+   },
+   {
+    "kind": "receipt",
+    "node_id": "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json",
+    "node_ids": [
+     "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json"
+    ],
+    "path": "receipts/graph/change-admission-298-datarim-ref-9709598f.json",
+    "status": "A"
    }
   ],
-  "head": "0ce55dbe986e400fdb6cbbc284655a0ed044b922",
+  "head": "767597ed5f9428052137f75eb8c5ba98d15c46d7",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -43,18 +52,18 @@
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:4e718c2d30155cdef2d30dc5cd02464587d70d23a44bfc84c56e1eea6c1f1042",
-  "path": "/tmp/arcana-verify-7lepnsh1/verifier-out/graph-cfd57cef686d.json",
+  "path": "/tmp/arcana-verify-s6reggep/verifier-out/graph-cfd57cef686d.json",
   "source_commit": "cfd57cef686da9b0782db08ab08cfce196bf4c3c"
  },
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:680fa28a6ca042017da3293dae6b2c9251566a32caf68ffba4a981610105e6b1",
-  "path": "/tmp/arcana-verify-7lepnsh1/verifier-out/graph-head-0ce55dbe986e.json",
-  "source_commit": "0ce55dbe986e400fdb6cbbc284655a0ed044b922",
+  "graph_digest": "sha256:994f52ea868f607c92beb1c0af389c6b3b44b71afdf18bb56d3af9c839dcba84",
+  "path": "/tmp/arcana-verify-s6reggep/verifier-out/graph-head-767597ed5f94.json",
+  "source_commit": "767597ed5f9428052137f75eb8c5ba98d15c46d7",
   "staleness": {
-   "checked_at_utc": "2026-11-19T12:13:58Z",
-   "checked_nodes": 1036,
+   "checked_at_utc": "2026-11-19T12:19:35Z",
+   "checked_nodes": 1037,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -62,7 +71,7 @@
  },
  "host": "graph-author-host",
  "host_redacted": true,
- "host_sha256": "a830999f29c3ab8ff0ec74be8b1a0b1088b57ea3e3f4255e20caffd232f136de",
+ "host_sha256": "12b5125828b0ece226fd3d706ca8041f1a1b4814d2b86d7612bd65835b07b8f1",
  "impact_set": {
   "deterministic_core": [
    {
@@ -598,13 +607,14 @@
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = \u22c3 edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i\u2026",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 2 attached from /tmp/exemptions-298-datarim.json"
+  "exemptions: 2 attached from /tmp/exemptions-298-datarim.json; 1 REJECTED \u2014 receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json: this receipt carries no verdict for that entity"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261119T121246Z-0ce55dbe",
+ "receipt_id": "car-verify-20261119T121826Z-767597ed",
+ "receipt_path": "receipts/graph/change-admission-298-datarim-ref-9709598f.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
   "path": "/home/dev/aup/claude-work/dev-sw19-b/model-connector"
@@ -644,6 +654,7 @@
    "deployable_unit:.",
    "document:deploy/stt-whisper/README.md",
    "receipt:receipts/bench-source-ctx24/source-car.json",
+   "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json",
    "receipt:receipts/graph/change-admission-440d2499-mc254.json",
    "receipt:receipts/graph/change-admission-6e2e5868.json",
    "receipt:receipts/graph/change-admission-A2-457-preflight.json",
@@ -673,7 +684,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-19T12:13:58Z",
+  "checked_at_utc": "2026-11-19T12:19:35Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -689,6 +700,21 @@
    "path": "receipts/bench-source-ctx24/source-car.json",
    "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
    "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": null,
+    "head": "sha256:990638947f3bbd7b54f79b2cad3823072e7b343be917ea919f39a6e984c80c4c"
+   },
+   "entity": "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-298-datarim-ref-9709598f.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it; superseded by construction \u2014 this run re-issues the receipt at receipts/graph/change-admission-298-datarim-ref-9709598f.json for work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0",
+   "rule": "DEC-AUP-0035",
+   "superseded": {
+    "receipt_path": "receipts/graph/change-admission-298-datarim-ref-9709598f.json",
+    "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
+   }
   },
   {
    "content_hash": {
@@ -945,7 +971,7 @@
   }
  ],
  "tree": {
-  "commit": "0ce55dbe986e400fdb6cbbc284655a0ed044b922",
+  "commit": "767597ed5f9428052137f75eb8c5ba98d15c46d7",
   "dirty": false
  },
  "verdicts": [
@@ -995,8 +1021,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-7lepnsh1/verifier-out/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-19T12:14:15Z",
+   "output_ref": "/tmp/arcana-verify-s6reggep/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-19T12:19:52Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1011,8 +1037,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-7lepnsh1/verifier-out/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-19T12:14:15Z",
+   "output_ref": "/tmp/arcana-verify-s6reggep/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-19T12:19:52Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1027,8 +1053,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-7lepnsh1/verifier-out/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-19T12:14:15Z",
+   "output_ref": "/tmp/arcana-verify-s6reggep/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-19T12:19:52Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1043,8 +1069,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-7lepnsh1/verifier-out/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-19T12:14:15Z",
+   "output_ref": "/tmp/arcana-verify-s6reggep/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-19T12:19:52Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1059,8 +1085,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/tmp/arcana-verify-7lepnsh1/verifier-out/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-19T12:14:15Z",
+   "output_ref": "/tmp/arcana-verify-s6reggep/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-19T12:19:52Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -1075,13 +1101,13 @@
    "exit_code": 1,
    "id": "v-workflow-config-6ceb21cf301c7eb2",
    "kind": "config_schema",
-   "output_ref": "/tmp/arcana-verify-7lepnsh1/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
-   "started_at_utc": "2026-11-19T12:14:15Z",
+   "output_ref": "/tmp/arcana-verify-s6reggep/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
+   "started_at_utc": "2026-11-19T12:19:52Z",
    "summary": "workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; job deploy step 7: command/process substitution closure is unresolved; job deploy step 8: checkout root or source-affecting workflow environment unresolved; job deploy step 8: command/process substitution closure is unresolved; job deploy step 9: checkout root or source-affecting workflow environment unresolved; job deploy step 9: line 1: wrapper execution scope/options unresolved; job network-exposure-lint: reusable/opaque shell context; 13 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.31,
+   "duration_s": 0.53,
    "entities": [
     "code_unit:.github/workflows/deploy-stt-whisper.yml",
     "deployable_unit:."
@@ -1093,8 +1119,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/tmp/arcana-verify-7lepnsh1/verifier-out/v-fitness.json",
-   "started_at_utc": "2026-11-19T12:14:15Z",
+   "output_ref": "/tmp/arcana-verify-s6reggep/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-19T12:19:52Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -1109,17 +1135,23 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/tmp/arcana-verify-7lepnsh1/verifier-out/v-doc-reference.txt",
-   "started_at_utc": "2026-11-19T12:14:16Z",
+   "output_ref": "/tmp/arcana-verify-s6reggep/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-19T12:19:52Z",
    "summary": "1 document(s), 0 failed"
   }
  ],
  "verify": {
   "events": [
    {
+    "code": "SUPERSEDED_SELF_EXCLUSION",
+    "entity": "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json",
+    "rule": "DEC-AUP-0035",
+    "text": "the receipt at receipts/graph/change-admission-298-datarim-ref-9709598f.json is the previous version of the one this run is writing, for the same work item 597f92c3-ed72-4791-ab6e-c5e8e2ee30d0 \u2014 superseded by construction, so it owes this change no verdict"
+   },
+   {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "24 affected entity(ies) owe no verdict (receipt: 24): unchanged at both revisions and given no verifier by the matrix"
+    "text": "25 affected entity(ies) owe no verdict (receipt: 25): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
@@ -1135,6 +1167,7 @@
     "doc_reference"
    ],
    "receipt:receipts/bench-source-ctx24/source-car.json": [],
+   "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json": [],
    "receipt:receipts/graph/change-admission-440d2499-mc254.json": [],
    "receipt:receipts/graph/change-admission-6e2e5868.json": [],
    "receipt:receipts/graph/change-admission-A2-457-preflight.json": [],
@@ -1160,11 +1193,10 @@
    "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json": []
   },
   "seconds": {
-   "prepare": 7.85,
-   "total": 89.36,
-   "verifiers": 0.31
+   "prepare": 6.83,
+   "total": 86.09,
+   "verifiers": 0.53
   }
  },
- "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0",
- "receipt_path": "receipts/graph/change-admission-298-datarim-ref-9709598f.json"
+ "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
 }
