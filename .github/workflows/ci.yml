@@ -442,8 +442,16 @@ jobs:
           DATABASE_URL: postgresql://dummy:dummy@127.0.0.1:5432/dummy
 
       # Same pin as graph-admission.yml — regression member test_source_input_contract.py.
+      # Some ci-general images lack pip; bootstrap with ensurepip when needed.
       - name: jsonschema for root regression membership
-        run: python3 -I -m pip install --disable-pip-version-check --no-input 'jsonschema==4.23.0'
+        run: |
+          set -euo pipefail
+          if python3 -I -c 'import jsonschema' >/dev/null 2>&1; then
+            python3 -I -c 'import jsonschema; print("jsonschema", jsonschema.__version__)'
+            exit 0
+          fi
+          python3 -I -m ensurepip --upgrade
+          python3 -I -m pip install --disable-pip-version-check --no-input 'jsonschema==4.23.0'
 
       - name: Start 127.0.0.1 disposable Postgres and Redis
         run: |
