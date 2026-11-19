@@ -72,6 +72,18 @@ if [[ "$1" == 'packages/sdk-python' ]] && ! env -i PATH="$SYSTEM_PATH" "$SYSTEM_
   PYTHON_PATH="$VENV/bin:$SYSTEM_PATH"
 fi
 
+# Root Vitest/integration arms import @prisma/client. A clean install with
+# ignored build scripts leaves the client ungenerated; generate into the owned
+# node_modules before measurement when prisma is present (dummy URL — generate
+# does not connect). Fixture harnesses without prisma skip this step.
+if [[ "$1" == '.' && -x "$REPO_ROOT/node_modules/.bin/prisma" ]]; then
+  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 \
+    PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 \
+    DATABASE_URL='postgresql://prisma-generate:prisma-generate@127.0.0.1:5432/prisma_generate' \
+    bash -lc "cd -- $(printf '%q' "$REPO_ROOT") && ./node_modules/.bin/prisma generate" \
+    || { echo 'FULL_FALLBACK_TEST_REFUSED: prisma generate failed' >&2; exit 1; }
+fi
+
 set +e
 env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 bash "$SCRIPT_DIR/graph-full-suite.sh" "$1"
 status=$?
