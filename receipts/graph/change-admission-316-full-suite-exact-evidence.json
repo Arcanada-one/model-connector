@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-19T16:08:36Z",
+ "captured_at_utc": "2026-11-19T16:32:47Z",
  "change_set": {
   "base": "1bc79e14c7727e7fd6557c558243821a18d7ec23",
   "files": [
@@ -19,15 +19,6 @@
     "status": "M"
    },
    {
-    "kind": "other",
-    "node_id": "code_unit:dev-tools/graph-full-suite.test.py",
-    "node_ids": [
-     "code_unit:dev-tools/graph-full-suite.test.py"
-    ],
-    "path": "dev-tools/graph-full-suite.test.py",
-    "status": "M"
-   },
-   {
     "kind": "receipt",
     "node_id": "receipt:receipts/graph/change-admission-316-full-suite-exact-evidence.json",
     "node_ids": [
@@ -38,47 +29,11 @@
    },
    {
     "kind": "code",
-    "node_id": "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-    "node_ids": [
-     "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs"
-    ],
-    "path": "scripts/full-suite-arms/app-e2e.probe.mjs",
-    "status": "A"
-   },
-   {
-    "kind": "code",
-    "node_id": "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-    "node_ids": [
-     "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs"
-    ],
-    "path": "scripts/full-suite-arms/disposable-store.probe.mjs",
-    "status": "A"
-   },
-   {
-    "kind": "code",
-    "node_id": "code_unit:scripts/full-suite-arms/external-provider.probe.mjs",
-    "node_ids": [
-     "code_unit:scripts/full-suite-arms/external-provider.probe.mjs"
-    ],
-    "path": "scripts/full-suite-arms/external-provider.probe.mjs",
-    "status": "A"
-   },
-   {
-    "kind": "code",
     "node_id": "code_unit:scripts/graph-full-suite-isolated.sh",
     "node_ids": [
      "code_unit:scripts/graph-full-suite-isolated.sh"
     ],
     "path": "scripts/graph-full-suite-isolated.sh",
-    "status": "M"
-   },
-   {
-    "kind": "other",
-    "node_id": "code_unit:scripts/graph_full_suite.py",
-    "node_ids": [
-     "code_unit:scripts/graph_full_suite.py"
-    ],
-    "path": "scripts/graph_full_suite.py",
     "status": "M"
    },
    {
@@ -241,7 +196,7 @@
     "status": "A"
    }
   ],
-  "head": "ecc3dffc247b7e3e7dbd92fd8c7035aef6e2ffe6",
+  "head": "3a8695afb59c6f768e4be6ddf41cadc2b707464f",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -249,106 +204,78 @@
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/ci.yml",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
+   "expires_at_utc": "2026-12-19T16:32:47Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 Root HOLD drop probes)",
    "reason": "v-workflow-config-b803fcb7f17ed923: workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 11: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 11: command/process substitut"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
+   "expires_at_utc": "2026-12-19T16:32:47Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 Root HOLD drop probes)",
    "reason": "v-workflow-config-2fe48d1021006468: workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
+   "expires_at_utc": "2026-12-19T16:32:47Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 Root HOLD drop probes)",
    "reason": "v-workflow-config-6ceb21cf301c7eb2: workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; "
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/deploy.yml",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
+   "expires_at_utc": "2026-12-19T16:32:47Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 Root HOLD drop probes)",
    "reason": "v-workflow-config-28802fbf11c83a2e: workflow shell caller closure not measured: job guard step 0: heredoc/group/function/brace expansion closure is unresolved; job guard step 2: command/process substitution closure is unresolved; job publication-post-state step 1: heredoc/group/function/brace expansion closure is unresolved; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/graph-admission-call.yml",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
+   "expires_at_utc": "2026-12-19T16:32:47Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 Root HOLD drop probes)",
    "reason": "v-workflow-config-60a4bd100e640545: workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/graph-admission.yml",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
+   "expires_at_utc": "2026-12-19T16:32:47Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 Root HOLD drop probes)",
    "reason": "v-workflow-config-dc49cc771602c92b: workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-affecting workflow environment unresolved; job graph-admission step 12: command/process substitution cl"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/public-surface.yml",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
+   "expires_at_utc": "2026-12-19T16:32:47Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 Root HOLD drop probes)",
    "reason": "v-workflow-config-9de6bedb8518f82f: workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; wo"
-  },
-  {
-   "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
-   "entity": "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
-   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
-  },
-  {
-   "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
-   "entity": "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
-   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
-  },
-  {
-   "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
-   "entity": "code_unit:scripts/full-suite-arms/external-provider.probe.mjs",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
-   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host"
   },
   {
    "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:scripts/graph-full-suite-isolated.sh",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
+   "expires_at_utc": "2026-12-19T16:32:47Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 Root HOLD drop probes)",
    "reason": "v-shell-syntax-a1de9832d14e1c41: shell syntax/closure: not_measured; v-shell-behavior-a1de9832d14e1c41: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 12: unsupported loader/interpreter options; line 16: directory transition has unresolved execution cwd; line 17: directory transition has unresolved execution cwd; line 18: wrapper options/child command unresolved; line 26: dynamic load/substitution; line 42: wrapper options/child command unresolved; line 51: directory transition has unresolved execution cwd; line 57: dynamic load/substitution; line 57: wrapper options/child command unresolved; line 6"
-  },
-  {
-   "code": "CANARY_INFERRED_BOUNDARY_NOT_MEASURED",
-   "entity": "code_unit:scripts/graph_full_suite.py",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
    "entity": "code_unit:src/bench-reservation/journal-bridge.spec.ts",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
+   "expires_at_utc": "2026-12-19T16:32:47Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 Root HOLD drop probes)",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host"
   },
   {
    "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
    "entity": "code_unit:test/app.e2e-spec.ts",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
+   "expires_at_utc": "2026-12-19T16:32:47Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 Root HOLD drop probes)",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host"
   },
   {
    "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
    "entity": "deployable_unit:.",
-   "expires_at_utc": "2026-12-19T16:08:35Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
+   "expires_at_utc": "2026-12-19T16:32:47Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 Root HOLD drop probes)",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host"
   }
  ],
@@ -362,12 +289,12 @@
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:fe6c89a39c086beeb9df044443007009424a2f98132ed009c230f48fcfc5b948",
-  "path": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/graph-head-ecc3dffc247b.json",
-  "source_commit": "ecc3dffc247b7e3e7dbd92fd8c7035aef6e2ffe6",
+  "graph_digest": "sha256:69636c18dd5480de0595ca571a61448798b0d429e21a545c8c66086a29107862",
+  "path": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/graph-head-3a8695afb59c.json",
+  "source_commit": "3a8695afb59c6f768e4be6ddf41cadc2b707464f",
   "staleness": {
-   "checked_at_utc": "2026-11-19T16:09:59Z",
-   "checked_nodes": 1057,
+   "checked_at_utc": "2026-11-19T16:33:43Z",
+   "checked_nodes": 1054,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -375,7 +302,7 @@
  },
  "host": "author-lane",
  "host_redacted": true,
- "host_sha256": "d4cc3a74aacec16a7564fe2dbe4b5a8ba03f8c9509ff622991502c9c7e0de1a9",
+ "host_sha256": "06f6dcffece64aa1b2650d401c5e5b62f5068a9237e710f79d279fd0985e910e",
  "impact_set": {
   "deterministic_core": [
    {
@@ -429,26 +356,6 @@
       "from": "document:docs/how-to/deploy-runbook.md",
       "provenance": "deterministic",
       "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "doc reference check (path/id still resolves)"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "document:docs/reference/full-suite-declarations.md",
-    "node_type": "document",
-    "path": [
-     {
-      "edge_type": "documents",
-      "from": "document:docs/reference/full-suite-declarations.md",
-      "provenance": "deterministic",
-      "to": "code_unit:dev-tools/graph-full-suite.test.py",
       "via": "explicit-path"
      }
     ],
@@ -569,26 +476,6 @@
       "from": "receipt:receipts/graph/change-admission-11159be7.json",
       "provenance": "deterministic",
       "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-290-full-suite-arms.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-290-full-suite-arms.json",
-      "provenance": "deterministic",
-      "to": "code_unit:dev-tools/graph-full-suite.test.py",
       "via": "explicit-path"
      }
     ],
@@ -1801,19 +1688,19 @@
   ],
   "max_depth": 3,
   "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
-  "total": 68
+  "total": 66
  },
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 15 attached from /home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-exemptions4.json",
+  "exemptions: 11 attached from /home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-exemptions5.json",
   "A2-353: `canary` discharged for 1 test code_unit(s) — a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/bench-reservation/journal-bridge.spec.ts"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261119T160836Z-ecc3dffc",
+ "receipt_id": "car-verify-20261119T163247Z-3a8695af",
  "receipt_path": "receipts/graph/change-admission-316-full-suite-exact-evidence.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -1828,23 +1715,19 @@
    "code_unit:.github/workflows/graph-admission-call.yml",
    "code_unit:.github/workflows/graph-admission.yml",
    "code_unit:.github/workflows/public-surface.yml",
-   "code_unit:dev-tools/graph-full-suite.test.py",
    "code_unit:scripts/graph-full-suite-isolated.sh",
-   "code_unit:scripts/graph_full_suite.py",
    "code_unit:src/bench-reservation/journal-bridge.spec.ts",
    "code_unit:test/app.e2e-spec.ts",
    "deployable_unit:.",
    "document:SECURITY.md",
    "document:deploy/stt-whisper/README.md",
    "document:docs/how-to/deploy-runbook.md",
-   "document:docs/reference/full-suite-declarations.md",
    "receipt:receipts/bench-source-ctx24/source-car.json",
    "receipt:receipts/graph/A2-315.json",
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
    "receipt:receipts/graph/a2-319-rate-limit-admin.json",
    "receipt:receipts/graph/change-admission-0a3f80e9.json",
    "receipt:receipts/graph/change-admission-11159be7.json",
-   "receipt:receipts/graph/change-admission-290-full-suite-arms.json",
    "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json",
    "receipt:receipts/graph/change-admission-440d2499-mc254.json",
    "receipt:receipts/graph/change-admission-595b306c.json",
@@ -1904,12 +1787,7 @@
    "code_unit:.github/workflows/graph-admission-call.yml",
    "code_unit:.github/workflows/graph-admission.yml",
    "code_unit:.github/workflows/public-surface.yml",
-   "code_unit:dev-tools/graph-full-suite.test.py",
-   "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-   "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-   "code_unit:scripts/full-suite-arms/external-provider.probe.mjs",
    "code_unit:scripts/graph-full-suite-isolated.sh",
-   "code_unit:scripts/graph_full_suite.py",
    "code_unit:src/bench-reservation/journal-bridge.spec.ts",
    "code_unit:test/app.e2e-spec.ts",
    "code_unit:test/fixtures/billing-3a-hermetic/accounting.py",
@@ -1931,14 +1809,12 @@
    "document:SECURITY.md",
    "document:deploy/stt-whisper/README.md",
    "document:docs/how-to/deploy-runbook.md",
-   "document:docs/reference/full-suite-declarations.md",
    "receipt:receipts/bench-source-ctx24/source-car.json",
    "receipt:receipts/graph/A2-315.json",
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
    "receipt:receipts/graph/a2-319-rate-limit-admin.json",
    "receipt:receipts/graph/change-admission-0a3f80e9.json",
    "receipt:receipts/graph/change-admission-11159be7.json",
-   "receipt:receipts/graph/change-admission-290-full-suite-arms.json",
    "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json",
    "receipt:receipts/graph/change-admission-316-full-suite-exact-evidence.json",
    "receipt:receipts/graph/change-admission-440d2499-mc254.json",
@@ -1996,7 +1872,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-19T16:09:58Z",
+  "checked_at_utc": "2026-11-19T16:33:43Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -2070,17 +1946,6 @@
   },
   {
    "content_hash": {
-    "base": "sha256:f8dca1d291d74328a5b4bfb582bbd4f61b47667661179643db746ba0bda1b2f5",
-    "head": "sha256:f8dca1d291d74328a5b4bfb582bbd4f61b47667661179643db746ba0bda1b2f5"
-   },
-   "entity": "receipt:receipts/graph/change-admission-290-full-suite-arms.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-290-full-suite-arms.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
     "base": "sha256:5a2328216c466384b94f38e63883c22dd728caa249604085564cfd07baac1981",
     "head": "sha256:5a2328216c466384b94f38e63883c22dd728caa249604085564cfd07baac1981"
    },
@@ -2093,7 +1958,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:17598c3168cc82e77f5712cd777db27a05510b46bf58101b0f116c2283cbb2d2"
+    "head": "sha256:e029adfa6d0af0f2c190ca10e7afe025dc13abe407c51ec60d29ccb8a8c804ff"
    },
    "entity": "receipt:receipts/graph/change-admission-316-full-suite-exact-evidence.json",
    "node_type": "receipt",
@@ -2646,7 +2511,7 @@
   }
  ],
  "tree": {
-  "commit": "ecc3dffc247b7e3e7dbd92fd8c7035aef6e2ffe6",
+  "commit": "3a8695afb59c6f768e4be6ddf41cadc2b707464f",
   "dirty": false
  },
  "verdicts": [
@@ -2714,45 +2579,6 @@
    ]
   },
   {
-   "entity": "code_unit:dev-tools/graph-full-suite.test.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-config-schema",
-    "v-fitness",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-config-schema",
-    "v-fitness",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "code_unit:scripts/full-suite-arms/external-provider.probe.mjs",
-   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-fitness",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
    "entity": "code_unit:scripts/graph-full-suite-isolated.sh",
    "reason": "v-shell-syntax-a1de9832d14e1c41: shell syntax/closure: not_measured; v-shell-behavior-a1de9832d14e1c41: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 12: unsupported loader/interpreter options; line 16: directory transition has unresolved execution cwd; line 17: directory transition has unresolved execution cwd; line 18: wrapper options/child command unresolved; line 26: dynamic load/substitution; line 42: wrapper options/child command unresolved; line 51: directory transition has unresolved execution cwd; line 57: dynamic load/substitution; line 57: wrapper options/child command unresolved; line 6",
    "verdict": "not_measured",
@@ -2760,16 +2586,6 @@
     "v-fitness",
     "v-shell-behavior-a1de9832d14e1c41",
     "v-shell-syntax-a1de9832d14e1c41"
-   ]
-  },
-  {
-   "entity": "code_unit:scripts/graph_full_suite.py",
-   "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-canary",
-    "v-config-schema",
-    "v-fitness"
    ]
   },
   {
@@ -2943,14 +2759,6 @@
    "verifier_ids": [
     "v-doc-reference"
    ]
-  },
-  {
-   "entity": "document:docs/reference/full-suite-declarations.md",
-   "reason": "v-doc-reference: 1 reference(s) resolve at head",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-doc-reference"
-   ]
   }
  ],
  "verifier_selection": {
@@ -2964,17 +2772,11 @@
    "command": "tsc -p /home/dev/aup/claude-work/dev-sw19-d/op2-clones/model-connector-suite-evidence/.arcana/tsconfig.mjs.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs",
     "code_unit:src/bench-reservation/journal-bridge.spec.ts",
     "code_unit:test/app.e2e-spec.ts",
     "deployable_unit:."
    ],
    "entity_verdicts": {
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs": "not_measured",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs": "not_measured",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs": "not_measured",
     "code_unit:src/bench-reservation/journal-bridge.spec.ts": "not_measured",
     "code_unit:test/app.e2e-spec.ts": "not_measured",
     "deployable_unit:.": "not_measured"
@@ -2982,96 +2784,72 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-19T16:10:43Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
    "command": "tsc -p /home/dev/aup/claude-work/dev-sw19-d/op2-clones/model-connector-suite-evidence/tsconfig.build.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs",
     "deployable_unit:."
    ],
    "entity_verdicts": {
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs": "not_measured",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs": "not_measured",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs": "not_measured",
     "deployable_unit:.": "not_measured"
    },
    "exit_code": 127,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-19T16:10:43Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
    "command": "tsc -p /home/dev/aup/claude-work/dev-sw19-d/op2-clones/model-connector-suite-evidence/tsconfig.ci.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs",
     "deployable_unit:."
    ],
    "entity_verdicts": {
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs": "not_measured",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs": "not_measured",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs": "not_measured",
     "deployable_unit:.": "not_measured"
    },
    "exit_code": 127,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-19T16:10:43Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
    "command": "tsc -p /home/dev/aup/claude-work/dev-sw19-d/op2-clones/model-connector-suite-evidence/tsconfig.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs",
     "deployable_unit:."
    ],
    "entity_verdicts": {
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs": "not_measured",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs": "not_measured",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs": "not_measured",
     "deployable_unit:.": "not_measured"
    },
    "exit_code": 127,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-19T16:10:43Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
    "command": "tsc -p /home/dev/aup/claude-work/dev-sw19-d/op2-clones/model-connector-suite-evidence/tsconfig.test.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs",
     "deployable_unit:."
    ],
    "entity_verdicts": {
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs": "not_measured",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs": "not_measured",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs": "not_measured",
     "deployable_unit:.": "not_measured"
    },
    "exit_code": 127,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-19T16:10:43Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -3086,8 +2864,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-b803fcb7f17ed923",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-b803fcb7f17ed923.txt",
-   "started_at_utc": "2026-11-19T16:10:43Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 11: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 11: command/process substitution closure is unresolved; job docker-e2e step 12: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 13: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 1: opaque input/interpolated workflow source; job docker-e2e step 3: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 3: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 4: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 5: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 6: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 7: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 10: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 13: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 14: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 15: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 16: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 17: unsupported loader/interpreter options; job lint-and-test step 10: line 18: relative execution cwd is not declared; job lint-and-test step 10: line 19: unsupported loader/interpreter options; job lint-and-test step 10: line 1: unsupported loader/interpreter options; job lint-and-test step 10: line 20: relative execution cwd is not declared; job lint-and-test step 10: line 21: unsupported loader/interpreter options; job lint-and-test step 10: line 22: relative execution cwd is not declared; job lint-and-test step 10: line 2: unsupported loader/interpreter options; job lint-and-test step 10: line 3: unsupported loader/interpreter options; job lint-and-test step 10: line 4: unsupported loader/interpreter options; job lint-and-test step 10: line 5: relative execution cwd is not declared; job lint-and-test step 10: line 6: relative execution cwd is not declared; job lint-and-test step 10: line 7: relative execution cwd is not declared; job lint-and-test step 10: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: heredoc/group/function/brace expansion closure is unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 15: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 17: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 18: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 19: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 1: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 20: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 20: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 20: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 3: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: command/process substitution closure is unresolved; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 9: unsupported loader/interpreter options; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: line 1: relative execution cwd is not declared; job lint-and-test step 8: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 8: line 1: unsupported loader/interpreter options; job lint-and-test step 8: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 9: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 9: line 1: unsupported loader/interpreter options; job lint-and-test step 9: line 2: relative execution cwd is not declared; job publish-image step 4: heredoc/group/function/brace expansion closure is unresolved; job verify-published-image step 1: heredoc/group/function/brace expansion closure is unresolved; 71 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -3102,8 +2880,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-2fe48d1021006468",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-2fe48d1021006468.txt",
-   "started_at_utc": "2026-11-19T16:10:43Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-workflow-config-2fe48d1021006468.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -3118,8 +2896,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-6ceb21cf301c7eb2",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-6ceb21cf301c7eb2.txt",
-   "started_at_utc": "2026-11-19T16:10:43Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-workflow-config-6ceb21cf301c7eb2.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; job deploy step 7: command/process substitution closure is unresolved; job deploy step 8: checkout root or source-affecting workflow environment unresolved; job deploy step 8: command/process substitution closure is unresolved; job deploy step 9: checkout root or source-affecting workflow environment unresolved; job deploy step 9: line 1: wrapper execution scope/options unresolved; job network-exposure-lint: reusable/opaque shell context; 13 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -3134,8 +2912,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-28802fbf11c83a2e",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-28802fbf11c83a2e.txt",
-   "started_at_utc": "2026-11-19T16:10:43Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-workflow-config-28802fbf11c83a2e.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "workflow shell caller closure not measured: job guard step 0: heredoc/group/function/brace expansion closure is unresolved; job guard step 2: command/process substitution closure is unresolved; job publication-post-state step 1: heredoc/group/function/brace expansion closure is unresolved; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -3150,8 +2928,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-60a4bd100e640545",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-60a4bd100e640545.txt",
-   "started_at_utc": "2026-11-19T16:10:43Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-workflow-config-60a4bd100e640545.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -3166,8 +2944,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-dc49cc771602c92b",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-dc49cc771602c92b.txt",
-   "started_at_utc": "2026-11-19T16:10:44Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-workflow-config-dc49cc771602c92b.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-affecting workflow environment unresolved; job graph-admission step 12: command/process substitution closure is unresolved; job graph-admission step 14: checkout root or source-affecting workflow environment unresolved; job graph-admission step 15: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 19: checkout root or source-affecting workflow environment unresolved; job graph-admission step 19: command/process substitution closure is unresolved; job graph-admission step 1: command/process substitution closure is unresolved; job graph-admission step 20: checkout root or source-affecting workflow environment unresolved; job graph-admission step 20: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 21: checkout root or source-affecting workflow environment unresolved; job graph-admission step 21: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 22: checkout root or source-affecting workflow environment unresolved; job graph-admission step 22: command/process substitution closure is unresolved; job graph-admission step 23: checkout root or source-affecting workflow environment unresolved; job graph-admission step 23: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 24: checkout root or source-affecting workflow environment unresolved; job graph-admission step 24: line 11: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 25: checkout root or source-affecting workflow environment unresolved; job graph-admission step 25: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 26: checkout root or source-affecting workflow environment unresolved; job graph-admission step 26: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 28: checkout root or source-affecting workflow environment unresolved; job graph-admission step 2: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 5: command/process substitution closure is unresolved; job graph-admission step 9: checkout root or source-affecting workflow environment unresolved; job graph-admission step 9: command/process substitution closure is unresolved; 33 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -3182,35 +2960,29 @@
    "exit_code": 1,
    "id": "v-workflow-config-9de6bedb8518f82f",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-9de6bedb8518f82f.txt",
-   "started_at_utc": "2026-11-19T16:10:44Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-workflow-config-9de6bedb8518f82f.txt",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 2.13,
+   "duration_s": 1.33,
    "entities": [
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-    "code_unit:scripts/graph_full_suite.py",
     "code_unit:src/bench-reservation/journal-bridge.spec.ts"
    ],
    "entity_verdicts": {
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs": "verified",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs": "verified",
-    "code_unit:scripts/graph_full_suite.py": "verified",
     "code_unit:src/bench-reservation/journal-bridge.spec.ts": "verified"
    },
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-config-schema.json",
-   "started_at_utc": "2026-11-19T16:10:44Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-config-schema.json",
+   "started_at_utc": "2026-11-19T16:34:09Z",
    "summary": "3 source(s), 0 new / 91 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.98,
+   "duration_s": 0.53,
    "entities": [
     "code_unit:.github/workflows/ci.yml",
     "code_unit:.github/workflows/dependabot-auto-merge.yml",
@@ -3219,12 +2991,7 @@
     "code_unit:.github/workflows/graph-admission-call.yml",
     "code_unit:.github/workflows/graph-admission.yml",
     "code_unit:.github/workflows/public-surface.yml",
-    "code_unit:dev-tools/graph-full-suite.test.py",
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs",
     "code_unit:scripts/graph-full-suite-isolated.sh",
-    "code_unit:scripts/graph_full_suite.py",
     "code_unit:src/bench-reservation/journal-bridge.spec.ts",
     "code_unit:test/app.e2e-spec.ts",
     "code_unit:test/fixtures/billing-3a-hermetic/accounting.py",
@@ -3252,12 +3019,7 @@
     "code_unit:.github/workflows/graph-admission-call.yml": "not_measured",
     "code_unit:.github/workflows/graph-admission.yml": "not_measured",
     "code_unit:.github/workflows/public-surface.yml": "not_measured",
-    "code_unit:dev-tools/graph-full-suite.test.py": "verified",
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs": "verified",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs": "verified",
-    "code_unit:scripts/full-suite-arms/external-provider.probe.mjs": "verified",
     "code_unit:scripts/graph-full-suite-isolated.sh": "verified",
-    "code_unit:scripts/graph_full_suite.py": "verified",
     "code_unit:src/bench-reservation/journal-bridge.spec.ts": "verified",
     "code_unit:test/app.e2e-spec.ts": "verified",
     "code_unit:test/fixtures/billing-3a-hermetic/accounting.py": "verified",
@@ -3280,51 +3042,29 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-fitness.json",
-   "started_at_utc": "2026-11-19T16:10:46Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-fitness.json",
+   "started_at_utc": "2026-11-19T16:34:10Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.01,
+   "duration_s": 0.0,
    "entities": [
     "document:SECURITY.md",
     "document:deploy/stt-whisper/README.md",
-    "document:docs/how-to/deploy-runbook.md",
-    "document:docs/reference/full-suite-declarations.md"
+    "document:docs/how-to/deploy-runbook.md"
    ],
    "entity_verdicts": {
     "document:SECURITY.md": "verified",
     "document:deploy/stt-whisper/README.md": "verified",
-    "document:docs/how-to/deploy-runbook.md": "verified",
-    "document:docs/reference/full-suite-declarations.md": "verified"
+    "document:docs/how-to/deploy-runbook.md": "verified"
    },
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-doc-reference.txt",
-   "started_at_utc": "2026-11-19T16:10:47Z",
-   "summary": "4 document(s), 0 failed"
-  },
-  {
-   "command": "tools/graph/deploy_gate.py canary --plan <plan> --phase pre|post (results supplied with --canary)",
-   "duration_s": 0.0,
-   "entities": [
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-    "code_unit:scripts/graph_full_suite.py"
-   ],
-   "entity_verdicts": {
-    "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs": "not_measured",
-    "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs": "not_measured",
-    "code_unit:scripts/graph_full_suite.py": "not_measured"
-   },
-   "exit_code": 0,
-   "id": "v-canary",
-   "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-canary.json",
-   "started_at_utc": "2026-11-19T16:10:47Z",
-   "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 3 not_measured of 3 entities"
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-doc-reference.txt",
+   "started_at_utc": "2026-11-19T16:34:11Z",
+   "summary": "3 document(s), 0 failed"
   },
   {
    "command": "bash -n + pinned ShellCheck on syntax projection; no caller/Bats execution",
@@ -3338,9 +3078,9 @@
    "exit_code": 0,
    "id": "v-shell-syntax-a1de9832d14e1c41",
    "kind": "shell_syntax",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-shell-syntax-a1de9832d14e1c41.txt",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-shell-syntax-a1de9832d14e1c41.txt",
    "scope": "shell_source_validation",
-   "started_at_utc": "2026-11-19T16:10:57Z",
+   "started_at_utc": "2026-11-19T16:34:17Z",
    "summary": "shell syntax/closure: not_measured"
   },
   {
@@ -3355,9 +3095,9 @@
    "exit_code": 0,
    "id": "v-shell-behavior-a1de9832d14e1c41",
    "kind": "shell_behavior",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-shell-behavior-a1de9832d14e1c41.txt",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify17/v-shell-behavior-a1de9832d14e1c41.txt",
    "scope": "shell_fixture_behavior",
-   "started_at_utc": "2026-11-19T16:10:57Z",
+   "started_at_utc": "2026-11-19T16:34:17Z",
    "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 12: unsupported loader/interpreter options; line 16: directory transition has unresolved execution cwd; line 17: directory transition has unresolved execution cwd; line 18: wrapper options/child command unresolved; line 26: dynamic load/substitution; line 42: wrapper options/child command unresolved; line 51: directory transition has unresolved execution cwd; line 57: dynamic load/substitution; line 57: wrapper options/child command unresolved; line 61: dynamic load/substitution; line 66: dynamic load/substitution; line 68: wrapper options/child command unresolved; line 70: wrapper options/child command unresolved; line 71: wrapper options/child command unresolved; line 79: wrapper options/child command unresolved; line 80: multiline/opaque shell statement; line 81: multiline/opaque shell statement; line 82: multiline/opaque shell statement; line 83: directory transition has unresolved execution cwd; line 88: wrapper options/child command unresolved"
   }
  ],
@@ -3372,7 +3112,7 @@
    {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "58 affected entity(ies) owe no verdict (receipt: 58): unchanged at both revisions and given no verifier by the matrix"
+    "text": "57 affected entity(ies) owe no verdict (receipt: 57): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
@@ -3404,34 +3144,10 @@
     "config_schema",
     "fitness_rules"
    ],
-   "code_unit:dev-tools/graph-full-suite.test.py": [
-    "fitness_rules"
-   ],
-   "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs": [
-    "canary",
-    "config_schema",
-    "fitness_rules",
-    "type_check"
-   ],
-   "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs": [
-    "canary",
-    "config_schema",
-    "fitness_rules",
-    "type_check"
-   ],
-   "code_unit:scripts/full-suite-arms/external-provider.probe.mjs": [
-    "fitness_rules",
-    "type_check"
-   ],
    "code_unit:scripts/graph-full-suite-isolated.sh": [
     "fitness_rules",
     "shell_behavior",
     "shell_syntax"
-   ],
-   "code_unit:scripts/graph_full_suite.py": [
-    "canary",
-    "config_schema",
-    "fitness_rules"
    ],
    "code_unit:src/bench-reservation/journal-bridge.spec.ts": [
     "config_schema",
@@ -3500,16 +3216,12 @@
    "document:docs/how-to/deploy-runbook.md": [
     "doc_reference"
    ],
-   "document:docs/reference/full-suite-declarations.md": [
-    "doc_reference"
-   ],
    "receipt:receipts/bench-source-ctx24/source-car.json": [],
    "receipt:receipts/graph/A2-315.json": [],
    "receipt:receipts/graph/a2-301-per-key-rate-limit.json": [],
    "receipt:receipts/graph/a2-319-rate-limit-admin.json": [],
    "receipt:receipts/graph/change-admission-0a3f80e9.json": [],
    "receipt:receipts/graph/change-admission-11159be7.json": [],
-   "receipt:receipts/graph/change-admission-290-full-suite-arms.json": [],
    "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json": [],
    "receipt:receipts/graph/change-admission-316-full-suite-exact-evidence.json": [],
    "receipt:receipts/graph/change-admission-440d2499-mc254.json": [],
@@ -3563,9 +3275,9 @@
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
   },
   "seconds": {
-   "prepare": 20.54,
-   "total": 141.34,
-   "verifiers": 3.12
+   "prepare": 12.43,
+   "total": 89.55,
+   "verifiers": 1.86
   }
  },
  "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
