@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **deploy-stt-whisper datarim uses pin matches datarim_ref.**
+  Align `network-exposure-lint.yml` `uses:` commit with the `datarim_ref`
+  input (workspace #1063 / datarim v4.12.9) so the reusable workflow resolves.
+
+
 
 - **docker-e2e is concurrency-safe on the shared Docker host.**
   ci-general runners share one Docker daemon (Machine/Docker Name
