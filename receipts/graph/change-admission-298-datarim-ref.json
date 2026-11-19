@@ -1,0 +1,1177 @@
+{
+ "admission": {
+  "rule": "admitted requires every verdict = verified; failed without exemption ⇒ refused; not_measured without exemption ⇒ paused_safe; exemptions (owner + expiry) are attached by the admitting agent, never by the verifier (DEC-AUP-0008, matrix P1/P4)",
+  "structural_exclusion_rule": "DEC-AUP-0034: an affected entity is NOT verdict-owing when all three hold — the verifier matrix declares neither a mandatory nor a selectable verifier for its node type (so the only verdict it could ever carry states a property of the MATRIX, not of this change), the change set does not contain it, and its bytes are identical at base and head. Each one is listed in structural_exclusions with the content hash at both revisions that proves the byte-identity, and impact_pair.receipt_problems re-derives that proof from Git rather than believing the receipt.",
+  "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
+  "verdict": "paused_safe"
+ },
+ "captured_at_utc": "2026-11-19T08:59:44Z",
+ "change_set": {
+  "base": "06b4e740b6c629acea57454c7025f61b0a5a0167",
+  "files": [
+   {
+    "kind": "config",
+    "node_id": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+    "node_ids": [
+     "code_unit:.github/workflows/deploy-stt-whisper.yml"
+    ],
+    "path": ".github/workflows/deploy-stt-whisper.yml",
+    "status": "M"
+   },
+   {
+    "kind": "doc",
+    "node_id": "document:CHANGELOG.md",
+    "node_ids": [
+     "document:CHANGELOG.md"
+    ],
+    "path": "CHANGELOG.md",
+    "status": "M"
+   }
+  ],
+  "head": "06b150d7a4b8f61146146c91c77b9307886b22b1",
+  "mode": "diff"
+ },
+ "decision_ref": "DEC-AUP-0008",
+ "exemptions": [],
+ "graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:38c44565e0bf1f224199f49373a20f9e4cdda76ebb7eadbcc583be9a63262f94",
+  "path": "/tmp/arcana-verify-h6n362az/verifier-out/graph-06b4e740b6c6.json",
+  "source_commit": "06b4e740b6c629acea57454c7025f61b0a5a0167"
+ },
+ "head_graph": {
+  "builder_version": "1.0.6",
+  "built_at_utc": "2026-09-05T00:00:00Z",
+  "graph_digest": "sha256:8c60ad05bcf4ac1056cae16f33a4bf13d0317480b1f21fba85e7bdcb49a9b34c",
+  "path": "/tmp/arcana-verify-h6n362az/verifier-out/graph-head-06b150d7a4b8.json",
+  "source_commit": "06b150d7a4b8f61146146c91c77b9307886b22b1",
+  "staleness": {
+   "checked_at_utc": "2026-11-19T09:00:57Z",
+   "checked_nodes": 1036,
+   "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+   "mismatched_nodes": [],
+   "verdict": "fresh"
+  }
+ },
+ "host": "author-lane",
+ "host_redacted": true,
+ "host_sha256": "d7d165347cd89b14df36148cf47cd736daaf4c49933972bfefa0942e92cfa98f",
+ "impact_set": {
+  "deterministic_core": [
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "deployable_unit:.",
+    "node_type": "deployable_unit",
+    "path": [
+     {
+      "edge_type": "deploys_to",
+      "from": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "provenance": "deterministic",
+      "to": "deployable_unit:.",
+      "via": "containment"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "can-i-deploy gate (GRAPH-008)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "document:deploy/stt-whisper/README.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "documents",
+      "from": "document:deploy/stt-whisper/README.md",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/bench-source-ctx24/source-car.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-440d2499-mc254.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-440d2499-mc254.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-6e2e5868.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-6e2e5868.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-432.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-432.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-a2-443.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-443.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-c59e860f.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-c59e860f.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-finish-20261115-mc.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-finish-20261115-mc.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-jev-decision.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kb-cons-02-broker.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kb-cons-02-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-config-contract.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-config-contract.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-exact-bytes.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-exact-bytes.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-internal-route.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-internal-route.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-pair.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-pair.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   }
+  ],
+  "edge_types": "all",
+  "global_fallback": {
+   "triggered": false
+  },
+  "inferred_tail": [],
+  "max_depth": 3,
+  "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
+  "total": 26
+ },
+ "notes": [
+  "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
+  "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none"
+ ],
+ "producer": {
+  "tool": "tools/graph/verify.py",
+  "version": "1.4.1"
+ },
+ "receipt_id": "car-verify-20261119T085944Z-06b150d7",
+ "repo": {
+  "name": "Arcanada-one/model-connector",
+  "path": "/home/dev/aup/claude-work/dev-sw19-d/wt-298"
+ },
+ "revision_selection": {
+  "base": [
+   "code_unit:.github/workflows/deploy-stt-whisper.yml",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:deploy/stt-whisper/README.md",
+   "receipt:receipts/bench-source-ctx24/source-car.json",
+   "receipt:receipts/graph/change-admission-440d2499-mc254.json",
+   "receipt:receipts/graph/change-admission-6e2e5868.json",
+   "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-432.json",
+   "receipt:receipts/graph/change-admission-a2-443.json",
+   "receipt:receipts/graph/change-admission-c59e860f.json",
+   "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
+   "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
+   "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json",
+   "receipt:receipts/graph/change-admission-finish-20261115-mc.json",
+   "receipt:receipts/graph/change-admission-jev-decision.json",
+   "receipt:receipts/graph/change-admission-kb-cons-02-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-config-contract.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-exact-bytes.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-internal-route.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-pair.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+   "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
+   "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json"
+  ],
+  "head": [
+   "code_unit:.github/workflows/deploy-stt-whisper.yml",
+   "deployable_unit:.",
+   "document:CHANGELOG.md",
+   "document:deploy/stt-whisper/README.md",
+   "receipt:receipts/bench-source-ctx24/source-car.json",
+   "receipt:receipts/graph/change-admission-440d2499-mc254.json",
+   "receipt:receipts/graph/change-admission-6e2e5868.json",
+   "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "receipt:receipts/graph/change-admission-a2-432.json",
+   "receipt:receipts/graph/change-admission-a2-443.json",
+   "receipt:receipts/graph/change-admission-c59e860f.json",
+   "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
+   "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
+   "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json",
+   "receipt:receipts/graph/change-admission-finish-20261115-mc.json",
+   "receipt:receipts/graph/change-admission-jev-decision.json",
+   "receipt:receipts/graph/change-admission-kb-cons-02-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-config-contract.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-exact-bytes.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-internal-route.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-pair.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+   "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+   "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
+   "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json"
+  ],
+  "schema": "RevisionImpactSelection/v1",
+  "unmeasured_head_files": []
+ },
+ "schema": "ChangeAdmissionReceipt/v1",
+ "staleness": {
+  "checked_at_utc": "2026-11-19T09:00:57Z",
+  "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
+  "mismatched_nodes": [],
+  "verdict": "fresh"
+ },
+ "structural_exclusions": [
+  {
+   "content_hash": {
+    "base": "sha256:1bf9d4ab170eee11a6e10ae667a923438765d8fb168561ffbc1480555c77ad94",
+    "head": "sha256:1bf9d4ab170eee11a6e10ae667a923438765d8fb168561ffbc1480555c77ad94"
+   },
+   "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
+   "node_type": "receipt",
+   "path": "receipts/bench-source-ctx24/source-car.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:5bcf3e72aad103c6ea89ccdaa49e6b6b39aae1778e3a0240cd07adafb5a2912b",
+    "head": "sha256:5bcf3e72aad103c6ea89ccdaa49e6b6b39aae1778e3a0240cd07adafb5a2912b"
+   },
+   "entity": "receipt:receipts/graph/change-admission-440d2499-mc254.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-440d2499-mc254.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:6132458e509e2ee865f074efd7bd394c0566def6840ddaaf6f7e9aa01e7e929a",
+    "head": "sha256:6132458e509e2ee865f074efd7bd394c0566def6840ddaaf6f7e9aa01e7e929a"
+   },
+   "entity": "receipt:receipts/graph/change-admission-6e2e5868.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-6e2e5868.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:99aed4bdd7b9d8f3bceb8059e6b1525cadeb595f2cb20a9b4d53f0e2f003c30c",
+    "head": "sha256:99aed4bdd7b9d8f3bceb8059e6b1525cadeb595f2cb20a9b4d53f0e2f003c30c"
+   },
+   "entity": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-A2-457-preflight.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf",
+    "head": "sha256:0108a8f57e5ab1679127a132c849744320b74085848c3cece8a30c7d327a8daf"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:47947b97d33ab3f837dc83a1fc71d3594e4c7df6351cd20e146d08e282ddda1e",
+    "head": "sha256:47947b97d33ab3f837dc83a1fc71d3594e4c7df6351cd20e146d08e282ddda1e"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-432.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-432.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:b8b7f231eb201c9a12810ec8f88f172ce525a0498c12bbb70b89f1f0390f0dda",
+    "head": "sha256:b8b7f231eb201c9a12810ec8f88f172ce525a0498c12bbb70b89f1f0390f0dda"
+   },
+   "entity": "receipt:receipts/graph/change-admission-a2-443.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-a2-443.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:21a7b0a88525a82847e39d2ea15aa9bc2d70bc39e8f023d9ad8e6b3732c60fdd",
+    "head": "sha256:21a7b0a88525a82847e39d2ea15aa9bc2d70bc39e8f023d9ad8e6b3732c60fdd"
+   },
+   "entity": "receipt:receipts/graph/change-admission-c59e860f.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-c59e860f.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:e94ae8270b77fa279ed37c621dc2f06bc6f312f9c296d0dceadd11c7a38e11b6",
+    "head": "sha256:e94ae8270b77fa279ed37c621dc2f06bc6f312f9c296d0dceadd11c7a38e11b6"
+   },
+   "entity": "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:679f44cbb72ca6f6e26542a9697df70384336cc83e7f52027903e4e23739892f",
+    "head": "sha256:679f44cbb72ca6f6e26542a9697df70384336cc83e7f52027903e4e23739892f"
+   },
+   "entity": "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:7436731d74ab0c30e3d7880768bf45313d0f029035c3cb7098ffe21f87258469",
+    "head": "sha256:7436731d74ab0c30e3d7880768bf45313d0f029035c3cb7098ffe21f87258469"
+   },
+   "entity": "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-finish-20261115-mc-env.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:f4d9b6620ece3bee631f9848b13be279955de3779540def1fc61c239b0a4cbc8",
+    "head": "sha256:f4d9b6620ece3bee631f9848b13be279955de3779540def1fc61c239b0a4cbc8"
+   },
+   "entity": "receipt:receipts/graph/change-admission-finish-20261115-mc.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-finish-20261115-mc.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a",
+    "head": "sha256:5b25f4adf26a817ae97ca13a9a4d583e64e756d445804b5b6636dd41d4d7878a"
+   },
+   "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-jev-decision.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:23469b9822daceea7f851c4542f2f99f1c3dc469798a3a2765e0b2eea2211428",
+    "head": "sha256:23469b9822daceea7f851c4542f2f99f1c3dc469798a3a2765e0b2eea2211428"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kb-cons-02-broker.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kb-cons-02-broker.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:185669a3af778225600ff194a07921b6933bbbda68f3f6796f7cb420384f8775",
+    "head": "sha256:185669a3af778225600ff194a07921b6933bbbda68f3f6796f7cb420384f8775"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0005-api-broker.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:ecd8a96dedd76efe3cbb5e0c1f3234f416e845cb3577be1157e7471a55473313",
+    "head": "sha256:ecd8a96dedd76efe3cbb5e0c1f3234f416e845cb3577be1157e7471a55473313"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:c8e0b64f57948bb756ef2cc11d232323b34443d0a589eaa771525bc33f3be5ae",
+    "head": "sha256:c8e0b64f57948bb756ef2cc11d232323b34443d0a589eaa771525bc33f3be5ae"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-config-contract.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0017-broker-config-contract.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:cc9ab488491468b5fe256931833df8d0d0c37b3a0cc85c72dbf3e0ca79e353a9",
+    "head": "sha256:cc9ab488491468b5fe256931833df8d0d0c37b3a0cc85c72dbf3e0ca79e353a9"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-exact-bytes.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0017-broker-exact-bytes.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:5d8c38de02ea078e5dea6bb792cac1c3de664a8d3eaa6d60477c4f1826d8b7dc",
+    "head": "sha256:5d8c38de02ea078e5dea6bb792cac1c3de664a8d3eaa6d60477c4f1826d8b7dc"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-internal-route.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0017-broker-internal-route.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:e75c0ea1ecf45e1c9e3303eae287ea9682f69c39916b2d012e400d3df8284ad3",
+    "head": "sha256:e75c0ea1ecf45e1c9e3303eae287ea9682f69c39916b2d012e400d3df8284ad3"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-pair.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0017-broker-pair.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:a8ec9b45b8b44be625766f7b9dc5fb3108cb52894f38d93fbfba2d74312cc326",
+    "head": "sha256:a8ec9b45b8b44be625766f7b9dc5fb3108cb52894f38d93fbfba2d74312cc326"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0017-compose-broker.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:aa2053cbc62cdd20c055a7971b3e22385cc853d937ba33b3300e3785ca28bd33",
+    "head": "sha256:aa2053cbc62cdd20c055a7971b3e22385cc853d937ba33b3300e3785ca28bd33"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0017-readiness.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:05eef322cef901536332509f3332412926636cb53f01b6a0160644fc896f78b2",
+    "head": "sha256:05eef322cef901536332509f3332412926636cb53f01b6a0160644fc896f78b2"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0033-broker-pin.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  },
+  {
+   "content_hash": {
+    "base": "sha256:74b5ff0404149e908e6f294cc48c84d000f6858a40c961744d19a1d949dd6d90",
+    "head": "sha256:74b5ff0404149e908e6f294cc48c84d000f6858a40c961744d19a1d949dd6d90"
+   },
+   "entity": "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-kcp-0035-broker-embed.json",
+   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
+   "rule": "DEC-AUP-0034"
+  }
+ ],
+ "tree": {
+  "commit": "06b150d7a4b8f61146146c91c77b9307886b22b1",
+  "dirty": false
+ },
+ "verdicts": [
+  {
+   "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
+   "reason": "v-workflow-config-6ceb21cf301c7eb2: workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; ",
+   "verdict": "not_measured",
+   "verifier_ids": [
+    "v-fitness",
+    "v-workflow-config-6ceb21cf301c7eb2"
+   ]
+  },
+  {
+   "entity": "deployable_unit:.",
+   "reason": "v-type-check-tsconfig-mjs: .arcana/tsconfig.mjs.json: 0 errors; v-fitness: no new violation in . (35 frozen)",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness",
+    "v-type-check-tsconfig-mjs"
+   ]
+  },
+  {
+   "entity": "document:CHANGELOG.md",
+   "reason": "v-doc-reference: 29 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  },
+  {
+   "entity": "document:deploy/stt-whisper/README.md",
+   "reason": "v-doc-reference: 0 reference(s) resolve at head",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-doc-reference"
+   ]
+  }
+ ],
+ "verifier_selection": {
+  "applied": {},
+  "not_applied": [],
+  "requested": [],
+  "schema": "VerifierSelection/v1"
+ },
+ "verifiers": [
+  {
+   "command": "/home/dev/aup/claude-work/dev-sw19-d/wt-298/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-sw19-d/wt-298/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-h6n362az/verifier-out/type-check-9l7zzoa8/check.tsbuildinfo --listFiles",
+   "duration_s": 16.91,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig-mjs",
+   "kind": "type_check",
+   "output_ref": "/tmp/arcana-verify-h6n362az/verifier-out/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-19T09:01:12Z",
+   "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2894 files listed"
+  },
+  {
+   "command": "/home/dev/aup/claude-work/dev-sw19-d/wt-298/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-sw19-d/wt-298/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-h6n362az/verifier-out/type-check-lvcqmbh8/check.tsbuildinfo --listFiles",
+   "duration_s": 9.67,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig-build",
+   "kind": "type_check",
+   "output_ref": "/tmp/arcana-verify-h6n362az/verifier-out/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-19T09:01:29Z",
+   "summary": "tsconfig.build.json: exit 0, 0 error(s), 2148 files listed"
+  },
+  {
+   "command": "/home/dev/aup/claude-work/dev-sw19-d/wt-298/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-sw19-d/wt-298/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-h6n362az/verifier-out/type-check-k5z99aaf/check.tsbuildinfo --listFiles",
+   "duration_s": 1.12,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig-ci",
+   "kind": "type_check",
+   "output_ref": "/tmp/arcana-verify-h6n362az/verifier-out/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-19T09:01:39Z",
+   "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
+  },
+  {
+   "command": "/home/dev/aup/claude-work/dev-sw19-d/wt-298/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-sw19-d/wt-298/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-h6n362az/verifier-out/type-check-7i8ker_l/check.tsbuildinfo --listFiles",
+   "duration_s": 14.31,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig",
+   "kind": "type_check",
+   "output_ref": "/tmp/arcana-verify-h6n362az/verifier-out/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-19T09:01:41Z",
+   "summary": "tsconfig.json: exit 0, 0 error(s), 2781 files listed"
+  },
+  {
+   "command": "/home/dev/aup/claude-work/dev-sw19-d/wt-298/node_modules/.bin/tsc -p /home/dev/aup/claude-work/dev-sw19-d/wt-298/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /tmp/arcana-verify-h6n362az/verifier-out/type-check-ztpteors/check.tsbuildinfo --listFiles",
+   "duration_s": 13.82,
+   "entities": [
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-type-check-tsconfig-test",
+   "kind": "type_check",
+   "output_ref": "/tmp/arcana-verify-h6n362az/verifier-out/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-19T09:01:55Z",
+   "summary": "tsconfig.test.json: exit 0, 0 error(s), 2887 files listed"
+  },
+  {
+   "command": "workflow_config.validate exact head bytes",
+   "duration_s": 0.0,
+   "entities": [
+    "code_unit:.github/workflows/deploy-stt-whisper.yml"
+   ],
+   "entity_verdicts": {
+    "code_unit:.github/workflows/deploy-stt-whisper.yml": "not_measured"
+   },
+   "exit_code": 1,
+   "id": "v-workflow-config-6ceb21cf301c7eb2",
+   "kind": "config_schema",
+   "output_ref": "/tmp/arcana-verify-h6n362az/verifier-out/v-workflow-config-6ceb21cf301c7eb2.txt",
+   "started_at_utc": "2026-11-19T09:02:10Z",
+   "summary": "workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; job deploy step 7: command/process substitution closure is unresolved; job deploy step 8: checkout root or source-affecting workflow environment unresolved; job deploy step 8: command/process substitution closure is unresolved; job deploy step 9: checkout root or source-affecting workflow environment unresolved; job deploy step 9: line 1: wrapper execution scope/options unresolved; job network-exposure-lint: reusable/opaque shell context; 13 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
+  },
+  {
+   "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
+   "duration_s": 0.35,
+   "entities": [
+    "code_unit:.github/workflows/deploy-stt-whisper.yml",
+    "deployable_unit:."
+   ],
+   "entity_verdicts": {
+    "code_unit:.github/workflows/deploy-stt-whisper.yml": "not_measured",
+    "deployable_unit:.": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-fitness",
+   "kind": "fitness_rules",
+   "output_ref": "/tmp/arcana-verify-h6n362az/verifier-out/v-fitness.json",
+   "started_at_utc": "2026-11-19T09:02:10Z",
+   "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
+  },
+  {
+   "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
+   "duration_s": 0.0,
+   "entities": [
+    "document:CHANGELOG.md",
+    "document:deploy/stt-whisper/README.md"
+   ],
+   "entity_verdicts": {
+    "document:CHANGELOG.md": "verified",
+    "document:deploy/stt-whisper/README.md": "verified"
+   },
+   "exit_code": 0,
+   "id": "v-doc-reference",
+   "kind": "doc_reference",
+   "output_ref": "/tmp/arcana-verify-h6n362az/verifier-out/v-doc-reference.txt",
+   "started_at_utc": "2026-11-19T09:02:10Z",
+   "summary": "2 document(s), 0 failed"
+  }
+ ],
+ "verify": {
+  "events": [
+   {
+    "code": "STRUCTURAL_EXCLUSION",
+    "rule": "DEC-AUP-0034",
+    "text": "24 affected entity(ies) owe no verdict (receipt: 24): unchanged at both revisions and given no verifier by the matrix"
+   }
+  ],
+  "required_by_entity": {
+   "code_unit:.github/workflows/deploy-stt-whisper.yml": [
+    "config_schema",
+    "fitness_rules"
+   ],
+   "deployable_unit:.": [
+    "fitness_rules",
+    "type_check"
+   ],
+   "document:CHANGELOG.md": [
+    "doc_reference"
+   ],
+   "document:deploy/stt-whisper/README.md": [
+    "doc_reference"
+   ],
+   "receipt:receipts/bench-source-ctx24/source-car.json": [],
+   "receipt:receipts/graph/change-admission-440d2499-mc254.json": [],
+   "receipt:receipts/graph/change-admission-6e2e5868.json": [],
+   "receipt:receipts/graph/change-admission-A2-457-preflight.json": [],
+   "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": [],
+   "receipt:receipts/graph/change-admission-a2-432.json": [],
+   "receipt:receipts/graph/change-admission-a2-443.json": [],
+   "receipt:receipts/graph/change-admission-c59e860f.json": [],
+   "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json": [],
+   "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json": [],
+   "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json": [],
+   "receipt:receipts/graph/change-admission-finish-20261115-mc.json": [],
+   "receipt:receipts/graph/change-admission-jev-decision.json": [],
+   "receipt:receipts/graph/change-admission-kb-cons-02-broker.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-config-contract.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-exact-bytes.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-internal-route.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0017-broker-pair.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0017-readiness.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json": [],
+   "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json": []
+  },
+  "seconds": {
+   "prepare": 7.61,
+   "total": 145.98,
+   "verifiers": 56.18
+  }
+ },
+ "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
+}
