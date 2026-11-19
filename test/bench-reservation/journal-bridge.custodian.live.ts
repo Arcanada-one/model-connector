@@ -1,16 +1,19 @@
 /**
- * Opt-in Billing3a Journal bridge controls. Not part of maintained Vitest membership
- * (`.live.ts` is excluded from graph-full-suite inventory). Run with
- * BILLING_CUSTODIAN_SOURCE set when measuring the pinned custodian snapshot.
+ * Opt-in Billing3a Journal bridge controls. Lives under test/ so nest build never
+ * compiles it; `.live.ts` stays outside maintained Vitest + graph-full-suite
+ * inventory. Run with BILLING_CUSTODIAN_SOURCE set for the pinned custodian snapshot.
  */
 import { describe, it, expect } from 'vitest';
 import { generateKeyPairSync, sign } from 'node:crypto';
 import { mkdtempSync, mkdirSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { fixture } from './monetary-v2.spec';
-import { incumbentJournalBridge, pinnedMonetaryProofVerifier } from './journal-bridge';
-import { canonical, digest, verifyEnvelope } from './signatures';
+import { fixture } from '../../src/bench-reservation/monetary-v2.spec';
+import {
+  incumbentJournalBridge,
+  pinnedMonetaryProofVerifier,
+} from '../../src/bench-reservation/journal-bridge';
+import { canonical, digest, verifyEnvelope } from '../../src/bench-reservation/signatures';
 
 const python = '/usr/bin/python3';
 const script = resolve('test/fixtures/bench-journal-custodian.py');
