@@ -82,6 +82,10 @@ fi
 if [[ -n "${MC_FULL_SUITE_PYTHON:-}" ]]; then
   GRANT_ARGS+=(MC_FULL_SUITE_PYTHON="$MC_FULL_SUITE_PYTHON")
 fi
+# Optional short TMPDIR for unix-socket unit specs (sun_path < 108 bytes).
+if [[ -n "${MC_FULL_SUITE_SHORT_TMP:-}" ]]; then
+  GRANT_ARGS+=(MC_FULL_SUITE_SHORT_TMP="$MC_FULL_SUITE_SHORT_TMP")
+fi
 # Private temp roots must also reach the child so grant path confinement can be checked.
 RUNTIME_ARGS=()
 if [[ -n "${XDG_RUNTIME_DIR:-}" ]]; then

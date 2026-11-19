@@ -452,6 +452,14 @@ jobs:
           "$VENV/bin/python" -c 'import jsonschema; print("jsonschema", jsonschema.__version__)'
           printf 'MC_FULL_SUITE_PYTHON=%s\n' "$VENV/bin/python" >>"$GITHUB_ENV"
 
+      # Short owned TMPDIR for bench composition unix sockets (sun_path < 108).
+      - name: Short TMPDIR for socket unit specs
+        run: |
+          set -euo pipefail
+          SHORT_TMP="/tmp/mcfs-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          mkdir -m 700 "$SHORT_TMP"
+          printf 'MC_FULL_SUITE_SHORT_TMP=%s\n' "$SHORT_TMP" >>"$GITHUB_ENV"
+
       - name: Start 127.0.0.1 disposable Postgres and Redis
         run: |
           set -euo pipefail

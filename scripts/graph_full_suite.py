@@ -239,8 +239,19 @@ def clean_environment(scratch, unit_root, grant=None):
     # Isolated env -i strips runner ambient DATABASE_URL that lint-and-test often
     # inherits. Provide a non-grant placeholder so Zod config can parse; nothing
     # here authorizes disposable TCP or Nest app-e2e (those need grant override).
+    # HOME stays under the private scratch (never world-writable /tmp). TMPDIR may
+    # use MC_FULL_SUITE_SHORT_TMP so unix-socket composition specs stay <108 bytes.
+    short_tmp = os.environ.get('MC_FULL_SUITE_SHORT_TMP')
+    tmpdir = short_tmp if short_tmp else str(scratch)
+    if short_tmp:
+        short_path = Path(short_tmp)
+        info = short_path.lstat()
+        if (short_path.is_symlink() or not stat.S_ISDIR(info.st_mode)
+                or info.st_uid != os.geteuid()
+                or stat.S_IMODE(info.st_mode) & 0o077):
+            raise Refusal('MC_FULL_SUITE_SHORT_TMP must be an owned mode-0700 directory')
     env = {'PATH': os.environ.get('PATH', os.defpath), 'HOME': str(scratch / 'home'),
-           'TMPDIR': str(scratch), 'CI': '1', 'NO_COLOR': '1', 'FORCE_COLOR': '0',
+           'TMPDIR': tmpdir, 'CI': '1', 'NO_COLOR': '1', 'FORCE_COLOR': '0',
            'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONPATH': str(unit_root),
            'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1',
            'NODE_ENV': 'test',
@@ -470,13 +481,13 @@ def root_regression_command(root, member):
     path = str(checked_file(root, member))
     if member.endswith('.py'):
         # Optional CI venv python (MC_FULL_SUITE_PYTHON) carries jsonschema etc.
-        # venv/bin/python is often a symlink; resolve and require an executable file.
+        # Keep the venv path as given: resolving the common venv/bin/python symlink
+        # lands on system python and drops the venv site-packages.
         python = os.environ.get('MC_FULL_SUITE_PYTHON') or sys.executable
         if python != sys.executable:
-            resolved = Path(python).resolve()
-            if not resolved.is_file() or not os.access(resolved, os.X_OK):
-                raise Refusal('MC_FULL_SUITE_PYTHON must resolve to an executable file')
-            python = str(resolved)
+            py_path = Path(python)
+            if not py_path.exists() or not os.access(python, os.X_OK):
+                raise Refusal('MC_FULL_SUITE_PYTHON must be an executable path')
         return [python, '-B', path], 'unittest'
     if member.endswith('.test.mjs'):
         return ['node', '--test', '--test-reporter=tap', path], 'node-tap'
