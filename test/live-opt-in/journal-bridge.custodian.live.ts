@@ -1,5 +1,5 @@
 /**
- * Opt-in Billing3a Journal bridge controls. Lives under test/ so nest build never
+ * Opt-in Billing3a Journal bridge controls. Lives under test/live-opt-in so nest/tsconfig.test never
  * compiles it; `.live.ts` stays outside maintained Vitest + graph-full-suite
  * inventory. Run with BILLING_CUSTODIAN_SOURCE set for the pinned custodian snapshot.
  */
@@ -128,7 +128,8 @@ describe.skipIf(!billingSource)(
             temporaryDirectory: root,
             now: f.deps.now,
           });
-          const Receiver = (await import('./monetary-v2')).BenchMonetaryV2Receiver;
+          const Receiver = (await import('../../src/bench-reservation/monetary-v2'))
+            .BenchMonetaryV2Receiver;
           if (mode === 'late' || mode === 'altered-context') {
             await expect(new Receiver(f.deps).reserveEnvelope(envelope)).rejects.toThrow(
               'monetary_v2_refused_unknown_preserved',
