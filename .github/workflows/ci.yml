@@ -442,9 +442,12 @@ jobs:
       - name: Start 127.0.0.1 disposable Postgres and Redis
         run: |
           set -euo pipefail
-          bash scripts/ci-full-suite-disposable-services.sh start | tee "$RUNNER_TEMP/mc-fs-ports.env"
+          # Script stdout is KEY=value only; docker IDs go to stderr.
+          bash scripts/ci-full-suite-disposable-services.sh start \
+            | tee "$RUNNER_TEMP/mc-fs-ports.env"
+          grep -E '^MC_FS_(PG|REDIS)_PORT=' "$RUNNER_TEMP/mc-fs-ports.env" >"$RUNNER_TEMP/mc-fs-ports.source"
           # shellcheck disable=SC1091
-          source "$RUNNER_TEMP/mc-fs-ports.env"
+          source "$RUNNER_TEMP/mc-fs-ports.source"
           printf 'MC_FS_PG_PORT=%s\n' "$MC_FS_PG_PORT" >> "$GITHUB_ENV"
           printf 'MC_FS_REDIS_PORT=%s\n' "$MC_FS_REDIS_PORT" >> "$GITHUB_ENV"
 
@@ -457,9 +460,11 @@ jobs:
       - name: Write owned full-suite grant
         run: |
           set -euo pipefail
-          bash scripts/ci-full-suite-disposable-services.sh grant | tee "$RUNNER_TEMP/mc-fs-grant.env"
+          bash scripts/ci-full-suite-disposable-services.sh grant \
+            | tee "$RUNNER_TEMP/mc-fs-grant.env"
+          grep -E '^MC_FULL_SUITE_GRANT=' "$RUNNER_TEMP/mc-fs-grant.env" >"$RUNNER_TEMP/mc-fs-grant.source"
           # shellcheck disable=SC1091
-          source "$RUNNER_TEMP/mc-fs-grant.env"
+          source "$RUNNER_TEMP/mc-fs-grant.source"
           printf 'MC_FULL_SUITE_GRANT=%s\n' "$MC_FULL_SUITE_GRANT" >> "$GITHUB_ENV"
 
       - name: Declared root full suite

@@ -23,16 +23,17 @@ GRANT_PATH="$RUNNER_TEMP/mc-full-suite-grant.json"
 start_services() {
   mkdir -p "$STATE_DIR"
   chmod 700 "$STATE_DIR"
-  # Ephemeral host ports, loopback-only.
+  # Ephemeral host ports, loopback-only. Docker container IDs go to stderr so
+  # callers can `source` stdout as KEY=value without executing hex IDs.
   docker run -d --name "$PG_NAME" \
     -e POSTGRES_USER=test \
     -e POSTGRES_PASSWORD=test \
     -e POSTGRES_DB=connector_test \
     -p 127.0.0.1::5432 \
-    postgres:16
+    postgres:16 >&2
   docker run -d --name "$REDIS_NAME" \
     -p 127.0.0.1::6379 \
-    redis:7
+    redis:7 >&2
   # Wait for health.
   for _ in $(seq 1 60); do
     if docker exec "$PG_NAME" pg_isready -U test >/dev/null 2>&1 \
@@ -41,14 +42,15 @@ start_services() {
     fi
     sleep 1
   done
-  docker exec "$PG_NAME" pg_isready -U test
-  docker exec "$REDIS_NAME" redis-cli ping | grep -q PONG
+  docker exec "$PG_NAME" pg_isready -U test >/dev/null
+  docker exec "$REDIS_NAME" redis-cli ping 2>/dev/null | grep -q PONG
   PG_PORT=$(docker port "$PG_NAME" 5432/tcp | awk -F: '{print $NF}' | tr -d '\r')
   REDIS_PORT=$(docker port "$REDIS_NAME" 6379/tcp | awk -F: '{print $NF}' | tr -d '\r')
   printf '%s\n' "$PG_PORT" >"$STATE_DIR/pg.port"
   printf '%s\n' "$REDIS_PORT" >"$STATE_DIR/redis.port"
   printf '%s\n' "$PG_NAME" >"$STATE_DIR/pg.name"
   printf '%s\n' "$REDIS_NAME" >"$STATE_DIR/redis.name"
+  # Only KEY=value lines on stdout (sourced by the workflow).
   printf 'MC_FS_PG_PORT=%s\n' "$PG_PORT"
   printf 'MC_FS_REDIS_PORT=%s\n' "$REDIS_PORT"
 }
@@ -75,6 +77,7 @@ write_grant() {
 }
 EOF
   chmod 600 "$GRANT_PATH"
+  # Only KEY=value on stdout for workflow source.
   printf 'MC_FULL_SUITE_GRANT=%s\n' "$GRANT_PATH"
 }
 
