@@ -23,6 +23,12 @@
 #   creates no shared credential, so the tools travel as a digest-pinned vendored bundle. The job
 #   refuses if any bundled file's sha256 does not match BUNDLE.json, if the caller's program_ref does
 #   not match the bundle's, or if the pull request itself touches the bundle.
+#
+#   PR body input: this workflow reads `pull_request.body` from `$GITHUB_EVENT_PATH` into a
+#   runner-temp file and passes `--pr-body-file` to the gate. It must never place body bytes in
+#   `env:` / argv (measured failure: E2BIG / "Argument list too long" → no verdict). Interim
+#   workaround for callers still on older pins: commit the CAR under `receipts/graph/` and keep the
+#   PR body short — that workaround is valid until those callers rebundle, and is not itself the fix.
 # ============================================================================================
 name: graph-admission
 
@@ -83,8 +89,10 @@ on:
         description: >-
           Optional CallerDependencySetup/v1 subject-and-digest manifest for the fixed MUN web typecheck
           dependency profile. It binds repository/base/head, policy pnpm-frozen-web-typecheck/v1, scope apps/web,
-          cwd ., and blob_oid/sha256/bytes for the seven fixed source inputs. It accepts no command, script,
-          registry, or filesystem path from the caller.
+          cwd ., and blob_oid/sha256/bytes for the seven fixed source inputs. The matching prepare step runs the
+          plan's fixed argv only (frozen install with scripts disabled, @muneral/types build, then
+          `pnpm exec prisma generate` like Auth). It accepts no command, script, registry, or filesystem path
+          from the caller.
         required: false
         default: ''
         type: string
@@ -701,15 +709,77 @@ jobs:
         # -I: isolated mode puts neither the working directory nor user site on sys.path. The checkout is
         # the pull request's own tree, so a planted ./pip package would otherwise run inside this required
         # gate before it measures anything (FRONTEND review of PR399).
-        run: python3 -I -m pip install --disable-pip-version-check --no-input 'pyyaml==6.0.2'
-
-      # AUP-GRAPH-006:gate5b (B6). A DECLARED DERIVED ARTEFACT is admitted only if the gate can RUN the
-      # caller's own verifier — accept the honest tree, then REFUSE it with one byte corrupted. That needs
-      # the caller's toolchain, which this job otherwise has no reason to install, so these steps are
-      # guarded on the declaration existing: a caller that declares nothing pays nothing, and the gate's
-      # 16 s stays 16 s. NON-COVERAGE, stated in derived-artefacts.v1.md §6: this knows about exactly ONE
-      # ecosystem. A caller in another needs its own toolchain, and the honest remedy is a
-      # declaration-driven toolchain field — named here, not built.
+        # --require-hashes: version alone is not enough; altered index/wheel bytes must not satisfy the pin
+        # (Muneral cfa0ff41 / PR399 follow-up). Reusable callers check out THEIR tree, not Program's, so the
+        # reviewed pin is carried in this step's env block (same bytes as tools/graph/hashes/pyyaml-6.0.2.txt).
+        # test_graph_admission_pip_isolated.py refuses drift between the env block and that file.
+        env:
+          PYYAML_HASHES: |
+            # Reviewed PyYAML 6.0.2 hashes from PyPI JSON digests (https://pypi.org/pypi/PyYAML/6.0.2/json).
+            # Generated for graph-admission hash-pin follow-up (Muneral cfa0ff41-5352-4f62-931d-d06e6e6c6ea1).
+            # Do not edit hashes without re-reviewing against PyPI digests.
+            pyyaml==6.0.2 \
+                --hash=sha256:0a9a2848a5b7feac301353437eb7d5957887edbf81d56e903999a75a3d743086 \
+                --hash=sha256:29717114e51c84ddfba879543fb232a6ed60086602313ca38cce623c1d62cfbf \
+                --hash=sha256:8824b5a04a04a047e72eea5cec3bc266db09e35de6bdfe34c9436ac5ee27d237 \
+                --hash=sha256:7c36280e6fb8385e520936c3cb3b8042851904eba0e58d277dca80a5cfed590b \
+                --hash=sha256:ec031d5d2feb36d1d1a24380e4db6d43695f3748343d99434e6f5f9156aaa2ed \
+                --hash=sha256:936d68689298c36b53b29f23c6dbb74de12b4ac12ca6cfe0e047bedceea56180 \
+                --hash=sha256:23502f431948090f597378482b4812b0caae32c22213aecf3b55325e049a6c68 \
+                --hash=sha256:2e99c6826ffa974fe6e27cdb5ed0021786b03fc98e5ee3c5bfe1fd5015f42b99 \
+                --hash=sha256:a4d3091415f010369ae4ed1fc6b79def9416358877534caf6a0fdd2146c87a3e \
+                --hash=sha256:cc1c1159b3d456576af7a3e4d1ba7e6924cb39de8f67111c735f6fc832082774 \
+                --hash=sha256:1e2120ef853f59c7419231f3bf4e7021f1b936f6ebd222406c3b60212205d2ee \
+                --hash=sha256:5d225db5a45f21e78dd9358e58a98702a0302f2659a3c6cd320564b75b86f47c \
+                --hash=sha256:5ac9328ec4831237bec75defaf839f7d4564be1e6b25ac710bd1a96321cc8317 \
+                --hash=sha256:3ad2a3decf9aaba3d29c8f537ac4b243e36bef957511b4766cb0057d32b0be85 \
+                --hash=sha256:ff3824dc5261f50c9b0dfb3be22b4567a6f938ccce4587b38952d85fd9e9afe4 \
+                --hash=sha256:797b4f722ffa07cc8d62053e4cff1486fa6dc094105d13fea7b1de7d8bf71c9e \
+                --hash=sha256:11d8f3dd2b9c1207dcaf2ee0bbbfd5991f571186ec9cc78427ba5bd32afae4b5 \
+                --hash=sha256:e10ce637b18caea04431ce14fabcf5c64a1c61ec9c56b071a4b7ca131ca52d44 \
+                --hash=sha256:c70c95198c015b85feafc136515252a261a84561b7b1d51e3384e0655ddf25ab \
+                --hash=sha256:ce826d6ef20b1bc864f0a68340c8b3287705cae2f8b4b1d932177dcc76721725 \
+                --hash=sha256:1f71ea527786de97d1a0cc0eacd1defc0985dcf6b3f17bb77dcfc8c34bec4dc5 \
+                --hash=sha256:9b22676e8097e9e22e36d6b7bda33190d0d400f345f23d4065d48f4ca7ae0425 \
+                --hash=sha256:80bab7bfc629882493af4aa31a4cfa43a4c57c83813253626916b8c7ada83476 \
+                --hash=sha256:0833f8694549e586547b576dcfaba4a6b55b9e96098b36cdc7ebefe667dfed48 \
+                --hash=sha256:8b9c7197f7cb2738065c481a0461e50ad02f18c78cd75775628afb4d7137fb3b \
+                --hash=sha256:ef6107725bd54b262d6dedcc2af448a266975032bc85ef0172c5f059da6325b4 \
+                --hash=sha256:7e7401d0de89a9a855c839bc697c079a4af81cf878373abd7dc625847d25cbd8 \
+                --hash=sha256:efdca5630322a10774e8e98e1af481aad470dd62c3170801852d752aa7a783ba \
+                --hash=sha256:50187695423ffe49e2deacb8cd10510bc361faac997de9efef88badc3bb9e2d1 \
+                --hash=sha256:0ffe8360bab4910ef1b9e87fb812d8bc0a308b0d0eef8c8f44e0254ab3b07133 \
+                --hash=sha256:17e311b6c678207928d649faa7cb0d7b4c26a0ba73d41e99c4fff6b6c3276484 \
+                --hash=sha256:70b189594dbe54f75ab3a1acec5f1e3faa7e8cf2f1e08d9b561cb41b845f69d5 \
+                --hash=sha256:41e4e3953a79407c794916fa277a82531dd93aad34e29c2a514c2c0c5fe971cc \
+                --hash=sha256:68ccc6023a3400877818152ad9a1033e3db8625d899c72eacb5a668902e4d652 \
+                --hash=sha256:bc2fa7c6b47d6bc618dd7fb02ef6fdedb1090ec036abab80d4681424b84c1183 \
+                --hash=sha256:8388ee1976c416731879ac16da0aff3f63b286ffdd57cdeb95f3f2e085687563 \
+                --hash=sha256:24471b829b3bf607e04e88d79542a9d48bb037c2267d7927a874e6c205ca7e9a \
+                --hash=sha256:d7fded462629cfa4b685c5416b949ebad6cec74af5e2d42905d41e257e0869f5 \
+                --hash=sha256:d84a1718ee396f54f3a086ea0a66d8e552b2ab2017ef8b420e92edbc841c352d \
+                --hash=sha256:9056c1ecd25795207ad294bcf39f2db3d845767be0ea6e6a34d856f006006083 \
+                --hash=sha256:82d09873e40955485746739bcb8b4586983670466c23382c19cffecbf1fd8706 \
+                --hash=sha256:43fa96a3ca0d6b1812e01ced1044a003533c47f6ee8aca31724f78e93ccc089a \
+                --hash=sha256:01179a4a8559ab5de078078f37e5c1a30d76bb88519906844fd7bdea1b7729ff \
+                --hash=sha256:688ba32a1cffef67fd2e9398a2efebaea461578b0923624778664cc1c914db5d \
+                --hash=sha256:a8786accb172bd8afb8be14490a16625cbc387036876ab6ba70912730faf8e1f \
+                --hash=sha256:d8e03406cac8513435335dbab54c0d385e4a49e4945d2909a581c83647ca0290 \
+                --hash=sha256:f753120cb8181e736c57ef7636e83f31b9c0d1722c516f7e86cf15b7aa57ff12 \
+                --hash=sha256:3b1fdb9dc17f5a7677423d508ab4f243a726dea51fa5e70992e59a7411c89d19 \
+                --hash=sha256:0b69e4ce7a131fe56b7e4d770c67429700908fc0752af059838b1cfb41960e4e \
+                --hash=sha256:a9f8c2e67970f13b16084e04f134610fd1d374bf477b17ec1599185cf611d725 \
+                --hash=sha256:6395c297d42274772abc367baaa79683958044e5d3835486c16da75d2a694631 \
+                --hash=sha256:39693e1f8320ae4f43943590b49779ffb98acb81f788220ea932a6b6c51004d8 \
+                --hash=sha256:d584d9ec91ad65861cc08d42e834324ef890a082e591037abe114850ff7bbc3e
+        run: |
+          set -euo pipefail
+          HASHES="${RUNNER_TEMP}/pyyaml-6.0.2.hashes.txt"
+          printf '%s' "$PYYAML_HASHES" > "$HASHES"
+          if [ -f tools/graph/hashes/pyyaml-6.0.2.txt ]; then
+            cmp -s "$HASHES" tools/graph/hashes/pyyaml-6.0.2.txt
+          fi
+          python3 -I -m pip install --disable-pip-version-check --no-input --require-hashes -r "$HASHES"
       - name: Does this repository declare derived artefacts? (B6)
         id: derived
         run: |
@@ -1052,12 +1122,17 @@ jobs:
       - name: Prepare frozen caller dependencies before candidate verification
         if: inputs.candidate_dependency_setup_required || inputs.candidate_dependency_setup != ''
         env:
+          # Same dummy DATABASE_URL shape as the Auth prepare step: prisma generate needs a
+          # URL string even when it only writes the client (muneral#444 / Auth path parity).
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
           RUNNER_TEMP: ${{ runner.temp }}
         run: |
           set -euo pipefail
           PLAN_PATH="$RUNNER_TEMP/graph-admission/candidate-dependency-setup/plan.json"
           pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile
           pnpm --filter @muneral/types build
+          # `--ignore-scripts` skips prisma postinstall; generate explicitly like Auth.
+          pnpm exec prisma generate
           cat "$PLAN_PATH" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Validate canonical Auth dependency source and toolchain
@@ -1127,6 +1202,75 @@ jobs:
           pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --registry=https://registry.npmjs.org/
           pnpm exec prisma generate
           cat "$RUNNER_TEMP/graph-admission/auth-dependency-setup/plan.json" >> "$GITHUB_STEP_SUMMARY"
+
+      # Talomnia-backend graph caller has no dependency-setup input. This fixed profile installs
+      # the root NestJS / Prisma closure before the current-candidate producer (talomnia-backend#66).
+      - name: Validate canonical Talomnia-backend dependency source and toolchain
+        id: candidate_talo_dependency_setup
+        if: github.repository == 'Arcanada-one/talomnia-backend'
+        env:
+          TOOLS_PATH: ${{ inputs.tools_path }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RANGE_BASE: ${{ steps.range.outputs.base }}
+          RANGE_HEAD: ${{ steps.range.outputs.head }}
+          RUNNER_TEMP: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          GRAPH_TOOLS_ROOT="$GITHUB_WORKSPACE/$TOOLS_PATH"
+          PLAN_ROOT="$RUNNER_TEMP/graph-admission/talo-dependency-setup"
+          mkdir -p "$PLAN_ROOT"
+          PLAN_PATH="$PLAN_ROOT/plan.json"
+          set -C
+          python3 -I -B "$GRAPH_TOOLS_ROOT/tools/graph/ci_gate.py" candidate-talo-dependency-setup-plan \
+            --repo "$GITHUB_WORKSPACE" --repository "$GITHUB_REPOSITORY" \
+            --base "$RANGE_BASE" --head "$RANGE_HEAD" > "$PLAN_PATH"
+          python3 -I -B - "$PLAN_PATH" >> "$GITHUB_OUTPUT" <<'PY'
+          import json, sys
+          plan = json.load(open(sys.argv[1], encoding="utf-8"))
+          if plan.get("policy") != "talo-pnpm-frozen-root/v1":
+              raise SystemExit("TALO_DEPENDENCY_SETUP_POLICY_REFUSED")
+          print("node_version=" + plan["node_version"])
+          print("pnpm_version=" + plan["pnpm_version"])
+          PY
+
+      - name: Pin pnpm for canonical Talomnia-backend candidate verification
+        if: github.repository == 'Arcanada-one/talomnia-backend'
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: ${{ steps.candidate_talo_dependency_setup.outputs.pnpm_version }}
+          dest: ${{ runner.temp }}/talo-setup-pnpm
+
+      - name: Pin Node for canonical Talomnia-backend candidate verification
+        if: github.repository == 'Arcanada-one/talomnia-backend'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ steps.candidate_talo_dependency_setup.outputs.node_version }}
+
+      - name: Prepare fixed Talomnia-backend verifier dependencies
+        if: github.repository == 'Arcanada-one/talomnia-backend'
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+          RUNNER_TEMP: ${{ runner.temp }}
+          TALO_NODE_VERSION: ${{ steps.candidate_talo_dependency_setup.outputs.node_version }}
+        run: |
+          set -euo pipefail
+          test -f package.json && test ! -L package.json
+          test -f pnpm-lock.yaml && test ! -L pnpm-lock.yaml
+          CONFIG_ROOT="$RUNNER_TEMP/graph-admission/talo-pnpm-config"
+          mkdir -p "$CONFIG_ROOT"
+          test ! -e "$CONFIG_ROOT/user.npmrc" && test ! -e "$CONFIG_ROOT/global.npmrc"
+          umask 077
+          : > "$CONFIG_ROOT/user.npmrc"
+          : > "$CONFIG_ROOT/global.npmrc"
+          export NPM_CONFIG_USERCONFIG="$CONFIG_ROOT/user.npmrc"
+          export NPM_CONFIG_GLOBALCONFIG="$CONFIG_ROOT/global.npmrc"
+          pnpm --version | grep -Fx '11.20.0'
+          test -n "$TALO_NODE_VERSION"
+          test "$(node --version)" = "v${TALO_NODE_VERSION}"
+          pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --registry=https://registry.npmjs.org/
+          pnpm exec prisma generate
+          cat "$RUNNER_TEMP/graph-admission/talo-dependency-setup/plan.json" >> "$GITHUB_STEP_SUMMARY"
 
       # The canonical Model Connector self-update is the only caller admitted by the narrow
       # B1 pin/permission grammar. Its current-candidate TypeScript verifiers need the same
@@ -1574,10 +1718,11 @@ jobs:
           CURRENT_EVALUATOR_REPOSITORY: ${{ github.repository }}
           CURRENT_EVALUATOR_CALLER_WORKFLOW_REF: ${{ github.workflow_ref }}
           CURRENT_EVALUATOR_CALLER_WORKFLOW_SHA: ${{ github.workflow_sha }}
-          CURRENT_EVALUATOR_WORKFLOW_REPOSITORY: ${{ job.workflow_repository }}
-          CURRENT_EVALUATOR_WORKFLOW_FILE_PATH: ${{ job.workflow_file_path }}
-          CURRENT_EVALUATOR_WORKFLOW_REF: ${{ job.workflow_ref }}
-          CURRENT_EVALUATOR_WORKFLOW_SHA: ${{ job.workflow_sha }}
+          # actionlint 1.7.12's job type lacks workflow_*; GitHub still populates those fields at
+          # runtime on reusable-workflow jobs. Serialize the whole job object (same pattern as
+          # ACTIVE_WORKFLOW_CONTEXT above) and extract below — do NOT substitute github.workflow_ref
+          # / github.workflow_sha here: those are the CALLER bindings already mapped above.
+          CURRENT_EVALUATOR_JOB_CONTEXT: ${{ toJSON(job) }}
           STAGE_USERPATH_RESULT: ${{ steps.stage_userpath.outputs.result }}
           STAGE_USERPATH_ROOT: ${{ steps.stage_userpath.outputs.root }}
           STAGE_USERPATH_REQUIRED: ${{ inputs.stage_userpath_required }}
@@ -1596,6 +1741,12 @@ jobs:
           # write the summary, upload the result and hand the verdict to the last step, which is the
           # single place the check turns red (GitHub starts this shell with -e; it is cleared here).
           set +e
+          # Extract reusable-workflow identity from toJSON(job). actionlint 1.7.12 rejects
+          # job.workflow_*; GitHub still provides those keys at runtime (see ACTIVE_WORKFLOW_CONTEXT).
+          CURRENT_EVALUATOR_WORKFLOW_REPOSITORY="$(python3 -c 'import json,os; print(json.loads(os.environ.get("CURRENT_EVALUATOR_JOB_CONTEXT") or "{}").get("workflow_repository") or "")')"
+          CURRENT_EVALUATOR_WORKFLOW_FILE_PATH="$(python3 -c 'import json,os; print(json.loads(os.environ.get("CURRENT_EVALUATOR_JOB_CONTEXT") or "{}").get("workflow_file_path") or "")')"
+          CURRENT_EVALUATOR_WORKFLOW_REF="$(python3 -c 'import json,os; print(json.loads(os.environ.get("CURRENT_EVALUATOR_JOB_CONTEXT") or "{}").get("workflow_ref") or "")')"
+          CURRENT_EVALUATOR_WORKFLOW_SHA="$(python3 -c 'import json,os; print(json.loads(os.environ.get("CURRENT_EVALUATOR_JOB_CONTEXT") or "{}").get("workflow_sha") or "")')"
           ARGS=()
           if [ -n "${RANGE_BASE_BRANCH:-}" ]; then ARGS+=(--base-branch "$RANGE_BASE_BRANCH"); fi
           while IFS= read -r g; do [ -n "$g" ] && ARGS+=(--receipt-glob "$g"); done <<< "$RECEIPT_GLOBS"
@@ -1651,16 +1802,24 @@ jobs:
           echo "rc=$RC" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Upload the gate result
+      # DEC-AUP-0191: retain evidence in the job log (+ host dir when mounted). Never GitHub artifacts.
+      # Keep order: gate verdict first (above), retention here, fail-the-check after — retention never
+      # changes RC. tools/ci/retain_evidence.py must travel in the signed GraphAdmissionBundle.
+      - name: Retain the gate result
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
-        with:
-          name: graph-admission-result
-          path: |
-            ${{ runner.temp }}/graph-admission/*.json
-            ${{ runner.temp }}/graph-admission/stage-userpath/
-            ${{ runner.temp }}/graph-admission/current-candidate/
-          if-no-files-found: warn
+        env:
+          TOOLS_PATH: ${{ steps.selftools.outputs.path || inputs.tools_path }}
+        run: |
+          set +e
+          ROOT="${TOOLS_PATH:-.github/graph-admission}"
+          # Quote globs so Python expands them; shell must not split into multiple --path values.
+          python3 "${ROOT}/tools/ci/retain_evidence.py" \
+            --name graph-admission-result \
+            --path "${RUNNER_TEMP}/graph-admission/*.json" \
+            --path "${RUNNER_TEMP}/graph-admission/stage-userpath/" \
+            --path "${RUNNER_TEMP}/graph-admission/current-candidate/" \
+            --summary "${GITHUB_STEP_SUMMARY}"
+          exit 0
 
       - name: Fail the check on a red verdict
         if: always()
@@ -1669,7 +1828,7 @@ jobs:
         run: |
           set -uo pipefail
           if [ "${RC:-}" != "0" ]; then
-            echo "::error title=graph-admission::the admission gate returned ${RC:-<no verdict>} — see the job summary and the graph-admission-result artefact"
+            echo "::error title=graph-admission::the admission gate returned ${RC:-<no verdict>} — see the job summary and the retained graph-admission-result evidence"
             exit 1
           fi
           echo "graph-admission: admitted"

@@ -34,6 +34,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -3684,8 +3685,19 @@ def _git_valid_structural_exclusions(repo_path: Path, doc: dict, base: str, head
     repo = impact_pair.impact.Repo(repo_path)
     before = impact_pair.index_at(repo, base)
     after = impact_pair.index_at(repo, head)
+    cs = doc.get("change_set") or {}
+    paths = {f.get("path") for f in cs.get("files", []) if isinstance(f, dict)}
+    files = [f for f in repo.diff_files(base, head) if f.get("path") in paths]
+    selection_config = doc.get("impact_set") or {}
+    depth = selection_config.get("max_depth", impact_pair.impact.DEFAULT_MAX_DEPTH)
+    edge_types = selection_config.get("edge_types", "all")
+    q = impact_pair.query(
+        before, after, files, repo=repo, base=base, head=head,
+        tree_commit=repo.head(), tree_dirty=repo.dirty(), max_depth=depth,
+        edge_types=None if edge_types == "all" else set(edge_types))
+    minimum_by_entity = impact_pair.mandatory_by_entity(before, after, q)
     accepted, _problems = impact_pair.structural_exclusions_rederived(
-        repo, doc, base, head, before, after)
+        repo, doc, base, head, before, after, minimum_by_entity)
     return accepted
 
 
@@ -4107,12 +4119,14 @@ def gate(repo: Path, base: str, head: str, receipt_paths: list[Path], policy: di
         # Revision selections are remeasured from Git, not trusted from receipt node_ids.
         try:
             origin_binding = None
+            binding_diagnostics = []
             if origin_association_path is not None:
                 origin_binding = origin_binding_at_base(repo, base, bundle_rel, origin_association_path,
                                                        rec["digest"], enforcement)
             with impact_pair.trace_phase("admission-C18-paired-coverage"):
                 coverage_problems = impact_pair.receipt_problems(repo, doc, origin_binding=origin_binding,
-                                                                trusted_base=base)
+                                                                trusted_base=base,
+                                                                binding_diagnostics=binding_diagnostics)
                 coverage_problems += full_suite_ci.receipt_errors(
                     repo, head, impact_pair.build_graph.source_repo_name(repo), doc.get("verifiers", []))
                 coverage_problems += full_suite_ci.root_typecheck_receipt_errors(
@@ -4120,6 +4134,8 @@ def gate(repo: Path, base: str, head: str, receipt_paths: list[Path], policy: di
                     root_typecheck_ci_root, token=github_token)
             if origin_binding is not None and "proof" in origin_binding:
                 rec["origin_association_proof"] = origin_binding["proof"]
+            import receipt_data
+            coverage_problems.extend(receipt_data.rederive_claims(repo, doc, candidate_head=head))
         except Exception as exc:
             # The class name alone ("Refusal") hides the whole diagnosis: the reason a coverage
             # measurement refused (STALE_GRAPH, a dirty tree, a missing graph) is carried in the
@@ -4135,10 +4151,13 @@ def gate(repo: Path, base: str, head: str, receipt_paths: list[Path], policy: di
             # of hiding it: a gate that knows ten problems must never report "4".
             shown = coverage_problems[:C18_PROBLEMS_SHOWN]
             more = len(coverage_problems) - len(shown)
+            c18_extra = {"coverage_problems": list(coverage_problems)}
+            if binding_diagnostics:
+                c18_extra["binding_diagnostics"] = binding_diagnostics
             add("C18", f"{Path(rec['path']).name}: " + "; ".join(shown)
                        + (f" …and {more} more of {len(coverage_problems)} (the full list is in this check's "
                           f"`coverage_problems` — re-run the gate with --json)" if more else ""),
-                coverage_problems=list(coverage_problems))
+                **c18_extra)
 
         # verdict aggregation with admissible exemptions
         captured = parse_iso(doc.get("captured_at_utc")) or datetime.now(timezone.utc)
@@ -4283,7 +4302,7 @@ def gate(repo: Path, base: str, head: str, receipt_paths: list[Path], policy: di
         imp = doc.get("impact_set") or {}
         try:
             structural_exclusions = _git_valid_structural_exclusions(repo, doc, base, head)
-        except (impact.Refusal, ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError):
+        except (impact_pair.impact.Refusal, ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError):
             # Coverage already reports its own refusal (C18). Fail closed here: an exclusion that
             # cannot be re-derived still owes the ordinary canary obligation.
             structural_exclusions = set()
@@ -4549,6 +4568,29 @@ class AttachRefusal(ValueError):
     repository never holds. The message is the whole answer: what is wrong and the command that fixes it."""
 
 
+def attachment_uri(prefix: str | None, rel: str) -> str:
+    """Validate a directory URI prefix and retain the complete relative receipt path."""
+    prefix = prefix if prefix is not None else "aup://arcanada-universal-program/"
+    try:
+        parsed = urllib.parse.urlsplit(prefix)
+        parsed.port  # reject malformed or out-of-range ports, even before any network request
+        valid = (parsed.scheme in ("aup", "https", "http") and parsed.hostname
+                 and not parsed.username and not parsed.password and not parsed.query
+                 and not parsed.fragment and prefix.endswith("/")
+                 and not any(c.isspace() or ord(c) < 32 for c in urllib.parse.unquote(prefix))
+                 and not parsed.path.rstrip("/").endswith("/" + rel))
+    except ValueError:
+        valid = False
+    if not valid:
+        raise AttachRefusal("ATTACH_URI_PREFIX_INVALID: --uri/--uri-prefix requires a directory URI "
+                            "ending in '/', without credentials, query, fragment or receipt suffix")
+    uri = prefix + urllib.parse.quote(rel, safe="/")
+    if len(uri) > 512:
+        raise AttachRefusal("ATTACH_URI_TOO_LONG: complete evidence URI exceeds512 characters; "
+                            "it must not be truncated")
+    return uri
+
+
 def build_attachment(receipt_path: Path, doc: dict, work_item: str, label: str, uri: str | None,
                      muneral_task_id: str | None = None, root: Path | None = None) -> dict:
     """A2-331. `receipt_path` MUST lie inside `root` (the repository that commits the ledger; default the
@@ -4572,7 +4614,7 @@ def build_attachment(receipt_path: Path, doc: dict, work_item: str, label: str, 
         "work_item": {"system": "muneral", "task_id": work_item, "muneral_task_id": muneral_task_id,
                       "epic": doc.get("work_item", {}).get("epic") if isinstance(doc.get("work_item"), dict) else None},
         "evidence_ref": {
-            "uri": f"{uri or 'aup://arcanada-universal-program/'}{rel}"[:512],
+            "uri": attachment_uri(uri, rel),
             "digest": digest,
             "contentType": "application/json",
             "label": label[:128],
@@ -4603,6 +4645,37 @@ def _muneral_error_body(raw: bytes) -> tuple[dict | None, str]:
         return (body if isinstance(body, dict) else None), text
     except json.JSONDecodeError:
         return None, text
+
+
+def evidence_identity_matches(body: dict | None, task_id: str, payload: dict) -> bool:
+    return (isinstance(body, dict) and isinstance(body.get("evidence_id"), str)
+            and bool(UUID_RE.fullmatch(body["evidence_id"])) and body.get("task_id") == task_id
+            and body.get("sha256") == payload["sha256"] and body.get("uri") == payload["uri"]
+            and body.get("content_type") == payload["contentType"])
+
+
+def muneral_readback(base_url: str, path: str, task_id: str, payload: dict,
+                    evidence_id: str, key: str, ua: str, timeout: float) -> dict:
+    """Verify one scoped durable row after POST; never record headers or answer bodies."""
+    probe = {"probe": "GET /tasks/<task>/evidence", "task_id": task_id}
+    req = urllib.request.Request(base_url.rstrip("/") + path, method="GET",
+                                 headers={"Authorization": f"Bearer {key}", "User-Agent": ua})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            probe["status"] = response.status
+            doc = json.loads(response.read())
+    except (urllib.error.URLError, TimeoutError, ConnectionError, OSError,
+            ValueError, UnicodeError) as error:
+        probe["status"] = f"error:{type(error).__name__}"
+        return {"status": "not_measured", "reason_code": "MUNERAL_READBACK_NOT_MEASURED", "probe": probe}
+    rows = doc.get("evidence") if isinstance(doc, dict) else None
+    matches = ([row for row in rows if isinstance(row, dict) and row.get("evidence_id") == evidence_id]
+               if isinstance(rows, list) else [])
+    if (not isinstance(doc, dict) or doc.get("task_id") != task_id or len(matches) != 1
+            or not evidence_identity_matches(matches[0], task_id, payload)):
+        return {"status": "failed", "reason_code": "MUNERAL_READBACK_MISMATCH", "probe": probe}
+    return {"status": "verified", "probe": probe,
+            "identity": {"exact_tuple_verified": True, "evidence_id": evidence_id}}
 
 
 def muneral_deliver(att: dict, task_id: str, key: str, base_url: str, ua: str, route: str,
@@ -4652,15 +4725,21 @@ def muneral_deliver(att: dict, task_id: str, key: str, base_url: str, ua: str, r
     body, text = _muneral_error_body(raw)
     d["http"] = code
     if code in (200, 201):
-        ok = (body is not None and body.get("sha256") == sha_hex and body.get("evidence_id")
-              and (code == 201 or body.get("idempotent") is True))
+        ok = (evidence_identity_matches(body, task_id, payload)
+              and ((code == 201 and body.get("idempotent") is False)
+                   or (code == 200 and body.get("idempotent") is True)))
         if not ok:
             return d | {"status": "failed", "reason_code": "MUNERAL_ANSWER_MISMATCH",
-                        "answer": text[:300], "probe": [probe]}
+                        "probe": [probe]}
+        readback = muneral_readback(base_url, path, task_id, payload, body["evidence_id"], key, ua, timeout)
+        probes = [probe, readback["probe"]]
+        if readback["status"] != "verified":
+            return d | {"status": readback["status"], "reason_code": readback["reason_code"],
+                        "evidence_id": body["evidence_id"], "probe": probes}
         return d | {"status": "posted", "reason_code": "MUNERAL_EVIDENCE_CREATED" if code == 201
                     else "MUNERAL_EVIDENCE_IDEMPOTENT",
                     "evidence_id": body["evidence_id"], "idempotent": bool(body.get("idempotent")),
-                    "created_at": body.get("created_at"), "probe": [probe]}
+                    "created_at": body.get("created_at"), "probe": probes, "readback": readback["identity"]}
     server_code = (body or {}).get("code")
     message = (body or {}).get("message") if body else text
     if code == 404 and body is None and f"Cannot {method}" in text:
@@ -4827,9 +4906,10 @@ def cmd_attach(a) -> int:
             return 2
     else:
         ledger = anchor_ledger
+    task_id = a.muneral_task_id or (wi if UUID_RE.match(wi) else None)
     try:
         att = build_attachment(receipt_path, doc, wi, a.label or f"ChangeAdmissionReceipt/v1 {doc.get('receipt_id')}",
-                               a.uri, a.muneral_task_id, root=root)
+                               a.uri, task_id, root=root)
     except AttachRefusal as e:
         print(f"refuse {e}", file=sys.stderr)
         return 2
@@ -4842,6 +4922,7 @@ def cmd_attach(a) -> int:
         return merged, outcome
 
     try:
+        # Resolve every local conflict before an HTTP write. The later merge changes delivery only.
         ledger, outcome = candidate_ledger()
     except AttachRefusal as e:
         print(f"refuse {e}", file=sys.stderr)
@@ -4852,7 +4933,6 @@ def cmd_attach(a) -> int:
         # a fact about Muneral that nobody measured.
         m = policy["work_item_evidence"]["muneral"]
         key = os.environ.get("MUNERAL_API_KEY")
-        task_id = a.muneral_task_id or (wi if UUID_RE.match(wi) else None)
         route = m.get("evidence_route")
         att["delivery"]["checked_at_utc"] = now_iso()
         if not route:
@@ -4983,6 +5063,13 @@ def merge_attachment(ledger: dict, att: dict, base_ledger: dict | None, base_whe
     action = "superseded" if superseded else "appended"
     for i, x in enumerate(atts):
         if _att_digest(x) == d:
+            def identity(row):
+                ref, work_item = row.get("evidence_ref") or {}, row.get("work_item") or {}
+                return (row.get("receipt_path"), work_item.get("task_id"), work_item.get("muneral_task_id"),
+                        ref.get("uri"), ref.get("digest"), ref.get("contentType"))
+            if identity(x) != identity(att):
+                raise AttachRefusal("ATTACH_EVIDENCE_IDENTITY_CONFLICT: same digest has a different "
+                                    "task/URI/media/path tuple; existing evidence is preserved")
             atts[i] = att | {"attached_at_utc": x.get("attached_at_utc", att["attached_at_utc"])}
             action = "refreshed"
             break
@@ -5742,8 +5829,8 @@ def selftest(receipt_out: Path | None, keep: bool = False) -> int:
 
         # 7. no status/transition route is reachable from this tool. A2-336: the tool now makes ONE
         # write — the evidence POST of `attach --post` — so the invariant is stated as what it always
-        # meant: the only network call site is `muneral_deliver`, and the only route it can be given is
-        # the policy's evidence route, which is neither a status nor a transition.
+        # meant: the only WRITE is `muneral_deliver` on the policy's evidence route; the second call
+        # is its GET readback of that same scoped evidence path, never a status or transition write.
         src = Path(__file__).read_text(encoding="utf-8")
         delivery_start = src.index("def muneral_deliver(")
         delivery_end = src.find("\ndef ", delivery_start + 1)
@@ -5752,7 +5839,8 @@ def selftest(receipt_out: Path | None, keep: bool = False) -> int:
         # that this tool's sole network write remains the exact Muneral evidence route.
         needles = ["/trans" + "itions", "/sta" + "tus", "method=" + "\"POST\""]
         route = policy["work_item_evidence"]["muneral"].get("evidence_route")
-        ok = (not any(n in delivery_src for n in needles) and src.count("urlopen" + "(") == 1
+        ok = (not any(n in delivery_src for n in needles) and src.count("urlopen" + "(") == 2
+              and src.count("method=" + "\"GET\"") == 1
               and route == "POST /tasks/{id}/evidence")
         results.append({"case": "no-status-write-path", "ok": ok})
         passed, failed = (passed + 1, failed) if ok else (passed, failed + 1)
@@ -8316,7 +8404,9 @@ def main(argv=None) -> int:
     at.add_argument("--work-item")
     at.add_argument("--muneral-task-id", help="the Muneral task uuid the evidence belongs to (receipts/muneral/*task-map*)")
     at.add_argument("--label")
-    at.add_argument("--uri")
+    at.add_argument("--uri", "--uri-prefix", dest="uri",
+                    help="directory URI PREFIX ending in '/'; repository-relative receipt path is appended "
+                         "once (default: aup://arcanada-universal-program/); never a complete receipt URI")
     at.add_argument("--ledger-dir")
     at.add_argument("--policy", type=Path)
     at.add_argument("--post", action="store_true",
