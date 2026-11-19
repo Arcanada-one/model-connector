@@ -100,6 +100,33 @@ describe('first-dispatch observation', () => {
     }
   });
 
+  it('separates principal-bound observation keys from identical request digests', () => {
+    const providerRequest: ConnectorRequest = {
+      prompt: 'synthetic prompt',
+      model: 'm',
+      jsonSchema: { '10': 'a', '2': 'b' },
+    };
+    const input = {
+      observationId: '00000000-0000-4000-8000-000000000001',
+      measurement,
+      connector: 'test',
+      providerRequest,
+    };
+    const firstPrincipal = reserveFirstDispatchObservationV0({
+      ...input,
+      apiKeyId: 'synthetic-api-key-id-a',
+    });
+    const secondPrincipal = reserveFirstDispatchObservationV0({
+      ...input,
+      apiKeyId: 'synthetic-api-key-id-b',
+    });
+
+    // Reservation field binding does not establish READ authorization.
+    expect(secondPrincipal.requestPayloadDigestSha256).toBe(firstPrincipal.requestPayloadDigestSha256);
+    expect(secondPrincipal.requestPayloadBytes).toBe(firstPrincipal.requestPayloadBytes);
+    expect(secondPrincipal.observationKeySha256).not.toBe(firstPrincipal.observationKeySha256);
+  });
+
   it('binds the complete pre-adapter request without returning prompt content', () => {
     const reserved = reservation();
     const observation = finalizeFirstDispatchObservationV0(reserved, response);
