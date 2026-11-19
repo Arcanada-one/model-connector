@@ -236,10 +236,15 @@ def clean_environment(scratch, unit_root, grant=None):
     must remain unused.
     """
     del grant  # never ambient-inject; see pass_red_vitest / disposable overrides
+    # Isolated env -i strips runner ambient DATABASE_URL that lint-and-test often
+    # inherits. Provide a non-grant placeholder so Zod config can parse; nothing
+    # here authorizes disposable TCP or Nest app-e2e (those need grant override).
     env = {'PATH': os.environ.get('PATH', os.defpath), 'HOME': str(scratch / 'home'),
            'TMPDIR': str(scratch), 'CI': '1', 'NO_COLOR': '1', 'FORCE_COLOR': '0',
            'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONPATH': str(unit_root),
-           'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1'}
+           'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1',
+           'NODE_ENV': 'test',
+           'DATABASE_URL': 'postgresql://suite:suite@127.0.0.1:65535/suite_placeholder'}
     if any(not Path(part).is_absolute() for part in env['PATH'].split(os.pathsep)):
         raise Refusal('relative PATH entry')
     (scratch / 'home').mkdir(mode=0o700)
@@ -272,6 +277,36 @@ def emit_failure_log_tail(raw_log, label, limit=FAIL_LOG_TAIL_LINES):
         return
     for line in lines[-limit:]:
         print('  |', scrub_log_line(line))
+
+
+def emit_vitest_json_failures(report_path, limit=12):
+    """Print scrubbed failed assertion messages from a Vitest JSON report."""
+    path = Path(report_path) if report_path else None
+    if not path or not path.is_file():
+        return
+    try:
+        document = json.loads(path.read_text())
+    except (OSError, ValueError, UnicodeDecodeError):
+        print('  | (vitest json report unreadable)')
+        return
+    print('  --- vitest json failures:', path.name, '---')
+    printed = 0
+    for row in document.get('testResults') or []:
+        for assertion in row.get('assertionResults') or []:
+            if assertion.get('status') != 'failed':
+                continue
+            name = assertion.get('fullName') or assertion.get('title') or '?'
+            file_name = Path(row.get('name', '?')).name
+            print('  | FAIL', file_name, '::', scrub_log_line(str(name)))
+            for message in (assertion.get('failureMessages') or [])[:1]:
+                for line in str(message).splitlines()[:20]:
+                    print('  |', scrub_log_line(line))
+            printed += 1
+            if printed >= limit:
+                return
+    if printed == 0:
+        print('  | (no failed assertions in json; numFailedTests=%s numTotalTests=%s)'
+              % (document.get('numFailedTests'), document.get('numTotalTests')))
 
 
 def disposable_member(path):
@@ -610,21 +645,25 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
             raise Refusal('PASS_RED disposable/e2e requires grant env')
         red_report = scratch / (label + '-pass-red.json')
         red_argv = ['pnpm', 'exec', 'vitest', 'run', *config_args,
-                    '--reporter=json', '--outputFile=' + str(red_report), *selected]
+                    '--reporter=default', '--reporter=json',
+                    '--outputFile=' + str(red_report), *selected]
         red_env = dict(grant_env)
         red_env['DATABASE_URL'] = 'postgresql://pass-red:pass-red@127.0.0.1:1/pass_red'
         red = run(red_argv, selected, label + '-pass-red',
                   lambda raw: vitest_counts(json.loads(red_report.read_text()), selected, root),
                   env_override=red_env)
+        red['vitest_report'] = str(red_report)
         if red.get('verdict') == 'verified':
             red.update(verdict='failed', reason='PASS_RED control unexpectedly verified')
             return red, None
         red['control'] = {'result': 'PASS_RED'}
         real_argv = ['pnpm', 'exec', 'vitest', 'run', *config_args,
-                     '--reporter=json', '--outputFile=' + str(report_path), *selected]
+                     '--reporter=default', '--reporter=json',
+                     '--outputFile=' + str(report_path), *selected]
         real = run(real_argv, selected, label,
                    lambda raw: vitest_counts(json.loads(report_path.read_text()), selected, root),
                    env_override=grant_env)
+        real['vitest_report'] = str(report_path)
         real['control'] = {'result': 'PASS_RED'}
         return red, real
 
@@ -670,9 +709,12 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
             selected, held = members, []
             report = scratch / (name + '.json')
             argv = ['pnpm', 'exec', 'vitest', 'run', '--maxWorkers=4',
-                    '--reporter=json', '--outputFile=' + str(report), *selected]
-            row['executions'].append(run(argv, selected, 'root-' + str(index),
-                lambda raw: vitest_counts(json.loads(report.read_text()), selected, root)))
+                    '--reporter=default', '--reporter=json',
+                    '--outputFile=' + str(report), *selected]
+            result = run(argv, selected, 'root-' + str(index),
+                lambda raw: vitest_counts(json.loads(report.read_text()), selected, root))
+            result['vitest_report'] = str(report)
+            row['executions'].append(result)
             row['verdict'] = ('failed' if any(r['verdict'] == 'failed' for r in row['executions']) else
                               'not_measured' if not row['executions'] or any(r['verdict'] != 'verified' for r in row['executions']) else 'verified')
         elif name == 'maintained-integration':
@@ -704,10 +746,13 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
             if offline:
                 report = scratch / (name + '-offline.json')
                 argv = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.integration.config.ts',
-                        '--reporter=json', '--outputFile=' + str(report), *offline]
-                row['executions'].append(run(argv, offline, 'root-' + str(index) + '-offline',
+                        '--reporter=default', '--reporter=json',
+                        '--outputFile=' + str(report), *offline]
+                result = run(argv, offline, 'root-' + str(index) + '-offline',
                     lambda raw, selected=offline, report=report: vitest_counts(
-                        json.loads(report.read_text()), selected, root)))
+                        json.loads(report.read_text()), selected, root))
+                result['vitest_report'] = str(report)
+                row['executions'].append(result)
             if run_disposable:
                 report = scratch / (name + '-disposable.json')
                 red, real = pass_red_vitest(
@@ -936,6 +981,8 @@ def main():
             # PASS_RED control failures are expected; print tails for other fails.
             if ex.get('verdict') == 'failed' and 'pass-red' not in log_name:
                 emit_failure_log_tail(ex.get('raw_log'), log_name)
+                if ex.get('vitest_report'):
+                    emit_vitest_json_failures(ex['vitest_report'])
         reasons = row.get('held_reasons') or {}
         for path_name, reason in sorted(reasons.items()):
             print('  held:', path_name, '->', reason)

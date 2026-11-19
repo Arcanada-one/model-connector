@@ -362,8 +362,11 @@ class Controls(unittest.TestCase):
         def child(argv, cwd, env, deadline, scratch, name):
             calls.append(argv)
             self.assertNotIn('PROVIDER_API_KEY', env)
-            self.assertNotIn('DATABASE_URL', env)
             self.assertNotIn('NODE_OPTIONS', env)
+            # Isolated baseline may set a non-grant placeholder DATABASE_URL.
+            self.assertNotIn('MC_FULL_SUITE_APP_E2E', env)
+            if 'DATABASE_URL' in env:
+                self.assertIn('suite_placeholder', env['DATABASE_URL'])
             if argv[0] == 'pnpm':
                 output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
                 members = [a for a in argv[argv.index('--outputFile=' + output) + 1:]
@@ -558,7 +561,7 @@ class Controls(unittest.TestCase):
         seen = []
 
         def child(argv, cwd, env, deadline, scratch, name):
-            seen.append((name, 'DATABASE_URL' in env))
+            seen.append((name, env.get('MC_FULL_SUITE_APP_E2E'), env.get('DATABASE_URL', '')))
             if argv[0] == 'pnpm':
                 output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
                 selected = [a for a in argv[argv.index('--outputFile=' + output) + 1:]
@@ -580,14 +583,13 @@ class Controls(unittest.TestCase):
         with patch.object(subject.shutil, 'which', return_value='/fixture/runner'), \
                 tempfile.TemporaryDirectory() as directory:
             subject.run_root_suites(self.root, suites, Path(directory), child, grant=grant)
-        by_name = dict(seen)
-        # plan order: app-e2e then vitest — e2e logs are root-0*; vitest is the other root-N.
-        e2e_names = [n for n in by_name if n.startswith('root-0')]
-        other = [n for n in by_name if n not in e2e_names]
-        self.assertTrue(e2e_names, seen)
-        self.assertTrue(all(by_name[n] for n in e2e_names), seen)
+        e2e = [row for row in seen if row[1] == '1']
+        other = [row for row in seen if row[1] != '1']
+        self.assertTrue(e2e, seen)
         self.assertTrue(other, seen)
-        self.assertTrue(all(not by_name[n] for n in other), seen)
+        self.assertTrue(all('connector_test' in row[2] or row[2].endswith('/pass_red') for row in e2e), seen)
+        self.assertTrue(all(row[1] is None for row in other), seen)
+        self.assertTrue(all('suite_placeholder' in row[2] for row in other), seen)
 
     def test_scrub_log_line_masks_url_password(self):
         line = 'connect postgresql://test:s3cret@127.0.0.1:5432/db api_key=abc123'

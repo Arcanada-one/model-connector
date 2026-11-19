@@ -441,6 +441,10 @@ jobs:
         env:
           DATABASE_URL: postgresql://dummy:dummy@127.0.0.1:5432/dummy
 
+      # Same pin as graph-admission.yml — regression member test_source_input_contract.py.
+      - name: jsonschema for root regression membership
+        run: python3 -I -m pip install --disable-pip-version-check --no-input 'jsonschema==4.23.0'
+
       - name: Start 127.0.0.1 disposable Postgres and Redis
         run: |
           set -euo pipefail
