@@ -5,19 +5,10 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-19T16:48:30Z",
+ "captured_at_utc": "2026-11-19T17:50:00Z",
  "change_set": {
   "base": "1bc79e14c7727e7fd6557c558243821a18d7ec23",
   "files": [
-   {
-    "kind": "config",
-    "node_id": "code_unit:.github/workflows/ci.yml",
-    "node_ids": [
-     "code_unit:.github/workflows/ci.yml"
-    ],
-    "path": ".github/workflows/ci.yml",
-    "status": "M"
-   },
    {
     "kind": "receipt",
     "node_id": "receipt:receipts/graph/change-admission-316-full-suite-exact-evidence.json",
@@ -35,168 +26,9 @@
     ],
     "path": "scripts/graph-full-suite-isolated.sh",
     "status": "M"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:src/bench-reservation/journal-bridge.spec.ts",
-    "node_ids": [
-     "code_unit:src/bench-reservation/journal-bridge.spec.ts"
-    ],
-    "path": "src/bench-reservation/journal-bridge.spec.ts",
-    "status": "M"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/app.e2e-spec.ts",
-    "node_ids": [
-     "code_unit:test/app.e2e-spec.ts"
-    ],
-    "path": "test/app.e2e-spec.ts",
-    "status": "M"
-   },
-   {
-    "kind": "test",
-    "new": true,
-    "path": "test/fixtures/billing-3a-hermetic/HERMETIC-SOURCE.json",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/accounting.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/accounting.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/accounting.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/accounting_tests.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/attempt.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/attempt.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/attempt.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/custodian.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/custodian.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/custodian.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/instrument.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/instrument.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/instrument.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/journal.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/journal.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/journal.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/journal_tests.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/monetary.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/monetary.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/monetary.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/proofs.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/proofs.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/proofs.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/test_attempt.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/test_custodian.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/test_instrument.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/test_monetary.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/test_monetary_journal.py",
-    "status": "A"
-   },
-   {
-    "kind": "test",
-    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py",
-    "node_ids": [
-     "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py"
-    ],
-    "path": "test/fixtures/billing-3a-hermetic/test_proofs.py",
-    "status": "A"
    }
   ],
-  "head": "cb61387ee310f62b372755efc00a7e80f7beb997",
+  "head": "e2f8a72a03d189cef346049a87b383442be2550b",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -204,78 +36,64 @@
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/ci.yml",
-   "expires_at_utc": "2026-12-19T16:48:16Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 HOLD probe removal tip-bound)",
-   "reason": "v-workflow-config-b803fcb7f17ed923: workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 11: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 11: command/process substitut"
+   "expires_at_utc": "2026-12-19T17:49:48Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 exposure removal tip-bound)",
+   "reason": "v-workflow-config-b803fcb7f17ed923: workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 11: checkout root or"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
-   "expires_at_utc": "2026-12-19T16:48:16Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 HOLD probe removal tip-bound)",
+   "expires_at_utc": "2026-12-19T17:49:48Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 exposure removal tip-bound)",
    "reason": "v-workflow-config-2fe48d1021006468: workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
-   "expires_at_utc": "2026-12-19T16:48:16Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 HOLD probe removal tip-bound)",
-   "reason": "v-workflow-config-6ceb21cf301c7eb2: workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; "
+   "expires_at_utc": "2026-12-19T17:49:48Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 exposure removal tip-bound)",
+   "reason": "v-workflow-config-6ceb21cf301c7eb2: workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure i"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/deploy.yml",
-   "expires_at_utc": "2026-12-19T16:48:16Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 HOLD probe removal tip-bound)",
-   "reason": "v-workflow-config-28802fbf11c83a2e: workflow shell caller closure not measured: job guard step 0: heredoc/group/function/brace expansion closure is unresolved; job guard step 2: command/process substitution closure is unresolved; job publication-post-state step 1: heredoc/group/function/brace expansion closure is unresolved; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
+   "expires_at_utc": "2026-12-19T17:49:48Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 exposure removal tip-bound)",
+   "reason": "v-workflow-config-28802fbf11c83a2e: workflow shell caller closure not measured: job guard step 0: heredoc/group/function/brace expansion closure is unresolved; job guard step 2: command/process substitution closure is unresolved; job publication-post-state step 1: heredoc/group/function/brace expansion closure is unresolved; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; work"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/graph-admission-call.yml",
-   "expires_at_utc": "2026-12-19T16:48:16Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 HOLD probe removal tip-bound)",
+   "expires_at_utc": "2026-12-19T17:49:48Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 exposure removal tip-bound)",
    "reason": "v-workflow-config-60a4bd100e640545: workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/graph-admission.yml",
-   "expires_at_utc": "2026-12-19T16:48:16Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 HOLD probe removal tip-bound)",
-   "reason": "v-workflow-config-dc49cc771602c92b: workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-affecting workflow environment unresolved; job graph-admission step 12: command/process substitution cl"
+   "expires_at_utc": "2026-12-19T17:49:48Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 exposure removal tip-bound)",
+   "reason": "v-workflow-config-dc49cc771602c92b: workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-aff"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/public-surface.yml",
-   "expires_at_utc": "2026-12-19T16:48:16Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 HOLD probe removal tip-bound)",
-   "reason": "v-workflow-config-9de6bedb8518f82f: workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; wo"
+   "expires_at_utc": "2026-12-19T17:49:48Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 exposure removal tip-bound)",
+   "reason": "v-workflow-config-9de6bedb8518f82f: workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML s"
   },
   {
    "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:scripts/graph-full-suite-isolated.sh",
-   "expires_at_utc": "2026-12-19T16:48:16Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 HOLD probe removal tip-bound)",
-   "reason": "v-shell-syntax-a1de9832d14e1c41: shell syntax/closure: not_measured; v-shell-behavior-a1de9832d14e1c41: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 12: unsupported loader/interpreter options; line 16: directory transition has unresolved execution cwd; line 17: directory transition has unresolved execution cwd; line 18: wrapper options/child command unresolved; line 26: dynamic load/substitution; line 42: wrapper options/child command unresolved; line 51: directory transition has unresolved execution cwd; line 57: dynamic load/substitution; line 57: wrapper options/child command unresolved; line 6"
-  },
-  {
-   "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
-   "entity": "code_unit:src/bench-reservation/journal-bridge.spec.ts",
-   "expires_at_utc": "2026-12-19T16:48:16Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 HOLD probe removal tip-bound)",
-   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host"
-  },
-  {
-   "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
-   "entity": "code_unit:test/app.e2e-spec.ts",
-   "expires_at_utc": "2026-12-19T16:48:16Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 HOLD probe removal tip-bound)",
-   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host"
+   "expires_at_utc": "2026-12-19T17:49:48Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 exposure removal tip-bound)",
+   "reason": "v-shell-syntax-a1de9832d14e1c41: shell syntax/closure: not_measured; v-shell-behavior-a1de9832d14e1c41: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 12: unsupported loader/interpreter options; line 16: directory transition has unresolved execution cwd; line 17: directory transition has unresolved execution cwd; line 18: wrapper options/child command unresolved; line 26: dynamic load/substitution; line 42: wrapper options/child command unresolved; line 51: directory transition has unresolved executio"
   },
   {
    "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
    "entity": "deployable_unit:.",
-   "expires_at_utc": "2026-12-19T16:48:16Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 HOLD probe removal tip-bound)",
+   "expires_at_utc": "2026-12-19T17:49:48Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 exposure removal tip-bound)",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host"
   }
  ],
@@ -289,12 +107,12 @@
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:3bb4057453cf0e571e759b502408d100ed4262f9f226e6dbbeacd08a77cdcfca",
-  "path": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/graph-head-cb61387ee310.json",
-  "source_commit": "cb61387ee310f62b372755efc00a7e80f7beb997",
+  "graph_digest": "sha256:25da6d9a334d8d8a07e5044779b78e4b23f38e3f271d188d24a0bf0674811c8d",
+  "path": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/graph-head-e2f8a72a03d1.json",
+  "source_commit": "e2f8a72a03d189cef346049a87b383442be2550b",
   "staleness": {
-   "checked_at_utc": "2026-11-19T16:49:25Z",
-   "checked_nodes": 1054,
+   "checked_at_utc": "2026-11-19T17:51:02Z",
+   "checked_nodes": 1039,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -302,7 +120,7 @@
  },
  "host": "author-lane",
  "host_redacted": true,
- "host_sha256": "9c78522b9fcc2f2268076b44666c961e5b1fe11249e93d84a9be940041c2c2c6",
+ "host_sha256": "91dbc82418ea5002d7628115dc2f48cd68ed7769f3c5e6e377806378bcd23d02",
  "impact_set": {
   "deterministic_core": [
    {
@@ -313,7 +131,7 @@
     "path": [
      {
       "edge_type": "deploys_to",
-      "from": "code_unit:.github/workflows/ci.yml",
+      "from": "code_unit:scripts/graph-full-suite-isolated.sh",
       "provenance": "deterministic",
       "to": "deployable_unit:.",
       "via": "containment"
@@ -328,546 +146,6 @@
    {
     "boundary": "intra_unit",
     "depth": 1,
-    "entity": "document:SECURITY.md",
-    "node_type": "document",
-    "path": [
-     {
-      "edge_type": "documents",
-      "from": "document:SECURITY.md",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "doc reference check (path/id still resolves)"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "document:docs/how-to/deploy-runbook.md",
-    "node_type": "document",
-    "path": [
-     {
-      "edge_type": "documents",
-      "from": "document:docs/how-to/deploy-runbook.md",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "doc reference check (path/id still resolves)"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/bench-source-ctx24/source-car.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/A2-315.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/A2-315.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-0a3f80e9.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-0a3f80e9.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-11159be7.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-11159be7.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-440d2499-mc254.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-440d2499-mc254.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-595b306c.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-595b306c.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-6206.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-6206.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-6664.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-6664.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-688ea1dc.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-688ea1dc.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-6e2e5868.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-6e2e5868.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-709559c4-strict-chat.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-709559c4-strict-chat.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-75d5342f.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-75d5342f.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-a2-425.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-a2-425.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-a2-432.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-a2-432.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-a2-443.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-a2-443.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-a34e640f.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-a34e640f.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-b8896c8e.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-b8896c8e.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
     "entity": "receipt:receipts/graph/change-admission-c59e860f.json",
     "node_type": "receipt",
     "path": [
@@ -875,507 +153,7 @@
       "edge_type": "verifies",
       "from": "receipt:receipts/graph/change-admission-c59e860f.json",
       "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-dev-mc-ci-20261117.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-dev-mc-ci-20261117.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-e8ab201d.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-e8ab201d.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-fa0a791c.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-fa0a791c.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-finish-20261114-mc.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-finish-20261114-mc.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-finish-20261115-mc.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-finish-20261115-mc.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-fork-deny-20261117.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-fork-deny-20261117.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-jev-decision.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-kb-cons-02-broker.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-kb-cons-02-broker.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-config-contract.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-config-contract.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-exact-bytes.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-exact-bytes.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-internal-route.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-internal-route.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-pair.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-pair.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-mc-price-106-107.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-mc-price-106-107.json",
-      "provenance": "deterministic",
-      "to": "code_unit:test/app.e2e-spec.ts",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/graph/change-admission-speed-publish-cache-min.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/graph/change-admission-speed-publish-cache-min.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
-      "via": "explicit-path"
-     }
-    ],
-    "revisions": [
-     "base",
-     "head"
-    ],
-    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
-   },
-   {
-    "boundary": "intra_unit",
-    "depth": 1,
-    "entity": "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json",
-    "node_type": "receipt",
-    "path": [
-     {
-      "edge_type": "verifies",
-      "from": "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json",
-      "provenance": "deterministic",
-      "to": "code_unit:.github/workflows/ci.yml",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
       "via": "explicit-path"
      }
     ],
@@ -1391,6 +169,27 @@
    "triggered": false
   },
   "inferred_tail": [
+   {
+    "boundary": "intra_unit",
+    "depth": 1,
+    "entity": "code_unit:.github/workflows/ci.yml",
+    "node_type": "code_unit",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "type-check of the caller; canary when inferred across a boundary"
+   },
    {
     "boundary": "intra_unit",
     "depth": 1,
@@ -1520,6 +319,34 @@
    {
     "boundary": "intra_unit",
     "depth": 2,
+    "entity": "document:SECURITY.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:SECURITY.md",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
     "entity": "document:deploy/stt-whisper/README.md",
     "node_type": "document",
     "path": [
@@ -1544,6 +371,90 @@
      "head"
     ],
     "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "document:docs/how-to/deploy-runbook.md",
+    "node_type": "document",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "documents",
+      "from": "document:docs/how-to/deploy-runbook.md",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "doc reference check (path/id still resolves)"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/bench-source-ctx24/source-car.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/bench-source-ctx24/source-car.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/A2-315.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/A2-315.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
    },
    {
     "boundary": "intra_unit",
@@ -1576,6 +487,510 @@
    {
     "boundary": "intra_unit",
     "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-440d2499-mc254.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-440d2499-mc254.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-6e2e5868.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-6e2e5868.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-A2-457-preflight.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-432.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-432.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a2-443.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a2-443.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-a34e640f.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-a34e640f.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-dev-mc-ci-20261117.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-dev-mc-ci-20261117.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-finish-20261115-mc.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-finish-20261115-mc.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-fork-deny-20261117.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-fork-deny-20261117.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-jev-decision.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-jev-decision.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kb-cons-02-broker.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kb-cons-02-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0005-api-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0005-workflow-fitness.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
     "entity": "receipt:receipts/graph/change-admission-kcp-0012-model-refresh.json",
     "node_type": "receipt",
     "path": [
@@ -1592,6 +1007,174 @@
       "from": "receipt:receipts/graph/change-admission-kcp-0012-model-refresh.json",
       "provenance": "deterministic",
       "to": "code_unit:.github/workflows/graph-admission-call.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-config-contract.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-config-contract.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-exact-bytes.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-exact-bytes.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-internal-route.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-internal-route.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-broker-pair.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-broker-pair.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-compose-broker.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0017-readiness.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
       "via": "explicit-path"
      }
     ],
@@ -1660,6 +1243,62 @@
    {
     "boundary": "intra_unit",
     "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
     "entity": "receipt:receipts/graph/change-admission-selfhosted-runners-20261117.json",
     "node_type": "receipt",
     "path": [
@@ -1684,23 +1323,79 @@
      "head"
     ],
     "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/graph/change-admission-speed-publish-cache-min.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/graph/change-admission-speed-publish-cache-min.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
+   },
+   {
+    "boundary": "intra_unit",
+    "depth": 2,
+    "entity": "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json",
+    "node_type": "receipt",
+    "path": [
+     {
+      "edge_type": "calls",
+      "from": "code_unit:.github/workflows/ci.yml",
+      "inferred_by": "bounded-workflow-unknown-shell-candidate",
+      "provenance": "inferred",
+      "to": "code_unit:scripts/graph-full-suite-isolated.sh",
+      "via": "unresolved-workflow-shell-closure"
+     },
+     {
+      "edge_type": "verifies",
+      "from": "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json",
+      "provenance": "deterministic",
+      "to": "code_unit:.github/workflows/ci.yml",
+      "via": "explicit-path"
+     }
+    ],
+    "revisions": [
+     "base",
+     "head"
+    ],
+    "verifier_hint": "selectable: run the targeted test / re-read the receipt"
    }
   ],
   "max_depth": 3,
   "method": "Union of independently revision-bound base/head traversals; reverse traversal (dependents) + forward declared-by hops (provides_route, implements_contract, maps_model of the same file, deploys_to); best path = fewest inferred/observed hops, then shortest; max_depth 3",
-  "total": 66
+  "total": 47
  },
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 11 attached from /home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-exemptions6.json",
-  "A2-353: `canary` discharged for 1 test code_unit(s) — a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/bench-reservation/journal-bridge.spec.ts"
+  "exemptions: 9 attached from /home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-exemptions8.json",
+  "head tree e2f8a72a03d1 exported with git archive into /tmp/arcana-verify-tfomm3jf/export-e2f8a72a03d1 (node_modules linked from the repository for ['packages/sdk-ts', 'watcher']; workspace packages built: ['packages/sdk-ts (tsc exit 1, 0.08s)']); the repository was not written"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261119T164830Z-cb61387e",
+ "receipt_id": "car-verify-20261119T175000Z-e2f8a72a",
  "receipt_path": "receipts/graph/change-admission-316-full-suite-exact-evidence.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -1716,46 +1411,25 @@
    "code_unit:.github/workflows/graph-admission.yml",
    "code_unit:.github/workflows/public-surface.yml",
    "code_unit:scripts/graph-full-suite-isolated.sh",
-   "code_unit:src/bench-reservation/journal-bridge.spec.ts",
-   "code_unit:test/app.e2e-spec.ts",
    "deployable_unit:.",
    "document:SECURITY.md",
    "document:deploy/stt-whisper/README.md",
    "document:docs/how-to/deploy-runbook.md",
    "receipt:receipts/bench-source-ctx24/source-car.json",
    "receipt:receipts/graph/A2-315.json",
-   "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
-   "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-   "receipt:receipts/graph/change-admission-0a3f80e9.json",
-   "receipt:receipts/graph/change-admission-11159be7.json",
    "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json",
    "receipt:receipts/graph/change-admission-440d2499-mc254.json",
-   "receipt:receipts/graph/change-admission-595b306c.json",
-   "receipt:receipts/graph/change-admission-6206.json",
-   "receipt:receipts/graph/change-admission-6664.json",
-   "receipt:receipts/graph/change-admission-688ea1dc.json",
    "receipt:receipts/graph/change-admission-6e2e5868.json",
-   "receipt:receipts/graph/change-admission-709559c4-strict-chat.json",
-   "receipt:receipts/graph/change-admission-75d5342f.json",
    "receipt:receipts/graph/change-admission-A2-457-preflight.json",
    "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
-   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
    "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
-   "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
-   "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
-   "receipt:receipts/graph/change-admission-a2-425.json",
    "receipt:receipts/graph/change-admission-a2-432.json",
    "receipt:receipts/graph/change-admission-a2-443.json",
    "receipt:receipts/graph/change-admission-a34e640f.json",
-   "receipt:receipts/graph/change-admission-b8896c8e.json",
    "receipt:receipts/graph/change-admission-c59e860f.json",
-   "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json",
    "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
    "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
    "receipt:receipts/graph/change-admission-dev-mc-ci-20261117.json",
-   "receipt:receipts/graph/change-admission-e8ab201d.json",
-   "receipt:receipts/graph/change-admission-fa0a791c.json",
-   "receipt:receipts/graph/change-admission-finish-20261114-mc.json",
    "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json",
    "receipt:receipts/graph/change-admission-finish-20261115-mc.json",
    "receipt:receipts/graph/change-admission-fork-deny-20261117.json",
@@ -1774,7 +1448,6 @@
    "receipt:receipts/graph/change-admission-kcp-0028-bundle-refresh.json",
    "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
    "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json",
-   "receipt:receipts/graph/change-admission-mc-price-106-107.json",
    "receipt:receipts/graph/change-admission-selfhosted-runners-20261117.json",
    "receipt:receipts/graph/change-admission-speed-publish-cache-min.json",
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json"
@@ -1788,62 +1461,26 @@
    "code_unit:.github/workflows/graph-admission.yml",
    "code_unit:.github/workflows/public-surface.yml",
    "code_unit:scripts/graph-full-suite-isolated.sh",
-   "code_unit:src/bench-reservation/journal-bridge.spec.ts",
-   "code_unit:test/app.e2e-spec.ts",
-   "code_unit:test/fixtures/billing-3a-hermetic/accounting.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/attempt.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/custodian.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/instrument.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/journal.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/monetary.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/proofs.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py",
-   "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py",
    "deployable_unit:.",
    "document:SECURITY.md",
    "document:deploy/stt-whisper/README.md",
    "document:docs/how-to/deploy-runbook.md",
    "receipt:receipts/bench-source-ctx24/source-car.json",
    "receipt:receipts/graph/A2-315.json",
-   "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
-   "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-   "receipt:receipts/graph/change-admission-0a3f80e9.json",
-   "receipt:receipts/graph/change-admission-11159be7.json",
    "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json",
    "receipt:receipts/graph/change-admission-316-full-suite-exact-evidence.json",
    "receipt:receipts/graph/change-admission-440d2499-mc254.json",
-   "receipt:receipts/graph/change-admission-595b306c.json",
-   "receipt:receipts/graph/change-admission-6206.json",
-   "receipt:receipts/graph/change-admission-6664.json",
-   "receipt:receipts/graph/change-admission-688ea1dc.json",
    "receipt:receipts/graph/change-admission-6e2e5868.json",
-   "receipt:receipts/graph/change-admission-709559c4-strict-chat.json",
-   "receipt:receipts/graph/change-admission-75d5342f.json",
    "receipt:receipts/graph/change-admission-A2-457-preflight.json",
    "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json",
-   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
    "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
-   "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
-   "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
-   "receipt:receipts/graph/change-admission-a2-425.json",
    "receipt:receipts/graph/change-admission-a2-432.json",
    "receipt:receipts/graph/change-admission-a2-443.json",
    "receipt:receipts/graph/change-admission-a34e640f.json",
-   "receipt:receipts/graph/change-admission-b8896c8e.json",
    "receipt:receipts/graph/change-admission-c59e860f.json",
-   "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json",
    "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json",
    "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json",
    "receipt:receipts/graph/change-admission-dev-mc-ci-20261117.json",
-   "receipt:receipts/graph/change-admission-e8ab201d.json",
-   "receipt:receipts/graph/change-admission-fa0a791c.json",
-   "receipt:receipts/graph/change-admission-finish-20261114-mc.json",
    "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json",
    "receipt:receipts/graph/change-admission-finish-20261115-mc.json",
    "receipt:receipts/graph/change-admission-fork-deny-20261117.json",
@@ -1862,7 +1499,6 @@
    "receipt:receipts/graph/change-admission-kcp-0028-bundle-refresh.json",
    "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json",
    "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json",
-   "receipt:receipts/graph/change-admission-mc-price-106-107.json",
    "receipt:receipts/graph/change-admission-selfhosted-runners-20261117.json",
    "receipt:receipts/graph/change-admission-speed-publish-cache-min.json",
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json"
@@ -1872,7 +1508,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-19T16:49:24Z",
+  "checked_at_utc": "2026-11-19T17:51:01Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -1902,50 +1538,6 @@
   },
   {
    "content_hash": {
-    "base": "sha256:e2ddb11ed9fbb9e0ba9a57378cc23d83e764bb9815cf1b9302d1026cbde28a90",
-    "head": "sha256:e2ddb11ed9fbb9e0ba9a57378cc23d83e764bb9815cf1b9302d1026cbde28a90"
-   },
-   "entity": "receipt:receipts/graph/a2-301-per-key-rate-limit.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/a2-301-per-key-rate-limit.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:f09d58b4096eb02b4450816057806a140465115c3947aa416e47e95422abf0e9",
-    "head": "sha256:f09d58b4096eb02b4450816057806a140465115c3947aa416e47e95422abf0e9"
-   },
-   "entity": "receipt:receipts/graph/a2-319-rate-limit-admin.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/a2-319-rate-limit-admin.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:e707ba309ff75f2740d21be85de434c6db69d86f8353c880b1058d9324a43b6a",
-    "head": "sha256:e707ba309ff75f2740d21be85de434c6db69d86f8353c880b1058d9324a43b6a"
-   },
-   "entity": "receipt:receipts/graph/change-admission-0a3f80e9.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-0a3f80e9.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:ed5a16b5de8adef0e4cdf47519c57e1e30736b6eb2e583332a4a9014ae586d30",
-    "head": "sha256:ed5a16b5de8adef0e4cdf47519c57e1e30736b6eb2e583332a4a9014ae586d30"
-   },
-   "entity": "receipt:receipts/graph/change-admission-11159be7.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-11159be7.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
     "base": "sha256:5a2328216c466384b94f38e63883c22dd728caa249604085564cfd07baac1981",
     "head": "sha256:5a2328216c466384b94f38e63883c22dd728caa249604085564cfd07baac1981"
    },
@@ -1958,7 +1550,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:841eec5e76d28f8fbe94a5245a4431ac3551bca83486615b3b6097b906c48581"
+    "head": "sha256:f7a40beeb4cd3dfc3e16a7d4dbf92f368056173949836718db73054bfe4a2382"
    },
    "entity": "receipt:receipts/graph/change-admission-316-full-suite-exact-evidence.json",
    "node_type": "receipt",
@@ -1983,78 +1575,12 @@
   },
   {
    "content_hash": {
-    "base": "sha256:715d2bc1007365e19155eb30d9c2a189c08187484d41eed31aa137626cd67782",
-    "head": "sha256:715d2bc1007365e19155eb30d9c2a189c08187484d41eed31aa137626cd67782"
-   },
-   "entity": "receipt:receipts/graph/change-admission-595b306c.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-595b306c.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:0c6f2e29c0efca7c7712302fe67e301986e3870bfbb5caccb48e7b4db29c4754",
-    "head": "sha256:0c6f2e29c0efca7c7712302fe67e301986e3870bfbb5caccb48e7b4db29c4754"
-   },
-   "entity": "receipt:receipts/graph/change-admission-6206.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-6206.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:62d68a5ad65602e0f4b3aed684e9cdfbbe17928a97bb8acbcd46604f355e219f",
-    "head": "sha256:62d68a5ad65602e0f4b3aed684e9cdfbbe17928a97bb8acbcd46604f355e219f"
-   },
-   "entity": "receipt:receipts/graph/change-admission-6664.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-6664.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:84ea8588848b57d7477ef0a5a296e2b3ac4291514c418dd073eabebf7ca469e1",
-    "head": "sha256:84ea8588848b57d7477ef0a5a296e2b3ac4291514c418dd073eabebf7ca469e1"
-   },
-   "entity": "receipt:receipts/graph/change-admission-688ea1dc.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-688ea1dc.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
     "base": "sha256:6132458e509e2ee865f074efd7bd394c0566def6840ddaaf6f7e9aa01e7e929a",
     "head": "sha256:6132458e509e2ee865f074efd7bd394c0566def6840ddaaf6f7e9aa01e7e929a"
    },
    "entity": "receipt:receipts/graph/change-admission-6e2e5868.json",
    "node_type": "receipt",
    "path": "receipts/graph/change-admission-6e2e5868.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:7cd429c314699d54a46884a98bba88305a327747ffa3d285ca01311a375b6797",
-    "head": "sha256:7cd429c314699d54a46884a98bba88305a327747ffa3d285ca01311a375b6797"
-   },
-   "entity": "receipt:receipts/graph/change-admission-709559c4-strict-chat.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-709559c4-strict-chat.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:008861fb2856f666f3530ef324607290e29e8d7b61d2268167f64249db5a4671",
-    "head": "sha256:008861fb2856f666f3530ef324607290e29e8d7b61d2268167f64249db5a4671"
-   },
-   "entity": "receipt:receipts/graph/change-admission-75d5342f.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-75d5342f.json",
    "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
    "rule": "DEC-AUP-0034"
   },
@@ -2082,56 +1608,12 @@
   },
   {
    "content_hash": {
-    "base": "sha256:b2f2634796fa4f3dd05a4968bf6035f30619441d3e557ee1960ad3aa7838eab4",
-    "head": "sha256:b2f2634796fa4f3dd05a4968bf6035f30619441d3e557ee1960ad3aa7838eab4"
-   },
-   "entity": "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-a2-223-20260923T182706Z.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
     "base": "sha256:73f07861997f0e6ebcc76800a4792914e610045ae274efb2482e78fb91752c33",
     "head": "sha256:73f07861997f0e6ebcc76800a4792914e610045ae274efb2482e78fb91752c33"
    },
    "entity": "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json",
    "node_type": "receipt",
    "path": "receipts/graph/change-admission-a2-227-20260923T191453Z.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:4d75a0b2ca6c1e2655c607d4536d6f510283336842742fe9197d774528399000",
-    "head": "sha256:4d75a0b2ca6c1e2655c607d4536d6f510283336842742fe9197d774528399000"
-   },
-   "entity": "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-a2-228-20260923T191237Z.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:f662576eb0ad71c0a0dc16ed3322df90522563d46bd77ddabbae8139b2767c60",
-    "head": "sha256:f662576eb0ad71c0a0dc16ed3322df90522563d46bd77ddabbae8139b2767c60"
-   },
-   "entity": "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-a2-299b-20260925T024316Z.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:969805673500d0f88865bd7c239e01fdf86746339c77e5bd5b4b3b10ce869e65",
-    "head": "sha256:969805673500d0f88865bd7c239e01fdf86746339c77e5bd5b4b3b10ce869e65"
-   },
-   "entity": "receipt:receipts/graph/change-admission-a2-425.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-a2-425.json",
    "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
    "rule": "DEC-AUP-0034"
   },
@@ -2170,34 +1652,12 @@
   },
   {
    "content_hash": {
-    "base": "sha256:1e0f816d0971c015f271a1ed1da20db073fdf02ca0fb314c6a8cc7ade894b62e",
-    "head": "sha256:1e0f816d0971c015f271a1ed1da20db073fdf02ca0fb314c6a8cc7ade894b62e"
-   },
-   "entity": "receipt:receipts/graph/change-admission-b8896c8e.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-b8896c8e.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
     "base": "sha256:21a7b0a88525a82847e39d2ea15aa9bc2d70bc39e8f023d9ad8e6b3732c60fdd",
     "head": "sha256:21a7b0a88525a82847e39d2ea15aa9bc2d70bc39e8f023d9ad8e6b3732c60fdd"
    },
    "entity": "receipt:receipts/graph/change-admission-c59e860f.json",
    "node_type": "receipt",
    "path": "receipts/graph/change-admission-c59e860f.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:09ed927a04e4e17c912d8e176f8fd7e9836800ba435d18bfa9e1310cee0cf372",
-    "head": "sha256:09ed927a04e4e17c912d8e176f8fd7e9836800ba435d18bfa9e1310cee0cf372"
-   },
-   "entity": "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-cb07a5b3-multipart.json",
    "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
    "rule": "DEC-AUP-0034"
   },
@@ -2231,39 +1691,6 @@
    "entity": "receipt:receipts/graph/change-admission-dev-mc-ci-20261117.json",
    "node_type": "receipt",
    "path": "receipts/graph/change-admission-dev-mc-ci-20261117.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:6a64c75ac0b42f55290ee4e460e0064f4344eea23de076780ca236615ca4c8c5",
-    "head": "sha256:6a64c75ac0b42f55290ee4e460e0064f4344eea23de076780ca236615ca4c8c5"
-   },
-   "entity": "receipt:receipts/graph/change-admission-e8ab201d.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-e8ab201d.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:c71d590dc74305b29dfaeb4d3a9a5df6924d6c49e5d3bc680fe48ad92540aea5",
-    "head": "sha256:c71d590dc74305b29dfaeb4d3a9a5df6924d6c49e5d3bc680fe48ad92540aea5"
-   },
-   "entity": "receipt:receipts/graph/change-admission-fa0a791c.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-fa0a791c.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
-    "base": "sha256:870e11c328ad8727ebf3961732ba33c5d03910d07c2e6681a4b7026f0311bb38",
-    "head": "sha256:870e11c328ad8727ebf3961732ba33c5d03910d07c2e6681a4b7026f0311bb38"
-   },
-   "entity": "receipt:receipts/graph/change-admission-finish-20261114-mc.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-finish-20261114-mc.json",
    "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
    "rule": "DEC-AUP-0034"
   },
@@ -2467,17 +1894,6 @@
   },
   {
    "content_hash": {
-    "base": "sha256:6c5aa2eb6c3874971afb102708177b2027e6b350efed796527012c3c84f0f37c",
-    "head": "sha256:6c5aa2eb6c3874971afb102708177b2027e6b350efed796527012c3c84f0f37c"
-   },
-   "entity": "receipt:receipts/graph/change-admission-mc-price-106-107.json",
-   "node_type": "receipt",
-   "path": "receipts/graph/change-admission-mc-price-106-107.json",
-   "reason": "historical receipt: asserted, never re-verified (I14); a new receipt supersedes it",
-   "rule": "DEC-AUP-0034"
-  },
-  {
-   "content_hash": {
     "base": "sha256:266442d177c9c3d2d1e86b693dd0acc4ba1fd8749520792f6d41aca747c3b744",
     "head": "sha256:266442d177c9c3d2d1e86b693dd0acc4ba1fd8749520792f6d41aca747c3b744"
    },
@@ -2511,7 +1927,7 @@
   }
  ],
  "tree": {
-  "commit": "cb61387ee310f62b372755efc00a7e80f7beb997",
+  "commit": "65737fcf30adca0b521849f7008b1d163697da97",
   "dirty": false
  },
  "verdicts": [
@@ -2589,145 +2005,6 @@
    ]
   },
   {
-   "entity": "code_unit:src/bench-reservation/journal-bridge.spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-config-schema",
-    "v-fitness",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "code_unit:test/app.e2e-spec.ts",
-   "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
-   "verdict": "not_measured",
-   "verifier_ids": [
-    "v-fitness",
-    "v-type-check-tsconfig-mjs"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/accounting.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/attempt.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/custodian.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/instrument.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/journal.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/monetary.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/proofs.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
-   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py",
-   "reason": "v-fitness: no new fitness violation",
-   "verdict": "verified",
-   "verifier_ids": [
-    "v-fitness"
-   ]
-  },
-  {
    "entity": "deployable_unit:.",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
    "verdict": "not_measured",
@@ -2769,27 +2046,23 @@
  },
  "verifiers": [
   {
-   "command": "tsc -p /home/dev/aup/claude-work/dev-sw19-d/op2-clones/model-connector-suite-evidence/.arcana/tsconfig.mjs.json (tsc not found)",
+   "command": "tsc -p /tmp/arcana-verify-tfomm3jf/export-e2f8a72a03d1/.arcana/tsconfig.mjs.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
-    "code_unit:src/bench-reservation/journal-bridge.spec.ts",
-    "code_unit:test/app.e2e-spec.ts",
     "deployable_unit:."
    ],
    "entity_verdicts": {
-    "code_unit:src/bench-reservation/journal-bridge.spec.ts": "not_measured",
-    "code_unit:test/app.e2e-spec.ts": "not_measured",
     "deployable_unit:.": "not_measured"
    },
    "exit_code": 127,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "tsc -p /home/dev/aup/claude-work/dev-sw19-d/op2-clones/model-connector-suite-evidence/tsconfig.build.json (tsc not found)",
+   "command": "tsc -p /tmp/arcana-verify-tfomm3jf/export-e2f8a72a03d1/tsconfig.build.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
     "deployable_unit:."
@@ -2800,12 +2073,12 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "tsc -p /home/dev/aup/claude-work/dev-sw19-d/op2-clones/model-connector-suite-evidence/tsconfig.ci.json (tsc not found)",
+   "command": "tsc -p /tmp/arcana-verify-tfomm3jf/export-e2f8a72a03d1/tsconfig.ci.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
     "deployable_unit:."
@@ -2816,12 +2089,12 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "tsc -p /home/dev/aup/claude-work/dev-sw19-d/op2-clones/model-connector-suite-evidence/tsconfig.json (tsc not found)",
+   "command": "tsc -p /tmp/arcana-verify-tfomm3jf/export-e2f8a72a03d1/tsconfig.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
     "deployable_unit:."
@@ -2832,12 +2105,12 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
-   "command": "tsc -p /home/dev/aup/claude-work/dev-sw19-d/op2-clones/model-connector-suite-evidence/tsconfig.test.json (tsc not found)",
+   "command": "tsc -p /tmp/arcana-verify-tfomm3jf/export-e2f8a72a03d1/tsconfig.test.json (tsc not found)",
    "duration_s": 0.0,
    "entities": [
     "deployable_unit:."
@@ -2848,8 +2121,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -2864,9 +2137,9 @@
    "exit_code": 1,
    "id": "v-workflow-config-b803fcb7f17ed923",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-workflow-config-b803fcb7f17ed923.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
-   "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 11: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 11: command/process substitution closure is unresolved; job docker-e2e step 12: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 13: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 1: opaque input/interpolated workflow source; job docker-e2e step 3: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 3: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 4: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 5: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 6: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 7: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 10: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 13: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 14: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 15: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 16: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 17: unsupported loader/interpreter options; job lint-and-test step 10: line 18: relative execution cwd is not declared; job lint-and-test step 10: line 19: unsupported loader/interpreter options; job lint-and-test step 10: line 1: unsupported loader/interpreter options; job lint-and-test step 10: line 20: relative execution cwd is not declared; job lint-and-test step 10: line 21: unsupported loader/interpreter options; job lint-and-test step 10: line 22: relative execution cwd is not declared; job lint-and-test step 10: line 2: unsupported loader/interpreter options; job lint-and-test step 10: line 3: unsupported loader/interpreter options; job lint-and-test step 10: line 4: unsupported loader/interpreter options; job lint-and-test step 10: line 5: relative execution cwd is not declared; job lint-and-test step 10: line 6: relative execution cwd is not declared; job lint-and-test step 10: line 7: relative execution cwd is not declared; job lint-and-test step 10: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: heredoc/group/function/brace expansion closure is unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 15: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 17: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 18: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 19: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 1: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 20: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 20: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 20: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 3: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: command/process substitution closure is unresolved; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 9: unsupported loader/interpreter options; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: line 1: relative execution cwd is not declared; job lint-and-test step 8: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 8: line 1: unsupported loader/interpreter options; job lint-and-test step 8: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 9: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 9: line 1: unsupported loader/interpreter options; job lint-and-test step 9: line 2: relative execution cwd is not declared; job publish-image step 4: heredoc/group/function/brace expansion closure is unresolved; job verify-published-image step 1: heredoc/group/function/brace expansion closure is unresolved; 71 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
+   "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 11: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 11: command/process substitution closure is unresolved; job docker-e2e step 12: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 13: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 1: opaque input/interpolated workflow source; job docker-e2e step 3: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 3: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 4: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 5: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 6: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 7: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 10: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 13: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 14: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 15: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 16: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 17: unsupported loader/interpreter options; job lint-and-test step 10: line 18: relative execution cwd is not declared; job lint-and-test step 10: line 19: unsupported loader/interpreter options; job lint-and-test step 10: line 1: unsupported loader/interpreter options; job lint-and-test step 10: line 20: relative execution cwd is not declared; job lint-and-test step 10: line 21: unsupported loader/interpreter options; job lint-and-test step 10: line 22: relative execution cwd is not declared; job lint-and-test step 10: line 2: unsupported loader/interpreter options; job lint-and-test step 10: line 3: unsupported loader/interpreter options; job lint-and-test step 10: line 4: unsupported loader/interpreter options; job lint-and-test step 10: line 5: relative execution cwd is not declared; job lint-and-test step 10: line 6: relative execution cwd is not declared; job lint-and-test step 10: line 7: relative execution cwd is not declared; job lint-and-test step 10: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: heredoc/group/function/brace expansion closure is unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 15: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 17: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 18: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 18: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 18: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 1: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 3: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: command/process substitution closure is unresolved; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 9: unsupported loader/interpreter options; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: line 1: relative execution cwd is not declared; job lint-and-test step 8: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 8: line 1: unsupported loader/interpreter options; job lint-and-test step 8: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 9: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 9: line 1: unsupported loader/interpreter options; job lint-and-test step 9: line 2: relative execution cwd is not declared; job publish-image step 4: heredoc/group/function/brace expansion closure is unresolved; job verify-published-image step 1: heredoc/group/function/brace expansion closure is unresolved; 69 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
    "command": "workflow_config.validate exact head bytes",
@@ -2880,8 +2153,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-2fe48d1021006468",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-workflow-config-2fe48d1021006468.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-workflow-config-2fe48d1021006468.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -2896,8 +2169,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-6ceb21cf301c7eb2",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-workflow-config-6ceb21cf301c7eb2.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-workflow-config-6ceb21cf301c7eb2.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; job deploy step 7: command/process substitution closure is unresolved; job deploy step 8: checkout root or source-affecting workflow environment unresolved; job deploy step 8: command/process substitution closure is unresolved; job deploy step 9: checkout root or source-affecting workflow environment unresolved; job deploy step 9: line 1: wrapper execution scope/options unresolved; job network-exposure-lint: reusable/opaque shell context; 13 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -2912,8 +2185,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-28802fbf11c83a2e",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-workflow-config-28802fbf11c83a2e.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-workflow-config-28802fbf11c83a2e.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "workflow shell caller closure not measured: job guard step 0: heredoc/group/function/brace expansion closure is unresolved; job guard step 2: command/process substitution closure is unresolved; job publication-post-state step 1: heredoc/group/function/brace expansion closure is unresolved; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -2928,8 +2201,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-60a4bd100e640545",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-workflow-config-60a4bd100e640545.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-workflow-config-60a4bd100e640545.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -2944,8 +2217,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-dc49cc771602c92b",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-workflow-config-dc49cc771602c92b.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-workflow-config-dc49cc771602c92b.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-affecting workflow environment unresolved; job graph-admission step 12: command/process substitution closure is unresolved; job graph-admission step 14: checkout root or source-affecting workflow environment unresolved; job graph-admission step 15: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 19: checkout root or source-affecting workflow environment unresolved; job graph-admission step 19: command/process substitution closure is unresolved; job graph-admission step 1: command/process substitution closure is unresolved; job graph-admission step 20: checkout root or source-affecting workflow environment unresolved; job graph-admission step 20: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 21: checkout root or source-affecting workflow environment unresolved; job graph-admission step 21: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 22: checkout root or source-affecting workflow environment unresolved; job graph-admission step 22: command/process substitution closure is unresolved; job graph-admission step 23: checkout root or source-affecting workflow environment unresolved; job graph-admission step 23: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 24: checkout root or source-affecting workflow environment unresolved; job graph-admission step 24: line 11: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 25: checkout root or source-affecting workflow environment unresolved; job graph-admission step 25: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 26: checkout root or source-affecting workflow environment unresolved; job graph-admission step 26: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 28: checkout root or source-affecting workflow environment unresolved; job graph-admission step 2: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 5: command/process substitution closure is unresolved; job graph-admission step 9: checkout root or source-affecting workflow environment unresolved; job graph-admission step 9: command/process substitution closure is unresolved; 33 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -2960,29 +2233,13 @@
    "exit_code": 1,
    "id": "v-workflow-config-9de6bedb8518f82f",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-workflow-config-9de6bedb8518f82f.txt",
-   "started_at_utc": "2026-11-19T16:49:57Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-workflow-config-9de6bedb8518f82f.txt",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
-   "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 1.53,
-   "entities": [
-    "code_unit:src/bench-reservation/journal-bridge.spec.ts"
-   ],
-   "entity_verdicts": {
-    "code_unit:src/bench-reservation/journal-bridge.spec.ts": "verified"
-   },
-   "exit_code": 0,
-   "id": "v-config-schema",
-   "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-config-schema.json",
-   "started_at_utc": "2026-11-19T16:49:57Z",
-   "summary": "3 source(s), 0 new / 91 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
-  },
-  {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.51,
+   "duration_s": 0.45,
    "entities": [
     "code_unit:.github/workflows/ci.yml",
     "code_unit:.github/workflows/dependabot-auto-merge.yml",
@@ -2992,23 +2249,6 @@
     "code_unit:.github/workflows/graph-admission.yml",
     "code_unit:.github/workflows/public-surface.yml",
     "code_unit:scripts/graph-full-suite-isolated.sh",
-    "code_unit:src/bench-reservation/journal-bridge.spec.ts",
-    "code_unit:test/app.e2e-spec.ts",
-    "code_unit:test/fixtures/billing-3a-hermetic/accounting.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/attempt.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/custodian.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/instrument.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/journal.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/monetary.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/proofs.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py",
     "deployable_unit:."
    ],
    "entity_verdicts": {
@@ -3020,35 +2260,18 @@
     "code_unit:.github/workflows/graph-admission.yml": "not_measured",
     "code_unit:.github/workflows/public-surface.yml": "not_measured",
     "code_unit:scripts/graph-full-suite-isolated.sh": "verified",
-    "code_unit:src/bench-reservation/journal-bridge.spec.ts": "verified",
-    "code_unit:test/app.e2e-spec.ts": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/accounting.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/attempt.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/custodian.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/instrument.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/journal.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/monetary.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/proofs.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py": "verified",
-    "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py": "verified",
     "deployable_unit:.": "verified"
    },
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-fitness.json",
-   "started_at_utc": "2026-11-19T16:49:59Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-fitness.json",
+   "started_at_utc": "2026-11-19T17:51:29Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
    "command": "verify.py doc_reference: path / route / model references of affected documents resolve at head",
-   "duration_s": 0.01,
+   "duration_s": 0.0,
    "entities": [
     "document:SECURITY.md",
     "document:deploy/stt-whisper/README.md",
@@ -3062,8 +2285,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-doc-reference.txt",
-   "started_at_utc": "2026-11-19T16:50:00Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-doc-reference.txt",
+   "started_at_utc": "2026-11-19T17:51:30Z",
    "summary": "3 document(s), 0 failed"
   },
   {
@@ -3078,9 +2301,9 @@
    "exit_code": 0,
    "id": "v-shell-syntax-a1de9832d14e1c41",
    "kind": "shell_syntax",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-shell-syntax-a1de9832d14e1c41.txt",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-shell-syntax-a1de9832d14e1c41.txt",
    "scope": "shell_source_validation",
-   "started_at_utc": "2026-11-19T16:50:05Z",
+   "started_at_utc": "2026-11-19T17:51:35Z",
    "summary": "shell syntax/closure: not_measured"
   },
   {
@@ -3095,9 +2318,9 @@
    "exit_code": 0,
    "id": "v-shell-behavior-a1de9832d14e1c41",
    "kind": "shell_behavior",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify19/v-shell-behavior-a1de9832d14e1c41.txt",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify30/v-shell-behavior-a1de9832d14e1c41.txt",
    "scope": "shell_fixture_behavior",
-   "started_at_utc": "2026-11-19T16:50:05Z",
+   "started_at_utc": "2026-11-19T17:51:35Z",
    "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 12: unsupported loader/interpreter options; line 16: directory transition has unresolved execution cwd; line 17: directory transition has unresolved execution cwd; line 18: wrapper options/child command unresolved; line 26: dynamic load/substitution; line 42: wrapper options/child command unresolved; line 51: directory transition has unresolved execution cwd; line 57: dynamic load/substitution; line 57: wrapper options/child command unresolved; line 61: dynamic load/substitution; line 66: dynamic load/substitution; line 68: wrapper options/child command unresolved; line 70: wrapper options/child command unresolved; line 71: wrapper options/child command unresolved; line 79: wrapper options/child command unresolved; line 80: multiline/opaque shell statement; line 81: multiline/opaque shell statement; line 82: multiline/opaque shell statement; line 83: directory transition has unresolved execution cwd; line 88: wrapper options/child command unresolved"
   }
  ],
@@ -3112,7 +2335,7 @@
    {
     "code": "STRUCTURAL_EXCLUSION",
     "rule": "DEC-AUP-0034",
-    "text": "57 affected entity(ies) owe no verdict (receipt: 57): unchanged at both revisions and given no verifier by the matrix"
+    "text": "37 affected entity(ies) owe no verdict (receipt: 37): unchanged at both revisions and given no verifier by the matrix"
    }
   ],
   "required_by_entity": {
@@ -3149,60 +2372,6 @@
     "shell_behavior",
     "shell_syntax"
    ],
-   "code_unit:src/bench-reservation/journal-bridge.spec.ts": [
-    "config_schema",
-    "fitness_rules",
-    "type_check"
-   ],
-   "code_unit:test/app.e2e-spec.ts": [
-    "fitness_rules",
-    "type_check"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/accounting.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/attempt.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/custodian.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/instrument.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/journal.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/monetary.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/proofs.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py": [
-    "fitness_rules"
-   ],
-   "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py": [
-    "fitness_rules"
-   ],
    "deployable_unit:.": [
     "fitness_rules",
     "type_check"
@@ -3218,39 +2387,20 @@
    ],
    "receipt:receipts/bench-source-ctx24/source-car.json": [],
    "receipt:receipts/graph/A2-315.json": [],
-   "receipt:receipts/graph/a2-301-per-key-rate-limit.json": [],
-   "receipt:receipts/graph/a2-319-rate-limit-admin.json": [],
-   "receipt:receipts/graph/change-admission-0a3f80e9.json": [],
-   "receipt:receipts/graph/change-admission-11159be7.json": [],
    "receipt:receipts/graph/change-admission-298-datarim-ref-9709598f.json": [],
    "receipt:receipts/graph/change-admission-316-full-suite-exact-evidence.json": [],
    "receipt:receipts/graph/change-admission-440d2499-mc254.json": [],
-   "receipt:receipts/graph/change-admission-595b306c.json": [],
-   "receipt:receipts/graph/change-admission-6206.json": [],
-   "receipt:receipts/graph/change-admission-6664.json": [],
-   "receipt:receipts/graph/change-admission-688ea1dc.json": [],
    "receipt:receipts/graph/change-admission-6e2e5868.json": [],
-   "receipt:receipts/graph/change-admission-709559c4-strict-chat.json": [],
-   "receipt:receipts/graph/change-admission-75d5342f.json": [],
    "receipt:receipts/graph/change-admission-A2-457-preflight.json": [],
    "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": [],
-   "receipt:receipts/graph/change-admission-a2-223-20260923T182706Z.json": [],
    "receipt:receipts/graph/change-admission-a2-227-20260923T191453Z.json": [],
-   "receipt:receipts/graph/change-admission-a2-228-20260923T191237Z.json": [],
-   "receipt:receipts/graph/change-admission-a2-299b-20260925T024316Z.json": [],
-   "receipt:receipts/graph/change-admission-a2-425.json": [],
    "receipt:receipts/graph/change-admission-a2-432.json": [],
    "receipt:receipts/graph/change-admission-a2-443.json": [],
    "receipt:receipts/graph/change-admission-a34e640f.json": [],
-   "receipt:receipts/graph/change-admission-b8896c8e.json": [],
    "receipt:receipts/graph/change-admission-c59e860f.json": [],
-   "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json": [],
    "receipt:receipts/graph/change-admission-col-8452-broker-agent-mailbox.json": [],
    "receipt:receipts/graph/change-admission-conv-ac5-doc-md-html-broker.json": [],
    "receipt:receipts/graph/change-admission-dev-mc-ci-20261117.json": [],
-   "receipt:receipts/graph/change-admission-e8ab201d.json": [],
-   "receipt:receipts/graph/change-admission-fa0a791c.json": [],
-   "receipt:receipts/graph/change-admission-finish-20261114-mc.json": [],
    "receipt:receipts/graph/change-admission-finish-20261115-mc-env.json": [],
    "receipt:receipts/graph/change-admission-finish-20261115-mc.json": [],
    "receipt:receipts/graph/change-admission-fork-deny-20261117.json": [],
@@ -3269,15 +2419,14 @@
    "receipt:receipts/graph/change-admission-kcp-0028-bundle-refresh.json": [],
    "receipt:receipts/graph/change-admission-kcp-0033-broker-pin.json": [],
    "receipt:receipts/graph/change-admission-kcp-0035-broker-embed.json": [],
-   "receipt:receipts/graph/change-admission-mc-price-106-107.json": [],
    "receipt:receipts/graph/change-admission-selfhosted-runners-20261117.json": [],
    "receipt:receipts/graph/change-admission-speed-publish-cache-min.json": [],
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
   },
   "seconds": {
-   "prepare": 17.63,
-   "total": 95.67,
-   "verifiers": 2.05
+   "prepare": 12.75,
+   "total": 94.76,
+   "verifiers": 0.45
   }
  },
  "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
