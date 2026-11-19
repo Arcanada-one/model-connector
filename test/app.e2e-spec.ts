@@ -3,9 +3,11 @@ import { Test } from '@nestjs/testing';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from '../src/app.module';
 
-// E2E tests require Redis + PostgreSQL — skip in CI without infra
-// Run locally with: DATABASE_URL=... REDIS_HOST=... pnpm test:e2e
-describe.skip('App E2E (requires infra)', () => {
+// Nest AppModule e2e against disposable Postgres/Redis. Ambient hosts stay skipped.
+// The full-suite grant sets MC_FULL_SUITE_APP_E2E=1 with DATABASE_URL/REDIS_* injected.
+const shouldRun = process.env.MC_FULL_SUITE_APP_E2E === '1';
+
+describe.skipIf(!shouldRun)('App E2E (Nest AppModule against disposable stores)', () => {
   let app: NestFastifyApplication;
 
   beforeAll(async () => {

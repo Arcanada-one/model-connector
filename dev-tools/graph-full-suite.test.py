@@ -507,15 +507,20 @@ class ArmEvidence(unittest.TestCase):
                                     capture_output=True, check=True).stdout.decode().strip()
 
     def results(self):
-        ok = {'verdict': 'verified', 'counts': {'passed': 3, 'failed': 0, 'skipped': 0}}
+        ok = {'verdict': 'verified', 'counts': {'passed': 3, 'failed': 0, 'skipped': 0},
+              'raw_log': '/tmp/root-offline.log'}
         return [
             {'suite': 'maintained-app-e2e', 'verdict': 'not_measured', 'held_members': ['test/app.e2e-spec.ts']},
             {'suite': 'maintained-authored-template', 'executions': [dict(ok)]},
             {'suite': 'maintained-integration', 'executions': [dict(ok)],
              'held_members': ['src/billing/hold.integration.spec.ts',
-                              'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts']},
+                              'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts'],
+             'held_reasons': {
+                 'src/billing/hold.integration.spec.ts': 'held_disposable: no FullSuiteDisposableGrant/v1',
+                 'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts':
+                     'held_live_opt_in: live provider credentials/money; local stub range later'}},
             {'suite': 'maintained-regression',
-             'executions': [dict(ok), {'verdict': 'verified', 'counts': None}]},
+             'executions': [dict(ok), {'verdict': 'verified', 'counts': None, 'raw_log': '/tmp/root-reg.log'}]},
             {'suite': 'maintained-vitest', 'executions': [dict(ok)]},
         ]
 
