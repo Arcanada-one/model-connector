@@ -474,16 +474,9 @@ jobs:
           printf 'MC_FULL_SUITE_GRANT=%s\n' "$MC_FULL_SUITE_GRANT" >> "$GITHUB_ENV"
 
       - name: Declared root full suite
+        # Failing vitest/Nest tails are printed by graph_full_suite.py (scrubbed).
+        # Do not upload Actions artifacts (org quota exhausted).
         run: bash scripts/graph-full-suite-isolated.sh .
-
-      - name: Upload full-suite execution evidence
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: graph-full-suite-execution-${{ github.run_id }}
-          path: node_modules/.cache/graph-full-suite/runs/
-          if-no-files-found: warn
-          retention-days: 14
 
       - name: Tear down disposable services
         if: always()
