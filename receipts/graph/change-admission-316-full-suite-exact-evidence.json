@@ -5,7 +5,7 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-19T15:24:34Z",
+ "captured_at_utc": "2026-11-19T16:08:36Z",
  "change_set": {
   "base": "1bc79e14c7727e7fd6557c558243821a18d7ec23",
   "files": [
@@ -98,9 +98,150 @@
     ],
     "path": "test/app.e2e-spec.ts",
     "status": "M"
+   },
+   {
+    "kind": "test",
+    "new": true,
+    "path": "test/fixtures/billing-3a-hermetic/HERMETIC-SOURCE.json",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/accounting.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/accounting.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/accounting.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/accounting_tests.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/attempt.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/attempt.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/attempt.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/custodian.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/custodian.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/custodian.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/instrument.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/instrument.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/instrument.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/journal.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/journal.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/journal.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/journal_tests.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/monetary.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/monetary.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/monetary.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/proofs.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/proofs.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/proofs.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/test_attempt.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/test_custodian.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/test_instrument.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/test_monetary.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/test_monetary_journal.py",
+    "status": "A"
+   },
+   {
+    "kind": "test",
+    "node_id": "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py",
+    "node_ids": [
+     "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py"
+    ],
+    "path": "test/fixtures/billing-3a-hermetic/test_proofs.py",
+    "status": "A"
    }
   ],
-  "head": "e1909d812e92dcad7f9010c964cb993f82dd2e9c",
+  "head": "ecc3dffc247b7e3e7dbd92fd8c7035aef6e2ffe6",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -108,106 +249,106 @@
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/ci.yml",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-workflow-config-b803fcb7f17ed923: workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 11: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 11: command/process substitut"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/dependabot-auto-merge.yml",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-workflow-config-2fe48d1021006468: workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/deploy-stt-whisper.yml",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-workflow-config-6ceb21cf301c7eb2: workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; "
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/deploy.yml",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-workflow-config-28802fbf11c83a2e: workflow shell caller closure not measured: job guard step 0: heredoc/group/function/brace expansion closure is unresolved; job guard step 2: command/process substitution closure is unresolved; job publication-post-state step 1: heredoc/group/function/brace expansion closure is unresolved; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/graph-admission-call.yml",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-workflow-config-60a4bd100e640545: workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; workflow actionlint NOT_MEASURED: pinned actionlint binary unavailable"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/graph-admission.yml",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-workflow-config-dc49cc771602c92b: workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-affecting workflow environment unresolved; job graph-admission step 12: command/process substitution cl"
   },
   {
    "code": "WORKFLOW_SHELL_CALLER_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:.github/workflows/public-surface.yml",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-workflow-config-9de6bedb8518f82f: workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence; v-fitness: no new fitness violation; wo"
   },
   {
    "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
    "entity": "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
    "entity": "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host; v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
    "entity": "code_unit:scripts/full-suite-arms/external-provider.probe.mjs",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host"
   },
   {
    "code": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED",
    "entity": "code_unit:scripts/graph-full-suite-isolated.sh",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-shell-syntax-a1de9832d14e1c41: shell syntax/closure: not_measured; v-shell-behavior-a1de9832d14e1c41: SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 12: unsupported loader/interpreter options; line 16: directory transition has unresolved execution cwd; line 17: directory transition has unresolved execution cwd; line 18: wrapper options/child command unresolved; line 26: dynamic load/substitution; line 42: wrapper options/child command unresolved; line 51: directory transition has unresolved execution cwd; line 57: dynamic load/substitution; line 57: wrapper options/child command unresolved; line 6"
   },
   {
    "code": "CANARY_INFERRED_BOUNDARY_NOT_MEASURED",
    "entity": "code_unit:scripts/graph_full_suite.py",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-canary: INFERRED_BOUNDARY_WITHOUT_CANARY: no canary result lists this entity (matrix P6, observed-edges-and-deploy-gate.v1 rule C1)"
   },
   {
    "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
    "entity": "code_unit:src/bench-reservation/journal-bridge.spec.ts",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host"
   },
   {
    "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
    "entity": "code_unit:test/app.e2e-spec.ts",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host"
   },
   {
    "code": "TSC_UNAVAILABLE_ON_AUTHOR_HOST",
    "entity": "deployable_unit:.",
-   "expires_at_utc": "2026-12-19T15:24:33Z",
-   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 REQUEST_CHANGES fix)",
+   "expires_at_utc": "2026-12-19T16:08:35Z",
+   "owner": "Arcanada (author lane dev-sw19-d; model-connector#316 rev-h hermetic preserves)",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host"
   }
  ],
@@ -221,12 +362,12 @@
  "head_graph": {
   "builder_version": "1.0.6",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:0a7ddfd6c8fab2954c5cc4d9305683193222cbc1bfc00e40bb1762ecb2be20c4",
-  "path": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/graph-head-e1909d812e92.json",
-  "source_commit": "e1909d812e92dcad7f9010c964cb993f82dd2e9c",
+  "graph_digest": "sha256:fe6c89a39c086beeb9df044443007009424a2f98132ed009c230f48fcfc5b948",
+  "path": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/graph-head-ecc3dffc247b.json",
+  "source_commit": "ecc3dffc247b7e3e7dbd92fd8c7035aef6e2ffe6",
   "staleness": {
-   "checked_at_utc": "2026-11-19T15:25:22Z",
-   "checked_nodes": 1042,
+   "checked_at_utc": "2026-11-19T16:09:59Z",
+   "checked_nodes": 1057,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
@@ -234,7 +375,7 @@
  },
  "host": "author-lane",
  "host_redacted": true,
- "host_sha256": "87470a866dcbe4efa554e6f200c6d65b82d00ed49a7f46dccb567f7c987fb545",
+ "host_sha256": "d4cc3a74aacec16a7564fe2dbe4b5a8ba03f8c9509ff622991502c9c7e0de1a9",
  "impact_set": {
   "deterministic_core": [
    {
@@ -1665,14 +1806,14 @@
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.1) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 15 attached from /home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-exemptions3.json",
+  "exemptions: 15 attached from /home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-exemptions4.json",
   "A2-353: `canary` discharged for 1 test code_unit(s) — a canary lists live-contour entities and can never name a test file; their other verifiers (config_schema, type_check, fitness) still apply: code_unit:src/bench-reservation/journal-bridge.spec.ts"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.1"
  },
- "receipt_id": "car-verify-20261119T152434Z-e1909d81",
+ "receipt_id": "car-verify-20261119T160836Z-ecc3dffc",
  "receipt_path": "receipts/graph/change-admission-316-full-suite-exact-evidence.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
@@ -1771,6 +1912,21 @@
    "code_unit:scripts/graph_full_suite.py",
    "code_unit:src/bench-reservation/journal-bridge.spec.ts",
    "code_unit:test/app.e2e-spec.ts",
+   "code_unit:test/fixtures/billing-3a-hermetic/accounting.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/attempt.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/custodian.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/instrument.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/journal.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/monetary.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/proofs.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py",
+   "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py",
    "deployable_unit:.",
    "document:SECURITY.md",
    "document:deploy/stt-whisper/README.md",
@@ -1840,7 +1996,7 @@
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-19T15:25:21Z",
+  "checked_at_utc": "2026-11-19T16:09:58Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
@@ -1937,7 +2093,7 @@
   {
    "content_hash": {
     "base": null,
-    "head": "sha256:12e28ada9249e13bbf9f33978d7360efeda37c3ec5e30fe3c6ec93bdb8285cfe"
+    "head": "sha256:17598c3168cc82e77f5712cd777db27a05510b46bf58101b0f116c2283cbb2d2"
    },
    "entity": "receipt:receipts/graph/change-admission-316-full-suite-exact-evidence.json",
    "node_type": "receipt",
@@ -2490,7 +2646,7 @@
   }
  ],
  "tree": {
-  "commit": "e1909d812e92dcad7f9010c964cb993f82dd2e9c",
+  "commit": "ecc3dffc247b7e3e7dbd92fd8c7035aef6e2ffe6",
   "dirty": false
  },
  "verdicts": [
@@ -2636,6 +2792,126 @@
    ]
   },
   {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/accounting.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/attempt.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/custodian.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/instrument.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/journal.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/monetary.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/proofs.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
+   "entity": "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py",
+   "reason": "v-fitness: no new fitness violation",
+   "verdict": "verified",
+   "verifier_ids": [
+    "v-fitness"
+   ]
+  },
+  {
    "entity": "deployable_unit:.",
    "reason": "v-type-check-tsconfig-mjs: tsc unavailable on this host",
    "verdict": "not_measured",
@@ -2706,8 +2982,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-19T16:10:43Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -2728,8 +3004,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-19T16:10:43Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -2750,8 +3026,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-19T16:10:43Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -2772,8 +3048,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-19T16:10:43Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -2794,8 +3070,8 @@
    "exit_code": 127,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-19T16:10:43Z",
    "summary": "not_measured: tsc unavailable"
   },
   {
@@ -2810,9 +3086,9 @@
    "exit_code": 1,
    "id": "v-workflow-config-b803fcb7f17ed923",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-workflow-config-b803fcb7f17ed923.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
-   "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 11: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 11: command/process substitution closure is unresolved; job docker-e2e step 12: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 13: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 1: opaque input/interpolated workflow source; job docker-e2e step 3: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 3: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 4: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 5: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 6: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 7: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 10: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 13: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 14: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 15: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 16: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 17: unsupported loader/interpreter options; job lint-and-test step 10: line 18: relative execution cwd is not declared; job lint-and-test step 10: line 19: unsupported loader/interpreter options; job lint-and-test step 10: line 1: unsupported loader/interpreter options; job lint-and-test step 10: line 20: relative execution cwd is not declared; job lint-and-test step 10: line 21: unsupported loader/interpreter options; job lint-and-test step 10: line 22: relative execution cwd is not declared; job lint-and-test step 10: line 2: unsupported loader/interpreter options; job lint-and-test step 10: line 3: unsupported loader/interpreter options; job lint-and-test step 10: line 4: unsupported loader/interpreter options; job lint-and-test step 10: line 5: relative execution cwd is not declared; job lint-and-test step 10: line 6: relative execution cwd is not declared; job lint-and-test step 10: line 7: relative execution cwd is not declared; job lint-and-test step 10: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: heredoc/group/function/brace expansion closure is unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 15: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 17: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 18: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 19: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 19: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 19: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 1: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 3: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: command/process substitution closure is unresolved; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 9: unsupported loader/interpreter options; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: line 1: relative execution cwd is not declared; job lint-and-test step 8: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 8: line 1: unsupported loader/interpreter options; job lint-and-test step 8: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 9: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 9: line 1: unsupported loader/interpreter options; job lint-and-test step 9: line 2: relative execution cwd is not declared; job publish-image step 4: heredoc/group/function/brace expansion closure is unresolved; job verify-published-image step 1: heredoc/group/function/brace expansion closure is unresolved; 70 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-b803fcb7f17ed923.txt",
+   "started_at_utc": "2026-11-19T16:10:43Z",
+   "summary": "workflow shell caller closure not measured: job deploy step 2: line 3: wrapper execution scope/options unresolved; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job docker-e2e step 10: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 10: command/process substitution closure is unresolved; job docker-e2e step 11: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 11: command/process substitution closure is unresolved; job docker-e2e step 12: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 13: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 1: opaque input/interpolated workflow source; job docker-e2e step 3: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 3: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 4: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 5: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 6: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 7: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 8: heredoc/group/function/brace expansion closure is unresolved; job docker-e2e step 9: checkout root or source-affecting workflow environment unresolved; job docker-e2e step 9: command/process substitution closure is unresolved; job lint-and-test step 10: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 10: line 10: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 11: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 12: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 13: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 14: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 15: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 16: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 17: unsupported loader/interpreter options; job lint-and-test step 10: line 18: relative execution cwd is not declared; job lint-and-test step 10: line 19: unsupported loader/interpreter options; job lint-and-test step 10: line 1: unsupported loader/interpreter options; job lint-and-test step 10: line 20: relative execution cwd is not declared; job lint-and-test step 10: line 21: unsupported loader/interpreter options; job lint-and-test step 10: line 22: relative execution cwd is not declared; job lint-and-test step 10: line 2: unsupported loader/interpreter options; job lint-and-test step 10: line 3: unsupported loader/interpreter options; job lint-and-test step 10: line 4: unsupported loader/interpreter options; job lint-and-test step 10: line 5: relative execution cwd is not declared; job lint-and-test step 10: line 6: relative execution cwd is not declared; job lint-and-test step 10: line 7: relative execution cwd is not declared; job lint-and-test step 10: line 8: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 10: line 9: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 11: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 11: heredoc/group/function/brace expansion closure is unresolved; job lint-and-test step 14: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 15: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 16: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 17: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 18: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 19: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 1: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 20: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 20: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 20: line 3: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 2: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 3: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 5: command/process substitution closure is unresolved; job lint-and-test step 6: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 6: line 9: unsupported loader/interpreter options; job lint-and-test step 7: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 7: line 1: relative execution cwd is not declared; job lint-and-test step 8: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 8: line 1: unsupported loader/interpreter options; job lint-and-test step 8: line 2: unsupported interpreter script/module/stdin dispatch closure; job lint-and-test step 9: checkout root or source-affecting workflow environment unresolved; job lint-and-test step 9: line 1: unsupported loader/interpreter options; job lint-and-test step 9: line 2: relative execution cwd is not declared; job publish-image step 4: heredoc/group/function/brace expansion closure is unresolved; job verify-published-image step 1: heredoc/group/function/brace expansion closure is unresolved; 71 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
    "command": "workflow_config.validate exact head bytes",
@@ -2826,8 +3102,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-2fe48d1021006468",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-workflow-config-2fe48d1021006468.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-2fe48d1021006468.txt",
+   "started_at_utc": "2026-11-19T16:10:43Z",
    "summary": "workflow shell caller closure not measured: job auto-merge step 0: opaque input/interpolated workflow source; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -2842,8 +3118,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-6ceb21cf301c7eb2",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-workflow-config-6ceb21cf301c7eb2.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-6ceb21cf301c7eb2.txt",
+   "started_at_utc": "2026-11-19T16:10:43Z",
    "summary": "workflow shell caller closure not measured: job deploy step 10: checkout root or source-affecting workflow environment unresolved; job deploy step 10: opaque input/interpolated workflow source; job deploy step 3: line 1: wrapper execution scope/options unresolved; job deploy step 4: line 1: wrapper execution scope/options unresolved; job deploy step 5: line 1: wrapper execution scope/options unresolved; job deploy step 6: command/process substitution closure is unresolved; job deploy step 7: checkout root or source-affecting workflow environment unresolved; job deploy step 7: command/process substitution closure is unresolved; job deploy step 8: checkout root or source-affecting workflow environment unresolved; job deploy step 8: command/process substitution closure is unresolved; job deploy step 9: checkout root or source-affecting workflow environment unresolved; job deploy step 9: line 1: wrapper execution scope/options unresolved; job network-exposure-lint: reusable/opaque shell context; 13 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -2858,8 +3134,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-28802fbf11c83a2e",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-workflow-config-28802fbf11c83a2e.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-28802fbf11c83a2e.txt",
+   "started_at_utc": "2026-11-19T16:10:43Z",
    "summary": "workflow shell caller closure not measured: job guard step 0: heredoc/group/function/brace expansion closure is unresolved; job guard step 2: command/process substitution closure is unresolved; job publication-post-state step 1: heredoc/group/function/brace expansion closure is unresolved; 3 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -2874,8 +3150,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-60a4bd100e640545",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-workflow-config-60a4bd100e640545.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-60a4bd100e640545.txt",
+   "started_at_utc": "2026-11-19T16:10:43Z",
    "summary": "workflow shell caller closure not measured: job graph-admission: reusable/opaque shell context; 1 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -2890,8 +3166,8 @@
    "exit_code": 1,
    "id": "v-workflow-config-dc49cc771602c92b",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-workflow-config-dc49cc771602c92b.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-dc49cc771602c92b.txt",
+   "started_at_utc": "2026-11-19T16:10:44Z",
    "summary": "workflow shell caller closure not measured: job graph-admission step 10: checkout root or source-affecting workflow environment unresolved; job graph-admission step 10: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 11: checkout root or source-affecting workflow environment unresolved; job graph-admission step 11: command/process substitution closure is unresolved; job graph-admission step 12: checkout root or source-affecting workflow environment unresolved; job graph-admission step 12: command/process substitution closure is unresolved; job graph-admission step 14: checkout root or source-affecting workflow environment unresolved; job graph-admission step 15: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: checkout root or source-affecting workflow environment unresolved; job graph-admission step 16: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 19: checkout root or source-affecting workflow environment unresolved; job graph-admission step 19: command/process substitution closure is unresolved; job graph-admission step 1: command/process substitution closure is unresolved; job graph-admission step 20: checkout root or source-affecting workflow environment unresolved; job graph-admission step 20: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 21: checkout root or source-affecting workflow environment unresolved; job graph-admission step 21: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 22: checkout root or source-affecting workflow environment unresolved; job graph-admission step 22: command/process substitution closure is unresolved; job graph-admission step 23: checkout root or source-affecting workflow environment unresolved; job graph-admission step 23: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 24: checkout root or source-affecting workflow environment unresolved; job graph-admission step 24: line 11: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 25: checkout root or source-affecting workflow environment unresolved; job graph-admission step 25: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 26: checkout root or source-affecting workflow environment unresolved; job graph-admission step 26: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 28: checkout root or source-affecting workflow environment unresolved; job graph-admission step 2: heredoc/group/function/brace expansion closure is unresolved; job graph-admission step 4: line 1: unsupported interpreter script/module/stdin dispatch closure; job graph-admission step 5: command/process substitution closure is unresolved; job graph-admission step 9: checkout root or source-affecting workflow environment unresolved; job graph-admission step 9: command/process substitution closure is unresolved; 33 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
@@ -2906,13 +3182,13 @@
    "exit_code": 1,
    "id": "v-workflow-config-9de6bedb8518f82f",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-workflow-config-9de6bedb8518f82f.txt",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-workflow-config-9de6bedb8518f82f.txt",
+   "started_at_utc": "2026-11-19T16:10:44Z",
    "summary": "workflow shell caller closure not measured: job public-surface step 1: local action/checkout path scope unresolved; job public-surface step 2: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: checkout root or source-affecting workflow environment unresolved; job public-surface step 3: heredoc/group/function/brace expansion closure is unresolved; 4 workflow shell-caller uncertainty item(s) remain separate from YAML schema validation and are retained in graph closure evidence"
   },
   {
    "command": "verify.py config_schema: keys read at head ⊆ declared keys",
-   "duration_s": 1.55,
+   "duration_s": 2.13,
    "entities": [
     "code_unit:scripts/full-suite-arms/app-e2e.probe.mjs",
     "code_unit:scripts/full-suite-arms/disposable-store.probe.mjs",
@@ -2928,13 +3204,13 @@
    "exit_code": 0,
    "id": "v-config-schema",
    "kind": "config_schema",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-config-schema.json",
-   "started_at_utc": "2026-11-19T15:25:53Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-config-schema.json",
+   "started_at_utc": "2026-11-19T16:10:44Z",
    "summary": "3 source(s), 0 new / 91 frozen undeclared reads, 0 failed; 5 vendored file(s) not attributed to this repository (Arcanada-one/arcanada-universal-program)"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.67,
+   "duration_s": 0.98,
    "entities": [
     "code_unit:.github/workflows/ci.yml",
     "code_unit:.github/workflows/dependabot-auto-merge.yml",
@@ -2951,6 +3227,21 @@
     "code_unit:scripts/graph_full_suite.py",
     "code_unit:src/bench-reservation/journal-bridge.spec.ts",
     "code_unit:test/app.e2e-spec.ts",
+    "code_unit:test/fixtures/billing-3a-hermetic/accounting.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/attempt.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/custodian.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/instrument.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/journal.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/monetary.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/proofs.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py",
     "deployable_unit:."
    ],
    "entity_verdicts": {
@@ -2969,13 +3260,28 @@
     "code_unit:scripts/graph_full_suite.py": "verified",
     "code_unit:src/bench-reservation/journal-bridge.spec.ts": "verified",
     "code_unit:test/app.e2e-spec.ts": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/accounting.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/attempt.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/custodian.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/instrument.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/journal.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/monetary.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/proofs.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py": "verified",
+    "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py": "verified",
     "deployable_unit:.": "verified"
    },
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-fitness.json",
-   "started_at_utc": "2026-11-19T15:25:55Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-fitness.json",
+   "started_at_utc": "2026-11-19T16:10:46Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -2996,8 +3302,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-doc-reference.txt",
-   "started_at_utc": "2026-11-19T15:25:55Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-doc-reference.txt",
+   "started_at_utc": "2026-11-19T16:10:47Z",
    "summary": "4 document(s), 0 failed"
   },
   {
@@ -3016,8 +3322,8 @@
    "exit_code": 0,
    "id": "v-canary",
    "kind": "canary",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-canary.json",
-   "started_at_utc": "2026-11-19T15:25:55Z",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-canary.json",
+   "started_at_utc": "2026-11-19T16:10:47Z",
    "summary": "0 canary result(s), 0 committed at head; 0 verified / 0 failed / 3 not_measured of 3 entities"
   },
   {
@@ -3032,9 +3338,9 @@
    "exit_code": 0,
    "id": "v-shell-syntax-a1de9832d14e1c41",
    "kind": "shell_syntax",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-shell-syntax-a1de9832d14e1c41.txt",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-shell-syntax-a1de9832d14e1c41.txt",
    "scope": "shell_source_validation",
-   "started_at_utc": "2026-11-19T15:26:01Z",
+   "started_at_utc": "2026-11-19T16:10:57Z",
    "summary": "shell syntax/closure: not_measured"
   },
   {
@@ -3049,9 +3355,9 @@
    "exit_code": 0,
    "id": "v-shell-behavior-a1de9832d14e1c41",
    "kind": "shell_behavior",
-   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify13/v-shell-behavior-a1de9832d14e1c41.txt",
+   "output_ref": "/home/dev/aup/claude-work/dev-sw19-d/op2/mc-316-verify15/v-shell-behavior-a1de9832d14e1c41.txt",
    "scope": "shell_fixture_behavior",
-   "started_at_utc": "2026-11-19T15:26:01Z",
+   "started_at_utc": "2026-11-19T16:10:57Z",
    "summary": "SHELL_DYNAMIC_CLOSURE_NOT_MEASURED: line 12: unsupported loader/interpreter options; line 16: directory transition has unresolved execution cwd; line 17: directory transition has unresolved execution cwd; line 18: wrapper options/child command unresolved; line 26: dynamic load/substitution; line 42: wrapper options/child command unresolved; line 51: directory transition has unresolved execution cwd; line 57: dynamic load/substitution; line 57: wrapper options/child command unresolved; line 61: dynamic load/substitution; line 66: dynamic load/substitution; line 68: wrapper options/child command unresolved; line 70: wrapper options/child command unresolved; line 71: wrapper options/child command unresolved; line 79: wrapper options/child command unresolved; line 80: multiline/opaque shell statement; line 81: multiline/opaque shell statement; line 82: multiline/opaque shell statement; line 83: directory transition has unresolved execution cwd; line 88: wrapper options/child command unresolved"
   }
  ],
@@ -3136,6 +3442,51 @@
     "fitness_rules",
     "type_check"
    ],
+   "code_unit:test/fixtures/billing-3a-hermetic/accounting.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/accounting_tests.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/attempt.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/custodian.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/instrument.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/journal.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/journal_tests.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/monetary.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/proofs.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/test_attempt.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/test_custodian.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/test_instrument.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/test_monetary.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/test_monetary_journal.py": [
+    "fitness_rules"
+   ],
+   "code_unit:test/fixtures/billing-3a-hermetic/test_proofs.py": [
+    "fitness_rules"
+   ],
    "deployable_unit:.": [
     "fitness_rules",
     "type_check"
@@ -3212,9 +3563,9 @@
    "receipt:receipts/infra-billing-atomic-e0c71e4/CAR-e0-current6c7.json": []
   },
   "seconds": {
-   "prepare": 18.27,
-   "total": 87.13,
-   "verifiers": 2.23
+   "prepare": 20.54,
+   "total": 141.34,
+   "verifiers": 3.12
   }
  },
  "work_item": "597f92c3-ed72-4791-ab6e-c5e8e2ee30d0"
