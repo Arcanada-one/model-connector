@@ -502,6 +502,7 @@ class Controls(unittest.TestCase):
                 'REDIS_HOST': '127.0.0.1',
                 'REDIS_PORT': '6379',
                 'NODE_ENV': 'test',
+                'HOST': '127.0.0.1',
                 'PORT': '3000',
             },
             'path': '/fixture/grant.json',
@@ -511,6 +512,7 @@ class Controls(unittest.TestCase):
 
         def child(argv, cwd, env, deadline, scratch, name):
             calls.append(name)
+            self.assertIn('DATABASE_URL', env)
             output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
             selected = [a for a in argv[argv.index('--outputFile=' + output) + 1:]
                         if not a.startswith('-')]
@@ -536,6 +538,63 @@ class Controls(unittest.TestCase):
         self.assertEqual(e2e['executions'][0]['control']['result'], 'PASS_RED')
         self.assertEqual(e2e['executions'][1]['verdict'], 'verified')
         self.assertEqual(e2e['verdict'], 'verified')
+
+    def test_grant_env_does_not_leak_into_vitest_default(self):
+        members = ['src/a.spec.ts', 'test/app.e2e-spec.ts']
+        suites = self.root_dispatch_fixture(members)
+        grant = {
+            'arms': ['app-e2e'],
+            'env': {
+                'DATABASE_URL': 'postgresql://test:test@127.0.0.1:5432/connector_test',
+                'MC_FULL_SUITE_APP_E2E': '1',
+                'REDIS_HOST': '127.0.0.1',
+                'REDIS_PORT': '6379',
+                'NODE_ENV': 'test',
+                'PORT': '3000',
+            },
+            'path': '/fixture/grant.json',
+            'sha256': '0' * 64,
+        }
+        seen = []
+
+        def child(argv, cwd, env, deadline, scratch, name):
+            seen.append((name, 'DATABASE_URL' in env))
+            if argv[0] == 'pnpm':
+                output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
+                selected = [a for a in argv[argv.index('--outputFile=' + output) + 1:]
+                            if not a.startswith('-')]
+                red = env.get('DATABASE_URL', '').endswith('/pass_red')
+                status = 'failed' if red else 'passed'
+                document = {
+                    'numTotalTests': len(selected),
+                    'numPassedTests': 0 if red else len(selected),
+                    'numFailedTests': len(selected) if red else 0,
+                    'testResults': [{'name': str(self.root / m),
+                                     'assertionResults': [{'status': status}]}
+                                    for m in selected],
+                }
+                Path(output).write_text(json.dumps(document))
+                return {'argv': argv, 'exit_code': 1 if red else 0, 'output': '', 'duration_s': 0}
+            return {'argv': argv, 'exit_code': 0, 'output': '', 'duration_s': 0}
+
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'), \
+                tempfile.TemporaryDirectory() as directory:
+            subject.run_root_suites(self.root, suites, Path(directory), child, grant=grant)
+        by_name = dict(seen)
+        # plan order: app-e2e then vitest — e2e logs are root-0*; vitest is the other root-N.
+        e2e_names = [n for n in by_name if n.startswith('root-0')]
+        other = [n for n in by_name if n not in e2e_names]
+        self.assertTrue(e2e_names, seen)
+        self.assertTrue(all(by_name[n] for n in e2e_names), seen)
+        self.assertTrue(other, seen)
+        self.assertTrue(all(not by_name[n] for n in other), seen)
+
+    def test_scrub_log_line_masks_url_password(self):
+        line = 'connect postgresql://test:s3cret@127.0.0.1:5432/db api_key=abc123'
+        scrubbed = subject.scrub_log_line(line)
+        self.assertNotIn('s3cret', scrubbed)
+        self.assertNotIn('abc123', scrubbed)
+        self.assertIn('***', scrubbed)
 
 
 class ArmEvidence(unittest.TestCase):

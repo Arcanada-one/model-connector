@@ -93,6 +93,7 @@ write_grant() {
     "REDIS_PREFIX": "${PREFIX}",
     "STT_PROVIDER_GROQ_ENABLED": "false",
     "NODE_ENV": "test",
+    "HOST": "127.0.0.1",
     "PORT": "3939",
     "MC_FULL_SUITE_APP_E2E": "1"
   }

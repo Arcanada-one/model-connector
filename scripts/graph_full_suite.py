@@ -39,11 +39,18 @@ GRANT_ARM_APP_E2E = 'app-e2e'
 # Env keys a disposable grant may inject into child processes (never secrets).
 GRANT_ENV_ALLOWLIST = frozenset({
     'DATABASE_URL', 'REDIS_HOST', 'REDIS_PORT', 'REDIS_PREFIX', 'REDIS_PASSWORD',
-    'STT_PROVIDER_GROQ_ENABLED', 'STT_GROQ_API_KEY', 'NODE_ENV', 'PORT',
+    'STT_PROVIDER_GROQ_ENABLED', 'STT_GROQ_API_KEY', 'NODE_ENV', 'PORT', 'HOST',
     'MC_FULL_SUITE_APP_E2E',
     'BENCH_OWNED_TEST_PG_SOCKET', 'BENCH_OWNED_TEST_SOCKET_ROOT',
     'BENCH_OWNED_NATIVE_TEST_BINARY',
 })
+# Log tails printed on failure (job log only; never Actions artifact).
+FAIL_LOG_TAIL_LINES = 80
+_SECRET_TAIL_RE = re.compile(
+    r'((?:postgres(?:ql)?|redis|mysql|mongodb)://[^:\s/]+:)([^@\s/]+)(@)'
+    r'|((?:authorization|api[_-]?key|token|password|secret)\s*[:=]\s*)(\S+)',
+    re.IGNORECASE,
+)
 BENCH_OWNED_MEMBER = 'src/bench-reservation/postgres.integration.spec.ts'
 HELD_STORE_PREFIXES = ('src/auth/', 'src/bench-reservation/', 'src/billing/')
 HELD_PROVIDER_PREFIXES = ('src/connectors/image-generation/',)
@@ -221,18 +228,50 @@ def load_disposable_grant():
 
 
 def clean_environment(scratch, unit_root, grant=None):
-    # No inherited tokens, flags, URLs, NODE_OPTIONS, PYTHONPATH or agent hooks.
+    """Build the base child env. Grant keys are NOT injected here.
+
+    Disposable/e2e children receive grant env only via env_override on those
+    steps so maintained-vitest / regression / offline never see DATABASE_URL.
+    The unused ``grant`` argument is accepted for call-site compatibility and
+    must remain unused.
+    """
+    del grant  # never ambient-inject; see pass_red_vitest / disposable overrides
     env = {'PATH': os.environ.get('PATH', os.defpath), 'HOME': str(scratch / 'home'),
            'TMPDIR': str(scratch), 'CI': '1', 'NO_COLOR': '1', 'FORCE_COLOR': '0',
            'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONPATH': str(unit_root),
            'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1'}
     if any(not Path(part).is_absolute() for part in env['PATH'].split(os.pathsep)):
         raise Refusal('relative PATH entry')
-    if grant:
-        for key, value in grant['env'].items():
-            env[key] = value
     (scratch / 'home').mkdir(mode=0o700)
     return env
+
+
+def scrub_log_line(line):
+    """Mask credential-bearing URL userinfo and common key=value secrets."""
+    def repl(match):
+        if match.group(1):
+            return match.group(1) + '***' + match.group(3)
+        return match.group(4) + '***'
+    return _SECRET_TAIL_RE.sub(repl, line)[:500]
+
+
+def emit_failure_log_tail(raw_log, label, limit=FAIL_LOG_TAIL_LINES):
+    """Print a bounded, scrubbed tail of a failing child log to the job stdout."""
+    path = Path(raw_log) if raw_log else None
+    print('  --- fail log tail:', label, '---')
+    if not path or not path.is_file():
+        print('  | (log missing)')
+        return
+    try:
+        lines = path.read_text(errors='replace').splitlines()
+    except OSError as exc:
+        print('  | (log unreadable:', type(exc).__name__ + ')')
+        return
+    if not lines:
+        print('  | (empty)')
+        return
+    for line in lines[-limit:]:
+        print('  |', scrub_log_line(line))
 
 
 def disposable_member(path):
@@ -526,7 +565,8 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
             checked_file(root, member)
             if suite['suite'] == 'maintained-regression':
                 root_regression_command(root, member)
-    env = clean_environment(scratch, root, grant)
+    env = clean_environment(scratch, root)
+    grant_env = dict(grant['env']) if grant else {}
     deadline = time.monotonic() + 900
     results = []
     grant_arms = set(grant['arms']) if grant else set()
@@ -561,13 +601,21 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
         return result
 
     def pass_red_vitest(config_args, selected, label, report_path):
-        """Broken DATABASE_URL must fail before the real disposable/e2e run."""
+        """Broken DATABASE_URL must fail before the real disposable/e2e run.
+
+        Grant env is applied only here (and the real follow-up), never to the
+        shared base env used by vitest-default / regression / offline.
+        """
+        if not grant_env:
+            raise Refusal('PASS_RED disposable/e2e requires grant env')
         red_report = scratch / (label + '-pass-red.json')
         red_argv = ['pnpm', 'exec', 'vitest', 'run', *config_args,
                     '--reporter=json', '--outputFile=' + str(red_report), *selected]
+        red_env = dict(grant_env)
+        red_env['DATABASE_URL'] = 'postgresql://pass-red:pass-red@127.0.0.1:1/pass_red'
         red = run(red_argv, selected, label + '-pass-red',
                   lambda raw: vitest_counts(json.loads(red_report.read_text()), selected, root),
-                  env_override={'DATABASE_URL': 'postgresql://pass-red:pass-red@127.0.0.1:1/pass_red'})
+                  env_override=red_env)
         if red.get('verdict') == 'verified':
             red.update(verdict='failed', reason='PASS_RED control unexpectedly verified')
             return red, None
@@ -575,7 +623,8 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
         real_argv = ['pnpm', 'exec', 'vitest', 'run', *config_args,
                      '--reporter=json', '--outputFile=' + str(report_path), *selected]
         real = run(real_argv, selected, label,
-                   lambda raw: vitest_counts(json.loads(report_path.read_text()), selected, root))
+                   lambda raw: vitest_counts(json.loads(report_path.read_text()), selected, root),
+                   env_override=grant_env)
         real['control'] = {'result': 'PASS_RED'}
         return red, real
 
@@ -583,7 +632,8 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
         name, members = suite['suite'], suite['members']
         row = {'suite': name, 'members': members, 'executions': []}
         if name == 'maintained-app-e2e':
-            if GRANT_ARM_APP_E2E in grant_arms and env.get('MC_FULL_SUITE_APP_E2E') == '1':
+            if (GRANT_ARM_APP_E2E in grant_arms
+                    and grant_env.get('MC_FULL_SUITE_APP_E2E') == '1'):
                 report = scratch / 'maintained-app-e2e.json'
                 red, real = pass_red_vitest(
                     ['--config', 'vitest.e2e.config.ts'], members,
@@ -871,17 +921,21 @@ def main():
               'held_members=' + str(held_n),
               'executions=' + str(len(row.get('executions') or [])))
         for ex in row.get('executions') or []:
+            log_name = Path(ex.get('raw_log', 'x')).name
             counts = ex.get('counts')
             if counts:
-                print(' ', Path(ex.get('raw_log', 'x')).name + ':',
+                print(' ', log_name + ':',
                       counts['passed'], 'passed,', counts['failed'],
                       'failed,', counts['skipped'], 'skipped; raw exit',
                       ex.get('exit_code'), 'verdict=' + str(ex.get('verdict')))
             else:
-                print(' ', Path(ex.get('raw_log', 'x')).name + ':',
+                print(' ', log_name + ':',
                       'verdict=' + str(ex.get('verdict')),
                       'exit=' + str(ex.get('exit_code')),
                       'reason=' + str(ex.get('reason', ''))[:160])
+            # PASS_RED control failures are expected; print tails for other fails.
+            if ex.get('verdict') == 'failed' and 'pass-red' not in log_name:
+                emit_failure_log_tail(ex.get('raw_log'), log_name)
         reasons = row.get('held_reasons') or {}
         for path_name, reason in sorted(reasons.items()):
             print('  held:', path_name, '->', reason)
