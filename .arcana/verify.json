@@ -15,6 +15,12 @@
         "scripts/graph-full-suite-isolated.sh",
         "."
       ],
+      "full_test_parity_setup": [
+        [
+          "bash",
+          "scripts/graph-parity-setup.sh"
+        ]
+      ],
       "full_test_arms": [
         {
           "name": "vitest-default",
