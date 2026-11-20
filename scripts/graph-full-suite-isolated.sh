@@ -130,11 +130,20 @@ if [[ "$1" == '.' ]]; then
   REG_VENV="$PRIVATE_TMP/regression-python"
   reg_env=(env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$SYSTEM_PATH" PYTHONDONTWRITEBYTECODE=1)
   [[ -f "$REGRESSION_LOCK" && ! -L "$REGRESSION_LOCK" ]] || refuse 'regression lock file missing'
+  # Optional offline source (tests, air-gapped hosts): GRAPH_FULL_SUITE_WHEELHOUSE names a local directory
+  # used with --no-index --find-links. It changes only where the wheels come from; --require-hashes still
+  # admits nothing but the exact sha256 bytes pinned in the lock.
+  pip_source=()
+  if [[ -n "${GRAPH_FULL_SUITE_WHEELHOUSE:-}" ]]; then
+    [[ -d "$GRAPH_FULL_SUITE_WHEELHOUSE" && ! -L "$GRAPH_FULL_SUITE_WHEELHOUSE" ]] \
+      || refuse 'GRAPH_FULL_SUITE_WHEELHOUSE must be a directory, not a symlink'
+    pip_source=(--no-index --find-links "$GRAPH_FULL_SUITE_WHEELHOUSE")
+  fi
   "${reg_env[@]}" "$SYSTEM_PYTHON" -I -m venv "$REG_VENV" \
     || refuse 'regression venv could not be created from the system python'
   "${reg_env[@]}" "$REG_VENV/bin/python" -I -m pip --isolated --disable-pip-version-check --no-input \
     install --cache-dir "$CACHE_ROOT/pip-cache" --require-hashes --no-deps --only-binary=:all: \
-    -r "$REGRESSION_LOCK" \
+    "${pip_source[@]}" -r "$REGRESSION_LOCK" \
     || refuse 'hash-locked regression dependencies could not be installed'
   "${reg_env[@]}" "$REG_VENV/bin/python" -I -c '
 import sys, jsonschema, importlib.metadata as md

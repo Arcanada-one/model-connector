@@ -341,6 +341,62 @@ class Controls(unittest.TestCase):
         self.assertFalse(str(Path(tempdir)).startswith(('/tmp/', '/var/tmp/')), tempdir)
         self.assertNotIn('must-not-leak', result.stdout + result.stderr)
 
+    def test_isolated_entrypoint_unit_root_installs_only_the_hash_locked_wheelhouse(self):
+        # Unit '.' succeeds hermetically when the lock and matching wheels are provided offline
+        # (GRAPH_FULL_SUITE_WHEELHOUSE -> --no-index --find-links): the suite then runs on the private
+        # venv python, which resolves the locked jsonschema from the venv. A wheel whose bytes do not
+        # match the locked sha256 is refused and the suite never starts.
+        import hashlib, zipfile
+        scripts = self.root / 'scripts'
+        scripts.mkdir()
+        (self.root / 'node_modules').mkdir()
+        (scripts / 'graph-full-suite-isolated.sh').write_bytes(
+            (ROOT / 'scripts/graph-full-suite-isolated.sh').read_bytes())
+        (scripts / 'graph-full-suite.sh').write_text(
+            '#!/usr/bin/env bash\n'
+            '[[ "$1" == . ]] || exit 9\n'
+            'python3 -c "import sys, jsonschema; print(sys.executable); print(jsonschema.__file__)"\n'
+            'exit 23\n'
+        )
+        wheelhouse = self.root / 'wheelhouse'
+        wheelhouse.mkdir(mode=0o700)
+        wheel = wheelhouse / 'jsonschema-4.23.0-py3-none-any.whl'
+        files = {
+            'jsonschema/__init__.py': 'FIXTURE = True\n',
+            'jsonschema-4.23.0.dist-info/METADATA': 'Metadata-Version: 2.1\nName: jsonschema\nVersion: 4.23.0\n',
+            'jsonschema-4.23.0.dist-info/WHEEL': 'Wheel-Version: 1.0\nGenerator: fixture\nRoot-Is-Purelib: true\nTag: py3-none-any\n',
+        }
+        record = ''.join(f'{name},,\n' for name in files) + 'jsonschema-4.23.0.dist-info/RECORD,,\n'
+        with zipfile.ZipFile(wheel, 'w') as archive:
+            for name, body in files.items():
+                archive.writestr(name, body)
+            archive.writestr('jsonschema-4.23.0.dist-info/RECORD', record)
+        digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
+        lock = scripts / 'graph-full-suite-regression.requirements.txt'
+        runtime = Path(tempfile.mkdtemp(prefix='.mcgs-runtime-', dir=pwd.getpwuid(os.getuid()).pw_dir))
+        self.addCleanup(shutil.rmtree, runtime, ignore_errors=True)
+        runtime.chmod(0o700)
+        env = {'PATH': os.defpath, 'HOME': str(self.root), 'XDG_RUNTIME_DIR': str(runtime),
+               'GRAPH_FULL_SUITE_WHEELHOUSE': str(wheelhouse)}
+
+        lock.write_text(f'jsonschema==4.23.0 --hash=sha256:{digest}\n')
+        result = subprocess.run(['bash', 'scripts/graph-full-suite-isolated.sh', '.'], cwd=self.root,
+                                env=env, capture_output=True, text=True, timeout=180)
+        self.assertEqual(result.returncode, 23, result.stdout + result.stderr)
+        executable, module = result.stdout.strip().splitlines()[-2:]
+        venv = (self.root / 'node_modules/.cache/graph-full-suite/runs').resolve()
+        self.assertTrue(executable.startswith(str(venv) + '/'), executable)
+        self.assertTrue(executable.endswith('/regression-python/bin/python3'), executable)
+        self.assertTrue(module.startswith(str(venv) + '/'), module)
+
+        lock.write_text(f'jsonschema==4.23.0 --hash=sha256:{"0" * 64}\n')
+        tampered = subprocess.run(['bash', 'scripts/graph-full-suite-isolated.sh', '.'], cwd=self.root,
+                                  env=env, capture_output=True, text=True, timeout=180)
+        self.assertEqual(tampered.returncode, 1, tampered.stdout + tampered.stderr)
+        self.assertIn('FULL_FALLBACK_TEST_REFUSED: hash-locked regression dependencies could not be installed',
+                      tampered.stderr)
+        self.assertNotIn('regression-python/bin/python3', tampered.stdout)
+
     def test_actual_root_entrypoint_dispatches_local_regression_retains_app_hold(self):
         self.root_entrypoint_fixture()
         temp = self.root / 'private'
