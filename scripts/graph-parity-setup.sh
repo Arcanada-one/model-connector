@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # DEC-AUP-0197 B9: the offline dependency setup the Program gate runs in each of its two private
 # worktrees (base and head) before the declared full_test. Declared in .arcana/verify.json as
-# deployables["."].full_test_parity_setup; the gate reads the declaration and this script at BASE.
+# deployables["."].full_test_parity_setup. Today's vendored gate reads neither that key nor this script.
+# Reading both at BASE arrives with Program PR #637 (B9), once a bundle carrying it is vendored here.
 #
 # What this script controls:
 #   - pnpm install is --offline: a package missing from the store fails the setup.
