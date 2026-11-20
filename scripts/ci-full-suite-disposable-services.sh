@@ -40,6 +40,20 @@ assert_ports_env_file() {
   return 0
 }
 
+parse_published_port() { # parse_published_port <docker port output>
+  local mapping=$1 port
+  if [[ ! "$mapping" =~ ^127\.0\.0\.1:([0-9]{1,5})$ ]]; then
+    printf 'ci-full-suite-disposable-services: unexpected docker port mapping: %s\n' "$mapping" >&2
+    return 1
+  fi
+  port=$((10#${BASH_REMATCH[1]}))
+  if (( port < 1024 || port > 65535 )); then
+    printf 'ci-full-suite-disposable-services: published port outside 1024-65535: %s\n' "$port" >&2
+    return 1
+  fi
+  printf '%s\n' "$port"
+}
+
 start_services() {
   mkdir -p "$STATE_DIR"
   chmod 700 "$STATE_DIR"
@@ -63,8 +77,8 @@ start_services() {
   done
   docker exec "$PG_NAME" pg_isready -U test >/dev/null
   docker exec "$REDIS_NAME" redis-cli ping 2>/dev/null | grep -q PONG
-  PG_PORT=$(docker port "$PG_NAME" 5432/tcp | awk -F: '{print $NF}' | tr -d '\r')
-  REDIS_PORT=$(docker port "$REDIS_NAME" 6379/tcp | awk -F: '{print $NF}' | tr -d '\r')
+  PG_PORT=$(parse_published_port "$(docker port "$PG_NAME" 5432/tcp | tr -d '\r')")
+  REDIS_PORT=$(parse_published_port "$(docker port "$REDIS_NAME" 6379/tcp | tr -d '\r')")
   printf '%s\n' "$PG_PORT" >"$STATE_DIR/pg.port"
   printf '%s\n' "$REDIS_PORT" >"$STATE_DIR/redis.port"
   printf '%s\n' "$PG_NAME" >"$STATE_DIR/pg.name"
