@@ -23,7 +23,7 @@ chmod 700 "$WORK"
 SHORT="$(mktemp -d "$HARNESS_BASE/.m.XXXXXX")"
 chmod 700 "$SHORT"
 trap 'rm -rf -- "$WORK" "$SHORT"' EXIT
-if (( ${#SHORT} + 14 + 19 + 38 >= 108 )); then
+if (( ${#SHORT} + 3 + 14 + 19 + 38 >= 108 )); then  # case 11 uses $SHORT/rt
   echo "graph-full-suite-isolated.test.sh: HOME $HARNESS_BASE is too long for the unit '.' budget cases" >&2
   exit 1
 fi
@@ -65,7 +65,10 @@ run_unit() { # run_unit <deployable> <env assignments...>; leaves stdout/stderr 
 # Base selection is checked on 'watcher', which binds no AF_UNIX socket, so the result does not depend
 # on how deep this harness itself runs; the socket budget of unit '.' is checked separately below.
 run_wrapper() { run_unit watcher "$@"; }
-observed() { sed -n "s/^$1=//p" "$WORK/repo/observed"; }
+observed() { # a missing file reads as empty, so a refused run fails its named checks instead of aborting
+  [[ -f "$WORK/repo/observed" ]] || return 0
+  sed -n "s/^$1=//p" "$WORK/repo/observed"
+}
 
 not_under_tmp() { case "$1" in /tmp|/tmp/*|/var/tmp|/var/tmp/*) return 1 ;; *) return 0 ;; esac; }
 
