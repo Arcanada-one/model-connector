@@ -18,6 +18,45 @@ subject = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(subject)
 
 
+
+def short_private_runtime(case):
+    """A 0700 exec base that fits the unit '.' AF_UNIX budget (base + 71 bytes < 108) on any host.
+
+    Candidates, in order: the account home (not the patched HOME) and /dev/shm. A candidate is used only
+    when a fresh mkdtemp dir under it fits the budget and can execute a file (the regression venv runs
+    from it). Runner account homes can be long (/opt/arcanada-runners/<runner>, 39 bytes), so the result
+    must not depend on the home alone. When no candidate qualifies the test is skipped with that reason,
+    never passed.
+    """
+    reasons = []
+    for parent in (pwd.getpwuid(os.getuid()).pw_dir, '/dev/shm'):
+        if not os.path.isdir(parent) or parent.startswith(('/tmp', '/var/tmp')):
+            reasons.append(f'{parent}: absent or under /tmp')
+            continue
+        try:
+            runtime = Path(tempfile.mkdtemp(prefix='.m', dir=parent))
+        except OSError as exc:
+            reasons.append(f'{parent}: {exc}')
+            continue
+        case.addCleanup(shutil.rmtree, runtime, ignore_errors=True)
+        runtime.chmod(0o700)
+        if len(str(runtime)) + 14 + 19 + 38 >= 108:
+            reasons.append(f'{runtime}: too long for the unit-. socket budget')
+            continue
+        probe = runtime / 'exec-probe'
+        probe.write_text('#!/bin/sh\nexit 0\n')
+        probe.chmod(0o700)
+        try:
+            runnable = subprocess.run([str(probe)], timeout=10).returncode == 0
+        except OSError:
+            runnable = False
+        probe.unlink()
+        if not runnable:
+            reasons.append(f'{runtime}: cannot execute files')
+            continue
+        return runtime
+    case.skipTest('no short private exec base on this host: ' + '; '.join(reasons))
+
 class Controls(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -133,6 +172,30 @@ class Controls(unittest.TestCase):
         self.assertEqual(groups['maintained-authored-template'], [subject.AUTHORED_TEMPLATE])
         self.assertEqual(groups['maintained-vitest'], ['src/a.spec.ts', 'templates/new/new.spec.ts'])
         self.assertEqual(sorted(n for r in rows for n in r['members']), sorted(members))
+
+    def test_node_test_spec_outside_vitest_include_is_a_regression_member(self):
+        members = ['src/a.spec.ts', 'scripts/ci/b.spec.mjs', 'provider-profiles/c.spec.mjs']
+        groups = {r['suite']: r['members'] for r in subject.plan('.', members)}
+        self.assertEqual(groups['maintained-vitest'], ['src/a.spec.ts', 'scripts/ci/b.spec.mjs'])
+        self.assertEqual(groups['maintained-regression'], ['provider-profiles/c.spec.mjs'])
+
+    def test_node_test_spec_runs_under_node_test_with_tap_counts(self):
+        name = 'provider-profiles/fi10-persona-resolve.spec.mjs'
+        argv, kind = subject.root_regression_command(ROOT, name)
+        self.assertEqual((argv[:3], kind), (['node', '--test', '--test-reporter=tap'], 'node-tap'))
+        self.assertEqual(argv[3], str(ROOT / name))
+        with self.assertRaises(subject.Refusal):
+            subject.root_regression_command(ROOT, 'scripts/ci/ci-observation.spec.mjs')
+
+    def test_vitest_include_still_covers_every_vitest_spec_mjs(self):
+        config = (ROOT / 'vitest.config.ts').read_text()
+        self.assertIn("'scripts/**/*.spec.mjs'", config)
+        listed = subprocess.run(['git', '-C', str(ROOT), 'ls-files', '-z', '--', '*.spec.mjs'],
+                                capture_output=True, check=True).stdout.decode().split('\0')
+        node_specs = [n for n in listed if n and subject.node_test_spec(n)]
+        self.assertTrue(node_specs)
+        for name in node_specs:
+            self.assertIn("from 'node:test'", (ROOT / name).read_text())
 
     def test_authored_template_render_binds_actual_sources_and_keeps_assertions(self):
         scratch = self.template_source_fixture()
@@ -323,18 +386,28 @@ class Controls(unittest.TestCase):
         runner = scripts / 'graph-full-suite.sh'
         runner.write_text(
             '#!/usr/bin/env bash\n'
-            '[[ "$1" == . ]] || exit 9\n'
+            '[[ "$1" == watcher ]] || exit 9\n'
             'printf "%s\\n%s\\n%s\\n" "$TMPDIR" "$HOME" "$(stat -c %a "$TMPDIR")"\n'
             '[[ -z "${FIXTURE_SECRET:-}" ]] || exit 10\n'
             'exit 23\n'
         )
-        # The private dir must live outside /tmp (world-writable); the base is a 0700 dir under the account home (not the patched HOME).
-        runtime = Path(tempfile.mkdtemp(prefix='.mcgs-runtime-', dir=pwd.getpwuid(os.getuid()).pw_dir))
-        self.addCleanup(shutil.rmtree, runtime, ignore_errors=True)
-        runtime.chmod(0o700)
+        # The private dir must live outside /tmp (world-writable); the base is a short 0700 dir under the account home
+        # (not the patched HOME), so it fits the unit-. socket budget whatever the depth of the host home.
+        runtime = short_private_runtime(self)
         self.assertFalse(str(runtime).startswith(('/tmp/', '/var/tmp/')), runtime)
+        # Unit '.' additionally builds the hash-locked regression venv from PyPI (scripts/graph-full-suite-
+        # regression.requirements.txt), which this hermetic fixture cannot do; the private TMPDIR/HOME and
+        # exit-status contract is the same for every unit, so it is checked on 'watcher' here, and unit '.'
+        # must refuse - never skip its regressions - when the lock is absent.
+        env = {'PATH': os.defpath, 'HOME': str(self.root), 'FIXTURE_SECRET': 'must-not-leak',
+               'XDG_RUNTIME_DIR': str(runtime)}
+        refused = subprocess.run(['bash', 'scripts/graph-full-suite-isolated.sh', '.'], cwd=self.root,
+                                 env=env, capture_output=True, text=True, timeout=10)
+        self.assertEqual(refused.returncode, 1, refused.stdout + refused.stderr)
+        self.assertIn('FULL_FALLBACK_TEST_REFUSED: regression lock file missing', refused.stderr)
+        self.assertEqual(list(runtime.iterdir()), [])
         result = subprocess.run(
-            ['bash', 'scripts/graph-full-suite-isolated.sh', '.'],
+            ['bash', 'scripts/graph-full-suite-isolated.sh', 'watcher'],
             cwd=self.root,
             env={'PATH': os.defpath, 'HOME': str(self.root), 'FIXTURE_SECRET': 'must-not-leak',
                  'XDG_RUNTIME_DIR': str(runtime)},
@@ -350,6 +423,60 @@ class Controls(unittest.TestCase):
         self.assertEqual(Path(tempdir).parent, runtime.resolve())
         self.assertFalse(str(Path(tempdir)).startswith(('/tmp/', '/var/tmp/')), tempdir)
         self.assertNotIn('must-not-leak', result.stdout + result.stderr)
+
+    def test_isolated_entrypoint_unit_root_installs_only_the_hash_locked_wheelhouse(self):
+        # Unit '.' succeeds hermetically when the lock and matching wheels are provided offline
+        # (GRAPH_FULL_SUITE_WHEELHOUSE -> --no-index --find-links): the suite then runs on the private
+        # venv python, which resolves the locked jsonschema from the venv. A wheel whose bytes do not
+        # match the locked sha256 is refused and the suite never starts.
+        import hashlib, zipfile
+        scripts = self.root / 'scripts'
+        scripts.mkdir()
+        (self.root / 'node_modules').mkdir()
+        (scripts / 'graph-full-suite-isolated.sh').write_bytes(
+            (ROOT / 'scripts/graph-full-suite-isolated.sh').read_bytes())
+        (scripts / 'graph-full-suite.sh').write_text(
+            '#!/usr/bin/env bash\n'
+            '[[ "$1" == . ]] || exit 9\n'
+            'python3 -c "import sys, jsonschema; print(sys.executable); print(jsonschema.__file__)"\n'
+            'exit 23\n'
+        )
+        wheelhouse = self.root / 'wheelhouse'
+        wheelhouse.mkdir(mode=0o700)
+        wheel = wheelhouse / 'jsonschema-4.23.0-py3-none-any.whl'
+        files = {
+            'jsonschema/__init__.py': 'FIXTURE = True\n',
+            'jsonschema-4.23.0.dist-info/METADATA': 'Metadata-Version: 2.1\nName: jsonschema\nVersion: 4.23.0\n',
+            'jsonschema-4.23.0.dist-info/WHEEL': 'Wheel-Version: 1.0\nGenerator: fixture\nRoot-Is-Purelib: true\nTag: py3-none-any\n',
+        }
+        record = ''.join(f'{name},,\n' for name in files) + 'jsonschema-4.23.0.dist-info/RECORD,,\n'
+        with zipfile.ZipFile(wheel, 'w') as archive:
+            for name, body in files.items():
+                archive.writestr(name, body)
+            archive.writestr('jsonschema-4.23.0.dist-info/RECORD', record)
+        digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
+        lock = scripts / 'graph-full-suite-regression.requirements.txt'
+        runtime = short_private_runtime(self)
+        env = {'PATH': os.defpath, 'HOME': str(self.root), 'XDG_RUNTIME_DIR': str(runtime),
+               'GRAPH_FULL_SUITE_WHEELHOUSE': str(wheelhouse)}
+
+        lock.write_text(f'jsonschema==4.23.0 --hash=sha256:{digest}\n')
+        result = subprocess.run(['bash', 'scripts/graph-full-suite-isolated.sh', '.'], cwd=self.root,
+                                env=env, capture_output=True, text=True, timeout=180)
+        self.assertEqual(result.returncode, 23, result.stdout + result.stderr)
+        executable, module = result.stdout.strip().splitlines()[-2:]
+        venv = (self.root / 'node_modules/.cache/graph-full-suite/runs').resolve()
+        self.assertTrue(executable.startswith(str(venv) + '/'), executable)
+        self.assertTrue(executable.endswith('/regression-python/bin/python3'), executable)
+        self.assertTrue(module.startswith(str(venv) + '/'), module)
+
+        lock.write_text(f'jsonschema==4.23.0 --hash=sha256:{"0" * 64}\n')
+        tampered = subprocess.run(['bash', 'scripts/graph-full-suite-isolated.sh', '.'], cwd=self.root,
+                                  env=env, capture_output=True, text=True, timeout=180)
+        self.assertEqual(tampered.returncode, 1, tampered.stdout + tampered.stderr)
+        self.assertIn('FULL_FALLBACK_TEST_REFUSED: hash-locked regression dependencies could not be installed',
+                      tampered.stderr)
+        self.assertNotIn('regression-python/bin/python3', tampered.stdout)
 
     def test_actual_root_entrypoint_dispatches_local_regression_retains_app_hold(self):
         self.root_entrypoint_fixture()
