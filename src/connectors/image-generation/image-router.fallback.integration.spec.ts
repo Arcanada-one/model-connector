@@ -64,10 +64,11 @@ describe.skipIf(!shouldRun)('ImageRouterService — fallback integration [INTEGR
     console.log('[INT] Replicate PLACEHOLDER correctly throws ProviderNotProvisionedError');
   });
 
-  it('VertexImageConnector with real SA JSON passes placeholder check (is NOT placeholder)', () => {
+  it('Vertex credential placeholder check handles absent and real service-account JSON', () => {
     const saJson = process.env.VERTEX_SERVICE_ACCOUNT_JSON;
     if (!saJson) {
-      console.log('[INT] Skipping: VERTEX_SERVICE_ACCOUNT_JSON not set');
+      expect(isPlaceholder('')).toBe(true);
+      console.log('[INT] Missing Vertex credential is classified as a placeholder');
       return;
     }
 

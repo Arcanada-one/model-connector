@@ -513,6 +513,8 @@ class Controls(unittest.TestCase):
             self.assertNotIn('NODE_OPTIONS', env)
             # Isolated baseline may set a non-grant placeholder DATABASE_URL.
             self.assertNotIn('MC_FULL_SUITE_APP_E2E', env)
+            if 'image-router.fallback.integration.spec.ts' in argv:
+                self.assertEqual(env.get('RUN_INTEGRATION'), '1')
             if 'DATABASE_URL' in env:
                 self.assertIn('suite_placeholder', env['DATABASE_URL'])
             if argv[0] == 'pnpm':
@@ -532,7 +534,8 @@ class Controls(unittest.TestCase):
 
     def test_root_dispatches_exact_local_members_and_retains_live_and_app(self):
         offline = sorted(subject.OFFLINE_INTEGRATION)[0]
-        members = ['src/a.spec.ts', offline, 'src/auth/live.integration.spec.ts',
+        local_image = sorted(subject.LOCAL_IMAGE_INTEGRATION)[0]
+        members = ['src/a.spec.ts', offline, local_image, 'src/auth/live.integration.spec.ts',
                    'test/app.e2e-spec.ts', 'scripts/control.test.sh']
         suites = self.root_dispatch_fixture(members)
         calls = []
@@ -540,7 +543,7 @@ class Controls(unittest.TestCase):
                 'PROVIDER_API_KEY': 'sentinel-secret', 'DATABASE_URL': 'sentinel-secret',
                 'MC_ALLOW_LIVE': '1', 'NODE_OPTIONS': 'sentinel-secret'}):
             result = subject.run_root_suites(self.root, suites, self.root, self.root_child(calls))
-        self.assertEqual(len(calls), 3)
+        self.assertEqual(len(calls), 4)
         full_vitest_calls = [args for args in calls if args[0] == 'pnpm' and '--maxWorkers=4' in args]
         self.assertEqual(len(full_vitest_calls), 1)
         self.assertEqual(sorted(n for r in result for n in r['members']), sorted(members))
@@ -549,6 +552,39 @@ class Controls(unittest.TestCase):
         self.assertFalse(any('live.integration.spec.ts' in a or 'app.e2e-spec.ts' in a for args in calls for a in args))
         self.assertEqual([r['verdict'] for r in result], ['not_measured', 'not_measured', 'verified', 'verified'])
         self.assertEqual(subject.execution_code(result), 127)
+
+    def test_image_router_fallback_integration_runs_without_external_grant(self):
+        member = sorted(subject.LOCAL_IMAGE_INTEGRATION)[0]
+        suites = self.root_dispatch_fixture([member])
+        calls = []
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'):
+            result = subject.run_root_suites(self.root, suites, self.root, self.root_child(calls))
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(result[0]['suite'], 'maintained-integration')
+        self.assertEqual(result[0]['verdict'], 'verified')
+        self.assertEqual(result[0]['executions'][0]['members'], [member])
+        self.assertEqual(subject.execution_code(result), 0)
+
+    def test_eight_held_integration_members_have_explicit_local_or_external_prerequisites(self):
+        members = {
+            'src/bench-reservation/postgres.integration.spec.ts',
+            subject.IMAGE_E2E_MEMBER,
+            'src/connectors/image-generation/image-router.fallback.integration.spec.ts',
+            *subject.EXTERNAL_INTEGRATION_PREREQUISITES,
+        }
+        self.assertEqual(len(members), 8)
+        self.assertEqual(set(subject.LOCAL_IMAGE_INTEGRATION), {
+            'src/connectors/image-generation/image-router.fallback.integration.spec.ts',
+        })
+        self.assertEqual(set(subject.EXTERNAL_INTEGRATION_PREREQUISITES), {
+            'src/connectors/image-generation/fal-ai/fal-ai.connector.integration.spec.ts',
+            'src/connectors/image-generation/openai-images/openai-images.connector.integration.spec.ts',
+            'src/connectors/image-generation/storage/r2.service.integration.spec.ts',
+            'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts',
+            'src/connectors/image-generation/vertex/vertex-image.connector.integration.spec.ts',
+        })
+        self.assertTrue(all(reason.startswith('held_')
+                            for reason in subject.EXTERNAL_INTEGRATION_PREREQUISITES.values()))
 
     def test_root_missing_runner_refuses_before_spawn(self):
         suites = self.root_dispatch_fixture(['src/a.spec.ts'])
@@ -690,6 +726,52 @@ class Controls(unittest.TestCase):
         self.assertEqual(e2e['executions'][1]['verdict'], 'verified')
         self.assertEqual(e2e['verdict'], 'verified')
 
+    def test_image_generation_e2e_uses_disposable_services_and_enables_integration(self):
+        member = subject.IMAGE_E2E_MEMBER
+        suites = self.root_dispatch_fixture([member])
+        grant = {
+            'arms': [subject.GRANT_ARM_DISPOSABLE],
+            'env': {
+                'DATABASE_URL': 'postgresql://test:test@127.0.0.1:5432/connector_test',
+                'REDIS_HOST': '127.0.0.1',
+                'REDIS_PORT': '6379',
+                'REDIS_PREFIX': 'fixture:',
+                'NODE_ENV': 'test',
+            },
+            'path': '/fixture/grant.json',
+            'sha256': '0' * 64,
+        }
+        seen = []
+
+        def child(argv, cwd, env, deadline, scratch, name):
+            seen.append((name, env.get('RUN_INTEGRATION')))
+            output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
+            selected = [a for a in argv[argv.index('--outputFile=' + output) + 1:]
+                        if not a.startswith('-')]
+            red = env.get('DATABASE_URL', '').endswith('/pass_red')
+            status = 'failed' if red else 'passed'
+            Path(output).write_text(json.dumps({
+                'numTotalTests': len(selected),
+                'numPassedTests': 0 if red else len(selected),
+                'numFailedTests': len(selected) if red else 0,
+                'testResults': [{'name': str(self.root / m),
+                                 'assertionResults': [{'status': status}]} for m in selected],
+            }))
+            return {'argv': argv, 'exit_code': 1 if red else 0,
+                    'output': '', 'duration_s': 0}
+
+        with patch.object(subject.shutil, 'which', return_value='/fixture/runner'), \
+                tempfile.TemporaryDirectory() as directory:
+            result = subject.run_root_suites(
+                self.root, suites, Path(directory), child, grant=grant)
+        integration = next(row for row in result if row['suite'] == 'maintained-integration')
+        self.assertEqual(seen, [('root-0-disposable-pass-red', '1'),
+                                ('root-0-disposable', '1')])
+        self.assertEqual(integration['executions'][0]['control']['result'], 'PASS_RED')
+        self.assertEqual(integration['executions'][1]['verdict'], 'verified')
+        self.assertEqual(integration['verdict'], 'verified')
+        self.assertEqual(subject.execution_code(result), 0)
+
     def test_grant_env_does_not_leak_into_vitest_default(self):
         members = ['src/a.spec.ts', 'test/app.e2e-spec.ts']
         suites = self.root_dispatch_fixture(members)
@@ -773,7 +855,8 @@ class ArmEvidence(unittest.TestCase):
              'held_reasons': {
                  'src/billing/hold.integration.spec.ts': 'held_disposable: no FullSuiteDisposableGrant/v1',
                  'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts':
-                     'held_live_opt_in: live provider credentials/money; local stub range later'}},
+                     subject.EXTERNAL_INTEGRATION_PREREQUISITES[
+                         'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts']}},
             {'suite': 'maintained-regression',
              'executions': [dict(ok), {'verdict': 'verified', 'counts': None, 'raw_log': '/tmp/root-reg.log'}]},
             {'suite': 'maintained-vitest', 'executions': [dict(ok)]},

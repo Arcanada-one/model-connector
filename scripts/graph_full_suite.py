@@ -4,8 +4,9 @@ Without an owned FullSuiteDisposableGrant/v1, real disposable-store authority,
 app E2E and live external provider arms remain unmeasured. Ambient environment
 flags never lift that disposition. A grant file (mode 0600, under the private
 runner temp) may authorize disposable Postgres/Redis + Nest app-e2e only.
-Live-credential image-generation members stay held_live_opt_in until a later
-local-stub range; they are never silently dropped from membership.
+Live-credential image-generation members stay held_live_opt_in; the local
+fallback integration member runs with its real placeholder-refusal behavior.
+Members are never silently dropped from membership.
 """
 from pathlib import Path
 import hashlib
@@ -32,6 +33,11 @@ OFFLINE_INTEGRATION = frozenset({
     'src/openai-compat/openai-compat.failover.integration.spec.ts',
     'src/speech/stt/stt-pilot.integration.spec.ts',
 })
+# This integration member exercises only deterministic fallback routing and
+# PLACEHOLDER refusal paths. It does not call a provider or storage endpoint.
+LOCAL_IMAGE_INTEGRATION = frozenset({
+    'src/connectors/image-generation/image-router.fallback.integration.spec.ts',
+})
 GRANT_SCHEMA = 'FullSuiteDisposableGrant/v1'
 GRANT_ENV_KEY = 'MC_FULL_SUITE_GRANT'
 GRANT_ARM_DISPOSABLE = 'integration-disposable-store'
@@ -52,8 +58,21 @@ _SECRET_TAIL_RE = re.compile(
     re.IGNORECASE,
 )
 BENCH_OWNED_MEMBER = 'src/bench-reservation/postgres.integration.spec.ts'
+IMAGE_E2E_MEMBER = 'src/connectors/image-generation/image-generation.e2e.integration.spec.ts'
 HELD_STORE_PREFIXES = ('src/auth/', 'src/bench-reservation/', 'src/billing/')
 HELD_PROVIDER_PREFIXES = ('src/connectors/image-generation/',)
+EXTERNAL_INTEGRATION_PREREQUISITES = {
+    'src/connectors/image-generation/fal-ai/fal-ai.connector.integration.spec.ts':
+        'held_external_api: RUN_INTEGRATION=1, FAL_AI_INTEGRATION=1, FAL_AI_API_KEY, and network to Fal image generation; paid image calls',
+    'src/connectors/image-generation/openai-images/openai-images.connector.integration.spec.ts':
+        'held_external_api: RUN_INTEGRATION=1, OPENAI_INTEGRATION=1, OPENAI_API_KEY, and network to OpenAI image generation; paid image calls',
+    'src/connectors/image-generation/storage/r2.service.integration.spec.ts':
+        'held_external_storage: RUN_INTEGRATION=1, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and network to Cloudflare R2; uploads, fetches, deletes',
+    'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts':
+        'held_external_auth: RUN_INTEGRATION=1, VERTEX_SERVICE_ACCOUNT_JSON, and network to Google OAuth2 token endpoint',
+    'src/connectors/image-generation/vertex/vertex-image.connector.integration.spec.ts':
+        'held_billed_external_api: RUN_INTEGRATION=1, VERTEX_SERVICE_ACCOUNT_JSON, VERTEX_BILLING_ENABLED=1, linked project billing, and network to Vertex AI Imagen',
+}
 
 
 class Refusal(Exception):
@@ -340,11 +359,12 @@ def emit_vitest_json_failures(report_path, limit=12):
 
 
 def disposable_member(path):
-    return path.startswith(HELD_STORE_PREFIXES) and path.endswith('.integration.spec.ts')
+    return (path.endswith('.integration.spec.ts')
+            and (path.startswith(HELD_STORE_PREFIXES) or path == IMAGE_E2E_MEMBER))
 
 
 def external_member(path):
-    return path.startswith(HELD_PROVIDER_PREFIXES) and path.endswith('.integration.spec.ts')
+    return path in EXTERNAL_INTEGRATION_PREREQUISITES
 
 
 def bench_fixture_ready(grant):
@@ -623,9 +643,10 @@ def render_authored_template(root, scratch, members, env=None):
 def run_root_suites(root, suites, scratch, executor=execute, grant=None):
     """Dispatch ordinary local groups; preserve every held member without spawning it.
 
-    With a disposable grant, Nest app-e2e and TCP Postgres/Redis disposable-store
-    members may execute. Live-credential image-generation members and the owned
-    bench unix-socket fixture stay held until their prerequisites exist.
+    With a disposable grant, Nest app-e2e, image HTTP e2e and TCP Postgres/Redis
+    disposable-store members may execute. Local image fallback runs without provider access;
+    live-credential image-generation and the owned bench unix-socket fixture
+    stay held until their prerequisites exist.
     """
     members = [n for suite in suites for n in suite['members']]
     expected = {r['suite']: r['members'] for r in plan('.', members)}
@@ -689,6 +710,8 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
                     '--outputFile=' + str(red_report), *selected]
         red_env = dict(grant_env)
         red_env['DATABASE_URL'] = 'postgresql://pass-red:pass-red@127.0.0.1:1/pass_red'
+        if IMAGE_E2E_MEMBER in selected:
+            red_env['RUN_INTEGRATION'] = '1'
         red = run(red_argv, selected, label + '-pass-red',
                   lambda raw: vitest_counts(json.loads(red_report.read_text()), selected, root),
                   env_override=red_env)
@@ -702,7 +725,8 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
                      '--outputFile=' + str(report_path), *selected]
         real = run(real_argv, selected, label,
                    lambda raw: vitest_counts(json.loads(report_path.read_text()), selected, root),
-                   env_override=grant_env)
+                   env_override={**grant_env,
+                                 **({'RUN_INTEGRATION': '1'} if IMAGE_E2E_MEMBER in selected else {})})
         real['vitest_report'] = str(report_path)
         real['control'] = {'result': 'PASS_RED'}
         return red, real
@@ -759,9 +783,11 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
                               'not_measured' if not row['executions'] or any(r['verdict'] != 'verified' for r in row['executions']) else 'verified')
         elif name == 'maintained-integration':
             offline = [n for n in members if n in OFFLINE_INTEGRATION]
+            local_image = [n for n in members if n in LOCAL_IMAGE_INTEGRATION]
             disposable = [n for n in members if disposable_member(n)]
             external = [n for n in members if external_member(n)]
-            other = [n for n in members if n not in offline and n not in disposable and n not in external]
+            other = [n for n in members if n not in offline and n not in local_image
+                     and n not in disposable and n not in external]
             if other:
                 raise Refusal('unclassified integration member: ' + ', '.join(other))
             held_reasons = {}
@@ -772,7 +798,9 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
                     if path_name == BENCH_OWNED_MEMBER and not bench_fixture_ready(grant):
                         held_disposable.append(path_name)
                         held_reasons[path_name] = (
-                            'held_owned_bench_fixture: unix-socket postgres + native UNIT TEST binary required')
+                            'held_owned_bench_fixture: BENCH_OWNED_TEST_PG_SOCKET under /mc-owned-postgres/socket, '
+                            'BENCH_OWNED_TEST_SOCKET_ROOT, disposable PG databases/roles, and real '
+                            'BENCH_OWNED_NATIVE_TEST_BINARY at /clean-native-build-v4/target/debug/deps/codex_http_client-* required')
                     else:
                         run_disposable.append(path_name)
             else:
@@ -780,8 +808,7 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
                 for path_name in disposable:
                     held_reasons[path_name] = 'held_disposable: no FullSuiteDisposableGrant/v1'
             for path_name in external:
-                held_reasons[path_name] = (
-                    'held_live_opt_in: live provider credentials/money; local stub range later')
+                held_reasons[path_name] = EXTERNAL_INTEGRATION_PREREQUISITES[path_name]
             held = held_disposable + external
             if offline:
                 report = scratch / (name + '-offline.json')
@@ -791,6 +818,17 @@ def run_root_suites(root, suites, scratch, executor=execute, grant=None):
                 result = run(argv, offline, 'root-' + str(index) + '-offline',
                     lambda raw, selected=offline, report=report: vitest_counts(
                         json.loads(report.read_text()), selected, root))
+                result['vitest_report'] = str(report)
+                row['executions'].append(result)
+            if local_image:
+                report = scratch / (name + '-local-image.json')
+                argv = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.integration.config.ts',
+                        '--reporter=default', '--reporter=json',
+                        '--outputFile=' + str(report), *local_image]
+                result = run(argv, local_image, 'root-' + str(index) + '-local-image',
+                    lambda raw, selected=local_image, report=report: vitest_counts(
+                        json.loads(report.read_text()), selected, root),
+                    env_override={'RUN_INTEGRATION': '1'})
                 result['vitest_report'] = str(report)
                 row['executions'].append(result)
             if run_disposable:
@@ -845,6 +883,8 @@ ARM_OF_SUITE = {'maintained-vitest': 'vitest-default',
 def classify_held(member):
     if member.endswith('.e2e-spec.ts'):
         return 'app-e2e'
+    if member == IMAGE_E2E_MEMBER:
+        return 'integration-disposable-store'
     if member.startswith(HELD_STORE_PREFIXES):
         return 'integration-disposable-store'
     if member.startswith(HELD_PROVIDER_PREFIXES):
