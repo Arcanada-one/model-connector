@@ -199,23 +199,26 @@ if (( ${#copies[@]} == 1 )) && [[ -f "${copies[0]}" && ! -L "${copies[0]}" ]]; t
   echo "Full-suite evidence: ${copies[0]}"
   # On a non-zero status, print a bounded failure digest on stdout. The caller keeps this output in the
   # retained verifier-out log, which survives the runner's cleanup when the private copy does not. Only argv,
-  # exit code, duration and the last 80 log lines of each non-verified execution are printed, after
-  # redaction; no environment value is ever printed. The digest is capped at 64 KiB.
+  # exit code, duration and the last 80 log lines of each FAILED execution (verdict neither verified nor
+  # not_measured) are printed, after redaction; no environment value is ever printed. A not-measured run
+  # (status 124/127) with no failed execution prints nothing. The digest is capped at 64 KiB.
   if (( status != 0 )); then
-    "$SYSTEM_PYTHON" -I - "${copies[0]}" <<'DIGEST' || echo 'graph-full-suite-isolated: failure digest unavailable'
+    "$SYSTEM_PYTHON" -I - "${copies[0]}" "$status" <<'DIGEST' || echo 'graph-full-suite-isolated: failure digest unavailable'
 import json, os, re, stat, sys
 CAP, TAIL = 65536, 80
-doc_path = sys.argv[1]
+doc_path, status = sys.argv[1], int(sys.argv[2])
 base = os.path.dirname(doc_path)
 SECRET = [
     (re.compile(r'-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----.*?(?:-----END [A-Z0-9 ]*PRIVATE KEY-----|\Z)', re.S), '[REDACTED PRIVATE KEY]'),
+    (re.compile(r'\A.*?-----END [A-Z0-9 ]*PRIVATE KEY-----', re.S), '[REDACTED PRIVATE KEY]'),
+    (re.compile(r'(?<![A-Za-z0-9+/])(?=[A-Za-z0-9+/]*[g-zG-Z+/])[A-Za-z0-9+/]{40,}={0,2}'), '[REDACTED]'),
     (re.compile(r'\b(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{16,}|glpat-[A-Za-z0-9_-]{16,}|mun_sk_[A-Za-z0-9_-]{8,}'
                 r'|sk-[A-Za-z0-9_-]{16,}|xox[abposr]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{30,})'), '[REDACTED]'),
     (re.compile(r'\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}'), '[REDACTED JWT]'),
     (re.compile(r'(?i)\b(bearer|basic|token)(\s+)[A-Za-z0-9._~+/=-]{8,}'), r'\1\2[REDACTED]'),
     (re.compile(r'(://[^/\s:@]+):[^@\s/]+@'), r'\1:[REDACTED]@'),
     (re.compile(r'(?i)\b((?:[a-z0-9_]*_)?(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key'
-                r'|client[_-]?secret|authorization|credentials?|cookie|session)["\']?\s*[:=]\s*)(["\']?)[^\s"\',;}]+'), r'\1\2[REDACTED]'),
+                r'|client[_-]?secret|authorization|credentials?|cookie|session|key)["\']?\s*[:=]\s*)(["\']?)[^\s"\',;}]+'), r'\1\2[REDACTED]'),
     (re.compile(r'^(\s*(?:export\s+)?[A-Z_][A-Z0-9_]*=)\S.*$', re.M), r'\1[REDACTED]'),
 ]
 def redact(text):
@@ -248,15 +251,18 @@ try:
 except (OSError, ValueError):
     print('graph-full-suite-isolated: failure digest unavailable (execution document unreadable)')
     sys.exit(0)
+def failed(ex):
+    return isinstance(ex, dict) and ex.get('verdict') not in ('verified', 'not_measured')
+rows = [r for r in (doc.get('results') or []) if isinstance(r, dict)]
+if status in (124, 127) and not any(failed(ex) for r in rows for ex in (r.get('executions') or [])):
+    sys.exit(0)
 out = ['=== graph-full-suite failure digest (argv, exit, duration, last %d log lines; redacted; capped at %d bytes) ===' % (TAIL, CAP),
        'unit=%s head=%s exit_code=%s' % (doc.get('unit'), doc.get('head'), doc.get('exit_code'))]
-for row in doc.get('results') or []:
-    if not isinstance(row, dict):
-        continue
+for row in rows:
     out.append('suite %s: %s; held %d; %s' % (row.get('suite'), row.get('verdict'), len(row.get('held_members') or []),
                                                 redact(str(row.get('reason') or ''))[:300]))
     for ex in row.get('executions') or []:
-        if not isinstance(ex, dict) or ex.get('verdict') == 'verified':
+        if not failed(ex):
             continue
         out.append('  execution %s: exit %s, %ss: %s' % (ex.get('verdict'), ex.get('exit_code'), ex.get('duration_s'),
                                                           redact(' '.join(arg(a) for a in (ex.get('argv') or [])))))

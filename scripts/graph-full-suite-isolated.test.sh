@@ -253,21 +253,30 @@ cat >"$WORK/repo2/scripts/graph-full-suite.sh" <<'STUB'
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 read -r status lines width <"$root/stub-mode"
 d="$(mktemp -d "$TMPDIR/mc-full-watcher-XXXXXXXX")"
+# Token-shaped values are assembled at run time so no token- or key-shaped literal sits in the source. The PEM
+# block is longer than the 80-line tail, so the tail starts inside it (no BEGIN line) and must still be redacted.
+pfx=ghp pem='PRIVATE KEY'
 {
   echo 'FIRST-LINE-OF-LOG'
-  pfx=ghp  # assembled at run time so no token-shaped literal sits in the source
+  echo "-----BEGIN RSA $pem-----"
+  for ((i = 0; i < 90; i++)); do echo "MIIharnessPEMbody${i}xyz"; done  # short: only the cut-PEM rule catches it
+  echo "-----END RSA $pem-----"
+  for ((i = 0; i < lines; i++)); do printf 'filler %0*d\n' "$width" "$i"; done
   echo "GITHUB_TOKEN=${pfx}_harnessfixture0123456789abcdef"
   echo 'Authorization: Bearer harnessbearer0123456789'
   echo 'dsn https://svc:harnesspassword@db.example/x'
   echo 'api_key="harnessapikeyvalue"'
-  for ((i = 0; i < lines; i++)); do printf 'filler %0*d\n' "$width" "$i"; done
+  echo '{"OPENAI_KEY": "harnessjsonkeyvalue"}'
+  echo 'payload harnessB64blobQWERTYuiopASDFGHjklZXCVBNm0123456789+/=='
   echo 'LAST-LINE-OF-LOG'
 } >"$d/root-3-1.log"
+ev=failed
+[[ $status == 127 ]] && ev=not_measured
 cat >"$d/execution.json" <<JSON
 {"schema":"MaintainedFullSuiteExecution/v1","unit":"watcher","head":"stubhead","exit_code":$status,
  "results":[{"suite":"stub-regression","verdict":"failed","held_members":[],
   "executions":[{"verdict":"verified","exit_code":0,"duration_s":0.1,"argv":["python3","ok_test.py"],"raw_log":"$d/root-3-0.log"},
-                {"verdict":"failed","exit_code":$status,"duration_s":0.2,"argv":["env","HARNESS_SETTING=harnessenvvalue","python3","stub_test.py"],"raw_log":"$d/root-3-1.log"}]}]}
+                {"verdict":"$ev","exit_code":$status,"duration_s":0.2,"argv":["env","HARNESS_SETTING=harnessenvvalue","python3","stub_test.py"],"raw_log":"$d/root-3-1.log"}]}]}
 JSON
 echo "Full-suite evidence: $d/execution.json"
 exit "$status"
@@ -281,7 +290,7 @@ run_repo2() { # run_repo2 <status> <lines> <width>; output in $WORK/run2.log, wr
 }
 last_pointer() { sed -n 's/^Full-suite evidence: //p' "$WORK/run2.log" | tail -1; }
 digest() { sed -n '/^=== graph-full-suite failure digest/,$p' "$WORK/run2.log"; }
-secret_free() { ! grep -q -E 'ghp_harness|harnessbearer|harnesspassword|harnessapikeyvalue|harnessenvvalue' "$WORK/run2.log"; }
+secret_free() { ! grep -q -E 'ghp_harness|harnessbearer|harnesspassword|harnessapikeyvalue|harnessenvvalue|harnessjsonkeyvalue|harnessPEMbody|harnessB64blob' "$WORK/run2.log"; }
 
 run_repo2 1 200 8
 ptr="$(last_pointer)"
@@ -299,7 +308,12 @@ check "digest: tail is at most 80 lines" test "$(digest | grep -c '^    | ')" -l
 check "digest: older log lines are not printed" bash -c '! grep -q FIRST-LINE-OF-LOG "$1"' _ "$WORK/run2.log"
 run_repo2 1 3 4
 check "digest: env assignment in argv is redacted" grep -q -F 'HARNESS_SETTING=[REDACTED]' "$WORK/run2.log"
-check "digest: token, bearer, URL password, key and env values redacted" secret_free
+check "digest: token, bearer, URL password, key, JSON *_KEY, cut PEM, base64 run and env values redacted" secret_free
+check "digest: redaction leaves the tail's last line" grep -q 'LAST-LINE-OF-LOG' "$WORK/run2.log"
+run_repo2 127 3 4
+check "not measured: status 127 kept" test "$(cat "$WORK/run2.rc")" = 127
+check "not measured: last pointer printed" test -f "$(last_pointer)"
+check "not measured: no failure digest without a failed execution" bash -c '! grep -q "failure digest" "$1"' _ "$WORK/run2.log"
 run_repo2 0 3 4
 check "evidence: last pointer also printed on success" test -f "$(last_pointer)"
 check "digest: not printed on success" bash -c '! grep -q "failure digest" "$1"' _ "$WORK/run2.log"
