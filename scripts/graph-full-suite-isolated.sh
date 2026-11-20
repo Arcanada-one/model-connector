@@ -119,6 +119,32 @@ if [[ "$1" == 'packages/sdk-python' ]] && ! env -i PATH="$SYSTEM_PATH" "$SYSTEM_
   PYTHON_PATH="$VENV/bin:$SYSTEM_PATH"
 fi
 
+# Root regressions of unit '.' include .github/graph-admission/tools/graph/test_source_input_contract.py,
+# which imports jsonschema. The system /usr/bin/python3 on the CI runners has none, and the setup-python
+# interpreter of the workflow is deliberately not on this PATH. Build a private venv from the system
+# python (no system site-packages) and install the hash-locked set with --require-hashes --no-deps
+# --only-binary=:all: and pip --isolated (no pip.conf or PIP_* environment). Any failure refuses;
+# the regression is never skipped.
+REGRESSION_LOCK="$SCRIPT_DIR/graph-full-suite-regression.requirements.txt"
+if [[ "$1" == '.' ]]; then
+  REG_VENV="$PRIVATE_TMP/regression-python"
+  reg_env=(env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$SYSTEM_PATH" PYTHONDONTWRITEBYTECODE=1)
+  [[ -f "$REGRESSION_LOCK" && ! -L "$REGRESSION_LOCK" ]] || refuse 'regression lock file missing'
+  "${reg_env[@]}" "$SYSTEM_PYTHON" -I -m venv "$REG_VENV" \
+    || refuse 'regression venv could not be created from the system python'
+  "${reg_env[@]}" "$REG_VENV/bin/python" -I -m pip --isolated --disable-pip-version-check --no-input \
+    install --cache-dir "$CACHE_ROOT/pip-cache" --require-hashes --no-deps --only-binary=:all: \
+    -r "$REGRESSION_LOCK" \
+    || refuse 'hash-locked regression dependencies could not be installed'
+  "${reg_env[@]}" "$REG_VENV/bin/python" -I -c '
+import sys, jsonschema, importlib.metadata as md
+venv = sys.argv[1]
+assert jsonschema.__file__.startswith(venv + "/"), jsonschema.__file__
+assert md.version("jsonschema") == "4.23.0", md.version("jsonschema")
+' "$REG_VENV" || refuse 'regression venv does not provide the locked jsonschema'
+  PYTHON_PATH="$REG_VENV/bin:$PYTHON_PATH"
+fi
+
 # Root Vitest/integration arms import @prisma/client. A clean install with
 # ignored build scripts leaves the client ungenerated; generate into the owned
 # node_modules before measurement when prisma is present (dummy URL — generate

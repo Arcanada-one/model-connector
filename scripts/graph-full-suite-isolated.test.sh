@@ -145,6 +145,22 @@ fi
 run_unit watcher RUNNER_TEMP="$deep"
 check "budget: deep base still used for watcher" test "$(observed TMPDIR | cut -c1-${#deep})" = "$deep"
 
+# 10. Unit '.' regressions run in a private venv built from the hash-locked set (offline checks; the
+#     networked install is exercised by every full-suite run of unit '.'). Every lock line is an exact
+#     pin with one sha256, the set is exactly the jsonschema 4.23.0 closure, and the wrapper installs it
+#     with --require-hashes --no-deps --only-binary=:all: under pip --isolated, refusing on failure.
+lock="$(dirname -- "$SUBJECT")/graph-full-suite-regression.requirements.txt"
+wrapper="$SUBJECT"
+pins="$(grep -v -E '^(#|$)' "$lock" | sed -E 's/ --hash=sha256:[0-9a-f]{64}$//' | LC_ALL=C sort | tr '\n' ' ')"
+check "lock: exact jsonschema 4.23.0 closure" test "$pins" = "attrs==24.3.0 jsonschema-specifications==2024.10.1 jsonschema==4.23.0 referencing==0.35.1 rpds-py==0.22.3 "
+check "lock: every requirement has one sha256" test "$(grep -v -E '^(#|$)' "$lock" | grep -c -v -E '^[a-z0-9-]+==[0-9.]+ --hash=sha256:[0-9a-f]{64}$')" = 0
+install_line="$(grep -A3 -E 'REG_VENV/bin/python" -I -m pip --isolated' "$wrapper" | tr -s ' \\\n' ' ')"
+for flag in --require-hashes --no-deps --only-binary=:all: '-r "$REGRESSION_LOCK"' "refuse 'hash-locked regression dependencies could not be installed'"; do
+  check "venv: pip install carries $flag" grep -q -F -- "$flag" <<<"$install_line"
+done
+check "venv: built without system site-packages" bash -c '! grep -q -- "--system-site-packages" "$1"' _ "$wrapper"
+check "venv: locked jsonschema asserted inside the venv" grep -q -F 'md.version("jsonschema") == "4.23.0"' "$wrapper"
+
 if [[ $fail -ne 0 ]]; then
   echo "graph-full-suite-isolated.test.sh: FAILED"
   exit 1

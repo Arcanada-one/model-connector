@@ -302,7 +302,7 @@ class Controls(unittest.TestCase):
         runner = scripts / 'graph-full-suite.sh'
         runner.write_text(
             '#!/usr/bin/env bash\n'
-            '[[ "$1" == . ]] || exit 9\n'
+            '[[ "$1" == watcher ]] || exit 9\n'
             'printf "%s\\n%s\\n%s\\n" "$TMPDIR" "$HOME" "$(stat -c %a "$TMPDIR")"\n'
             '[[ -z "${FIXTURE_SECRET:-}" ]] || exit 10\n'
             'exit 23\n'
@@ -312,8 +312,19 @@ class Controls(unittest.TestCase):
         self.addCleanup(shutil.rmtree, runtime, ignore_errors=True)
         runtime.chmod(0o700)
         self.assertFalse(str(runtime).startswith(('/tmp/', '/var/tmp/')), runtime)
+        # Unit '.' additionally builds the hash-locked regression venv from PyPI (scripts/graph-full-suite-
+        # regression.requirements.txt), which this hermetic fixture cannot do; the private TMPDIR/HOME and
+        # exit-status contract is the same for every unit, so it is checked on 'watcher' here, and unit '.'
+        # must refuse - never skip its regressions - when the lock is absent.
+        env = {'PATH': os.defpath, 'HOME': str(self.root), 'FIXTURE_SECRET': 'must-not-leak',
+               'XDG_RUNTIME_DIR': str(runtime)}
+        refused = subprocess.run(['bash', 'scripts/graph-full-suite-isolated.sh', '.'], cwd=self.root,
+                                 env=env, capture_output=True, text=True, timeout=10)
+        self.assertEqual(refused.returncode, 1, refused.stdout + refused.stderr)
+        self.assertIn('FULL_FALLBACK_TEST_REFUSED: regression lock file missing', refused.stderr)
+        self.assertEqual(list(runtime.iterdir()), [])
         result = subprocess.run(
-            ['bash', 'scripts/graph-full-suite-isolated.sh', '.'],
+            ['bash', 'scripts/graph-full-suite-isolated.sh', 'watcher'],
             cwd=self.root,
             env={'PATH': os.defpath, 'HOME': str(self.root), 'FIXTURE_SECRET': 'must-not-leak',
                  'XDG_RUNTIME_DIR': str(runtime)},
