@@ -20,18 +20,42 @@ spec.loader.exec_module(subject)
 
 
 def short_private_runtime(case):
-    """A 0700 exec base under the account home that fits the unit '.' AF_UNIX budget (base + 71 < 108).
+    """A 0700 exec base that fits the unit '.' AF_UNIX budget (base + 71 bytes < 108) on any host.
 
-    It is deliberately short (home + 11 bytes) so the result does not depend on how deep the host home is;
-    a home too long for it fails the test loudly instead of letting the wrapper fall through to another base.
+    Candidates, in order: the account home (not the patched HOME) and /dev/shm. A candidate is used only
+    when a fresh mkdtemp dir under it fits the budget and can execute a file (the regression venv runs
+    from it). Runner account homes can be long (/opt/arcanada-runners/<runner>, 39 bytes), so the result
+    must not depend on the home alone. When no candidate qualifies the test is skipped with that reason,
+    never passed.
     """
-    home = pwd.getpwuid(os.getuid()).pw_dir
-    runtime = Path(tempfile.mkdtemp(prefix='.m', dir=home))
-    case.addCleanup(shutil.rmtree, runtime, ignore_errors=True)
-    runtime.chmod(0o700)
-    case.assertLess(len(str(runtime)) + 14 + 19 + 38, 108,
-                    f'account home {home} is too long for the unit-. socket budget cases')
-    return runtime
+    reasons = []
+    for parent in (pwd.getpwuid(os.getuid()).pw_dir, '/dev/shm'):
+        if not os.path.isdir(parent) or parent.startswith(('/tmp', '/var/tmp')):
+            reasons.append(f'{parent}: absent or under /tmp')
+            continue
+        try:
+            runtime = Path(tempfile.mkdtemp(prefix='.m', dir=parent))
+        except OSError as exc:
+            reasons.append(f'{parent}: {exc}')
+            continue
+        case.addCleanup(shutil.rmtree, runtime, ignore_errors=True)
+        runtime.chmod(0o700)
+        if len(str(runtime)) + 14 + 19 + 38 >= 108:
+            reasons.append(f'{runtime}: too long for the unit-. socket budget')
+            continue
+        probe = runtime / 'exec-probe'
+        probe.write_text('#!/bin/sh\nexit 0\n')
+        probe.chmod(0o700)
+        try:
+            runnable = subprocess.run([str(probe)], timeout=10).returncode == 0
+        except OSError:
+            runnable = False
+        probe.unlink()
+        if not runnable:
+            reasons.append(f'{runtime}: cannot execute files')
+            continue
+        return runtime
+    case.skipTest('no short private exec base on this host: ' + '; '.join(reasons))
 
 class Controls(unittest.TestCase):
     def setUp(self):
