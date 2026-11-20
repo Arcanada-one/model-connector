@@ -180,6 +180,14 @@ jobs:
           node --test dev-tools/rate-limit-ci-report.test.mjs
           PYTHONDONTWRITEBYTECODE=1 python3 dev-tools/rate-limit-ci-workflow.test.py
 
+      - name: Node test specs outside the Vitest include
+        # vitest.config.ts collects only scripts/**/*.spec.mjs; every other *.spec.mjs is node:test.
+        run: |
+          mapfile -t node_specs < <(git ls-files -- '*.spec.mjs' ':(exclude)scripts/**')
+          test "${#node_specs[@]}" -gt 0
+          printf 'node:test spec: %s\n' "${node_specs[@]}"
+          node --test "${node_specs[@]}"
+
   docker-e2e:
     # Skipped only when a same-repository PR changes Docker-ignored files alone.
     # Missing output, unknown event, fork, or source-read failure keeps the job enabled.

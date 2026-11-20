@@ -159,6 +159,30 @@ class Controls(unittest.TestCase):
         self.assertEqual(groups['maintained-vitest'], ['src/a.spec.ts', 'templates/new/new.spec.ts'])
         self.assertEqual(sorted(n for r in rows for n in r['members']), sorted(members))
 
+    def test_node_test_spec_outside_vitest_include_is_a_regression_member(self):
+        members = ['src/a.spec.ts', 'scripts/ci/b.spec.mjs', 'provider-profiles/c.spec.mjs']
+        groups = {r['suite']: r['members'] for r in subject.plan('.', members)}
+        self.assertEqual(groups['maintained-vitest'], ['src/a.spec.ts', 'scripts/ci/b.spec.mjs'])
+        self.assertEqual(groups['maintained-regression'], ['provider-profiles/c.spec.mjs'])
+
+    def test_node_test_spec_runs_under_node_test_with_tap_counts(self):
+        name = 'provider-profiles/fi10-persona-resolve.spec.mjs'
+        argv, kind = subject.root_regression_command(ROOT, name)
+        self.assertEqual((argv[:3], kind), (['node', '--test', '--test-reporter=tap'], 'node-tap'))
+        self.assertEqual(argv[3], str(ROOT / name))
+        with self.assertRaises(subject.Refusal):
+            subject.root_regression_command(ROOT, 'scripts/ci/ci-observation.spec.mjs')
+
+    def test_vitest_include_still_covers_every_vitest_spec_mjs(self):
+        config = (ROOT / 'vitest.config.ts').read_text()
+        self.assertIn("'scripts/**/*.spec.mjs'", config)
+        listed = subprocess.run(['git', '-C', str(ROOT), 'ls-files', '-z', '--', '*.spec.mjs'],
+                                capture_output=True, check=True).stdout.decode().split('\0')
+        node_specs = [n for n in listed if n and subject.node_test_spec(n)]
+        self.assertTrue(node_specs)
+        for name in node_specs:
+            self.assertIn("from 'node:test'", (ROOT / name).read_text())
+
     def test_authored_template_render_binds_actual_sources_and_keeps_assertions(self):
         scratch = self.template_source_fixture()
         result = subject.render_authored_template(self.root, scratch, [subject.AUTHORED_TEMPLATE])
