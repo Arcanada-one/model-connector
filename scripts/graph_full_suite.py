@@ -1,8 +1,12 @@
-"""Maintain complete source membership and honest per-suite results, without grants.
+"""Maintain complete source membership and honest per-suite results.
 
-Root's real external arms, disposable-store authority and skipped app E2E remain
-unmeasured. No environment flag changes that disposition. The other declarations
-exercise their complete existing offline/owned-loopback contracts, not production.
+Without an owned FullSuiteDisposableGrant/v1, real disposable-store authority,
+app E2E and live external provider arms remain unmeasured. Ambient environment
+flags never lift that disposition. A grant file (mode 0600, under the private
+runner temp) may authorize disposable Postgres/Redis + Nest app-e2e only.
+Live-credential image-generation members stay held_live_opt_in; the local
+fallback integration member runs with its real placeholder-refusal behavior.
+Members are never silently dropped from membership.
 """
 from pathlib import Path
 import hashlib
@@ -29,6 +33,46 @@ OFFLINE_INTEGRATION = frozenset({
     'src/openai-compat/openai-compat.failover.integration.spec.ts',
     'src/speech/stt/stt-pilot.integration.spec.ts',
 })
+# This integration member exercises only deterministic fallback routing and
+# PLACEHOLDER refusal paths. It does not call a provider or storage endpoint.
+LOCAL_IMAGE_INTEGRATION = frozenset({
+    'src/connectors/image-generation/image-router.fallback.integration.spec.ts',
+})
+GRANT_SCHEMA = 'FullSuiteDisposableGrant/v1'
+GRANT_ENV_KEY = 'MC_FULL_SUITE_GRANT'
+GRANT_ARM_DISPOSABLE = 'integration-disposable-store'
+GRANT_ARM_APP_E2E = 'app-e2e'
+# Env keys a disposable grant may inject into child processes (never secrets).
+GRANT_ENV_ALLOWLIST = frozenset({
+    'DATABASE_URL', 'REDIS_HOST', 'REDIS_PORT', 'REDIS_PREFIX', 'REDIS_PASSWORD',
+    'STT_PROVIDER_GROQ_ENABLED', 'STT_GROQ_API_KEY', 'NODE_ENV', 'PORT', 'HOST',
+    'MC_FULL_SUITE_APP_E2E',
+    'BENCH_OWNED_TEST_PG_SOCKET', 'BENCH_OWNED_TEST_SOCKET_ROOT',
+    'BENCH_OWNED_NATIVE_TEST_BINARY',
+})
+# Log tails printed on failure (job log only; never Actions artifact).
+FAIL_LOG_TAIL_LINES = 80
+_SECRET_TAIL_RE = re.compile(
+    r'((?:postgres(?:ql)?|redis|mysql|mongodb)://[^:\s/]+:)([^@\s/]+)(@)'
+    r'|((?:authorization|api[_-]?key|token|password|secret)\s*[:=]\s*)(\S+)',
+    re.IGNORECASE,
+)
+BENCH_OWNED_MEMBER = 'src/bench-reservation/postgres.integration.spec.ts'
+IMAGE_E2E_MEMBER = 'src/connectors/image-generation/image-generation.e2e.integration.spec.ts'
+HELD_STORE_PREFIXES = ('src/auth/', 'src/bench-reservation/', 'src/billing/')
+HELD_PROVIDER_PREFIXES = ('src/connectors/image-generation/',)
+EXTERNAL_INTEGRATION_PREREQUISITES = {
+    'src/connectors/image-generation/fal-ai/fal-ai.connector.integration.spec.ts':
+        'held_external_api: RUN_INTEGRATION=1, FAL_AI_INTEGRATION=1, FAL_AI_API_KEY, and network to Fal image generation; paid image calls',
+    'src/connectors/image-generation/openai-images/openai-images.connector.integration.spec.ts':
+        'held_external_api: RUN_INTEGRATION=1, OPENAI_INTEGRATION=1, OPENAI_API_KEY, and network to OpenAI image generation; paid image calls',
+    'src/connectors/image-generation/storage/r2.service.integration.spec.ts':
+        'held_external_storage: RUN_INTEGRATION=1, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and network to Cloudflare R2; uploads, fetches, deletes',
+    'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts':
+        'held_external_auth: RUN_INTEGRATION=1, VERTEX_SERVICE_ACCOUNT_JSON, and network to Google OAuth2 token endpoint',
+    'src/connectors/image-generation/vertex/vertex-image.connector.integration.spec.ts':
+        'held_billed_external_api: RUN_INTEGRATION=1, VERTEX_SERVICE_ACCOUNT_JSON, VERTEX_BILLING_ENABLED=1, linked project billing, and network to Vertex AI Imagen',
+}
 
 
 class Refusal(Exception):
@@ -69,6 +113,10 @@ def test_member(name):
             or name.endswith('.e2e-spec.ts') or name.endswith('.bats')
             or bool(re.search(r'(?:^|/)test_[^/]+\.py$', name))
             or name == 'dev-tools/credential-docs-regression.sh')
+
+
+def node_test_spec(name):
+    return name.endswith('.spec.mjs') and not name.startswith('scripts/')
 
 
 def inventory(root):
@@ -153,16 +201,182 @@ def plan(unit, members):
     return suites
 
 
-def clean_environment(scratch, unit_root):
-    # No inherited tokens, flags, URLs, NODE_OPTIONS, PYTHONPATH or agent hooks.
+def _private_temp_roots():
+    roots = []
+    for key in ('XDG_RUNTIME_DIR', 'RUNNER_TEMP'):
+        value = os.environ.get(key)
+        if value:
+            roots.append(Path(value).resolve())
+    return roots
+
+
+def load_disposable_grant():
+    """Load an owned FullSuiteDisposableGrant/v1, or None when absent.
+
+    Ambient CI=1 / DATABASE_URL alone never grants. The path must be absolute,
+    mode 0600, uid-owned, not a symlink, and under XDG_RUNTIME_DIR or RUNNER_TEMP.
+    """
+    raw_path = os.environ.get(GRANT_ENV_KEY)
+    if not raw_path:
+        return None
+    path = Path(raw_path)
+    if not path.is_absolute():
+        raise Refusal('full-suite grant path must be absolute')
+    try:
+        info = path.lstat()
+    except OSError as exc:
+        raise Refusal('full-suite grant unreadable') from exc
+    if path.is_symlink() or not stat.S_ISREG(info.st_mode):
+        raise Refusal('full-suite grant must be a regular non-symlink file')
+    if info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o600:
+        raise Refusal('full-suite grant must be mode 0600 and owned by the caller')
+    resolved = path.resolve()
+    if not any(resolved == root or root in resolved.parents for root in _private_temp_roots()):
+        raise Refusal('full-suite grant must live under XDG_RUNTIME_DIR or RUNNER_TEMP')
+    try:
+        doc = json.loads(path.read_text())
+    except (OSError, ValueError, UnicodeDecodeError) as exc:
+        raise Refusal('full-suite grant is not valid JSON') from exc
+    if not isinstance(doc, dict) or doc.get('schema') != GRANT_SCHEMA:
+        raise Refusal('full-suite grant schema mismatch')
+    arms = doc.get('arms')
+    env = doc.get('env')
+    if not isinstance(arms, list) or not arms or not all(isinstance(a, str) for a in arms):
+        raise Refusal('full-suite grant arms malformed')
+    if not isinstance(env, dict) or not env:
+        raise Refusal('full-suite grant env malformed')
+    unknown = set(env) - GRANT_ENV_ALLOWLIST
+    if unknown:
+        raise Refusal('full-suite grant env has disallowed keys: ' + ', '.join(sorted(unknown)))
+    for key, value in env.items():
+        if not isinstance(value, str) or not value:
+            raise Refusal('full-suite grant env values must be non-empty strings')
+    allowed = {GRANT_ARM_DISPOSABLE, GRANT_ARM_APP_E2E}
+    if set(arms) - allowed:
+        raise Refusal('full-suite grant arms out of disposable/app-e2e scope')
+    return {'path': str(resolved), 'arms': list(arms), 'env': dict(env),
+            'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+
+
+def clean_environment(scratch, unit_root, grant=None):
+    """Build the base child env. Grant keys are NOT injected here.
+
+    Disposable/e2e children receive grant env only via env_override on those
+    steps so maintained-vitest / regression / offline never see DATABASE_URL.
+    The unused ``grant`` argument is accepted for call-site compatibility and
+    must remain unused.
+    """
+    del grant  # never ambient-inject; see pass_red_vitest / disposable overrides
+    # Isolated env -i strips runner ambient DATABASE_URL that lint-and-test often
+    # inherits. Provide a non-grant placeholder so Zod config can parse; nothing
+    # here authorizes disposable TCP or Nest app-e2e (those need grant override).
+    # HOME stays under the private scratch (never world-writable /tmp). TMPDIR may
+    # use MC_FULL_SUITE_SHORT_TMP so unix-socket composition specs stay <108 bytes.
+    short_tmp = os.environ.get('MC_FULL_SUITE_SHORT_TMP')
+    tmpdir = short_tmp if short_tmp else str(scratch)
+    if short_tmp:
+        short_path = Path(short_tmp)
+        info = short_path.lstat()
+        if (short_path.is_symlink() or not stat.S_ISDIR(info.st_mode)
+                or info.st_uid != os.geteuid()
+                or stat.S_IMODE(info.st_mode) & 0o077):
+            raise Refusal('MC_FULL_SUITE_SHORT_TMP must be an owned mode-0700 directory')
     env = {'PATH': os.environ.get('PATH', os.defpath), 'HOME': str(scratch / 'home'),
-           'TMPDIR': str(scratch), 'CI': '1', 'NO_COLOR': '1', 'FORCE_COLOR': '0',
+           'TMPDIR': tmpdir, 'CI': '1', 'NO_COLOR': '1', 'FORCE_COLOR': '0',
            'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONPATH': str(unit_root),
-           'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1'}
+           'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1',
+           'NODE_ENV': 'test',
+           'DATABASE_URL': 'postgresql://suite:suite@127.0.0.1:65535/suite_placeholder'}
+    # Forward pinned Compose CLI discovery (lint-and-test / graph-full-suite job
+    # install under DOCKER_CONFIG). Without this, `docker compose -f` becomes
+    # `docker -f` on runners that lack a system compose plugin.
+    for key in ('DOCKER_CONFIG', 'DOCKER_HOST'):
+        value = os.environ.get(key)
+        if value:
+            env[key] = value
     if any(not Path(part).is_absolute() for part in env['PATH'].split(os.pathsep)):
         raise Refusal('relative PATH entry')
     (scratch / 'home').mkdir(mode=0o700)
     return env
+
+
+def scrub_log_line(line):
+    """Mask credential-bearing URL userinfo and common key=value secrets."""
+    def repl(match):
+        if match.group(1):
+            return match.group(1) + '***' + match.group(3)
+        return match.group(4) + '***'
+    return _SECRET_TAIL_RE.sub(repl, line)[:500]
+
+
+def emit_failure_log_tail(raw_log, label, limit=FAIL_LOG_TAIL_LINES):
+    """Print a bounded, scrubbed tail of a failing child log to the job stdout."""
+    path = Path(raw_log) if raw_log else None
+    print('  --- fail log tail:', label, '---')
+    if not path or not path.is_file():
+        print('  | (log missing)')
+        return
+    try:
+        lines = path.read_text(errors='replace').splitlines()
+    except OSError as exc:
+        print('  | (log unreadable:', type(exc).__name__ + ')')
+        return
+    if not lines:
+        print('  | (empty)')
+        return
+    for line in lines[-limit:]:
+        print('  |', scrub_log_line(line))
+
+
+def emit_vitest_json_failures(report_path, limit=12):
+    """Print scrubbed failed assertion messages from a Vitest JSON report."""
+    path = Path(report_path) if report_path else None
+    if not path or not path.is_file():
+        return
+    try:
+        document = json.loads(path.read_text())
+    except (OSError, ValueError, UnicodeDecodeError):
+        print('  | (vitest json report unreadable)')
+        return
+    print('  --- vitest json failures:', path.name, '---')
+    printed = 0
+    for row in document.get('testResults') or []:
+        for assertion in row.get('assertionResults') or []:
+            if assertion.get('status') != 'failed':
+                continue
+            name = assertion.get('fullName') or assertion.get('title') or '?'
+            file_name = Path(row.get('name', '?')).name
+            print('  | FAIL', file_name, '::', scrub_log_line(str(name)))
+            for message in (assertion.get('failureMessages') or [])[:1]:
+                for line in str(message).splitlines()[:20]:
+                    print('  |', scrub_log_line(line))
+            printed += 1
+            if printed >= limit:
+                return
+    if printed == 0:
+        print('  | (no failed assertions in json; numFailedTests=%s numTotalTests=%s)'
+              % (document.get('numFailedTests'), document.get('numTotalTests')))
+
+
+def disposable_member(path):
+    return (path.endswith('.integration.spec.ts')
+            and (path.startswith(HELD_STORE_PREFIXES) or path == IMAGE_E2E_MEMBER))
+
+
+def external_member(path):
+    return path in EXTERNAL_INTEGRATION_PREREQUISITES
+
+
+def bench_fixture_ready(grant):
+    if not grant:
+        return False
+    env = grant['env']
+    socket = env.get('BENCH_OWNED_TEST_PG_SOCKET', '')
+    root = env.get('BENCH_OWNED_TEST_SOCKET_ROOT', '')
+    binary = env.get('BENCH_OWNED_NATIVE_TEST_BINARY', '')
+    return (bool(socket) and '/mc-owned-postgres/socket' in socket
+            and bool(root) and bool(binary)
+            and '/clean-native-build-v4/target/debug/deps/codex_http_client-' in binary)
 
 
 def execute(argv, cwd, env, deadline, scratch, name):
@@ -305,7 +519,15 @@ def run_suites(root, unit, suites, scratch, executor=execute):
 def root_regression_command(root, member):
     path = str(checked_file(root, member))
     if member.endswith('.py'):
-        return [sys.executable, '-B', path], 'unittest'
+        # Optional CI venv python (MC_FULL_SUITE_PYTHON) carries jsonschema etc.
+        # Keep the venv path as given: resolving the common venv/bin/python symlink
+        # lands on system python and drops the venv site-packages.
+        python = os.environ.get('MC_FULL_SUITE_PYTHON') or sys.executable
+        if python != sys.executable:
+            py_path = Path(python)
+            if not py_path.exists() or not os.access(python, os.X_OK):
+                raise Refusal('MC_FULL_SUITE_PYTHON must be an executable path')
+        return [python, '-B', path], 'unittest'
     if member.endswith('.test.mjs') or node_test_spec(member):
         return ['node', '--test', '--test-reporter=tap', path], 'node-tap'
     if member.endswith('.bats'):
@@ -418,8 +640,14 @@ def render_authored_template(root, scratch, members, env=None):
             'target': target, 'config': config}
 
 
-def run_root_suites(root, suites, scratch, executor=execute):
-    """Dispatch ordinary local groups; preserve every held member without spawning it."""
+def run_root_suites(root, suites, scratch, executor=execute, grant=None):
+    """Dispatch ordinary local groups; preserve every held member without spawning it.
+
+    With a disposable grant, Nest app-e2e, image HTTP e2e and TCP Postgres/Redis
+    disposable-store members may execute. Local image fallback runs without provider access;
+    live-credential image-generation and the owned bench unix-socket fixture
+    stay held until their prerequisites exist.
+    """
     members = [n for suite in suites for n in suite['members']]
     expected = {r['suite']: r['members'] for r in plan('.', members)}
     if (len(members) != len(set(members)) or len(suites) != len(expected)
@@ -432,19 +660,25 @@ def run_root_suites(root, suites, scratch, executor=execute):
             if suite['suite'] == 'maintained-regression':
                 root_regression_command(root, member)
     env = clean_environment(scratch, root)
+    grant_env = dict(grant['env']) if grant else {}
     deadline = time.monotonic() + 900
     results = []
-    def run(argv, members, name, parser):
+    grant_arms = set(grant['arms']) if grant else set()
+
+    def run(argv, members, name, parser, env_override=None):
+        child_env = dict(env)
+        if env_override:
+            child_env.update(env_override)
         required = [argv[0]]
         if members == ['deploy/compose-network.test.sh']:
             required.append('docker')  # Compose config only, never start or stop.
-        missing = [tool for tool in required if not shutil.which(tool, path=env['PATH'])]
+        missing = [tool for tool in required if not shutil.which(tool, path=child_env['PATH'])]
         if argv[0] == 'pnpm' and not (root / 'node_modules/.bin/vitest').is_file():
             missing.append('owned Vitest dependency')
         if missing:
             return {'argv': argv, 'members': members, 'verdict': 'not_measured',
                     'exit_code': 127, 'reason': 'missing local runner: ' + ', '.join(missing)}
-        result = executor(argv, root, env, deadline, scratch, name)
+        result = executor(argv, root, child_env, deadline, scratch, name)
         raw = result.pop('output')
         code = result['exit_code']
         result.update(members=members, raw_log=str(scratch / (name + '.log')),
@@ -452,19 +686,72 @@ def run_root_suites(root, suites, scratch, executor=execute):
         if not code:
             try:
                 counts = parser(raw)
-            except (Refusal, ValueError, KeyError, OSError):
-                result.update(verdict='not_measured', reason='missing or invalid exact execution evidence')
+            except (Refusal, ValueError, KeyError, OSError, TypeError) as exc:
+                detail = str(exc).strip() or type(exc).__name__
+                result.update(verdict='not_measured',
+                              reason='missing or invalid exact execution evidence: ' + detail[:160])
             else:
                 result['counts'] = counts
                 if counts and (counts['failed'] or counts['skipped'] or not counts['passed']):
                     result['verdict'] = 'failed' if counts['failed'] else 'not_measured'
         return result
+
+    def pass_red_vitest(config_args, selected, label, report_path):
+        """Broken DATABASE_URL must fail before the real disposable/e2e run.
+
+        Grant env is applied only here (and the real follow-up), never to the
+        shared base env used by vitest-default / regression / offline.
+        """
+        if not grant_env:
+            raise Refusal('PASS_RED disposable/e2e requires grant env')
+        red_report = scratch / (label + '-pass-red.json')
+        red_argv = ['pnpm', 'exec', 'vitest', 'run', *config_args,
+                    '--reporter=default', '--reporter=json',
+                    '--outputFile=' + str(red_report), *selected]
+        red_env = dict(grant_env)
+        red_env['DATABASE_URL'] = 'postgresql://pass-red:pass-red@127.0.0.1:1/pass_red'
+        if IMAGE_E2E_MEMBER in selected:
+            red_env['RUN_INTEGRATION'] = '1'
+        red = run(red_argv, selected, label + '-pass-red',
+                  lambda raw: vitest_counts(json.loads(red_report.read_text()), selected, root),
+                  env_override=red_env)
+        red['vitest_report'] = str(red_report)
+        if red.get('verdict') == 'verified':
+            red.update(verdict='failed', reason='PASS_RED control unexpectedly verified')
+            return red, None
+        red['control'] = {'result': 'PASS_RED'}
+        real_argv = ['pnpm', 'exec', 'vitest', 'run', *config_args,
+                     '--reporter=default', '--reporter=json',
+                     '--outputFile=' + str(report_path), *selected]
+        real = run(real_argv, selected, label,
+                   lambda raw: vitest_counts(json.loads(report_path.read_text()), selected, root),
+                   env_override={**grant_env,
+                                 **({'RUN_INTEGRATION': '1'} if IMAGE_E2E_MEMBER in selected else {})})
+        real['vitest_report'] = str(report_path)
+        real['control'] = {'result': 'PASS_RED'}
+        return red, real
+
     for index, suite in enumerate(suites):
         name, members = suite['suite'], suite['members']
         row = {'suite': name, 'members': members, 'executions': []}
         if name == 'maintained-app-e2e':
-            row.update(verdict='not_measured', reason='unconditional AppE2E skip; no execution grant',
-                       held_members=members)
+            if (GRANT_ARM_APP_E2E in grant_arms
+                    and grant_env.get('MC_FULL_SUITE_APP_E2E') == '1'):
+                report = scratch / 'maintained-app-e2e.json'
+                red, real = pass_red_vitest(
+                    ['--config', 'vitest.e2e.config.ts'], members,
+                    'root-' + str(index), report)
+                row['executions'].extend([red] + ([real] if real else []))
+                # PASS_RED control is intentionally failed; suite verdict uses real run only.
+                real_only = _real_executions(row['executions'])
+                row['verdict'] = (
+                    'failed' if any(r['verdict'] == 'failed' for r in real_only) else
+                    'not_measured' if (not real_only or any(r['verdict'] != 'verified' for r in real_only))
+                    else 'verified')
+                row['arm'] = 'app-e2e'
+            else:
+                row.update(verdict='not_measured', reason='AppE2E held; no disposable grant',
+                           held_members=members)
         elif name == 'maintained-authored-template':
             rendered = render_authored_template(root, scratch, members, env)
             target, config = rendered.pop('target'), rendered.pop('config')
@@ -482,27 +769,88 @@ def run_root_suites(root, suites, scratch, executor=execute):
             result['template_evidence'] = rendered
             row['executions'].append(result)
             row['verdict'] = result['verdict']
-        elif name in ('maintained-vitest', 'maintained-integration'):
-            selected = members if name == 'maintained-vitest' else [n for n in members if n in OFFLINE_INTEGRATION]
-            held = [n for n in members if n not in selected]
-            if held:
-                row.update(held_members=held, reason='real provider/auth/storage arms or disposable DB/Redis authority unresolved')
-            if selected:
-                report = scratch / (name + '.json')
-                argv = ['pnpm', 'exec', 'vitest', 'run']
-                if name == 'maintained-integration':
-                    argv += ['--config', 'vitest.integration.config.ts']
-                else:
-                    # The graph runner can execute on hosts with far more
-                    # visible CPUs than the CI container actually receives.
-                    # Bound worker fan-out so module-bootstrap suites remain
-                    # measurable under the same small-runner resource envelope.
-                    argv += ['--maxWorkers=4']
-                argv += ['--reporter=json', '--outputFile=' + str(report), *selected]
-                row['executions'].append(run(argv, selected, 'root-' + str(index),
-                    lambda raw: vitest_counts(json.loads(report.read_text()), selected, root)))
+        elif name == 'maintained-vitest':
+            selected, held = members, []
+            report = scratch / (name + '.json')
+            argv = ['pnpm', 'exec', 'vitest', 'run', '--maxWorkers=4',
+                    '--reporter=default', '--reporter=json',
+                    '--outputFile=' + str(report), *selected]
+            result = run(argv, selected, 'root-' + str(index),
+                lambda raw: vitest_counts(json.loads(report.read_text()), selected, root))
+            result['vitest_report'] = str(report)
+            row['executions'].append(result)
             row['verdict'] = ('failed' if any(r['verdict'] == 'failed' for r in row['executions']) else
-                              'not_measured' if held or not row['executions'] or any(r['verdict'] != 'verified' for r in row['executions']) else 'verified')
+                              'not_measured' if not row['executions'] or any(r['verdict'] != 'verified' for r in row['executions']) else 'verified')
+        elif name == 'maintained-integration':
+            offline = [n for n in members if n in OFFLINE_INTEGRATION]
+            local_image = [n for n in members if n in LOCAL_IMAGE_INTEGRATION]
+            disposable = [n for n in members if disposable_member(n)]
+            external = [n for n in members if external_member(n)]
+            other = [n for n in members if n not in offline and n not in local_image
+                     and n not in disposable and n not in external]
+            if other:
+                raise Refusal('unclassified integration member: ' + ', '.join(other))
+            held_reasons = {}
+            run_disposable = []
+            held_disposable = []
+            if GRANT_ARM_DISPOSABLE in grant_arms:
+                for path_name in disposable:
+                    if path_name == BENCH_OWNED_MEMBER and not bench_fixture_ready(grant):
+                        held_disposable.append(path_name)
+                        held_reasons[path_name] = (
+                            'held_owned_bench_fixture: BENCH_OWNED_TEST_PG_SOCKET under /mc-owned-postgres/socket, '
+                            'BENCH_OWNED_TEST_SOCKET_ROOT, disposable PG databases/roles, and real '
+                            'BENCH_OWNED_NATIVE_TEST_BINARY at /clean-native-build-v4/target/debug/deps/codex_http_client-* required')
+                    else:
+                        run_disposable.append(path_name)
+            else:
+                held_disposable = list(disposable)
+                for path_name in disposable:
+                    held_reasons[path_name] = 'held_disposable: no FullSuiteDisposableGrant/v1'
+            for path_name in external:
+                held_reasons[path_name] = EXTERNAL_INTEGRATION_PREREQUISITES[path_name]
+            held = held_disposable + external
+            if offline:
+                report = scratch / (name + '-offline.json')
+                argv = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.integration.config.ts',
+                        '--reporter=default', '--reporter=json',
+                        '--outputFile=' + str(report), *offline]
+                result = run(argv, offline, 'root-' + str(index) + '-offline',
+                    lambda raw, selected=offline, report=report: vitest_counts(
+                        json.loads(report.read_text()), selected, root))
+                result['vitest_report'] = str(report)
+                row['executions'].append(result)
+            if local_image:
+                report = scratch / (name + '-local-image.json')
+                argv = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.integration.config.ts',
+                        '--reporter=default', '--reporter=json',
+                        '--outputFile=' + str(report), *local_image]
+                result = run(argv, local_image, 'root-' + str(index) + '-local-image',
+                    lambda raw, selected=local_image, report=report: vitest_counts(
+                        json.loads(report.read_text()), selected, root),
+                    env_override={'RUN_INTEGRATION': '1'})
+                result['vitest_report'] = str(report)
+                row['executions'].append(result)
+            if run_disposable:
+                report = scratch / (name + '-disposable.json')
+                red, real = pass_red_vitest(
+                    ['--config', 'vitest.integration.config.ts'], run_disposable,
+                    'root-' + str(index) + '-disposable', report)
+                row['executions'].extend([red] + ([real] if real else []))
+                row['disposable_members'] = run_disposable
+                row['disposable_arm'] = GRANT_ARM_DISPOSABLE
+            if held:
+                row.update(held_members=held, held_reasons=held_reasons,
+                           reason='held members retained visibly (live-opt-in and/or owned bench fixture)')
+            real_execs = [r for r in row['executions']
+                          if 'pass-red' not in Path(r.get('raw_log', 'x')).name]
+            # Held members keep the suite not_measured even when offline/disposable green.
+            if any(r['verdict'] == 'failed' for r in real_execs):
+                row['verdict'] = 'failed'
+            elif held or not real_execs or any(r['verdict'] != 'verified' for r in real_execs):
+                row['verdict'] = 'not_measured'
+            else:
+                row['verdict'] = 'verified'
         elif name == 'maintained-regression':
             for offset, member in enumerate(members):
                 argv, kind = root_regression_command(root, member)
@@ -527,8 +875,6 @@ def run_root_suites(root, suites, scratch, executor=execute):
 # and keep the whole root suite not_measured. No environment flag changes that disposition.
 ARMS_SCHEMA = 'FullSuiteArmEvidence/v1'
 ARM_DEFINITION_PATH = '.arcana/verify.json'
-HELD_STORE_PREFIXES = ('src/auth/', 'src/bench-reservation/', 'src/billing/')
-HELD_PROVIDER_PREFIXES = ('src/connectors/image-generation/',)
 ARM_OF_SUITE = {'maintained-vitest': 'vitest-default',
                 'maintained-authored-template': 'authored-template',
                 'maintained-regression': 'regression'}
@@ -537,6 +883,8 @@ ARM_OF_SUITE = {'maintained-vitest': 'vitest-default',
 def classify_held(member):
     if member.endswith('.e2e-spec.ts'):
         return 'app-e2e'
+    if member == IMAGE_E2E_MEMBER:
+        return 'integration-disposable-store'
     if member.startswith(HELD_STORE_PREFIXES):
         return 'integration-disposable-store'
     if member.startswith(HELD_PROVIDER_PREFIXES):
@@ -558,6 +906,10 @@ def sum_counts(rows):
     return {'total': sum(total.values()), **total}
 
 
+def _real_executions(executions):
+    return [e for e in executions if 'pass-red' not in Path(e.get('raw_log', 'x')).name]
+
+
 def build_arms(root, results, head):
     raw = subprocess.run(['git', '-C', str(root), 'show', 'HEAD:' + ARM_DEFINITION_PATH],
                          capture_output=True, check=True).stdout
@@ -565,16 +917,52 @@ def build_arms(root, results, head):
     for row in results:
         name = row['suite']
         executions = row.get('executions', [])
+        held = row.get('held_members', [])
         if name == 'maintained-app-e2e':
+            real = _real_executions(executions)
+            if (row.get('arm') == 'app-e2e' and real and all(e.get('verdict') == 'verified' for e in real)
+                    and all(e.get('control', {}).get('result') == 'PASS_RED' for e in real)):
+                counts = sum_counts(real)
+                if counts is not None:
+                    arms.append({'name': 'app-e2e', 'backend': 'real_disposable', 'counts': counts,
+                                 'head': head, 'control': {'result': 'PASS_RED'},
+                                 'verdict': 'failed' if counts['failed'] else 'passed'})
+                    ran.add('app-e2e')
+                    continue
             not_run.add('app-e2e')
             continue
         if name == 'maintained-integration':
-            arm_name = 'integration-offline-contracts'
-        else:
-            arm_name = ARM_OF_SUITE[name]
-        held = row.get('held_members', [])
-        if name == 'maintained-integration':
             not_run.update(classify_held(m) for m in held)
+            offline_execs = [e for e in _real_executions(executions)
+                             if 'disposable' not in Path(e.get('raw_log', 'x')).name]
+            disposable_execs = [e for e in _real_executions(executions)
+                                if 'disposable' in Path(e.get('raw_log', 'x')).name]
+            if offline_execs and all(e.get('verdict') in ('verified', 'failed') for e in offline_execs):
+                counts = sum_counts(offline_execs)
+                if counts is not None:
+                    arms.append({'name': 'integration-offline-contracts', 'backend': 'stub',
+                                 'counts': counts, 'head': head,
+                                 'verdict': 'failed' if counts['failed'] else 'passed'})
+                    ran.add('integration-offline-contracts')
+                else:
+                    not_run.add('integration-offline-contracts')
+            else:
+                not_run.add('integration-offline-contracts')
+            # Disposable arm only when every disposable member ran (none held in that class).
+            disposable_held = [m for m in held if disposable_member(m)]
+            if (not disposable_held and disposable_execs
+                    and all(e.get('verdict') == 'verified' for e in disposable_execs)
+                    and all(e.get('control', {}).get('result') == 'PASS_RED' for e in disposable_execs)):
+                counts = sum_counts(disposable_execs)
+                if counts is not None:
+                    arms.append({'name': 'integration-disposable-store', 'backend': 'real_disposable',
+                                 'counts': counts, 'head': head, 'control': {'result': 'PASS_RED'},
+                                 'verdict': 'failed' if counts['failed'] else 'passed'})
+                    ran.add('integration-disposable-store')
+            elif 'integration-disposable-store' not in not_run:
+                not_run.add('integration-disposable-store')
+            continue
+        arm_name = ARM_OF_SUITE[name]
         counts = None
         if executions and all(e.get('verdict') in ('verified', 'failed') for e in executions):
             counts = sum_counts(executions)
@@ -618,15 +1006,22 @@ def main():
     os.chmod(scratch, 0o700)
     head = subprocess.run(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'],
                           capture_output=True, check=True).stdout.decode().strip()
+    grant = load_disposable_grant() if unit == '.' else None
     document = {'schema': 'MaintainedFullSuiteExecution/v1', 'head': head, 'unit': unit,
                 'membership': rows, 'suite_plan': suites, 'results': [],
                 'runtime_authorized': False, 'knowledge_admitted': False}
+    if grant:
+        document['disposable_grant'] = {
+            'schema': GRANT_SCHEMA, 'path': grant['path'], 'sha256': grant['sha256'],
+            'arms': grant['arms']}
     if unit == '.':
-        document['remaining'] = ['seven real external provider/auth/storage/image arms',
-                                 'unconditional AppE2E skip',
-                                 'broader disposable DB/Redis executor and namespace authority']
+        document['remaining'] = [
+            'held_live_opt_in: live image-generation provider credentials/money',
+            'held_owned_bench_fixture unless grant supplies unix-socket postgres + native binary',
+            'app-e2e / disposable-store require FullSuiteDisposableGrant/v1',
+        ]
     try:
-        document['results'] = (run_root_suites(ROOT, suites, scratch) if unit == '.' else
+        document['results'] = (run_root_suites(ROOT, suites, scratch, grant=grant) if unit == '.' else
                                run_suites(ROOT, unit, suites, scratch))
     except (Refusal, ValueError, KeyError, OSError):
         document['remaining'] = ['invalid or absent execution evidence; inspect private raw suite files']
@@ -646,10 +1041,38 @@ def main():
     target.chmod(0o600)
     print('Full-suite evidence:', target)
     for row in document['results']:
-        counts = row.get('counts')
-        if counts:
-            print(row['suite'], ':', counts['passed'], 'passed,', counts['failed'],
-                  'failed,', counts['skipped'], 'skipped; raw exit', row.get('exit_code'))
+        held_n = len(row.get('held_members') or [])
+        print(row['suite'], 'verdict=' + str(row.get('verdict')),
+              'held_members=' + str(held_n),
+              'executions=' + str(len(row.get('executions') or [])))
+        for ex in row.get('executions') or []:
+            log_name = Path(ex.get('raw_log', 'x')).name
+            counts = ex.get('counts')
+            if counts:
+                print(' ', log_name + ':',
+                      counts['passed'], 'passed,', counts['failed'],
+                      'failed,', counts['skipped'], 'skipped; raw exit',
+                      ex.get('exit_code'), 'verdict=' + str(ex.get('verdict')))
+            else:
+                print(' ', log_name + ':',
+                      'verdict=' + str(ex.get('verdict')),
+                      'exit=' + str(ex.get('exit_code')),
+                      'reason=' + str(ex.get('reason', ''))[:160])
+            # PASS_RED control failures are expected; print tails for other fails
+            # and for not_measured evidence gaps (Root: job log, not Actions artifacts).
+            if 'pass-red' in log_name:
+                continue
+            if ex.get('verdict') == 'failed':
+                emit_failure_log_tail(ex.get('raw_log'), log_name)
+                if ex.get('vitest_report'):
+                    emit_vitest_json_failures(ex['vitest_report'])
+            elif ex.get('verdict') == 'not_measured':
+                emit_failure_log_tail(ex.get('raw_log'), log_name)
+                if ex.get('vitest_report'):
+                    emit_vitest_json_failures(ex['vitest_report'])
+        reasons = row.get('held_reasons') or {}
+        for path_name, reason in sorted(reasons.items()):
+            print('  held:', path_name, '->', reason)
     if code == 127:
         print('FULL_FALLBACK_TEST_NOT_MEASURED: complete maintained obligations not executed')
     return code

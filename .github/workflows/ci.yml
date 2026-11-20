@@ -89,6 +89,8 @@ jobs:
       - name: Full-suite declaration boundary controls
         run: |
           bash -n scripts/graph-full-suite.sh
+          bash -n scripts/ci-full-suite-disposable-services.sh
+          bash scripts/ci-full-suite-disposable-services.test.sh
           PYTHONDONTWRITEBYTECODE=1 python3 -B dev-tools/graph-full-suite.test.py
 
       # ARAS-0058 — BILLING_ENFORCED was declared nowhere outside src/: not in
@@ -411,6 +413,121 @@ jobs:
             exit 1
           fi
           echo "per-run images removed: none left"
+
+  # Declared full_test for deployable "." — real disposable Postgres/Redis on
+  # 127.0.0.1 + Nest app-e2e under an owned grant. Live-credential external arms
+  # stay held_live_opt_in (visible). No continue-on-error; step run is exact argv.
+  graph-full-suite:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, ci-general]
+    needs: [lint-and-test]
+    timeout-minutes: 55
+    concurrency:
+      group: graph-full-suite-${{ github.run_id }}-${{ github.run_attempt }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Record checkout identity
+        run: git log -1 --format=%H
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm-full-suite
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.4'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@127.0.0.1:5432/dummy
+
+      # Same pin as lint-and-test PR Compose CLI. ci-general may lack a system
+      # compose plugin; without DOCKER_CONFIG, regression `docker compose -f`
+      # collapses to `docker -f` (unknown shorthand flag). Forwarded through
+      # graph-full-suite-isolated.sh → clean_environment.
+      - name: Provision pinned Compose CLI for full-suite regression
+        run: |
+          set -euo pipefail
+          [ "$(uname -m)" = x86_64 ] || { echo "Unsupported Compose CLI architecture" >&2; exit 1; }
+          compose_root="${RUNNER_TEMP}/mc-fs-compose-cli"
+          mkdir -p "$compose_root/cli-plugins"
+          curl --fail --silent --show-error --location --retry 2 --connect-timeout 10 --max-time 120 \
+            https://github.com/docker/compose/releases/download/v5.6.0/docker-compose-linux-x86_64 \
+            --output "$compose_root/cli-plugins/docker-compose"
+          printf '%s  %s\n' \
+            40343e21ca777173e69cff5dbafeb37c6f81f3b0d57d9e597f036e95eb63e76a \
+            "$compose_root/cli-plugins/docker-compose" | sha256sum --check --strict
+          chmod 700 "$compose_root/cli-plugins/docker-compose"
+          printf 'DOCKER_CONFIG=%s\n' "$compose_root" >> "$GITHUB_ENV"
+          DOCKER_CONFIG="$compose_root" docker compose version
+
+      # Same pin as graph-admission.yml — regression member test_source_input_contract.py.
+      # Debian PEP 668 blocks system pip; use a job-local venv and forward its python.
+      - name: jsonschema for root regression membership
+        run: |
+          set -euo pipefail
+          VENV="$RUNNER_TEMP/mc-fs-py"
+          python3 -m venv "$VENV"
+          "$VENV/bin/pip" install --disable-pip-version-check --no-input 'jsonschema==4.23.0'
+          "$VENV/bin/python" -c 'import jsonschema; print("jsonschema", jsonschema.__version__)'
+          printf 'MC_FULL_SUITE_PYTHON=%s\n' "$VENV/bin/python" >>"$GITHUB_ENV"
+
+      # Short owned TMPDIR for bench composition unix sockets (sun_path < 108).
+      - name: Short TMPDIR for socket unit specs
+        run: |
+          set -euo pipefail
+          SHORT_TMP="/tmp/mcfs-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          mkdir -m 700 "$SHORT_TMP"
+          printf 'MC_FULL_SUITE_SHORT_TMP=%s\n' "$SHORT_TMP" >>"$GITHUB_ENV"
+
+      - name: Start 127.0.0.1 disposable Postgres and Redis
+        run: |
+          set -euo pipefail
+          # Script stdout is KEY=digits only; docker run IDs go to /dev/null.
+          bash scripts/ci-full-suite-disposable-services.sh start \
+            | tee "$RUNNER_TEMP/mc-fs-ports.env"
+          if grep -Eqv '^MC_FS_[A-Z_]+=[0-9]+$' "$RUNNER_TEMP/mc-fs-ports.env"; then
+            printf 'ports env has non KEY=digits lines\n' >&2
+            cat "$RUNNER_TEMP/mc-fs-ports.env" >&2
+            exit 1
+          fi
+          # shellcheck disable=SC1091
+          source "$RUNNER_TEMP/mc-fs-ports.env"
+          printf 'MC_FS_PG_PORT=%s\n' "$MC_FS_PG_PORT" >> "$GITHUB_ENV"
+          printf 'MC_FS_REDIS_PORT=%s\n' "$MC_FS_REDIS_PORT" >> "$GITHUB_ENV"
+
+      - name: Migrate disposable schema
+        run: |
+          set -euo pipefail
+          DATABASE_URL="postgresql://test:test@127.0.0.1:${MC_FS_PG_PORT}/connector_test" \
+            pnpm exec prisma migrate deploy
+
+      - name: Write owned full-suite grant
+        run: |
+          set -euo pipefail
+          bash scripts/ci-full-suite-disposable-services.sh grant \
+            | tee "$RUNNER_TEMP/mc-fs-grant.env"
+          grep -E '^MC_FULL_SUITE_GRANT=' "$RUNNER_TEMP/mc-fs-grant.env" >"$RUNNER_TEMP/mc-fs-grant.source"
+          # shellcheck disable=SC1091
+          source "$RUNNER_TEMP/mc-fs-grant.source"
+          printf 'MC_FULL_SUITE_GRANT=%s\n' "$MC_FULL_SUITE_GRANT" >> "$GITHUB_ENV"
+
+      - name: Declared root full suite
+        # Failing vitest/Nest tails are printed by graph_full_suite.py (scrubbed).
+        # Do not upload Actions artifacts (org quota exhausted).
+        run: bash scripts/graph-full-suite-isolated.sh .
+
+      - name: Tear down disposable services
+        if: always()
+        run: bash scripts/ci-full-suite-disposable-services.sh stop
 
   # ARC-CI digest-promotion gap fill (Muneral 440d2499): build once to GHCR and
   # emit published-image.json. Does not change the existing push-main broker

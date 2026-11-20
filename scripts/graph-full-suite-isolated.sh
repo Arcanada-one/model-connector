@@ -135,6 +135,38 @@ if [[ "$1" == 'packages/sdk-python' ]] && ! env -i PATH="$SYSTEM_PATH" "$SYSTEM_
   PYTHON_PATH="$VENV/bin:$SYSTEM_PATH"
 fi
 
+# Optional owned disposable grant (mode 0600 under RUNNER_TEMP/XDG_RUNTIME_DIR).
+# Ambient DATABASE_URL / CI alone never grants; the Python runner re-validates the file.
+GRANT_ARGS=()
+if [[ -n "${MC_FULL_SUITE_GRANT:-}" ]]; then
+  GRANT_ARGS+=(MC_FULL_SUITE_GRANT="$MC_FULL_SUITE_GRANT")
+fi
+# Optional job-local venv python (jsonschema etc.) for root .py regression members.
+if [[ -n "${MC_FULL_SUITE_PYTHON:-}" ]]; then
+  GRANT_ARGS+=(MC_FULL_SUITE_PYTHON="$MC_FULL_SUITE_PYTHON")
+fi
+# Optional short TMPDIR for unix-socket unit specs (sun_path < 108 bytes).
+if [[ -n "${MC_FULL_SUITE_SHORT_TMP:-}" ]]; then
+  GRANT_ARGS+=(MC_FULL_SUITE_SHORT_TMP="$MC_FULL_SUITE_SHORT_TMP")
+fi
+# Private temp roots must also reach the child so grant path confinement can be checked.
+RUNTIME_ARGS=()
+if [[ -n "${XDG_RUNTIME_DIR:-}" ]]; then
+  RUNTIME_ARGS+=(XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR")
+fi
+if [[ -n "${RUNNER_TEMP:-}" ]]; then
+  RUNTIME_ARGS+=(RUNNER_TEMP="$RUNNER_TEMP")
+fi
+# Pinned Compose CLI (DOCKER_CONFIG=…/cli-plugins/docker-compose). env -i would
+# otherwise drop it and regression members that call `docker compose -f` fail as
+# `unknown shorthand flag: 'f' in -f` on runners without a system plugin.
+if [[ -n "${DOCKER_CONFIG:-}" ]]; then
+  RUNTIME_ARGS+=(DOCKER_CONFIG="$DOCKER_CONFIG")
+fi
+if [[ -n "${DOCKER_HOST:-}" ]]; then
+  RUNTIME_ARGS+=(DOCKER_HOST="$DOCKER_HOST")
+fi
+
 # Root regressions of unit '.' include .github/graph-admission/tools/graph/test_source_input_contract.py,
 # which imports jsonschema. The system /usr/bin/python3 on the CI runners has none, and the setup-python
 # interpreter of the workflow is deliberately not on this PATH. Build a private venv from the system
@@ -183,7 +215,10 @@ if [[ "$1" == '.' && -x "$REPO_ROOT/node_modules/.bin/prisma" ]]; then
 fi
 
 set +e
-env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 bash "$SCRIPT_DIR/graph-full-suite.sh" "$1"
+env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 \
+  PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 \
+  "${RUNTIME_ARGS[@]}" "${GRANT_ARGS[@]}" \
+  bash "$SCRIPT_DIR/graph-full-suite.sh" "$1"
 status=$?
 shopt -s nullglob
 for artifact in "$EXEC_TMP"/mc-full-*; do
