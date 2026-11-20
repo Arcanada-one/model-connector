@@ -189,4 +189,88 @@ shopt -s nullglob
 for artifact in "$EXEC_TMP"/mc-full-*; do
   cp -a -- "$artifact" "$PRIVATE_TMP/"
 done
+
+# The suite printed "Full-suite evidence: <EXEC_TMP>/mc-full-*/execution.json", but the EXIT trap removes
+# EXEC_TMP before the caller (verify.py) reads that line, so the document was always "unreadable" there.
+# Name the surviving private copy; the caller takes the LAST such line. The copy is byte-identical, so this
+# corrects which document is read; it adds no field and changes no verdict or exit status.
+copies=("$PRIVATE_TMP"/mc-full-*/execution.json)
+if (( ${#copies[@]} == 1 )) && [[ -f "${copies[0]}" && ! -L "${copies[0]}" ]]; then
+  echo "Full-suite evidence: ${copies[0]}"
+  # On a non-zero status, print a bounded failure digest on stdout. The caller keeps this output in the
+  # retained verifier-out log, which survives the runner's cleanup when the private copy does not. Only argv,
+  # exit code, duration and the last 80 log lines of each non-verified execution are printed, after
+  # redaction; no environment value is ever printed. The digest is capped at 64 KiB.
+  if (( status != 0 )); then
+    "$SYSTEM_PYTHON" -I - "${copies[0]}" <<'DIGEST' || echo 'graph-full-suite-isolated: failure digest unavailable'
+import json, os, re, stat, sys
+CAP, TAIL = 65536, 80
+doc_path = sys.argv[1]
+base = os.path.dirname(doc_path)
+SECRET = [
+    (re.compile(r'-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----.*?(?:-----END [A-Z0-9 ]*PRIVATE KEY-----|\Z)', re.S), '[REDACTED PRIVATE KEY]'),
+    (re.compile(r'\b(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{16,}|glpat-[A-Za-z0-9_-]{16,}|mun_sk_[A-Za-z0-9_-]{8,}'
+                r'|sk-[A-Za-z0-9_-]{16,}|xox[abposr]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{30,})'), '[REDACTED]'),
+    (re.compile(r'\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}'), '[REDACTED JWT]'),
+    (re.compile(r'(?i)\b(bearer|basic|token)(\s+)[A-Za-z0-9._~+/=-]{8,}'), r'\1\2[REDACTED]'),
+    (re.compile(r'(://[^/\s:@]+):[^@\s/]+@'), r'\1:[REDACTED]@'),
+    (re.compile(r'(?i)\b((?:[a-z0-9_]*_)?(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key'
+                r'|client[_-]?secret|authorization|credentials?|cookie|session)["\']?\s*[:=]\s*)(["\']?)[^\s"\',;}]+'), r'\1\2[REDACTED]'),
+    (re.compile(r'^(\s*(?:export\s+)?[A-Z_][A-Z0-9_]*=)\S.*$', re.M), r'\1[REDACTED]'),
+]
+def redact(text):
+    for rx, rep in SECRET:
+        text = rx.sub(rep, text)
+    return text
+def arg(a):
+    a = str(a)
+    return re.sub(r'^([A-Za-z_][A-Za-z0-9_]*=).*$', r'\1[REDACTED]', a, flags=re.S)
+def tail(raw):
+    if not isinstance(raw, str):
+        return ['(no raw log named)']
+    p = os.path.join(base, os.path.basename(raw))
+    try:
+        st = os.lstat(p)
+        if not stat.S_ISREG(st.st_mode):
+            return ['(raw log is not a regular file)']
+        with open(p, 'rb') as f:
+            f.seek(max(0, st.st_size - 262144))
+            lines = f.read().decode('utf-8', 'replace').splitlines()[-TAIL:]
+    except OSError:
+        return ['(raw log unreadable)']
+    return redact('\n'.join(lines)).splitlines()
+try:
+    st = os.lstat(doc_path)
+    if not stat.S_ISREG(st.st_mode):
+        raise ValueError
+    with open(doc_path) as f:
+        doc = json.load(f)
+except (OSError, ValueError):
+    print('graph-full-suite-isolated: failure digest unavailable (execution document unreadable)')
+    sys.exit(0)
+out = ['=== graph-full-suite failure digest (argv, exit, duration, last %d log lines; redacted; capped at %d bytes) ===' % (TAIL, CAP),
+       'unit=%s head=%s exit_code=%s' % (doc.get('unit'), doc.get('head'), doc.get('exit_code'))]
+for row in doc.get('results') or []:
+    if not isinstance(row, dict):
+        continue
+    out.append('suite %s: %s; held %d; %s' % (row.get('suite'), row.get('verdict'), len(row.get('held_members') or []),
+                                                redact(str(row.get('reason') or ''))[:300]))
+    for ex in row.get('executions') or []:
+        if not isinstance(ex, dict) or ex.get('verdict') == 'verified':
+            continue
+        out.append('  execution %s: exit %s, %ss: %s' % (ex.get('verdict'), ex.get('exit_code'), ex.get('duration_s'),
+                                                          redact(' '.join(arg(a) for a in (ex.get('argv') or [])))))
+        out.extend('    | ' + line for line in tail(ex.get('raw_log')))
+text, used = [], 0
+for line in out:
+    size = len(line.encode('utf-8')) + 1
+    if used + size > CAP - 64:
+        text.append('[digest truncated at %d bytes]' % CAP)
+        break
+    text.append(line)
+    used += size
+print('\n'.join(text))
+DIGEST
+  fi
+fi
 exit "$status"
