@@ -15,18 +15,56 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 SUBJECT="$SCRIPT_DIR/graph-full-suite-isolated.sh"
 
 # The harness itself must not live under /tmp either: assertions compare against the path prefix.
-HARNESS_BASE="${HOME:?HOME required}"
-WORK="$(mktemp -d "$HARNESS_BASE/.mcgs-isolated-test.XXXXXXXX")"
-chmod 700 "$WORK"
-# Unit '.' success cases need a base that fits the AF_UNIX budget (base + 71 bytes < 108), whatever depth
-# WORK has on this host. A deliberately short private dir under HOME; a HOME too long for it fails loudly.
-SHORT="$(mktemp -d "$HARNESS_BASE/.m.XXXXXX")"
-chmod 700 "$SHORT"
-trap 'rm -rf -- "$WORK" "$SHORT"' EXIT
-if (( ${#SHORT} + 3 + 14 + 19 + 38 >= 108 )); then  # case 11 uses $SHORT/rt
-  echo "graph-full-suite-isolated.test.sh: HOME $HARNESS_BASE is too long for the unit '.' budget cases" >&2
+# Unit '.' success cases need a base that fits the AF_UNIX budget (base + 71 bytes < 108; case 11 uses
+# $SHORT/rt, so $SHORT + 74 < 108). Inside the root full suite HOME and TMPDIR are the run's private dirs
+# (for example /home/ci-runner/.mcgs/mcgs.XXXXXXXX/mc-full-.-XXXXXXXX/home), too deep for that budget, so
+# the base is the first of HOME, TMPDIR, /dev/shm that passes every check below. Custody: the candidate is
+# a directory outside /tmp and /var/tmp, owned by the caller or root, and, if group/other-writable, sticky
+# (so no other user can rename what the harness creates in it); the fresh private dir is caller-owned,
+# mode 0700, not a symlink, fits the budget, and can execute a file. None passing fails loudly; the
+# cases are never skipped.
+HARNESS_BASE=""
+SHORT=""
+tried=""
+me="$(id -u)"
+for cand in "${HOME:-}" "${TMPDIR:-}" /dev/shm; do
+  [[ -n "$cand" && -d "$cand" && -w "$cand" ]] || { tried="$tried ${cand:-<unset>}(unusable)"; continue; }
+  real="$(cd -- "$cand" && pwd -P)" || { tried="$tried $cand(unresolvable)"; continue; }
+  case "$real/" in /tmp/*|/var/tmp/*) tried="$tried $cand(under /tmp)"; continue ;; esac
+  read -r owner mode <<<"$(stat -c '%u %a' -- "$real")"
+  [[ "$owner" == "$me" || "$owner" == 0 ]] || { tried="$tried $cand(foreign owner)"; continue; }
+  if (( (8#$mode & 8#022) != 0 && (8#$mode & 8#1000) == 0 )); then
+    tried="$tried $cand(group/other-writable, not sticky)"
+    continue
+  fi
+  probe="$(mktemp -d "$real/.m.XXXXXX")" || { tried="$tried $cand(mktemp failed)"; continue; }
+  chmod 700 "$probe"
+  why=""
+  if [[ -L "$probe" || "$(stat -c '%u %a' -- "$probe")" != "$me 700" ]]; then
+    why="private dir custody"
+  elif (( ${#probe} + 3 + 14 + 19 + 38 >= 108 )); then
+    why="too long"
+  else
+    printf '#!/bin/sh\nexit 0\n' >"$probe/x" && chmod 700 "$probe/x" && "$probe/x" || why="cannot execute"
+    rm -f -- "$probe/x"
+  fi
+  if [[ -n "$why" ]]; then
+    rm -rf -- "${probe:?}"
+    tried="$tried $cand($why)"
+    continue
+  fi
+  HARNESS_BASE="$real"
+  SHORT="$probe"
+  break
+done
+if [[ -z "$SHORT" ]]; then
+  echo "graph-full-suite-isolated.test.sh: no base fits the unit '.' budget cases (tried:$tried)" >&2
   exit 1
 fi
+WORK="$(mktemp -d "$HARNESS_BASE/.mcgs-isolated-test.XXXXXXXX")"
+chmod 700 "$WORK"
+trap 'rm -rf -- "$WORK" "$SHORT"' EXIT
+echo "graph-full-suite-isolated.test.sh: harness base $HARNESS_BASE" >&2
 
 fail=0
 check() { # check <name> <command...>
