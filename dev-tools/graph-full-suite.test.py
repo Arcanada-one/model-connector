@@ -93,6 +93,20 @@ class Controls(unittest.TestCase):
         with self.assertRaises(subject.Refusal):
             subject.plan('watcher', ['watcher/test/a.spec.ts'])
 
+    def test_node_tap_spec_is_regression_not_vitest(self):
+        member = 'provider-profiles/fi10-persona-resolve.spec.mjs'
+        rows = subject.plan('.', [member, 'src/a.spec.ts'])
+        groups = {row['suite']: row['members'] for row in rows}
+        self.assertEqual(groups['maintained-vitest'], ['src/a.spec.ts'])
+        self.assertEqual(groups['maintained-regression'], [member])
+
+        path = self.root / member
+        path.parent.mkdir(parents=True)
+        path.write_text("import { test } from 'node:test';\ntest('fixture', () => {});\n")
+        argv, kind = subject.root_regression_command(self.root, member)
+        self.assertEqual(kind, 'node-tap')
+        self.assertEqual(argv, ['node', '--test', '--test-reporter=tap', str(path)])
+
     def template_source_fixture(self):
         names = ['templates/api-connector-scaffold/README.md',
                  'templates/api-connector-scaffold/{{name}}.connector.ts',

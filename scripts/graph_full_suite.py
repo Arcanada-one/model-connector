@@ -22,6 +22,9 @@ import time
 import xml.etree.ElementTree as ET
 
 AUTHORED_TEMPLATE = 'templates/api-connector-scaffold/{{name}}.connector.spec.ts'
+NODE_TAP_SPEC_MEMBERS = frozenset({
+    'provider-profiles/fi10-persona-resolve.spec.mjs',
+})
 
 UNITS = ('.', 'packages/sdk-python', 'packages/sdk-ts', 'watcher')
 ROOT = Path(__file__).resolve().parents[1]
@@ -143,6 +146,8 @@ def plan(unit, members):
                 group = 'maintained-integration'
             elif name.endswith('.e2e-spec.ts'):
                 group = 'maintained-app-e2e'
+            elif name in NODE_TAP_SPEC_MEMBERS:
+                group = 'maintained-regression'
             elif name.endswith('.spec.ts') or name.endswith('.spec.mjs'):
                 group = 'maintained-vitest'
             else:
@@ -496,7 +501,7 @@ def root_regression_command(root, member):
             if not py_path.exists() or not os.access(python, os.X_OK):
                 raise Refusal('MC_FULL_SUITE_PYTHON must be an executable path')
         return [python, '-B', path], 'unittest'
-    if member.endswith('.test.mjs'):
+    if member.endswith('.test.mjs') or member in NODE_TAP_SPEC_MEMBERS:
         return ['node', '--test', '--test-reporter=tap', path], 'node-tap'
     if member.endswith('.bats'):
         return ['bats', '--formatter', 'tap', path], 'bats'
