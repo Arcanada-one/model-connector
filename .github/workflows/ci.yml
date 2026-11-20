@@ -19,6 +19,34 @@ permissions:
   contents: read
 
 jobs:
+  # Measurement only (Root, 2026-11-20): does the arcana-devs ci-general runner offer the B9 sandbox?
+  # Draft PR, closed after one run; never merged.
+  b9-probe-ci-general-host:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, arcana-ci-general-host]
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - name: B9 sandbox probe (prints only)
+        run: |
+          set +e
+          echo "b9-probe runner=${RUNNER_NAME} user=$(id -un) home=${HOME} kernel=$(uname -r)"
+          echo "b9-probe bwrap=$(command -v bwrap || echo absent) version=$(bwrap --version 2>&1 | head -1)"
+          for f in /proc/sys/kernel/unprivileged_userns_clone /proc/sys/user/max_user_namespaces \
+                   /proc/sys/kernel/apparmor_restrict_unprivileged_userns; do
+            echo "b9-probe $f=$(cat "$f" 2>/dev/null || echo absent)"
+          done
+          unshare -Ur true >/dev/null 2>&1; echo "b9-probe unshare-user rc=$?"
+          if command -v bwrap >/dev/null; then
+            ifaces=$(bwrap --unshare-net --unshare-pid --die-with-parent --ro-bind /usr /usr \
+              --symlink usr/bin /bin --symlink usr/lib /lib --symlink usr/lib64 /lib64 --proc /proc --dev /dev \
+              /bin/sh -c 'tail -n +3 /proc/net/dev | cut -d: -f1 | tr -d " " | tr "\n" " "' 2>&1); rc=$?
+            echo "b9-probe bwrap-unshare-net rc=$rc ifaces=${ifaces}"
+          fi
+          echo "b9-probe corepack=$(command -v corepack || echo absent) node=$(command -v node || echo absent) python3=$(command -v python3 || echo absent)"
+          exit 0
+
   lint-and-test:
     # A2-315: pre-deploy gates run on the dedicated `deploy-gate` lane, not on `ci-general`, where
     # KC2 batteries held all five slots for hours (argana 95 min, muneral 150 min in the queue on
