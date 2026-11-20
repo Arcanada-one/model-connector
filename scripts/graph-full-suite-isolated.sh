@@ -52,13 +52,13 @@ refuse() {
   exit 1
 }
 
-check_private_base() { # check_private_base <resolved base>; refuses, never skips
+base_problem() { # base_problem <resolved base>; prints why it is not a private exec base, or nothing
   case "$1" in
     /tmp|/tmp/*|/var/tmp|/var/tmp/*)
-      refuse 'the private exec dir may not live under /tmp or /var/tmp' ;;
+      echo 'it lives under /tmp or /var/tmp'; return ;;
   esac
   if [[ -L "$1" || ! -O "$1" ]] || (( 8#$(stat -c '%a' -- "$1") & 8#022 )); then
-    refuse 'the private exec base must be owned by the caller and not group/other-writable'
+    echo 'it is a symlink, not owned by the caller, or group/other-writable'
   fi
 }
 
@@ -67,42 +67,58 @@ fits_socket_budget() { # fits_socket_budget <exec dir or base + template>
   (( ${#1} + ${#SCRATCH_SUFFIX} + ${#SOCKET_SUFFIX} < SOCKET_LIMIT ))
 }
 
-home_base() { # home_base -> prints $HOME/.mcgs (created 0700 if missing); refuses a foreign one
-  local base="$HOME/.mcgs"
+home_candidate() { # sets CANDIDATE to $HOME/.mcgs (created 0700 if missing), or WHY to the reason it is skipped
+  local base="${HOME:-}/.mcgs"
+  if [[ -z "${HOME:-}" || ! -d "$HOME" || -L "$HOME" || ! -O "$HOME" ]]; then
+    WHY='HOME is unset, not a directory, a symlink or not owned by the caller'; return
+  fi
+  if (( 8#$(stat -c '%a' -- "$HOME") & 8#022 )); then
+    WHY='HOME is group/other-writable'; return
+  fi
   if [[ ! -e "$base" && ! -L "$base" ]]; then
-    mkdir -m 700 -- "$base" 2>/dev/null || [[ -d "$base" && ! -L "$base" ]] \
-      || refuse '$HOME/.mcgs could not be created'
+    if ! mkdir -m 700 -- "$base" 2>/dev/null && ! [[ -d "$base" && ! -L "$base" ]]; then
+      WHY='$HOME/.mcgs could not be created'; return
+    fi
   fi
   if [[ -L "$base" || ! -d "$base" || ! -O "$base" ]] || [[ "$(stat -c '%a' -- "$base")" != 700 ]]; then
-    refuse '$HOME/.mcgs must be a directory owned by the caller with mode 0700, not a symlink'
+    WHY='$HOME/.mcgs is a symlink or not a caller-owned 0700 directory'; return
   fi
-  printf '%s\n' "$base"
+  CANDIDATE=$base
 }
 
+# Every candidate is checked for custody AND (unit '.') the socket budget. A candidate that fails either
+# is skipped with its reason on stderr; the run refuses only when no candidate passes both, so the base
+# that is used has always passed every custody check.
 UNIT=$1
 EXEC_BASE=
-seen=0
-for source in xdg home runner; do
-  candidate=
+for source in XDG_RUNTIME_DIR '$HOME/.mcgs' RUNNER_TEMP; do
+  CANDIDATE= WHY=
   case "$source" in
-    xdg) candidate=${XDG_RUNTIME_DIR:-} ;;
-    home) if [[ -n "${HOME:-}" && -d "$HOME" && ! -L "$HOME" && -O "$HOME" ]]; then candidate=$(home_base) || exit 1; fi ;;
-    runner) candidate=${RUNNER_TEMP:-} ;;
+    XDG_RUNTIME_DIR) CANDIDATE=${XDG_RUNTIME_DIR:-} ;;
+    '$HOME/.mcgs') home_candidate ;;
+    RUNNER_TEMP) CANDIDATE=${RUNNER_TEMP:-} ;;
   esac
-  [[ -n "$candidate" && -d "$candidate" ]] || continue
-  seen=1
-  candidate=$(cd -- "$candidate" && pwd -P)
-  check_private_base "$candidate"
-  if fits_socket_budget "$candidate$EXEC_TEMPLATE"; then
-    EXEC_BASE=$candidate
+  if [[ -z "$WHY" && -z "$CANDIDATE" ]]; then
+    WHY='not set'
+  elif [[ -z "$WHY" && ! -d "$CANDIDATE" ]]; then
+    WHY='not a directory'
+  fi
+  if [[ -z "$WHY" ]]; then
+    CANDIDATE=$(cd -- "$CANDIDATE" && pwd -P)
+    WHY=$(base_problem "$CANDIDATE")
+  fi
+  if [[ -z "$WHY" ]] && ! fits_socket_budget "$CANDIDATE$EXEC_TEMPLATE"; then
+    WHY="too deep for the ${SOCKET_LIMIT}-byte AF_UNIX path budget"
+  fi
+  if [[ -z "$WHY" ]]; then
+    EXEC_BASE=$CANDIDATE
+    echo "graph-full-suite-isolated: exec base from $source" >&2
     break
   fi
+  echo "graph-full-suite-isolated: skipped exec base candidate $source: $WHY" >&2
 done
 if [[ -z "$EXEC_BASE" ]]; then
-  if (( seen )); then
-    refuse "no private exec base fits the ${SOCKET_LIMIT}-byte AF_UNIX path budget (tried XDG_RUNTIME_DIR, \$HOME/.mcgs, RUNNER_TEMP)"
-  fi
-  refuse 'set XDG_RUNTIME_DIR or RUNNER_TEMP to a private directory (the private exec dir may not live under /tmp)'
+  refuse "no private exec base passes custody and the ${SOCKET_LIMIT}-byte AF_UNIX path budget (tried XDG_RUNTIME_DIR, \$HOME/.mcgs, RUNNER_TEMP; the private exec dir may not live under /tmp)"
 fi
 EXEC_TMP=$(mktemp -d "$EXEC_BASE/mcgs.XXXXXXXX")
 chmod 700 "$EXEC_TMP"

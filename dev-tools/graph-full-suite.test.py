@@ -18,6 +18,21 @@ subject = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(subject)
 
 
+
+def short_private_runtime(case):
+    """A 0700 exec base under the account home that fits the unit '.' AF_UNIX budget (base + 71 < 108).
+
+    It is deliberately short (home + 11 bytes) so the result does not depend on how deep the host home is;
+    a home too long for it fails the test loudly instead of letting the wrapper fall through to another base.
+    """
+    home = pwd.getpwuid(os.getuid()).pw_dir
+    runtime = Path(tempfile.mkdtemp(prefix='.m', dir=home))
+    case.addCleanup(shutil.rmtree, runtime, ignore_errors=True)
+    runtime.chmod(0o700)
+    case.assertLess(len(str(runtime)) + 14 + 19 + 38, 108,
+                    f'account home {home} is too long for the unit-. socket budget cases')
+    return runtime
+
 class Controls(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -307,10 +322,9 @@ class Controls(unittest.TestCase):
             '[[ -z "${FIXTURE_SECRET:-}" ]] || exit 10\n'
             'exit 23\n'
         )
-        # The private dir must live outside /tmp (world-writable); the base is a 0700 dir under the account home (not the patched HOME).
-        runtime = Path(tempfile.mkdtemp(prefix='.mcgs-runtime-', dir=pwd.getpwuid(os.getuid()).pw_dir))
-        self.addCleanup(shutil.rmtree, runtime, ignore_errors=True)
-        runtime.chmod(0o700)
+        # The private dir must live outside /tmp (world-writable); the base is a short 0700 dir under the account home
+        # (not the patched HOME), so it fits the unit-. socket budget whatever the depth of the host home.
+        runtime = short_private_runtime(self)
         self.assertFalse(str(runtime).startswith(('/tmp/', '/var/tmp/')), runtime)
         # Unit '.' additionally builds the hash-locked regression venv from PyPI (scripts/graph-full-suite-
         # regression.requirements.txt), which this hermetic fixture cannot do; the private TMPDIR/HOME and
@@ -373,9 +387,7 @@ class Controls(unittest.TestCase):
             archive.writestr('jsonschema-4.23.0.dist-info/RECORD', record)
         digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
         lock = scripts / 'graph-full-suite-regression.requirements.txt'
-        runtime = Path(tempfile.mkdtemp(prefix='.mcgs-runtime-', dir=pwd.getpwuid(os.getuid()).pw_dir))
-        self.addCleanup(shutil.rmtree, runtime, ignore_errors=True)
-        runtime.chmod(0o700)
+        runtime = short_private_runtime(self)
         env = {'PATH': os.defpath, 'HOME': str(self.root), 'XDG_RUNTIME_DIR': str(runtime),
                'GRAPH_FULL_SUITE_WHEELHOUSE': str(wheelhouse)}
 
