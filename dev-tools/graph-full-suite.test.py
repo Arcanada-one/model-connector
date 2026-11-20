@@ -737,6 +737,7 @@ class Controls(unittest.TestCase):
                 'REDIS_PORT': '6379',
                 'REDIS_PREFIX': 'fixture:',
                 'NODE_ENV': 'test',
+                'MC_FULL_SUITE_APP_E2E': '1',
             },
             'path': '/fixture/grant.json',
             'sha256': '0' * 64,
@@ -745,6 +746,7 @@ class Controls(unittest.TestCase):
 
         def child(argv, cwd, env, deadline, scratch, name):
             seen.append((name, env.get('RUN_INTEGRATION')))
+            self.assertEqual(env.get('MC_FULL_SUITE_APP_E2E'), '1')
             output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
             selected = [a for a in argv[argv.index('--outputFile=' + output) + 1:]
                         if not a.startswith('-')]

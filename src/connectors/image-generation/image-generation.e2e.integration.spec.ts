@@ -33,7 +33,6 @@ describe.skipIf(!shouldRun)('POST /images/generate [E2E INTEGRATION]', () => {
   let app: NestFastifyApplication;
   let prisma: PrismaService;
   let apiKey = process.env.INTEGRATION_API_KEY;
-  let ownedApiKeyId: string | undefined;
   const generatedRequestIds: string[] = [];
 
   beforeAll(async () => {
@@ -56,17 +55,19 @@ describe.skipIf(!shouldRun)('POST /images/generate [E2E INTEGRATION]', () => {
     prisma = app.get(PrismaService);
 
     // When no pre-seeded key is supplied, use a real, short-lived row in the
-    // disposable Postgres fixture. This exercises AuthGuard and Prisma without
-    // relying on a production credential or mocking the application path.
+    // explicitly owned disposable Postgres fixture. Persistent local databases
+    // must supply their own seeded test key instead.
     if (!apiKey) {
+      if (process.env.MC_FULL_SUITE_APP_E2E !== '1') {
+        throw new Error('INTEGRATION_API_KEY must be seeded outside the owned disposable fixture');
+      }
       apiKey = `mc-image-e2e-${randomUUID()}`;
-      const row = await prisma.apiKey.create({
+      await prisma.apiKey.create({
         data: {
           name: `mc-image-e2e-${randomUUID()}`,
           keyHash: await hash(apiKey, 4),
         },
       });
-      ownedApiKeyId = row.id;
     }
   }, 30_000);
 
@@ -76,9 +77,6 @@ describe.skipIf(!shouldRun)('POST /images/generate [E2E INTEGRATION]', () => {
         where: { imageGenerationId: { in: generatedRequestIds } },
       });
       await prisma.imageGeneration.deleteMany({ where: { id: { in: generatedRequestIds } } });
-    }
-    if (prisma && ownedApiKeyId) {
-      await prisma.apiKey.deleteMany({ where: { id: ownedApiKeyId } });
     }
     await app?.close();
   });
