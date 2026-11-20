@@ -135,6 +135,42 @@ if [[ "$1" == 'packages/sdk-python' ]] && ! env -i PATH="$SYSTEM_PATH" "$SYSTEM_
   PYTHON_PATH="$VENV/bin:$SYSTEM_PATH"
 fi
 
+# pnpm offline (Program DEC-AUP-0197 B9). /usr/bin/pnpm is a corepack shim: under the fresh private HOME
+# it finds no pnpm and needs the network, which the B9 sandbox does not have. When
+# GRAPH_FULL_SUITE_COREPACK names a directory holding the corepack archive of the packageManager pnpm
+# (pnpm-<version>.corepack.tgz, as written by `corepack pack`), the archive must match the sha256 pinned in
+# scripts/graph-full-suite-corepack.sha256; it is installed into a private COREPACK_HOME with
+# COREPACK_ENABLE_NETWORK=0, and both variables are passed to every later child. Any mismatch refuses.
+# Unset: nothing changes (pnpm resolves as before).
+corepack_env=()
+if [[ -n "${GRAPH_FULL_SUITE_COREPACK:-}" ]]; then
+  [[ -d "$GRAPH_FULL_SUITE_COREPACK" && ! -L "$GRAPH_FULL_SUITE_COREPACK" ]] \
+    || refuse 'GRAPH_FULL_SUITE_COREPACK must be a directory, not a symlink'
+  COREPACK_LOCK="$SCRIPT_DIR/graph-full-suite-corepack.sha256"
+  [[ -f "$COREPACK_LOCK" && ! -L "$COREPACK_LOCK" ]] || refuse 'corepack lock file missing'
+  pm=$(env -i PATH="$SYSTEM_PATH" "$SYSTEM_PYTHON" -I -c '
+import json, sys
+print(json.load(open(sys.argv[1])).get("packageManager", ""))' "$REPO_ROOT/package.json") \
+    || refuse 'package.json packageManager unreadable'
+  [[ "$pm" =~ ^pnpm@([0-9]+\.[0-9]+\.[0-9]+)$ ]] || refuse "packageManager is not an exact pnpm version: $pm"
+  pnpm_version=${BASH_REMATCH[1]}
+  archive_name="pnpm-$pnpm_version.corepack.tgz"
+  read -r pinned_sha pinned_name extra < "$COREPACK_LOCK" || true
+  [[ "$pinned_name" == "$archive_name" && -z "${extra:-}" && "$pinned_sha" =~ ^[0-9a-f]{64}$ ]] \
+    || refuse "corepack lock does not pin $archive_name"
+  archive="$GRAPH_FULL_SUITE_COREPACK/$archive_name"
+  [[ -f "$archive" && ! -L "$archive" ]] || refuse "corepack archive $archive_name missing"
+  actual_sha=$(sha256sum -- "$archive") || refuse 'corepack archive unreadable'
+  [[ "${actual_sha%% *}" == "$pinned_sha" ]] || refuse "corepack archive $archive_name does not match its pinned sha256"
+  mkdir -m 700 "$PRIVATE_TMP/corepack"
+  corepack_env=(COREPACK_HOME="$PRIVATE_TMP/corepack" COREPACK_ENABLE_NETWORK=0)
+  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$SYSTEM_PATH" "${corepack_env[@]}" \
+    corepack install -g "$archive" >&2 || refuse 'corepack could not install the pinned pnpm offline'
+  got=$(cd -- "$REPO_ROOT" && env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$SYSTEM_PATH" \
+    "${corepack_env[@]}" pnpm --version) || refuse 'pnpm does not run offline after the corepack install'
+  [[ "$got" == "$pnpm_version" ]] || refuse "pnpm offline reports $got, expected $pnpm_version"
+fi
+
 # Root regressions of unit '.' include .github/graph-admission/tools/graph/test_source_input_contract.py,
 # which imports jsonschema. The system /usr/bin/python3 on the CI runners has none, and the setup-python
 # interpreter of the workflow is deliberately not on this PATH. Build a private venv from the system
@@ -175,7 +211,7 @@ fi
 # node_modules before measurement when prisma is present (dummy URL — generate
 # does not connect). Fixture harnesses without prisma skip this step.
 if [[ "$1" == '.' && -x "$REPO_ROOT/node_modules/.bin/prisma" ]]; then
-  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 \
+  env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 "${corepack_env[@]}" \
     PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 \
     DATABASE_URL='postgresql://prisma-generate:prisma-generate@127.0.0.1:5432/prisma_generate' \
     bash -lc "cd -- $(printf '%q' "$REPO_ROOT") && ./node_modules/.bin/prisma generate" \
@@ -183,7 +219,7 @@ if [[ "$1" == '.' && -x "$REPO_ROOT/node_modules/.bin/prisma" ]]; then
 fi
 
 set +e
-env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 bash "$SCRIPT_DIR/graph-full-suite.sh" "$1"
+env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 "${corepack_env[@]}" PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 bash "$SCRIPT_DIR/graph-full-suite.sh" "$1"
 status=$?
 shopt -s nullglob
 for artifact in "$EXEC_TMP"/mc-full-*; do
