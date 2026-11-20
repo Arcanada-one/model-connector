@@ -1135,6 +1135,64 @@ jobs:
           pnpm exec prisma generate
           cat "$PLAN_PATH" >> "$GITHUB_STEP_SUMMARY"
 
+      # Muneral Nest e2e suites inside the candidate producer's full_fallback_test need a live
+      # Postgres and a durable DATABASE_URL (muneral#444 / class-c on main). The prepare step's
+      # dummy URL is step-local and never reaches produce/verify. Match lint-and-test:
+      # postgres:16, user/db muneral_test, free host port (no fixed 5432 bind). Source-fixed to
+      # Arcanada-one/muneral only — never a caller-controlled input. Random password is generated
+      # here (not a repository secret), masked, written to GITHUB_ENV for later steps, torn down
+      # under if: always(). Measured: muneral lint-and-test already runs services.postgres on the
+      # same ci-general self-hosted pool, so docker is present on those runners.
+      - name: Start throwaway Postgres for Muneral candidate fallback suites
+        id: muneral_candidate_postgres
+        # Match Produce: Muneral candidate CAR also runs under gate_self_update. Start Postgres for
+        # both arms so a self_update-only Muneral path does not inherit the DATABASE_URL hole.
+        if: github.repository == 'Arcanada-one/muneral' && (inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update')
+        run: |
+          set -euo pipefail
+          if ! command -v docker >/dev/null 2>&1; then
+            echo "::error::docker is required for Muneral candidate fallback Postgres (same capability as lint-and-test services.postgres on ci-general)" >&2
+            exit 2
+          fi
+          PASS="$(openssl rand -hex 16)"
+          NAME="muneral-ga-pg-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          # Container port only: Docker publishes a free host port (lint-and-test comment: fixed
+          # 5432:5432 dies with address already in use on shared ci-general runners).
+          docker run -d --name "$NAME" \
+            -e POSTGRES_USER=test \
+            -e "POSTGRES_PASSWORD=${PASS}" \
+            -e POSTGRES_DB=muneral_test \
+            -p 127.0.0.1::5432 \
+            postgres:16
+          # Publish the deterministic name immediately after docker run so Stop can tear down even
+          # when a later readiness/port line fails (step outputs are otherwise empty on failure).
+          echo "container=${NAME}" >> "$GITHUB_OUTPUT"
+          PORT="$(docker port "$NAME" 5432/tcp | awk -F: '{print $NF}' | head -n 1)"
+          test -n "$PORT"
+          for _ in $(seq 1 30); do
+            if docker exec "$NAME" pg_isready -U test -d muneral_test >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          docker exec "$NAME" pg_isready -U test -d muneral_test
+          URL="postgresql://test:${PASS}@127.0.0.1:${PORT}/muneral_test"
+          echo "::add-mask::${PASS}"
+          echo "::add-mask::${URL}"
+          {
+            echo "DATABASE_URL=${URL}"
+            echo "MUNERAL_GA_PG_CONTAINER=${NAME}"
+          } >> "$GITHUB_ENV"
+          echo "port=${PORT}" >> "$GITHUB_OUTPUT"
+
+      - name: Apply Muneral Prisma migrations on throwaway Postgres
+        if: github.repository == 'Arcanada-one/muneral' && (inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update')
+        run: |
+          set -euo pipefail
+          test -n "${DATABASE_URL:-}"
+          # Same root prisma migrate deploy as muneral lint-and-test (schema via prisma.config.ts).
+          pnpm exec prisma migrate deploy
+
       - name: Validate canonical Auth dependency source and toolchain
         id: candidate_auth_dependency_setup
         if: github.repository == 'Arcanada-one/auth-arcana'
@@ -1275,9 +1333,11 @@ jobs:
       # The canonical Model Connector self-update is the only caller admitted by the narrow
       # B1 pin/permission grammar. Its current-candidate TypeScript verifiers need the same
       # frozen dependencies and generated Prisma client as its ordinary CI job. Keep this
-      # source-fixed setup separate from caller-controlled dependency-setup inputs.
+      # source-fixed setup separate from caller-controlled dependency-setup inputs. It also runs on the
+      # ordinary candidate route (`candidate_receipt_required`): the hosted full-suite fallbacks refuse
+      # without an owned node_modules directory. The repository check is source-fixed; no new input.
       - name: Prepare canonical Model Connector self-update verifier dependencies
-        if: github.repository == 'Arcanada-one/model-connector' && steps.self_update_classifier.outputs.case == 'gate_self_update'
+        if: github.repository == 'Arcanada-one/model-connector' && (inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update')
         env:
           RANGE_BASE: ${{ steps.range.outputs.base }}
           RANGE_HEAD: ${{ steps.range.outputs.head }}
@@ -1820,6 +1880,15 @@ jobs:
             --path "${RUNNER_TEMP}/graph-admission/current-candidate/" \
             --summary "${GITHUB_STEP_SUMMARY}"
           exit 0
+
+      - name: Stop throwaway Postgres for Muneral candidate fallback suites
+        if: always() && github.repository == 'Arcanada-one/muneral' && steps.muneral_candidate_postgres.outcome != 'skipped'
+        run: |
+          set -uo pipefail
+          # Derive the deterministic name; do not rely solely on Start step outputs (empty when
+          # docker run succeeded but a later Start line failed before writing GITHUB_OUTPUT).
+          NAME="muneral-ga-pg-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker rm -f "$NAME" || true
 
       - name: Fail the check on a red verdict
         if: always()
