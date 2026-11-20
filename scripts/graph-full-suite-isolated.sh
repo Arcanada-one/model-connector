@@ -26,41 +26,88 @@ chmod 700 "$CACHE_ROOT" "$RUNS_DIR" "$CACHE_ROOT/pip-cache"
 PRIVATE_TMP=$(mktemp -d "$RUNS_DIR/run.XXXXXXXX")
 chmod 700 "$PRIVATE_TMP"
 mkdir -m 700 "$PRIVATE_TMP/home"
-# Keep runtime-created Unix socket names below the platform's 108-byte limit.
-# The verifier cache path is intentionally deep; using it as TMPDIR made the
-# BENCH composition fixtures reject otherwise valid socket paths. A sibling of
-# the checkout is still too long once graph_full_suite.py adds its own scratch
-# directory and the fixtures add their socket names, so use a private short
-# system-temp path. Preserve execution reports in PRIVATE_TMP after the run.
 # The private exec/home dir must NOT live under /tmp or any other world-writable directory:
 # deploy/prime-first-install.py protected() rejects every path chain with a group/other-writable
 # component, so a HOME below /tmp makes test_prime_first_install.py fail with Refusal(custody)
-# for a reason that has nothing to do with the code under test. Use the per-user runtime
-# directory (XDG_RUNTIME_DIR) or the CI runner temp directory (RUNNER_TEMP); fail closed otherwise.
+# for a reason that has nothing to do with the code under test. Preserve execution reports in
+# PRIVATE_TMP after the run.
+#
+# AF_UNIX path budget (unit '.'). The exec dir becomes TMPDIR of graph_full_suite.py, which adds its
+# own mc-full-<unit>-XXXXXXXX scratch dir, and the deepest socket a maintained root test binds is
+#   <exec dir>/mc-full-.-XXXXXXXX/bench-composition-XXXXXX/custody.sock
+# (src/bench-reservation/composition.spec.ts; src/bench-reservation/composition.ts requires < 108
+# bytes). On a CI runner XDG_RUNTIME_DIR is unset and RUNNER_TEMP is too deep for that budget
+# (/opt/arcanada-runners/<runner>/_work/_temp gave a 126-byte socket path and 15 failed tests),
+# so the candidates are, in order: XDG_RUNTIME_DIR, $HOME/.mcgs, RUNNER_TEMP. The first existing
+# candidate that passes the custody checks AND fits the budget is used; when none fits the wrapper
+# refuses. A too-deep base is never used, because the socket tests would then fail for a reason
+# that has nothing to do with the code under test.
+EXEC_TEMPLATE='/mcgs.XXXXXXXX'
+SCRATCH_SUFFIX="/mc-full-${1//\//-}-XXXXXXXX"
+SOCKET_SUFFIX='/bench-composition-XXXXXX/custody.sock'
+SOCKET_LIMIT=108
+
+refuse() {
+  echo "FULL_FALLBACK_TEST_REFUSED: $1" >&2
+  exit 1
+}
+
+check_private_base() { # check_private_base <resolved base>; refuses, never skips
+  case "$1" in
+    /tmp|/tmp/*|/var/tmp|/var/tmp/*)
+      refuse 'the private exec dir may not live under /tmp or /var/tmp' ;;
+  esac
+  if [[ -L "$1" || ! -O "$1" ]] || (( 8#$(stat -c '%a' -- "$1") & 8#022 )); then
+    refuse 'the private exec base must be owned by the caller and not group/other-writable'
+  fi
+}
+
+fits_socket_budget() { # fits_socket_budget <exec dir or base + template>
+  [[ "$UNIT" == . ]] || return 0  # only unit '.' binds AF_UNIX sockets below TMPDIR
+  (( ${#1} + ${#SCRATCH_SUFFIX} + ${#SOCKET_SUFFIX} < SOCKET_LIMIT ))
+}
+
+home_base() { # home_base -> prints $HOME/.mcgs (created 0700 if missing); refuses a foreign one
+  local base="$HOME/.mcgs"
+  if [[ ! -e "$base" && ! -L "$base" ]]; then
+    mkdir -m 700 -- "$base" 2>/dev/null || [[ -d "$base" && ! -L "$base" ]] \
+      || refuse '$HOME/.mcgs could not be created'
+  fi
+  if [[ -L "$base" || ! -d "$base" || ! -O "$base" ]] || [[ "$(stat -c '%a' -- "$base")" != 700 ]]; then
+    refuse '$HOME/.mcgs must be a directory owned by the caller with mode 0700, not a symlink'
+  fi
+  printf '%s\n' "$base"
+}
+
+UNIT=$1
 EXEC_BASE=
-for candidate in "${XDG_RUNTIME_DIR:-}" "${RUNNER_TEMP:-}"; do
-  if [[ -n "$candidate" && -d "$candidate" ]]; then
+seen=0
+for source in xdg home runner; do
+  candidate=
+  case "$source" in
+    xdg) candidate=${XDG_RUNTIME_DIR:-} ;;
+    home) if [[ -n "${HOME:-}" && -d "$HOME" && ! -L "$HOME" && -O "$HOME" ]]; then candidate=$(home_base) || exit 1; fi ;;
+    runner) candidate=${RUNNER_TEMP:-} ;;
+  esac
+  [[ -n "$candidate" && -d "$candidate" ]] || continue
+  seen=1
+  candidate=$(cd -- "$candidate" && pwd -P)
+  check_private_base "$candidate"
+  if fits_socket_budget "$candidate$EXEC_TEMPLATE"; then
     EXEC_BASE=$candidate
     break
   fi
 done
 if [[ -z "$EXEC_BASE" ]]; then
-  echo 'FULL_FALLBACK_TEST_REFUSED: set XDG_RUNTIME_DIR or RUNNER_TEMP to a private directory (the private exec dir may not live under /tmp)' >&2
-  exit 1
-fi
-EXEC_BASE=$(cd -- "$EXEC_BASE" && pwd -P)
-case "$EXEC_BASE" in
-  /tmp|/tmp/*|/var/tmp|/var/tmp/*)
-    echo 'FULL_FALLBACK_TEST_REFUSED: the private exec dir may not live under /tmp or /var/tmp' >&2
-    exit 1 ;;
-esac
-if [[ -L "$EXEC_BASE" || ! -O "$EXEC_BASE" ]] || (( 8#$(stat -c '%a' -- "$EXEC_BASE") & 8#022 )); then
-  echo 'FULL_FALLBACK_TEST_REFUSED: the private exec base must be owned by the caller and not group/other-writable' >&2
-  exit 1
+  if (( seen )); then
+    refuse "no private exec base fits the ${SOCKET_LIMIT}-byte AF_UNIX path budget (tried XDG_RUNTIME_DIR, \$HOME/.mcgs, RUNNER_TEMP)"
+  fi
+  refuse 'set XDG_RUNTIME_DIR or RUNNER_TEMP to a private directory (the private exec dir may not live under /tmp)'
 fi
 EXEC_TMP=$(mktemp -d "$EXEC_BASE/mcgs.XXXXXXXX")
 chmod 700 "$EXEC_TMP"
 trap 'rm -rf -- "$EXEC_TMP"' EXIT
+fits_socket_budget "$EXEC_TMP" || refuse "exec dir $EXEC_TMP exceeds the AF_UNIX path budget"
 
 SYSTEM_PATH=$PATH
 SYSTEM_PYTHON=$(PATH="$SYSTEM_PATH" command -v python3)
