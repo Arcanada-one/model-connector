@@ -242,6 +242,86 @@ done
 check "venv: built without system site-packages" bash -c '! grep -q -- "--system-site-packages" "$1"' _ "$wrapper"
 check "venv: locked jsonschema asserted inside the venv" grep -q -F 'md.version("jsonschema") == "4.23.0"' "$wrapper"
 
+# 13. Evidence survives the wrapper. The suite's own "Full-suite evidence:" line names EXEC_TMP, which the EXIT
+#     trap removes; the wrapper must print a LAST pointer to the surviving private copy, and on a non-zero status
+#     a redacted failure digest capped at 64 KiB. A second fake checkout runs a stub suite that writes an
+#     execution document and a raw log under TMPDIR; repo2/stub-mode holds "<status> <lines> <line bytes>".
+mkdir -p "$WORK/repo2/scripts" "$WORK/repo2/node_modules"
+cp "$SUBJECT" "$WORK/repo2/scripts/graph-full-suite-isolated.sh"
+cat >"$WORK/repo2/scripts/graph-full-suite.sh" <<'STUB'
+#!/usr/bin/env bash
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+read -r status lines width <"$root/stub-mode"
+d="$(mktemp -d "$TMPDIR/mc-full-watcher-XXXXXXXX")"
+# Token-shaped values are assembled at run time so no token- or key-shaped literal sits in the source. The PEM
+# block is longer than the 80-line tail, so the tail starts inside it (no BEGIN line) and must still be redacted.
+pfx=ghp pem='PRIVATE KEY'
+{
+  echo 'FIRST-LINE-OF-LOG'
+  echo "-----BEGIN RSA $pem-----"
+  for ((i = 0; i < 90; i++)); do echo "MIIharnessPEMbody${i}xyz"; done  # short: only the cut-PEM rule catches it
+  echo "-----END RSA $pem-----"
+  for ((i = 0; i < lines; i++)); do printf 'filler %0*d\n' "$width" "$i"; done
+  echo "GITHUB_TOKEN=${pfx}_harnessfixture0123456789abcdef"
+  echo 'Authorization: Bearer harnessbearer0123456789'
+  echo 'dsn https://svc:harnesspassword@db.example/x'
+  echo 'api_key="harnessapikeyvalue"'
+  echo '{"OPENAI_KEY": "harnessjsonkeyvalue"}'
+  echo 'payload harnessB64blobQWERTYuiopASDFGHjklZXCVBNm0123456789+/=='
+  echo 'LAST-LINE-OF-LOG'
+} >"$d/root-3-1.log"
+ev=failed
+[[ $status == 127 ]] && ev=not_measured
+cat >"$d/execution.json" <<JSON
+{"schema":"MaintainedFullSuiteExecution/v1","unit":"watcher","head":"stubhead","exit_code":$status,
+ "results":[{"suite":"stub-regression","verdict":"failed","held_members":[],
+  "executions":[{"verdict":"verified","exit_code":0,"duration_s":0.1,"argv":["python3","ok_test.py"],"raw_log":"$d/root-3-0.log"},
+                {"verdict":"$ev","exit_code":$status,"duration_s":0.2,"argv":["env","HARNESS_SETTING=harnessenvvalue","python3","stub_test.py"],"raw_log":"$d/root-3-1.log"}]}]}
+JSON
+echo "Full-suite evidence: $d/execution.json"
+exit "$status"
+STUB
+chmod 755 "$WORK/repo2/scripts/"*.sh
+run_repo2() { # run_repo2 <status> <lines> <width>; output in $WORK/run2.log, wrapper status in $WORK/run2.rc
+  echo "$1 $2 $3" >"$WORK/repo2/stub-mode"
+  local rc=0
+  env -i PATH=/usr/bin:/bin RUNNER_TEMP="$WORK/runtime" bash "$WORK/repo2/scripts/graph-full-suite-isolated.sh" watcher >"$WORK/run2.log" 2>&1 || rc=$?
+  echo "$rc" >"$WORK/run2.rc"
+}
+last_pointer() { sed -n 's/^Full-suite evidence: //p' "$WORK/run2.log" | tail -1; }
+digest() { sed -n '/^=== graph-full-suite failure digest/,$p' "$WORK/run2.log"; }
+secret_free() { ! grep -q -E 'ghp_harness|harnessbearer|harnesspassword|harnessapikeyvalue|harnessenvvalue|harnessjsonkeyvalue|harnessPEMbody|harnessB64blob' "$WORK/run2.log"; }
+
+run_repo2 1 200 8
+ptr="$(last_pointer)"
+check "evidence: wrapper keeps the suite's exit status" test "$(cat "$WORK/run2.rc")" = 1
+check "evidence: two pointers, the suite's and the wrapper's" test "$(grep -c '^Full-suite evidence: ' "$WORK/run2.log")" = 2
+check "evidence: last pointer exists after the wrapper exits" test -f "$ptr" -a ! -L "$ptr"
+check "evidence: last pointer is the private copy" test "${ptr#"$WORK/repo2/node_modules/.cache/graph-full-suite/runs/run."}" != "$ptr"
+check "evidence: first pointer (EXEC_TMP) is gone" test ! -e "$(sed -n 's/^Full-suite evidence: //p' "$WORK/run2.log" | head -1)"
+check "evidence: private copy is byte-identical in content" grep -q '"head":"stubhead"' "$ptr"
+check "digest: printed on failure" grep -q '^=== graph-full-suite failure digest' "$WORK/run2.log"
+check "digest: names the failed execution's argv" grep -q -F 'python3 stub_test.py' "$WORK/run2.log"
+check "digest: verified executions are not listed" bash -c '! grep -q -F "ok_test.py" "$1"' _ "$WORK/run2.log"
+check "digest: tail holds the last log line" grep -q 'LAST-LINE-OF-LOG' "$WORK/run2.log"
+check "digest: tail is at most 80 lines" test "$(digest | grep -c '^    | ')" -le 80
+check "digest: older log lines are not printed" bash -c '! grep -q FIRST-LINE-OF-LOG "$1"' _ "$WORK/run2.log"
+run_repo2 1 3 4
+check "digest: env assignment in argv is redacted" grep -q -F 'HARNESS_SETTING=[REDACTED]' "$WORK/run2.log"
+check "digest: token, bearer, URL password, key, JSON *_KEY, cut PEM, base64 run and env values redacted" secret_free
+check "digest: redaction leaves the tail's last line" grep -q 'LAST-LINE-OF-LOG' "$WORK/run2.log"
+run_repo2 127 3 4
+check "not measured: status 127 kept" test "$(cat "$WORK/run2.rc")" = 127
+check "not measured: last pointer printed" test -f "$(last_pointer)"
+check "not measured: no failure digest without a failed execution" bash -c '! grep -q "failure digest" "$1"' _ "$WORK/run2.log"
+run_repo2 0 3 4
+check "evidence: last pointer also printed on success" test -f "$(last_pointer)"
+check "digest: not printed on success" bash -c '! grep -q "failure digest" "$1"' _ "$WORK/run2.log"
+check "evidence: success status kept" test "$(cat "$WORK/run2.rc")" = 0
+run_repo2 1 79 3000
+check "digest: capped at 64 KiB" test "$(digest | wc -c)" -le 65536
+check "digest: cap is marked" grep -q '^\[digest truncated at 65536 bytes\]$' "$WORK/run2.log"
+
 if [[ $fail -ne 0 ]]; then
   echo "graph-full-suite-isolated.test.sh: FAILED"
   exit 1
