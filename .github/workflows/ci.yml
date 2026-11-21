@@ -180,6 +180,14 @@ jobs:
           node --test dev-tools/rate-limit-ci-report.test.mjs
           PYTHONDONTWRITEBYTECODE=1 python3 dev-tools/rate-limit-ci-workflow.test.py
 
+      - name: Node test specs outside the Vitest include
+        # vitest.config.ts collects only scripts/**/*.spec.mjs; every other *.spec.mjs is node:test.
+        run: |
+          mapfile -t node_specs < <(git ls-files -- '*.spec.mjs' ':(exclude)scripts/**')
+          test "${#node_specs[@]}" -gt 0
+          printf 'node:test spec: %s\n' "${node_specs[@]}"
+          node --test "${node_specs[@]}"
+
   docker-e2e:
     # Skipped only when a same-repository PR changes Docker-ignored files alone.
     # Missing output, unknown event, fork, or source-read failure keeps the job enabled.
@@ -222,6 +230,28 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # Program DEC-AUP-0197 B9 runs each side in bwrap with --unshare-net; where bwrap or user namespaces
+      # are missing, B9 reads not_measured. This step only prints what this ci-general runner offers. It
+      # changes nothing, reads no secret and never fails the job.
+      - name: B9 sandbox probe (prints only)
+        run: |
+          set +e
+          echo "b9-probe runner=${RUNNER_NAME} kernel=$(uname -r)"
+          echo "b9-probe bwrap=$(command -v bwrap || echo absent) version=$(bwrap --version 2>&1 | head -1)"
+          for f in /proc/sys/kernel/unprivileged_userns_clone /proc/sys/user/max_user_namespaces \
+                   /proc/sys/kernel/apparmor_restrict_unprivileged_userns; do
+            echo "b9-probe $f=$(cat "$f" 2>/dev/null || echo absent)"
+          done
+          unshare -Ur true >/dev/null 2>&1; echo "b9-probe unshare-user rc=$?"
+          if command -v bwrap >/dev/null; then
+            ifaces=$(bwrap --unshare-net --unshare-pid --die-with-parent --ro-bind /usr /usr \
+              --symlink usr/bin /bin --symlink usr/lib /lib --symlink usr/lib64 /lib64 --proc /proc --dev /dev \
+              /bin/sh -c 'tail -n +3 /proc/net/dev | cut -d: -f1 | tr -d " " | tr "\n" " "' 2>&1); rc=$?
+            echo "b9-probe bwrap-unshare-net rc=$rc ifaces=${ifaces}"
+          fi
+          echo "b9-probe corepack=$(command -v corepack || echo absent) node=$(command -v node || echo absent) python3=$(command -v python3 || echo absent)"
+          exit 0
 
       - name: Export ephemeral service host ports
         run: |

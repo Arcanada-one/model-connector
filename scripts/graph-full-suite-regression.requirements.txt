@@ -1,0 +1,12 @@
+# Hash-locked Python set for the maintained root regressions of unit '.' (graph-full-suite-isolated.sh).
+# .github/graph-admission/tools/graph/test_source_input_contract.py imports jsonschema at module level;
+# the isolated wrapper runs the suite with the system /usr/bin/python3 (3.12, cp312), which has no
+# jsonschema on the CI runners. This is jsonschema==4.23.0 (the version graph-admission.yml installs)
+# and its complete transitive closure for CPython 3.12 on manylinux x86_64, installed with
+# --require-hashes --no-deps --only-binary=:all: into a private venv. Change only together with the
+# hashes from https://pypi.org/pypi/<name>/<version>/json.
+attrs==24.3.0 --hash=sha256:ac96cd038792094f438ad1f6ff80837353805ac950cd2aa0e0625ef19850c308
+jsonschema==4.23.0 --hash=sha256:fbadb6f8b144a8f8cf9f0b89ba94501d143e50411a1278633f56a7acf7fd5566
+jsonschema-specifications==2024.10.1 --hash=sha256:a09a0680616357d9a0ecf05c12ad234479f549239d0f5b55f3deea67475da9bf
+referencing==0.35.1 --hash=sha256:eda6d3234d62814d1c64e305c1331c9a3a6132da475ab6382eaa997b21ee75de
+rpds-py==0.22.3 --hash=sha256:e67ba3c290821343c192f7eae1d8fd5999ca2dc99994114643e2f2d3e6138b15
