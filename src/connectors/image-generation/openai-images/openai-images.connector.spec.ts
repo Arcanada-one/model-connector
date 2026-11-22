@@ -141,7 +141,9 @@ describe('OpenAIImagesConnector', () => {
       tier: 'premium',
       prompt: 'usage cost',
       quality: 'high',
+      count: 1,
       outputFormat: 'url',
+      outputAsync: 'never',
     });
     expect(result.costUsd).toBeCloseTo(21.5);
   });
@@ -152,8 +154,11 @@ describe('OpenAIImagesConnector', () => {
         tier: 'premium',
         prompt: 'bad size',
         quality: 'high',
+        count: 1,
         width: 1000,
         height: 1024,
+        outputFormat: 'url',
+        outputAsync: 'never',
       }),
     ).rejects.toThrow(/divisible by 16/);
   });
