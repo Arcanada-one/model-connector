@@ -80,20 +80,20 @@ class PublishSdksNpmTokenTests(unittest.TestCase):
         on = self.doc.get("on") or self.doc.get(True) or {}
         self.assertNotIn("workflow_dispatch", on)
 
-    def test_publishing_jobs_check_out_event_sha(self) -> None:
-        jobs = self.doc["jobs"]
-        for job_name in ("build-ts", "tag-ancestor-gate", "publish-ts"):
+    def test_every_checkout_uses_event_sha_and_no_user_ref(self) -> None:
+        self.assertNotIn("inputs.ref", self.raw)
+        checkouts = []
+        for job_name, job in self.doc["jobs"].items():
+            for step in job.get("steps", []):
+                if str(step.get("uses", "")).startswith("actions/checkout@"):
+                    checkouts.append((job_name, step))
+
+        self.assertEqual(len(checkouts), 4)
+        for job_name, checkout in checkouts:
             with self.subTest(job=job_name):
-                checkouts = [
-                    step
-                    for step in jobs[job_name]["steps"]
-                    if str(step.get("uses", "")).startswith("actions/checkout@")
-                ]
-                self.assertTrue(checkouts)
-                for checkout in checkouts:
-                    self.assertEqual(
-                        checkout.get("with", {}).get("ref"), "${{ github.sha }}"
-                    )
+                self.assertEqual(
+                    checkout.get("with", {}).get("ref"), "${{ github.sha }}"
+                )
 
     def test_publish_ts_requires_tokenless_tag_ancestor_gate(self) -> None:
         jobs = self.doc["jobs"]
