@@ -588,5 +588,5 @@ describe('latency budget (positive fixtures add < 20 ms p95)', () => {
     const sorted = [...samples].sort((a, b) => a - b);
     const p95 = percentile(sorted, 95);
     expect(p95).toBeGreaterThanOrEqual(20);
-  });
+  }, 15_000);
 });

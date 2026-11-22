@@ -7,14 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- **Deterministic lint-and-test under deploy-gate load.** Prompt-cache latency
-  budget keeps the 20 ms p95 gate but measures `process.cpuUsage` after warmup
-  (plus a mutation that a real CPU regression still fails). Transient API stall
-  retry (A2-425) injects a timeout signal driven by an explicit test clock
-  instead of wall-clock `AbortSignal.timeout`, without changing the 150 ms budget.
-
 ### Changed
 
 - **watcher vitest ^4.1.4 → ^4.1.11.** Nested manifest-only bump; measured

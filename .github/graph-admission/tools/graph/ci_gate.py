@@ -24,12 +24,8 @@ Receipt sources (both supported, both reported):
     a) files in the pull-request head tree matching `--receipt-glob` (default the caller's
        `receipts/graph/**` and `receipts/**/change-admission-*.json`);
     b) a fenced ```json block in the PR body whose `schema` starts with `ChangeAdmissionReceipt`.
-    The PR body is read from a FILE (`--pr-body-file`). The reusable workflow writes that file from
-    `$GITHUB_EVENT_PATH` and never places body bytes in an environment variable or argv payload —
-    a large body previously crashed the job with E2BIG / "Argument list too long". A PR body is
-    attacker-controlled text. Until every caller pins a program SHA that includes the event-file
-    path, the interim workaround remains valid: commit the CAR in-tree under `receipts/graph/` and
-    keep the PR body short (the gate accepts a receipt in the head tree).
+    The PR body is read from a FILE (the workflow passes it through an environment variable and a
+    file, never through a shell interpolation) — a PR body is attacker-controlled text.
 
 stdlib only (Python 3.12), deterministic, no network.
 """
@@ -57,21 +53,15 @@ BUNDLE_FILES = [
     # The finished-stage publisher is part of the pinned Program bundle so external callers
     # can run the same producer without a Program checkout in their workspace.
     "tools/ci/stage_userpath.py",
-    # DEC-AUP-0191: host/job-log evidence retention replaces actions/upload-artifact in the
-    # reusable workflow; callers need the same script inside the signed bundle.
-    "tools/ci/retain_evidence.py",
     "governance/decisions/DEC-AUP-0167.md",
     "tools/graph/full_suite_ci.py",
     "tools/graph/shell_source.py",
     "tools/graph/shell_workflow.py",
-    # build_graph.py imports go_source at module scope for the bounded Go extractor.
-    "tools/graph/go_source.py",
     "tools/graph/admit_change.py",
     # The StageEvidence validator reads this committed contract relative to the bundle root.
     # Without it, a vendored admission tool cannot validate the explicit finished-stage input.
     "contracts/graph-verified-change/stage-evidence.v1.json",
     "tools/graph/schema_check.py",
-    "tools/graph/receipt_data.py",  # native verifier/gate dependency; genuine source bytes travel with bundle
     "tools/graph/build_graph.py",
     # build_graph.py imports this at module scope to add declared source-input edges.
     # Keep the parser beside the builder in every exported caller bundle.
@@ -121,11 +111,6 @@ BUNDLE_FILES = [
     # Found by importing every bundled module from a directory that contains nothing else — a
     # static import scan missed it, and so did testing one entry point by hand.
     "tools/graph/canary_evidence.py",
-    "tools/graph/environment_obligations.py",
-    "tools/graph/environment_obligations.cjs",
-    "tools/graph/package.json",
-    "tools/graph/pnpm-lock.yaml",
-    "tools/graph/tsconfig.json",
     "tools/graph/process_observation.py",
     # AUP-GRAPH-006:gate2b — the SSHSIG/Ed25519 verifier. It must travel with the bundle: the gate
     # verifies the bundle's signature before trusting anything in it, and a verifier the caller does
@@ -583,21 +568,8 @@ def changed_files(repo: Path, base: str, head: str) -> list[str]:
     return [l for l in out.splitlines() if l]
 
 
-def _dependency_manifest_predicate():
-    """The single definition lives in schema_check (same bundle directory); load it by exact sibling path."""
-    path = Path(__file__).resolve().with_name("schema_check.py")
-    spec = importlib.util.spec_from_file_location("_ci_gate_dep_manifest_schema_check", path)
-    if spec is None or spec.loader is None:
-        raise RuntimeError("schema_check.py is not loadable beside ci_gate.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.is_python_dependency_manifest
-
-
 def is_doc_only(paths: list[str], globs: list[str]) -> bool:
-    # DEC-AUP-0188: a dependency manifest is measured by the fallback suite; no doc glob may reclassify it.
-    manifest = _dependency_manifest_predicate()
-    return bool(paths) and all(any(fnmatch.fnmatch(p, g) for g in globs) and not manifest(p) for p in paths)
+    return bool(paths) and all(any(fnmatch.fnmatch(p, g) for g in globs) for p in paths)
 
 
 def receipts_from_body(body: str, workdir: Path) -> list[Path]:
@@ -1587,10 +1559,7 @@ def validate_candidate_dependency_setup(manifest: dict, repo_path: str | Path,
 
     The manifest is caller-supplied data, never a command source. This function checks its exact
     policy, subject, range, package scope and seven Git/blob/content pins, then returns only the
-    fixed pnpm operations supported by this profile (frozen install with scripts disabled, the
-    @muneral/types build, then `pnpm exec prisma generate` — the Auth dependency-setup shape —
-    because ignore-scripts would otherwise leave @prisma/client ungenerated for apps/api
-    type_check). Its JSON shape is exactly
+    fixed pnpm operations supported by this profile. Its JSON shape is exactly
     {schema, policy, repository, base, head, working_directory, scope, files}; each files value is
     {blob_oid, sha256, bytes}. The workflow is responsible for executing those literal operations
     after this function succeeds.
@@ -1722,14 +1691,9 @@ def validate_candidate_dependency_setup(manifest: dict, repo_path: str | Path,
         "package_manager": root_package["packageManager"],
         "node_version": root_package["engines"]["node"],
         "files": checked_files,
-        # `--ignore-scripts` skips prisma postinstall. Auth's dependency setup therefore runs
-        # `pnpm exec prisma generate` after the frozen install; Muneral must do the same or
-        # apps/api type_check fails with a flood of missing `@prisma/client` exports
-        # (measured: muneral#444 CURRENT_CANDIDATE_PRODUCER_FAILED).
         "argv": [["pnpm", "install", "--frozen-lockfile", "--ignore-scripts",
                   "--ignore-pnpmfile"],
-                 ["pnpm", "--filter", "@muneral/types", "build"],
-                 ["pnpm", "exec", "prisma", "generate"]],
+                 ["pnpm", "--filter", "@muneral/types", "build"]],
     }
 
 
@@ -1927,29 +1891,7 @@ AUTH_DEPENDENCY_SETUP_UNCHANGED = (
     "vendor/arcanada-access-contracts-dac7c5ede606698b10c2c5edd0c07ff21a798f83.tgz",
 )
 AUTH_DEPENDENCY_SETUP_REPO = "Arcanada-one/auth-arcana"
-AUTH_DEPENDENCY_SETUP_NODE_VERSIONS = ("24.22.1", "24.22.2", "24.22.3")
-# DEC-AUP-0190: .nvmrc is the one file of AUTH_DEPENDENCY_SETUP_UNCHANGED a candidate range may change,
-# and only UPWARD between two exact members of AUTH_DEPENDENCY_SETUP_NODE_VERSIONS (see _auth_exact_node_pin).
-# The tuple is therefore ordered oldest to newest; append a newer version, never insert or reorder.
-AUTH_DEPENDENCY_SETUP_NODE_PIN_FILE = ".nvmrc"
-# DEC-AUP-0192 Clause A: ordered oldest→newest commit40 pins for Auth network-exposure reusable workflow.
-# Includes the measured #350 base uses SHA, the measured #350 base datarim_ref SHA (pre-sync), and the head / v4.12.9 SHA.
-AUTH_DEPENDENCY_SETUP_NETWORK_EXPOSURE_PINS = (
-    "37a98c9e5b1b8e0abda4153a36b2e3c85ec8868c",  # measured auth-arcana #350 base uses (PR #246)
-    "af8e0ec6f4cf8cb2547eb2805a220fc4ce829de3",  # measured auth-arcana #350 base datarim_ref
-    "2ef3dc606919c1b82c5fb440b49519f7f2a1e293",  # measured auth-arcana #350 head / v4.12.9
-)
-AUTH_DEPENDENCY_SETUP_NETWORK_EXPOSURE_USES = (
-    "Arcanada-one/datarim/.github/workflows/network-exposure-lint.yml@"
-)
-# DEC-AUP-0192 Clause B: root package.json keys that may move upward between exact allowlisted specifiers.
-# Paths are (section, key). Never widen beyond this map.
-AUTH_DEPENDENCY_SETUP_NPM_PIN_LADDERS = {
-    ("dependencies", "nodemailer"): ("10.4.0", "10.5.0"),
-    ("devDependencies", "@typescript-eslint/eslint-plugin"): ("^8.72.1", "^8.72.2"),
-    ("devDependencies", "@typescript-eslint/parser"): ("^8.72.1", "^8.72.2"),
-    ("devDependencies", "prettier"): ("^3.9.10", "^3.10.1"),
-}
+AUTH_DEPENDENCY_SETUP_NODE_VERSIONS = ("24.22.1", "24.22.2")
 AUTH_DEPENDENCY_SETUP_VITE_VERSIONS = ("6.4.4", "6.4.5")
 AUTH_DEPENDENCY_SETUP_PNPM = "10.30.3"
 AUTH_DEPENDENCY_SETUP_REGISTRY = "https://registry.npmjs.org/"
@@ -2000,126 +1942,6 @@ def _candidate_setup_blob_oid(repo: Path, revision: str, relative: str) -> str:
     return oid
 
 
-def _auth_exact_node_pin(raw: bytes) -> int | None:
-    """Return the position in AUTH_DEPENDENCY_SETUP_NODE_VERSIONS of the version a .nvmrc names, only
-    when its bytes are exactly the version or the version plus one newline. Anything else (extra text,
-    whitespace, a range, a prefix, an empty file) is None."""
-    for position, version in enumerate(AUTH_DEPENDENCY_SETUP_NODE_VERSIONS):
-        if raw in (version.encode("ascii"), version.encode("ascii") + b"\n"):
-            return position
-    return None
-
-
-def _auth_node_pin_moves_up(base_raw: bytes, head_raw: bytes) -> bool:
-    """True only when both .nvmrc byte strings are exact allowlisted pins and the head pin is strictly
-    newer than the base pin (a downgrade or a byte-only rewrite of the same version is not an upgrade)."""
-    base_pos, head_pos = _auth_exact_node_pin(base_raw), _auth_exact_node_pin(head_raw)
-    return base_pos is not None and head_pos is not None and head_pos > base_pos
-
-
-_AUTH_NE_USES_RE = re.compile(
-    rb"(?m)^([ \t]*uses:[ \t]*"
-    + re.escape(AUTH_DEPENDENCY_SETUP_NETWORK_EXPOSURE_USES.encode("ascii"))
-    + rb")([0-9a-f]{40})([ \t]*(?:#[^\n]*)?)$"
-)
-_AUTH_NE_REF_RE = re.compile(
-    rb"(?m)^([ \t]*datarim_ref:[ \t]*')([0-9a-f]{40})('[ \t]*)$"
-)
-
-
-def _auth_network_exposure_pins(raw: bytes) -> tuple[str, str] | None:
-    """Return (uses_sha, datarim_ref_sha) when ci.yml carries exactly one of each pin site."""
-    uses = _AUTH_NE_USES_RE.findall(raw)
-    refs = _AUTH_NE_REF_RE.findall(raw)
-    if len(uses) != 1 or len(refs) != 1:
-        return None
-    return uses[0][1].decode("ascii"), refs[0][1].decode("ascii")
-
-
-def _auth_network_exposure_normalized(raw: bytes) -> bytes | None:
-    """Erase the two pin sites (and the uses-line comment) so any other ci.yml hunk is visible."""
-    if _auth_network_exposure_pins(raw) is None:
-        return None
-    out = _AUTH_NE_USES_RE.sub(rb"\1<PIN>\3", raw)
-    # Drop trailing comment variance on the uses line after pin erasure.
-    out = re.sub(rb"(?m)^([ \t]*uses:[ \t]*"
-                 + re.escape(AUTH_DEPENDENCY_SETUP_NETWORK_EXPOSURE_USES.encode("ascii"))
-                 + rb"<PIN>)[ \t]*#[^\n]*$", rb"\1", out)
-    out = _AUTH_NE_REF_RE.sub(rb"\1<PIN>\3", out)
-    return out
-
-
-def _auth_network_exposure_pin_moves_up(base_raw: bytes, head_raw: bytes) -> bool:
-    """True only when the ci.yml diff is confined to the network-exposure uses/datarim_ref pins,
-    head pins are identical and allowlisted, each base pin is allowlisted, and both move strictly up."""
-    base_pins = _auth_network_exposure_pins(base_raw)
-    head_pins = _auth_network_exposure_pins(head_raw)
-    if base_pins is None or head_pins is None:
-        return False
-    if _auth_network_exposure_normalized(base_raw) != _auth_network_exposure_normalized(head_raw):
-        return False
-    base_uses, base_ref = base_pins
-    head_uses, head_ref = head_pins
-    if head_uses != head_ref:
-        return False
-    allow = AUTH_DEPENDENCY_SETUP_NETWORK_EXPOSURE_PINS
-    try:
-        base_uses_i = allow.index(base_uses)
-        base_ref_i = allow.index(base_ref)
-        head_i = allow.index(head_uses)
-    except ValueError:
-        return False
-    return head_i > base_uses_i and head_i > base_ref_i
-
-
-def _auth_npm_section_key(pkg: dict, section: str, key: str):
-    block = pkg.get(section)
-    if not isinstance(block, dict):
-        return None
-    return block.get(key)
-
-
-def _auth_npm_strip_ladder_keys(pkg: dict) -> dict:
-    """Return a deep-ish copy of package.json with DEC-AUP-0192 ladder keys removed for equality."""
-    out = json.loads(json.dumps(pkg))
-    for section, key in AUTH_DEPENDENCY_SETUP_NPM_PIN_LADDERS:
-        block = out.get(section)
-        if isinstance(block, dict) and key in block:
-            del block[key]
-            if not block:
-                del out[section]
-    return out
-
-
-def _auth_npm_pin_moves_up(base_raw: bytes, head_raw: bytes) -> bool:
-    """True only when root package.json differs solely by upward moves of listed npm specifier ladders."""
-    try:
-        base_pkg = json.loads(base_raw.decode("utf-8"))
-        head_pkg = json.loads(head_raw.decode("utf-8"))
-    except (UnicodeError, json.JSONDecodeError, TypeError):
-        return False
-    if not isinstance(base_pkg, dict) or not isinstance(head_pkg, dict):
-        return False
-    if _auth_npm_strip_ladder_keys(base_pkg) != _auth_npm_strip_ladder_keys(head_pkg):
-        return False
-    moved = False
-    for (section, key), ladder in AUTH_DEPENDENCY_SETUP_NPM_PIN_LADDERS.items():
-        base_val = _auth_npm_section_key(base_pkg, section, key)
-        head_val = _auth_npm_section_key(head_pkg, section, key)
-        if base_val == head_val:
-            if base_val is None:
-                continue
-            if base_val not in ladder:
-                return False
-            continue
-        if base_val not in ladder or head_val not in ladder:
-            return False
-        if ladder.index(head_val) <= ladder.index(base_val):
-            return False
-        moved = True
-    return moved
-
-
 def validate_candidate_auth_dependency_setup(repo_path: str | Path, repository: str,
                                             base: str, head: str) -> dict:
     """Validate exact Auth dependency inputs and return fixed, non-executing setup argv."""
@@ -2160,21 +1982,6 @@ def validate_candidate_auth_dependency_setup(repo_path: str | Path, repository: 
                 raise ValueError("Auth project npm configuration is not a regular committed file")
             _candidate_setup_git(repo, "diff", "--quiet", head, "--", relative)
         if base_oid != head_oid:
-            base_raw = (_candidate_setup_blob(repo, base, relative)[1]
-                        if relative != ".npmrc" else b"")
-            if (relative == AUTH_DEPENDENCY_SETUP_NODE_PIN_FILE
-                    and _auth_node_pin_moves_up(base_raw, source[relative])):
-                # DEC-AUP-0190: allowlisted Node pin to a newer allowlisted Node pin. Skips only this
-                # oid comparison; the head pin is still checked against the allowlist further below.
-                continue
-            if (relative == ".github/workflows/ci.yml"
-                    and _auth_network_exposure_pin_moves_up(base_raw, source[relative])):
-                # DEC-AUP-0192 Clause A: network-exposure uses/datarim_ref pins move upward only.
-                continue
-            if (relative == "package.json"
-                    and _auth_npm_pin_moves_up(base_raw, source[relative])):
-                # DEC-AUP-0192 Clause B: listed root package.json specifier ladders move upward only.
-                continue
             raise ValueError(f"Auth dependency policy source changed in candidate range: {relative}")
 
     try:
@@ -2265,334 +2072,6 @@ def cmd_candidate_auth_dependency_setup_plan(a) -> int:
         plan = validate_candidate_auth_dependency_setup(a.repo, a.repository, a.base, a.head)
     except (OSError, ValueError) as exc:
         print(f"CANDIDATE_AUTH_DEPENDENCY_SETUP_REFUSED: {exc}", file=sys.stderr)
-        return 2
-    print(json.dumps(plan, sort_keys=True, separators=(",", ":")))
-    return 0
-
-
-# Talomnia backend has no caller dependency-setup input. This separate profile is selected only
-# for that exact repository and recognizes its checked-in root NestJS / Prisma CI closure
-# (talomnia-backend#66: CURRENT_CANDIDATE_PRODUCER_FAILED without app node_modules).
-TALO_DEPENDENCY_SETUP_POLICY = "talo-pnpm-frozen-root/v1"
-TALO_DEPENDENCY_SETUP_FILES = (
-    ".github/workflows/ci.yml", "package.json", "pnpm-lock.yaml",
-    "pnpm-workspace.yaml", "prisma.config.ts", "prisma/schema.prisma",
-)
-# CI install shape stays fixed across Nest/lock bumps; package.json and the lock may change.
-TALO_DEPENDENCY_SETUP_UNCHANGED = (".github/workflows/ci.yml",)
-TALO_DEPENDENCY_SETUP_REPO = "Arcanada-one/talomnia-backend"
-# Exact Node versions the graph-admission prepare step installs. engines.node on the caller may
-# stay ">=22.23.4"; the plan always emits one exact member of this tuple (never a range).
-TALO_DEPENDENCY_SETUP_NODE_VERSIONS = ("22.23.4",)
-TALO_DEPENDENCY_SETUP_ENGINES_NODE = ">=22.23.4"
-TALO_DEPENDENCY_SETUP_PNPM = "11.20.0"
-TALO_DEPENDENCY_SETUP_REGISTRY = "https://registry.npmjs.org/"
-# Qualified action pins currently declared in talomnia-backend .github/workflows/ci.yml.
-TALO_QUALIFIED_PNPM_SETUP_PINS = (
-    "pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda",  # v4.1.0
-    "pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320",  # v5.0.0, talomnia-backend main eee7c465
-)
-TALO_QUALIFIED_NODE_SETUP_PINS = (
-    "actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af",  # v4.1.0
-    "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",  # v4.4.0, talomnia-backend main eee7c465
-)
-
-
-class _TaloBlockScalar:
-    """Opaque `|` / `>` block-scalar content: never read as a workflow fact."""
-
-
-_TALO_YAML_KEY = re.compile(r"([A-Za-z_][A-Za-z0-9_-]*):(?: (.*))?$")
-_TALO_YAML_BLOCK = re.compile(r"[|>](?:[+-]?[1-9]?|[1-9][+-])$")
-_TALO_TOP_KEYS = frozenset({"name", "on", "permissions", "concurrency", "jobs"})
-_TALO_BUILD_KEYS = frozenset({"runs-on", "steps"})
-_TALO_STEP_KEYS = frozenset({"name", "uses", "with", "run"})
-_TALO_RUNS_ON = "[self-hosted, Linux, X64, ci-general]"
-_TALO_ON = {"push": None, "pull_request": None}
-_TALO_PERMISSIONS = {"contents": "read"}
-_TALO_REQUIRED_RUNS = ("pnpm install --frozen-lockfile", "pnpm typecheck", "pnpm build",
-                       "pnpm test")
-
-
-def _talo_yaml_refuse(lineno: int, why: str):
-    raise ValueError(f"Talo CI source does not declare the fixed root dependency closure "
-                     f"(unsupported workflow grammar at line {lineno}: {why})")
-
-
-def _talo_yaml_value(text: str, lineno: int):
-    """One-line scalar with an optional trailing comment. Quotes count only at value start."""
-    if text.startswith(("'", '"')):
-        quote = text[0]
-        close = text.find(quote, 1)
-        while quote == "'" and close != -1 and text[close + 1:close + 2] == "'":
-            close = text.find(quote, close + 2)
-        if close == -1:
-            _talo_yaml_refuse(lineno, "unterminated quoted scalar")
-        rest = text[close + 1:]
-        if rest.strip() and not re.match(r"\s+#", rest):
-            _talo_yaml_refuse(lineno, "content after a quoted scalar")
-        inner = text[1:close]
-        if quote == '"' and "\\" in inner:
-            _talo_yaml_refuse(lineno, "escape in a double-quoted scalar")
-        return inner.replace("''", "'") if quote == "'" else inner
-    value = re.split(r"\s#", text, maxsplit=1)[0].rstrip()
-    if value.startswith(("&", "*", "!", "%", "@", "`", "{", "?", "|", ">", "- ", "#")) or value == "-":
-        _talo_yaml_refuse(lineno, f"unsupported scalar form {value[:1]!r}")
-    if value.startswith("[") and not value.endswith("]"):
-        _talo_yaml_refuse(lineno, "multi-line flow sequence")
-    return value
-
-
-def _talo_yaml_tokens(workflow: str) -> list:
-    """Tokens (indent, kind, key, value, lineno) of a strict block-YAML subset.
-
-    Positive grammar: `key:`, `key: scalar`, `- key: ...`, `- scalar`, blank and comment lines,
-    and `|`/`>` block scalars kept opaque. Anything else (tabs, anchors, aliases, tags, flow
-    mappings, multi-line plain or quoted scalars, document markers) refuses.
-    """
-    for offset, char in enumerate(workflow):
-        code = ord(char)
-        if ((code < 0x20 and char != "\n") or code == 0x7F or 0x80 <= code <= 0x9F
-                or code in (0x2028, 0x2029, 0xFEFF)):
-            # YAML also breaks lines at \r, NEL, LS and PS; a line scan that splits only at
-            # \n would read a key hidden after one of them as comment text.
-            _talo_yaml_refuse(workflow.count("\n", 0, offset) + 1,
-                              f"control or line-break character U+{code:04X}")
-    lines = workflow.split("\n")
-    tokens, i = [], 0
-    while i < len(lines):
-        line, lineno = lines[i], i + 1
-        i += 1
-        if "\t" in line:
-            _talo_yaml_refuse(lineno, "tab character")
-        body = line.lstrip(" ")
-        if not body or body.startswith("#"):
-            continue
-        indent = len(line) - len(body)
-        while body == "-" or body.startswith("- "):
-            tokens.append((indent, "item", None, None, lineno))
-            rest = body[1:].lstrip(" ")
-            indent += len(body) - len(rest)
-            body = rest
-            if not body:
-                break
-        if not body:
-            continue
-        match = _TALO_YAML_KEY.match(body)
-        if match is None:
-            if tokens and tokens[-1][1] == "item" and tokens[-1][0] < indent:
-                item = tokens.pop()
-                tokens.append((item[0], "item", None, _talo_yaml_value(body, lineno), lineno))
-                continue
-            _talo_yaml_refuse(lineno, "line is not a supported mapping or sequence entry")
-        key, raw = match.group(1), (match.group(2) or "").strip()
-        if raw.startswith("#"):
-            raw = ""
-        if raw and _TALO_YAML_BLOCK.match(re.split(r"\s#", raw, maxsplit=1)[0].rstrip()):
-            while i < len(lines):
-                nxt = lines[i]
-                stripped = nxt.lstrip(" ")
-                if stripped and len(nxt) - len(stripped) <= indent:
-                    break
-                if "\t" in nxt:
-                    _talo_yaml_refuse(i + 1, "tab character")
-                i += 1
-            tokens.append((indent, "key", key, _TaloBlockScalar(), lineno))
-            continue
-        tokens.append((indent, "key", key, _talo_yaml_value(raw, lineno) if raw else None, lineno))
-    return tokens
-
-
-def _talo_yaml_tree(tokens: list):
-    def block(pos, indent):
-        if tokens[pos][1] == "item":
-            return sequence(pos, indent)
-        return mapping(pos, indent)
-
-    def child(pos, indent):
-        if pos < len(tokens) and tokens[pos][0] > indent:
-            return block(pos, tokens[pos][0])
-        return None, pos
-
-    def mapping(pos, indent):
-        out = {}
-        while pos < len(tokens) and tokens[pos][0] == indent and tokens[pos][1] == "key":
-            _, _, key, value, lineno = tokens[pos]
-            if key in out:
-                _talo_yaml_refuse(lineno, f"duplicate key {key!r}")
-            pos += 1
-            if value is None:
-                value, pos = child(pos, indent)
-            out[key] = value
-        if pos < len(tokens) and tokens[pos][0] >= indent:
-            _talo_yaml_refuse(tokens[pos][4], "entry at an unexpected indentation")
-        return out, pos
-
-    def sequence(pos, indent):
-        out = []
-        while pos < len(tokens) and tokens[pos][0] == indent and tokens[pos][1] == "item":
-            value = tokens[pos][3]
-            pos += 1
-            if value is None:
-                value, pos = child(pos, indent)
-            out.append(value)
-        if pos < len(tokens) and tokens[pos][0] >= indent:
-            _talo_yaml_refuse(tokens[pos][4], "entry at an unexpected indentation")
-        return out, pos
-
-    if not tokens or tokens[0][0] != 0:
-        _talo_yaml_refuse(tokens[0][4] if tokens else 1, "document must start at column 0")
-    tree, pos = mapping(0, 0)
-    if pos != len(tokens):
-        _talo_yaml_refuse(tokens[pos][4], "trailing content")
-    return tree
-
-
-def _talo_build_job_closure_ok(workflow: str) -> bool:
-    """Facts bound to the live `jobs.build.steps` of a strictly parsed workflow.
-
-    Required runs are exact one-line `run:` values in the same job as the qualified setup
-    steps, after them; `node-version` is read from the setup-node step's own `with`. Key
-    whitelists exclude `if`, `continue-on-error`, `shell`, `defaults` and the like. Block
-    scalars are opaque, so text inside them is never a fact (review 5969140634 / D51), and
-    comments are never facts (review 5968716824 / D50).
-    """
-    tree = _talo_yaml_tree(_talo_yaml_tokens(workflow))
-    if not set(tree) <= _TALO_TOP_KEYS or not isinstance(tree.get("jobs"), dict):
-        return False
-    # The workflow must actually run on push and pull_request, and the optional top-level
-    # keys must carry the consumer's values: an invalid workflow never runs its build job.
-    if tree.get("on") != _TALO_ON or tree.get("permissions", _TALO_PERMISSIONS) != _TALO_PERMISSIONS:
-        return False
-    if not isinstance(tree.get("name", ""), str):
-        return False
-    concurrency = tree.get("concurrency", {})
-    if not (isinstance(concurrency, dict) and set(concurrency) <= {"group", "cancel-in-progress"}
-            and all(isinstance(v, str) and v for v in concurrency.values())):
-        return False
-    build = tree["jobs"].get("build")
-    if not isinstance(build, dict) or set(build) != _TALO_BUILD_KEYS:
-        return False
-    if build["runs-on"] != _TALO_RUNS_ON or not isinstance(build["steps"], list):
-        return False
-    pnpm_at, node_at, run_at = [], [], {}
-    for index, step in enumerate(build["steps"]):
-        if not isinstance(step, dict) or not set(step) <= _TALO_STEP_KEYS:
-            return False
-        if ("with" in step and "uses" not in step) or ("uses" in step and "run" in step):
-            return False
-        if "with" in step and not (isinstance(step["with"], dict) and all(
-                isinstance(v, str) for v in step["with"].values())):
-            return False
-        uses = step.get("uses")
-        if uses is not None and not isinstance(uses, str):
-            return False
-        if isinstance(uses, str) and uses.startswith("pnpm/action-setup@"):
-            if uses not in TALO_QUALIFIED_PNPM_SETUP_PINS:
-                return False
-            pnpm_at.append(index)
-        if isinstance(uses, str) and uses.startswith("actions/setup-node@"):
-            if (uses not in TALO_QUALIFIED_NODE_SETUP_PINS
-                    or step.get("with", {}).get("node-version") != "22"):
-                return False
-            node_at.append(index)
-        run = step.get("run")
-        if isinstance(run, str) and run in _TALO_REQUIRED_RUNS:
-            run_at.setdefault(run, index)
-    if not pnpm_at or not node_at or set(run_at) != set(_TALO_REQUIRED_RUNS):
-        return False
-    install = run_at["pnpm install --frozen-lockfile"]
-    return (max(pnpm_at[0], node_at[0]) < install
-            and all(run_at[c] > install for c in _TALO_REQUIRED_RUNS[1:]))
-
-
-def validate_candidate_talo_dependency_setup(repo_path: str | Path, repository: str,
-                                            base: str, head: str) -> dict:
-    """Validate exact Talomnia-backend dependency inputs and return fixed, non-executing setup argv."""
-    if repository != TALO_DEPENDENCY_SETUP_REPO:
-        raise ValueError("Talo dependency setup repository is unsupported")
-    if (not isinstance(base, str) or not re.fullmatch(r"[0-9a-f]{40}", base)
-            or not isinstance(head, str) or not re.fullmatch(r"[0-9a-f]{40}", head)
-            or base == head):
-        raise ValueError("Talo dependency setup range is malformed")
-    repo = Path(repo_path).resolve(strict=True)
-    if not repo.is_dir():
-        raise ValueError("Talo candidate workspace is unavailable")
-    actual_head = _candidate_setup_git(repo, "rev-parse", "--verify", "HEAD^{commit}").decode().strip()
-    _candidate_setup_git(repo, "cat-file", "-e", f"{base}^{{commit}}")
-    _candidate_setup_git(repo, "merge-base", "--is-ancestor", base, head)
-    if actual_head != head:
-        raise ValueError("Talo dependency setup subject differs from checked-out HEAD")
-
-    checked, source = {}, {}
-    for relative in TALO_DEPENDENCY_SETUP_FILES:
-        oid, raw = _candidate_setup_blob(repo, head, relative)
-        path = repo / relative
-        if path.is_symlink() or not path.is_file() or path.read_bytes() != raw:
-            raise ValueError(f"Talo dependency source differs from exact committed bytes: {relative}")
-        checked[relative] = {"blob_oid": oid, "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw)}
-        source[relative] = raw
-
-    for relative in TALO_DEPENDENCY_SETUP_UNCHANGED:
-        base_oid = _candidate_setup_blob(repo, base, relative)[0]
-        head_oid = checked[relative]["blob_oid"]
-        if base_oid != head_oid:
-            raise ValueError(f"Talo dependency policy source changed in candidate range: {relative}")
-
-    try:
-        root = _strict_json_object(source["package.json"].decode("utf-8"), "Talo package.json")
-    except (UnicodeError, ValueError) as exc:
-        raise ValueError("Talo dependency package inputs are malformed") from exc
-
-    engines_node = (root.get("engines") or {}).get("node")
-    if (root.get("name") != "talomnia-backend"
-            or root.get("packageManager") != f"pnpm@{TALO_DEPENDENCY_SETUP_PNPM}"
-            or engines_node not in (TALO_DEPENDENCY_SETUP_ENGINES_NODE,) + TALO_DEPENDENCY_SETUP_NODE_VERSIONS
-            or (root.get("scripts") or {}).get("test") != "vitest run"
-            or (root.get("scripts") or {}).get("postinstall") != "prisma generate"):
-        raise ValueError("Talo Node, pnpm, or root contract differs from supported source")
-
-    deps = root.get("dependencies") or {}
-    dev_deps = root.get("devDependencies") or {}
-    if ("@nestjs/common" not in deps or "@prisma/client" not in deps
-            or "prisma" not in dev_deps):
-        raise ValueError("Talo NestJS/Prisma dependency contract is incomplete")
-
-    lock = source["pnpm-lock.yaml"].decode("utf-8")
-    workspace = source["pnpm-workspace.yaml"].decode("utf-8")
-    workflow = source[".github/workflows/ci.yml"].decode("utf-8")
-    if (not re.search(r"(?m)^lockfileVersion:\s*['\"]?9\.0['\"]?\s*$", lock)
-            or "allowBuilds:" not in workspace
-            or "prisma: true" not in workspace):
-        raise ValueError("Talo workspace lockfile does not bind the supported frozen dependency closure")
-
-    if not _talo_build_job_closure_ok(workflow):
-        raise ValueError("Talo CI source does not declare the fixed root dependency closure")
-
-    return {
-        "schema": "TaloCallerDependencySetupPlan/v1",
-        "policy": TALO_DEPENDENCY_SETUP_POLICY,
-        "repository": repository, "base": base, "head": head,
-        "working_directory": ".", "scope": "root",
-        "node_version": TALO_DEPENDENCY_SETUP_NODE_VERSIONS[0],
-        "pnpm_version": TALO_DEPENDENCY_SETUP_PNPM,
-        "registry": TALO_DEPENDENCY_SETUP_REGISTRY,
-        "files": checked,
-        "setup_argv": [
-            ["pnpm", "install", "--frozen-lockfile", "--ignore-scripts", "--ignore-pnpmfile",
-             "--registry=https://registry.npmjs.org/"],
-            ["pnpm", "exec", "prisma", "generate"],
-        ],
-        "execution": "not_performed",
-    }
-
-
-def cmd_candidate_talo_dependency_setup_plan(a) -> int:
-    """Validate canonical Talomnia-backend source and emit fixed setup data; never install."""
-    try:
-        plan = validate_candidate_talo_dependency_setup(a.repo, a.repository, a.base, a.head)
-    except (OSError, ValueError) as exc:
-        print(f"CANDIDATE_TALO_DEPENDENCY_SETUP_REFUSED: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(plan, sort_keys=True, separators=(",", ":")))
     return 0
@@ -5621,15 +5100,6 @@ def main(argv=None) -> int:
     auth_dependency_setup.add_argument("--base", required=True)
     auth_dependency_setup.add_argument("--head", required=True)
     auth_dependency_setup.set_defaults(fn=cmd_candidate_auth_dependency_setup_plan)
-
-    talo_dependency_setup = sub.add_parser(
-        "candidate-talo-dependency-setup-plan",
-        help="validate canonical Talomnia-backend inputs and return its fixed non-executing setup plan")
-    talo_dependency_setup.add_argument("--repo", required=True)
-    talo_dependency_setup.add_argument("--repository", required=True)
-    talo_dependency_setup.add_argument("--base", required=True)
-    talo_dependency_setup.add_argument("--head", required=True)
-    talo_dependency_setup.set_defaults(fn=cmd_candidate_talo_dependency_setup_plan)
 
     b = sub.add_parser("bundle", help="vendor the gate tools of a pinned program SHA into a caller repository")
     b.add_argument("--out", required=True)

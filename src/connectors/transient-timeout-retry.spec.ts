@@ -46,6 +46,24 @@ const OPENING_BALANCE = 5;
 const BUDGET_MS = 150;
 const MODEL = 'stall-model';
 
+function deferred<T = void>() {
+  let resolvePromise!: (value: T) => void;
+  const promise = new Promise<T>((resolve) => {
+    resolvePromise = resolve;
+  });
+  return {
+    promise,
+    resolve(value?: T) {
+      resolvePromise(value as T);
+    },
+  };
+}
+
+interface ApiStepSignal {
+  handled: ReturnType<typeof deferred<'hang' | 'answer'>>;
+  responseEnded: ReturnType<typeof deferred>;
+}
+
 /**
  * Deterministic timeout clock for the API stall path. Wall time on a loaded
  * deploy-gate runner must not decide when the 150 ms budget expires.
@@ -53,15 +71,21 @@ const MODEL = 'stall-model';
 class InjectedTimeoutClock {
   private nowMs = 0;
   private readonly due: Array<{ at: number; fire: () => void }> = [];
+  private registrationWaiters: Array<() => void> = [];
 
   get pendingCount(): number {
     return this.due.length;
+  }
+
+  waitForRegistration(): Promise<void> {
+    return new Promise((resolve) => this.registrationWaiters.push(resolve));
   }
 
   schedule(timeoutMs: number, fire: () => void): () => void {
     const at = this.nowMs + timeoutMs;
     const entry = { at, fire };
     this.due.push(entry);
+    for (const resolve of this.registrationWaiters.splice(0)) resolve();
     return () => {
       const idx = this.due.indexOf(entry);
       if (idx >= 0) this.due.splice(idx, 1);
@@ -80,6 +104,11 @@ class InjectedTimeoutClock {
 
   reset(): void {
     this.nowMs = 0;
+    this.due.length = 0;
+    this.registrationWaiters.length = 0;
+  }
+
+  clearPending(): void {
     this.due.length = 0;
   }
 }
@@ -295,16 +324,23 @@ let server: Server;
 let baseUrl: string;
 let script: Array<'hang' | 'answer'> = [];
 let hits = 0;
+let apiStepSignals: ApiStepSignal[] = [];
+let apiStepSignalIndex = 0;
 
 beforeAll(async () => {
   validateEnv(BASE_ENV);
   server = createServer((req, res) => {
-    const step = script[hits] ?? 'hang';
+    const requestIndex = hits;
+    const step = script[requestIndex] ?? 'hang';
+    const signals = apiStepSignals[requestIndex];
     hits += 1;
     req.resume();
+    signals?.handled.resolve(step);
     if (step === 'answer') {
       res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ text: `answer-${hits}` }));
+      res.end(JSON.stringify({ text: `answer-${hits}` }), () => {
+        signals?.responseEnded.resolve();
+      });
       return;
     }
     // 'hang': accept, never respond. Connection: close on the client request
@@ -380,29 +416,30 @@ class StallingApiConnector extends BaseApiConnector {
 }
 
 /**
- * Dispatch once under the injected clock. A local answer is allowed a short
- * real window to settle (not the 150 ms budget); a hang never settles in that
- * window, so the clock fires the TimeoutError and the fetch aborts.
+ * Dispatch once under the injected clock. Wait for the clock registration and
+ * the scripted server event; only an explicit hang advances the timeout.
  */
 async function sendWithInjectedClock(
   service: ConnectorsService,
   connector: string,
   idempotencyKey?: string,
 ): Promise<ConnectorResponse> {
+  const signals = apiStepSignals[apiStepSignalIndex++];
+  if (!signals) throw new Error('missing scripted API request signal');
+  const timerRegistered = apiTimeoutClock.waitForRegistration();
   const pending = send(service, connector, idempotencyKey);
-  const started = Date.now();
-  while (apiTimeoutClock.pendingCount === 0 && Date.now() - started < 1000) {
-    await new Promise<void>((resolve) => setImmediate(resolve));
+  const [step] = await Promise.all([signals.handled.promise, timerRegistered]);
+  if (step === 'hang') {
+    apiTimeoutClock.advance(BUDGET_MS);
+    return pending;
   }
-  expect(apiTimeoutClock.pendingCount).toBeGreaterThan(0);
-  const early = await Promise.race([
-    pending.then((response) => ({ kind: 'done' as const, response })),
-    new Promise<{ kind: 'wait' }>((resolve) => setTimeout(() => resolve({ kind: 'wait' }), 25)),
-  ]);
-  if (early.kind === 'done') return early.response;
-  apiTimeoutClock.advance(BUDGET_MS);
-  await new Promise<void>((resolve) => setImmediate(resolve));
-  return pending;
+
+  // A response is an explicit server event; await the actual client result
+  // without advancing the fake timeout, however slowly the runner is loaded.
+  await signals.responseEnded.promise;
+  const response = await pending;
+  apiTimeoutClock.clearPending();
+  return response;
 }
 
 /** A CLI lane that outlives its budget: `sleep 30` killed at 150 ms. */
@@ -443,6 +480,11 @@ class SleepingCliConnector extends BaseCliConnector {
 function stand(steps: Array<'hang' | 'answer'>) {
   script = steps;
   hits = 0;
+  apiStepSignals = steps.map(() => ({
+    handled: deferred<'hang' | 'answer'>(),
+    responseEnded: deferred(),
+  }));
+  apiStepSignalIndex = 0;
   const store = memoryDb();
   const billing = new BillingService(store.db as never);
   const service = new ConnectorsService(
