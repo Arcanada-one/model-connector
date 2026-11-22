@@ -250,6 +250,49 @@ def app_e2e_control(document):
     return {'result': 'PASS_RED', 'test': expected, 'expected_status': 401}
 
 
+def app_e2e_failure_details(document):
+    """Return bounded test names and error messages without exposing environment values."""
+    details = []
+    seen = set()
+
+    def safe_message(value):
+        message = str(value or '').strip()
+        # Keep the assertion/bootstrap error, not the stack's source excerpts or local paths.
+        message = re.split(r'\n\s*(?:❯|at )', message, maxsplit=1)[0].strip()
+        message = re.sub(r'(://[^/\s:@]+):[^@\s/]+@', r'\1:[REDACTED]@', message)
+        message = re.sub(r'(?i)\b(bearer|basic|token)(\s+)[A-Za-z0-9._~+/=-]{8,}',
+                         r'\1\2[REDACTED]', message)
+        message = re.sub(r'(?i)\b((?:[a-z0-9_]*_)?(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|'
+                         r'authorization|credentials?|cookie|session|key)["\']?\s*[:=]\s*)(["\']?)[^\s"\',;}]+',
+                         r'\1\2[REDACTED]', message)
+        message = re.sub(r'\b(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{16,}|'
+                         r'glpat-[A-Za-z0-9_-]{16,}|sk-[A-Za-z0-9_-]{16,}|AKIA[0-9A-Z]{16})\b',
+                         '[REDACTED]', message)
+        return message[:1200] or 'Vitest reported a failure without an error message'
+
+    for result in document.get('testResults', []):
+        if not isinstance(result, dict):
+            continue
+        file_name = Path(str(result.get('name') or 'AppE2E suite')).name
+        failures = [case for case in result.get('assertionResults', [])
+                    if isinstance(case, dict) and case.get('status') in ('failed', 'error')]
+        for case in failures:
+            name = case.get('fullName') or case.get('title') or file_name
+            messages = case.get('failureMessages') or [case.get('message') or result.get('message')]
+            message = safe_message(next((m for m in messages if m), ''))
+            key = (str(name), message)
+            if key not in seen:
+                details.append({'test': str(name)[:300], 'message': message})
+                seen.add(key)
+        if not failures and result.get('status') in ('failed', 'error'):
+            message = safe_message(result.get('failureMessage') or result.get('message'))
+            key = (file_name, message)
+            if key not in seen:
+                details.append({'test': file_name, 'message': message})
+                seen.add(key)
+    return details[:20]
+
+
 def pytest_counts(collection, xml, expected, unit):
     nodes = [line.strip() for line in collection.splitlines() if '::' in line and not line.startswith(' ')]
     files = {unit + '/' + n.split('::')[0] for n in nodes}
@@ -509,15 +552,37 @@ def run_root_suites(root, suites, scratch, executor=execute):
                     child_env=app_env, parse_failed=True)
                 if result['verdict'] in ('verified', 'failed'):
                     try:
-                        result['control'] = app_e2e_control(json.loads(report.read_text()))
-                    except (Refusal, ValueError, KeyError, OSError) as error:
+                        document = json.loads(report.read_text())
+                    except (ValueError, OSError):
+                        document = None
+                    if document is None:
                         if result['verdict'] == 'failed':
                             result['control'] = {'result': 'FAIL_RED',
                                                  'test': 'POST /execute without auth should return 401',
                                                  'expected_status': 401}
-                            result['control_reason'] = str(error)
+                            result['control_reason'] = 'Vitest JSON report missing or invalid'
                         else:
-                            result.update(verdict='not_measured', reason=str(error))
+                            result.update(verdict='not_measured',
+                                          reason='missing or invalid exact execution evidence')
+                    else:
+                        try:
+                            result['control'] = app_e2e_control(document)
+                        except (Refusal, ValueError, KeyError, OSError) as error:
+                            if result['verdict'] == 'failed':
+                                result['control'] = {'result': 'FAIL_RED',
+                                                     'test': 'POST /execute without auth should return 401',
+                                                     'expected_status': 401}
+                                result['control_reason'] = str(error)
+                            else:
+                                result.update(verdict='not_measured', reason=str(error))
+                        if result['verdict'] == 'failed':
+                            details = app_e2e_failure_details(document)
+                            result['failure_details'] = details
+                            if details:
+                                for detail in details:
+                                    print(f"AppE2E test failed: {detail['test']}: {detail['message']}", flush=True)
+                            else:
+                                print('AppE2E failed; Vitest JSON has no test-level failure details.', flush=True)
                 row['executions'].append(result)
                 row['verdict'] = result['verdict']
         elif name == 'maintained-authored-template':

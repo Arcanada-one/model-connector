@@ -265,6 +265,31 @@ for artifact in "$EXEC_TMP"/mc-full-*; do
   cp -a -- "$artifact" "$PRIVATE_TMP/"
 done
 
+# Keep the sanitized-under-test JSON report in runner.temp so CI can upload it even when Vitest fails.
+# The destination name is derived only from GitHub's numeric run identifiers, never caller input.
+app_reports=("$PRIVATE_TMP"/mc-full-*/app-e2e.json)
+if (( ${#app_reports[@]} > 1 )); then
+  echo 'graph-full-suite-isolated: multiple AppE2E JSON reports; refusing ambiguous upload' >&2
+  exit 1
+fi
+if (( ${#app_reports[@]} == 1 )) && [[ -n "${RUNNER_TEMP:-}" ]] \
+    && [[ "${GITHUB_RUN_ID:-}" =~ ^[0-9]+$ && "${GITHUB_RUN_ATTEMPT:-}" =~ ^[0-9]+$ ]]; then
+  [[ -d "$RUNNER_TEMP" && ! -L "$RUNNER_TEMP" && -O "$RUNNER_TEMP" ]] \
+    || { echo 'graph-full-suite-isolated: RUNNER_TEMP is not a caller-owned real directory' >&2; exit 1; }
+  [[ -f "${app_reports[0]}" && ! -L "${app_reports[0]}" ]] \
+    || { echo 'graph-full-suite-isolated: AppE2E JSON report is not a regular file' >&2; exit 1; }
+  report_destination="$RUNNER_TEMP/model-connector-app-e2e-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.json"
+  [[ ! -e "$report_destination" && ! -L "$report_destination" ]] \
+    || { echo 'graph-full-suite-isolated: AppE2E report destination already exists' >&2; exit 1; }
+  cp -- "${app_reports[0]}" "$report_destination" \
+    || { echo 'graph-full-suite-isolated: could not retain AppE2E JSON report' >&2; exit 1; }
+  chmod 600 "$report_destination" \
+    || { echo 'graph-full-suite-isolated: could not protect AppE2E JSON report' >&2; exit 1; }
+  echo 'graph-full-suite-isolated: AppE2E JSON report ready for upload'
+elif (( ${#app_reports[@]} == 1 )) && [[ -n "${RUNNER_TEMP:-}" ]]; then
+  echo 'graph-full-suite-isolated: AppE2E JSON report not copied because GitHub run identifiers are unavailable' >&2
+fi
+
 # The suite printed "Full-suite evidence: <EXEC_TMP>/mc-full-*/execution.json", but the EXIT trap removes
 # EXEC_TMP before the caller (verify.py) reads that line, so the document was always "unreadable" there.
 # Name the surviving private copy; the caller takes the LAST such line. The copy is byte-identical, so this

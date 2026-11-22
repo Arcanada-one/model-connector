@@ -515,6 +515,35 @@ class Controls(unittest.TestCase):
         with self.assertRaisesRegex(subject.Refusal, 'PASS_RED unauthenticated /execute control'):
             subject.app_e2e_control(document)
 
+    def test_app_e2e_failure_details_name_failed_tests_and_redact_values(self):
+        document = {'testResults': [
+            {'name': str(self.root / 'test/app.e2e-spec.ts'), 'assertionResults': [
+                {'title': 'GET /health should be public and return ok', 'status': 'failed',
+                 'failureMessages': ['Error: connect failed for postgresql://test:fixture-pass@127.0.0.1/db\n'
+                                     '    ❯ test/app.e2e-spec.ts:20:11']},
+                {'title': 'GET /health/ready should be public', 'status': 'passed'}]},
+            {'name': str(self.root / 'test/app.e2e-spec.ts'), 'status': 'failed',
+             'message': 'Error: invalid API_KEY=fixture-secret\n    at bootstrap'}]}
+        details = subject.app_e2e_failure_details(document)
+        self.assertEqual([row['test'] for row in details], [
+            'GET /health should be public and return ok', 'app.e2e-spec.ts'])
+        joined = '\n'.join(row['message'] for row in details)
+        self.assertIn('connect failed', joined)
+        self.assertIn('[REDACTED]', joined)
+        self.assertNotIn('fixture-pass', joined)
+        self.assertNotIn('fixture-secret', joined)
+        self.assertNotIn('at bootstrap', joined)
+
+    def test_app_e2e_ci_uploads_json_report_for_three_days(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text()
+        job = workflow.split('  app-e2e-full-suite:', 1)[1].split('\n  # ARC-CI digest-promotion', 1)[0]
+        self.assertIn('name: Upload AppE2E JSON report', job)
+        self.assertIn('if: always()', job)
+        self.assertIn('actions/upload-artifact@ea165f8d65b6e75b540449e2b4886f43607fa02', job)
+        self.assertIn('retention-days: 3', job)
+        self.assertIn('if-no-files-found: error', job)
+        self.assertIn('model-connector-app-e2e-${{ github.run_id }}-${{ github.run_attempt }}.json', job)
+
     def root_dispatch_fixture(self, members):
         for member in members:
             p = self.root / member

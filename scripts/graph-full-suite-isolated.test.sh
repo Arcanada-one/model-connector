@@ -98,6 +98,8 @@ out="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)/observed"
   echo "REDIS_PORT=${REDIS_PORT:-}"
   echo "PROVIDER_API_KEY=${PROVIDER_API_KEY:-}"
 } >"$out"
+mkdir -m 700 "$TMPDIR/mc-full-fixture"
+printf '{"status":"failed","test":"fixture only"}\n' >"$TMPDIR/mc-full-fixture/app-e2e.json"
 STUB
 chmod 755 "$WORK/repo/scripts/"*.sh
 mkdir -m 700 "$WORK/pnpm-bin"
@@ -138,6 +140,19 @@ check "xdg: exec dir removed on exit" test ! -e "$exec_dir"
 
 check "service endpoint forwarding is an explicit three-name allowlist" grep -q \
   'for name in DATABASE_URL REDIS_HOST REDIS_PORT; do' "$SUBJECT"
+
+# A failed AppE2E run keeps its JSON in runner.temp for the three-day CI artifact. The copied
+# report is private, run-scoped, and the wrapper never prints its JSON contents.
+run_unit watcher XDG_RUNTIME_DIR="$WORK/runtime" RUNNER_TEMP="$WORK/runtime" \
+  GITHUB_RUN_ID=332 GITHUB_RUN_ATTEMPT=1 \
+  || check "AppE2E report copy wrapper refused fixture" false
+app_report="$WORK/runtime/model-connector-app-e2e-332-1.json"
+check "AppE2E report copied to run-scoped runner.temp name" test -f "$app_report" -a ! -L "$app_report"
+check "AppE2E report bytes are preserved" grep -qx '{"status":"failed","test":"fixture only"}' "$app_report"
+check "AppE2E report is mode 600" test "$(stat -c '%a' "$app_report")" = 600
+not_grep() { ! grep -q "$1" "$2"; }
+check "AppE2E report fixture content is not printed" not_grep 'fixture only' "$WORK/run.log"
+rm -f -- "$app_report"
 
 # Setup-pnpm source is caller-owned, version-matched and precedes the scrubbed system PATH.
 run_wrapper XDG_RUNTIME_DIR="$WORK/runtime" GRAPH_FULL_SUITE_PNPM_DIR="$WORK/pnpm-bin" \

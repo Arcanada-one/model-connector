@@ -501,6 +501,15 @@ jobs:
           REDIS_PORT: ${{ job.services.redis.ports['6379'] }}
         run: bash scripts/graph-full-suite-isolated.sh .
 
+      - name: Upload AppE2E JSON report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e2b4886f43607fa02 # v4.6.2
+        with:
+          name: app-e2e-full-suite-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/model-connector-app-e2e-${{ github.run_id }}-${{ github.run_attempt }}.json
+          if-no-files-found: error
+          retention-days: 3
+
   # ARC-CI digest-promotion gap fill (Muneral 440d2499): build once to GHCR and
   # emit published-image.json. Does not change the existing push-main broker
   # deploy job below; production cutover by digest remains a later host-gated
