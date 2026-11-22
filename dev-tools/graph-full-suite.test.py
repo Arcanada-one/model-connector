@@ -480,6 +480,7 @@ class Controls(unittest.TestCase):
         source = {'DATABASE_URL': 'postgresql://test:test@127.0.0.1:55432/db',
                   'REDIS_HOST': '127.0.0.1', 'REDIS_PORT': '56379',
                   'PROVIDER_API_KEY': 'must-not-pass', 'NODE_OPTIONS': 'must-not-pass',
+                  'PROVIDER_ACCESS': 'deepseek:use',
                   'STT_PROVIDER_GROQ_ENABLED': 'true'}
         child_env, reason = subject.app_e2e_environment(base, source)
         self.assertIsNone(reason)
@@ -487,6 +488,7 @@ class Controls(unittest.TestCase):
         self.assertEqual(child_env['REDIS_HOST'], '127.0.0.1')
         self.assertEqual(child_env['REDIS_PORT'], '56379')
         self.assertEqual(child_env['NODE_ENV'], 'test')
+        self.assertEqual(child_env['PROVIDER_ACCESS'], 'deepseek:none')
         self.assertEqual(child_env['STT_PROVIDER_GROQ_ENABLED'], 'false')
         self.assertNotIn('PROVIDER_API_KEY', child_env)
         self.assertNotIn('NODE_OPTIONS', child_env)

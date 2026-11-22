@@ -174,7 +174,8 @@ def app_e2e_environment(base, source=None):
     if missing:
         return None, 'missing AppE2E service endpoint names: ' + ', '.join(missing)
     return ({**base, **{name: source[name] for name in APP_E2E_ENV},
-             'NODE_ENV': 'test', 'STT_PROVIDER_GROQ_ENABLED': 'false'}, None)
+             'NODE_ENV': 'test', 'PROVIDER_ACCESS': 'deepseek:none',
+             'STT_PROVIDER_GROQ_ENABLED': 'false'}, None)
 
 
 def execute(argv, cwd, env, deadline, scratch, name):
