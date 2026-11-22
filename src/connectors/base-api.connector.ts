@@ -181,7 +181,7 @@ export abstract class BaseApiConnector implements IConnector {
   abstract getCapabilities(): ConnectorCapabilities;
 
   /**
-   * A2-207 — the per-attempt budget handed to `createTimeoutSignal` below.
+   * A2-207 — the per-attempt budget handed to `AbortSignal.timeout` below.
    *
    * This used to return a hard-coded 30 000 while `CONNECTOR_TIMEOUT_MS` was
    * declared in env.schema.ts, documented in README, parity-checked by CI and
@@ -227,16 +227,6 @@ export abstract class BaseApiConnector implements IConnector {
     } catch {
       return undefined;
     }
-  }
-
-  /**
-   * Per-attempt abort signal for the outbound `fetch`. Production uses
-   * `AbortSignal.timeout(ms)`. Specs that need a deterministic stall inject a
-   * clock by overriding this method (fake timers / manual abort) without
-   * changing the timeout budget the caller requested.
-   */
-  protected createTimeoutSignal(timeoutMs: number): AbortSignal {
-    return AbortSignal.timeout(timeoutMs);
   }
 
   protected getRedirectPolicy(): RequestRedirect {
@@ -558,7 +548,7 @@ export abstract class BaseApiConnector implements IConnector {
         headers: await this.getRequestHeaders(request),
         body: JSON.stringify(body),
         redirect: this.getRedirectPolicy(),
-        signal: this.createTimeoutSignal(timeout),
+        signal: AbortSignal.timeout(timeout),
       });
 
       if (!res.ok) {

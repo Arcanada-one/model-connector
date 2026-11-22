@@ -20,13 +20,13 @@
  * assertions read what the real components WROTE: the intent row's state, the
  * provider hit counter, the ledger, the balance.
  *
- * The API stall path no longer waits on wall-clock `AbortSignal.timeout`: the
- * connector injects a timeout signal driven by an explicit test clock so a
- * loaded deploy-gate runner cannot stretch a 150 ms budget into a race against
- * the second dispatch. The budget value itself is unchanged.
+ * The API stall path spies on `AbortSignal.timeout` and drives it from an
+ * explicit test clock so a loaded deploy-gate runner cannot stretch a 150 ms
+ * budget into a race against the second dispatch. Production timeout behavior
+ * stays unchanged.
  */
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createServer, Server } from 'http';
 import type { AddressInfo } from 'net';
 import { Prisma } from '@prisma/client';
@@ -114,6 +114,7 @@ class InjectedTimeoutClock {
 }
 
 const apiTimeoutClock = new InjectedTimeoutClock();
+let restoreAbortSignalTimeout: (() => void) | undefined;
 
 const BASE_ENV = {
   PORT: '3900',
@@ -365,20 +366,6 @@ class StallingApiConnector extends BaseApiConnector {
   protected getTimeout(): number {
     return 300_000;
   }
-  /**
-   * Injected clock: same TimeoutError shape as AbortSignal.timeout, fired when
-   * the test advances `apiTimeoutClock` by the caller budget.
-   */
-  protected createTimeoutSignal(timeoutMs: number): AbortSignal {
-    const controller = new AbortController();
-    const cancel = apiTimeoutClock.schedule(timeoutMs, () => {
-      controller.abort(
-        new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
-      );
-    });
-    controller.signal.addEventListener('abort', cancel, { once: true });
-    return controller.signal;
-  }
   protected getBaseUrl(): string {
     return this.url;
   }
@@ -545,6 +532,22 @@ describe('A2-425 — a transient timeout is retried once, where a retry is the s
   describe('API stall (injected timeout clock)', () => {
     beforeEach(() => {
       apiTimeoutClock.reset();
+      const timeoutSpy = vi.spyOn(AbortSignal, 'timeout').mockImplementation((timeoutMs) => {
+        const controller = new AbortController();
+        const cancel = apiTimeoutClock.schedule(timeoutMs, () => {
+          controller.abort(
+            new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+          );
+        });
+        controller.signal.addEventListener('abort', cancel, { once: true });
+        return controller.signal;
+      });
+      restoreAbortSignalTimeout = () => timeoutSpy.mockRestore();
+    });
+
+    afterEach(() => {
+      restoreAbortSignalTimeout?.();
+      restoreAbortSignalTimeout = undefined;
     });
 
     it('RED CONTROL: one stall on the API lane under a key → the turn continues on the retry', async () => {
