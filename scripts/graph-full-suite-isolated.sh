@@ -109,7 +109,7 @@ home_candidate() { # sets CANDIDATE to $HOME/.mcgs (created 0700 if missing), or
 UNIT=$1
 EXEC_BASE=
 for source in XDG_RUNTIME_DIR '$HOME/.mcgs' RUNNER_TEMP; do
-  CANDIDATE= WHY=
+  CANDIDATE='' WHY=''
   case "$source" in
     XDG_RUNTIME_DIR) CANDIDATE=${XDG_RUNTIME_DIR:-} ;;
     '$HOME/.mcgs') home_candidate ;;
