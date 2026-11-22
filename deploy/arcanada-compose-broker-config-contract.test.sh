@@ -4,6 +4,15 @@
 # (no daemon, no network, disposable directory) and feeds that render to the broker's own
 # validator, extracted verbatim from deploy/arcanada-compose-broker.sh.
 set -euo pipefail
+# Fail closed, naming the cause, when the docker CLI cannot dispatch its compose plugin. Every case below needs a real
+# render; without the plugin, docker parses `compose -f` as its own flag and the first case fails with a misleading
+# "unknown shorthand flag: 'f'". Docker 29 dispatch also fails (while `docker info` still lists the plugin) when an
+# earlier system plugin dir exists but is not searchable by the caller.
+if ! compose_version="$(/usr/bin/docker compose version 2>&1)"; then
+  printf '%s\n' "$compose_version" | sed -n '1,5p' >&2
+  echo 'FAIL: docker compose plugin unavailable (docker could not dispatch "compose"); refusing, not skipping' >&2
+  exit 1
+fi
 here="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 broker="${KC_CONTRACT_BROKER:-${here}/arcanada-compose-broker.sh}"
 work="$(mktemp -d)"

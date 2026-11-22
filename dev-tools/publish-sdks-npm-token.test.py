@@ -53,6 +53,7 @@ class PublishSdksNpmTokenTests(unittest.TestCase):
 
     def test_publish_ts_uses_token_not_oidc(self) -> None:
         publish = self.doc["jobs"]["publish-ts"]
+        self.assertEqual(publish.get("environment"), "npm")
         perms = publish.get("permissions") or {}
         self.assertNotIn("id-token", perms)
         dumped = yaml.dump(publish)
@@ -60,15 +61,78 @@ class PublishSdksNpmTokenTests(unittest.TestCase):
         self.assertIn("NODE_AUTH_TOKEN", dumped)
         self.assertIn("secrets.NPM_TOKEN", dumped)
 
+    def test_npm_token_is_only_in_npm_environment_publish_job(self) -> None:
+        jobs = self.doc["jobs"]
+        jobs_with_npm_token = [
+            name
+            for name, job in jobs.items()
+            if "secrets.NPM_TOKEN" in yaml.dump(job)
+            or "NODE_AUTH_TOKEN" in yaml.dump(job)
+        ]
+        self.assertEqual(jobs_with_npm_token, ["publish-ts"])
+        self.assertEqual(jobs["publish-ts"].get("environment"), "npm")
+
     def test_publish_ts_tag_only(self) -> None:
         publish_if = str(self.doc["jobs"]["publish-ts"].get("if") or "")
+        self.assertIn("github.event_name == 'push'", publish_if)
         self.assertIn("refs/tags/sdk-v", publish_if)
         self.assertNotIn("pull_request", publish_if)
+        on = self.doc.get("on") or self.doc.get(True) or {}
+        self.assertNotIn("workflow_dispatch", on)
+
+    def test_publishing_jobs_check_out_event_sha(self) -> None:
+        jobs = self.doc["jobs"]
+        for job_name in ("build-ts", "tag-ancestor-gate", "publish-ts"):
+            with self.subTest(job=job_name):
+                checkouts = [
+                    step
+                    for step in jobs[job_name]["steps"]
+                    if str(step.get("uses", "")).startswith("actions/checkout@")
+                ]
+                self.assertTrue(checkouts)
+                for checkout in checkouts:
+                    self.assertEqual(
+                        checkout.get("with", {}).get("ref"), "${{ github.sha }}"
+                    )
+
+    def test_publish_ts_requires_tokenless_tag_ancestor_gate(self) -> None:
+        jobs = self.doc["jobs"]
+        gate = jobs["tag-ancestor-gate"]
+        gate_if = str(gate.get("if") or "")
+        self.assertIn("github.event_name == 'push'", gate_if)
+        self.assertIn("refs/tags/sdk-v", gate_if)
+
+        checkout = next(
+            step for step in gate["steps"]
+            if str(step.get("uses", "")).startswith("actions/checkout@")
+        )
+        self.assertEqual(checkout.get("with", {}).get("fetch-depth"), 0)
+        gate_script = "\n".join(
+            step["run"] for step in gate["steps"] if isinstance(step.get("run"), str)
+        )
+        self.assertIn(
+            "git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main",
+            gate_script,
+        )
+        self.assertIn(
+            'git merge-base --is-ancestor "$GH_SHA" refs/remotes/origin/main',
+            gate_script,
+        )
+        self.assertIn("exit 1", gate_script)
+        gate_dump = yaml.dump(gate)
+        self.assertNotIn("secrets.NPM_TOKEN", gate_dump)
+        self.assertNotIn("NODE_AUTH_TOKEN", gate_dump)
+
+        needs = jobs["publish-ts"].get("needs") or []
+        self.assertIn("build-ts", needs)
+        self.assertIn("tag-ancestor-gate", needs)
 
     def test_build_ts_dry_run_needs_no_secret(self) -> None:
         build = self.doc["jobs"]["build-ts"]
         dumped = yaml.dump(build)
         self.assertIn("--dry-run", dumped)
+        self.assertIn("github.event.pull_request.head.repo.full_name", str(build.get("if")))
+        self.assertIn("github.repository", str(build.get("if")))
         self.assertNotIn("secrets.NPM_TOKEN", dumped)
         self.assertNotIn("NODE_AUTH_TOKEN", dumped)
 

@@ -98,6 +98,10 @@ def inventory(root):
     return rows
 
 
+def node_test_spec(name):
+    return name.endswith('.spec.mjs') and not name.startswith('scripts/')
+
+
 def members_for(rows, unit):
     names = [row['path'] for row in rows]
     if unit == '.':
@@ -118,6 +122,10 @@ def plan(unit, members):
                 group = 'maintained-integration'
             elif name.endswith('.e2e-spec.ts'):
                 group = 'maintained-app-e2e'
+            elif node_test_spec(name):
+                # vitest.config.ts includes only scripts/**/*.spec.mjs; any other
+                # *.spec.mjs is a node:test file that Vitest never collects.
+                group = 'maintained-regression'
             elif name.endswith('.spec.ts') or name.endswith('.spec.mjs'):
                 group = 'maintained-vitest'
             else:
@@ -298,7 +306,7 @@ def root_regression_command(root, member):
     path = str(checked_file(root, member))
     if member.endswith('.py'):
         return [sys.executable, '-B', path], 'unittest'
-    if member.endswith('.test.mjs'):
+    if member.endswith('.test.mjs') or node_test_spec(member):
         return ['node', '--test', '--test-reporter=tap', path], 'node-tap'
     if member.endswith('.bats'):
         return ['bats', '--formatter', 'tap', path], 'bats'

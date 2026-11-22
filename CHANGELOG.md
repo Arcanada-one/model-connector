@@ -13,15 +13,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   2026-11-18: Trusted Publishing / OIDC is accepted only from GitHub-hosted
   runners, so `publish-sdks.yml` `publish-ts` now runs on
   `[self-hosted, Linux, ci-general]` with `NODE_AUTH_TOKEN` from
-  `secrets.NPM_TOKEN`, drops `id-token: write`, and omits `--provenance`
-  (unsupported off GitHub-hosted). PR dry-run is unchanged. Contract:
+  the `npm` environment secret `NPM_TOKEN`, drops `id-token: write`, and omits
+  `--provenance` (unsupported off GitHub-hosted). Publish is limited to
+  `sdk-v*` tag pushes whose commit is an ancestor of main; manual dispatch is
+  disabled. PR dry-run is tokenless. Contract:
   `dev-tools/publish-sdks-npm-token.test.py`.
+
+- **watcher vitest ^4.1.4 → ^4.1.11.** Nested manifest-only bump; measured
+  non-fallback; frozen-lockfile install stays green without a lockfile edit
+  (deferred from #273). Other watcher deps that require a lock update are
+  split into a separate global_fallback PR.
 
 - **packages/sdk-ts vitest ^3.2.4 → ^4.1.11.** Nested manifest-only bump;
   measured non-fallback for graph admission; frozen-lockfile install stays green
   without a lockfile edit (deferred from #273).
 
 ### Fixed
+
+- **OpenAI-compat failover integration stub includes `recordFailoverHops`.**
+  ConnectorsService settles failover chains via `metrics.recordFailoverHops`;
+  the integration harness mock now provides a no-op so hop settlement does not
+  throw. Also include `test/watcher/*.spec.ts` in `.arcana/tsconfig.mjs.json`
+  for the graph typecheck profile.
 
 
 - **docker-e2e is concurrency-safe on the shared Docker host.**
