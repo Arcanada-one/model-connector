@@ -1,10 +1,10 @@
-import type { ModelId } from './types';
+import type { ModelIdV2 } from './types';
 
 /**
  * Pricing snapshot (USD per image). Source: CONN-0052 plan §5.9.
  * Update last_validated when re-checking provider pricing pages.
  */
-export const PRICING_TABLE: Partial<Record<ModelId | string, number>> = {
+export const PRICING_TABLE: Partial<Record<ModelIdV2 | string, number>> = {
   'vertex:nano-banana': 0.039,
   'vertex:imagen-4-fast': 0.02,
   'vertex:imagen-4': 0.04,

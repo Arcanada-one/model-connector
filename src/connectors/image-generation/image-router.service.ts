@@ -1,5 +1,6 @@
 import { CircuitBreakerManager } from '../../core/resilience/circuit-breaker-manager';
 import { CircuitOpenError } from '../../core/resilience/circuit-breaker';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import type { Tier, ProviderId, RoutingDecision } from './types';
 import { IMAGE_CAPABILITIES } from './capabilities';
 import { calculateCostUsd } from './pricing';
@@ -8,6 +9,20 @@ export class ImageRoutingError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'ImageRoutingError';
+  }
+}
+
+export class RetiredImageModelError extends HttpException {
+  constructor(model: string) {
+    super(
+      {
+        statusCode: HttpStatus.GONE,
+        error: 'Gone',
+        code: 'MODEL_RETIRED',
+        message: `Model "${model}" is retired: OpenAI shut down gpt-image-1 on 2026-10-23. Choose openai:gpt-image-2.5-sunburst-low, openai:gpt-image-2.5-sunburst-medium, or openai:gpt-image-2.5-sunburst-high.`,
+      },
+      HttpStatus.GONE,
+    );
   }
 }
 
@@ -113,9 +128,7 @@ export class ImageRouterService {
     // Model pin: bypass tier routing entirely
     if (options.model) {
       if (options.model === 'gpt-image-1' || options.model.startsWith('openai:gpt-image-1-')) {
-        throw new ImageRoutingError(
-          `Model "${options.model}" is retired: OpenAI shut down gpt-image-1 on 2026-10-23. Choose openai:gpt-image-2.5-sunburst-low, openai:gpt-image-2.5-sunburst-medium, or openai:gpt-image-2.5-sunburst-high.`,
-        );
+        throw new RetiredImageModelError(options.model);
       }
       const cap = IMAGE_CAPABILITIES[options.model as keyof typeof IMAGE_CAPABILITIES];
       const provider: ProviderId = cap?.provider ?? 'vertex';

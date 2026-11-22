@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ImageProviderCapabilities, ModelId } from './types';
+import type { ImageProviderCapabilities, ModelIdV2 } from './types';
 
 // ─── Zod schema for boot-time validation ─────────────────────────────────────
 
@@ -30,7 +30,7 @@ export type CapabilityRecord = Record<string, ImageProviderCapabilities>;
 
 // ─── Static capabilities constant ─────────────────────────────────────────────
 
-export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
+export const IMAGE_CAPABILITIES: Record<ModelIdV2, ImageProviderCapabilities> = {
   'vertex:nano-banana': {
     modelId: 'vertex:nano-banana',
     // TODO(CONN-0052 Phase 3): Nano Banana = Gemini 2.5 Flash Image.
