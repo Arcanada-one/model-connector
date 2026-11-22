@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateCostUsd, PRICING_TABLE } from './pricing';
+import { calculateCostUsd, calculateOpenAIImageCostUsd, PRICING_TABLE } from './pricing';
 
 describe('calculateCostUsd', () => {
   it('returns correct cost for vertex:nano-banana × 1', () => {
@@ -10,8 +10,8 @@ describe('calculateCostUsd', () => {
     expect(calculateCostUsd('vertex:imagen-4', 3)).toBeCloseTo(0.12);
   });
 
-  it('returns correct cost for openai:gpt-image-1-high × 1', () => {
-    expect(calculateCostUsd('openai:gpt-image-1-high', 1)).toBeCloseTo(0.25);
+  it('returns correct cost for openai:gpt-image-2.5-sunburst-high × 1', () => {
+    expect(calculateCostUsd('openai:gpt-image-2.5-sunburst-high', 1)).toBeCloseTo(0.25);
   });
 
   it('returns 0 for unknown model', () => {
@@ -25,9 +25,9 @@ describe('calculateCostUsd', () => {
       'vertex:imagen-4',
       'vertex:imagen-4-ultra',
       'replicate:flux-pro',
-      'openai:gpt-image-1-low',
-      'openai:gpt-image-1-medium',
-      'openai:gpt-image-1-high',
+      'openai:gpt-image-2.5-sunburst-low',
+      'openai:gpt-image-2.5-sunburst-medium',
+      'openai:gpt-image-2.5-sunburst-high',
     ];
     for (const id of expected) {
       expect(PRICING_TABLE).toHaveProperty(id);
@@ -80,18 +80,12 @@ describe('PRICING_TABLE — 2026 range validation', () => {
     expect(price).toBeLessThanOrEqual(0.06);
   });
 
-  it('openai:gpt-image-1-low < openai:gpt-image-1-medium < openai:gpt-image-1-high (quality tiers)', () => {
-    const low = PRICING_TABLE['openai:gpt-image-1-low']!;
-    const med = PRICING_TABLE['openai:gpt-image-1-medium']!;
-    const high = PRICING_TABLE['openai:gpt-image-1-high']!;
-    expect(low).toBeLessThan(med);
-    expect(med).toBeLessThan(high);
-  });
-
-  it('openai:gpt-image-1-high is in expected range [$0.15, $0.30] per image', () => {
-    const price = PRICING_TABLE['openai:gpt-image-1-high']!;
-    expect(price).toBeGreaterThanOrEqual(0.15);
-    expect(price).toBeLessThanOrEqual(0.3);
+  it('uses the same provisional routing estimate across GPT Image 2.5 quality settings', () => {
+    const low = PRICING_TABLE['openai:gpt-image-2.5-sunburst-low']!;
+    const med = PRICING_TABLE['openai:gpt-image-2.5-sunburst-medium']!;
+    const high = PRICING_TABLE['openai:gpt-image-2.5-sunburst-high']!;
+    expect(low).toBe(med);
+    expect(med).toBe(high);
   });
 
   it('all prices are positive and non-zero', () => {
@@ -104,5 +98,20 @@ describe('PRICING_TABLE — 2026 range validation', () => {
     for (const [model, price] of Object.entries(PRICING_TABLE)) {
       expect(price, `${model} price <= $1.00`).toBeLessThanOrEqual(1.0);
     }
+  });
+});
+
+describe('calculateOpenAIImageCostUsd', () => {
+  it('applies current GPT Image 2.5 token rates by modality', () => {
+    expect(
+      calculateOpenAIImageCostUsd({
+        input_tokens_details: { image_tokens: 1_000_000, text_tokens: 1_000_000 },
+        output_tokens_details: { image_tokens: 1_000_000, text_tokens: 0 },
+      }),
+    ).toBeCloseTo(21.5);
+  });
+
+  it('returns undefined when the complete usage breakdown is absent', () => {
+    expect(calculateOpenAIImageCostUsd({})).toBeUndefined();
   });
 });

@@ -15,9 +15,9 @@ export type ModelId =
   | 'vertex:imagen-4'
   | 'vertex:imagen-4-ultra'
   | 'replicate:flux-pro'
-  | 'openai:gpt-image-1-low'
-  | 'openai:gpt-image-1-medium'
-  | 'openai:gpt-image-1-high'
+  | 'openai:gpt-image-2.5-sunburst-low'
+  | 'openai:gpt-image-2.5-sunburst-medium'
+  | 'openai:gpt-image-2.5-sunburst-high'
   | 'fal-ai:flux/dev'
   | 'fal-ai:flux-pro/v1.1';
 

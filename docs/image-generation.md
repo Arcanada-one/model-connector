@@ -8,7 +8,7 @@ The image generation connector routes generation requests to one of three provid
 
 - **Vertex AI (Imagen 4 family)** — Google Cloud, 4 model tiers, SynthID watermark
 - **Replicate (FLUX.1 Pro)** — no watermark, premium quality
-- **OpenAI (gpt-image-1)** — 3 quality tiers, strict content moderation
+- **OpenAI (GPT Image 2.5 Sunburst)** — 3 quality tiers, strict content moderation
 
 All providers require Vault credentials at `arcanada/prod/env/model-connector-{vertex,replicate,openai-images}`.
 Missing credentials return HTTP 503 with `code: PROVIDER_NOT_PROVISIONED` — not a crash.
@@ -24,11 +24,23 @@ Missing credentials return HTTP 503 with `code: PROVIDER_NOT_PROVISIONED` — no
 | `vertex:imagen-4` | vertex | mid | $0.040 | 15s | no | optional | Imagen 4 Standard, up to 2816px |
 | `vertex:imagen-4-ultra` | vertex | premium | $0.070 | 45s | yes | optional | Imagen 4 Ultra, highest quality |
 | `replicate:flux-pro` | replicate | premium | $0.040 | 30s | yes | never | FLUX.1 Pro, no watermark |
-| `openai:gpt-image-1-low` | openai-images | mid | $0.011 | 10s | no | never | GPT Image 1 low quality |
-| `openai:gpt-image-1-medium` | openai-images | mid | $0.060 | 20s | no | never | GPT Image 1 medium quality |
-| `openai:gpt-image-1-high` | openai-images | premium | $0.250 | 60s | yes | never | GPT Image 1 high quality, strict moderation |
+| `openai:gpt-image-2.5-sunburst-low` | openai-images | mid | usage-based | 10s | no | never | GPT Image 2.5 Sunburst low quality |
+| `openai:gpt-image-2.5-sunburst-medium` | openai-images | mid | usage-based | 20s | no | never | GPT Image 2.5 Sunburst medium quality |
+| `openai:gpt-image-2.5-sunburst-high` | openai-images | premium | usage-based | 60s | yes | never | GPT Image 2.5 Sunburst high quality |
 
-Prices USD, validated 2026-05-07. Verify at provider pricing pages before production billing.
+OpenAI costs are calculated from the API response token usage when present. The router uses a conservative $0.25 per-image estimate for preflight budgeting; it is not a billing quote. Other prices are USD snapshots; verify provider pricing before production billing.
+
+OpenAI shut down `gpt-image-1` on 2026-10-23. Requests pinned to `gpt-image-1` or an `openai:gpt-image-1-*` model ID receive a clear retired-model error with the supported Sunburst model IDs. The official deprecations page lists both GPT Image 2.5 Sunburst and Flare as replacements, so the service does not silently treat the old ID as an alias. Sunburst is selected for the premium route because its model page highlights editing precision.
+
+GPT Image models return base64 image data; they do not support the legacy `response_format=url` parameter. The connector requests PNG with `output_format` and returns a `data:image/png;base64,...` URI, including when the API's `outputFormat` field is `url`. GPT Image 2.5 supports `low`, `medium`, `high`, `xhigh`, `max`, and `auto`; this connector currently exposes low, medium, and high. Arbitrary dimensions must be divisible by 16 with an aspect ratio from 1:3 through 3:1. The provider's standard sizes are 1024×1024, 1536×1024, and 1024×1536.
+
+Official references checked 2026-11-22:
+
+- [Deprecations](https://developers.openai.com/api/docs/deprecations) — shutdown date, listed replacements, and notice date.
+- [GPT Image 1 model](https://developers.openai.com/api/docs/models/gpt-image-1) — retired model status and replacement recommendation.
+- [GPT Image 2.5 Sunburst](https://developers.openai.com/api/docs/models/gpt-image-2.5-sunburst) — model capabilities and quality settings.
+- [Image API reference](https://developers.openai.com/api/reference/resources/images/methods/generate) — dimensions, formats, response shape, and usage fields.
+- [Pricing](https://developers.openai.com/api/docs/pricing) — token rates for GPT Image 2.5.
 
 ---
 
@@ -61,7 +73,7 @@ Generate one or more images. Requires Bearer auth (API key).
 | `prompt` | string | yes | Generation prompt (max 8000 chars for premium) |
 | `quality` | `low \| medium \| high` | no | Provider quality hint (default: medium) |
 | `count` | integer 1–4 | no | Number of images (default: 1) |
-| `outputFormat` | `url \| inline_base64` | no | Response format (default: url) |
+| `outputFormat` | `url \| inline_base64` | no | Caller-facing delivery preference (default: url); OpenAI GPT Image responses are returned as base64 data URIs either way |
 | `outputAsync` | `auto \| force \| never` | no | Async mode override (default: auto) |
 | `aspectRatio` | string | no | e.g. `1:1`, `16:9`, `9:16`, `4:3` |
 | `negativePrompt` | string | no | Negative prompt (Vertex only) |
@@ -207,7 +219,7 @@ Models are automatically routed async if `latencyP95Ms >= asyncThresholdMs`:
 
 - `vertex:imagen-4-ultra` — asyncThresholdMs: 45 000ms → always async
 - `replicate:flux-pro` — asyncThresholdMs: 30 000ms → always async
-- `openai:gpt-image-1-high` — asyncThresholdMs: 60 000ms → always async
+- `openai:gpt-image-2.5-sunburst-high` — asyncThresholdMs: 60 000ms → always async
 
 Override with `outputAsync: "never"` (sync; risk of Cloudflare 524 on long jobs) or `"force"` (force async for any model).
 

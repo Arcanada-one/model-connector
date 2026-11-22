@@ -151,15 +151,15 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     lastValidated: '2026-05-07',
   },
 
-  'openai:gpt-image-1-low': {
-    modelId: 'openai:gpt-image-1-low',
-    apiModelName: 'gpt-image-1', // Single real model ID; quality is a separate API param
+  'openai:gpt-image-2.5-sunburst-low': {
+    modelId: 'openai:gpt-image-2.5-sunburst-low',
+    apiModelName: 'gpt-image-2.5-sunburst',
     provider: 'openai-images',
-    displayName: 'GPT Image 1 Low Quality',
+    displayName: 'GPT Image 2.5 Sunburst Low Quality',
     sizes: [
       { width: 1024, height: 1024 },
-      { width: 1792, height: 1024 },
-      { width: 1024, height: 1792 },
+      { width: 1536, height: 1024 },
+      { width: 1024, height: 1536 },
     ],
     aspectRatios: ['1:1', '16:9', '9:16'],
     maxPromptChars: 4000,
@@ -167,23 +167,23 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     supportsSeed: false,
     watermark: 'never',
     safetyPolicy: 'strict',
-    costPerImageUsd: 0.011,
+    costPerImageUsd: 0.25,
     latencyP95Ms: 10000,
     asyncThresholdMs: 30000,
     // true = connector active; no creds → ProviderNotProvisionedError (not disabled)
     enabledByDefault: true,
-    lastValidated: '2026-05-07',
+    lastValidated: '2026-11-22',
   },
 
-  'openai:gpt-image-1-medium': {
-    modelId: 'openai:gpt-image-1-medium',
-    apiModelName: 'gpt-image-1', // Single real model ID; quality is a separate API param
+  'openai:gpt-image-2.5-sunburst-medium': {
+    modelId: 'openai:gpt-image-2.5-sunburst-medium',
+    apiModelName: 'gpt-image-2.5-sunburst',
     provider: 'openai-images',
-    displayName: 'GPT Image 1 Medium Quality',
+    displayName: 'GPT Image 2.5 Sunburst Medium Quality',
     sizes: [
       { width: 1024, height: 1024 },
-      { width: 1792, height: 1024 },
-      { width: 1024, height: 1792 },
+      { width: 1536, height: 1024 },
+      { width: 1024, height: 1536 },
     ],
     aspectRatios: ['1:1', '16:9', '9:16'],
     maxPromptChars: 4000,
@@ -191,22 +191,22 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     supportsSeed: false,
     watermark: 'never',
     safetyPolicy: 'strict',
-    costPerImageUsd: 0.06,
+    costPerImageUsd: 0.25,
     latencyP95Ms: 20000,
     asyncThresholdMs: 30000,
     enabledByDefault: true,
-    lastValidated: '2026-05-07',
+    lastValidated: '2026-11-22',
   },
 
-  'openai:gpt-image-1-high': {
-    modelId: 'openai:gpt-image-1-high',
-    apiModelName: 'gpt-image-1', // Single real model ID; quality is a separate API param
+  'openai:gpt-image-2.5-sunburst-high': {
+    modelId: 'openai:gpt-image-2.5-sunburst-high',
+    apiModelName: 'gpt-image-2.5-sunburst',
     provider: 'openai-images',
-    displayName: 'GPT Image 1 High Quality',
+    displayName: 'GPT Image 2.5 Sunburst High Quality',
     sizes: [
       { width: 1024, height: 1024 },
-      { width: 1792, height: 1024 },
-      { width: 1024, height: 1792 },
+      { width: 1536, height: 1024 },
+      { width: 1024, height: 1536 },
     ],
     aspectRatios: ['1:1', '16:9', '9:16'],
     maxPromptChars: 8000,
@@ -218,7 +218,7 @@ export const IMAGE_CAPABILITIES: Record<ModelId, ImageProviderCapabilities> = {
     latencyP95Ms: 60000,
     asyncThresholdMs: 60000,
     enabledByDefault: true,
-    lastValidated: '2026-05-07',
+    lastValidated: '2026-11-22',
   },
 
   // CONN-0213: Fal.ai (Phase 1 image only — video/audio in backlog CONN-0215/CONN-0216)

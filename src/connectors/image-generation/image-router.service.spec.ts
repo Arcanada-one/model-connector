@@ -73,6 +73,16 @@ describe('ImageRouterService', () => {
       expect(decision.fallbackUsed).toBe(false);
       expect(decision.reason).toContain('pinned');
     });
+
+    it('rejects retired GPT Image 1 model pins with a migration hint', () => {
+      expect(() => router.route('premium', { model: 'openai:gpt-image-1-high' })).toThrow(
+        ImageRoutingError,
+      );
+      expect(() => router.route('premium', { model: 'openai:gpt-image-1-high' })).toThrow(
+        /retired.*gpt-image-2\.5-sunburst-high/i,
+      );
+      expect(() => router.route('premium', { model: 'gpt-image-1' })).toThrow(/retired/i);
+    });
   });
 
   describe('routeExcluding — skip unprovisioned providers', () => {

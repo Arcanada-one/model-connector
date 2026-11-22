@@ -30,7 +30,7 @@ const TIER_MAP: Record<Tier, Array<{ provider: ProviderId; model: string }>> = {
   premium: [
     { provider: 'vertex', model: 'vertex:imagen-4-ultra' },
     { provider: 'replicate', model: 'replicate:flux-pro' },
-    { provider: 'openai-images', model: 'openai:gpt-image-1-high' },
+    { provider: 'openai-images', model: 'openai:gpt-image-2.5-sunburst-high' },
     // CONN-0213: fal-ai as last fallback (cheaper than openai-images, watermark:never)
     { provider: 'fal-ai', model: 'fal-ai:flux-pro/v1.1' },
   ],
@@ -43,7 +43,7 @@ const TIER_MAP: Record<Tier, Array<{ provider: ProviderId; model: string }>> = {
 export const ASYNC_PROVIDERS = new Set([
   'vertex:imagen-4-ultra',
   'replicate:flux-pro',
-  'openai:gpt-image-1-high',
+  'openai:gpt-image-2.5-sunburst-high',
 ]);
 
 interface RouteOptions {
@@ -112,6 +112,11 @@ export class ImageRouterService {
   route(tier: Tier, options: RouteOptions): RoutingDecision {
     // Model pin: bypass tier routing entirely
     if (options.model) {
+      if (options.model === 'gpt-image-1' || options.model.startsWith('openai:gpt-image-1-')) {
+        throw new ImageRoutingError(
+          `Model "${options.model}" is retired: OpenAI shut down gpt-image-1 on 2026-10-23. Choose openai:gpt-image-2.5-sunburst-low, openai:gpt-image-2.5-sunburst-medium, or openai:gpt-image-2.5-sunburst-high.`,
+        );
+      }
       const cap = IMAGE_CAPABILITIES[options.model as keyof typeof IMAGE_CAPABILITIES];
       const provider: ProviderId = cap?.provider ?? 'vertex';
       return {

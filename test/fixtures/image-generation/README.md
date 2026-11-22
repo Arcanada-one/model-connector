@@ -14,9 +14,8 @@ Fixtures will be captured in Phase 1 after real credentials are provisioned.
 - `replicate-flux-pro-success.json` — Replicate FLUX pro prediction response
 - `replicate-flux-pro-polling-started.json` — initial `status: "starting"` response
 - `replicate-flux-pro-error.json` — failed prediction shape
-- `openai-gpt-image-1-success-url.json` — gpt-image-1 `response_format: "url"` shape
-- `openai-gpt-image-1-success-b64.json` — gpt-image-1 `response_format: "b64_json"` shape
-- `openai-gpt-image-1-error-moderation.json` — content policy violation shape
+- `openai-gpt-image-2.5-sunburst-success-b64.json` — GPT Image 2.5 Sunburst base64 response shape
+- `openai-gpt-image-2.5-sunburst-error-moderation.json` — content policy violation shape
 
 ## Capture instructions (Phase 1)
 
@@ -39,11 +38,11 @@ curl -X POST \
   -d '{"version": "black-forest-labs/flux-pro", "input": {"prompt": "a white cat sitting on a wooden table"}}' \
   > replicate-flux-pro-polling-started.json
 
-# OpenAI gpt-image-1
+# OpenAI gpt-image-2.5-sunburst
 curl -X POST \
   "https://api.openai.com/v1/images/generations" \
   -H "Authorization: Bearer $OPENAI_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model": "gpt-image-1", "prompt": "a white cat sitting on a wooden table", "n": 1, "size": "1024x1024", "response_format": "url"}' \
-  > openai-gpt-image-1-success-url.json
+  -d '{"model": "gpt-image-2.5-sunburst", "prompt": "a white cat sitting on a wooden table", "n": 1, "size": "1024x1024", "quality": "low", "output_format": "png"}' \
+  > openai-gpt-image-2.5-sunburst-success-b64.json
 ```
