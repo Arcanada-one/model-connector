@@ -86,7 +86,6 @@ describe('OpenAIImagesConnector', () => {
       tier: 'premium',
       prompt: 'MSW shape test',
       quality: 'high',
-      output_format: 'png',
       count: 1,
       outputFormat: 'url',
       outputAsync: 'auto',
