@@ -2,7 +2,24 @@
 # Prepare the private environment required by graph-full-suite.sh under the
 # graph verifier's deliberately minimal child environment.
 set -euo pipefail
-PATH=/usr/bin:/bin
+SYSTEM_PATH=/usr/bin:/bin
+if [[ -n "${GRAPH_FULL_SUITE_COREPACK:-}" && -n "${GRAPH_FULL_SUITE_PNPM_DIR:-}" ]]; then
+  echo 'FULL_FALLBACK_TEST_REFUSED: choose one pinned pnpm source' >&2
+  exit 1
+fi
+if [[ -n "${GRAPH_FULL_SUITE_PNPM_DIR:-}" ]]; then
+  [[ -d "$GRAPH_FULL_SUITE_PNPM_DIR" && ! -L "$GRAPH_FULL_SUITE_PNPM_DIR" ]] \
+    || { echo 'FULL_FALLBACK_TEST_REFUSED: GRAPH_FULL_SUITE_PNPM_DIR must be a real directory' >&2; exit 1; }
+  GRAPH_FULL_SUITE_PNPM_DIR=$(cd -- "$GRAPH_FULL_SUITE_PNPM_DIR" && pwd -P)
+  [[ -O "$GRAPH_FULL_SUITE_PNPM_DIR" ]] \
+    || { echo 'FULL_FALLBACK_TEST_REFUSED: GRAPH_FULL_SUITE_PNPM_DIR must be caller-owned' >&2; exit 1; }
+  (( 8#$(stat -c '%a' -- "$GRAPH_FULL_SUITE_PNPM_DIR") & 8#022 )) \
+    && { echo 'FULL_FALLBACK_TEST_REFUSED: GRAPH_FULL_SUITE_PNPM_DIR is group/other-writable' >&2; exit 1; }
+  [[ -x "$GRAPH_FULL_SUITE_PNPM_DIR/pnpm" ]] \
+    || { echo 'FULL_FALLBACK_TEST_REFUSED: pinned pnpm executable missing' >&2; exit 1; }
+  SYSTEM_PATH="$GRAPH_FULL_SUITE_PNPM_DIR:$SYSTEM_PATH"
+fi
+PATH=$SYSTEM_PATH
 export PATH
 if [[ $# != 1 ]]; then
   echo 'FULL_FALLBACK_TEST_REFUSED: exactly one deployable is required' >&2
@@ -169,6 +186,18 @@ print(json.load(open(sys.argv[1])).get("packageManager", ""))' "$REPO_ROOT/packa
   got=$(cd -- "$REPO_ROOT" && env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$SYSTEM_PATH" \
     "${corepack_env[@]}" pnpm --version) || refuse 'pnpm does not run offline after the corepack install'
   [[ "$got" == "$pnpm_version" ]] || refuse "pnpm offline reports $got, expected $pnpm_version"
+elif [[ -n "${GRAPH_FULL_SUITE_PNPM_DIR:-}" ]]; then
+  pm=$(env -i PATH="$SYSTEM_PATH" "$SYSTEM_PYTHON" -I -c '
+import json, sys
+print(json.load(open(sys.argv[1])).get("packageManager", ""))' "$REPO_ROOT/package.json") \
+    || refuse 'package.json packageManager unreadable'
+  [[ "$pm" =~ ^pnpm@([0-9]+\.[0-9]+\.[0-9]+)$ ]] \
+    || refuse "packageManager is not an exact pnpm version: $pm"
+  pnpm_version=${BASH_REMATCH[1]}
+  got=$(env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$SYSTEM_PATH" pnpm --version) \
+    || refuse 'pinned pnpm does not run in the isolated environment'
+  [[ "$got" == "$pnpm_version" ]] \
+    || refuse "pinned pnpm reports $got, expected $pnpm_version"
 fi
 
 # Root regressions of unit '.' include .github/graph-admission/tools/graph/test_source_input_contract.py,
@@ -218,8 +247,18 @@ if [[ "$1" == '.' && -x "$REPO_ROOT/node_modules/.bin/prisma" ]]; then
     || { echo 'FULL_FALLBACK_TEST_REFUSED: prisma generate failed' >&2; exit 1; }
 fi
 
+app_e2e_env=()
+if [[ "$1" == '.' ]]; then
+  for name in DATABASE_URL REDIS_HOST REDIS_PORT; do
+    if [[ -n "${!name:-}" ]]; then
+      app_e2e_env+=("$name=${!name}")
+    fi
+  done
+fi
 set +e
-env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 "${corepack_env[@]}" PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 bash "$SCRIPT_DIR/graph-full-suite.sh" "$1"
+env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 "${corepack_env[@]}" \
+  PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 "${app_e2e_env[@]}" \
+  bash "$SCRIPT_DIR/graph-full-suite.sh" "$1"
 status=$?
 shopt -s nullglob
 for artifact in "$EXEC_TMP"/mc-full-*; do

@@ -92,9 +92,21 @@ out="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)/observed"
   echo "TMPDIR_MODE=$(stat -c '%a' -- "$TMPDIR")"
   echo "COREPACK_HOME=${COREPACK_HOME:-}"
   echo "COREPACK_ENABLE_NETWORK=${COREPACK_ENABLE_NETWORK:-}"
+  echo "PATH=$PATH"
+  echo "DATABASE_URL=${DATABASE_URL:-}"
+  echo "REDIS_HOST=${REDIS_HOST:-}"
+  echo "REDIS_PORT=${REDIS_PORT:-}"
+  echo "PROVIDER_API_KEY=${PROVIDER_API_KEY:-}"
 } >"$out"
 STUB
 chmod 755 "$WORK/repo/scripts/"*.sh
+mkdir -m 700 "$WORK/pnpm-bin"
+cat >"$WORK/pnpm-bin/pnpm" <<'PNPM'
+#!/bin/sh
+echo 10.30.3
+PNPM
+chmod 700 "$WORK/pnpm-bin/pnpm"
+printf '{"packageManager":"pnpm@10.30.3"}\n' >"$WORK/repo/package.json"
 
 run_unit() { # run_unit <deployable> <env assignments...>; leaves stdout/stderr in $WORK/run.log
   local unit=$1
@@ -115,12 +127,35 @@ not_under_tmp() { case "$1" in /tmp|/tmp/*|/var/tmp|/var/tmp/*) return 1 ;; *) r
 # 1. XDG_RUNTIME_DIR is used: exec dir below it, not under /tmp, mode 0700, not group/other-writable.
 run_wrapper XDG_RUNTIME_DIR="$WORK/runtime" || check "wrapper refused a run that must succeed (line $LINENO)" false
 exec_dir="$(observed TMPDIR)"
+check "unit watcher: AppE2E service endpoints do not cross the wrapper" \
+  test -z "$(observed DATABASE_URL)" -a -z "$(observed REDIS_HOST)" -a -z "$(observed REDIS_PORT)"
 check "xdg: exec dir is below XDG_RUNTIME_DIR" test "${exec_dir#"$WORK/runtime/"}" != "$exec_dir"
 check "xdg: exec dir is not under /tmp" not_under_tmp "$exec_dir"
 check "xdg: exec dir mode is 700" test "$(observed TMPDIR_MODE)" = 700
 check "xdg: exec dir is not world-writable" test $((8#$(observed TMPDIR_MODE) & 8#002)) -eq 0
 check "xdg: HOME handed to the suite is not under /tmp" not_under_tmp "$(observed HOME)"
 check "xdg: exec dir removed on exit" test ! -e "$exec_dir"
+
+check "service endpoint forwarding is an explicit three-name allowlist" grep -q \
+  'for name in DATABASE_URL REDIS_HOST REDIS_PORT; do' "$SUBJECT"
+
+# Setup-pnpm source is caller-owned, version-matched and precedes the scrubbed system PATH.
+run_wrapper XDG_RUNTIME_DIR="$WORK/runtime" GRAPH_FULL_SUITE_PNPM_DIR="$WORK/pnpm-bin" \
+  || check "pinned pnpm directory: wrapper refused a valid install (line $LINENO)" false
+check "pinned pnpm directory: PATH reaches the isolated suite" bash -c \
+  'case "$1" in "$2":*) exit 0 ;; *) exit 1 ;; esac' _ "$(observed PATH)" "$WORK/pnpm-bin"
+cat >"$WORK/pnpm-bin/pnpm" <<'PNPM'
+#!/bin/sh
+echo 99.0.0
+PNPM
+chmod 700 "$WORK/pnpm-bin/pnpm"
+if run_wrapper XDG_RUNTIME_DIR="$WORK/runtime" GRAPH_FULL_SUITE_PNPM_DIR="$WORK/pnpm-bin"; then
+  check "pinned pnpm directory: mismatched version refuses" false
+else
+  check "pinned pnpm directory: mismatched version refuses before suite" \
+    grep -q 'pinned pnpm reports 99.0.0, expected 10.30.3' "$WORK/run.log"
+  check "pinned pnpm directory: mismatched version launches no suite" test ! -e "$WORK/repo/observed"
+fi
 
 # 2. RUNNER_TEMP is the fallback when XDG_RUNTIME_DIR is unset.
 run_wrapper RUNNER_TEMP="$WORK/runtime" || check "wrapper refused a run that must succeed (line $LINENO)" false

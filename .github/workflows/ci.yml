@@ -434,6 +434,73 @@ jobs:
           fi
           echo "per-run images removed: none left"
 
+  app-e2e-full-suite:
+    # Same-repository PRs only: this job runs checked-out project code on ci-general.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    needs: lint-and-test
+    runs-on: [self-hosted, Linux, ci-general]
+    timeout-minutes: 55
+    concurrency:
+      group: mc-app-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+      cancel-in-progress: false
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: connector_test
+        ports:
+          - 5432/tcp
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379/tcp
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.4'
+          cache: pnpm
+
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@127.0.0.1:55432/prisma_generate
+
+      - name: Apply migrations to disposable PostgreSQL
+        run: pnpm exec prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test:test@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/connector_test
+
+      - name: Root full-suite run with AppE2E disposable services
+        env:
+          GRAPH_FULL_SUITE_PNPM_DIR: ${{ runner.temp }}/setup-pnpm/node_modules/.bin
+          DATABASE_URL: postgresql://test:test@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/connector_test
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: ${{ job.services.redis.ports['6379'] }}
+        run: bash scripts/graph-full-suite-isolated.sh .
+
   # ARC-CI digest-promotion gap fill (Muneral 440d2499): build once to GHCR and
   # emit published-image.json. Does not change the existing push-main broker
   # deploy job below; production cutover by digest remains a later host-gated
