@@ -539,7 +539,7 @@ class Controls(unittest.TestCase):
         job = workflow.split('  app-e2e-full-suite:', 1)[1].split('\n  # ARC-CI digest-promotion', 1)[0]
         self.assertIn('name: Upload AppE2E JSON report', job)
         self.assertIn('if: always()', job)
-        self.assertIn('actions/upload-artifact@ea165f8d65b6e75b540449e2b4886f43607fa02', job)
+        self.assertIn('actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02', job)
         self.assertIn('retention-days: 3', job)
         self.assertIn('if-no-files-found: error', job)
         self.assertIn('model-connector-app-e2e-${{ github.run_id }}-${{ github.run_attempt }}.json', job)
