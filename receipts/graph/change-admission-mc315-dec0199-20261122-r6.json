@@ -5,7 +5,35 @@
   "superseded_self_rule": "DEC-AUP-0035: the entity a receipt can never verify is the PREVIOUS VERSION OF ITSELF. When a receipt is re-issued at the same path for the same work item — the ordinary case after a rebase or a second commit on a card — the copy of it standing in the tree is superseded by construction: this run is the measurement that replaces it, so the only verdict it could carry is I14 `not_measured` about a document that no longer exists at that path once the run finishes. It is excluded with the work item and the output path that identify it, both re-derived from Git by impact_pair.receipt_problems, never asserted.",
   "verdict": "admitted_with_exemptions"
  },
- "captured_at_utc": "2026-11-22T21:30:25Z",
+ "caller_graph_compatibility": {
+  "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
+  "bundle_digest": "sha256:b157e624f5f3141577dad65234d3eecae35bb83f52e69faa71f3e20ea4947970",
+  "bundle_path": ".github/graph-admission",
+  "current_producer_files_sha256": "sha256:ef55c2e8d6d8d19df0873c766db319ba8cdd47bc913d3cbb06a1e575fc2f3be2",
+  "graphs": {
+   "base": {
+    "body_sha256": "sha256:937cb1b3c15871345daebb0ef6fbd8f5beba76464a0e531b1030695dad2f35b1",
+    "current_builder_version": "1.0.7",
+    "current_graph_digest": "sha256:1acec26dad23425a40ff699b7445058540dd166e092bcd0a58a3af5ed21758d0",
+    "installed_builder_version": "1.0.7",
+    "installed_graph_digest": "sha256:1acec26dad23425a40ff699b7445058540dd166e092bcd0a58a3af5ed21758d0",
+    "source_commit": "f33082f4f1c5612e5bfcc5d06683f07dc563e491"
+   },
+   "head": {
+    "body_sha256": "sha256:fc627402d58180cc2fbbfe05d2c784cb7c414bde585e6a02fe054ea9b95dbd47",
+    "current_builder_version": "1.0.7",
+    "current_graph_digest": "sha256:8099ef4fa86efe08c3bfca559f08619dafa5f7987b594ead639b56932190250c",
+    "installed_builder_version": "1.0.7",
+    "installed_graph_digest": "sha256:8099ef4fa86efe08c3bfca559f08619dafa5f7987b594ead639b56932190250c",
+    "source_commit": "bd538ae0366a6a648ab32d87e94f4a324d1cd200"
+   }
+  },
+  "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
+  "program_ref": "4dbf8a682d94ef43a174051f58c9aa8a1b6ba5a6",
+  "schema": "CallerGraphCompatibility/v1",
+  "trusted_key_fingerprint": "SHA256:9QFqysn44UjA8rXyfHjItP3b2Oadhnbf1bDNqXrsCig"
+ },
+ "captured_at_utc": "2026-11-24T15:19:56Z",
  "change_set": {
   "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
   "files": [
@@ -14,6 +42,15 @@
     "path": ".arcana/tsconfig.mjs.json",
     "status": "M",
     "uncovered": true
+   },
+   {
+    "kind": "receipt",
+    "node_id": "receipt:receipts/graph/change-admission-mc315-dec0199-20261122-r6.json",
+    "node_ids": [
+     "receipt:receipts/graph/change-admission-mc315-dec0199-20261122-r6.json"
+    ],
+    "path": "receipts/graph/change-admission-mc315-dec0199-20261122-r6.json",
+    "status": "A"
    },
    {
     "kind": "test",
@@ -34,7 +71,7 @@
     "status": "M"
    }
   ],
-  "head": "11109b82338f490917114dabb7ac48ab8d897245",
+  "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
   "mode": "diff"
  },
  "decision_ref": "DEC-AUP-0008",
@@ -198,26 +235,26 @@
   "builder_version": "1.0.7",
   "built_at_utc": "2026-09-05T00:00:00Z",
   "graph_digest": "sha256:1acec26dad23425a40ff699b7445058540dd166e092bcd0a58a3af5ed21758d0",
-  "path": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/graph-f33082f4f1c5.json",
+  "path": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/graph-f33082f4f1c5.json",
   "source_commit": "f33082f4f1c5612e5bfcc5d06683f07dc563e491"
  },
  "head_graph": {
   "builder_version": "1.0.7",
   "built_at_utc": "2026-09-05T00:00:00Z",
-  "graph_digest": "sha256:868a6a5d67e2876a8a7ede989ddef8e0fd581dfd92ea22c67824a91322013bac",
-  "path": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/graph-head-11109b82338f.json",
-  "source_commit": "11109b82338f490917114dabb7ac48ab8d897245",
+  "graph_digest": "sha256:8099ef4fa86efe08c3bfca559f08619dafa5f7987b594ead639b56932190250c",
+  "path": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/graph-head-bd538ae0366a.json",
+  "source_commit": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
   "staleness": {
-   "checked_at_utc": "2026-11-22T21:31:14Z",
-   "checked_nodes": 1053,
+   "checked_at_utc": "2026-11-24T15:22:05Z",
+   "checked_nodes": 1054,
    "method": "manifest.dirty must be false; manifest.source_commit == change_set.head; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at head (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
    "mismatched_nodes": [],
    "verdict": "fresh"
   }
  },
- "host": "author-lane",
+ "host": "review-lane",
  "host_redacted": true,
- "host_sha256": "65948d59e53c306d9c699e8fca77ea2630d85f36dcafd94dfbf85714720d9b24",
+ "host_sha256": "5151e289160e6e1dc4050c7a549f923e37e800986479a279be24a66f4c3dceec",
  "impact_set": {
   "deterministic_core": [
    {
@@ -741,17 +778,17 @@
  "notes": [
   "DRAFT produced by `arcana verify` (tools/graph/verify.py 1.4.2) from matrix contracts/graph-verified-change/verifier-matrix.v1.json; selection rule: required(entity) = ⋃ edge_types[t].mandatory over the edge types t of the hops that reach the entity in its best path (i…",
   "profile: .arcana/verify.json at verified head; baseline: (auto-base-freeze: pre-existing findings at base frozen for this run; persist one with --freeze-baseline) (valid); selected: none; disabled: none",
-  "exemptions: 22 attached from /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-exemptions.json"
+  "exemptions: 22 attached from /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/exemptions.json"
  ],
  "producer": {
   "tool": "tools/graph/verify.py",
   "version": "1.4.2"
  },
- "receipt_id": "car-verify-20261122T213025Z-11109b82",
+ "receipt_id": "car-verify-20261124T151956Z-bd538ae0",
  "receipt_path": "receipts/graph/change-admission-mc315-dec0199-20261122-r6.json",
  "repo": {
   "name": "Arcanada-one/model-connector",
-  "path": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-experiments/model-connector"
+  "path": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/model-connector-315-r7-gate-worktree"
  },
  "revision_selection": {
   "base": [
@@ -808,21 +845,38 @@
    "receipt:receipts/graph/change-admission-fa0a791c.json",
    "receipt:receipts/graph/change-admission-finish-20261114-mc.json",
    "receipt:receipts/graph/change-admission-jev-decision.json",
-   "receipt:receipts/graph/change-admission-mc-price-106-107.json"
+   "receipt:receipts/graph/change-admission-mc-price-106-107.json",
+   "receipt:receipts/graph/change-admission-mc315-dec0199-20261122-r6.json"
   ],
   "schema": "RevisionImpactSelection/v1",
   "unmeasured_head_files": []
  },
  "schema": "ChangeAdmissionReceipt/v1",
  "staleness": {
-  "checked_at_utc": "2026-11-22T21:31:14Z",
+  "checked_at_utc": "2026-11-24T15:22:05Z",
   "method": "manifest.dirty must be false; manifest.source_commit == change_set.base; working tree must be clean (a receipt in diff mode describes committed history only); content_hash of every whole-file node (code_unit, document, receipt; deployable_unit via its package.json) must equal the sha256 of the file bytes at base (git objects); contract/route/data_model hashes are extractor-owned (declaration text) and not recomputed",
   "mismatched_nodes": [],
   "verdict": "fresh"
  },
- "structural_exclusions": [],
+ "structural_exclusions": [
+  {
+   "content_hash": {
+    "base": null,
+    "head": "sha256:b7d5cafc21d73001b3c7c0ff51ff0284fd86c5ab7ba02dfb747e7be23e100d85"
+   },
+   "entity": "receipt:receipts/graph/change-admission-mc315-dec0199-20261122-r6.json",
+   "node_type": "receipt",
+   "path": "receipts/graph/change-admission-mc315-dec0199-20261122-r6.json",
+   "reason": "No genuine archival-data measurement: historical foreign source claims are never rerun or upgraded by receipt_data.; superseded by construction — this run re-issues the receipt at receipts/graph/change-admission-mc315-dec0199-20261122-r6.json for work item 4dae0857-f648-46c7-a532-11ab7d559668",
+   "rule": "DEC-AUP-0035",
+   "superseded": {
+    "receipt_path": "receipts/graph/change-admission-mc315-dec0199-20261122-r6.json",
+    "work_item": "4dae0857-f648-46c7-a532-11ab7d559668"
+   }
+  }
+ ],
  "tree": {
-  "commit": "11109b82338f490917114dabb7ac48ab8d897245",
+  "commit": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
   "dirty": false
  },
  "verdicts": [
@@ -1046,8 +1100,8 @@
  },
  "verifiers": [
   {
-   "command": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-experiments/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-experiments/model-connector/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/type-check-cko1aa9q/check.tsbuildinfo --listFiles",
-   "duration_s": 10.58,
+   "command": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/model-connector-315-r7-gate-worktree/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-w6-rev-ws-a/model-connector-315-r7-gate-worktree/.arcana/tsconfig.mjs.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/type-check-r3e7e1j9/check.tsbuildinfo --listFiles",
+   "duration_s": 19.37,
    "entities": [
     "code_unit:src/connectors/transient-timeout-retry.spec.ts",
     "code_unit:src/prompt-cache/prompt-cache-policy.spec.ts",
@@ -1061,13 +1115,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-mjs",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/v-type-check-tsconfig-mjs.txt",
-   "started_at_utc": "2026-11-22T21:31:26Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/v-type-check-tsconfig-mjs.txt",
+   "started_at_utc": "2026-11-24T15:22:55Z",
    "summary": ".arcana/tsconfig.mjs.json: exit 0, 0 error(s), 2973 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-experiments/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-experiments/model-connector/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/type-check-zfae2rks/check.tsbuildinfo --listFiles",
-   "duration_s": 5.75,
+   "command": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/model-connector-315-r7-gate-worktree/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-w6-rev-ws-a/model-connector-315-r7-gate-worktree/tsconfig.build.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/type-check-7v9rkznm/check.tsbuildinfo --listFiles",
+   "duration_s": 9.65,
    "entities": [
     "deployable_unit:."
    ],
@@ -1077,13 +1131,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-build",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/v-type-check-tsconfig-build.txt",
-   "started_at_utc": "2026-11-22T21:31:37Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/v-type-check-tsconfig-build.txt",
+   "started_at_utc": "2026-11-24T15:23:15Z",
    "summary": "tsconfig.build.json: exit 0, 0 error(s), 2148 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-experiments/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-experiments/model-connector/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/type-check-qircgets/check.tsbuildinfo --listFiles",
-   "duration_s": 0.72,
+   "command": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/model-connector-315-r7-gate-worktree/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-w6-rev-ws-a/model-connector-315-r7-gate-worktree/tsconfig.ci.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/type-check-uhm9tvka/check.tsbuildinfo --listFiles",
+   "duration_s": 1.15,
    "entities": [
     "deployable_unit:."
    ],
@@ -1093,13 +1147,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-ci",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/v-type-check-tsconfig-ci.txt",
-   "started_at_utc": "2026-11-22T21:31:43Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/v-type-check-tsconfig-ci.txt",
+   "started_at_utc": "2026-11-24T15:23:25Z",
    "summary": "tsconfig.ci.json: exit 0, 0 error(s), 190 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-experiments/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-experiments/model-connector/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/type-check-kv5u16mg/check.tsbuildinfo --listFiles",
-   "duration_s": 9.49,
+   "command": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/model-connector-315-r7-gate-worktree/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-w6-rev-ws-a/model-connector-315-r7-gate-worktree/tsconfig.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/type-check-bigsbz8s/check.tsbuildinfo --listFiles",
+   "duration_s": 13.65,
    "entities": [
     "deployable_unit:."
    ],
@@ -1109,13 +1163,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/v-type-check-tsconfig.txt",
-   "started_at_utc": "2026-11-22T21:31:44Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/v-type-check-tsconfig.txt",
+   "started_at_utc": "2026-11-24T15:23:26Z",
    "summary": "tsconfig.json: exit 0, 0 error(s), 2781 files listed"
   },
   {
-   "command": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-experiments/model-connector/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-experiments/model-connector/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/type-check-tlyg_2mo/check.tsbuildinfo --listFiles",
-   "duration_s": 10.93,
+   "command": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/model-connector-315-r7-gate-worktree/node_modules/.bin/tsc -p /home/dev/aup/claude-work/fin-w6-rev-ws-a/model-connector-315-r7-gate-worktree/tsconfig.test.json --noEmit --incremental true --tsBuildInfoFile /home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/type-check-a3xh75ei/check.tsbuildinfo --listFiles",
+   "duration_s": 13.92,
    "entities": [
     "deployable_unit:."
    ],
@@ -1125,13 +1179,13 @@
    "exit_code": 0,
    "id": "v-type-check-tsconfig-test",
    "kind": "type_check",
-   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/v-type-check-tsconfig-test.txt",
-   "started_at_utc": "2026-11-22T21:31:54Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/v-type-check-tsconfig-test.txt",
+   "started_at_utc": "2026-11-24T15:23:41Z",
    "summary": "tsconfig.test.json: exit 0, 0 error(s), 2887 files listed"
   },
   {
    "command": "verify.py fitness_rules FR-01..FR-05 over the head graph + head sources",
-   "duration_s": 0.28,
+   "duration_s": 0.43,
    "entities": [
     "code_unit:src/connectors/transient-timeout-retry.spec.ts",
     "code_unit:src/prompt-cache/prompt-cache-policy.spec.ts",
@@ -1145,8 +1199,8 @@
    "exit_code": 0,
    "id": "v-fitness",
    "kind": "fitness_rules",
-   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/v-fitness.json",
-   "started_at_utc": "2026-11-22T21:32:06Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/v-fitness.json",
+   "started_at_utc": "2026-11-24T15:23:55Z",
    "summary": "35 finding(s): 0 new / 35 frozen; 0 entity(ies) failed"
   },
   {
@@ -1161,8 +1215,8 @@
    "exit_code": 0,
    "id": "v-doc-reference",
    "kind": "doc_reference",
-   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/v-doc-reference.txt",
-   "started_at_utc": "2026-11-22T21:32:06Z",
+   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/v-doc-reference.txt",
+   "started_at_utc": "2026-11-24T15:23:56Z",
    "summary": "1 document(s), 0 failed"
   },
   {
@@ -1223,7 +1277,7 @@
     "receipt:receipts/bench-source-ctx24/source-car.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/bench-source-ctx24/source-car.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1232,7 +1286,7 @@
     "receipt:receipts/graph/change-admission-0a3f80e9.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-0a3f80e9.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1241,7 +1295,7 @@
     "receipt:receipts/graph/change-admission-105-reasoning-subset.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-105-reasoning-subset.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1250,7 +1304,7 @@
     "receipt:receipts/graph/change-admission-11159be7.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-11159be7.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1259,7 +1313,7 @@
     "receipt:receipts/graph/change-admission-14d5ee02.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-14d5ee02.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1268,7 +1322,7 @@
     "receipt:receipts/graph/change-admission-595b306c.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-595b306c.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1277,7 +1331,7 @@
     "receipt:receipts/graph/change-admission-6206.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-6206.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1286,7 +1340,7 @@
     "receipt:receipts/graph/change-admission-6664.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-6664.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1295,7 +1349,7 @@
     "receipt:receipts/graph/change-admission-688ea1dc.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-688ea1dc.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1304,7 +1358,7 @@
     "receipt:receipts/graph/change-admission-709559c4-strict-chat.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-709559c4-strict-chat.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1313,7 +1367,7 @@
     "receipt:receipts/graph/change-admission-a2-207-20260923T134542Z.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-a2-207-20260923T134542Z.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1322,7 +1376,7 @@
     "receipt:receipts/graph/change-admission-a2-425.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-a2-425.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1331,7 +1385,7 @@
     "receipt:receipts/graph/change-admission-a2-432.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-a2-432.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1340,7 +1394,7 @@
     "receipt:receipts/graph/change-admission-a2-443.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-a2-443.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1349,7 +1403,7 @@
     "receipt:receipts/graph/change-admission-b8896c8e.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-b8896c8e.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1358,7 +1412,7 @@
     "receipt:receipts/graph/change-admission-b92d0523.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-b92d0523.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1367,7 +1421,7 @@
     "receipt:receipts/graph/change-admission-cb07a5b3-multipart.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-cb07a5b3-multipart.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1376,7 +1430,7 @@
     "receipt:receipts/graph/change-admission-e8ab201d.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-e8ab201d.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1385,7 +1439,7 @@
     "receipt:receipts/graph/change-admission-fa0a791c.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-fa0a791c.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1394,7 +1448,7 @@
     "receipt:receipts/graph/change-admission-finish-20261114-mc.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-finish-20261114-mc.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1403,7 +1457,7 @@
     "receipt:receipts/graph/change-admission-jev-decision.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-jev-decision.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
@@ -1412,21 +1466,33 @@
     "receipt:receipts/graph/change-admission-mc-price-106-107.json": {
      "base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
      "entity_path": "receipts/graph/change-admission-mc-price-106-107.json",
-     "head": "11109b82338f490917114dabb7ac48ab8d897245",
+     "head": "bd538ae0366a6a648ab32d87e94f4a324d1cd200",
      "reason": "BASE_NATIVE_POLICY_MISSING",
      "schema": "ReceiptDataMeasurement/v1",
      "scope": "archived_evidence_data",
      "verdict": "not_measured"
     }
    },
-   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r6-verify-out-final2/v-receipt-data.json",
+   "output_ref": "/home/dev/aup/claude-work/fin-w6-rev-ws-a/mc315-r7-validation/verifier-output/v-receipt-data.json",
    "scope": "archived_evidence_data",
-   "started_at_utc": "2026-11-22T21:32:06Z",
+   "started_at_utc": "2026-11-24T15:23:56Z",
    "summary": "archival data only; foreign source claims unchanged"
   }
  ],
  "verify": {
-  "events": [],
+  "events": [
+   {
+    "code": "SUPERSEDED_SELF_EXCLUSION",
+    "entity": "receipt:receipts/graph/change-admission-mc315-dec0199-20261122-r6.json",
+    "rule": "DEC-AUP-0035",
+    "text": "the receipt at receipts/graph/change-admission-mc315-dec0199-20261122-r6.json is the previous version of the one this run is writing, for the same work item 4dae0857-f648-46c7-a532-11ab7d559668 — superseded by construction, so it owes this change no verdict"
+   },
+   {
+    "code": "STRUCTURAL_EXCLUSION",
+    "rule": "DEC-AUP-0034",
+    "text": "1 affected entity(ies) owe no verdict (receipt: 1): unchanged at both revisions and given no verifier by the matrix"
+   }
+  ],
   "required_by_entity": {
    "code_unit:src/connectors/transient-timeout-retry.spec.ts": [
     "fitness_rules",
@@ -1508,12 +1574,15 @@
    ],
    "receipt:receipts/graph/change-admission-mc-price-106-107.json": [
     "receipt_data"
+   ],
+   "receipt:receipts/graph/change-admission-mc315-dec0199-20261122-r6.json": [
+    "receipt_data"
    ]
   },
   "seconds": {
-   "prepare": 5.68,
-   "total": 101.57,
-   "verifiers": 37.99
+   "prepare": 41.86,
+   "total": 239.69,
+   "verifiers": 58.41
   }
  },
  "work_item": "4dae0857-f648-46c7-a532-11ab7d559668"
