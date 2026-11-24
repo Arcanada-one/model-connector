@@ -16,7 +16,7 @@
     "test:cov": "vitest run --coverage",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts --mode integration",
-    "test:billing3a-journal": "vitest run --config vitest.billing3a.config.ts",
+    "test:billing3a-journal": "MC_BILLING3A_JOURNAL_ONLY=1 vitest run --config vitest.integration.config.ts --mode integration",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",

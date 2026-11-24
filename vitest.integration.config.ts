@@ -27,21 +27,26 @@ function loadEnvFile(filePath: string): Record<string, string> {
 }
 
 const envVars = loadEnvFile(join(process.cwd(), '.env.integration'));
+const billing3aSpec = 'src/bench-reservation/journal-bridge.billing3a.integration.spec.ts';
+const billing3aJournalOnly = process.env.MC_BILLING3A_JOURNAL_ONLY === '1';
+
+if (billing3aJournalOnly && !process.env.BILLING_CUSTODIAN_SOURCE) {
+  throw new Error('BILLING_CUSTODIAN_SOURCE must name the pinned Billing3a source snapshot');
+}
 
 export default defineConfig({
   test: {
     globals: true,
     root: './',
-    include: ['src/**/*.integration.spec.ts'],
-    exclude: ['src/bench-reservation/journal-bridge.billing3a.integration.spec.ts'],
+    include: billing3aJournalOnly ? [billing3aSpec] : ['src/**/*.integration.spec.ts'],
+    exclude: billing3aJournalOnly ? [] : [billing3aSpec],
     // Integration tests hit real APIs — allow up to 60s per test
     testTimeout: 60_000,
     hookTimeout: 30_000,
     // Run serially to avoid parallel Vertex quota hits
     pool: 'forks',
-    poolOptions: {
-      forks: { singleFork: true },
-    },
+    maxWorkers: 1,
+    fileParallelism: false,
     env: envVars,
   },
   plugins: [swc.vite()],
