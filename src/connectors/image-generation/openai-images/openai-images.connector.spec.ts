@@ -145,7 +145,7 @@ describe('OpenAIImagesConnector', () => {
       outputFormat: 'url',
       outputAsync: 'never',
     });
-    expect(result.costUsd).toBeCloseTo(21.5);
+    expect(result.costUsd).toBeCloseTo(43);
   });
 
   it('rejects dimensions the provider will reject before making a request', async () => {

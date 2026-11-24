@@ -347,7 +347,7 @@ describe('OpenAI Images connector — fixture replay', () => {
 
     expect(result.status).toBe('completed');
     expect(result.routing.chosenProvider).toBe('openai-images');
-    expect(result.costUsd).toBeGreaterThan(0);
+    expect(result.costUsd).toBeCloseTo(0.0108, 6);
     // ImageGenerationResult.urls is optional — prove it was returned first.
     expect(result.urls).toBeDefined();
     expect(result.urls!.length).toBeGreaterThan(0);

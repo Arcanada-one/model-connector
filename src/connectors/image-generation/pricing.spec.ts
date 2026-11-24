@@ -108,7 +108,7 @@ describe('calculateOpenAIImageCostUsd', () => {
         input_tokens_details: { image_tokens: 1_000_000, text_tokens: 1_000_000 },
         output_tokens_details: { image_tokens: 1_000_000, text_tokens: 0 },
       }),
-    ).toBeCloseTo(21.5);
+    ).toBeCloseTo(43);
   });
 
   it('returns undefined when the complete usage breakdown is absent', () => {

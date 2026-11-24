@@ -28,7 +28,7 @@ export function calculateCostUsd(modelId: string, count: number): number {
   return perImage * count;
 }
 
-/** Calculate GPT Image 2.5 Sunburst cost from the API's token usage breakdown. */
+/** Calculate GPT Image 2.5 Sunburst cost at Standard rates from the API's token usage breakdown. */
 export function calculateOpenAIImageCostUsd(usage: {
   input_tokens_details?: { image_tokens?: number; text_tokens?: number };
   output_tokens_details?: { image_tokens?: number; text_tokens?: number };
@@ -42,5 +42,5 @@ export function calculateOpenAIImageCostUsd(usage: {
   }
   const [inputImage, inputText, outputImage, outputText] = tokens as number[];
   void outputText;
-  return (inputImage * 4 + inputText * 2.5 + outputImage * 15) / 1_000_000;
+  return (inputImage * 8 + inputText * 5 + outputImage * 30) / 1_000_000;
 }
