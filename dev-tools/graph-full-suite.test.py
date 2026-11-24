@@ -526,6 +526,74 @@ class Controls(unittest.TestCase):
         self.assertEqual([r['verdict'] for r in result], ['not_measured', 'not_measured', 'verified', 'verified'])
         self.assertEqual(subject.execution_code(result), 127)
 
+    def test_disposable_store_profile_runs_only_fixed_members_with_red_controls(self):
+        members = sorted(subject.DISPOSABLE_STORE_INTEGRATION) + [
+            sorted(subject.OFFLINE_INTEGRATION)[0],
+            'src/connectors/image-generation/provider.integration.spec.ts',
+            'test/app.e2e-spec.ts']
+        suites = self.root_dispatch_fixture(members)
+        with tempfile.TemporaryDirectory() as directory:
+            scratch = Path(directory)
+            runner_temp = scratch / 'runner'
+            socket = runner_temp / 'graph-admission/mc-owned-postgres/socket'
+            socket.mkdir(parents=True)
+            env = {'GITHUB_REPOSITORY': 'Arcanada-one/model-connector',
+                   'GRAPH_DISPOSABLE_STORE_PROFILE': subject.DISPOSABLE_STORE_PROFILE,
+                   'DATABASE_URL': 'postgresql://test:test@127.0.0.1:55432/connector_test',
+                   'REDIS_HOST': '127.0.0.1', 'REDIS_PORT': '56379',
+                   'REDIS_PREFIX': 'mc-ga-123-1:', 'RUNNER_TEMP': str(runner_temp),
+                   'BENCH_OWNED_TEST_PG_SOCKET': str(socket)}
+            calls = []
+            def child(argv, cwd, child_env, deadline, private, name):
+                calls.append((argv, child_env.copy(), name))
+                if name.startswith('disposable-store-control-'):
+                    spec_name = argv[-1]
+                    report = {'success': False, 'numTotalTests': 1, 'numPassedTests': 0,
+                              'numFailedTests': 1, 'testResults': [{'name': str(self.root / spec_name),
+                                  'assertionResults': [{'status': 'failed'}]}]}
+                    Path(argv[argv.index('--reporter=json') + 1].split('=', 1)[1]).write_text(json.dumps(report))
+                    return {'argv': argv, 'exit_code': 1, 'output': '', 'duration_s': 0}
+                if argv[0] == 'pnpm' and 'migrate' in argv:
+                    return {'argv': argv, 'exit_code': 0, 'output': '', 'duration_s': 0}
+                selected = [a for a in argv[argv.index('--reporter=json') + 1:]
+                            if not a.startswith('--')]
+                report = {'success': True, 'numTotalTests': len(selected),
+                          'numPassedTests': len(selected), 'numFailedTests': 0,
+                          'testResults': [{'name': str(self.root / name),
+                              'assertionResults': [{'status': 'passed'}]} for name in selected]}
+                Path(argv[argv.index('--reporter=json') + 1].split('=', 1)[1]).write_text(json.dumps(report))
+                return {'argv': argv, 'exit_code': 0, 'output': '', 'duration_s': 0}
+            with patch.dict(os.environ, env, clear=True), patch.object(subject.shutil, 'which', return_value='/fixture/pnpm'):
+                rows = subject.run_root_suites(self.root, suites, scratch, child)
+        store = next(row for row in rows if row['suite'] == 'maintained-integration-disposable-store')
+        self.assertEqual(store['verdict'], 'verified')
+        self.assertEqual(store['control'], {'result': 'PASS_RED'})
+        self.assertEqual([c['result'] for c in store['controls']], ['PASS_RED', 'PASS_RED'])
+        self.assertEqual(set(store['members']), subject.DISPOSABLE_STORE_INTEGRATION)
+        self.assertTrue(all('DATABASE_URL' in child_env for _, child_env, _ in calls))
+        self.assertFalse(any('provider.integration.spec.ts' in arg for args, _, _ in calls for arg in args))
+        self.assertEqual(subject.execution_code(rows), 127)
+
+    def test_disposable_store_profile_validation_is_exact_and_fail_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runner_temp = Path(directory) / 'runner'
+            socket = runner_temp / 'graph-admission/mc-owned-postgres/socket'
+            socket.mkdir(parents=True)
+            env = {'GITHUB_REPOSITORY': 'Arcanada-one/model-connector',
+                   'GRAPH_DISPOSABLE_STORE_PROFILE': subject.DISPOSABLE_STORE_PROFILE,
+                   'DATABASE_URL': 'postgresql://test:test@127.0.0.1:55432/connector_test',
+                   'REDIS_HOST': '127.0.0.1', 'REDIS_PORT': '56379',
+                   'REDIS_PREFIX': 'mc-ga-123-1:', 'RUNNER_TEMP': str(runner_temp),
+                   'BENCH_OWNED_TEST_PG_SOCKET': str(socket)}
+            with patch.dict(os.environ, env, clear=True):
+                accepted = subject.disposable_store_environment(Path(directory))
+            self.assertEqual(accepted['RUN_INTEGRATION'], '1')
+            for key, value in [('GITHUB_REPOSITORY', 'Arcanada-one/other'),
+                               ('REDIS_PREFIX', 'foreign:')]:
+                mutated = dict(env, **{key: value})
+                with patch.dict(os.environ, mutated, clear=True), self.assertRaises(subject.Refusal):
+                    subject.disposable_store_environment(Path(directory))
+
     def test_root_missing_runner_refuses_before_spawn(self):
         suites = self.root_dispatch_fixture(['src/a.spec.ts'])
         with patch.object(subject.shutil, 'which', return_value=None):
@@ -639,8 +707,9 @@ class ArmEvidence(unittest.TestCase):
             {'suite': 'maintained-app-e2e', 'verdict': 'not_measured', 'held_members': ['test/app.e2e-spec.ts']},
             {'suite': 'maintained-authored-template', 'executions': [dict(ok)]},
             {'suite': 'maintained-integration', 'executions': [dict(ok)],
-             'held_members': ['src/billing/hold.integration.spec.ts',
-                              'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts']},
+             'held_members': ['src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts']},
+            {'suite': 'maintained-integration-disposable-store', 'executions': [dict(ok)],
+             'control': {'result': 'PASS_RED'}},
             {'suite': 'maintained-regression',
              'executions': [dict(ok), {'verdict': 'verified', 'counts': None}]},
             {'suite': 'maintained-vitest', 'executions': [dict(ok)]},
@@ -651,23 +720,27 @@ class ArmEvidence(unittest.TestCase):
             root, head = self.repo(tmp)
             arms = subject.build_arms(root, self.results(), head)
         self.assertEqual(set(arms), {'schema', 'head', 'definition', 'arms', 'not_run'})
-        self.assertEqual(arms['not_run'], ['app-e2e', 'integration-disposable-store',
-                                           'integration-external-provider'])
+        self.assertEqual(arms['not_run'], ['app-e2e', 'integration-external-provider'])
         by_name = {a['name']: a for a in arms['arms']}
         self.assertEqual(set(by_name), {'authored-template', 'integration-offline-contracts',
-                                        'regression', 'vitest-default'})
+                                        'integration-disposable-store', 'regression', 'vitest-default'})
         # An exit-status validator counts as exactly one passed check; nothing is invented beyond that.
         self.assertEqual(by_name['regression']['counts'], {'total': 4, 'passed': 4, 'failed': 0, 'skipped': 0})
         for arm in arms['arms']:
-            self.assertEqual((arm['backend'], arm['head']), ('stub', head))
+            self.assertEqual(arm['head'], head)
+            if arm['name'] == 'integration-disposable-store':
+                self.assertEqual(arm['backend'], 'real_disposable')
+                self.assertEqual(arm['control'], {'result': 'PASS_RED'})
+            else:
+                self.assertEqual(arm['backend'], 'stub')
         self.assertEqual(len(arms['definition']['sha256']), 64)
 
     def test_unexecuted_or_skipped_or_unclassified_never_becomes_an_executed_arm(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, head = self.repo(tmp)
             results = self.results()
-            results[4] = {'suite': 'maintained-vitest', 'executions': [{'verdict': 'not_measured', 'exit_code': 127}]}
-            results[3]['held_members'] = ['deploy/x.sh']
+            results[5] = {'suite': 'maintained-vitest', 'executions': [{'verdict': 'not_measured', 'exit_code': 127}]}
+            results[4]['held_members'] = ['deploy/x.sh']
             arms = subject.build_arms(root, results, head)
             self.assertNotIn('vitest-default', {a['name'] for a in arms['arms']})
             self.assertNotIn('regression', {a['name'] for a in arms['arms']})

@@ -218,8 +218,44 @@ if [[ "$1" == '.' && -x "$REPO_ROOT/node_modules/.bin/prisma" ]]; then
     || { echo 'FULL_FALLBACK_TEST_REFUSED: prisma generate failed' >&2; exit 1; }
 fi
 
+# Program may pass the fixed Model Connector candidate-store profile to this verifier step.
+# Revalidate it here, then forward only these named values through env -i to the full-suite child.
+# No arbitrary inherited environment is carried into the runner.
+disposable_store_env=()
+if [[ -n "${GRAPH_DISPOSABLE_STORE_PROFILE:-}" ]]; then
+  [[ "$1" == '.' && "${GITHUB_REPOSITORY:-}" == 'Arcanada-one/model-connector' \
+     && "$GRAPH_DISPOSABLE_STORE_PROFILE" == 'model-connector-disposable-store-v1' ]] \
+    || refuse 'disposable-store profile is not bound to Model Connector root suite'
+  [[ "${GITHUB_RUN_ID:-}" =~ ^[0-9]+$ && "${GITHUB_RUN_ATTEMPT:-}" =~ ^[0-9]+$ ]] \
+    || refuse 'disposable-store run namespace is invalid'
+  [[ "${DATABASE_URL:-}" =~ ^postgresql://test:test@127\.0\.0\.1:([0-9]+)/connector_test$ ]] \
+    || refuse 'disposable PostgreSQL URL is outside the fixed loopback profile'
+  pg_port=${BASH_REMATCH[1]}
+  (( 10#$pg_port >= 1 && 10#$pg_port <= 65535 )) || refuse 'disposable PostgreSQL port is invalid'
+  [[ "${REDIS_HOST:-}" == '127.0.0.1' && "${REDIS_PORT:-}" =~ ^[0-9]+$ ]] \
+    || refuse 'disposable Redis endpoint is outside the fixed loopback profile'
+  (( 10#$REDIS_PORT >= 1 && 10#$REDIS_PORT <= 65535 )) || refuse 'disposable Redis port is invalid'
+  [[ "${REDIS_PREFIX:-}" == "mc-ga-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}:" ]] \
+    || refuse 'disposable Redis namespace is not run-bound'
+  expected_socket="${RUNNER_TEMP:-}/graph-admission/mc-owned-postgres/socket"
+  [[ -n "${RUNNER_TEMP:-}" && "${BENCH_OWNED_TEST_PG_SOCKET:-}" == "$expected_socket" \
+     && -d "$expected_socket" && ! -L "$expected_socket" \
+     && ! -L "${RUNNER_TEMP}/graph-admission" \
+     && ! -L "${RUNNER_TEMP}/graph-admission/mc-owned-postgres" ]] \
+    || refuse 'owned PostgreSQL socket path is absent or indirect'
+  disposable_store_env=(GITHUB_REPOSITORY="$GITHUB_REPOSITORY"
+    GRAPH_DISPOSABLE_STORE_PROFILE="$GRAPH_DISPOSABLE_STORE_PROFILE"
+    DATABASE_URL="$DATABASE_URL" REDIS_HOST="$REDIS_HOST" REDIS_PORT="$REDIS_PORT"
+    REDIS_PREFIX="$REDIS_PREFIX" BENCH_OWNED_TEST_PG_SOCKET="$BENCH_OWNED_TEST_PG_SOCKET"
+    RUNNER_TEMP="$RUNNER_TEMP")
+elif [[ -n "${DATABASE_URL:-}${REDIS_HOST:-}${REDIS_PORT:-}${REDIS_PREFIX:-}${BENCH_OWNED_TEST_PG_SOCKET:-}" ]]; then
+  refuse 'store service variables require the fixed disposable-store profile'
+fi
+
 set +e
-env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 "${corepack_env[@]}" PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 bash "$SCRIPT_DIR/graph-full-suite.sh" "$1"
+env -i HOME="$PRIVATE_TMP/home" TMPDIR="$EXEC_TMP" PATH="$PYTHON_PATH" CI=1 "${corepack_env[@]}" \
+  PYTHONDONTWRITEBYTECODE=1 NO_COLOR=1 FORCE_COLOR=0 "${disposable_store_env[@]}" \
+  bash "$SCRIPT_DIR/graph-full-suite.sh" "$1"
 status=$?
 shopt -s nullglob
 for artifact in "$EXEC_TMP"/mc-full-*; do
