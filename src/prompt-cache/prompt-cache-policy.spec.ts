@@ -498,30 +498,30 @@ function cpuMsSince(start: NodeJS.CpuUsage): number {
   return (delta.user + delta.system) / 1000;
 }
 
-function measurePositiveCpuRound(round: number): number[] {
+function measurePositiveCpuRound(round: number, evaluatePolicy: typeof evaluate): number[] {
   const samples: number[] = [];
   const store = new InMemoryPolicyStore();
   for (let step = 1; step <= 10; step += 1) {
     const body = buildReplayRequest(fixture, step);
     const started = process.cpuUsage();
-    evaluate(body, { tenantId: 'key-L', sessionId: `s-${round}` }, 'enforce', store);
+    evaluatePolicy(body, { tenantId: 'key-L', sessionId: `s-${round}` }, 'enforce', store);
     samples.push(cpuMsSince(started));
   }
   return samples;
 }
 
 describe('latency budget (positive fixtures add < 20 ms p95)', () => {
-  it('measures CPU-time p95 over warmed replay-loop rounds (budget stays 20 ms)', () => {
+  function checkCpuBudget(evaluatePolicy: typeof evaluate, reportLabel: string): void {
     const WARMUP_ROUNDS = 3;
     const MEASURE_ROUNDS = 20;
     // Warmup: populate caches / JIT so the measured window is steady-state work.
     for (let round = 0; round < WARMUP_ROUNDS; round += 1) {
-      measurePositiveCpuRound(round);
+      measurePositiveCpuRound(round, evaluatePolicy);
     }
     const roundP95: number[] = [];
     const positive: number[] = [];
     for (let round = 0; round < MEASURE_ROUNDS; round += 1) {
-      const samples = measurePositiveCpuRound(WARMUP_ROUNDS + round);
+      const samples = measurePositiveCpuRound(WARMUP_ROUNDS + round, evaluatePolicy);
       positive.push(...samples);
       const sorted = [...samples].sort((a, b) => a - b);
       roundP95.push(percentile(sorted, 95));
@@ -559,34 +559,32 @@ describe('latency budget (positive fixtures add < 20 ms p95)', () => {
       budget_p95_ms: 20,
     };
     // Written to stdout so the receipt can quote the measured numbers verbatim.
-    console.log(`PROMPT_CACHE_POLICY_LATENCY ${JSON.stringify(report)}`);
+    console.log(`${reportLabel} ${JSON.stringify(report)}`);
     // Keep the 20 ms budget; assert the median of per-round p95 CPU times so a
     // single pre-empted sample cannot fail the suite under runner load.
-    expect(report.positive.round_p95_median_ms).toBeLessThan(20);
-    expect(report.positive.p95_ms).toBeLessThan(20);
+    expect(report.positive.round_p95_median_ms, 'Median per-round positive CPU p95').toBeLessThan(
+      report.budget_p95_ms,
+    );
+    expect(report.positive.p95_ms, 'Pooled positive CPU p95').toBeLessThan(report.budget_p95_ms);
+  }
+
+  it('measures CPU-time p95 over warmed replay-loop rounds (budget stays 20 ms)', () => {
+    checkCpuBudget(evaluate, 'PROMPT_CACHE_POLICY_LATENCY');
   });
 
   it('MUTATION: a deliberate CPU burn over the budget still fails the 20 ms p95 gate', () => {
     const burnMs = 25;
-    const samples: number[] = [];
-    for (let i = 0; i < 40; i += 1) {
-      const started = process.cpuUsage();
-      const body = buildReplayRequest(fixture, (i % 10) + 1);
-      evaluate(
-        body,
-        { tenantId: 'key-M', sessionId: `mut-${i}` },
-        'enforce',
-        new InMemoryPolicyStore(),
-      );
+    const evaluateWithCpuBurn: typeof evaluate = (...args) => {
+      const decision = evaluate(...args);
       // Busy-wait on CPU (not wall sleep) so process.cpuUsage records the burn.
       const burnStart = process.cpuUsage();
       while (cpuMsSince(burnStart) < burnMs) {
         // spin
       }
-      samples.push(cpuMsSince(started));
-    }
-    const sorted = [...samples].sort((a, b) => a - b);
-    const p95 = percentile(sorted, 95);
-    expect(p95).toBeGreaterThanOrEqual(20);
+      return decision;
+    };
+    expect(() =>
+      checkCpuBudget(evaluateWithCpuBurn, 'PROMPT_CACHE_POLICY_LATENCY_MUTATION'),
+    ).toThrow(/^Median per-round positive CPU p95:/);
   }, 15_000);
 });
