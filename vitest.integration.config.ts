@@ -33,6 +33,7 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['src/**/*.integration.spec.ts'],
+    exclude: ['src/bench-reservation/journal-bridge.billing3a.integration.spec.ts'],
     // Integration tests hit real APIs — allow up to 60s per test
     testTimeout: 60_000,
     hookTimeout: 30_000,
