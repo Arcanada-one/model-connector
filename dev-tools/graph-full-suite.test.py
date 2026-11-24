@@ -546,6 +546,15 @@ class Controls(unittest.TestCase):
         self.assertIn('if-no-files-found: error', job)
         self.assertIn('model-connector-app-e2e-${{ github.run_id }}-${{ github.run_attempt }}.json', job)
 
+    def test_app_e2e_postgres_healthcheck_uses_configured_user_and_database(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text()
+        job = workflow.split('  app-e2e-full-suite:', 1)[1].split('\n  # ARC-CI digest-promotion', 1)[0]
+        postgres = job.split('      postgres:', 1)[1].split('      redis:', 1)[0]
+        self.assertIn('POSTGRES_USER: test', postgres)
+        self.assertIn('POSTGRES_DB: connector_test', postgres)
+        self.assertIn('--health-cmd "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"', postgres)
+        self.assertNotIn('--health-cmd pg_isready\n', postgres)
+
     def root_dispatch_fixture(self, members):
         for member in members:
             p = self.root / member
