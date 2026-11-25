@@ -5033,6 +5033,7 @@ def gate(repo: Path, base: str, head: str, receipt_paths: list[Path], policy: di
 
         # Revision selections are remeasured from Git, not trusted from receipt node_ids.
         try:
+            import receipt_data
             origin_binding = None
             binding_diagnostics = []
             if origin_association_path is not None:
@@ -5047,7 +5048,6 @@ def gate(repo: Path, base: str, head: str, receipt_paths: list[Path], policy: di
                     doc.get("verifiers", []), root_typecheck_ci_root, token=github_token)
             if origin_binding is not None and "proof" in origin_binding:
                 rec["origin_association_proof"] = origin_binding["proof"]
-            import receipt_data
             coverage_problems.extend(receipt_data.rederive_claims(repo, doc, candidate_head=head))
         except Exception as exc:
             # The class name alone ("Refusal") hides the whole diagnosis: the reason a coverage
@@ -5091,7 +5091,12 @@ def gate(repo: Path, base: str, head: str, receipt_paths: list[Path], policy: di
             elif x.get("entity") not in verdict_of:
                 bad_exempt.append(f"{x.get('entity')}: exempts an entity that has no verdict")
             else:
-                valid_exempt.add(x["entity"])
+                eligibility_problems = base_native_policy_exemption_problems(
+                    repo, doc, x, repo_name or repo_remote_name(repo))
+                if eligibility_problems:
+                    bad_exempt.extend(eligibility_problems)
+                else:
+                    valid_exempt.add(x["entity"])
         if bad_exempt:
             add("C10", f"{Path(rec['path']).name}: " + "; ".join(bad_exempt[:6]))
 
@@ -8745,6 +8750,54 @@ def decision_eligibility(repo: Path, doc: dict, entity: str, klass: str, policy:
         return False, (f"a live contour IS declared for {repo_name} ({contours[repo_name]}): run the canary there. "
                        f"A decision covers only a pause no measurement can clear"), facts
     return True, "eligible", facts
+
+
+BASE_NATIVE_POLICY_MISSING_CODE = "BASE_NATIVE_POLICY_MISSING"
+
+
+def base_native_policy_exemption_problems(repo: Path, doc: dict, exemption: dict,
+                                          repo_name: str) -> list[str]:
+    """C10's narrow eligibility check for the DEC-AUP-0199 base-policy exemption.
+
+    This is deliberately separate from C21: the signed DEC-AUP-0037 path keeps
+    its existing policy, signature, expiry and binding checks. The historical
+    receipt class is selected only for receipt entities and is loaded from the
+    receipt's immutable base tree, never from the candidate head.
+    """
+    if exemption.get("code") != BASE_NATIVE_POLICY_MISSING_CODE:
+        return []
+    import receipt_data
+    entity = exemption.get("entity")
+    verdict = next((v for v in doc.get("verdicts") or []
+                    if isinstance(v, dict) and v.get("entity") == entity), None)
+    if verdict is None:
+        return [f"{entity}: BASE_NATIVE_POLICY_MISSING has no matching verdict"]
+    exemption_reason, verdict_reason = exemption.get("reason"), verdict.get("reason")
+    if (not isinstance(exemption_reason, str) or not isinstance(verdict_reason, str)
+            or exemption_reason.encode("utf-8") != verdict_reason.encode("utf-8")):
+        return [f"{entity}: BASE_NATIVE_POLICY_MISSING reason is not byte-equal to verdicts[].reason"]
+    if not isinstance(entity, str) or not entity.startswith("receipt:"):
+        return [f"{entity}: BASE_NATIVE_POLICY_MISSING has no exemptable class for this entity type"]
+    change_set = doc.get("change_set") or {}
+    receipt_base = change_set.get("base")
+    if not isinstance(receipt_base, str) or not receipt_data.OID.fullmatch(receipt_base):
+        return [f"{entity}: BASE_NATIVE_POLICY_MISSING receipt base is unavailable"]
+    try:
+        _, base_contract, _ = receipt_data.policy_document_at(receipt_data.GitObjects(repo), receipt_base)
+    except (receipt_data.Contradiction, receipt_data.Unmeasured, OSError, TypeError, ValueError) as exc:
+        return [f"{entity}: BASE_NATIVE_POLICY_MISSING base contract unavailable ({exc})"]
+    classes = decision_policy(base_contract).get("classes") or {}
+    class_name = "historical_receipt"
+    class_spec = classes.get(class_name)
+    if (not isinstance(class_spec, dict) or class_spec.get("verifier") != "I14"
+            or class_spec.get("entity_prefix") != "receipt:"
+            or class_spec.get("reason_marker") != "(I14)"
+            or class_spec.get("requires_added_in_range") is not True):
+        return [f"{entity}: base contract has no I14 historical_receipt exemption class"]
+    ok, why, _ = decision_eligibility(repo, doc, entity, class_name, base_contract, repo_name)
+    if not ok:
+        return [f"{entity}: BASE_NATIVE_POLICY_MISSING is not eligible under base class {class_name}: {why}"]
+    return []
 
 
 def verify_decision_exemption(repo: Path, doc: dict, x: dict, policy: dict, *, base: str,

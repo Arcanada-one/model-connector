@@ -2623,7 +2623,24 @@ class Verify:
             for pkg in overlay.get("stub_packages", []):
                 paths[pkg] = [str(troot / pkg / "index.d.ts")]
             paths.update(overlay.get("paths_override", {}))
-            co["baseUrl"] = str(self.exec_root / dep)
+            # TS 7 removes node10 resolution and baseUrl. The selftest overlay has
+            # historically compiled as CommonJS with Node's legacy resolver, so
+            # use paired Node16 semantics instead. Paths are made absolute relative
+            # to the same deployable root previously supplied as baseUrl; this keeps
+            # both inherited and overlay mappings intact without relying on baseUrl.
+            if co.get("moduleResolution") in {"node", "node10"}:
+                co["moduleResolution"] = "node16"
+                if co.get("module") == "commonjs":
+                    co["module"] = "node16"
+            paths_root = self.exec_root / dep
+            for key, targets in paths.items():
+                if isinstance(targets, list):
+                    paths[key] = [str(Path(os.path.abspath(os.path.join(paths_root, target))))
+                                  if isinstance(target, str) and not os.path.isabs(target) else target
+                                  for target in targets]
+            # Explicit null shadows a baseUrl inherited through `extends`; omitting
+            # the key would still leave TS 7 seeing the removed inherited option.
+            co["baseUrl"] = None
             co["paths"] = paths
             doc["files"] = [str(troot / g) for g in overlay.get("global_typings", [])]
         gen.write_text(json.dumps(doc, indent=1))
