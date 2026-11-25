@@ -175,41 +175,37 @@ def plan(unit, members):
 
 def disposable_store_environment(scratch):
     """Accept only the fixed Program candidate profile and its loopback test services."""
-    if os.environ.get('GRAPH_DISPOSABLE_STORE_PROFILE') != DISPOSABLE_STORE_PROFILE:
+    profile = os.environ.get('GRAPH_DISPOSABLE_STORE_PROFILE')
+    if not profile:
         return None
-    if os.environ.get('GITHUB_REPOSITORY') != 'Arcanada-one/model-connector':
+    if profile != DISPOSABLE_STORE_PROFILE or os.environ.get('GITHUB_REPOSITORY') != 'Arcanada-one/model-connector':
         raise Refusal('disposable-store profile is not bound to Model Connector')
+    job_identity = [os.environ.get(key, '') for key in
+                    ('GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GRAPH_CHECK_RUN_ID')]
+    if any(not re.fullmatch(r'[0-9]+', value) for value in job_identity):
+        raise Refusal('disposable-store job identity is invalid')
+    job = '-'.join(job_identity)
     url = os.environ.get('DATABASE_URL', '')
-    try:
-        parsed = urlsplit(url)
-        port = parsed.port
-    except ValueError as exc:
-        raise Refusal('disposable PostgreSQL URL is invalid') from exc
-    if (parsed.scheme != 'postgresql' or parsed.username != 'test' or parsed.password != 'test'
-            or parsed.hostname != '127.0.0.1' or parsed.path != '/connector_test'
-            or port is None or not 1 <= port <= 65535 or parsed.query or parsed.fragment):
+    postgres = re.fullmatch(r'postgresql://test:test@127\.0\.0\.1:([0-9]{1,5})/connector_test', url)
+    if not postgres or not 1 <= int(postgres[1]) <= 65535:
         raise Refusal('disposable PostgreSQL URL is outside the fixed loopback profile')
     redis_host = os.environ.get('REDIS_HOST')
     redis_port = os.environ.get('REDIS_PORT', '')
     prefix = os.environ.get('REDIS_PREFIX', '')
-    if redis_host != '127.0.0.1' or not redis_port.isdigit() or not 1 <= int(redis_port) <= 65535:
+    if redis_host != '127.0.0.1' or not re.fullmatch(r'[0-9]{1,5}', redis_port) or not 1 <= int(redis_port) <= 65535:
         raise Refusal('disposable Redis endpoint is outside the fixed loopback profile')
-    if not re.fullmatch(r'mc-ga-[0-9]+-[0-9]+:', prefix):
-        raise Refusal('disposable Redis prefix is not run-namespaced')
-    runner_temp = os.environ.get('RUNNER_TEMP')
+    if prefix != f'mc-ga-{job}:':
+        raise Refusal('disposable Redis prefix is not job-bound')
+    runner_temp = os.environ.get('RUNNER_TEMP', '')
     socket = os.environ.get('BENCH_OWNED_TEST_PG_SOCKET', '')
-    if not runner_temp:
-        raise Refusal('Program runner temp is required for the owned PostgreSQL socket')
-    expected = Path(runner_temp) / 'graph-admission/mc-owned-postgres/socket'
-    if socket != str(expected):
+    if not runner_temp.startswith('/') or socket != f'{runner_temp}/mc-owned-postgres-{job}/socket':
         raise Refusal('owned PostgreSQL socket path differs from the fixed profile')
-    for part in (expected, *expected.parents):
-        if part.is_symlink():
-            raise Refusal('symlink in owned PostgreSQL socket path')
-        if part == Path(runner_temp):
-            break
-    if not expected.is_dir():
-        raise Refusal('owned PostgreSQL socket directory is absent')
+    try:
+        direct = os.path.realpath(socket, strict=True) == socket and Path(socket).is_dir()
+    except OSError as exc:
+        raise Refusal('owned PostgreSQL socket path is absent or indirect') from exc
+    if not direct:
+        raise Refusal('owned PostgreSQL socket path is absent or indirect')
     return {
         'GRAPH_DISPOSABLE_STORE_PROFILE': DISPOSABLE_STORE_PROFILE,
         'DATABASE_URL': url,

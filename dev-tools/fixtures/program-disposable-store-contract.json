@@ -1,0 +1,18 @@
+{
+  "program_workflow_blob": "6a5124a6805dd13dc2d61084638758ba64877c11",
+  "candidate_base": "f33082f4f1c5612e5bfcc5d06683f07dc563e491",
+  "job": {
+    "GITHUB_REPOSITORY": "Arcanada-one/model-connector",
+    "GITHUB_RUN_ID": "123",
+    "GITHUB_RUN_ATTEMPT": "2",
+    "GRAPH_CHECK_RUN_ID": "456"
+  },
+  "binding": {
+    "GRAPH_DISPOSABLE_STORE_PROFILE": "model-connector-disposable-store-v1",
+    "DATABASE_URL": "postgresql://test:test@127.0.0.1:49152/connector_test",
+    "REDIS_HOST": "127.0.0.1",
+    "REDIS_PORT": "49153",
+    "REDIS_PREFIX": "mc-ga-123-2-456:",
+    "BENCH_OWNED_TEST_PG_SOCKET": "${RUNNER_TEMP}/mc-owned-postgres-123-2-456/socket"
+  }
+}

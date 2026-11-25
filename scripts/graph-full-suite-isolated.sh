@@ -226,24 +226,25 @@ if [[ -n "${GRAPH_DISPOSABLE_STORE_PROFILE:-}" ]]; then
   [[ "$1" == '.' && "${GITHUB_REPOSITORY:-}" == 'Arcanada-one/model-connector' \
      && "$GRAPH_DISPOSABLE_STORE_PROFILE" == 'model-connector-disposable-store-v1' ]] \
     || refuse 'disposable-store profile is not bound to Model Connector root suite'
-  [[ "${GITHUB_RUN_ID:-}" =~ ^[0-9]+$ && "${GITHUB_RUN_ATTEMPT:-}" =~ ^[0-9]+$ ]] \
-    || refuse 'disposable-store run namespace is invalid'
-  [[ "${DATABASE_URL:-}" =~ ^postgresql://test:test@127\.0\.0\.1:([0-9]+)/connector_test$ ]] \
+  [[ "${GITHUB_RUN_ID:-}" =~ ^[0-9]+$ && "${GITHUB_RUN_ATTEMPT:-}" =~ ^[0-9]+$ \
+     && "${GRAPH_CHECK_RUN_ID:-}" =~ ^[0-9]+$ ]] \
+    || refuse 'disposable-store job identity is invalid'
+  store_job="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GRAPH_CHECK_RUN_ID}"
+  [[ "${DATABASE_URL:-}" =~ ^postgresql://test:test@127\.0\.0\.1:([0-9]{1,5})/connector_test$ ]] \
     || refuse 'disposable PostgreSQL URL is outside the fixed loopback profile'
   pg_port=${BASH_REMATCH[1]}
   (( 10#$pg_port >= 1 && 10#$pg_port <= 65535 )) || refuse 'disposable PostgreSQL port is invalid'
-  [[ "${REDIS_HOST:-}" == '127.0.0.1' && "${REDIS_PORT:-}" =~ ^[0-9]+$ ]] \
+  [[ "${REDIS_HOST:-}" == '127.0.0.1' && "${REDIS_PORT:-}" =~ ^[0-9]{1,5}$ ]] \
     || refuse 'disposable Redis endpoint is outside the fixed loopback profile'
   (( 10#$REDIS_PORT >= 1 && 10#$REDIS_PORT <= 65535 )) || refuse 'disposable Redis port is invalid'
-  [[ "${REDIS_PREFIX:-}" == "mc-ga-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}:" ]] \
-    || refuse 'disposable Redis namespace is not run-bound'
-  expected_socket="${RUNNER_TEMP:-}/graph-admission/mc-owned-postgres/socket"
-  [[ -n "${RUNNER_TEMP:-}" && "${BENCH_OWNED_TEST_PG_SOCKET:-}" == "$expected_socket" \
-     && -d "$expected_socket" && ! -L "$expected_socket" \
-     && ! -L "${RUNNER_TEMP}/graph-admission" \
-     && ! -L "${RUNNER_TEMP}/graph-admission/mc-owned-postgres" ]] \
+  [[ "${REDIS_PREFIX:-}" == "mc-ga-${store_job}:" ]] \
+    || refuse 'disposable Redis prefix is not job-bound'
+  expected_socket="${RUNNER_TEMP:-}/mc-owned-postgres-${store_job}/socket"
+  [[ "${RUNNER_TEMP:-}" == /* && "${BENCH_OWNED_TEST_PG_SOCKET:-}" == "$expected_socket" \
+     && -d "$expected_socket" && "$(realpath -e -- "$expected_socket")" == "$expected_socket" ]] \
     || refuse 'owned PostgreSQL socket path is absent or indirect'
   disposable_store_env=(GITHUB_REPOSITORY="$GITHUB_REPOSITORY"
+    GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" GRAPH_CHECK_RUN_ID="$GRAPH_CHECK_RUN_ID"
     GRAPH_DISPOSABLE_STORE_PROFILE="$GRAPH_DISPOSABLE_STORE_PROFILE"
     DATABASE_URL="$DATABASE_URL" REDIS_HOST="$REDIS_HOST" REDIS_PORT="$REDIS_PORT"
     REDIS_PREFIX="$REDIS_PREFIX" BENCH_OWNED_TEST_PG_SOCKET="$BENCH_OWNED_TEST_PG_SOCKET"
