@@ -767,7 +767,7 @@ class ArmEvidence(unittest.TestCase):
 
 
 class ProgramDisposableStoreContract(unittest.TestCase):
-    PROGRAM_WORKFLOW_BLOB = '4b9166648452c9b335ddec8827a6b9418802a2cf'
+    PROGRAM_WORKFLOW_BLOB = '00201ab5d083b199caccd94afeca945322275b12'
 
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix='program-store-contract-')
