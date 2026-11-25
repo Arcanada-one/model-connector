@@ -90,6 +90,8 @@ out="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)/observed"
   echo "TMPDIR=$TMPDIR"
   echo "HOME=$HOME"
   echo "TMPDIR_MODE=$(stat -c '%a' -- "$TMPDIR")"
+  echo "COREPACK_HOME=${COREPACK_HOME:-}"
+  echo "COREPACK_ENABLE_NETWORK=${COREPACK_ENABLE_NETWORK:-}"
 } >"$out"
 STUB
 chmod 755 "$WORK/repo/scripts/"*.sh
@@ -321,6 +323,51 @@ check "evidence: success status kept" test "$(cat "$WORK/run2.rc")" = 0
 run_repo2 1 79 3000
 check "digest: capped at 64 KiB" test "$(digest | wc -c)" -le 65536
 check "digest: cap is marked" grep -q '^\[digest truncated at 65536 bytes\]$' "$WORK/run2.log"
+
+# 20. pnpm offline seed (GRAPH_FULL_SUITE_COREPACK). Unset: nothing changes. Set: the archive named by the
+# exact packageManager pnpm must match the pinned sha256, or the run refuses before the suite.
+run_wrapper XDG_RUNTIME_DIR="$WORK/runtime" || check "wrapper refused a run that must succeed (line $LINENO)" false
+check "corepack unset: no COREPACK_HOME reaches the suite" test -z "$(observed COREPACK_HOME)"
+check "corepack unset: no COREPACK_ENABLE_NETWORK reaches the suite" test -z "$(observed COREPACK_ENABLE_NETWORK)"
+printf '{"name":"fixture","packageManager":"pnpm@10.30.3"}\n' >"$WORK/repo/package.json"
+mkdir -m 700 "$WORK/seed"
+printf 'not a corepack archive\n' >"$WORK/seed/pnpm-10.30.3.corepack.tgz"
+good_sha="$(sha256sum "$WORK/seed/pnpm-10.30.3.corepack.tgz" | cut -d' ' -f1)"
+pin() { printf '%s  %s\n' "$1" "$2" >"$WORK/repo/scripts/graph-full-suite-corepack.sha256"; }
+refused_with() { # refused_with <name> <expected message> <env...>
+  local name=$1 want=$2
+  shift 2
+  if run_wrapper XDG_RUNTIME_DIR="$WORK/runtime" "$@"; then
+    check "$name: refused" false
+  else
+    check "$name: refused before the suite" test ! -e "$WORK/repo/observed"
+    check "$name: names the reason" grep -q -F "$want" "$WORK/run.log"
+  fi
+}
+pin "$(printf '0%.0s' {1..64})" pnpm-10.30.3.corepack.tgz
+refused_with "corepack sha mismatch" 'does not match its pinned sha256' GRAPH_FULL_SUITE_COREPACK="$WORK/seed"
+pin "$good_sha" pnpm-10.30.2.corepack.tgz
+refused_with "corepack lock pins another version" 'corepack lock does not pin pnpm-10.30.3.corepack.tgz' GRAPH_FULL_SUITE_COREPACK="$WORK/seed"
+rm -f "$WORK/repo/scripts/graph-full-suite-corepack.sha256"
+refused_with "corepack lock missing" 'corepack lock file missing' GRAPH_FULL_SUITE_COREPACK="$WORK/seed"
+pin "$good_sha" pnpm-10.30.3.corepack.tgz
+ln -s "$WORK/seed" "$WORK/seed-link"
+refused_with "corepack seed symlink" 'must be a directory, not a symlink' GRAPH_FULL_SUITE_COREPACK="$WORK/seed-link"
+mkdir -m 700 "$WORK/seed-empty"
+refused_with "corepack archive missing" 'corepack archive pnpm-10.30.3.corepack.tgz missing' GRAPH_FULL_SUITE_COREPACK="$WORK/seed-empty"
+mv "$WORK/seed/pnpm-10.30.3.corepack.tgz" "$WORK/seed/real.tgz"
+ln -s real.tgz "$WORK/seed/pnpm-10.30.3.corepack.tgz"
+refused_with "corepack archive symlink" 'corepack archive pnpm-10.30.3.corepack.tgz missing' GRAPH_FULL_SUITE_COREPACK="$WORK/seed"
+rm -f "$WORK/seed/pnpm-10.30.3.corepack.tgz"
+mv "$WORK/seed/real.tgz" "$WORK/seed/pnpm-10.30.3.corepack.tgz"
+printf '{"name":"fixture","packageManager":"pnpm@10"}\n' >"$WORK/repo/package.json"
+refused_with "corepack loose packageManager" 'packageManager is not an exact pnpm version' GRAPH_FULL_SUITE_COREPACK="$WORK/seed"
+printf '{"name":"fixture","packageManager":"pnpm@10.30.3"}\n' >"$WORK/repo/package.json"
+# Positive control of the gate: the pinned bytes pass every check and reach `corepack install` offline;
+# this fixture is not a real archive, so corepack itself refuses it. The real archive is measured outside
+# this test (it is 4.6 MB and stays out of the repository).
+refused_with "corepack pinned bytes reach the offline install" 'corepack could not install the pinned pnpm offline' GRAPH_FULL_SUITE_COREPACK="$WORK/seed"
+rm -rf -- "${WORK:?}/seed" "${WORK:?}/seed-empty" "$WORK/seed-link" "$WORK/repo/package.json" "$WORK/repo/scripts/graph-full-suite-corepack.sha256"
 
 if [[ $fail -ne 0 ]]; then
   echo "graph-full-suite-isolated.test.sh: FAILED"
