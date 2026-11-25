@@ -2117,6 +2117,27 @@ jobs:
         if: inputs.stage_userpath_required || inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update'
         run: python3 -I -m pip install --disable-pip-version-check --no-input 'jsonschema==4.23.0'
 
+      - name: Provision pinned actionlint for candidate verification
+        id: candidate_actionlint
+        if: inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update'
+        run: |
+          set -euo pipefail
+          if [[ "$RUNNER_OS" != Linux || "$RUNNER_ARCH" != X64 ]]; then
+            echo "::error::pinned actionlint requires a Linux x64 runner" >&2
+            exit 1
+          fi
+          tool_dir="$(mktemp -d -- "$RUNNER_TEMP/graph-actionlint.XXXXXXXX")"
+          cd -- "$tool_dir"
+          curl --fail --location --silent --show-error --proto '=https' --proto-redir '=https' --max-time 60 \
+            --output actionlint.tar.gz \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          printf '%s\n' '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz' | sha256sum --check
+          tar -xOzf actionlint.tar.gz -- actionlint > actionlint.unverified
+          printf '%s\n' 'c872d6db8c6bf83a8eaa704fc93999f027d55dffbc63b8a6abdccb47df5f4cd4  actionlint.unverified' | sha256sum --check
+          chmod 0755 actionlint.unverified
+          mv -- actionlint.unverified actionlint
+          printf 'bin_dir=%s\n' "$tool_dir" >> "$GITHUB_OUTPUT"
+
       # Arm a one-shot Bash startup file for the immediately following producer.
       # The file contains only source-fixed code. Store values stay in separate private data
       # and are exported inside the producer process, never through the job environment.
@@ -2184,6 +2205,7 @@ jobs:
         id: candidate_receipt
         if: inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update'
         env:
+          ACTIONLINT_BIN_DIR: ${{ steps.candidate_actionlint.outputs.bin_dir }}
           RANGE_BASE: ${{ steps.range.outputs.base }}
           RANGE_HEAD: ${{ steps.range.outputs.head }}
           RANGE_BASE_BRANCH: ${{ steps.range.outputs.base_branch }}
@@ -2288,10 +2310,11 @@ jobs:
             printf '%s\0' "${VERIFY_ARGV[@]}" > "$CANDIDATE_ROOT/verify.argv.nul"
             pwd -P > "$CANDIDATE_ROOT/verify.cwd"
             date -u +%FT%T.%NZ > "$CANDIDATE_ROOT/verify-start.utc"
+            VERIFY_PATH="${ACTIONLINT_BIN_DIR:?verified actionlint directory is missing}:$PATH"
             if [ "$GITHUB_REPOSITORY" = "Arcanada-one/auth-arcana" ] && [ -n "$TYPECHECK_TOKEN" ]; then
-              GH_TOKEN="$TYPECHECK_TOKEN" "${VERIFY_ARGV[@]}" > "$CANDIDATE_ROOT/verify.stdout" 2> "$CANDIDATE_ROOT/verify.stderr" &
+              PATH="$VERIFY_PATH" GH_TOKEN="$TYPECHECK_TOKEN" "${VERIFY_ARGV[@]}" > "$CANDIDATE_ROOT/verify.stdout" 2> "$CANDIDATE_ROOT/verify.stderr" &
             else
-              "${VERIFY_ARGV[@]}" > "$CANDIDATE_ROOT/verify.stdout" 2> "$CANDIDATE_ROOT/verify.stderr" &
+              PATH="$VERIFY_PATH" "${VERIFY_ARGV[@]}" > "$CANDIDATE_ROOT/verify.stdout" 2> "$CANDIDATE_ROOT/verify.stderr" &
             fi
             VERIFY_PID=$!
             printf '%s\n' "$VERIFY_PID" > "$CANDIDATE_ROOT/verify.pid"
@@ -2744,7 +2767,7 @@ jobs:
           rc=0
           for name in "${owned_containers[@]}"; do
             filters=(--filter "name=^/${name}$" --filter "label=org.arcanada.graph-store-job=$STORE_JOB")
-            if ! found="$(docker ps -a --no-trunc "${filters[@]}" --format '{{.ID}}')"; then
+            if ! found="$(docker ps -a --no-trunc "${filters[@]}" --format '{{.ID}}' 2>/dev/null)"; then
               echo "::error::could not locate owned disposable container: $name" >&2
               rc=1
               continue
@@ -2755,11 +2778,16 @@ jobs:
               rc=1
               continue
             fi
-            if ! docker rm -f -v "$found"; then
-              echo "::error::could not remove owned disposable container: $name" >&2
+            # Let PostgreSQL unlink its container-owned files in the sticky socket directory.
+            if [[ "$name" == "model-connector-ga-pg-${STORE_JOB}" ]] &&
+               ! docker stop --time 15 "$found" >/dev/null 2>&1; then
+              echo "::warning::graceful stop failed for owned disposable container; attempting forced removal: $name" >&2
+            fi
+            if ! docker rm -f -v "$found" >/dev/null 2>&1; then
+              echo "::error::could not remove owned disposable container: $found" >&2
               rc=1
             fi
-            if ! remaining="$(docker ps -a --no-trunc "${filters[@]}" --format '{{.ID}}')" || [ -n "$remaining" ]; then
+            if ! remaining="$(docker ps -a --no-trunc "${filters[@]}" --format '{{.ID}}' 2>/dev/null)" || [ -n "$remaining" ]; then
               echo "::error::owned disposable container removal could not be verified: $name" >&2
               rc=1
             fi
@@ -2770,17 +2798,19 @@ jobs:
             if [[ ! -e "$SOCKET_ROOT" && ! -L "$SOCKET_ROOT" ]]; then
               exit "$rc"
             fi
-            if [[ ! -d "$SOCKET_ROOT" || ! -O "$SOCKET_ROOT" ||
-                  "$(realpath -e -- "$SOCKET_ROOT")" != "$SOCKET_ROOT" ||
-                  "$(stat -c %a -- "$SOCKET_ROOT")" != 700 ||
-                  ! -f "$marker" || -L "$marker" || ! -O "$marker" ||
-                  "$(stat -c %a -- "$marker")" != 600 ]] ||
-               ! SOCKET_INODE="$(stat -c '%d:%i' -- "$SOCKET_ROOT")" ||
-               [[ "$(<"$marker")" != "$STORE_JOB $SOCKET_INODE" ]]; then
-              echo "::error::refusing cleanup of unowned disposable PostgreSQL socket directory: $SOCKET_ROOT" >&2
+            if {
+              [[ ! -d "$SOCKET_ROOT" || ! -O "$SOCKET_ROOT" ||
+                 "$(realpath -e -- "$SOCKET_ROOT")" != "$SOCKET_ROOT" ||
+                 "$(stat -c %a -- "$SOCKET_ROOT")" != 700 ||
+                 ! -f "$marker" || -L "$marker" || ! -O "$marker" ||
+                 "$(stat -c %a -- "$marker")" != 600 ]] ||
+              ! SOCKET_INODE="$(stat -c '%d:%i' -- "$SOCKET_ROOT")" ||
+              [[ "$(<"$marker")" != "$STORE_JOB $SOCKET_INODE" ]]
+            } 2>/dev/null; then
+              echo "::error::refusing cleanup of unowned disposable PostgreSQL socket directory" >&2
               rc=1
-            elif ! rm -rf -- "$SOCKET_ROOT" || [ -e "$SOCKET_ROOT" ] || [ -L "$SOCKET_ROOT" ]; then
-              echo "::error::owned disposable PostgreSQL socket directory could not be removed: $SOCKET_ROOT" >&2
+            elif ! rm -rf -- "$SOCKET_ROOT" >/dev/null 2>&1 || [ -e "$SOCKET_ROOT" ] || [ -L "$SOCKET_ROOT" ]; then
+              echo "::error::owned disposable PostgreSQL socket directory could not be removed" >&2
               rc=1
             fi
           fi
