@@ -767,7 +767,7 @@ class ArmEvidence(unittest.TestCase):
 
 
 class ProgramDisposableStoreContract(unittest.TestCase):
-    PROGRAM_WORKFLOW_BLOB = '6a5124a6805dd13dc2d61084638758ba64877c11'
+    PROGRAM_WORKFLOW_BLOB = '5eb5b84e554ee1d95ba38f049c65163c2d80714a'
 
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix='program-store-contract-')
@@ -784,10 +784,14 @@ class ProgramDisposableStoreContract(unittest.TestCase):
             for key, value in self.fixture['binding'].items()
         }
 
-    def producer_binding(self, source, stub_source):
+    def verified_program_workflow(self, source):
         raw = source.read_bytes()
         blob = hashlib.sha1(f'blob {len(raw)}\0'.encode() + raw).hexdigest()
-        self.assertEqual(self.PROGRAM_WORKFLOW_BLOB, blob, 'Program workflow differs from the pinned blob')
+        self.assertEqual(self.PROGRAM_WORKFLOW_BLOB, blob,
+                         'Program workflow differs from the pinned blob; the signed caller refresh is required')
+        return raw
+
+    def producer_binding(self, raw, stub_source):
         step = raw.decode().split('        id: candidate_disposable_stores\n', 1)[1]
         setup = textwrap.dedent(step.split('        run: |\n', 1)[1].split('\n      - name:', 1)[0])
         # Extract the committed Program Docker stub without importing its test harness.
@@ -824,12 +828,14 @@ class ProgramDisposableStoreContract(unittest.TestCase):
         source = os.environ.get('MC_TEST_PINNED_PROGRAM_WORKFLOW')
         stub = os.environ.get('MC_TEST_PINNED_PROGRAM_DOCKER_TEST')
         self.assertEqual(bool(source), bool(stub))
-        if source:
-            actual = self.producer_binding(Path(source), Path(stub))
+        workflow = Path(source) if source else ROOT / '.github/workflows/graph-admission.yml'
+        raw = self.verified_program_workflow(workflow)
+        if stub:
+            actual = self.producer_binding(raw, Path(stub))
             self.assertEqual(self.binding, actual)
         else:
-            # The public CI job uses the recorded non-secret output of the pinned producer.
-            # Private Program workflow sources are supplied only for the independent local replay.
+            # The signed caller refresh supplies the exact producer bytes to public CI.
+            # Verify those bytes before using the recorded non-secret binding transcript.
             actual = self.binding
             Path(actual['BENCH_OWNED_TEST_PG_SOCKET']).mkdir(parents=True)
         env = {**self.environment, **actual}
