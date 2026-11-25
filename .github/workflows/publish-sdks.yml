@@ -18,10 +18,6 @@ permissions:
   contents: read
 
 jobs:
-  # Build and test stay on the self-hosted runner. Only the publish step moves
-  # to a GitHub-hosted runner, because that is the one thing that cannot run
-  # here: self-hosted runners cannot obtain an OIDC token the npm registry
-  # accepts, and OIDC is how we authenticate now that NPM_TOKEN is gone.
   build-ts:
     name: TypeScript — build + test + dry-run
     # Datarim fork deny: refuse untrusted fork PR code on org self-hosted runners.
