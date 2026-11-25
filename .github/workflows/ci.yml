@@ -508,7 +508,9 @@ jobs:
           set -euo pipefail
           SHORT_TMP="/tmp/mcfs-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           mkdir -m 700 "$SHORT_TMP"
+          trap 'rm -rf -- "$SHORT_TMP"' EXIT
           printf 'MC_FULL_SUITE_SHORT_TMP=%s\n' "$SHORT_TMP" >>"$GITHUB_ENV"
+          trap - EXIT
 
       - name: Start 127.0.0.1 disposable Postgres and Redis
         run: |
@@ -550,6 +552,13 @@ jobs:
       - name: Tear down disposable services
         if: always()
         run: bash scripts/ci-full-suite-disposable-services.sh stop
+
+      - name: Remove short socket directory
+        if: always() && env.MC_FULL_SUITE_SHORT_TMP != ''
+        run: |
+          set -euo pipefail
+          test "$MC_FULL_SUITE_SHORT_TMP" = "/tmp/mcfs-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          rm -rf -- "$MC_FULL_SUITE_SHORT_TMP"
 
   # ARC-CI digest-promotion gap fill (Muneral 440d2499): build once to GHCR and
   # emit published-image.json. Does not change the existing push-main broker

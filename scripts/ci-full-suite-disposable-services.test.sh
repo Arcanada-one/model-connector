@@ -44,8 +44,14 @@ cat >"$fake_root/bin/docker" <<'DOCKER'
 #!/usr/bin/env bash
 set -euo pipefail
 case "$1" in
-  run) printf 'fake-container-id\n' ;;
+  run)
+    name=$4
+    touch "$RUNNER_TEMP/$name.container" "$RUNNER_TEMP/$name.volume"
+    if [[ "${FAIL_REDIS_RUN:-0}" == 1 && "$name" == mc-fs-redis-* ]]; then exit 38; fi
+    printf 'fake-container-id\n'
+    ;;
   exec)
+    if [[ "${FAIL_READINESS:-0}" == 1 ]]; then exit 39; fi
     if [[ "$*" == *pg_isready* ]]; then exit 0; fi
     if [[ "$*" == *redis-cli* ]]; then printf 'PONG\n'; exit 0; fi
     exit 1
@@ -53,26 +59,69 @@ case "$1" in
   port)
     if [[ "$3" == 5432/tcp ]]; then printf '127.0.0.1:%s\n' "$FAKE_PG_PORT"; else printf '127.0.0.1:%s\n' "$FAKE_REDIS_PORT"; fi
     ;;
-  rm) exit 0 ;;
+  rm)
+    [[ "$2" == -fv ]]
+    if [[ "${FAIL_REMOVE:-0}" == 1 && "$3" == mc-fs-pg-* ]]; then exit 40; fi
+    if [[ ! -f "$RUNNER_TEMP/$3.container" ]]; then
+      printf 'Error response from daemon: No such container: %s\n' "$3" >&2
+      exit 1
+    fi
+    rm -- "$RUNNER_TEMP/$3.container" "$RUNNER_TEMP/$3.volume"
+    ;;
   *) printf 'unexpected fake docker args: %s\n' "$*" >&2; exit 2 ;;
 esac
 DOCKER
 chmod 700 "$fake_root/bin/docker"
+printf '#!/bin/bash\nexit 0\n' >"$fake_root/bin/sleep"
+chmod 700 "$fake_root/bin/sleep"
 
-env PATH="$fake_root/bin:/usr/bin:/bin" RUNNER_TEMP="$fake_root/valid" \
-  GITHUB_RUN_ID=123 GITHUB_RUN_ATTEMPT=1 FAKE_PG_PORT=32920 FAKE_REDIS_PORT=32921 \
-  bash "$SCRIPT" start >"$fake_root/valid.out" || fail 'start rejected valid Docker-published ports'
+fake_env=(env PATH="$fake_root/bin:/usr/bin:/bin" GITHUB_RUN_ID=123 GITHUB_RUN_ATTEMPT=1
+          FAKE_PG_PORT=32920 FAKE_REDIS_PORT=32921)
+valid_env=("${fake_env[@]}" RUNNER_TEMP="$fake_root/valid")
+touch "$fake_root/valid/unrelated.container" "$fake_root/valid/unrelated.volume"
+"${valid_env[@]}" bash "$SCRIPT" start >"$fake_root/valid.out" || fail 'start rejected valid Docker-published ports'
 grep -Fxq 'MC_FS_PG_PORT=32920' "$fake_root/valid.out" || fail 'start did not publish parsed PostgreSQL port'
 grep -Fxq 'MC_FS_REDIS_PORT=32921' "$fake_root/valid.out" || fail 'start did not publish parsed Redis port'
 pass=$((pass + 1))
 
-if env PATH="$fake_root/bin:/usr/bin:/bin" RUNNER_TEMP="$fake_root/invalid" \
-  GITHUB_RUN_ID=124 GITHUB_RUN_ATTEMPT=1 FAKE_PG_PORT=1 FAKE_REDIS_PORT=32921 \
+assert_clean() {
+  local dir=$1
+  ! compgen -G "$dir/mc-fs-*" >/dev/null || fail 'owned container or anonymous volume remains'
+  [[ ! -e "$dir/mc-full-suite-services" && ! -e "$dir/mc-full-suite-grant.json" ]] \
+    || fail 'service state or grant remains'
+}
+
+"${valid_env[@]}" bash "$SCRIPT" grant >/dev/null
+if "${valid_env[@]}" FAIL_REMOVE=1 bash "$SCRIPT" stop 2>"$fake_root/stop.err"; then
+  fail 'teardown accepted a Docker removal failure'
+fi
+[[ -f "$fake_root/valid/mc-full-suite-services/pg.name" ]] || fail 'failed teardown lost the cleanup record'
+[[ ! -e "$fake_root/valid/mc-fs-redis-123-1.volume" ]] || fail 'Postgres removal failure prevented Redis cleanup'
+"${valid_env[@]}" bash "$SCRIPT" stop
+"${valid_env[@]}" bash "$SCRIPT" stop
+assert_clean "$fake_root/valid"
+[[ -f "$fake_root/valid/unrelated.container" && -f "$fake_root/valid/unrelated.volume" ]] \
+  || fail 'teardown touched an unrelated resource'
+pass=$((pass + 1))
+
+for failure in FAIL_REDIS_RUN=1 FAIL_READINESS=1; do
+  rc=0
+  "${fake_env[@]}" RUNNER_TEMP="$fake_root/invalid" "$failure" bash "$SCRIPT" start >/dev/null 2>&1 || rc=$?
+  case "$failure:$rc" in
+    FAIL_REDIS_RUN=1:38|FAIL_READINESS=1:39) ;;
+    *) fail "unexpected startup status for $failure: $rc" ;;
+  esac
+  assert_clean "$fake_root/invalid"
+  pass=$((pass + 1))
+done
+
+if "${fake_env[@]}" RUNNER_TEMP="$fake_root/invalid" FAKE_PG_PORT=1 \
   bash "$SCRIPT" start >"$fake_root/invalid.out" 2>"$fake_root/invalid.err"; then
   fail 'start accepted Docker-published port 1'
 fi
 grep -q 'published port outside 1024-65535: 1' "$fake_root/invalid.err" \
   || fail 'start did not identify rejected published port 1'
+assert_clean "$fake_root/invalid"
 pass=$((pass + 1))
 
 good=$(mktemp)

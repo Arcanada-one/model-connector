@@ -15,6 +15,7 @@
  * real database with only the provider itself faked.
  */
 
+import { randomUUID } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -203,7 +204,7 @@ describe('idempotency, per intent rather than per attempt', () => {
   });
 
   it('scopes keys per api key, so one caller cannot read another one back', async () => {
-    const OTHER = '44444444-4444-4444-8444-444444444444';
+    const OTHER = randomUUID();
     await prisma.apiKey.upsert({
       where: { id: OTHER },
       create: { id: OTHER, name: 'aras-0058-idem-other', keyHash: `hash-${OTHER}` },

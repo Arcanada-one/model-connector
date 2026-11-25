@@ -55,16 +55,21 @@ parse_published_port() { # parse_published_port <docker port output>
 }
 
 start_services() {
-  mkdir -p "$STATE_DIR"
-  chmod 700 "$STATE_DIR"
+  mkdir -m 700 -- "$STATE_DIR"
+  trap 'rc=$?; if (( rc != 0 )); then stop_services || true; fi' EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
   # Container IDs go to /dev/null; docker errors stay on stderr. Stdout is
   # only KEY=value so the workflow can tee/source without executing hex IDs.
+  # Record the name before docker run, which can create a container and then fail.
+  printf '%s\n' "$PG_NAME" >"$STATE_DIR/pg.name"
   docker run -d --name "$PG_NAME" \
     -e POSTGRES_USER=test \
     -e POSTGRES_PASSWORD=test \
     -e POSTGRES_DB=connector_test \
     -p 127.0.0.1::5432 \
     postgres:16 >/dev/null
+  printf '%s\n' "$REDIS_NAME" >"$STATE_DIR/redis.name"
   docker run -d --name "$REDIS_NAME" \
     -p 127.0.0.1::6379 \
     redis:7 >/dev/null
@@ -81,8 +86,6 @@ start_services() {
   REDIS_PORT=$(parse_published_port "$(docker port "$REDIS_NAME" 6379/tcp | tr -d '\r')")
   printf '%s\n' "$PG_PORT" >"$STATE_DIR/pg.port"
   printf '%s\n' "$REDIS_PORT" >"$STATE_DIR/redis.port"
-  printf '%s\n' "$PG_NAME" >"$STATE_DIR/pg.name"
-  printf '%s\n' "$REDIS_NAME" >"$STATE_DIR/redis.name"
   {
     printf 'MC_FS_PG_PORT=%s\n' "$PG_PORT"
     printf 'MC_FS_REDIS_PORT=%s\n' "$REDIS_PORT"
@@ -117,15 +120,29 @@ EOF
   printf 'MC_FULL_SUITE_GRANT=%s\n' "$GRANT_PATH"
 }
 
+remove_recorded_container() {
+  local record=$1 expected=$2 name error
+  [[ -f "$record" ]] || return 0
+  name=$(cat "$record") || return 1
+  if [[ "$name" != "$expected" ]]; then
+    printf 'Unexpected container name in %s\n' "$record" >&2
+    return 1
+  fi
+  if ! error=$(LC_ALL=C docker rm -fv "$name" 2>&1) \
+    && [[ "$error" != "Error response from daemon: No such container: $name" ]]; then
+    printf '%s\n' "$error" >&2
+    return 1
+  fi
+}
+
 stop_services() {
-  if [[ -f "$STATE_DIR/pg.name" ]]; then
-    docker rm -f "$(cat "$STATE_DIR/pg.name")" >/dev/null 2>&1 || true
-  fi
-  if [[ -f "$STATE_DIR/redis.name" ]]; then
-    docker rm -f "$(cat "$STATE_DIR/redis.name")" >/dev/null 2>&1 || true
-  fi
-  rm -f "$GRANT_PATH"
-  rm -rf "$STATE_DIR"
+  local failed=0
+  remove_recorded_container "$STATE_DIR/pg.name" "$PG_NAME" || failed=1
+  remove_recorded_container "$STATE_DIR/redis.name" "$REDIS_NAME" || failed=1
+  rm -f -- "$GRANT_PATH" || failed=1
+  # Keep the names when teardown fails so the workflow can retry.
+  (( failed == 0 )) || return 1
+  rm -rf -- "$STATE_DIR"
 }
 
 case "$cmd" in
