@@ -184,89 +184,22 @@ jobs:
                            "buildx": sh("docker", "buildx", "version")})
               if free < 25 * 10**9:
                   raise SystemExit("BLOCKED: less than 25 GB free in runner temp")
-              c1, c2, c3 = (os.path.join(W, n) for n in ("c1", "c2", "c3"))
-              # Interleaved so that host drift hits both arms alike.
-              results.append(build("B1", SHA))
+              # Second run: only the stale-cache control, with MC_BUILD_SHA held equal so that
+              # the changed source file is the single difference from the cached build.
+              c1 = os.path.join(W, "c1")
               results.append(build("C1", SHA, cache_to=c1))
-              results.append(build("B2", NEXT))
-              results.append(build("C2", NEXT, cache_from=c1, cache_to=c2))
-              results.append(build("B3", NEXT))
-              results.append(build("C3", NEXT, cache_from=c2, cache_to=c3, keep=True))
-              for d in (c2, c3):
-                  shutil.rmtree(d, ignore_errors=True)
-
-              # N3b: the verifier itself must reject a wrong expected digest and a tampered blob.
-              good = os.path.join(W, "C3.tar")
-              c3rec = results[-1]
-              if c3rec["exit"] == 0:
-                  p1 = verify(good, "sha256:" + "0" * 64, NEXT)
-                  control("N3b-wrong-expected-digest", "verifier rejects", p1, "digest-mismatch" in p1)
-                  tam = os.path.join(W, "tampered.tar")
-                  x = os.path.join(W, "tam")
-                  with tarfile.open(good) as t:
-                      t.extractall(x)
-                  bd = os.path.join(x, "blobs", "sha256")
-                  big = max(os.listdir(bd), key=lambda n: os.path.getsize(os.path.join(bd, n)))
-                  os.chmod(os.path.join(bd, big), 0o644)
-                  with open(os.path.join(bd, big), "r+b") as f:
-                      f.seek(100)
-                      b = f.read(1)
-                      f.seek(100)
-                      f.write(bytes([b[0] ^ 255]))
-                  with tarfile.open(tam, "w") as t:
-                      for n in os.listdir(x):
-                          t.add(os.path.join(x, n), arcname=n)
-                  p2 = verify(tam, c3rec["digest"], NEXT)
-                  control("N3b-tampered-blob", "verifier rejects", p2, any(s.startswith("blob-hash-mismatch") for s in p2))
-                  shutil.rmtree(x)
-                  os.remove(tam)
-                  os.remove(good)
-
-              # N1: stale cache + changed source must rebuild and ship the new source.
+              base = build("N1BASE", SHA, cache_from=c1)
+              control("N1-positive-baseline", "unchanged source, same SHA: production 9/12 is a cache hit",
+                      {"exit": base["exit"], "cached": base["cached_steps"], "problems": base.get("verify_problems")},
+                      base["exit"] == 0 and base.get("verify_problems") == [] and "production 9/12" in base["cached_steps"])
               stale = os.path.join(W, "stale-src")
               shutil.copytree(SRC, stale, ignore=shutil.ignore_patterns(".git"), symlinks=True)
               marker = "stale-control-" + RUN
               open(os.path.join(stale, "scripts", "mc-cache-stale-marker.txt"), "w").write(marker + "\n")
-              r = build("N1", NEXT, cache_from=c1, context=stale, marker=marker)
-              control("N1-stale-cache", "build succeeds, changed COPY step not cached, new source in image",
+              r = build("N1R", SHA, cache_from=c1, context=stale, marker=marker)
+              control("N1R-stale-cache", "same SHA, one changed file: production 9/12 rebuilds, new file in image",
                       {"exit": r["exit"], "cached": r["cached_steps"], "problems": r.get("verify_problems")},
                       r["exit"] == 0 and r.get("verify_problems") == [] and "production 9/12" not in r["cached_steps"])
-
-              # N2a: cache directory that does not exist.
-              r = build("N2A", SHA, cache_from=os.path.join(W, "does-not-exist"))
-              control("N2a-unreadable-cache", "fails closed OR rebuilds with zero hits and a verified image",
-                      {"exit": r["exit"], "cached": r["cached"], "problems": r.get("verify_problems")},
-                      r["exit"] != 0 or (r["cached"] == 0 and r.get("verify_problems") == []))
-
-              # N2b: same manifests, every large blob corrupted. Same SHA, so cache keys match.
-              corrupt = os.path.join(W, "corrupt")
-              shutil.copytree(c1, corrupt)
-              bd = os.path.join(corrupt, "blobs", "sha256")
-              n = 0
-              for name in os.listdir(bd):
-                  path = os.path.join(bd, name)
-                  if os.path.getsize(path) > 65536:
-                      os.chmod(path, 0o644)
-                      with open(path, "r+b") as f:
-                          f.seek(os.path.getsize(path) // 2)
-                          f.write(os.urandom(4096))
-                      n += 1
-              out("CORRUPTED", {"blobs": n})
-              r = build("N2B", SHA, cache_from=corrupt)
-              control("N2b-corrupt-cache-blobs", "fails closed OR output passes full blob verification",
-                      {"exit": r["exit"], "cached": r["cached_steps"], "corrupted": n,
-                       "problems": r.get("verify_problems"), "errors": r["errors"]},
-                      n > 0 and (r["exit"] != 0 or r.get("verify_problems") == []))
-
-              # N3a: wrong base-image digest must fail the build.
-              df = os.path.join(W, "Dockerfile.wrongdigest")
-              text = open(os.path.join(SRC, "Dockerfile")).read()
-              wrong = re.sub(r"(FROM node:[^@]+@sha256:)[0-9a-f]{64}", lambda m: m[1] + "0" * 64, text)
-              assert wrong != text
-              open(df, "w").write(wrong)
-              r = build("N3A", SHA, cache_from=c1, dockerfile=df)
-              control("N3a-wrong-base-digest", "build fails, no image", {"exit": r["exit"], "errors": r["errors"]},
-                      r["exit"] != 0 and "digest" not in r)
           finally:
               out("SUMMARY", {"results": [{k: v for k, v in r.items() if k not in ("step_s",)} for r in results],
                               "controls": controls, "load_end": os.getloadavg()})
