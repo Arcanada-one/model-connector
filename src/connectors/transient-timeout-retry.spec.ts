@@ -19,9 +19,14 @@
  * aborted-attempt-intent-path.spec.ts, same reasons as given there). The
  * assertions read what the real components WROTE: the intent row's state, the
  * provider hit counter, the ledger, the balance.
+ *
+ * The API stall path spies on `AbortSignal.timeout` and drives it from an
+ * explicit test clock so a loaded deploy-gate runner cannot stretch a 150 ms
+ * budget into a race against the second dispatch. Production timeout behavior
+ * stays unchanged.
  */
 
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createServer, Server } from 'http';
 import type { AddressInfo } from 'net';
 import { Prisma } from '@prisma/client';
@@ -40,6 +45,76 @@ import { validateEnv } from '../config/env.schema';
 const OPENING_BALANCE = 5;
 const BUDGET_MS = 150;
 const MODEL = 'stall-model';
+
+function deferred<T = void>() {
+  let resolvePromise!: (value: T) => void;
+  const promise = new Promise<T>((resolve) => {
+    resolvePromise = resolve;
+  });
+  return {
+    promise,
+    resolve(value?: T) {
+      resolvePromise(value as T);
+    },
+  };
+}
+
+interface ApiStepSignal {
+  handled: ReturnType<typeof deferred<'hang' | 'answer'>>;
+  responseEnded: ReturnType<typeof deferred>;
+}
+
+/**
+ * Deterministic timeout clock for the API stall path. Wall time on a loaded
+ * deploy-gate runner must not decide when the 150 ms budget expires.
+ */
+class InjectedTimeoutClock {
+  private nowMs = 0;
+  private readonly due: Array<{ at: number; fire: () => void }> = [];
+  private registrationWaiters: Array<() => void> = [];
+
+  get pendingCount(): number {
+    return this.due.length;
+  }
+
+  waitForRegistration(): Promise<void> {
+    return new Promise((resolve) => this.registrationWaiters.push(resolve));
+  }
+
+  schedule(timeoutMs: number, fire: () => void): () => void {
+    const at = this.nowMs + timeoutMs;
+    const entry = { at, fire };
+    this.due.push(entry);
+    for (const resolve of this.registrationWaiters.splice(0)) resolve();
+    return () => {
+      const idx = this.due.indexOf(entry);
+      if (idx >= 0) this.due.splice(idx, 1);
+    };
+  }
+
+  advance(ms: number): void {
+    this.nowMs += ms;
+    const ready = this.due.filter((e) => e.at <= this.nowMs).sort((a, b) => a.at - b.at);
+    for (const e of ready) {
+      const idx = this.due.indexOf(e);
+      if (idx >= 0) this.due.splice(idx, 1);
+      e.fire();
+    }
+  }
+
+  reset(): void {
+    this.nowMs = 0;
+    this.due.length = 0;
+    this.registrationWaiters.length = 0;
+  }
+
+  clearPending(): void {
+    this.due.length = 0;
+  }
+}
+
+const apiTimeoutClock = new InjectedTimeoutClock();
+let restoreAbortSignalTimeout: (() => void) | undefined;
 
 const BASE_ENV = {
   PORT: '3900',
@@ -243,25 +318,36 @@ function memoryDb(openingBalance = OPENING_BALANCE) {
 
 // ---------------------------------------------------------------------------
 // The provider: a local server whose n-th request either hangs (accepts and
-// never answers — a real `AbortSignal.timeout()` fires on a real `fetch`) or
+// never answers — the injected timeout signal aborts a real `fetch`) or
 // answers. `hits` is the ground truth for "did the retry reach the provider".
 // ---------------------------------------------------------------------------
 let server: Server;
 let baseUrl: string;
 let script: Array<'hang' | 'answer'> = [];
 let hits = 0;
+let apiStepSignals: ApiStepSignal[] = [];
+let apiStepSignalIndex = 0;
 
 beforeAll(async () => {
   validateEnv(BASE_ENV);
   server = createServer((req, res) => {
-    const step = script[hits] ?? 'hang';
+    const requestIndex = hits;
+    const step = script[requestIndex] ?? 'hang';
+    const signals = apiStepSignals[requestIndex];
     hits += 1;
     req.resume();
+    signals?.handled.resolve(step);
     if (step === 'answer') {
       res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ text: `answer-${hits}` }));
+      res.end(JSON.stringify({ text: `answer-${hits}` }), () => {
+        signals?.responseEnded.resolve();
+      });
+      return;
     }
-    // 'hang': accept, never respond.
+    // 'hang': accept, never respond. Connection: close on the client request
+    // already prevents keep-alive reuse of a poisoned socket after abort.
+    // Do NOT destroy on req 'close' — that event fires after the body is
+    // consumed and would turn the hang into an immediate network_error.
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
@@ -285,6 +371,10 @@ class StallingApiConnector extends BaseApiConnector {
   }
   protected buildRequestUrl(): string {
     return `${this.url}/v1/complete`;
+  }
+  protected async getRequestHeaders(request: ConnectorRequest): Promise<Record<string, string>> {
+    const headers = await super.getRequestHeaders(request);
+    return { ...headers, Connection: 'close' };
   }
   protected buildRequestBody(request: ConnectorRequest): unknown {
     return { input: request.prompt };
@@ -310,6 +400,33 @@ class StallingApiConnector extends BaseApiConnector {
       maxTimeout: 600_000,
     };
   }
+}
+
+/**
+ * Dispatch once under the injected clock. Wait for the clock registration and
+ * the scripted server event; only an explicit hang advances the timeout.
+ */
+async function sendWithInjectedClock(
+  service: ConnectorsService,
+  connector: string,
+  idempotencyKey?: string,
+): Promise<ConnectorResponse> {
+  const signals = apiStepSignals[apiStepSignalIndex++];
+  if (!signals) throw new Error('missing scripted API request signal');
+  const timerRegistered = apiTimeoutClock.waitForRegistration();
+  const pending = send(service, connector, idempotencyKey);
+  const [step] = await Promise.all([signals.handled.promise, timerRegistered]);
+  if (step === 'hang') {
+    apiTimeoutClock.advance(BUDGET_MS);
+    return pending;
+  }
+
+  // A response is an explicit server event; await the actual client result
+  // without advancing the fake timeout, however slowly the runner is loaded.
+  await signals.responseEnded.promise;
+  const response = await pending;
+  apiTimeoutClock.clearPending();
+  return response;
 }
 
 /** A CLI lane that outlives its budget: `sleep 30` killed at 150 ms. */
@@ -350,6 +467,11 @@ class SleepingCliConnector extends BaseCliConnector {
 function stand(steps: Array<'hang' | 'answer'>) {
   script = steps;
   hits = 0;
+  apiStepSignals = steps.map(() => ({
+    handled: deferred<'hang' | 'answer'>(),
+    responseEnded: deferred(),
+  }));
+  apiStepSignalIndex = 0;
   const store = memoryDb();
   const billing = new BillingService(store.db as never);
   const service = new ConnectorsService(
@@ -387,82 +509,106 @@ function send(
 }
 
 /**
- * One `arcana` turn, reduced to the two rules of `crates/core/src/agent_loop.rs`
- * that decide it: an envelope's `retryable` is `is_transient()`
- * (`connector.rs`, `Self::Logical { retryable, .. } => *retryable`), and a
- * turn re-dispatches the SAME payload under the SAME key up to
- * `DEFAULT_CONNECTOR_RETRY_LIMIT` = 2 times. Returns whether the run goes on.
+ * One `arcana` turn on the injected timeout clock: an envelope's `retryable`
+ * is `is_transient()`, and a turn re-dispatches the SAME payload under the
+ * SAME key up to `DEFAULT_CONNECTOR_RETRY_LIMIT` = 2 times.
  */
-async function arcanaTurn(service: ConnectorsService, connector: string, key?: string) {
-  let response = await send(service, connector, key);
+async function arcanaTurnOnInjectedClock(
+  service: ConnectorsService,
+  connector: string,
+  key?: string,
+) {
+  let response = await sendWithInjectedClock(service, connector, key);
   let retries = 0;
   while (response.status !== 'success') {
     if (!response.error?.retryable || retries >= 2) return { continued: false, response };
     retries += 1;
-    response = await send(service, connector, key);
+    response = await sendWithInjectedClock(service, connector, key);
   }
   return { continued: true, response };
 }
 
 describe('A2-425 — a transient timeout is retried once, where a retry is the same request', () => {
-  it('RED CONTROL: one stall on the API lane under a key → the turn continues on the retry', async () => {
-    const { service, intents, ledger, requests, balances } = stand(['hang', 'answer']);
+  describe('API stall (injected timeout clock)', () => {
+    beforeEach(() => {
+      apiTimeoutClock.reset();
+      const timeoutSpy = vi.spyOn(AbortSignal, 'timeout').mockImplementation((timeoutMs) => {
+        const controller = new AbortController();
+        const cancel = apiTimeoutClock.schedule(timeoutMs, () => {
+          controller.abort(
+            new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+          );
+        });
+        controller.signal.addEventListener('abort', cancel, { once: true });
+        return controller.signal;
+      });
+      restoreAbortSignalTimeout = () => timeoutSpy.mockRestore();
+    });
 
-    const first = await send(service, 'stall-api', 'turn-1');
-    expect(first.status).toBe('timeout');
-    expect(first.error?.type).toBe('timeout');
-    expect(first.error?.retryable).toBe(true);
-    expect(first.error?.recommendation).toBe('retry');
-    // Recorded (our cost, R3) but NOT stored for replay and NOT charged (R2).
-    const intent = [...intents.values()][0];
-    expect(intent.state).toBe('released');
-    expect(intent.response).toBeUndefined();
-    expect(requests).toHaveLength(1);
-    expect(requests[0].status).toBe('timeout');
-    expect(ledger.filter((r) => r.entryType === 'charge')).toHaveLength(0);
-    expect(balances.get('key-1')!.heldUsd).toBe(0);
+    afterEach(() => {
+      restoreAbortSignalTimeout?.();
+      restoreAbortSignalTimeout = undefined;
+    });
 
-    // The repeat under the SAME key reaches the provider — hit 2 — and answers.
-    const second = await send(service, 'stall-api', 'turn-1');
-    expect(hits).toBe(2);
-    expect(second.status).toBe('success');
-    expect(second.result).toBe('answer-2');
-    expect(intent.state).toBe('completed');
-    expect(balances.get('key-1')!.balanceUsd).toBe(OPENING_BALANCE);
-  });
+    it('RED CONTROL: one stall on the API lane under a key → the turn continues on the retry', async () => {
+      const { service, intents, ledger, requests, balances } = stand(['hang', 'answer']);
 
-  it('RED CONTROL, end to end: the same stall no longer ends an arcana run', async () => {
-    const { service } = stand(['hang', 'answer']);
-    const turn = await arcanaTurn(service, 'stall-api', 'turn-1');
-    expect(turn.continued).toBe(true);
-    expect(turn.response.result).toBe('answer-2');
-    expect(hits).toBe(2);
-  });
+      const first = await sendWithInjectedClock(service, 'stall-api', 'turn-1');
+      expect(first.status).toBe('timeout');
+      expect(first.error?.type).toBe('timeout');
+      expect(first.error?.retryable).toBe(true);
+      expect(first.error?.recommendation).toBe('retry');
+      // Recorded (our cost, R3) but NOT stored for replay and NOT charged (R2).
+      const intent = [...intents.values()][0];
+      expect(intent.state).toBe('released');
+      expect(intent.response).toBeUndefined();
+      expect(requests).toHaveLength(1);
+      expect(requests[0].status).toBe('timeout');
+      expect(ledger.filter((r) => r.entryType === 'charge')).toHaveLength(0);
+      expect(balances.get('key-1')!.heldUsd).toBe(0);
 
-  it('a second timeout under the same key is final, and a third repeat is a replay, not a dispatch', async () => {
-    const { service, intents } = stand(['hang', 'hang', 'answer']);
+      // The repeat under the SAME key reaches the provider — hit 2 — and answers.
+      const second = await sendWithInjectedClock(service, 'stall-api', 'turn-1');
+      expect(hits).toBe(2);
+      expect(second.status).toBe('success');
+      expect(second.result).toBe('answer-2');
+      expect(intent.state).toBe('completed');
+      expect(balances.get('key-1')!.balanceUsd).toBe(OPENING_BALANCE);
+    });
 
-    const turn = await arcanaTurn(service, 'stall-api', 'turn-1');
-    expect(turn.continued).toBe(false);
-    expect(turn.response.error?.retryable).toBe(false);
-    expect(turn.response.error?.recommendation).toBe('abort');
-    expect(hits).toBe(2);
-    expect([...intents.values()][0].state).toBe('completed');
+    it('RED CONTROL, end to end: the same stall no longer ends an arcana run', async () => {
+      const { service } = stand(['hang', 'answer']);
+      const turn = await arcanaTurnOnInjectedClock(service, 'stall-api', 'turn-1');
+      expect(turn.continued).toBe(true);
+      expect(turn.response.result).toBe('answer-2');
+      expect(hits).toBe(2);
+    });
 
-    // A client that ignores `abort` buys nothing more: the stored final answer
-    // is replayed and the provider is not called a third time.
-    const again = await send(service, 'stall-api', 'turn-1');
-    expect(hits).toBe(2);
-    expect(again.error?.retryable).toBe(false);
-  });
+    it('a second timeout under the same key is final, and a third repeat is a replay, not a dispatch', async () => {
+      const { service, intents } = stand(['hang', 'hang', 'answer']);
 
-  it('without an Idempotency-Key nothing ties a repeat to this attempt → still abort', async () => {
-    const { service } = stand(['hang', 'answer']);
-    const turn = await arcanaTurn(service, 'stall-api');
-    expect(turn.continued).toBe(false);
-    expect(turn.response.status).toBe('timeout');
-    expect(turn.response.error?.recommendation).toBe('abort');
-    expect(hits).toBe(1);
+      const turn = await arcanaTurnOnInjectedClock(service, 'stall-api', 'turn-1');
+      expect(turn.continued).toBe(false);
+      expect(turn.response.error?.retryable).toBe(false);
+      expect(turn.response.error?.recommendation).toBe('abort');
+      expect(hits).toBe(2);
+      expect([...intents.values()][0].state).toBe('completed');
+
+      // A client that ignores `abort` buys nothing more: the stored final answer
+      // is replayed and the provider is not called a third time.
+      const again = await send(service, 'stall-api', 'turn-1');
+      expect(hits).toBe(2);
+      expect(again.error?.retryable).toBe(false);
+    });
+
+    it('without an Idempotency-Key nothing ties a repeat to this attempt → still abort', async () => {
+      const { service } = stand(['hang', 'answer']);
+      const turn = await arcanaTurnOnInjectedClock(service, 'stall-api');
+      expect(turn.continued).toBe(false);
+      expect(turn.response.status).toBe('timeout');
+      expect(turn.response.error?.recommendation).toBe('abort');
+      expect(hits).toBe(1);
+    });
   });
 
   it('RED CONTROL, the other way: a CLI lane may have run tools → not proven idempotent → abort', async () => {

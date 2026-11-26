@@ -1,5 +1,6 @@
 import { CircuitBreakerManager } from '../../core/resilience/circuit-breaker-manager';
 import { CircuitOpenError } from '../../core/resilience/circuit-breaker';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import type { Tier, ProviderId, RoutingDecision } from './types';
 import { IMAGE_CAPABILITIES } from './capabilities';
 import { calculateCostUsd } from './pricing';
@@ -8,6 +9,20 @@ export class ImageRoutingError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'ImageRoutingError';
+  }
+}
+
+export class RetiredImageModelError extends HttpException {
+  constructor(model: string) {
+    super(
+      {
+        statusCode: HttpStatus.GONE,
+        error: 'Gone',
+        code: 'MODEL_RETIRED',
+        message: `Model "${model}" is retired: OpenAI shut down gpt-image-1 on 2026-10-23. Choose openai:gpt-image-2.5-sunburst-low, openai:gpt-image-2.5-sunburst-medium, or openai:gpt-image-2.5-sunburst-high.`,
+      },
+      HttpStatus.GONE,
+    );
   }
 }
 
@@ -30,7 +45,7 @@ const TIER_MAP: Record<Tier, Array<{ provider: ProviderId; model: string }>> = {
   premium: [
     { provider: 'vertex', model: 'vertex:imagen-4-ultra' },
     { provider: 'replicate', model: 'replicate:flux-pro' },
-    { provider: 'openai-images', model: 'openai:gpt-image-1-high' },
+    { provider: 'openai-images', model: 'openai:gpt-image-2.5-sunburst-high' },
     // CONN-0213: fal-ai as last fallback (cheaper than openai-images, watermark:never)
     { provider: 'fal-ai', model: 'fal-ai:flux-pro/v1.1' },
   ],
@@ -43,7 +58,7 @@ const TIER_MAP: Record<Tier, Array<{ provider: ProviderId; model: string }>> = {
 export const ASYNC_PROVIDERS = new Set([
   'vertex:imagen-4-ultra',
   'replicate:flux-pro',
-  'openai:gpt-image-1-high',
+  'openai:gpt-image-2.5-sunburst-high',
 ]);
 
 interface RouteOptions {
@@ -112,6 +127,9 @@ export class ImageRouterService {
   route(tier: Tier, options: RouteOptions): RoutingDecision {
     // Model pin: bypass tier routing entirely
     if (options.model) {
+      if (options.model === 'gpt-image-1' || options.model.startsWith('openai:gpt-image-1-')) {
+        throw new RetiredImageModelError(options.model);
+      }
       const cap = IMAGE_CAPABILITIES[options.model as keyof typeof IMAGE_CAPABILITIES];
       const provider: ProviderId = cap?.provider ?? 'vertex';
       return {

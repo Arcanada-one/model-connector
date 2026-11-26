@@ -338,8 +338,8 @@ describe('OpenAI Images connector — fixture replay', () => {
     connector = new OpenAIImagesConnector('sk-proj-fixture-key-abc', cbManager);
   });
 
-  it('happy-path URL format: fixture shape has data[].url', async () => {
-    const fixture = fixtureBody('openai-gpt-image-1-success-url.json');
+  it('base64 format: GPT Image fixture shape has data[].b64_json', async () => {
+    const fixture = fixtureBody('openai-gpt-image-2.5-sunburst-success-b64.json');
 
     server.use(http.post(`${OPENAI_API}/v1/images/generations`, () => HttpResponse.json(fixture)));
 
@@ -347,14 +347,15 @@ describe('OpenAI Images connector — fixture replay', () => {
 
     expect(result.status).toBe('completed');
     expect(result.routing.chosenProvider).toBe('openai-images');
-    expect(result.costUsd).toBeGreaterThan(0);
+    expect(result.costUsd).toBeCloseTo(0.0108, 6);
     // ImageGenerationResult.urls is optional — prove it was returned first.
     expect(result.urls).toBeDefined();
     expect(result.urls!.length).toBeGreaterThan(0);
+    expect(result.urls![0]).toMatch(/^data:image\/png;base64,/);
   });
 
   it('b64_json fixture shape has data[].b64_json field (no url)', () => {
-    const fixture = loadFixture('openai-gpt-image-1-success-b64.json') as {
+    const fixture = loadFixture('openai-gpt-image-2.5-sunburst-success-b64.json') as {
       data: Array<{ b64_json: string; revised_prompt?: string }>;
     };
 
@@ -365,7 +366,7 @@ describe('OpenAI Images connector — fixture replay', () => {
   });
 
   it('content-policy-violation (400): fixture shape has error.code = content_policy_violation', () => {
-    const fixture = loadFixture('openai-gpt-image-1-error-moderation.json') as {
+    const fixture = loadFixture('openai-gpt-image-2.5-sunburst-error-moderation.json') as {
       error: { code: string; type: string };
     };
 
@@ -374,7 +375,7 @@ describe('OpenAI Images connector — fixture replay', () => {
   });
 
   it('content-policy-violation: connector throws on HTTP 400', async () => {
-    const fixture = fixtureBody('openai-gpt-image-1-error-moderation.json');
+    const fixture = fixtureBody('openai-gpt-image-2.5-sunburst-error-moderation.json');
 
     server.use(
       http.post(`${OPENAI_API}/v1/images/generations`, () =>

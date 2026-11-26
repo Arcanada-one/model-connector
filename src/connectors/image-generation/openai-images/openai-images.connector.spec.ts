@@ -27,10 +27,13 @@ const server = setupServer(
       created: Date.now(),
       data: [
         {
-          url: 'https://oaidalleapiprodscus.blob.core.windows.net/private/test.png',
-          revised_prompt: 'A beautiful ocean sunset',
+          b64_json: 'dGVzdC1pbWFnZQ==',
         },
       ],
+      usage: {
+        input_tokens_details: { image_tokens: 10, text_tokens: 20 },
+        output_tokens_details: { image_tokens: 100, text_tokens: 0 },
+      },
     });
   }),
 );
@@ -62,7 +65,7 @@ describe('OpenAIImagesConnector', () => {
 
     expect(result.status).toBe('completed');
     expect(result.routing.chosenProvider).toBe('openai-images');
-    expect(result.routing.chosenModel).toBe('openai:gpt-image-1-high');
+    expect(result.routing.chosenModel).toBe('openai:gpt-image-2.5-sunburst-high');
     expect(result.costUsd).toBeGreaterThan(0);
   });
 
@@ -74,7 +77,7 @@ describe('OpenAIImagesConnector', () => {
         capturedBody = await request.json();
         return HttpResponse.json({
           created: Date.now(),
-          data: [{ url: 'https://openai.com/test.png', revised_prompt: 'test' }],
+          data: [{ b64_json: 'dGVzdC1pbWFnZQ==' }],
         });
       }),
     );
@@ -90,10 +93,11 @@ describe('OpenAIImagesConnector', () => {
 
     // Verify OpenAI API payload shape
     expect(capturedBody).toMatchObject({
-      model: 'gpt-image-1',
+      model: 'gpt-image-2.5-sunburst',
       prompt: 'MSW shape test',
       n: 1,
       quality: 'high',
+      output_format: 'png',
     });
   });
 
@@ -117,6 +121,46 @@ describe('OpenAIImagesConnector', () => {
         outputAsync: 'auto',
       }),
     ).rejects.toThrow();
+  });
+
+  it('uses the API usage breakdown for the reported cost', async () => {
+    server.use(
+      http.post(`${OPENAI_API}/v1/images/generations`, () =>
+        HttpResponse.json({
+          created: Date.now(),
+          data: [{ b64_json: 'dGVzdA==' }],
+          usage: {
+            input_tokens_details: { image_tokens: 1_000_000, text_tokens: 1_000_000 },
+            output_tokens_details: { image_tokens: 1_000_000, text_tokens: 0 },
+          },
+        }),
+      ),
+    );
+
+    const result = await connector.generate({
+      tier: 'premium',
+      prompt: 'usage cost',
+      quality: 'high',
+      count: 1,
+      outputFormat: 'url',
+      outputAsync: 'never',
+    });
+    expect(result.costUsd).toBeCloseTo(43);
+  });
+
+  it('rejects dimensions the provider will reject before making a request', async () => {
+    await expect(
+      connector.generate({
+        tier: 'premium',
+        prompt: 'bad size',
+        quality: 'high',
+        count: 1,
+        width: 1000,
+        height: 1024,
+        outputFormat: 'url',
+        outputAsync: 'never',
+      }),
+    ).rejects.toThrow(/divisible by 16/);
   });
 });
 
