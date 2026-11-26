@@ -8,7 +8,11 @@ export type Tier = z.infer<typeof TierEnum>;
 export const ProviderIdEnum = z.enum(['vertex', 'replicate', 'openai-images', 'fal-ai']);
 export type ProviderId = z.infer<typeof ProviderIdEnum>;
 
-// Full model IDs used as routing keys
+/**
+ * Legacy ModelId/v1 contract retained for source compatibility.
+ * @deprecated Use ModelIdV2 for current image-generation routing IDs. GPT Image 1 IDs remain
+ * recognized by this type only; the runtime rejects them with HTTP 410 because OpenAI retired them.
+ */
 export type ModelId =
   | 'vertex:nano-banana'
   | 'vertex:imagen-4-fast'
@@ -18,6 +22,19 @@ export type ModelId =
   | 'openai:gpt-image-1-low'
   | 'openai:gpt-image-1-medium'
   | 'openai:gpt-image-1-high'
+  | 'fal-ai:flux/dev'
+  | 'fal-ai:flux-pro/v1.1';
+
+/** Current routing IDs. Additive v2 contract; ModelId/v1 remains unchanged. */
+export type ModelIdV2 =
+  | 'vertex:nano-banana'
+  | 'vertex:imagen-4-fast'
+  | 'vertex:imagen-4'
+  | 'vertex:imagen-4-ultra'
+  | 'replicate:flux-pro'
+  | 'openai:gpt-image-2.5-sunburst-low'
+  | 'openai:gpt-image-2.5-sunburst-medium'
+  | 'openai:gpt-image-2.5-sunburst-high'
   | 'fal-ai:flux/dev'
   | 'fal-ai:flux-pro/v1.1';
 
@@ -76,7 +93,7 @@ export interface ImageGenerationResult {
 // ─── Provider capabilities ────────────────────────────────────────────────────
 
 export interface ImageProviderCapabilities {
-  modelId: ModelId;
+  modelId: ModelIdV2;
   /** Provider-side model identifier used in API URLs/bodies.
    *  Distinct from the internal `modelId` routing key.
    *  E.g. 'imagen-4.0-fast-generate-001' for 'vertex:imagen-4-fast'.

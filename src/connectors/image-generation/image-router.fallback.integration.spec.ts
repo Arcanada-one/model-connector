@@ -31,7 +31,7 @@ describe.skipIf(!shouldRun)('ImageRouterService — fallback integration [INTEGR
     // Exclude vertex (simulating it being unprovisioned)
     const decision = router.routeExcluding('premium', {}, ['vertex']);
 
-    // Premium tier TIER_MAP: vertex:imagen-4-ultra → replicate:flux-pro → openai:gpt-image-1-high
+    // Premium tier TIER_MAP: vertex:imagen-4-ultra → replicate:flux-pro → openai:gpt-image-2.5-sunburst-high
     expect(decision.chosenProvider).not.toBe('vertex');
     expect(decision.fallbackUsed).toBe(true);
     expect(decision.reason).toContain('vertex');
