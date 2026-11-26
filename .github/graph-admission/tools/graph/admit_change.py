@@ -4616,7 +4616,7 @@ def _git_valid_structural_exclusions(repo_path: Path, doc: dict, base: str, head
 
 
 def canary_coverage(repo: Path, rows: list[dict], cashed: set[str] | None = None, *,
-                    head: str | None = None) -> tuple[set[str], list[str]]:
+                    head: str | None = None, require_trusted_execution: bool = False) -> tuple[set[str], list[str]]:
     """Which entities a receipt's canary rows ACTUALLY cover (DEC-AUP-0037 R1/R2).
 
     The coverage is read out of the evidence document, never out of the row that cites it. A row is
@@ -4634,6 +4634,10 @@ def canary_coverage(repo: Path, rows: list[dict], cashed: set[str] | None = None
     still be the reason a boundary entity is covered; but a problem is only REPORTED for a row whose
     claim is being spent. With `cashed=None` every problem is reported, which is what a caller that
     holds no verdicts (a test, a direct call) should get.
+
+    `require_trusted_execution` — opt-in C12 needs an independent observation of execution
+    and outcome. Committed canary data cannot supply that observation. Still validate the
+    record and its full inventory for diagnostics.
 
     `head` — the commit being admitted. A2-263 §5.3: this function used to open `output_ref` out of
     the WORKING TREE. `.gitignore:15` ignores `receipts/graph/verifier-out/**/graph-*.json` and
@@ -4703,7 +4707,7 @@ def canary_coverage(repo: Path, rows: list[dict], cashed: set[str] | None = None
             if not measured:
                 report(vid, f"{ref} is not counted native shell process evidence")
                 continue
-        rows_ok, binding, _doc = canary_evidence.consume(path, root, head, at_head=ref)
+        rows_ok, binding, _ = canary_evidence.consume(path, root, head, at_head=ref)
         if binding:
             report(vid, f"{ref} does not bind {str(head)[:12]}: " + "; ".join(binding[:3]))
             continue
@@ -4712,7 +4716,8 @@ def canary_coverage(repo: Path, rows: list[dict], cashed: set[str] | None = None
         if surplus:
             report(vid, f"the row names {len(surplus)} entity(ies) the document does not "
                         f"list, which are therefore not covered: " + ", ".join(surplus[:6]))
-        covered |= listed
+        if not require_trusted_execution:
+            covered |= listed
     return covered, problems
 
 
@@ -4799,6 +4804,7 @@ def gate(repo: Path, base: str, head: str, receipt_paths: list[Path], policy: di
          current_source_producer_exit: int | None = None,
          current_source_program_tools_root: Path | None = None,
          current_source_program_ref: str | None = None,
+         candidate_canary: str | None = None,
          current_source_signing_key_fingerprint: str | None = None,
          root_typecheck_ci_root: Path | None = None,
          current_evaluator: dict | None = None,
@@ -5009,7 +5015,8 @@ def gate(repo: Path, base: str, head: str, receipt_paths: list[Path], policy: di
                 current_source_producer_exit, expected_repo_name=repo_name or repo_remote_name(repo),
                 program_tools_root=current_source_program_tools_root,
                 program_ref=current_source_program_ref,
-                signing_key_fingerprint=current_source_signing_key_fingerprint)
+                signing_key_fingerprint=current_source_signing_key_fingerprint,
+                candidate_canary=candidate_canary)
             if stage_evidence_path is not None:
                 current_problems = ["current-source outcome cannot be combined with StageEvidence/v1"]
                 current_doc = {}
@@ -5237,10 +5244,13 @@ def gate(repo: Path, base: str, head: str, receipt_paths: list[Path], policy: di
         # `e not in valid_exempt` term below), so a canary row that merely lists it is spending
         # nothing. Passing the full set made `verify.py`'s scope list a claim and turned every
         # caller receipt into a C12 refusal.
+        canary_rows = doc.get("verifiers") or []
+        # Opt-in changes what may grant coverage, while every cashed row still owes validation.
         canary_entities, canary_problems = canary_coverage(
-            repo, doc.get("verifiers") or [],
+            repo, canary_rows,
             cashed=cashed_canary_ids(
-                doc, set(boundary_inferred) - set(valid_exempt) - structural_exclusions), head=head)
+                doc, set(boundary_inferred) - set(valid_exempt) - structural_exclusions),
+            head=head, require_trusted_execution=bool(candidate_canary))
         for problem in canary_problems:
             add("C12", f"{Path(rec['path']).name}: {problem}")
         # An exact eligible DEC-AUP-0167 record may carry a C1 canary measurement that remains
@@ -6922,6 +6932,8 @@ def cmd_gate(a) -> int:
         ), current_evaluator_values))
     if any(value is not None for value in current_values) and not all(value is not None for value in current_values):
         raise UsageError("current-source stage result, root, userpath exit, and producer exit must be supplied together")
+    if getattr(a, "candidate_canary", None) and not all(value is not None for value in current_values):
+        raise UsageError("--candidate-canary requires the same-run current-source outcome")
     actual_repo_name = getattr(a, "repo_name", None) or repo_remote_name(Path(a.repo).resolve())
     if (any(value is not None for value in current_values)
             and actual_repo_name != "Arcanada-one/arcanada-universal-program"
@@ -6980,6 +6992,7 @@ def cmd_gate(a) -> int:
                current_source_program_tools_root=(Path(a.current_source_program_tools_root)
                                                   if getattr(a, "current_source_program_tools_root", None) else None),
                current_source_program_ref=getattr(a, "current_source_program_ref", None),
+               candidate_canary=getattr(a, "candidate_canary", None),
                current_source_signing_key_fingerprint=getattr(a, "current_source_signing_key_fingerprint", None),
                root_typecheck_ci_root=(Path(a.root_typecheck_ci_root)
                                        if getattr(a, "root_typecheck_ci_root", None) else None),
@@ -7069,7 +7082,8 @@ def current_source_stage_outcome_for_receipt(receipt_path: Path, receipt: dict, 
                                               expected_repo_name: str | None = None,
                                               program_tools_root: Path | None = None,
                                               program_ref: str | None = None,
-                                              signing_key_fingerprint: str | None = None) -> tuple[dict, list[str]]:
+                                              signing_key_fingerprint: str | None = None,
+                                              candidate_canary: str | None = None) -> tuple[dict, list[str]]:
     """Qualify same-run current-source CLI captures under the exact Program source authority.
 
     This consumes ProgramStageUserpath/ProgramCurrentSourceCLIOutcome directly. It is deliberately
@@ -7133,7 +7147,7 @@ def current_source_stage_outcome_for_receipt(receipt_path: Path, receipt: dict, 
             str(userpath_result), str(userpath_root), True, repo, actual_repo_name,
             base, head, userpath_exit, candidate_outcome_required=True,
             tools_root=(repo if program_repo else program_tools_root),
-            trusted_bundle=trusted_bundle)
+            trusted_bundle=trusted_bundle, candidate_canary=candidate_canary)
     except Exception as exc:
         return {}, ["current-source stage validator is unavailable: " + type(exc).__name__]
     if capture_problems:
@@ -9234,6 +9248,7 @@ def main(argv=None) -> int:
                    help="actual outer ProgramStageUserpath process exit")
     g.add_argument("--current-source-producer-exit", type=int,
                    help="actual current-candidate CAR producer process exit")
+    g.add_argument("--candidate-canary", help="expected repository-relative committed CanaryResult/v2")
     g.add_argument("--current-source-program-tools-root", type=Path,
                    help="exact signed Program bundle used for an external caller's source and fixture commands")
     g.add_argument("--current-source-program-ref",
