@@ -1461,7 +1461,7 @@ jobs:
           PY
 
       - name: Prepare canonical Scrutator contract verifier dependencies
-        if: github.repository == 'Arcanada-one/scrutator' && steps.self_update_classifier.outputs.case == 'gate_self_update'
+        if: github.repository == 'Arcanada-one/scrutator' && (inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update')
         env:
           RANGE_BASE: ${{ steps.range.outputs.base }}
           RANGE_HEAD: ${{ steps.range.outputs.head }}
