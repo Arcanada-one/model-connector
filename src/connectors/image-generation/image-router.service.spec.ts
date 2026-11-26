@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ImageRouterService, ImageRoutingError } from './image-router.service';
+import { HttpException } from '@nestjs/common';
+import {
+  ImageRouterService,
+  ImageRoutingError,
+  RetiredImageModelError,
+} from './image-router.service';
 import { CircuitBreakerManager } from '../../core/resilience/circuit-breaker-manager';
 
 describe('ImageRouterService', () => {
@@ -72,6 +77,23 @@ describe('ImageRouterService', () => {
       expect(decision.chosenProvider).toBe('replicate');
       expect(decision.fallbackUsed).toBe(false);
       expect(decision.reason).toContain('pinned');
+    });
+
+    it('rejects retired GPT Image 1 model pins with a migration hint', () => {
+      for (const model of ['openai:gpt-image-1-high', 'gpt-image-1']) {
+        try {
+          router.route('premium', { model });
+          throw new Error('expected retired-model exception');
+        } catch (error) {
+          expect(error).toBeInstanceOf(RetiredImageModelError);
+          expect(error).toBeInstanceOf(HttpException);
+          expect((error as RetiredImageModelError).getStatus()).toBe(410);
+          expect((error as RetiredImageModelError).getResponse()).toMatchObject({
+            code: 'MODEL_RETIRED',
+            message: expect.stringContaining('retired'),
+          });
+        }
+      }
     });
   });
 
