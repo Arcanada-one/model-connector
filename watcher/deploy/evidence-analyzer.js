@@ -19,6 +19,10 @@ import { readFile } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
 
+/**
+ * @typedef {{ timestamp: string, provider: string, model: string, [key: string]: unknown }} AuditRecord
+ */
+
 // ── Thresholds (CONN-0230-plan.md §5, fixed) ──────────────────────────────
 const THRESHOLD = {
   SAMPLES_PER_PAIR: 500,
@@ -36,23 +40,28 @@ const THRESHOLD = {
 };
 
 // ── CLI ────────────────────────────────────────────────────────────────────
+/** @param {string[]} args */
 function parseArgs(args) {
-  const opts = { auditPath: null, statePath: null, windowDays: THRESHOLD.WINDOW_DAYS_MIN };
+  let auditPath = null;
+  let statePath = null;
+  let windowDays = THRESHOLD.WINDOW_DAYS_MIN;
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--audit') opts.auditPath = args[++i];
-    else if (args[i] === '--state') opts.statePath = args[++i];
-    else if (args[i] === '--window-days') opts.windowDays = parseInt(args[++i], 10);
+    if (args[i] === '--audit') auditPath = args[++i];
+    else if (args[i] === '--state') statePath = args[++i];
+    else if (args[i] === '--window-days') windowDays = parseInt(args[++i], 10);
     else if (args[i] === '--help') {
       console.log('Usage: evidence-analyzer.js --audit AUDIT_JSONL [--state STATE_JSON] [--window-days N]');
       process.exit(0);
     }
   }
-  if (!opts.auditPath) throw new Error('--audit path is required');
-  return opts;
+  if (!auditPath) throw new Error('--audit path is required');
+  return { auditPath, statePath, windowDays };
 }
 
 // ── Read audit.jsonl ────────────────────────────────────────────────────────
+/** @param {string} path */
 async function readAuditLog(path) {
+  /** @type {AuditRecord[]} */
   const records = [];
   const rl = createInterface({ input: createReadStream(path), crlfDelay: Infinity });
   for await (const line of rl) {
@@ -64,11 +73,16 @@ async function readAuditLog(path) {
 }
 
 // ── Window: prefer state.json _shadowStart+heartbeatAt, fallback audit span ─
-async function computeWindow(statePath, records, requiredWindowDays) {
+/**
+ * @param {string | null} statePath
+ * @param {AuditRecord[]} records
+ */
+async function computeWindow(statePath, records) {
   let startTs = null, endTs = null;
 
   if (statePath) {
     try {
+      /** @type {{ _shadowStart?: string, heartbeatAt?: string }} */
       const state = JSON.parse(await readFile(statePath, 'utf8'));
       if (state._shadowStart) startTs = new Date(state._shadowStart).getTime();
       if (state.heartbeatAt) endTs = new Date(state.heartbeatAt).getTime();
@@ -99,6 +113,11 @@ async function computeWindow(statePath, records, requiredWindowDays) {
 // ── Filter records to the analysis window ─────────────────────────────────
 // Pure function: drop any record whose timestamp falls outside [startTs, endTs].
 // endTs=null means open-ended (up to the latest record).
+/**
+ * @param {AuditRecord[]} records
+ * @param {number | null} startTs
+ * @param {number | null} endTs
+ */
 export function filterToWindow(records, startTs, endTs) {
   return records.filter(r => {
     const t = new Date(r.timestamp).getTime();
@@ -110,7 +129,9 @@ export function filterToWindow(records, startTs, endTs) {
 }
 
 // ── Sample count (from audit records as lower bound) ──────────────────────
+/** @param {AuditRecord[]} records */
 function computeSamples(records) {
+  /** @type {Map<string, number>} */
   const counts = new Map();
   for (const r of records) {
     const key = `${r.provider}:${r.model}`;
@@ -123,13 +144,17 @@ function computeSamples(records) {
 // An audit record is a proxy-FP if it is an ISOLATED outage event:
 // no other record for the same pair within ISOLATION_GAP_MS before OR after it.
 // Burst events have a neighbor within 30s → they are NOT proxy-FP.
+/** @param {AuditRecord[]} records */
 function computeFpRate(records) {
+  /** @type {Map<string, AuditRecord[]>} */
   const byPair = new Map();
   for (const r of records) {
     const key = `${r.provider}:${r.model}`;
-    if (!byPair.has(key)) byPair.set(key, []);
-    byPair.get(key).push(r);
+    const group = byPair.get(key);
+    if (group) group.push(r);
+    else byPair.set(key, [r]);
   }
+  /** @type {Map<string, { total: number, proxyFp: number, rate: number, gated: boolean }>} */
   const result = new Map();
   for (const [key, recs] of byPair) {
     const sorted = recs.slice().sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
@@ -153,17 +178,23 @@ function computeFpRate(records) {
 // ── Flap detection ────────────────────────────────────────────────────────
 // Flap = degraded→recovered→degraded where the full cycle fits in 1h.
 // We reconstruct implied recoveries from gaps >90s (3 × missed heartbeats = dead-man).
+/** @param {AuditRecord[]} records */
 function computeFlaps(records) {
+  /** @type {Map<string, number[]>} */
   const byPair = new Map();
   for (const r of records) {
     const key = `${r.provider}:${r.model}`;
-    if (!byPair.has(key)) byPair.set(key, []);
-    byPair.get(key).push(new Date(r.timestamp).getTime());
+    const timestamp = new Date(r.timestamp).getTime();
+    const group = byPair.get(key);
+    if (group) group.push(timestamp);
+    else byPair.set(key, [timestamp]);
   }
 
+  /** @type {Map<string, { flapsByDay: Map<string, number>, avgPerDay: number, singleDayMax: number }>} */
   const result = new Map();
   for (const [key, tsArr] of byPair) {
     const sorted = tsArr.slice().sort((a, b) => a - b);
+    /** @type {Map<string, number>} */
     const flapsByDay = new Map();
 
     // Build state transitions
@@ -202,8 +233,21 @@ function computeFlaps(records) {
 }
 
 // ── Build report ───────────────────────────────────────────────────────────
+/**
+ * @param {{
+ *   samples: ReturnType<typeof computeSamples>,
+ *   fpRates: ReturnType<typeof computeFpRate>,
+ *   flaps: ReturnType<typeof computeFlaps>,
+ *   window: Awaited<ReturnType<typeof computeWindow>>,
+ *   requiredWindowDays: number
+ * }} options
+ */
 function buildReport({ samples, fpRates, flaps, window, requiredWindowDays }) {
-  const pass = [], fail = [], warn = [];
+  /** @type {string[]} */
+  const pass = [];
+  /** @type {string[]} */
+  const fail = [];
+  const warn = [];
 
   // Window
   const windowOk = window.days >= requiredWindowDays;
@@ -260,7 +304,7 @@ function buildReport({ samples, fpRates, flaps, window, requiredWindowDays }) {
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   const records = await readAuditLog(opts.auditPath);
-  const window = await computeWindow(opts.statePath, records, opts.windowDays);
+  const window = await computeWindow(opts.statePath, records);
   const startTs = window.startIso ? new Date(window.startIso).getTime() : null;
   const endTs = window.endIso ? new Date(window.endIso).getTime() : null;
   const windowedRecords = filterToWindow(records, startTs, endTs);

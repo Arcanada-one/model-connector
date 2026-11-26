@@ -28,7 +28,6 @@ function validateCreateEventDto(event: unknown): { ok: true; data: Record<string
 }
 
 const servers: Array<ReturnType<typeof createServer>> = [];
-const REPAIR_TOKEN = 'x'.repeat(32);
 
 afterEach(async () => {
   await Promise.all(
