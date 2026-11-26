@@ -906,7 +906,8 @@ def _argv_uses_pinned_interpreter(argv: object, interpreter: object) -> bool:
 def validate_current_source_cli_outcome(outcome: object, root: Path, repo: Path, repo_name: str,
                                         base: str, head: str, candidate_tree: str,
                                         program_source: dict, tools_root: Path,
-                                        required: bool) -> tuple[dict | None, list[str]]:
+                                        required: bool, *, candidate_canary: str | None = None,
+                                        ) -> tuple[dict | None, list[str]]:
     """Validate fresh same-run candidate CLI captures; never interpret them as admission."""
     if outcome is None:
         return None, (["required current-source CLI outcome is missing"] if required else [])
@@ -968,6 +969,13 @@ def validate_current_source_cli_outcome(outcome: object, root: Path, repo: Path,
         expected_argv["verify"].extend(["--empty-impact-explanation", str(explanation_path)])
     if repo_name == "Arcanada-one/auth-arcana":
         expected_argv["verify"].extend(["--root-typecheck-ci-root", str(candidate_root / "ci-typecheck")])
+    if candidate_canary:
+        import canary_evidence
+        try:
+            canary_evidence.validate_candidate_canary(repo, head, candidate_canary)
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+            problems.append("current-source candidate canary refused: " + str(exc))
+        expected_argv["verify"].extend([f"--canary={candidate_canary}", "--require-committed-canary-v2"])
     resolved_outputs = {}
     for name, row in command_by_id.items():
         if (set(row) != {"id", "argv", "cwd", "pid", "start_utc", "end_utc", "exit_code",
@@ -1145,7 +1153,8 @@ def validate_stage_userpath_result(result_path: str | None, result_root: str | N
                                    outer_exit: int | None = None,
                                    candidate_outcome_required: bool = False,
                                    tools_root: Path | None = None,
-                                   trusted_bundle: dict | None = None) -> tuple[dict, list[str]]:
+                                   trusted_bundle: dict | None = None,
+                                   candidate_canary: str | None = None) -> tuple[dict, list[str]]:
     """Validate the actual Program-stage runner output without treating its fixture gate as candidate admission."""
     if not result_path:
         return {}, (["required ProgramStageUserpath/v1 result is missing"] if required else [])
@@ -1312,7 +1321,7 @@ def validate_stage_userpath_result(result_path: str | None, result_root: str | N
     candidate_outcome, candidate_outcome_problems = validate_current_source_cli_outcome(
         doc.get("candidate_cli_outcome"), root, repo, repo_name, base, head,
         actual_candidate_tree, program_source, effective_tools_root or repo,
-        candidate_outcome_required)
+        candidate_outcome_required, candidate_canary=candidate_canary)
     problems.extend(candidate_outcome_problems)
 
     fixture = doc.get("fixture")
@@ -1497,6 +1506,8 @@ def validate_stage_userpath_result(result_path: str | None, result_root: str | N
                             "--tools-root", str(effective_tools_root)]
     if candidate_outcome_required:
         expected_runner_argv.extend(["--candidate-root", str(root / "current-candidate")])
+    if candidate_canary:
+        expected_runner_argv.append(f"--candidate-canary={candidate_canary}")
     runner_argv = invocation.get("argv") if isinstance(invocation, dict) else None
     if (not isinstance(invocation, dict) or invocation.get("cwd") != str(repo.resolve())
             or not _argv_uses_pinned_interpreter(runner_argv, doc.get("interpreter"))
@@ -3009,8 +3020,9 @@ def cmd_candidate_auth_dependency_setup_plan(a) -> int:
 
 
 # DEC-AUP-0203. Qualify the complete frozen closure rather than interpreting
-# user-provided version ranges. Only the correlated #312 and #337 blob sets
-# are accepted. The lock digest binds importers, resolutions and integrity
+# user-provided version ranges. Changes must use the correlated blob sets
+# from #312 or #337. Ordinary source changes may keep the exact base closure.
+# The lock digest binds importers, resolutions and integrity
 # values, including transitive snapshot entries that did not change.
 MC_DEPENDENCY_SETUP_REPO = "Arcanada-one/model-connector"
 MC_DEPENDENCY_SETUP_POLICY = "mc-pnpm-frozen-root-watcher-sdk/v1"
@@ -3206,6 +3218,8 @@ def validate_candidate_mc_dependency_setup(repo_path: str | Path, repository: st
     repo = _mc_dependency_subject(repo_path, repository, base, head)
 
     checked = {}
+    closure_inputs = (*MC_DEPENDENCY_SETUP_MANIFESTS, MC_DEPENDENCY_SETUP_LOCK)
+    same_closure = True
     for relative, expected in MC_DEPENDENCY_SETUP_BASE.items():
         modes = ("100755",) if relative in MC_DEPENDENCY_SETUP_EXECUTABLES else ("100644",)
         _, before = _candidate_setup_blob(repo, base, relative, regular_modes=modes)
@@ -3220,31 +3234,39 @@ def validate_candidate_mc_dependency_setup(repo_path: str | Path, repository: st
             path.chmod(0o500 if modes == ("100755",) else 0o400)
             checked_bytes = _mc_dependency_worktree_file(snapshot, relative, raw)
         digest = hashlib.sha256(checked_bytes).hexdigest()
-        if relative not in (*MC_DEPENDENCY_SETUP_MANIFESTS, MC_DEPENDENCY_SETUP_LOCK) and digest != expected:
+        unchanged = checked_bytes == before
+        if relative in closure_inputs:
+            same_closure &= unchanged
+        elif not unchanged:
             raise ValueError(f"MC dependency setup requires unchanged source: {relative}")
         checked[relative] = {"blob_oid": oid, "sha256": digest, "bytes": len(raw)}
-
-    target = tuple(checked[path]["sha256"] for path in MC_DEPENDENCY_SETUP_MANIFESTS)
-    expected_lock = MC_DEPENDENCY_SETUP_TARGETS.get(target)
-    if expected_lock is None:
-        raise ValueError("MC dependency manifest transition is unqualified")
-    if checked[MC_DEPENDENCY_SETUP_LOCK]["sha256"] != expected_lock:
-        raise ValueError("MC dependency lockfile does not match the qualified frozen closure")
 
     _mc_dependency_prisma_tree(repo, base, head, snapshot)
     _mc_dependency_workspace(repo, base, head)
     if snapshot is not None:
         _mc_dependency_workspace(snapshot)
         _mc_dependency_prisma_worktree(repo, root=snapshot)
-    # The pinned inputs and Prisma tree are checked independently above.
-    allowed_paths = set(MC_DEPENDENCY_SETUP_BASE)
-    watcher = "watcher/package.json"
-    if checked[watcher]["sha256"] != MC_DEPENDENCY_SETUP_BASE[watcher]:
-        allowed_paths.update(MC_DEPENDENCY_SETUP_BATCH_PATHS)
-    diff = _candidate_setup_git(repo, "diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", base, head)
-    changed = set(diff.decode().rstrip("\0").split("\0"))
-    if any(path not in allowed_paths and not path.startswith("prisma/") for path in changed):
-        raise ValueError("MC dependency range has unqualified changed paths")
+    # Only a byte-identical closure with all common checks satisfied may
+    # bypass the dependency-batch path filter.
+    if not same_closure:
+        target = tuple(checked[path]["sha256"] for path in MC_DEPENDENCY_SETUP_MANIFESTS)
+        base_target = tuple(MC_DEPENDENCY_SETUP_BASE[path] for path in MC_DEPENDENCY_SETUP_MANIFESTS)
+        if target == base_target:
+            raise ValueError("MC dependency lockfile does not match the qualified frozen closure")
+        expected_lock = MC_DEPENDENCY_SETUP_TARGETS.get(target)
+        if expected_lock is None:
+            raise ValueError("MC dependency manifest transition is unqualified")
+        if checked[MC_DEPENDENCY_SETUP_LOCK]["sha256"] != expected_lock:
+            raise ValueError("MC dependency lockfile does not match the qualified frozen closure")
+
+        allowed_paths = set(MC_DEPENDENCY_SETUP_BASE)
+        watcher = "watcher/package.json"
+        if checked[watcher]["sha256"] != MC_DEPENDENCY_SETUP_BASE[watcher]:
+            allowed_paths.update(MC_DEPENDENCY_SETUP_BATCH_PATHS)
+        diff = _candidate_setup_git(repo, "diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", base, head)
+        changed = set(diff.decode().rstrip("\0").split("\0"))
+        if any(path not in allowed_paths and not path.startswith("prisma/") for path in changed):
+            raise ValueError("MC dependency range has unqualified changed paths")
     return {
         "schema": "ModelConnectorCallerDependencySetupPlan/v1",
         "policy": MC_DEPENDENCY_SETUP_POLICY,
@@ -3735,6 +3757,10 @@ def cmd_run(a) -> int:
     stage_userpath_required = bool(getattr(a, "stage_userpath_required", False))
     candidate_required = bool(getattr(a, "candidate_receipt_required", False))
     candidate_source_outcome_required = bool(getattr(a, "candidate_source_outcome_required", False))
+    candidate_canary = getattr(a, "candidate_canary", None)
+    if candidate_canary and not candidate_source_outcome_required:
+        return fail("CURRENT_SOURCE_OUTCOME_CONFIGURATION_INVALID",
+                    "a candidate canary requires the same-run current-source outcome")
     if candidate_source_outcome_required and not (candidate_required and stage_userpath_required):
         return fail("CURRENT_SOURCE_OUTCOME_CONFIGURATION_INVALID",
                     "a current-source outcome requires both the explicit candidate CAR and ProgramStageUserpath routes")
@@ -3774,7 +3800,7 @@ def cmd_run(a) -> int:
             getattr(a, "stage_userpath_exit", None),
             candidate_outcome_required=candidate_source_outcome_required,
             tools_root=(repo if result["repo"] == "Arcanada-one/arcanada-universal-program" else tools),
-            trusted_bundle=man)
+            trusted_bundle=man, candidate_canary=candidate_canary)
         result["stage_userpath"] = stage_userpath
         if stage_userpath_problems:
             result["checks"].append({"code": "STAGE_USERPATH_REFUSED", "verdict": "refuse",
@@ -4118,6 +4144,8 @@ def cmd_run(a) -> int:
                 "--current-source-userpath-root", str(Path(getattr(a, "stage_userpath_root")).resolve()),
                 "--current-source-userpath-exit", str(getattr(a, "stage_userpath_exit")),
                 "--current-source-producer-exit", str(candidate_exit)]
+        if candidate_canary:
+            cmd.append(f"--candidate-canary={candidate_canary}")
         if result["repo"] != "Arcanada-one/arcanada-universal-program":
             cmd += ["--current-source-program-tools-root", str(tools),
                     "--current-source-program-ref", str(a.program_ref),
@@ -6763,6 +6791,7 @@ def main(argv=None) -> int:
     r.add_argument("--stage-userpath-exit", type=int,
                    help="outer process exit captured by the invoking hosted workflow")
     r.add_argument("--candidate-receipt", help="exact current-range CAR produced by the hosted candidate workflow")
+    r.add_argument("--candidate-canary", help="expected repository-relative committed CanaryResult/v2")
     r.add_argument("--candidate-receipt-exit", type=int,
                    help="captured exit from the hosted current-candidate CAR producer")
     r.add_argument("--candidate-receipt-required", action="store_true",

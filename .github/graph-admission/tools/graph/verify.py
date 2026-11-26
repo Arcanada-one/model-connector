@@ -1671,6 +1671,7 @@ class Verify:
         self.test_suite: dict | None = None  # typed absent-suite record; set only by v_global_fallback_test
         self.ev: dict[str, dict[str, tuple[str, str]]] = {}   # verifier id → entity → (verdict, reason)
         self.canary_paths = list(getattr(a, "canary", None) or [])   # CanaryResult/v1 documents (AUP-GRAPH-008)
+        self.require_committed_canary_v2 = getattr(a, "require_committed_canary_v2", False)
         self.canary_verified: set[str] = set()
         self.canary_discharged_tests: list[str] = []   # A2-353: test code_units whose `canary` was discharged
         self.type_check_discharged_fixtures: list[str] = []   # A2-452: uncovered fixture files, type_check discharged
@@ -3525,6 +3526,13 @@ class Verify:
             if errors:
                 rows = {e: {"entity": e, "verdict": "not_measured",
                             "reason": "CANARY_EVIDENCE_UNVERIFIABLE: " + "; ".join(errors)} for e in ents}
+            elif getattr(self, "require_committed_canary_v2", False):
+                # Source identity and readable execution inputs cannot authenticate the
+                # execution or its outcome. Keep the committed result as diagnostic evidence.
+                rows = {eid: {**row, "verdict": "not_measured",
+                              "reason": "CANARY_EXECUTION_PROVENANCE_NOT_MEASURED: "
+                                        "no independently authenticated execution outcome"}
+                        if row["verdict"] == "verified" else row for eid, row in rows.items()}
             meta = {"plan": (doc.get("plan") or {}).get("id") if isinstance(doc.get("plan"), dict) else None,
                     "phase": doc.get("phase"), "environment": doc.get("environment")}
             row_id = None
@@ -5390,6 +5398,8 @@ def main(argv=None) -> int:
     ap.add_argument("--canary", action="append",
                     help="CanaryResult/v1 (tools/graph/deploy_gate.py canary): live-contour evidence for inferred/observed "
                          "boundary entities and canary_required edge types (AUP-GRAPH-008)")
+    ap.add_argument("--require-committed-canary-v2", action="store_true",
+                    help="require one exact-head CanaryResult/v2 for the hosted candidate input")
     ap.add_argument("--full-test-ci", action="append", metavar="COMMITTED_PATH",
                     help="committed GitHubFullSuiteEvidence/v1 for explicit full_test; authenticate exact run/job/log/tree, never replay on refusal")
     ap.add_argument("--root-typecheck-ci-root", type=Path,
@@ -5429,6 +5439,13 @@ def main(argv=None) -> int:
     if a.compiler_sdk_root and not a.diff:
         ap.error("compiler SDK binding requires an exact committed --diff range")
     base, head = a.diff.split("..", 1) if a.diff else ("HEAD", "HEAD")
+    if a.require_committed_canary_v2:
+        if not a.diff or len(a.canary or []) != 1:
+            ap.error("the hosted canary requires exactly one --canary and a committed --diff range")
+        try:
+            canary_evidence.validate_candidate_canary(a.repo, head, a.canary[0])
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+            ap.error(str(exc))
     with impact_pair.phase_trace_to(a.phase_log):
         with impact_pair.trace_phase("verification-command"):
             with compiler_sdk_input(a, a.repo, base, head):
