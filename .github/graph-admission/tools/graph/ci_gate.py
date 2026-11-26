@@ -3052,6 +3052,23 @@ MC_DEPENDENCY_SETUP_TARGETS = {
     ): "711d6b5e84ace35a7139afaafd11eedf1ab56093a363d913dcdf8e4a74ccff6d",
 }
 MC_DEPENDENCY_SETUP_LOCK = "pnpm-lock.yaml"
+# DEC-AUP-0208 stage 2. Scope MC #341 to the post-#312 base and its reviewed tree.
+# These pins do not qualify that base for the legacy transitions or identity route.
+MC_DEPENDENCY_SETUP_REVIEWED_RANGES = {
+    "d9fcf32591f485c50cadd6426dd6ec72b62299ba": {
+        "base_closure": (
+            "7baafd090fa8a5fa9fae99aada2f7cfe03e746b2e4956e00c402473e17fe7a04",
+            "5b16b57c28a66ad4fa300996202f4572889002fb18793d75e64e274a95b1d874",
+            "0dc664051285f21c6d40f6e40bcd2f902a8dc6799707f272074a1ae9ed81700a",
+        ),
+        "head_tree": "757892ba0affac7179a8ca33958fc9e737be9a89",
+        "manifest_pair": (
+            "4eeddb8d5b8204341cb7f2b23984af3dc7c0243314a4fab66d8d5bcfd38d4ec5",
+            "5b16b57c28a66ad4fa300996202f4572889002fb18793d75e64e274a95b1d874",
+        ),
+        "lock": "bce3c01f0de7dbbdf49d2ca596b99a78df25a0bf66e67992aac02e7a17c8f046",
+    },
+}
 MC_DEPENDENCY_SETUP_EXECUTABLES = ("scripts/graph-full-suite-isolated.sh", "scripts/graph-parity-setup.sh")
 MC_DEPENDENCY_SETUP_BATCH_PATHS = (
     "CHANGELOG.md", "watcher/test/ops-alert.integration.spec.ts", "watcher/test/windowed-error-rate.spec.ts",
@@ -3219,8 +3236,12 @@ def validate_candidate_mc_dependency_setup(repo_path: str | Path, repository: st
 
     checked = {}
     closure_inputs = (*MC_DEPENDENCY_SETUP_MANIFESTS, MC_DEPENDENCY_SETUP_LOCK)
+    reviewed_range = MC_DEPENDENCY_SETUP_REVIEWED_RANGES.get(base)
+    base_pins = MC_DEPENDENCY_SETUP_BASE
+    if reviewed_range is not None:
+        base_pins = {**base_pins, **dict(zip(closure_inputs, reviewed_range["base_closure"], strict=True))}
     same_closure = True
-    for relative, expected in MC_DEPENDENCY_SETUP_BASE.items():
+    for relative, expected in base_pins.items():
         modes = ("100755",) if relative in MC_DEPENDENCY_SETUP_EXECUTABLES else ("100644",)
         _, before = _candidate_setup_blob(repo, base, relative, regular_modes=modes)
         if hashlib.sha256(before).hexdigest() != expected:
@@ -3248,20 +3269,28 @@ def validate_candidate_mc_dependency_setup(repo_path: str | Path, repository: st
         _mc_dependency_prisma_worktree(repo, root=snapshot)
     # Only a byte-identical closure with all common checks satisfied may
     # bypass the dependency-batch path filter.
-    if not same_closure:
+    if reviewed_range is not None or not same_closure:
         target = tuple(checked[path]["sha256"] for path in MC_DEPENDENCY_SETUP_MANIFESTS)
-        base_target = tuple(MC_DEPENDENCY_SETUP_BASE[path] for path in MC_DEPENDENCY_SETUP_MANIFESTS)
+        base_target = tuple(base_pins[path] for path in MC_DEPENDENCY_SETUP_MANIFESTS)
         if target == base_target:
             raise ValueError("MC dependency lockfile does not match the qualified frozen closure")
-        expected_lock = MC_DEPENDENCY_SETUP_TARGETS.get(target)
+        if reviewed_range is not None:
+            expected_lock = reviewed_range["lock"] if target == reviewed_range["manifest_pair"] else None
+        else:
+            expected_lock = MC_DEPENDENCY_SETUP_TARGETS.get(target)
         if expected_lock is None:
             raise ValueError("MC dependency manifest transition is unqualified")
         if checked[MC_DEPENDENCY_SETUP_LOCK]["sha256"] != expected_lock:
             raise ValueError("MC dependency lockfile does not match the qualified frozen closure")
+        if reviewed_range is not None:
+            head_tree = _candidate_setup_git(repo, "--no-replace-objects", "rev-parse",
+                                             f"{head}^{{tree}}").decode().strip()
+            if head_tree != reviewed_range["head_tree"]:
+                raise ValueError("MC dependency range does not match the reviewed projected tree")
 
-        allowed_paths = set(MC_DEPENDENCY_SETUP_BASE)
+        allowed_paths = set(base_pins)
         watcher = "watcher/package.json"
-        if checked[watcher]["sha256"] != MC_DEPENDENCY_SETUP_BASE[watcher]:
+        if checked[watcher]["sha256"] != base_pins[watcher]:
             allowed_paths.update(MC_DEPENDENCY_SETUP_BATCH_PATHS)
         diff = _candidate_setup_git(repo, "diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", base, head)
         changed = set(diff.decode().rstrip("\0").split("\0"))
