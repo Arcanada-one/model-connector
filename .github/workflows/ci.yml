@@ -476,13 +476,9 @@ jobs:
             io.arcanada.release_sha=${{ github.sha }}
           provenance: true
           sbom: true
-          # mode=min: only final-image layers. Measured main run 44507659147 spent
-          # 302s of the 497s "Build and publish exact image" step on
-          # "exporting to GitHub Actions Cache" under mode=max; mode=min keeps
-          # cache-from useful for the next publish without that export tax.
+          # No cache-from/cache-to: in 8 main publishes the gha export ran 118-319s
+          # past the image push, while only 1-2 of 21 steps were cache hits.
           # Gates unchanged: same push, provenance, sbom, digest verify.
-          cache-from: type=gha,scope=model-connector-image
-          cache-to: type=gha,mode=min,scope=model-connector-image
       - name: Record immutable publication identity
         env:
           IMAGE_DIGEST: ${{ steps.publish.outputs.digest }}
