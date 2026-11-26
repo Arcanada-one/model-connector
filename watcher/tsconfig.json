@@ -4,6 +4,8 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
+    "allowJs": true,
+    "checkJs": true,
     "outDir": "dist",
     "rootDir": ".",
     "declaration": true,
@@ -11,5 +13,10 @@
     "skipLibCheck": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "deploy/evidence-analyzer.js",
+    "deploy/test-fixtures/gen-fixtures.js"
+  ]
 }
