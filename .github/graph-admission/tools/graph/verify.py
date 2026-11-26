@@ -46,6 +46,7 @@ from __future__ import annotations
 import workflow_config
 import nest_bootstrap
 import canary_evidence
+import environment_obligations
 import argparse
 import ast
 import atexit
@@ -78,6 +79,7 @@ import impact  # noqa: E402
 import nest_fixture_scope
 import fixture_contracts
 import impact_pair  # noqa: E402
+import receipt_data  # noqa: E402
 import contract_diff  # noqa: E402
 import native_projection  # noqa: E402
 import full_suite_ci
@@ -104,7 +106,7 @@ def _new_private_scratch(prefix: str) -> Path:
     return path
 
 
-VERSION = "1.4.1"   # workflow shell unknown cannot discharge mandatory caller closure
+VERSION = "1.4.2"   # Operational configuration is selected but remains semantically unmeasured.
 TOOL = "tools/graph/verify.py"
 
 
@@ -348,7 +350,7 @@ UNRESOLVED_MODULE_CODES = {"TS2307", "TS2688", "TS7016"}
 SHARED_KINDS = {"library", "shared_package"}
 MANDATORY_IDS = ["type_check", "contract_diff", "route_config_consistency", "schema_diff", "config_schema", "fitness_rules", "doc_reference",
                  "canary", "shell_syntax", "shell_behavior", "systemd_unit_semantics", "source_file_integrity",
-                 "source_input_contract", "trust_anchor_pin_consistency"]
+                 "source_input_contract", "trust_anchor_pin_consistency", "receipt_data"]
 SELECTABLE_IDS = ["targeted_test", "property_check"]
 # internal rules the mutation battery disables one at a time
 RULES = ["aggregate_failed_wins", "missing_required_not_measured", "disabled_mandatory_event", "inferred_boundary_hold",
@@ -924,6 +926,8 @@ def config_keys_read(code: str, lang: str = "ts") -> set[str]:
         return {g for m in build_graph.PY_ENV_RE.finditer(code) for g in m.groups() if g}
     if lang == "rust":
         return set(build_graph.RUST_ENV_RE.findall(code))
+    if lang == "go":
+        return set(build_graph.go_source.GO_ENV_RE.findall(code))
     keys = set(re.findall(r"process\.env\.([A-Z_][A-Z0-9_]*)", code))
     keys |= set(re.findall(r"""process\.env\[\s*['"]([A-Z_][A-Z0-9_]*)['"]\s*\]""", code))
     keys |= set(re.findall(r"""configService\.get(?:<[^>]*>)?\(\s*['"]([A-Z_][A-Z0-9_]*)['"]""", code))
@@ -1524,6 +1528,8 @@ def config_violations(graph: dict, tree: build_graph.Tree, scan: TreeScan, extra
             lang, code = "python", build_graph.strip_comments_python(tree.text(path))
         elif path.endswith(build_graph.RUST_EXT):
             lang, code = "rust", build_graph.strip_comments_rust(tree.text(path))
+        elif path.endswith(build_graph.GO_EXT):
+            lang, code = "go", build_graph.strip_comments_go(tree.text(path))
         else:
             continue
         undeclared = {k for k in config_keys_read(code, lang) if k not in declared and not FRAMEWORK_ENV_RE.match(k)}
@@ -1665,6 +1671,7 @@ class Verify:
         self.test_suite: dict | None = None  # typed absent-suite record; set only by v_global_fallback_test
         self.ev: dict[str, dict[str, tuple[str, str]]] = {}   # verifier id → entity → (verdict, reason)
         self.canary_paths = list(getattr(a, "canary", None) or [])   # CanaryResult/v1 documents (AUP-GRAPH-008)
+        self.require_committed_canary_v2 = getattr(a, "require_committed_canary_v2", False)
         self.canary_verified: set[str] = set()
         self.canary_discharged_tests: list[str] = []   # A2-353: test code_units whose `canary` was discharged
         self.type_check_discharged_fixtures: list[str] = []   # A2-452: uncovered fixture files, type_check discharged
@@ -2208,6 +2215,24 @@ class Verify:
         self.ev.setdefault(vid, {}).update(verdicts)
 
     # ---- verifiers
+    def v_receipt_data(self):
+        ents = self.needing("receipt_data")
+        superseded = self.superseded_self_exclusions()
+        ents = [e for e in ents if e not in superseded]
+        if not ents:
+            return
+        started, tick = now_iso(), time.monotonic()
+        objects = receipt_data.GitObjects(self.top)
+        measured = {e: receipt_data.measure(objects, self.base, self.head, self.entity_file(e)) for e in ents}
+        verdicts = {e: (v["verdict"], v["reason"]) for e, v in measured.items()}
+        code = 1 if any(v[0] == "failed" for v in verdicts.values()) else 2 if any(v[0] == "not_measured" for v in verdicts.values()) else 0
+        output = json.dumps({"schema": "ReceiptDataVerifierResult/v1", "scope": receipt_data.SCOPE,
+                             "measurements": measured}, sort_keys=True)
+        self.record("v-receipt-data", "receipt_data", "verify.py receipt_data (Git + authenticated native GET)",
+                    ents, code, output, started, round(time.monotonic() - tick, 2),
+                    "archival data only; foreign source claims unchanged", verdicts, ext="json")
+        self.verifiers[-1].update(scope=receipt_data.SCOPE, measurements=measured)
+
     def v_type_check(self):
         ents = self.needing("type_check")
         if not ents:
@@ -2599,11 +2624,38 @@ class Verify:
             for pkg in overlay.get("stub_packages", []):
                 paths[pkg] = [str(troot / pkg / "index.d.ts")]
             paths.update(overlay.get("paths_override", {}))
-            co["baseUrl"] = str(self.exec_root / dep)
+            # TS 7 removes node10 resolution and baseUrl. The selftest overlay has
+            # historically compiled as CommonJS with Node's legacy resolver, so
+            # use paired Node16 semantics instead. Paths are made absolute relative
+            # to the same deployable root previously supplied as baseUrl; this keeps
+            # both inherited and overlay mappings intact without relying on baseUrl.
+            if co.get("moduleResolution") in {"node", "node10"}:
+                co["moduleResolution"] = "node16"
+                if co.get("module") == "commonjs":
+                    co["module"] = "node16"
+            paths_root = self.exec_root / dep
+            for key, targets in paths.items():
+                if isinstance(targets, list):
+                    paths[key] = [str(Path(os.path.abspath(os.path.join(paths_root, target))))
+                                  if isinstance(target, str) and not os.path.isabs(target) else target
+                                  for target in targets]
+            # Explicit null shadows a baseUrl inherited through `extends`; omitting
+            # the key would still leave TS 7 seeing the removed inherited option.
+            co["baseUrl"] = None
             co["paths"] = paths
             doc["files"] = [str(troot / g) for g in overlay.get("global_typings", [])]
         gen.write_text(json.dumps(doc, indent=1))
         return gen
+
+    def _changed_paths_both_sides(self) -> set[str]:
+        """Every path the change set names, base and head side (a rename contributes both its old and new path)."""
+        out: set[str] = set()
+        for f in self.change_files:
+            out.add(f["path"])
+            for k in ("renamed_to", "renamed_from"):
+                if f.get(k):
+                    out.add(f[k])
+        return out
 
     def v_contract_diff(self):
         ents = self.needing("contract_diff")
@@ -2612,9 +2664,24 @@ class Verify:
         started = now_iso()
         t0 = time.monotonic()
         cmd = f"{contract_diff.TOOL}.run_diff(base={self.tree_base.meta.get('source_commit', '?')[:12]}, head={'worktree' if self.mode == 'worktree' else self.head[:12]}, graph=head graph)"
+        # DEC-AUP-0189: the pydantic refusal is scoped to the contracts this change reaches (the entities
+        # needing this verifier and the contracts their graph edges bind), not to every Python contract of
+        # the repository. Reaching an unsupported Python contract still refuses; the contract maps and edge
+        # verdicts below stay unscoped, so an edge to an unextracted contract is still not_measured.
+        reach = set(ents)
+        for eid in ents:
+            p = (self.entities[eid]["node"] or {}).get("path")
+            if p:
+                reach.add(f"code_unit:{p}")
+        # head AND base edges: an entity removed at head, or a consumer of a removed contract, only has base edges
+        for graph in (self.graph_head, getattr(self.idx, "doc", None) or {}):
+            for e in graph.get("edges", []):
+                if e["type"] in ("implements_contract", "consumes_contract") and e["from"] in reach and e["to"].startswith("contract:"):
+                    reach.add(e["to"])
         try:
             res = contract_diff.run_diff(self.tree_base, self.tree_head, graph=self.graph_head, repo_name=self.repo.name,
-                                         metadata_root=self.exec_root, metadata_git_repo=self.top)
+                                         metadata_root=self.exec_root, metadata_git_repo=self.top, reach=reach,
+                                         changed_paths=self._changed_paths_both_sides())
         except contract_diff.Refusal as r:
             self.record("v-contract-diff", "contract_diff", cmd, ents, 2, f"REFUSAL {r.code}: {r.detail}", started, round(time.monotonic() - t0, 2),
                         f"refusal {r.code}", {e: ("not_measured", f"contract_diff refused: {r.code}") for e in ents}, "txt")
@@ -2749,6 +2816,39 @@ class Verify:
             owners = {deployable_of(p, self.deployables) for p in (n.get('attrs') or {}).get('nest_route_sources', [])}
             if nest and len(owners) > 1:
                 verdicts[eid] = ('not_measured', 'BOOTSTRAP_UNRESOLVED: logical route has multiple deployable owners')
+                continue
+            source_paths = sorted({path} | set((n.get('attrs') or {}).get('nest_route_sources', [])))
+            testing = {p: nest_bootstrap.resolve_test(self.tree_head, p) for p in source_paths} if nest else {}
+            if any(x is not None for x in testing.values()) and self.fr_rules & {'rc01', 'rc02'}:
+                unknown, failures, prefixes = [], [], []
+                for source, selected in testing.items():
+                    if selected is None:
+                        selected = nest_bootstrap.resolve(self.tree_head, dep, self.deployables, self.profile)
+                        reg, rnotes = nest_registered_files(self.scan_head, selected.root_file) if selected.root_file else (set(), ['no resolved bootstrap'])
+                        is_registered = source in reg
+                        if not reg and rnotes and rnotes[0].startswith('no'):
+                            unknown.append(f'{source}: RC-02 {rnotes[0]}')
+                    else:
+                        is_registered = selected.registered
+                    if not selected.complete:
+                        unknown.append(f'{source}: {selected.reason}')
+                        continue
+                    prefixes.append(selected.prefix)
+                    if 'rc02' in self.fr_rules and not is_registered:
+                        failures.append(f'UNREGISTERED_CONTROLLER: {source} is absent from its concrete application registration')
+                if len(set(prefixes)) > 1:
+                    unknown.append('logical route contributors have distinct application prefixes')
+                want = (n.get('attrs') or {}).get('global_prefix')
+                want = '/' + want.strip('/') if want else None
+                if not unknown and prefixes and 'rc01' in self.fr_rules and want != prefixes[0]:
+                    failures.append(f'PREFIX_MISMATCH: route built with {want!r}, concrete application requires {prefixes[0]!r}')
+                if failures:
+                    verdicts[eid] = ('failed', '; '.join(failures))
+                elif unknown:
+                    verdicts[eid] = ('not_measured', 'BOOTSTRAP_UNRESOLVED: ' + '; '.join(unknown))
+                else:
+                    verdicts[eid] = ('verified', 'served at head; every contributor has concrete trusted bootstrap, prefix and controller registration')
+                log.append(f'{eid}: {verdicts[eid][0]} — {verdicts[eid][1]}')
                 continue
             if dep not in bootstraps:
                 bootstraps[dep] = nest_bootstrap.resolve(self.tree_head, dep, self.deployables, self.profile)
@@ -2998,7 +3098,9 @@ class Verify:
                 fz = frozen_by.get(eid, [])
                 verdicts[eid] = ("verified", f"every key read is declared" + (f" ({len(fz)} frozen undeclared key(s): {', '.join(v['key'] for v in fz[:4])})" if fz else ""))
         out = {"declared_sources": sources, "declared_count": len(declared), "new": new, "frozen": frozen,
-               "vendored_not_attributed": list(vendored_report.values())}
+               "vendored_not_attributed": list(vendored_report.values()),
+               "environment_obligations": environment_obligations.for_verifier(
+                   self, ents, find_bin, deployable_of, is_test_path) if not sources else {}}
         failed = sum(1 for v in verdicts.values() if v[0] == "failed")
         self.record("v-config-schema", "config_schema", "verify.py config_schema: keys read at head ⊆ declared keys", ents, 1 if failed else 0, out,
                     started, round(time.monotonic() - t0, 2),
@@ -3257,6 +3359,9 @@ class Verify:
         verdicts = {}
         for eid in ents:
             n = self.entities[eid]["node"]
+            if n.get("kind") == "operational_configuration":
+                verdicts[eid] = ("not_measured", "operational configuration syntax and runtime semantics require separate exact-byte evidence")
+                continue
             if n["type"] == "deployable_unit":
                 dep = (n.get("path") or "").rstrip("/")
                 mine = [v for v in new if deployable_of(v["entity"].split(":", 1)[1], self.deployables) == dep]
@@ -3285,12 +3390,39 @@ class Verify:
                 actionlint = find_bin("actionlint", None, self.exec_root,
                                       getattr(self, "scope_root", self.top), [])
                 native_verdict, proof = workflow_config.native_fitness(path, raw, actionlint)
-            workflow_native[eid] = {"verdict": native_verdict, **proof}
+            change_native_verdict = native_verdict
+            # Fitness describes what this range introduced. An inferred caller
+            # may be byte-identical at base and head, yet actionlint can find a
+            # pre-existing defect when the tool becomes available. Keep the
+            # failed native observations; only their change-level disposition
+            # can be frozen, and only after the same pinned tool reproduces the
+            # same diagnostic from the exact base bytes. Changed workflows and
+            # incomplete base measurements retain the raw head verdict.
+            if native_verdict == "failed" and self.mode == "diff" and raw is not None:
+                base_raw = self.tree_base.files.get(path)
+                if base_raw == raw:
+                    base_verdict, base_proof = workflow_config.native_fitness(path, base_raw, actionlint)
+                    diagnostic_keys = ("reason", "exit_code", "output")
+                    if (base_verdict == "failed" and proof.get("identity") and
+                            all(base_proof.get(k) == proof.get(k) for k in diagnostic_keys) and
+                            base_proof.get("identity") == proof.get("identity")):
+                        change_native_verdict = "verified"
+                        proof = {**proof, "historical_baseline": {
+                            "base_verdict": base_verdict,
+                            "base_source_sha256": base_proof.get("source_sha256"),
+                            "base_diagnostic": {k: base_proof.get(k) for k in diagnostic_keys},
+                            "head_verdict": native_verdict,
+                            "head_source_sha256": proof.get("source_sha256"),
+                            "rule": "byte-identical base/head workflow with the same failed native diagnostic; no new fitness finding",
+                        }}
+            workflow_native[eid] = {"verdict": native_verdict, "change_verdict": change_native_verdict, **proof}
             current, reason = verdicts[eid]
-            if current == "failed" or native_verdict == "failed":
+            if current == "failed" or change_native_verdict == "failed":
                 verdicts[eid] = ("failed", reason if current == "failed" else proof.get("reason", "workflow fitness failed"))
-            elif current == "not_measured" or native_verdict == "not_measured":
+            elif current == "not_measured" or change_native_verdict == "not_measured":
                 verdicts[eid] = ("not_measured", reason + "; workflow actionlint NOT_MEASURED: " + proof.get("reason", "unavailable"))
+            elif native_verdict == "failed":
+                verdicts[eid] = ("verified", reason + "; historical native workflow failure frozen at identical base/head bytes")
         out = {"rules": self.matrix["fitness_rules"], "baseline": self.baseline_ref, "baseline_status": self.baseline_status,
                "new": new, "frozen": frozen, "workflow_native": workflow_native}
         failed = sum(1 for v in verdicts.values() if v[0] == "failed")
@@ -3394,6 +3526,13 @@ class Verify:
             if errors:
                 rows = {e: {"entity": e, "verdict": "not_measured",
                             "reason": "CANARY_EVIDENCE_UNVERIFIABLE: " + "; ".join(errors)} for e in ents}
+            elif getattr(self, "require_committed_canary_v2", False):
+                # Source identity and readable execution inputs cannot authenticate the
+                # execution or its outcome. Keep the committed result as diagnostic evidence.
+                rows = {eid: {**row, "verdict": "not_measured",
+                              "reason": "CANARY_EXECUTION_PROVENANCE_NOT_MEASURED: "
+                                        "no independently authenticated execution outcome"}
+                        if row["verdict"] == "verified" else row for eid, row in rows.items()}
             meta = {"plan": (doc.get("plan") or {}).get("id") if isinstance(doc.get("plan"), dict) else None,
                     "phase": doc.get("phase"), "environment": doc.get("environment")}
             row_id = None
@@ -3997,8 +4136,9 @@ class Verify:
 
         Three conditions, each separately falsifiable:
 
-          1. The matrix declares NO verifier of any kind for the node type — the same condition as
-             DEC-AUP-0034 (1), and the reason the excluded verdict carries no information.
+          1. The receipt owes no mandatory verifier other than archived-data receipt_data and
+             no selectable verifier. DEC-AUP-0083 preserves this self-reissue case only; ordinary
+             historical receipt entities now owe archival-data measurement.
           2. The entity's path is the path this run writes its receipt to (`--out`, relative to the
              repository). A receipt cannot supersede a document it is not replacing.
           3. Every version of that file which exists at base or head declares the SAME work item as
@@ -4014,7 +4154,11 @@ class Verify:
         node = ent["node"]
         ntype = node.get("type") or "receipt"
         spec = self.matrix["node_types"].get(ntype)
-        if not isinstance(spec, dict) or (spec.get("mandatory") or []) or (spec.get("selectable") or []):
+        # DEC-AUP-0083: self-reissue is not archival custody of its previous draft.
+        # No OTHER mandatory/selectable obligation may be removed by this narrow case.
+        if (ntype != "receipt" or not isinstance(spec, dict) or spec.get("selectable")
+                or set(spec.get("mandatory") or []) - {"receipt_data"}
+                or set(ent.get("required") or []) - {"receipt_data"}):
             return {}
         path = self.self_receipt_rel
         declared = {rev: self._declared_work_item(tree, path)
@@ -4425,7 +4569,7 @@ class Verify:
                         ("route_config_consistency", self.v_route_config), ("schema_diff", self.v_schema_diff),
                         ("config_schema", self.v_config_schema), ("fitness_rules", self.v_fitness),
                         ("fitness_rules", self.v_selected_dependency),
-                        ("doc_reference", self.v_doc_reference), ("canary", self.v_canary),
+                        ("doc_reference", self.v_doc_reference), ("receipt_data", self.v_receipt_data), ("canary", self.v_canary),
                         ("shell_syntax", self.v_shell_syntax), ("shell_behavior", self.v_shell_behavior),
                         ("systemd_unit_semantics", self.v_systemd_unit_semantics),
                         ("source_file_integrity", self.v_source_file_integrity),
@@ -4818,6 +4962,19 @@ def selftest(a) -> int:
                                   "survived_when_disabled": survived, "other_verifiers_failed_when_disabled": others_failed})
     # per-verifier summary: every mandatory verifier is load-bearing
     for vid in MANDATORY_IDS:
+        if vid == "receipt_data":
+            # The legacy worktree fault fixture has no committed original/archive
+            # lineage. Exercise actual diff selection/runner/aggregation over real
+            # Git instead; the control asserts FAILED enabled, NM disabled, and
+            # a mandatory-disabled event. Its HTTP transport is explicitly synthetic.
+            result = subprocess.run(
+                [sys.executable, "-m", "unittest",
+                 "test_receipt_data_integration.ReceiptDataIntegration."
+                 "test_native_mandatory_fault_killed_enabled_survives_disabled", "-v"],
+                cwd=Path(__file__).parent, capture_output=True, text=True)
+            check("mandatory verifier receipt_data: real-Git fault killed enabled, survives disabled without admission",
+                  result.returncode == 0, output=(result.stdout + result.stderr)[-2000:])
+            continue
         if vid == "source_input_contract":
             result = subprocess.run([sys.executable, "-m", "unittest",
                                      "test_source_input_contract.SourceInputContractTests."
@@ -5241,6 +5398,8 @@ def main(argv=None) -> int:
     ap.add_argument("--canary", action="append",
                     help="CanaryResult/v1 (tools/graph/deploy_gate.py canary): live-contour evidence for inferred/observed "
                          "boundary entities and canary_required edge types (AUP-GRAPH-008)")
+    ap.add_argument("--require-committed-canary-v2", action="store_true",
+                    help="require one exact-head CanaryResult/v2 for the hosted candidate input")
     ap.add_argument("--full-test-ci", action="append", metavar="COMMITTED_PATH",
                     help="committed GitHubFullSuiteEvidence/v1 for explicit full_test; authenticate exact run/job/log/tree, never replay on refusal")
     ap.add_argument("--root-typecheck-ci-root", type=Path,
@@ -5280,6 +5439,13 @@ def main(argv=None) -> int:
     if a.compiler_sdk_root and not a.diff:
         ap.error("compiler SDK binding requires an exact committed --diff range")
     base, head = a.diff.split("..", 1) if a.diff else ("HEAD", "HEAD")
+    if a.require_committed_canary_v2:
+        if not a.diff or len(a.canary or []) != 1:
+            ap.error("the hosted canary requires exactly one --canary and a committed --diff range")
+        try:
+            canary_evidence.validate_candidate_canary(a.repo, head, a.canary[0])
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+            ap.error(str(exc))
     with impact_pair.phase_trace_to(a.phase_log):
         with impact_pair.trace_phase("verification-command"):
             with compiler_sdk_input(a, a.repo, base, head):

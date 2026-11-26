@@ -37,6 +37,11 @@ Extractors (each one separately disable-able for the mutation battery; `manifest
                every discovered src root, relative imports (`from .x import y`) resolved from the importing file's
                directory; `os.environ`/`os.getenv`; `@app.get(...)`-style decorators                → imports / reads_config /
                provides_route (deterministic)
+  go           AUP-GRAPH-009: go.mod (when present) → deployable_unit + containment; package clause required for a
+               hash-bound code_unit (no bare .go node); project import paths resolved only under a declared module;
+               same-package `*_test.go` → verifies; `os.Getenv`/`LookupEnv`; build tags recorded; unresolved external
+               imports stay external (no fabricated module)                                         → imports / verifies /
+               reads_config (deterministic)
 
 Nothing here calls an LLM; every `inferred` edge names its method in `inferred_by` (LLM_EDGE_NOT_INFERRED is a schema
 violation). stdlib only (Python 3.12); the TypeScript compiler is NOT used — the extractor is a comment/string-aware
@@ -64,15 +69,16 @@ import nest_bootstrap
 import python_search_path
 import schema_check  # noqa: E402  (tools/graph/schema_check.py — the validator of GRAPH-001)
 import shell_source
+import go_source
 import nest_fixture_scope
 import fixture_contracts
 import native_projection  # noqa: E402
 import source_input_contract  # noqa: E402
 
-VERSION = "1.0.6"  # Bounded Python caller contexts remain explicitly inferred.
+VERSION = "1.0.7"  # Operational config hash-bound (semantics unmeasured); bounded Go package/import/test extractor.
 BUILDER = "tools/graph/build_graph.py"
 EXTRACTORS = ["imports", "routes", "contracts", "prisma", "config", "reuse", "di", "queue", "tests",
-              "http_client", "deployables", "docs", "work_items", "receipts", "rust", "python"]
+              "http_client", "deployables", "docs", "work_items", "receipts", "rust", "python", "go"]
 EXTRACTORS.append("systemd")
 EXTRACTORS.append("trust_anchor")
 # `.mts` / `.cts` are TypeScript's ESM / CommonJS module flavours. impact.py and verify.py have always
@@ -98,7 +104,22 @@ DECL_EXT = (".d.ts", ".d.mts", ".d.cts")
 TS_SPEC_EXT = {".js": (".ts", ".tsx", ".d.ts"), ".mjs": (".mts", ".d.mts"), ".cjs": (".cts", ".d.cts")}
 RUST_EXT = (".rs",)
 PY_EXT = (".py",)
+GO_EXT = go_source.GO_EXT
+
+
+def operational_config_kind(path: str) -> str | None:
+    """Recognize the bounded deployment and service-registry sources we cannot parse semantically."""
+    name = path.rsplit("/", 1)[-1]
+    if path.startswith("ops/nginx/") and (name.endswith(".conf") or name == "sudoers" or name.endswith("-sudoers")):
+        return "operational_configuration"
+    if path == "scripts/services.yml":
+        return "operational_configuration"
+    return None
 ADAPTER_CLASS_RE = re.compile(r"\bclass\s+\w+\s+extends\s+(\w*Adapter)\b")
+
+
+def strip_comments_go(src: str) -> str:
+    return go_source.strip_comments_go(src)
 
 RUST_MOD_RE = re.compile(r"(?m)^\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*;")
 RUST_USE_RE = re.compile(r"\buse\s+((?:crate|self|super)(?:::[A-Za-z_][A-Za-z0-9_]*)*"
@@ -506,14 +527,14 @@ def load_tree_worktree(root: Path) -> Tree:
 SYSTEMD_SUFFIX_KIND = {".service": "service", ".timer": "timer"}
 SYSTEMD_ALLOWED = {
     "Unit": {"Description", "Documentation", "After", "Before", "Requires", "Wants", "PartOf",
-             "ConditionPathExists", "ConditionPathIsDirectory"},
+             "ConditionPathExists", "ConditionPathIsDirectory", "StartLimitIntervalSec", "StartLimitBurst"},
     "Service": {"Type", "ExecStart", "ExecStartPre", "ExecStartPost", "ExecStop", "User", "Group",
                  "WorkingDirectory", "EnvironmentFile", "Restart", "RestartSec", "TimeoutStartSec", "Nice",
                  "CPUWeight", "IOWeight", "Environment", "StandardOutput", "StandardError", "ProtectSystem",
                  "NoNewPrivileges", "PrivateTmp", "ProtectHome", "ProtectKernelTunables",
                  "ProtectKernelModules", "ProtectControlGroups", "RestrictSUIDSGID", "LockPersonality",
                  "RestrictRealtime", "SystemCallArchitectures", "ReadOnlyPaths", "ReadWritePaths",
-                 "StateDirectory"},
+                 "StateDirectory", "UMask", "RestrictAddressFamilies", "MemoryDenyWriteExecute"},
     # Muneral 7fbbccbe: every key of systemd.timer(5) (systemd 255), not the three the first fixtures used. A valid
     # key was reported as SYSTEMD_KEY_UNKNOWN and failed the verdict of any change that touched the file
     # (scrutator deploy/muneral-kb-sync.timer, AccuracySec=15s). Keys stay single-valued: a duplicate is still
@@ -534,7 +555,7 @@ SYSTEMD_REPEATABLE = {
 SYSTEMD_BOOLEAN_VALUES = {"1", "yes", "true", "on", "0", "no", "false", "off"}
 SYSTEMD_BOOLEAN_DIRECTIVES = {
     "NoNewPrivileges", "ProtectKernelTunables", "ProtectKernelModules", "RestrictSUIDSGID",
-    "LockPersonality", "RestrictRealtime",
+    "LockPersonality", "RestrictRealtime", "MemoryDenyWriteExecute",
 }
 SYSTEMD_TIMER_BOOLEAN_DIRECTIVES = {
     "FixedRandomDelay", "OnClockChange", "OnTimezoneChange", "Persistent", "WakeSystem", "RemainAfterElapse",
@@ -544,6 +565,16 @@ SYSTEMD_ARCHITECTURES = {
     "s390", "s390x", "sparc", "sparc64", "mips", "mips-le", "mips64", "mips64-le",
     "alpha", "arm", "arm-be", "arm64", "arm64-be", "sh", "sh64", "m68k", "tilegx", "cris",
     "arc", "arc-be", "x32", "mips64-n32", "mips64-le-n32", "native",
+}
+# Linux address families and aliases recognized by systemd 255's generated af-list.
+# Keep the grammar independent of the Python build and the verifier host's headers.
+SYSTEMD_ADDRESS_FAMILIES = {
+    "AF_ALG", "AF_APPLETALK", "AF_ASH", "AF_ATMPVC", "AF_ATMSVC", "AF_AX25", "AF_BLUETOOTH",
+    "AF_BRIDGE", "AF_CAIF", "AF_CAN", "AF_DECNET", "AF_ECONET", "AF_FILE", "AF_IB", "AF_IEEE802154",
+    "AF_INET", "AF_INET6", "AF_IPX", "AF_IRDA", "AF_ISDN", "AF_IUCV", "AF_KCM", "AF_KEY", "AF_LLC",
+    "AF_LOCAL", "AF_MCTP", "AF_MPLS", "AF_NETBEUI", "AF_NETLINK", "AF_NETROM", "AF_NFC", "AF_PACKET",
+    "AF_PHONET", "AF_PPPOX", "AF_QIPCRTR", "AF_RDS", "AF_ROSE", "AF_ROUTE", "AF_RXRPC",
+    "AF_SECURITY", "AF_SMC", "AF_SNA", "AF_TIPC", "AF_UNIX", "AF_VSOCK", "AF_WANPIPE", "AF_X25", "AF_XDP",
 }
 
 
@@ -648,11 +679,103 @@ def _systemd_path_list_is_valid(value: str) -> bool:
     return True
 
 
+_SYSTEMD_USEC_PER_SECOND = 1_000_000
+_SYSTEMD_USEC_INFINITY = (1 << 64) - 1
+_SYSTEMD_TIME_UNITS = {
+    unit: microseconds
+    for names, microseconds in (
+        ("usec us μs µs", 1),
+        ("msec ms", 1_000),
+        ("seconds second sec s", _SYSTEMD_USEC_PER_SECOND),
+        ("minutes minute min m", 60 * _SYSTEMD_USEC_PER_SECOND),
+        ("hours hour hr h", 3_600 * _SYSTEMD_USEC_PER_SECOND),
+        ("days day d", 86_400 * _SYSTEMD_USEC_PER_SECOND),
+        ("weeks week w", 604_800 * _SYSTEMD_USEC_PER_SECOND),
+        ("months month M", 2_629_800 * _SYSTEMD_USEC_PER_SECOND),
+        ("years year y", 31_557_600 * _SYSTEMD_USEC_PER_SECOND),
+    )
+    for unit in names.split()
+}
+# Match the longest suffix first, so e.g. "msec" is not read as minutes followed by junk.
+_SYSTEMD_TIME_SUFFIX = "|".join(sorted(_SYSTEMD_TIME_UNITS, key=len, reverse=True))
+_SYSTEMD_TIME_COMPONENT = re.compile(
+    r"[ \t]*(?P<number>\+?[0-9]+(?:\.[0-9]+)?|\.[0-9]+)"
+    rf"(?:[ \t]*(?P<unit>{_SYSTEMD_TIME_SUFFIX}))?"
+)
+_SYSTEMD_INTEGER = re.compile(
+    r"[+-]?(?:0[xX](?P<hexadecimal>[0-9a-fA-F]+)|0[bB](?P<binary>[01]+)"
+    r"|0(?P<octal>[0-7]*)|(?P<decimal>[1-9][0-9]*))|0o(?P<explicit_octal>[0-7]+)"
+)
+
+
+def _systemd_timespan_is_valid(value: str) -> bool:
+    """Validate a seconds-based systemd 255 time span."""
+    value = value.strip(" \t")
+    if value == "infinity":
+        return True
+    offset = total = 0
+    while offset < len(value):
+        part = _SYSTEMD_TIME_COMPONENT.match(value, offset)
+        if part is None:
+            return False
+        offset = part.end()
+        unit = part["unit"]
+        if unit is None and offset < len(value) and value[offset] not in " \t":
+            return False
+        whole, _, fraction = part["number"].lstrip("+").partition(".")
+        whole = whole.lstrip("0")
+        if len(whole) > 19:
+            return False
+        count = int(whole or "0")
+        scale = _SYSTEMD_TIME_UNITS.get(unit, _SYSTEMD_USEC_PER_SECOND)
+        if count >= _SYSTEMD_USEC_INFINITY // scale or count >= 1 << 63:
+            return False
+        total += count * scale
+        for digit in fraction:
+            scale //= 10
+            if not scale:
+                break
+            total += int(digit) * scale
+        if total >= _SYSTEMD_USEC_INFINITY:
+            return False
+    return bool(value)
+
+
+def _systemd_integer_in_range(value: str, minimum: int, maximum: int) -> bool:
+    value = value.strip(" \t")
+    number = _SYSTEMD_INTEGER.fullmatch(value)
+    if number is None:
+        return False
+    digits = number[number.lastgroup].lstrip("0") or "0"
+    if len(digits) > 32:
+        return False
+    radix = {"hexadecimal": 16, "binary": 2, "octal": 8, "explicit_octal": 8, "decimal": 10}
+    count = int(digits, radix[number.lastgroup])
+    if value.startswith("-"):
+        count = -count
+    return minimum <= count <= maximum
+
+
 def _systemd_value_is_valid(section: str, key: str, value: str) -> bool:
+    if key.endswith("Sec"):
+        # Each allowlisted *Sec key in Unit, Service and Timer takes a time span.
+        return _systemd_timespan_is_valid(value)
+    if section == "Unit" and key == "StartLimitBurst":
+        return _systemd_integer_in_range(value, 0, (1 << 32) - 1)
     if section == "Timer" and key in SYSTEMD_TIMER_BOOLEAN_DIRECTIVES:
         return value.lower() in SYSTEMD_BOOLEAN_VALUES
     if section != "Service":
         return True
+    if key == "Nice":
+        return _systemd_integer_in_range(value, -20, 19)
+    if key == "UMask":
+        return bool(re.fullmatch(r"[0-7]{1,4}", value.strip(" \t")))
+    if key == "RestrictAddressFamilies":
+        value = value.strip(" \t")
+        if value == "none":
+            return True
+        families = re.split(r"[ \t]+", value.removeprefix("~").lstrip(" \t"))
+        return all(name.isascii() and name.upper() in SYSTEMD_ADDRESS_FAMILIES for name in families)
     if key == "StateDirectory":
         # This bounded grammar supports plain directory basenames only. systemd ownership
         # modifiers and specifiers remain outside this parser's verified source subset.
@@ -692,8 +815,9 @@ def parse_systemd_unit(path: str, raw: bytes) -> dict:
         raise SystemdParseError(f"SYSTEMD_UTF8_INVALID:{exc.start}") from exc
     sections: dict[str, dict[str, list[dict]]] = {}
     section = None
-    for line_no, line in enumerate(text.splitlines(), 1):
-        stripped = line.strip()
+    # Keep Unicode line separators in the key or value for validation.
+    for line_no, line in enumerate(re.split(r"\r\n|\r|\n", text), 1):
+        stripped = line.strip(" \t")
         if not stripped or stripped.startswith(("#", ";")):
             continue
         if stripped.endswith("\\"):
@@ -707,11 +831,11 @@ def parse_systemd_unit(path: str, raw: bytes) -> dict:
         if section is None or "=" not in line:
             raise SystemdParseError(f"SYSTEMD_LINE_INVALID:{line_no}")
         key, value = line.split("=", 1)
-        key = key.strip()
+        key = key.strip(" \t")
         if key not in SYSTEMD_ALLOWED[section]:
             raise SystemdParseError(f"SYSTEMD_KEY_UNKNOWN:{line_no}:{section}.{key}")
         if not value or value.startswith((" ", "\t")):
-            value = value.strip()
+            value = value.strip(" \t")
         if value == "" and (section, key) in {
                 ("Service", "ReadOnlyPaths"), ("Service", "ReadWritePaths")}:
             sections[section].setdefault(key, []).clear()
@@ -1083,6 +1207,9 @@ class Builder:
                     self.g.edge(f"code_unit:{path}", "imports", f"code_unit:{payload}",
                                 "deterministic", via="BenchNativePatchset/v1-physical-sibling")
         for p in t.paths:
+            config_kind = operational_config_kind(p)
+            if config_kind:
+                self.g.node(f"code_unit:{p}", "code_unit", sha_bytes(t.files[p]), path=p, kind=config_kind)
             shell_kind = shell_source.kind(p, t.files[p], t.meta.get("file_modes", {}).get(p))
             if shell_kind:
                 analysis = shell_source.analyse(p, t.files[p], t.paths)
@@ -1095,6 +1222,15 @@ class Builder:
                 self.g.node(f"code_unit:{p}", "code_unit", sha_bytes(t.files[p]), path=p, kind="type_declaration")
             elif p.endswith(CODE_EXT) or p.endswith(".prisma") or p.endswith(RUST_EXT) or p.endswith(PY_EXT):
                 self.g.node(f"code_unit:{p}", "code_unit", sha_bytes(t.files[p]), path=p)
+            elif p.endswith(GO_EXT):
+                # No fake bare .go node: a package clause is required before a hash-bound code_unit exists.
+                parsed = go_source.parse_go_file(t.text(p))
+                if parsed is not None:
+                    kind = "go_test" if go_source.is_go_test(p) else "go_source"
+                    self.g.node(f"code_unit:{p}", "code_unit", sha_bytes(t.files[p]), path=p, kind=kind,
+                                symbol=parsed["package"],
+                                attrs={"go_package": parsed["package"], "go_imports": parsed["imports"],
+                                       "go_build_tags": parsed["build_tags"]})
             if p.endswith(CODE_EXT):
                 self.ts[p] = TsFile(p, t.text(p))
         self._source_input_bindings()
@@ -1462,6 +1598,7 @@ class Builder:
 
     def x_routes(self):
         t = self.tree
+        testing_bootstraps = {}
         projections = {}
         if self.source_repo and t.meta.get('source_tree') == 'git-objects':
             for dep, bootstrap in self.bootstraps.items():
@@ -1487,7 +1624,11 @@ class Builder:
                         continue
                     method = HTTP_METHODS[m.group(1).lower()]
                     route_path = self._route_path(prefix, sub or '')
-                    bootstrap = self.bootstraps.get(nest_bootstrap.deployable_of(f.path, self.package_dirs))
+                    if f.path not in testing_bootstraps:
+                        testing_bootstraps[f.path] = nest_bootstrap.resolve_test(t, f.path)
+                    bootstrap = testing_bootstraps[f.path]
+                    if bootstrap is None:
+                        bootstrap = self.bootstraps.get(nest_bootstrap.deployable_of(f.path, self.package_dirs))
                     route_complete = bool(bootstrap and bootstrap.complete)
                     try:
                         effective = bootstrap.effective_prefix(method, route_path) if route_complete else None
@@ -1842,6 +1983,90 @@ class Builder:
                                      "star imports, importlib-dynamic imports and bare `from . import x` "
                                      "are not resolved")
 
+    def x_go(self):
+        """AUP-GRAPH-009: go.mod (when present) → deployable_unit + containment; package-bound .go code_units;
+        project import paths resolved only under a declared module path; same-package `*_test.go` → verifies;
+        os.Getenv/LookupEnv → config_key. A missing go.mod is NOT fabricated. External imports stay external.
+        Build tags are recorded on the node attrs (from base()); nested modules use nearest go.mod."""
+        t = self.tree
+        modules: list[tuple[str, str]] = []  # (dir, module_path)
+        for p in t.paths:
+            if os.path.basename(p) != "go.mod":
+                continue
+            mp = go_source.module_path(t.text(p))
+            if not mp:
+                self.limitations.append(f"go.mod unreadable module line: {p}")
+                continue
+            modules.append((os.path.dirname(p), mp))
+        modules.sort(key=lambda x: len(x[0]), reverse=True)
+
+        go_files = [p for p in t.paths if p.endswith(GO_EXT) and f"code_unit:{p}" in self.g.nodes]
+        parsed_of: dict[str, dict] = {}
+        for p in go_files:
+            parsed = go_source.parse_go_file(t.text(p))
+            if parsed is None:
+                continue
+            parsed_of[p] = parsed
+
+        for d, name in modules:
+            go_mod_path = (d + "/" if d else "") + "go.mod"
+            kind = "library"
+            # A module that imports a known HTTP/service stack is a service; main packages lean cli.
+            text_blob = " ".join(imp for meta in parsed_of.values() for imp in meta["imports"])
+            if any(h in text_blob for h in go_source.GO_SERVICE_IMPORT_HINTS):
+                kind = "service"
+            elif any(meta["package"] == "main" for p, meta in parsed_of.items()
+                     if go_source.owning_module(p, modules) == (d, name)):
+                kind = "cli"
+            did = self.g.node(f"deployable_unit:{d or '.'}", "deployable_unit", sha_bytes(t.files[go_mod_path]),
+                              path=d or ".", kind=kind, symbol=name)
+            prefix = (d + "/") if d else ""
+            for fp in go_files:
+                if not (fp.startswith(prefix) if d else True):
+                    continue
+                own = go_source.owning_module(fp, modules)
+                if own != (d, name):
+                    continue
+                self.g.edge(f"code_unit:{fp}", "deploys_to", did, "deterministic", via="containment")
+
+        for p, meta in parsed_of.items():
+            for imp in meta["imports"]:
+                pkg_dir = go_source.import_package_dir(modules, imp)
+                if pkg_dir is None:
+                    self.external_packages.add(imp)
+                    continue
+                for target in go_source.package_dir_files(t.paths, pkg_dir):
+                    if target == p or f"code_unit:{target}" not in self.g.nodes:
+                        continue
+                    # Do not edge a file to another file in the same package via its own module import of itself
+                    # unless packages differ by path; same-package mates are not Go imports.
+                    if os.path.dirname(target) == os.path.dirname(p):
+                        continue
+                    self.g.edge(f"code_unit:{p}", "imports", f"code_unit:{target}", "deterministic",
+                                via="go-module-import")
+            for key in meta["env_keys"]:
+                self.g.node(f"config_key:{key}", "config_key", sha_text(key), symbol=key)
+                self.g.edge(f"code_unit:{p}", "reads_config", f"config_key:{key}", "deterministic", via="os-getenv")
+
+        # Same-package test → non-test verifies (Go tests need no import of same-package symbols).
+        by_dir_pkg: dict[tuple[str, str], list[str]] = {}
+        for p, meta in parsed_of.items():
+            by_dir_pkg.setdefault((os.path.dirname(p), meta["package"]), []).append(p)
+        for (_d, _pkg), files in by_dir_pkg.items():
+            tests = [f for f in files if go_source.is_go_test(f)]
+            sources = [f for f in files if not go_source.is_go_test(f)]
+            for tf in tests:
+                for sf in sources:
+                    self.g.edge(f"code_unit:{tf}", "verifies", f"code_unit:{sf}", "deterministic",
+                                via="go-same-package-test")
+
+        if modules or go_files or any(p.endswith(GO_EXT) for p in t.paths):
+            self.limitations.append(
+                "go: package clause required for a code_unit (bare .go files stay unmeasured); import paths resolve "
+                "only under a declared go.mod module path (absent go.mod ⇒ no fabricated module, external imports "
+                "recorded as external_packages); build tags are attrs only (no conditional file set); cgo and "
+                "embed directives are not modelled")
+
     def x_config(self):
         pat = re.compile(r"process\.env\.([A-Za-z_][A-Za-z0-9_]*)|process\.env\[\s*['\"]([A-Za-z_][A-Za-z0-9_]*)['\"]\s*\]"
                          r"|(?:configService|config|this\.config|this\.configService)\.get(?:OrThrow)?(?:<[^>]*>)?\(\s*['\"]([A-Za-z0-9_.]+)['\"]")
@@ -2111,7 +2336,7 @@ class Builder:
         order = [("contracts", self.x_contracts), ("routes", self.x_routes), ("prisma", self.x_prisma), ("imports", self.x_imports),
                  ("config", self.x_config), ("reuse", self.x_reuse), ("di", self.x_di), ("queue", self.x_queue), ("tests", self.x_tests),
                  ("http_client", self.x_http_client), ("deployables", self.x_deployables), ("rust", self.x_rust),
-                 ("python", self.x_python), ("docs", self.x_docs), ("work_items", self.x_work_items),
+                 ("python", self.x_python), ("go", self.x_go), ("docs", self.x_docs), ("work_items", self.x_work_items),
                  ("receipts", self.x_receipts), ("systemd", self.x_systemd),
                  ("trust_anchor", self.x_trust_anchor)]
         for name, fn in order:
@@ -2141,10 +2366,16 @@ class Builder:
         for e in edges:
             by_edge.setdefault(e["type"], {})
             by_edge[e["type"]][e["provenance"]] = by_edge[e["type"]].get(e["provenance"], 0) + 1
+        # AUP-E29 remasure (task 76bc): the uncovered-language census must match extractors that
+        # actually emit nodes. Counting `.service`/`.timer` here while `x_systemd` creates
+        # `systemd_unit:` nodes published a false "yield no nodes" limitation (A2-407 honesty gap).
         uncovered: dict[str, int] = {}
         for p in self.tree.paths:
             ext = os.path.splitext(p)[1] or "(none)"
-            if not (p.endswith(CODE_EXT) or p.endswith(RUST_EXT) or p.endswith(PY_EXT)
+            if self.on("systemd") and Path(p).suffix in SYSTEMD_SUFFIX_KIND:
+                continue
+            if not (p.endswith(CODE_EXT) or p.endswith(RUST_EXT) or p.endswith(PY_EXT) or p.endswith(GO_EXT)
+                    or operational_config_kind(p)
                     or shell_source.kind(p, self.tree.files[p], self.tree.meta.get("file_modes", {}).get(p))
                     or p.endswith((".prisma", ".md", ".markdown", ".json", ".yaml", ".yml", ".toml"))):
                 uncovered[ext] = uncovered.get(ext, 0) + 1
@@ -2162,6 +2393,9 @@ class Builder:
             limitations.append(f"http client call sites matched to no served route: {len(self.unmatched_http)}")
         if uncovered:
             limitations.append("files of uncovered languages yield no nodes: " + ", ".join(f"{k}×{v}" for k, v in sorted(uncovered.items())))
+        language_coverage = ["typescript", "javascript", "prisma", "markdown", "json-receipts", "rust", "python", "go", "bash", "bats"]
+        if self.on("systemd"):
+            language_coverage = language_coverage + ["systemd"]
         manifest = {
             "schema": "RelationshipGraph/v1",
             "builder": BUILDER,
@@ -2179,7 +2413,7 @@ class Builder:
                            "work_item_pattern": self.work_item_pattern, "parser": "regex-ast-lite", "typescript_compiler": False},
             "node_count": len(nodes),
             "edge_count": len(edges),
-            "language_coverage": ["typescript", "javascript", "prisma", "markdown", "json-receipts", "rust", "python", "bash", "bats"],
+            "language_coverage": language_coverage,
             "limitations": limitations,
             "stats": {"files": len(self.tree.paths), "ts_files": len(self.ts), "nodes_by_type": by_node, "edges_by_type_provenance": by_edge,
                       "dropped_dangling_edges": len(self.g.dropped_dangling), "unresolved_relative_imports": self.unresolved_imports,

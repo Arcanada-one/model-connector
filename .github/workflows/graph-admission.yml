@@ -23,6 +23,12 @@
 #   creates no shared credential, so the tools travel as a digest-pinned vendored bundle. The job
 #   refuses if any bundled file's sha256 does not match BUNDLE.json, if the caller's program_ref does
 #   not match the bundle's, or if the pull request itself touches the bundle.
+#
+#   PR body input: this workflow reads `pull_request.body` from `$GITHUB_EVENT_PATH` into a
+#   runner-temp file and passes `--pr-body-file` to the gate. It must never place body bytes in
+#   `env:` / argv (measured failure: E2BIG / "Argument list too long" → no verdict). Interim
+#   workaround for callers still on older pins: commit the CAR under `receipts/graph/` and keep the
+#   PR body short — that workaround is valid until those callers rebundle, and is not itself the fix.
 # ============================================================================================
 name: graph-admission
 
@@ -54,6 +60,11 @@ on:
         required: false
         default: ''
         type: string
+      candidate_canary_path:
+        description: 'Optional repository-relative CanaryResult/v2 committed at the candidate head. Requires the same-run current-source outcome.'
+        required: false
+        default: ''
+        type: string
       stage_evidence_root:
         description: 'Root directory containing the explicit StageEvidence/v1 file and its committed run evidence.'
         required: false
@@ -81,10 +92,10 @@ on:
         type: boolean
       candidate_dependency_setup:
         description: >-
-          Optional CallerDependencySetup/v1 subject-and-digest manifest for the fixed MUN web typecheck
-          dependency profile. It binds repository/base/head, policy pnpm-frozen-web-typecheck/v1, scope apps/web,
-          cwd ., and blob_oid/sha256/bytes for the seven fixed source inputs. It accepts no command, script,
-          registry, or filesystem path from the caller.
+          Optional CallerDependencySetup/v1 subject-and-digest manifest for either fixed MUN policy:
+          pnpm-frozen-web-typecheck/v1 (scope apps/web) or pnpm-frozen-api-prisma-typecheck/v1 (scope apps/api).
+          The matching prepare step runs only the selected validated plan's fixed commands after frozen install.
+          The caller supplies no command, script, registry, filesystem path, or environment value.
         required: false
         default: ''
         type: string
@@ -112,9 +123,9 @@ on:
         default: true
         type: boolean
       runs_on:
-        description: 'Runner label set.'
+        description: 'Runner label set (one self-hosted pool label; callers use ci-general).'
         required: false
-        default: 'ubuntu-latest'
+        default: 'ci-general'
         type: string
       verifier_job:
         description: >-
@@ -166,8 +177,38 @@ jobs:
       actions: read
     timeout-minutes: 90
     steps:
+      # RUNNER_TEMP can survive a cancelled job on self-hosted runners. Establish this job's
+      # private workspace before checkout or any step can create candidate data.
+      - name: Initialize graph-admission runner temp
+        shell: bash
+        env:
+          EXPECTED_RUNNER_TEMP: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          # Refuse non-canonical paths, including symlinks anywhere in either path.
+          is_real_directory() {
+            local resolved
+            [[ "$1" == /* && "$1" != / && -d "$1" ]] &&
+              IFS= read -r -d '' resolved < <(realpath -ez -- "$1") &&
+              [[ "$resolved" == "$1" ]]
+          }
+          if [[ "${RUNNER_TEMP:-}" != "${EXPECTED_RUNNER_TEMP:-}" ]] ||
+             ! is_real_directory "${RUNNER_TEMP:-}"; then
+            echo "::error::RUNNER_TEMP must be the runner's canonical absolute temp directory"
+            exit 2
+          fi
+          ROOT="$RUNNER_TEMP/graph-admission"
+          if [[ -L "$ROOT" || -e "$ROOT" ]]; then
+            if ! is_real_directory "$ROOT"; then
+              echo "::error::graph-admission must be a real private directory inside RUNNER_TEMP"
+              exit 2
+            fi
+            rm -rf -- "$ROOT"
+          fi
+          mkdir -m 700 -- "$ROOT"
+
       - name: Check out the pull-request head (full history — the gate needs base..head)
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -182,6 +223,9 @@ jobs:
           PR_BASE: ${{ github.event.pull_request.base.sha }}
           PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          EMPTY_IMPACT_INPUT: ${{ inputs.empty_impact_explanation }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          THIS_REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
           BASE_BRANCH=""
@@ -193,11 +237,52 @@ jobs:
             BASE="$(git rev-parse HEAD~1)"
             HEAD_SHA="$(git rev-parse HEAD)"
           fi
+          # DEC-AUP-0198: a committed EmptyImpactExplanation as the single tip commit of a pull request.
+          # Program only, and a no-op unless the PR adds a file under receipts/graph/empty-impact/. When the
+          # claim is structurally accepted the whole job measures base..H' (H' = the tip's parent), so every
+          # existing validator judges the claim exactly as it judges the workflow_call input route; the claim
+          # file itself is never measured. A refusal keeps the PR head and the run ends as it would today.
+          CLAIM_FILE=""
+          if [ -n "${PR_BASE:-}" ] && [ "${THIS_REPOSITORY:-}" = "Arcanada-one/arcanada-universal-program" ] \
+             && [ -f tools/graph/empty_impact_claim.py ] && [ ! -L tools/graph/empty_impact_claim.py ]; then
+            CLAIM_OUT="${RUNNER_TEMP:?}/empty-impact-claim.json"
+            mkdir -p "${RUNNER_TEMP}/graph-admission"
+            CLAIM_DECISION="${RUNNER_TEMP}/graph-admission/empty-impact-claim.decision.json"
+            CLAIM_RC=0
+            python3 -I -B tools/graph/empty_impact_claim.py check --repo . --base "$BASE" --head "$HEAD_SHA" \
+              --default-branch "${DEFAULT_BRANCH:-}" --base-branch "$BASE_BRANCH" \
+              --out-claim "$CLAIM_OUT" --summary "${GITHUB_STEP_SUMMARY:-/dev/null}" > "$CLAIM_DECISION" || CLAIM_RC=$?
+            if [ "$CLAIM_RC" = "0" ]; then
+              if [ -n "${EMPTY_IMPACT_INPUT:-}" ]; then
+                echo "::error::a committed empty-impact claim and the empty_impact_explanation input are both present" >&2
+                exit 2
+              fi
+              HEAD_SHA="$(python3 -I -B -c 'import json,sys; print(json.load(open(sys.argv[1]))["h_prime"])' "$CLAIM_DECISION")"
+              CLAIM_FILE="$CLAIM_OUT"
+            elif [ "$CLAIM_RC" != "10" ] && [ "$CLAIM_RC" != "11" ]; then
+              echo "::error::the empty-impact claim check failed to run (exit $CLAIM_RC)" >&2
+              exit 2
+            fi
+          fi
           {
             echo "base=$BASE"
             echo "head=$HEAD_SHA"
             echo "base_branch=$BASE_BRANCH"
+            echo "claim_file=$CLAIM_FILE"
           } >> "$GITHUB_OUTPUT"
+
+      # DEC-AUP-0198: when the range step accepted a committed empty-impact claim, evaluate the pull
+      # request exactly as it stands without that one data commit: the working tree and HEAD become H'
+      # (the claim commit's parent), so every later step sees HEAD == range head, as on any other run.
+      - name: Evaluate the claim-parent head (committed empty-impact claim only)
+        if: steps.range.outputs.claim_file != ''
+        env:
+          CLAIM_PARENT_HEAD: ${{ steps.range.outputs.head }}
+        run: |
+          set -euo pipefail
+          git checkout --detach "$CLAIM_PARENT_HEAD"
+          test "$(git rev-parse HEAD)" = "$CLAIM_PARENT_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
 
       # The reusable workflow is loaded from the caller-pinned Program ref. Before it invokes any
       # vendored code, independently authenticate the complete bundle with the caller's pin and the
@@ -688,7 +773,7 @@ jobs:
           PY
 
       - name: Python 3.12
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version: '3.12'
 
@@ -701,15 +786,77 @@ jobs:
         # -I: isolated mode puts neither the working directory nor user site on sys.path. The checkout is
         # the pull request's own tree, so a planted ./pip package would otherwise run inside this required
         # gate before it measures anything (FRONTEND review of PR399).
-        run: python3 -I -m pip install --disable-pip-version-check --no-input 'pyyaml==6.0.2'
-
-      # AUP-GRAPH-006:gate5b (B6). A DECLARED DERIVED ARTEFACT is admitted only if the gate can RUN the
-      # caller's own verifier — accept the honest tree, then REFUSE it with one byte corrupted. That needs
-      # the caller's toolchain, which this job otherwise has no reason to install, so these steps are
-      # guarded on the declaration existing: a caller that declares nothing pays nothing, and the gate's
-      # 16 s stays 16 s. NON-COVERAGE, stated in derived-artefacts.v1.md §6: this knows about exactly ONE
-      # ecosystem. A caller in another needs its own toolchain, and the honest remedy is a
-      # declaration-driven toolchain field — named here, not built.
+        # --require-hashes: version alone is not enough; altered index/wheel bytes must not satisfy the pin
+        # (Muneral cfa0ff41 / PR399 follow-up). Reusable callers check out THEIR tree, not Program's, so the
+        # reviewed pin is carried in this step's env block (same bytes as tools/graph/hashes/pyyaml-6.0.2.txt).
+        # test_graph_admission_pip_isolated.py refuses drift between the env block and that file.
+        env:
+          PYYAML_HASHES: |
+            # Reviewed PyYAML 6.0.2 hashes from PyPI JSON digests (https://pypi.org/pypi/PyYAML/6.0.2/json).
+            # Generated for graph-admission hash-pin follow-up (Muneral cfa0ff41-5352-4f62-931d-d06e6e6c6ea1).
+            # Do not edit hashes without re-reviewing against PyPI digests.
+            pyyaml==6.0.2 \
+                --hash=sha256:0a9a2848a5b7feac301353437eb7d5957887edbf81d56e903999a75a3d743086 \
+                --hash=sha256:29717114e51c84ddfba879543fb232a6ed60086602313ca38cce623c1d62cfbf \
+                --hash=sha256:8824b5a04a04a047e72eea5cec3bc266db09e35de6bdfe34c9436ac5ee27d237 \
+                --hash=sha256:7c36280e6fb8385e520936c3cb3b8042851904eba0e58d277dca80a5cfed590b \
+                --hash=sha256:ec031d5d2feb36d1d1a24380e4db6d43695f3748343d99434e6f5f9156aaa2ed \
+                --hash=sha256:936d68689298c36b53b29f23c6dbb74de12b4ac12ca6cfe0e047bedceea56180 \
+                --hash=sha256:23502f431948090f597378482b4812b0caae32c22213aecf3b55325e049a6c68 \
+                --hash=sha256:2e99c6826ffa974fe6e27cdb5ed0021786b03fc98e5ee3c5bfe1fd5015f42b99 \
+                --hash=sha256:a4d3091415f010369ae4ed1fc6b79def9416358877534caf6a0fdd2146c87a3e \
+                --hash=sha256:cc1c1159b3d456576af7a3e4d1ba7e6924cb39de8f67111c735f6fc832082774 \
+                --hash=sha256:1e2120ef853f59c7419231f3bf4e7021f1b936f6ebd222406c3b60212205d2ee \
+                --hash=sha256:5d225db5a45f21e78dd9358e58a98702a0302f2659a3c6cd320564b75b86f47c \
+                --hash=sha256:5ac9328ec4831237bec75defaf839f7d4564be1e6b25ac710bd1a96321cc8317 \
+                --hash=sha256:3ad2a3decf9aaba3d29c8f537ac4b243e36bef957511b4766cb0057d32b0be85 \
+                --hash=sha256:ff3824dc5261f50c9b0dfb3be22b4567a6f938ccce4587b38952d85fd9e9afe4 \
+                --hash=sha256:797b4f722ffa07cc8d62053e4cff1486fa6dc094105d13fea7b1de7d8bf71c9e \
+                --hash=sha256:11d8f3dd2b9c1207dcaf2ee0bbbfd5991f571186ec9cc78427ba5bd32afae4b5 \
+                --hash=sha256:e10ce637b18caea04431ce14fabcf5c64a1c61ec9c56b071a4b7ca131ca52d44 \
+                --hash=sha256:c70c95198c015b85feafc136515252a261a84561b7b1d51e3384e0655ddf25ab \
+                --hash=sha256:ce826d6ef20b1bc864f0a68340c8b3287705cae2f8b4b1d932177dcc76721725 \
+                --hash=sha256:1f71ea527786de97d1a0cc0eacd1defc0985dcf6b3f17bb77dcfc8c34bec4dc5 \
+                --hash=sha256:9b22676e8097e9e22e36d6b7bda33190d0d400f345f23d4065d48f4ca7ae0425 \
+                --hash=sha256:80bab7bfc629882493af4aa31a4cfa43a4c57c83813253626916b8c7ada83476 \
+                --hash=sha256:0833f8694549e586547b576dcfaba4a6b55b9e96098b36cdc7ebefe667dfed48 \
+                --hash=sha256:8b9c7197f7cb2738065c481a0461e50ad02f18c78cd75775628afb4d7137fb3b \
+                --hash=sha256:ef6107725bd54b262d6dedcc2af448a266975032bc85ef0172c5f059da6325b4 \
+                --hash=sha256:7e7401d0de89a9a855c839bc697c079a4af81cf878373abd7dc625847d25cbd8 \
+                --hash=sha256:efdca5630322a10774e8e98e1af481aad470dd62c3170801852d752aa7a783ba \
+                --hash=sha256:50187695423ffe49e2deacb8cd10510bc361faac997de9efef88badc3bb9e2d1 \
+                --hash=sha256:0ffe8360bab4910ef1b9e87fb812d8bc0a308b0d0eef8c8f44e0254ab3b07133 \
+                --hash=sha256:17e311b6c678207928d649faa7cb0d7b4c26a0ba73d41e99c4fff6b6c3276484 \
+                --hash=sha256:70b189594dbe54f75ab3a1acec5f1e3faa7e8cf2f1e08d9b561cb41b845f69d5 \
+                --hash=sha256:41e4e3953a79407c794916fa277a82531dd93aad34e29c2a514c2c0c5fe971cc \
+                --hash=sha256:68ccc6023a3400877818152ad9a1033e3db8625d899c72eacb5a668902e4d652 \
+                --hash=sha256:bc2fa7c6b47d6bc618dd7fb02ef6fdedb1090ec036abab80d4681424b84c1183 \
+                --hash=sha256:8388ee1976c416731879ac16da0aff3f63b286ffdd57cdeb95f3f2e085687563 \
+                --hash=sha256:24471b829b3bf607e04e88d79542a9d48bb037c2267d7927a874e6c205ca7e9a \
+                --hash=sha256:d7fded462629cfa4b685c5416b949ebad6cec74af5e2d42905d41e257e0869f5 \
+                --hash=sha256:d84a1718ee396f54f3a086ea0a66d8e552b2ab2017ef8b420e92edbc841c352d \
+                --hash=sha256:9056c1ecd25795207ad294bcf39f2db3d845767be0ea6e6a34d856f006006083 \
+                --hash=sha256:82d09873e40955485746739bcb8b4586983670466c23382c19cffecbf1fd8706 \
+                --hash=sha256:43fa96a3ca0d6b1812e01ced1044a003533c47f6ee8aca31724f78e93ccc089a \
+                --hash=sha256:01179a4a8559ab5de078078f37e5c1a30d76bb88519906844fd7bdea1b7729ff \
+                --hash=sha256:688ba32a1cffef67fd2e9398a2efebaea461578b0923624778664cc1c914db5d \
+                --hash=sha256:a8786accb172bd8afb8be14490a16625cbc387036876ab6ba70912730faf8e1f \
+                --hash=sha256:d8e03406cac8513435335dbab54c0d385e4a49e4945d2909a581c83647ca0290 \
+                --hash=sha256:f753120cb8181e736c57ef7636e83f31b9c0d1722c516f7e86cf15b7aa57ff12 \
+                --hash=sha256:3b1fdb9dc17f5a7677423d508ab4f243a726dea51fa5e70992e59a7411c89d19 \
+                --hash=sha256:0b69e4ce7a131fe56b7e4d770c67429700908fc0752af059838b1cfb41960e4e \
+                --hash=sha256:a9f8c2e67970f13b16084e04f134610fd1d374bf477b17ec1599185cf611d725 \
+                --hash=sha256:6395c297d42274772abc367baaa79683958044e5d3835486c16da75d2a694631 \
+                --hash=sha256:39693e1f8320ae4f43943590b49779ffb98acb81f788220ea932a6b6c51004d8 \
+                --hash=sha256:d584d9ec91ad65861cc08d42e834324ef890a082e591037abe114850ff7bbc3e
+        run: |
+          set -euo pipefail
+          HASHES="${RUNNER_TEMP}/pyyaml-6.0.2.hashes.txt"
+          printf '%s' "$PYYAML_HASHES" > "$HASHES"
+          if [ -f tools/graph/hashes/pyyaml-6.0.2.txt ]; then
+            cmp -s "$HASHES" tools/graph/hashes/pyyaml-6.0.2.txt
+          fi
+          python3 -I -m pip install --disable-pip-version-check --no-input --require-hashes -r "$HASHES"
       - name: Does this repository declare derived artefacts? (B6)
         id: derived
         run: |
@@ -741,7 +888,7 @@ jobs:
 
       - name: Node toolchain for the declared verifier (B6)
         if: steps.derived.outputs.declared == 'yes'
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: ${{ steps.derived.outputs.node_version || inputs.derived_artefact_node_version }}
 
@@ -759,7 +906,7 @@ jobs:
 
       - name: Node for the pinned admission-selftest compiler
         if: steps.derived.outputs.declared != 'yes'
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: '24.20.0'
 
@@ -776,8 +923,8 @@ jobs:
             "version": "1.0.0",
             "private": true,
             "dependencies": {
-              "@types/node": "24.19.2",
-              "typescript": "5.9.3"
+              "@types/node": "26.6.6",
+              "typescript": "7.0.2"
             }
           }
           AUP_PACKAGE_JSON
@@ -791,37 +938,378 @@ jobs:
               "": {
                 "name": "aup-graph-selftest-compiler",
                 "version": "1.0.0",
-                "private": true,
                 "dependencies": {
-                  "@types/node": "24.19.2",
-                  "typescript": "5.9.3"
+                  "@types/node": "26.6.6",
+                  "typescript": "7.0.2"
                 }
               },
               "node_modules/@types/node": {
-                "version": "24.19.2",
-                "resolved": "https://registry.npmjs.org/@types/node/-/node-24.19.2.tgz",
-                "integrity": "sha512-93d49wCWJkCyN87MxLpNN6KXPCwFw7bVUg79mGUV1OS40JGWwVCr8n61DXCSqz7CV6/VfPkb7xec7uP2M+QHWQ==",
+                "version": "26.6.6",
+                "resolved": "https://registry.npmjs.org/@types/node/-/node-26.6.6.tgz",
+                "integrity": "sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog==",
                 "license": "MIT",
                 "dependencies": {
-                  "undici-types": ">=7.24.0 <7.24.7"
+                  "undici-types": "~8.9.0"
+                }
+              },
+              "node_modules/@typescript/typescript-aix-ppc64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-aix-ppc64/-/typescript-aix-ppc64-7.0.2.tgz",
+                "integrity": "sha512-MTKKkWB7p/0E9xi1d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhgIgi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ==",
+                "cpu": [
+                  "ppc64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "aix"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-darwin-arm64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-darwin-arm64/-/typescript-darwin-arm64-7.0.2.tgz",
+                "integrity": "sha512-gowzar9MwS/aRWp6f3a4KUqzRjAZjOsmGNCM6LcTgXum+dBfgsBVMN+AgvOCCbguXyick6LJhpBszxMebJ8syA==",
+                "cpu": [
+                  "arm64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "darwin"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-darwin-x64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-darwin-x64/-/typescript-darwin-x64-7.0.2.tgz",
+                "integrity": "sha512-SZ9xZInqApNlNGc9s0W1VSsktYSOe9cFqNOIqmN1Gs8SmkjKZYFt017G4VwPxASInODuAdbTW7sXiFUf893RgA==",
+                "cpu": [
+                  "x64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "darwin"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-freebsd-arm64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-freebsd-arm64/-/typescript-freebsd-arm64-7.0.2.tgz",
+                "integrity": "sha512-W5NH4y/J0plIIS5b2xvTEkU7JFxyqdMAOgf+Ilhl0vHQXKO5dZoxd+C/jEtq56c4F3wk71RB4BMRQ2XdI+bwYQ==",
+                "cpu": [
+                  "arm64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "freebsd"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-freebsd-x64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-freebsd-x64/-/typescript-freebsd-x64-7.0.2.tgz",
+                "integrity": "sha512-UMGDx5sTpzNw3WiPebH7l90IWfJggEd+egHt/q6p7/Cm3zqoV7VxkGXt+3DxPIw8CcmvAB0j3sVVfbhX+M4Tpw==",
+                "cpu": [
+                  "x64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "freebsd"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-linux-arm": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-linux-arm/-/typescript-linux-arm-7.0.2.tgz",
+                "integrity": "sha512-gffT3xPz9sR7j/YJExkyPntrI0P2EP9XbOyWzth2/Gs0RstK+90RBcO0ncXoXy/beYll1SXw846Nf2zdnEz0QQ==",
+                "cpu": [
+                  "arm"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "linux"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-linux-arm64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-linux-arm64/-/typescript-linux-arm64-7.0.2.tgz",
+                "integrity": "sha512-Qh4eU4/y3yDjnfjjyPYihMj5/ODIlmt+Bzu17OI+fiSRDW57QmU5SiN63exPRNJPKUzcc1INa1NXdrJ+MqHjUQ==",
+                "cpu": [
+                  "arm64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "linux"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-linux-loong64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-linux-loong64/-/typescript-linux-loong64-7.0.2.tgz",
+                "integrity": "sha512-uEHck9i8hoAzXPiYRib1O7miOnz23SxIeVl6F4LXox+qov1K35jHcEW6VHKvZI+pyvl7fZEP4MCU5LYvIq1GuQ==",
+                "cpu": [
+                  "loong64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "linux"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-linux-mips64el": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-linux-mips64el/-/typescript-linux-mips64el-7.0.2.tgz",
+                "integrity": "sha512-R4KvAMnE43W5Qeqb0Ly56O3mWMWIAgsMyz36DCaycd5nbg/9kzm0liw3JocfRqyJY0KPmzFjbswozXyW0DnIYA==",
+                "cpu": [
+                  "mips64el"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "linux"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-linux-ppc64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-linux-ppc64/-/typescript-linux-ppc64-7.0.2.tgz",
+                "integrity": "sha512-DORx5b3sd/4S7eayxm4FQv+A7CrkUIGRaHiwI8oiHTAI1fAPWhF4J0vAlkC8biAlHSVVwxMQ3tjZ2/DVbnQiiA==",
+                "cpu": [
+                  "ppc64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "linux"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-linux-riscv64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-linux-riscv64/-/typescript-linux-riscv64-7.0.2.tgz",
+                "integrity": "sha512-wf0jqEDOjrPRnKwYRyyJDRo11KMbvMFrU+q4zqKyChODBzvlkbhNQfKvLxQCcwTpdDaXSHZTVuh0JoCrKCUMHQ==",
+                "cpu": [
+                  "riscv64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "linux"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-linux-s390x": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-linux-s390x/-/typescript-linux-s390x-7.0.2.tgz",
+                "integrity": "sha512-IkwJc3L7yhytWd/ewjyxNDfOmswCm9GWMJT/ue/dU4aZNbwZeYAetq42VyLmsmSjvoX7z74X6ZaYCtzAr0EuGw==",
+                "cpu": [
+                  "s390x"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "linux"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-linux-x64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-linux-x64/-/typescript-linux-x64-7.0.2.tgz",
+                "integrity": "sha512-EYdf2cNg7rgCWJnxCdJ+F3V39O8ihb37eHAu1LK8oAFizgTQbPOK7zHHXbPt8rX24COqODXeI3sIf0fCXG7H/A==",
+                "cpu": [
+                  "x64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "linux"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-netbsd-arm64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-netbsd-arm64/-/typescript-netbsd-arm64-7.0.2.tgz",
+                "integrity": "sha512-+polYF4MF04aPpO5FTkHran9yUQDSXqy5GiSDKpsll5jy3l3+g9QLhpf39T+ePtefhXLOGrLl0QIjkQP6VnelA==",
+                "cpu": [
+                  "arm64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "netbsd"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-netbsd-x64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-netbsd-x64/-/typescript-netbsd-x64-7.0.2.tgz",
+                "integrity": "sha512-8YIT0EHM/3dq10ZOVF/A7pc/YSMtbcecct4rWtexrnSCHOPcpC2KTLXfTCR6vDpnSiY12heNb1GiN/wu+T/FyA==",
+                "cpu": [
+                  "x64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "netbsd"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-openbsd-arm64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-openbsd-arm64/-/typescript-openbsd-arm64-7.0.2.tgz",
+                "integrity": "sha512-APT8+ClYnuYm1u9+kgGXoMj2VzWzcymwh2gNSQVySHfkRDGOTVkoWLjCmOQSaO+PoqQ57B0flRp9SA+7GnnkzQ==",
+                "cpu": [
+                  "arm64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "openbsd"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-openbsd-x64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-openbsd-x64/-/typescript-openbsd-x64-7.0.2.tgz",
+                "integrity": "sha512-yX7s+Q0Dln0Dt9tEzZsAjXXR/+ytBM7AlglaqyeMPxQszJ1JhlJdZ6jLA+IzldHtflX81em7lDao1xXu+aRRkg==",
+                "cpu": [
+                  "x64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "openbsd"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-sunos-x64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-sunos-x64/-/typescript-sunos-x64-7.0.2.tgz",
+                "integrity": "sha512-dLJDGaLZ1D4HPQn62u1n8mBDkJREwMsAkCdkwd4Ieqw+x3TUyTsqY0YiBCtE6H6OzzgGk3iuZ3vFWRS+E8/d1g==",
+                "cpu": [
+                  "x64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "sunos"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-win32-arm64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-win32-arm64/-/typescript-win32-arm64-7.0.2.tgz",
+                "integrity": "sha512-Gyl1Vy6OsWesLzmq+EP0Fb7b4Nid5232AvcA2SFcdYreldpNtYFFofPjnt62y9hQy7VTaZp65ICJjuAQRaVcIQ==",
+                "cpu": [
+                  "arm64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "win32"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
+                }
+              },
+              "node_modules/@typescript/typescript-win32-x64": {
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/@typescript/typescript-win32-x64/-/typescript-win32-x64-7.0.2.tgz",
+                "integrity": "sha512-0BQ3HkAHHlKLSp1qRvf3SUhGpGsDuhB/jgFw75guyqbxJqEaS0Cw/VFO8i2nHglJUzQCRtMMR/IBAKE3ETMC4g==",
+                "cpu": [
+                  "x64"
+                ],
+                "license": "Apache-2.0",
+                "optional": true,
+                "os": [
+                  "win32"
+                ],
+                "engines": {
+                  "node": ">=16.20.0"
                 }
               },
               "node_modules/typescript": {
-                "version": "5.9.3",
-                "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
-                "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
+                "version": "7.0.2",
+                "resolved": "https://registry.npmjs.org/typescript/-/typescript-7.0.2.tgz",
+                "integrity": "sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA==",
+                "license": "Apache-2.0",
                 "bin": {
-                  "tsc": "bin/tsc",
-                  "tsserver": "bin/tsserver"
+                  "tsc": "bin/tsc"
                 },
                 "engines": {
-                  "node": ">=14.17"
+                  "node": ">=16.20.0"
+                },
+                "optionalDependencies": {
+                  "@typescript/typescript-aix-ppc64": "7.0.2",
+                  "@typescript/typescript-darwin-arm64": "7.0.2",
+                  "@typescript/typescript-darwin-x64": "7.0.2",
+                  "@typescript/typescript-freebsd-arm64": "7.0.2",
+                  "@typescript/typescript-freebsd-x64": "7.0.2",
+                  "@typescript/typescript-linux-arm": "7.0.2",
+                  "@typescript/typescript-linux-arm64": "7.0.2",
+                  "@typescript/typescript-linux-loong64": "7.0.2",
+                  "@typescript/typescript-linux-mips64el": "7.0.2",
+                  "@typescript/typescript-linux-ppc64": "7.0.2",
+                  "@typescript/typescript-linux-riscv64": "7.0.2",
+                  "@typescript/typescript-linux-s390x": "7.0.2",
+                  "@typescript/typescript-linux-x64": "7.0.2",
+                  "@typescript/typescript-netbsd-arm64": "7.0.2",
+                  "@typescript/typescript-netbsd-x64": "7.0.2",
+                  "@typescript/typescript-openbsd-arm64": "7.0.2",
+                  "@typescript/typescript-openbsd-x64": "7.0.2",
+                  "@typescript/typescript-sunos-x64": "7.0.2",
+                  "@typescript/typescript-win32-arm64": "7.0.2",
+                  "@typescript/typescript-win32-x64": "7.0.2"
                 }
               },
               "node_modules/undici-types": {
-                "version": "7.24.6",
-                "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-7.24.6.tgz",
-                "integrity": "sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==",
+                "version": "8.9.0",
+                "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-8.9.0.tgz",
+                "integrity": "sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==",
                 "license": "MIT"
               }
             }
@@ -831,6 +1319,20 @@ jobs:
           #!/usr/bin/env python3
           import json, pathlib, subprocess, sys, tempfile
 
+          def bounded(value, limit=4096):
+              encoded = value.encode("utf-8", errors="replace")
+              if len(encoded) <= limit:
+                  return value
+              marker = b"\n...[truncated]\n"
+              prefix = encoded[:limit - len(marker)]
+              while True:
+                  try:
+                      text = prefix.decode("utf-8")
+                      break
+                  except UnicodeDecodeError as error:
+                      prefix = prefix[:error.start]
+              return text + marker.decode("ascii")
+
           def qualify(root, executable):
               root = pathlib.Path(root).resolve()
               executable = pathlib.Path(executable)
@@ -838,23 +1340,32 @@ jobs:
               if executable.resolve() != expected:
                   raise ValueError("TSC_EXECUTABLE_OUTSIDE_PINNED_PACKAGE")
               package = json.loads((root / "node_modules/typescript/package.json").read_text())
-              if package["version"] != "5.9.3":
+              if package["version"] != "7.0.2":
                   raise ValueError("TSC_PACKAGE_VERSION_MISMATCH")
               result = subprocess.run([str(executable), "--version"], capture_output=True, text=True, timeout=20)
-              if result.returncode != 0 or result.stdout.strip() != "Version 5.9.3":
+              if result.returncode != 0 or result.stdout.strip() != "Version 7.0.2":
                   raise ValueError("TSC_EXECUTABLE_VERSION_MISMATCH")
-              with tempfile.TemporaryDirectory(prefix="aup-tsc-controls-") as scratch:
+              # compiler_root is created under RUNNER_TEMP; keep controls outside the caller checkout
+              # and independent of an inherited TMPDIR that could point into that checkout.
+              with tempfile.TemporaryDirectory(prefix="aup-tsc-controls-", dir=root.parent) as scratch:
                   path = pathlib.Path(scratch)
+                  for ancestor in (path, *path.parents):
+                      if any((ancestor / name).exists() for name in ("tsconfig.json", "package.json")):
+                          raise ValueError("TSC_CONTROL_WORKDIR_NOT_ISOLATED")
                   for filename, contents, expected_success in [
                       ("valid.ts", "const value: number = 1;\n", True),
                       ("invalid.ts", "const value: number = 'wrong';\n", False),
                   ]:
                       source = path / filename
                       source.write_text(contents)
-                      result = subprocess.run([str(executable), "--noEmit", "--strict", "--skipLibCheck", str(source)], capture_output=True, text=True, timeout=30)
+                      result = subprocess.run([str(executable), "--noEmit", "--strict", "--skipLibCheck", str(source)], capture_output=True, text=True, errors="replace", timeout=30, cwd=path)
                       if (result.returncode == 0) != expected_success:
+                          expected_code = "0" if expected_success else "nonzero"
+                          sys.stderr.write(f"TSC_CONTROL_FAILURE file={filename} expected_exit_code={expected_code} actual_exit_code={result.returncode}\n")
+                          sys.stderr.write("tsc stdout (max 4096 bytes):\n" + bounded(result.stdout))
+                          sys.stderr.write("tsc stderr (max 4096 bytes):\n" + bounded(result.stderr))
                           raise ValueError("TSC_SEMANTIC_CONTROL_FAILED:" + filename)
-              return {"version": "5.9.3", "executable": str(executable.resolve()), "valid_input": "PASS", "invalid_input": "REFUSED"}
+              return {"version": "7.0.2", "executable": str(executable.resolve()), "valid_input": "PASS", "invalid_input": "REFUSED"}
 
           if __name__ == "__main__":
               print(json.dumps(qualify(sys.argv[1], sys.argv[2]), sort_keys=True))
@@ -998,7 +1509,7 @@ jobs:
           printf '/contracts/http/node_modules\n' >> .git/info/exclude
           ln -s "$contract_root/node_modules" "$contract_modules"
 
-      # A caller may opt into the one fixed MUN web-typecheck setup policy. The signed bundle validates
+      # A caller may opt into one fixed MUN setup policy. The signed bundle validates
       # exact repository/range/package/lock/blob pins before Node or pnpm executes; the caller input
       # contains data only and cannot choose commands, paths, registries, or environment variables.
       - name: Validate fixed caller dependency setup subject and source pins
@@ -1031,11 +1542,12 @@ jobs:
             --repo "$GITHUB_WORKSPACE" --repository "$GITHUB_REPOSITORY" \
             --base "$RANGE_BASE" --head "$RANGE_HEAD" > "$PLAN_PATH"
           NODE_VERSION="$(python3 -I -B -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["node_version"])' "$PLAN_PATH")"
-          printf 'node_version=%s\nplan_path=%s\n' "$NODE_VERSION" "$PLAN_PATH" >> "$GITHUB_OUTPUT"
+          SETUP_POLICY="$(python3 -I -B -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["policy"])' "$PLAN_PATH")"
+          printf 'node_version=%s\nsetup_policy=%s\nplan_path=%s\n' "$NODE_VERSION" "$SETUP_POLICY" "$PLAN_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Node for the fixed caller dependency setup
         if: inputs.candidate_dependency_setup_required || inputs.candidate_dependency_setup != ''
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: ${{ steps.candidate_dependency_setup.outputs.node_version }}
           cache: pnpm
@@ -1049,7 +1561,7 @@ jobs:
           corepack enable --install-directory "${RUNNER_TEMP}/corepack-bin"
           echo "${RUNNER_TEMP}/corepack-bin" >> "$GITHUB_PATH"
 
-      - name: Prepare frozen caller dependencies before candidate verification
+      - name: Install frozen caller dependencies before candidate verification
         if: inputs.candidate_dependency_setup_required || inputs.candidate_dependency_setup != ''
         env:
           RUNNER_TEMP: ${{ runner.temp }}
@@ -1057,8 +1569,303 @@ jobs:
           set -euo pipefail
           PLAN_PATH="$RUNNER_TEMP/graph-admission/candidate-dependency-setup/plan.json"
           pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile
-          pnpm --filter @muneral/types build
           cat "$PLAN_PATH" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build Muneral shared types before Prisma generation
+        if: >-
+          github.repository == 'Arcanada-one/muneral' &&
+          (steps.candidate_dependency_setup.outputs.setup_policy == 'pnpm-frozen-web-typecheck/v1' ||
+          steps.candidate_dependency_setup.outputs.setup_policy == 'pnpm-frozen-api-prisma-typecheck/v1')
+        run: pnpm --filter @muneral/types build
+
+      - name: Generate Prisma Client for fixed caller dependency setup
+        if: >-
+          github.repository == 'Arcanada-one/muneral' &&
+          (inputs.candidate_dependency_setup_required || inputs.candidate_dependency_setup != '')
+        env:
+          # This non-secret placeholder is consumed only by Prisma generation; generate does not connect.
+          CHECKPOINT_DISABLE: '1'
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+          SETUP_POLICY: ${{ steps.candidate_dependency_setup.outputs.setup_policy }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::fixed Prisma generation DATABASE_URL is missing" >&2
+            exit 2
+          fi
+          case "$SETUP_POLICY" in
+            pnpm-frozen-web-typecheck/v1|pnpm-frozen-api-prisma-typecheck/v1)
+              pnpm exec prisma generate --config prisma.config.ts --schema apps/api/prisma/schema.prisma
+              ;;
+            *)
+              echo "::error::validated dependency setup policy is unsupported" >&2
+              exit 2
+              ;;
+          esac
+
+      - name: Allocate current-candidate capture for this job
+        id: candidate_capture
+        if: >-
+          (github.repository == 'Arcanada-one/muneral' &&
+          (inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update')) ||
+          (github.repository == 'Arcanada-one/model-connector' && inputs.candidate_receipt_required)
+        env:
+          RUNNER_TEMP: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          # The initial runner-temp step owns graph-admission. Allocate a separate evidence
+          # directory so an earlier capture cannot be mistaken for this job's output.
+          parent="${RUNNER_TEMP:?}/graph-admission"
+          [[ -O "$parent" && -d "$parent" && "$(realpath -e -- "$parent")" == "$parent" ]]
+          stage_parent="$parent/stage-userpath"
+          if [[ ! -e "$stage_parent" && ! -L "$stage_parent" ]]; then
+            mkdir -m 700 -- "$stage_parent"
+          fi
+          [[ -O "$stage_parent" && -d "$stage_parent" && "$(realpath -e -- "$stage_parent")" == "$stage_parent" ]]
+          root="$(mktemp -d -- "$stage_parent/run.XXXXXXXX")"
+          {
+            printf 'stage_root=%s\n' "$root"
+            printf 'candidate_root=%s/current-candidate\n' "$root"
+          } >> "$GITHUB_OUTPUT"
+
+      # Fixed disposable-store profiles for the only callers whose candidate suites have an
+      # explicit disposable backend contract. Repository, profile, images and credentials are
+      # source-fixed here; no workflow_call input can select a service or inject its environment.
+      # Store values are handed to the candidate producer through a private, per-job data file.
+      - name: Start allowlisted candidate disposable stores
+        id: candidate_disposable_stores
+        if: >-
+          (github.repository == 'Arcanada-one/muneral' &&
+          (inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update')) ||
+          (github.repository == 'Arcanada-one/model-connector' && inputs.candidate_receipt_required)
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RANGE_BASE: ${{ steps.range.outputs.base }}
+          RUNNER_TEMP: ${{ runner.temp }}
+          CAPTURE_ROOT: ${{ steps.candidate_capture.outputs.stage_root }}
+          GRAPH_CHECK_RUN_ID: ${{ job.check_run_id }}
+        run: |
+          set -euo pipefail
+          python3 -I -B - "$RANGE_BASE" "$GITHUB_REPOSITORY" <<'PY'
+          import json
+          import re
+          import subprocess
+          import sys
+
+          base, repo = sys.argv[1:]
+          refusals = {
+              "Arcanada-one/model-connector": "MODEL_CONNECTOR_DISPOSABLE_STORE_PROFILE_REFUSED",
+              "Arcanada-one/muneral": "MUNERAL_CANDIDATE_POSTGRES_PROFILE_REFUSED",
+          }
+          if repo not in refusals:
+              raise SystemExit("CANDIDATE_DISPOSABLE_STORE_REPOSITORY_REFUSED")
+          if not re.fullmatch(r"[0-9a-f]{40}", base):
+              raise SystemExit(refusals[repo])
+          try:
+              raw = subprocess.run(["git", "show", base + ":.arcana/verify.json"],
+                                   check=True, capture_output=True).stdout
+              root = json.loads(raw)["deployables"]["."]
+              if repo == "Arcanada-one/model-connector":
+                  arms = root["full_test_arms"]
+                  matches = [
+                      arm for arm in arms if isinstance(arm, dict)
+                      and arm.get("name") == "integration-disposable-store"
+                  ] if isinstance(arms, list) else []
+                  valid = matches == [{"name": "integration-disposable-store", "requires": "real_disposable"}]
+              else:
+                  full = root["full_test"]
+                  valid = isinstance(full, list) and bool(full)
+          except (KeyError, TypeError, ValueError, subprocess.CalledProcessError):
+              valid = False
+          if not valid:
+              raise SystemExit(refusals[repo])
+          PY
+          if ! command -v docker >/dev/null 2>&1; then
+            echo "::error::docker is required for the allowlisted candidate disposable-store profile" >&2
+            exit 2
+          fi
+          [[ -d "$CAPTURE_ROOT" && -O "$CAPTURE_ROOT" && "$(realpath -e -- "$CAPTURE_ROOT")" == "$CAPTURE_ROOT" ]]
+          [[ "${CAPTURE_ROOT%/*}" == "$RUNNER_TEMP/graph-admission/stage-userpath" && "${CAPTURE_ROOT##*/}" == run.* ]]
+          STORE_BINDING="$RUNNER_TEMP/graph-admission/${CAPTURE_ROOT##*/}.stores"
+          if [[ ! "$GITHUB_RUN_ID" =~ ^[0-9]+$ || ! "$GITHUB_RUN_ATTEMPT" =~ ^[0-9]+$ ||
+                ! "$GRAPH_CHECK_RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::invalid disposable-store job identity" >&2
+            exit 2
+          fi
+          STORE_JOB="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GRAPH_CHECK_RUN_ID}"
+          case "$GITHUB_REPOSITORY" in
+            Arcanada-one/muneral)
+              PROFILE=muneral-candidate-postgres-v1
+              NAME="muneral-ga-pg-${STORE_JOB}"
+              DB=muneral_test
+              PASS="$(openssl rand -hex 16)"
+              ;;
+            Arcanada-one/model-connector)
+              PROFILE=model-connector-disposable-store-v1
+              NAME="model-connector-ga-pg-${STORE_JOB}"
+              REDIS_NAME="model-connector-ga-redis-${STORE_JOB}"
+              DB=connector_test
+              PASS='test'
+              # Outside the generic graph-admission cleanup root: an unowned lookalike
+              # must survive a refused setup and its cleanup step.
+              SOCKET_ROOT="${RUNNER_TEMP}/mc-owned-postgres-${STORE_JOB}"
+              SOCKET_DIR="${SOCKET_ROOT}/socket"
+              if [[ -e "$SOCKET_ROOT" || -L "$SOCKET_ROOT" ]]; then
+                echo "::error::refusing to use an existing disposable PostgreSQL socket path" >&2
+                exit 2
+              fi
+              (
+                # Stage inside this job's private capture. The final path only becomes
+                # visible after its device/inode marker is complete.
+                stage="$CAPTURE_ROOT/.store-socket"
+                # This path belongs to the private capture allocated for this job.
+                # Preserve an existing stage and arm cleanup before mkdir can create one.
+                if [[ -e "$stage" || -L "$stage" ]]; then
+                  echo "::error::refusing to use an existing disposable PostgreSQL socket stage" >&2
+                  exit 2
+                fi
+                trap '
+                  if [[ -O "$stage" && -d "$stage" && ! -L "$stage" ]]; then
+                    rm -f -- "$stage/.owner"
+                    rmdir -- "$stage"
+                  fi
+                ' EXIT
+                trap 'exit 143' TERM
+                if ! mkdir -m 700 -- "$stage"; then
+                  trap - EXIT
+                  echo "::error::could not create the disposable PostgreSQL socket stage" >&2
+                  exit 2
+                fi
+                if ! inode="$(stat -c '%d:%i' -- "$stage")" ||
+                   ! (umask 077; set -C; printf '%s %s\n' "$STORE_JOB" "$inode" > "$stage/.owner"); then
+                  echo "::error::could not record disposable PostgreSQL socket ownership" >&2
+                  exit 2
+                fi
+                # RENAME_NOREPLACE is a single Linux rename with no overwrite or cross-device copy.
+                # Use the runner's system libc/Python pair, independent of setup-python's tool cache.
+                if env -u LD_LIBRARY_PATH /usr/bin/python3 -I -B - "$stage" "$SOCKET_ROOT" <<'PYTHON'
+          import errno
+          import os
+          import sys
+
+          try:
+              import _ctypes
+              import ctypes
+
+              rename = ctypes.CDLL(None, use_errno=True).renameat2
+          except (ImportError, AttributeError, OSError):
+              # EX_CONFIG maps to the workflow's stable ABI refusal below.
+              sys.exit(78)
+          rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+          at_fdcwd, rename_noreplace = -100, 1
+          if rename(at_fdcwd, os.fsencode(sys.argv[1]), at_fdcwd, os.fsencode(sys.argv[2]), rename_noreplace):
+              error = ctypes.get_errno()
+              if error == errno.ENOSYS:
+                  sys.exit(78)
+              raise OSError(error, os.strerror(error), sys.argv[2])
+          PYTHON
+                then
+                  :
+                else
+                  status=$?
+                  case "$status" in
+                    78|126|127)
+                      # No fallback: this caller requires the system Python and atomic rename ABI.
+                      echo "::error::CANDIDATE_SOCKET_ATOMIC_PUBLISH_UNAVAILABLE: /usr/bin/python3 with _ctypes and renameat2 is required" >&2
+                      exit 2
+                      ;;
+                    *) exit "$status" ;;
+                  esac
+                fi
+              )
+              mkdir -m 777 -- "$SOCKET_DIR"
+              ;;
+          esac
+          docker_mount_args=()
+          if [ -n "${SOCKET_DIR:-}" ]; then
+            docker_mount_args=(-v "${SOCKET_DIR}:/var/run/postgresql")
+          fi
+          docker run -d --name "$NAME" --label "org.arcanada.graph-store-job=$STORE_JOB" \
+            -e POSTGRES_USER=test \
+            -e "POSTGRES_PASSWORD=${PASS}" \
+            -e "POSTGRES_DB=${DB}" \
+            -p 127.0.0.1::5432 \
+            "${docker_mount_args[@]}" \
+            postgres:16@sha256:07abc3f43c9395b0bdbbab36bc25ddb0e8d83cd4fcafb5fb7d6abe14ff156dd8
+          PORT="$(docker port "$NAME" 5432/tcp | awk -F: '{print $NF}' | head -n 1)"
+          test -n "$PORT"
+          for _ in $(seq 1 30); do
+            if docker exec "$NAME" pg_isready -h 127.0.0.1 -U test -d "$DB" >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          docker exec "$NAME" pg_isready -h 127.0.0.1 -U test -d "$DB"
+          URL="postgresql://test:${PASS}@127.0.0.1:${PORT}/${DB}"
+          if [ "$GITHUB_REPOSITORY" = "Arcanada-one/muneral" ]; then
+            echo "::add-mask::${PASS}"
+            echo "::add-mask::${URL}"
+          else
+            # Owned local Unix-socket test fixture; no TCP is exposed for this test path.
+            docker exec -i "$NAME" psql -X -v ON_ERROR_STOP=1 -U test -d postgres <<'SQL'
+          CREATE ROLE dev LOGIN;
+          CREATE ROLE bench_primary_fixture_writer LOGIN;
+          CREATE ROLE bench_checkpoint_fixture_writer LOGIN;
+          CREATE DATABASE bench_primary_fixture OWNER dev;
+          CREATE DATABASE bench_checkpoint_fixture OWNER dev;
+          GRANT CONNECT ON DATABASE bench_primary_fixture TO bench_primary_fixture_writer;
+          GRANT CONNECT ON DATABASE bench_checkpoint_fixture TO bench_checkpoint_fixture_writer;
+          SQL
+            FIXTURE_READY="$(docker exec -i "$NAME" psql -XAtq -v ON_ERROR_STOP=1 -U test -d postgres <<'SQL'
+          SELECT (SELECT count(*) FROM pg_roles
+                  WHERE rolcanlogin AND rolname IN ('dev', 'bench_primary_fixture_writer', 'bench_checkpoint_fixture_writer')) = 3
+             AND (SELECT count(*) FROM pg_database
+                  WHERE datname IN ('bench_primary_fixture', 'bench_checkpoint_fixture')
+                    AND datdba = (SELECT oid FROM pg_roles WHERE rolname = 'dev')) = 2;
+          SQL
+            )"
+            if [ "$FIXTURE_READY" != "t" ]; then
+              echo "::error::Model Connector PostgreSQL fixture roles or databases are missing" >&2
+              exit 2
+            fi
+            docker run -d --name "$REDIS_NAME" --label "org.arcanada.graph-store-job=$STORE_JOB" \
+              -p 127.0.0.1::6379 \
+              redis:7@sha256:6b645a37f49b0546582468706b32e71a8b7fbb5ba4583d0f9e27a8004716b738
+            REDIS_PORT="$(docker port "$REDIS_NAME" 6379/tcp | awk -F: '{print $NF}' | head -n 1)"
+            test -n "$REDIS_PORT"
+            for _ in $(seq 1 30); do
+              if [ "$(docker exec "$REDIS_NAME" redis-cli ping 2>/dev/null || true)" = PONG ]; then break; fi
+              sleep 2
+            done
+            test "$(docker exec "$REDIS_NAME" redis-cli ping)" = PONG
+            {
+              echo "redis_container=${REDIS_NAME}"
+              echo "redis_port=${REDIS_PORT}"
+              echo "redis_host=127.0.0.1"
+              echo "redis_prefix=mc-ga-${STORE_JOB}:"
+              echo "bench_socket=${SOCKET_DIR}"
+            } >> "$GITHUB_OUTPUT"
+          fi
+          # NUL-delimited data, never sourced as shell. Keep it outside retained evidence.
+          (umask 077; set -C; printf '%s\0' "$PROFILE" "$URL" "${REDIS_PORT:+127.0.0.1}" \
+            "${REDIS_PORT:-}" "${REDIS_PORT:+mc-ga-${STORE_JOB}:}" \
+            "${SOCKET_DIR:-}" > "$STORE_BINDING")
+          {
+            echo "postgres_container=${NAME}"
+            echo "profile=${PROFILE}"
+            echo "database_url=${URL}"
+            echo "database_port=${PORT}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Apply Muneral Prisma migrations on throwaway Postgres
+        if: github.repository == 'Arcanada-one/muneral' && (inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update')
+        env:
+          DATABASE_URL: ${{ steps.candidate_disposable_stores.outputs.database_url }}
+          SETUP_POLICY: ${{ steps.candidate_dependency_setup.outputs.setup_policy }}
+        run: |
+          set -euo pipefail
+          test -n "${DATABASE_URL:-}"
+          test -n "${SETUP_POLICY:-}"
+          # Use the same qualified config and schema as client generation.
+          pnpm exec prisma migrate deploy --config prisma.config.ts --schema apps/api/prisma/schema.prisma
 
       - name: Validate canonical Auth dependency source and toolchain
         id: candidate_auth_dependency_setup
@@ -1091,14 +1898,14 @@ jobs:
 
       - name: Pin pnpm for canonical Auth candidate verification
         if: github.repository == 'Arcanada-one/auth-arcana'
-        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           version: ${{ steps.candidate_auth_dependency_setup.outputs.pnpm_version }}
           dest: ${{ runner.temp }}/auth-setup-pnpm
 
       - name: Pin Node for canonical Auth candidate verification
         if: github.repository == 'Arcanada-one/auth-arcana'
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ steps.candidate_auth_dependency_setup.outputs.node_version }}
 
@@ -1128,10 +1935,168 @@ jobs:
           pnpm exec prisma generate
           cat "$RUNNER_TEMP/graph-admission/auth-dependency-setup/plan.json" >> "$GITHUB_STEP_SUMMARY"
 
-      # The canonical Model Connector self-update is the only caller admitted by the narrow
-      # B1 pin/permission grammar. Its current-candidate TypeScript verifiers need the same
-      # frozen dependencies and generated Prisma client as its ordinary CI job. Keep this
-      # source-fixed setup separate from caller-controlled dependency-setup inputs.
+      # Talomnia-backend graph caller has no dependency-setup input. This fixed profile installs
+      # the root NestJS / Prisma closure before the current-candidate producer (talomnia-backend#66).
+      - name: Validate canonical Talomnia-backend dependency source and toolchain
+        id: candidate_talo_dependency_setup
+        if: github.repository == 'Arcanada-one/talomnia-backend'
+        env:
+          TOOLS_PATH: ${{ inputs.tools_path }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RANGE_BASE: ${{ steps.range.outputs.base }}
+          RANGE_HEAD: ${{ steps.range.outputs.head }}
+          RUNNER_TEMP: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          GRAPH_TOOLS_ROOT="$GITHUB_WORKSPACE/$TOOLS_PATH"
+          PLAN_ROOT="$RUNNER_TEMP/graph-admission/talo-dependency-setup"
+          mkdir -p "$PLAN_ROOT"
+          PLAN_PATH="$PLAN_ROOT/plan.json"
+          set -C
+          python3 -I -B "$GRAPH_TOOLS_ROOT/tools/graph/ci_gate.py" candidate-talo-dependency-setup-plan \
+            --repo "$GITHUB_WORKSPACE" --repository "$GITHUB_REPOSITORY" \
+            --base "$RANGE_BASE" --head "$RANGE_HEAD" > "$PLAN_PATH"
+          python3 -I -B - "$PLAN_PATH" >> "$GITHUB_OUTPUT" <<'PY'
+          import json, sys
+          plan = json.load(open(sys.argv[1], encoding="utf-8"))
+          if plan.get("policy") != "talo-pnpm-frozen-root/v1":
+              raise SystemExit("TALO_DEPENDENCY_SETUP_POLICY_REFUSED")
+          print("node_version=" + plan["node_version"])
+          print("pnpm_version=" + plan["pnpm_version"])
+          PY
+
+      - name: Pin pnpm for canonical Talomnia-backend candidate verification
+        if: github.repository == 'Arcanada-one/talomnia-backend'
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: ${{ steps.candidate_talo_dependency_setup.outputs.pnpm_version }}
+          dest: ${{ runner.temp }}/talo-setup-pnpm
+
+      - name: Pin Node for canonical Talomnia-backend candidate verification
+        if: github.repository == 'Arcanada-one/talomnia-backend'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ steps.candidate_talo_dependency_setup.outputs.node_version }}
+
+      - name: Prepare fixed Talomnia-backend verifier dependencies
+        if: github.repository == 'Arcanada-one/talomnia-backend'
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+          RUNNER_TEMP: ${{ runner.temp }}
+          TALO_NODE_VERSION: ${{ steps.candidate_talo_dependency_setup.outputs.node_version }}
+        run: |
+          set -euo pipefail
+          test -f package.json && test ! -L package.json
+          test -f pnpm-lock.yaml && test ! -L pnpm-lock.yaml
+          CONFIG_ROOT="$RUNNER_TEMP/graph-admission/talo-pnpm-config"
+          mkdir -p "$CONFIG_ROOT"
+          test ! -e "$CONFIG_ROOT/user.npmrc" && test ! -e "$CONFIG_ROOT/global.npmrc"
+          umask 077
+          : > "$CONFIG_ROOT/user.npmrc"
+          : > "$CONFIG_ROOT/global.npmrc"
+          export NPM_CONFIG_USERCONFIG="$CONFIG_ROOT/user.npmrc"
+          export NPM_CONFIG_GLOBALCONFIG="$CONFIG_ROOT/global.npmrc"
+          pnpm --version | grep -Fx '11.20.0'
+          test -n "$TALO_NODE_VERSION"
+          test "$(node --version)" = "v${TALO_NODE_VERSION}"
+          pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --registry=https://registry.npmjs.org/
+          pnpm exec prisma generate
+          cat "$RUNNER_TEMP/graph-admission/talo-dependency-setup/plan.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate canonical Model Connector candidate dependencies
+        id: candidate_mc_dependency_setup
+        if: github.repository == 'Arcanada-one/model-connector' && inputs.candidate_receipt_required && steps.self_update_classifier.outputs.case != 'gate_self_update'
+        env:
+          RUNNER_TEMP: ${{ runner.temp }}
+          TOOLS_PATH: ${{ inputs.tools_path }}
+          RANGE_BASE: ${{ steps.range.outputs.base }}
+          RANGE_HEAD: ${{ steps.range.outputs.head }}
+        run: |
+          set -euo pipefail
+          umask 077
+          CONFIG_ROOT="$(mktemp -d "$RUNNER_TEMP/mc-candidate-pnpm.XXXXXXXX")"
+          trap 'rm -rf -- "$CONFIG_ROOT"' EXIT
+          mkdir -p "$CONFIG_ROOT/tools/graph"
+          for input in ci_gate.py sshsig.py; do
+            git --no-replace-objects show "$RANGE_HEAD:$TOOLS_PATH/tools/graph/$input" > "$CONFIG_ROOT/tools/graph/$input"
+          done
+          python3 -I -B "$CONFIG_ROOT/tools/graph/ci_gate.py" candidate-mc-dependency-setup-plan \
+            --repo "$GITHUB_WORKSPACE" --repository "$GITHUB_REPOSITORY" \
+            --base "$RANGE_BASE" --head "$RANGE_HEAD" --snapshot "$CONFIG_ROOT/snapshot" \
+            | tee "$CONFIG_ROOT/plan.json" >> "$GITHUB_STEP_SUMMARY"
+          printf 'root=%s\n' "$CONFIG_ROOT" >> "$GITHUB_OUTPUT"
+          trap - EXIT
+
+      - name: Recheck Model Connector snapshot before pnpm bootstrap
+        id: candidate_mc_bootstrap_snapshot
+        if: github.repository == 'Arcanada-one/model-connector' && inputs.candidate_receipt_required && steps.self_update_classifier.outputs.case != 'gate_self_update'
+        env:
+          CONFIG_ROOT: ${{ steps.candidate_mc_dependency_setup.outputs.root }}
+          RANGE_BASE: ${{ steps.range.outputs.base }}
+          RANGE_HEAD: ${{ steps.range.outputs.head }}
+        run: |
+          set -euo pipefail
+          test -n "$CONFIG_ROOT"
+          python3 -I -B "$CONFIG_ROOT/tools/graph/ci_gate.py" candidate-mc-dependency-snapshot-verify \
+            --repo "$GITHUB_WORKSPACE" --repository "$GITHUB_REPOSITORY" \
+            --base "$RANGE_BASE" --head "$RANGE_HEAD" --snapshot "$CONFIG_ROOT/snapshot" \
+            --plan "$CONFIG_ROOT/plan.json" --phase bootstrap
+          # action-setup joins this input to GITHUB_WORKSPACE.
+          manifest="$(python3 -I -B -c 'import os, sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' \
+            "$CONFIG_ROOT/snapshot/package.json" "$GITHUB_WORKSPACE")"
+          printf 'package_json_file=%s\n' "$manifest" >> "$GITHUB_OUTPUT"
+
+      - name: Pin pnpm for Model Connector candidate verification
+        if: github.repository == 'Arcanada-one/model-connector' && inputs.candidate_receipt_required && steps.self_update_classifier.outputs.case != 'gate_self_update'
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: '10.30.3'
+          dest: ${{ runner.temp }}/mc-setup-pnpm
+          package_json_file: ${{ steps.candidate_mc_bootstrap_snapshot.outputs.package_json_file }}
+
+      - name: Pin Node for Model Connector candidate verification
+        if: github.repository == 'Arcanada-one/model-connector' && inputs.candidate_receipt_required && steps.self_update_classifier.outputs.case != 'gate_self_update'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22.23.4'
+          package-manager-cache: false
+
+      - name: Prepare fixed Model Connector candidate verifier dependencies
+        if: github.repository == 'Arcanada-one/model-connector' && inputs.candidate_receipt_required && steps.self_update_classifier.outputs.case != 'gate_self_update'
+        env:
+          CONFIG_ROOT: ${{ steps.candidate_mc_dependency_setup.outputs.root }}
+          RANGE_BASE: ${{ steps.range.outputs.base }}
+          RANGE_HEAD: ${{ steps.range.outputs.head }}
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$CONFIG_ROOT"
+          trap 'rm -rf -- "$CONFIG_ROOT"' EXIT
+          test "$(node --version)" = v22.23.4
+          : > "$CONFIG_ROOT/user.npmrc"
+          : > "$CONFIG_ROOT/global.npmrc"
+          SNAPSHOT="$CONFIG_ROOT/snapshot"
+          PLAN="$CONFIG_ROOT/plan.json"
+          TOOL="$CONFIG_ROOT/tools/graph/ci_gate.py"
+          verify_snapshot() {
+            python3 -I -B "$TOOL" candidate-mc-dependency-snapshot-verify \
+              --repo "$GITHUB_WORKSPACE" --repository "$GITHUB_REPOSITORY" \
+              --base "$RANGE_BASE" --head "$RANGE_HEAD" --snapshot "$SNAPSHOT" --plan "$PLAN" --phase "$1"
+          }
+          cd "$SNAPSHOT"
+          test "$(env -i PATH="$PATH" HOME="$CONFIG_ROOT" pnpm --version)" = 10.30.3
+          verify_snapshot install
+          env -i PATH="$PATH" HOME="$CONFIG_ROOT" CI=true \
+            NPM_CONFIG_USERCONFIG="$CONFIG_ROOT/user.npmrc" NPM_CONFIG_GLOBALCONFIG="$CONFIG_ROOT/global.npmrc" \
+            pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --registry=https://registry.npmjs.org/
+          verify_snapshot generate
+          env -i PATH="$PATH" HOME="$CONFIG_ROOT" CI=true DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy \
+            NPM_CONFIG_USERCONFIG="$CONFIG_ROOT/user.npmrc" NPM_CONFIG_GLOBALCONFIG="$CONFIG_ROOT/global.npmrc" \
+            ./node_modules/.bin/prisma generate --config prisma.config.ts
+          verify_snapshot publish
+
+      # Preserve the unchanged-input setup for the authenticated self-update.
       - name: Prepare canonical Model Connector self-update verifier dependencies
         if: github.repository == 'Arcanada-one/model-connector' && steps.self_update_classifier.outputs.case == 'gate_self_update'
         env:
@@ -1157,10 +2122,95 @@ jobs:
         if: inputs.stage_userpath_required || inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update'
         run: python3 -I -m pip install --disable-pip-version-check --no-input 'jsonschema==4.23.0'
 
+      - name: Provision pinned actionlint for candidate verification
+        id: candidate_actionlint
+        if: inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update'
+        run: |
+          set -euo pipefail
+          if [[ "$RUNNER_OS" != Linux || "$RUNNER_ARCH" != X64 ]]; then
+            echo "::error::pinned actionlint requires a Linux x64 runner" >&2
+            exit 1
+          fi
+          tool_dir="$(mktemp -d -- "$RUNNER_TEMP/graph-actionlint.XXXXXXXX")"
+          cd -- "$tool_dir"
+          curl --fail --location --silent --show-error --proto '=https' --proto-redir '=https' --max-time 60 \
+            --output actionlint.tar.gz \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          printf '%s\n' '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz' | sha256sum --check
+          tar -xOzf actionlint.tar.gz -- actionlint > actionlint.unverified
+          printf '%s\n' 'c872d6db8c6bf83a8eaa704fc93999f027d55dffbc63b8a6abdccb47df5f4cd4  actionlint.unverified' | sha256sum --check
+          chmod 0755 actionlint.unverified
+          mv -- actionlint.unverified actionlint
+          printf 'bin_dir=%s\n' "$tool_dir" >> "$GITHUB_OUTPUT"
+
+      # Arm a one-shot Bash startup file for the immediately following producer.
+      # The file contains only source-fixed code. Store values stay in separate private data
+      # and are exported inside the producer process, never through the job environment.
+      - name: Arm the disposable-store producer environment
+        id: candidate_store_environment
+        if: steps.candidate_disposable_stores.outcome == 'success'
+        env:
+          CAPTURE_ROOT: ${{ steps.candidate_capture.outputs.stage_root }}
+        run: |
+          set -euo pipefail
+          [[ -d "$CAPTURE_ROOT" && -O "$CAPTURE_ROOT" && "$(realpath -e -- "$CAPTURE_ROOT")" == "$CAPTURE_ROOT" ]]
+          [[ "${CAPTURE_ROOT%/*}" == "$RUNNER_TEMP/graph-admission/stage-userpath" && "${CAPTURE_ROOT##*/}" == run.* ]]
+          loader="$RUNNER_TEMP/graph-admission/${CAPTURE_ROOT##*/}.producer-env"
+          (umask 077; set -C; cat > "$loader" <<'BASH_ENV_LOADER'
+          # These step-local keys identify the exact candidate producer. If it was skipped,
+          # an always() step must not load any store values.
+          if [[ ! -v EMPTY_IMPACT_CLAIM_FILE || ! -v RANGE_BASE_BRANCH || ! -v CANDIDATE_ROOT ]]; then
+            unset BASH_ENV
+            return 0
+          fi
+          loader="${BASH_SOURCE[0]}"
+          unset BASH_ENV
+          capture="$RUNNER_TEMP/graph-admission/stage-userpath/${loader##*/}"
+          capture="${capture%.producer-env}"
+          if ! (unset GH_TOKEN; rm -- "$loader"); then
+            echo "::error::could not disarm the disposable-store producer environment" >&2
+            exit 2
+          fi
+          GRAPH_CHECK_RUN_ID='${{ job.check_run_id }}'
+          binding="${RUNNER_TEMP:?}/graph-admission/${capture##*/}.stores"
+          if [[ ! -f "$binding" || -L "$binding" || ! -O "$binding" || "$(unset GH_TOKEN; stat -c %a -- "$binding")" != 600 ]] ||
+             ! mapfile -d '' -t store < "$binding" || [ "${#store[@]}" -ne 6 ]; then
+            echo "::error::owned disposable-store binding is missing or invalid" >&2
+            exit 2
+          fi
+          case "$GITHUB_REPOSITORY:${store[0]}" in
+            Arcanada-one/muneral:muneral-candidate-postgres-v1)
+              [[ "${store[1]}" =~ ^postgresql://test:[0-9a-f]{32}@127\.0\.0\.1:[0-9]{1,5}/muneral_test$ &&
+                 -z "${store[2]}${store[3]}${store[4]}${store[5]}" ]] || exit 2
+              ;;
+            Arcanada-one/model-connector:model-connector-disposable-store-v1)
+              [[ "${store[1]}" =~ ^postgresql://test:test@127\.0\.0\.1:[0-9]{1,5}/connector_test$ &&
+                 "${store[2]}" == 127.0.0.1 && "${store[3]}" =~ ^[0-9]{1,5}$ &&
+                 "${store[4]}" == "mc-ga-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GRAPH_CHECK_RUN_ID}:" &&
+                 "${store[5]}" == "$RUNNER_TEMP/mc-owned-postgres-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GRAPH_CHECK_RUN_ID}/socket" ]] || exit 2
+              # Pass current-job identity independently of the binding fields, so the
+              # consumer can reject an otherwise consistent binding from a different job.
+              export GRAPH_CHECK_RUN_ID
+              ;;
+            *) echo "::error::disposable-store binding does not match the caller" >&2; exit 2 ;;
+          esac
+          if ! (unset GH_TOKEN; rm -- "$binding"); then
+            echo "::error::could not remove the consumed disposable-store binding" >&2
+            exit 2
+          fi
+          export GRAPH_DISPOSABLE_STORE_PROFILE="${store[0]}" DATABASE_URL="${store[1]}" \
+            REDIS_HOST="${store[2]}" REDIS_PORT="${store[3]}" REDIS_PREFIX="${store[4]}" \
+            BENCH_OWNED_TEST_PG_SOCKET="${store[5]}"
+          export CANDIDATE_ROOT="$capture/current-candidate"
+          BASH_ENV_LOADER
+          )
+          printf 'BASH_ENV=%s\n' "$loader" >> "$GITHUB_ENV"
+
       - name: Produce the exact current Program candidate CAR
         id: candidate_receipt
         if: inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update'
         env:
+          ACTIONLINT_BIN_DIR: ${{ steps.candidate_actionlint.outputs.bin_dir }}
           RANGE_BASE: ${{ steps.range.outputs.base }}
           RANGE_HEAD: ${{ steps.range.outputs.head }}
           RANGE_BASE_BRANCH: ${{ steps.range.outputs.base_branch }}
@@ -1173,6 +2223,8 @@ jobs:
           VERIFIER_JOB: ${{ inputs.verifier_job }}
           VERIFIER_CONCLUSION: ${{ inputs.verifier_conclusion }}
           EMPTY_IMPACT_EXPLANATION: ${{ inputs.empty_impact_explanation }}
+          CANDIDATE_CANARY_PATH: ${{ inputs.candidate_canary_path }}
+          EMPTY_IMPACT_CLAIM_FILE: ${{ steps.range.outputs.claim_file }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -uo pipefail
@@ -1195,12 +2247,22 @@ jobs:
           fi
           mkdir -p "$CANDIDATE_ROOT/work" "$CANDIDATE_ROOT/verifier-out"
           EMPTY_IMPACT_PATH="$CANDIDATE_ROOT/empty-impact-explanation.json"
-          if [ -n "${EMPTY_IMPACT_EXPLANATION:-}" ]; then
+          if [ -n "${EMPTY_IMPACT_CLAIM_FILE:-}" ] && [ -n "${EMPTY_IMPACT_EXPLANATION:-}" ]; then
+            echo "::error::a committed empty-impact claim and the empty_impact_explanation input are both present" >&2
+            exit 2
+          fi
+          if [ -n "${EMPTY_IMPACT_EXPLANATION:-}" ] || [ -n "${EMPTY_IMPACT_CLAIM_FILE:-}" ]; then
             if [ "$CANDIDATE_SOURCE_OUTCOME_REQUIRED" != "true" ]; then
               echo "::error::empty-impact explanation requires same-run current-source outcome capture" >&2
               exit 2
             fi
-            if ! (umask 077; set -C; printf '%s' "$EMPTY_IMPACT_EXPLANATION" > "$EMPTY_IMPACT_PATH"); then
+            if [ -n "${EMPTY_IMPACT_CLAIM_FILE:-}" ]; then
+              # the claim blob was read by git at the exact PR head and validated before any head code ran
+              if ! (umask 077; set -C; cp -- "$EMPTY_IMPACT_CLAIM_FILE" "$EMPTY_IMPACT_PATH"); then
+                echo "::error::committed empty-impact claim could not be captured safely" >&2
+                exit 2
+              fi
+            elif ! (umask 077; set -C; printf '%s' "$EMPTY_IMPACT_EXPLANATION" > "$EMPTY_IMPACT_PATH"); then
               echo "::error::empty-impact explanation input could not be captured safely" >&2
               exit 2
             fi
@@ -1245,19 +2307,23 @@ jobs:
               --graph "$CANDIDATE_ROOT/base-graph.json" --out "$CANDIDATE_ROOT/receipt.json" --json
               --workdir "$CANDIDATE_ROOT/work" --verifier-out "$CANDIDATE_ROOT/verifier-out"
               --phase-log "$CANDIDATE_ROOT/phase.jsonl")
-            if [ -n "${EMPTY_IMPACT_EXPLANATION:-}" ]; then
+            if [ -n "${EMPTY_IMPACT_EXPLANATION:-}" ] || [ -n "${EMPTY_IMPACT_CLAIM_FILE:-}" ]; then
               VERIFY_ARGV+=(--empty-impact-explanation "$EMPTY_IMPACT_PATH")
             fi
             if [ "$GITHUB_REPOSITORY" = "Arcanada-one/auth-arcana" ]; then
               VERIFY_ARGV+=(--root-typecheck-ci-root "$CANDIDATE_ROOT/ci-typecheck")
             fi
+            if [ -n "${CANDIDATE_CANARY_PATH:-}" ]; then
+              VERIFY_ARGV+=("--canary=$CANDIDATE_CANARY_PATH" --require-committed-canary-v2)
+            fi
             printf '%s\0' "${VERIFY_ARGV[@]}" > "$CANDIDATE_ROOT/verify.argv.nul"
             pwd -P > "$CANDIDATE_ROOT/verify.cwd"
             date -u +%FT%T.%NZ > "$CANDIDATE_ROOT/verify-start.utc"
+            VERIFY_PATH="${ACTIONLINT_BIN_DIR:?verified actionlint directory is missing}:$PATH"
             if [ "$GITHUB_REPOSITORY" = "Arcanada-one/auth-arcana" ] && [ -n "$TYPECHECK_TOKEN" ]; then
-              GH_TOKEN="$TYPECHECK_TOKEN" "${VERIFY_ARGV[@]}" > "$CANDIDATE_ROOT/verify.stdout" 2> "$CANDIDATE_ROOT/verify.stderr" &
+              PATH="$VERIFY_PATH" GH_TOKEN="$TYPECHECK_TOKEN" "${VERIFY_ARGV[@]}" > "$CANDIDATE_ROOT/verify.stdout" 2> "$CANDIDATE_ROOT/verify.stderr" &
             else
-              "${VERIFY_ARGV[@]}" > "$CANDIDATE_ROOT/verify.stdout" 2> "$CANDIDATE_ROOT/verify.stderr" &
+              PATH="$VERIFY_PATH" "${VERIFY_ARGV[@]}" > "$CANDIDATE_ROOT/verify.stdout" 2> "$CANDIDATE_ROOT/verify.stderr" &
             fi
             VERIFY_PID=$!
             printf '%s\n' "$VERIFY_PID" > "$CANDIDATE_ROOT/verify.pid"
@@ -1399,10 +2465,11 @@ jobs:
           RANGE_BASE: ${{ steps.range.outputs.base }}
           RANGE_HEAD: ${{ steps.range.outputs.head }}
           REPO_NAME: ${{ github.repository }}
-          STAGE_ROOT: ${{ runner.temp }}/graph-admission/stage-userpath
-          CANDIDATE_ROOT: ${{ runner.temp }}/graph-admission/stage-userpath/current-candidate
+          STAGE_ROOT: ${{ steps.candidate_capture.outputs.stage_root || format('{0}/graph-admission/stage-userpath', runner.temp) }}
+          CANDIDATE_ROOT: ${{ steps.candidate_capture.outputs.candidate_root || format('{0}/graph-admission/stage-userpath/current-candidate', runner.temp) }}
           CANDIDATE_SOURCE_OUTCOME_REQUIRED: ${{ inputs.candidate_source_outcome_required }}
           TOOLS_PATH: ${{ inputs.tools_path }}
+          CANDIDATE_CANARY_PATH: ${{ inputs.candidate_canary_path }}
         run: |
           set -uo pipefail
           set +e
@@ -1416,6 +2483,9 @@ jobs:
           ARGS=()
           if [ "$CANDIDATE_SOURCE_OUTCOME_REQUIRED" = "true" ]; then
             ARGS+=(--candidate-root "$CANDIDATE_ROOT")
+          fi
+          if [ -n "${CANDIDATE_CANARY_PATH:-}" ]; then
+            ARGS+=("--candidate-canary=$CANDIDATE_CANARY_PATH")
           fi
           python3 "$GRAPH_TOOLS_ROOT/tools/ci/stage_userpath.py" \
             --repo "$GITHUB_WORKSPACE" \
@@ -1569,22 +2639,24 @@ jobs:
           STAGE_EVIDENCE_REQUIRED: ${{ inputs.stage_evidence_required }}
           CURRENT_EVALUATOR_RUN_ID: ${{ github.run_id }}
           CURRENT_EVALUATOR_ATTEMPT: ${{ github.run_attempt }}
+          CANDIDATE_CANARY_PATH: ${{ inputs.candidate_canary_path }}
           CURRENT_EVALUATOR_CHECK_RUN_ID: ${{ job.check_run_id }}
           CURRENT_EVALUATOR_JOB_KEY: ${{ github.job }}
           CURRENT_EVALUATOR_REPOSITORY: ${{ github.repository }}
           CURRENT_EVALUATOR_CALLER_WORKFLOW_REF: ${{ github.workflow_ref }}
           CURRENT_EVALUATOR_CALLER_WORKFLOW_SHA: ${{ github.workflow_sha }}
-          CURRENT_EVALUATOR_WORKFLOW_REPOSITORY: ${{ job.workflow_repository }}
-          CURRENT_EVALUATOR_WORKFLOW_FILE_PATH: ${{ job.workflow_file_path }}
-          CURRENT_EVALUATOR_WORKFLOW_REF: ${{ job.workflow_ref }}
-          CURRENT_EVALUATOR_WORKFLOW_SHA: ${{ job.workflow_sha }}
+          # actionlint 1.7.12's job type lacks workflow_*; GitHub still populates those fields at
+          # runtime on reusable-workflow jobs. Serialize the whole job object (same pattern as
+          # ACTIVE_WORKFLOW_CONTEXT above) and extract below — do NOT substitute github.workflow_ref
+          # / github.workflow_sha here: those are the CALLER bindings already mapped above.
+          CURRENT_EVALUATOR_JOB_CONTEXT: ${{ toJSON(job) }}
           STAGE_USERPATH_RESULT: ${{ steps.stage_userpath.outputs.result }}
           STAGE_USERPATH_ROOT: ${{ steps.stage_userpath.outputs.root }}
           STAGE_USERPATH_REQUIRED: ${{ inputs.stage_userpath_required }}
           STAGE_USERPATH_EXIT: ${{ steps.stage_userpath.outputs.exit }}
           CANDIDATE_RECEIPT: ${{ steps.candidate_receipt.outputs.receipt }}
           CANDIDATE_RECEIPT_EXIT: ${{ steps.candidate_receipt.outputs.exit }}
-          CANDIDATE_ROOT: ${{ runner.temp }}/graph-admission/stage-userpath/current-candidate
+          CANDIDATE_ROOT: ${{ steps.candidate_capture.outputs.candidate_root || format('{0}/graph-admission/stage-userpath/current-candidate', runner.temp) }}
           CANDIDATE_RECEIPT_REQUIRED: ${{ inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update' }}
           CANDIDATE_SOURCE_OUTCOME_REQUIRED: ${{ inputs.candidate_source_outcome_required }}
           GH_TOKEN: ${{ github.token }}
@@ -1596,6 +2668,12 @@ jobs:
           # write the summary, upload the result and hand the verdict to the last step, which is the
           # single place the check turns red (GitHub starts this shell with -e; it is cleared here).
           set +e
+          # Extract reusable-workflow identity from toJSON(job). actionlint 1.7.12 rejects
+          # job.workflow_*; GitHub still provides those keys at runtime (see ACTIVE_WORKFLOW_CONTEXT).
+          CURRENT_EVALUATOR_WORKFLOW_REPOSITORY="$(python3 -c 'import json,os; print(json.loads(os.environ.get("CURRENT_EVALUATOR_JOB_CONTEXT") or "{}").get("workflow_repository") or "")')"
+          CURRENT_EVALUATOR_WORKFLOW_FILE_PATH="$(python3 -c 'import json,os; print(json.loads(os.environ.get("CURRENT_EVALUATOR_JOB_CONTEXT") or "{}").get("workflow_file_path") or "")')"
+          CURRENT_EVALUATOR_WORKFLOW_REF="$(python3 -c 'import json,os; print(json.loads(os.environ.get("CURRENT_EVALUATOR_JOB_CONTEXT") or "{}").get("workflow_ref") or "")')"
+          CURRENT_EVALUATOR_WORKFLOW_SHA="$(python3 -c 'import json,os; print(json.loads(os.environ.get("CURRENT_EVALUATOR_JOB_CONTEXT") or "{}").get("workflow_sha") or "")')"
           ARGS=()
           if [ -n "${RANGE_BASE_BRANCH:-}" ]; then ARGS+=(--base-branch "$RANGE_BASE_BRANCH"); fi
           while IFS= read -r g; do [ -n "$g" ] && ARGS+=(--receipt-glob "$g"); done <<< "$RECEIPT_GLOBS"
@@ -1608,6 +2686,9 @@ jobs:
           if [ -n "${STAGE_EVIDENCE_PATH:-}" ]; then ARGS+=(--stage-evidence "$STAGE_EVIDENCE_PATH"); fi
           if [ -n "${STAGE_EVIDENCE_ROOT:-}" ]; then ARGS+=(--stage-evidence-root "$STAGE_EVIDENCE_ROOT"); fi
           if [ "${STAGE_EVIDENCE_REQUIRED:-false}" = "true" ]; then ARGS+=(--stage-evidence-required); fi
+          if [ -n "${CANDIDATE_CANARY_PATH:-}" ]; then
+            ARGS+=("--candidate-canary=$CANDIDATE_CANARY_PATH")
+          fi
           if [ -n "${STAGE_EVIDENCE_PATH:-}" ]; then
             ARGS+=(--current-evaluator-run-id "$CURRENT_EVALUATOR_RUN_ID"
               --current-evaluator-attempt "$CURRENT_EVALUATOR_ATTEMPT"
@@ -1651,16 +2732,106 @@ jobs:
           echo "rc=$RC" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Upload the gate result
+      # DEC-AUP-0191: retain evidence in the job log (+ host dir when mounted). Never GitHub artifacts.
+      # Keep order: gate verdict first (above), retention here, fail-the-check after — retention never
+      # changes RC. tools/ci/retain_evidence.py must travel in the signed GraphAdmissionBundle.
+      - name: Retain the gate result
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
-        with:
-          name: graph-admission-result
-          path: |
-            ${{ runner.temp }}/graph-admission/*.json
-            ${{ runner.temp }}/graph-admission/stage-userpath/
-            ${{ runner.temp }}/graph-admission/current-candidate/
-          if-no-files-found: warn
+        env:
+          TOOLS_PATH: ${{ steps.selftools.outputs.path || inputs.tools_path }}
+        run: |
+          set +e
+          ROOT="${TOOLS_PATH:-.github/graph-admission}"
+          # Quote globs so Python expands them; shell must not split into multiple --path values.
+          python3 "${ROOT}/tools/ci/retain_evidence.py" \
+            --name graph-admission-result \
+            --path "${RUNNER_TEMP}/graph-admission/*.json" \
+            --path "${RUNNER_TEMP}/graph-admission/stage-userpath/" \
+            --path "${RUNNER_TEMP}/graph-admission/current-candidate/" \
+            --summary "${GITHUB_STEP_SUMMARY}"
+          exit 0
+
+      - name: Stop allowlisted candidate disposable stores
+        if: >-
+          always() && (steps.candidate_disposable_stores.outcome == 'success' ||
+          steps.candidate_disposable_stores.outcome == 'failure' ||
+          steps.candidate_disposable_stores.outcome == 'cancelled')
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RUNNER_TEMP: ${{ runner.temp }}
+          GRAPH_CHECK_RUN_ID: ${{ job.check_run_id }}
+        run: |
+          set -uo pipefail
+          if [[ ! "$GITHUB_RUN_ID" =~ ^[0-9]+$ || ! "$GITHUB_RUN_ATTEMPT" =~ ^[0-9]+$ ||
+                ! "$GRAPH_CHECK_RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::invalid disposable-store cleanup identity" >&2
+            exit 2
+          fi
+          STORE_JOB="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GRAPH_CHECK_RUN_ID}"
+          case "$GITHUB_REPOSITORY" in
+            Arcanada-one/muneral)
+              owned_containers=("muneral-ga-pg-${STORE_JOB}")
+              ;;
+            Arcanada-one/model-connector)
+              owned_containers=("model-connector-ga-pg-${STORE_JOB}"
+                                "model-connector-ga-redis-${STORE_JOB}")
+              ;;
+            *)
+              echo "::error::refusing cleanup for non-allowlisted caller" >&2
+              exit 2
+              ;;
+          esac
+          rc=0
+          for name in "${owned_containers[@]}"; do
+            filters=(--filter "name=^/${name}$" --filter "label=org.arcanada.graph-store-job=$STORE_JOB")
+            if ! found="$(docker ps -a --no-trunc "${filters[@]}" --format '{{.ID}}' 2>/dev/null)"; then
+              echo "::error::could not locate owned disposable container: $name" >&2
+              rc=1
+              continue
+            fi
+            if [ -z "$found" ]; then continue; fi
+            if [[ ! "$found" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "::error::could not verify owned disposable container identity: $name" >&2
+              rc=1
+              continue
+            fi
+            # Let PostgreSQL unlink its container-owned files in the sticky socket directory.
+            if [[ "$name" == "model-connector-ga-pg-${STORE_JOB}" ]] &&
+               ! docker stop --time 15 "$found" >/dev/null 2>&1; then
+              echo "::warning::graceful stop failed for owned disposable container; attempting forced removal: $name" >&2
+            fi
+            if ! docker rm -f -v "$found" >/dev/null 2>&1; then
+              echo "::error::could not remove owned disposable container: $found" >&2
+              rc=1
+            fi
+            if ! remaining="$(docker ps -a --no-trunc "${filters[@]}" --format '{{.ID}}' 2>/dev/null)" || [ -n "$remaining" ]; then
+              echo "::error::owned disposable container removal could not be verified: $name" >&2
+              rc=1
+            fi
+          done
+          if [ "$GITHUB_REPOSITORY" = "Arcanada-one/model-connector" ]; then
+            SOCKET_ROOT="${RUNNER_TEMP:?}/mc-owned-postgres-${STORE_JOB}"
+            marker="$SOCKET_ROOT/.owner"
+            if [[ ! -e "$SOCKET_ROOT" && ! -L "$SOCKET_ROOT" ]]; then
+              exit "$rc"
+            fi
+            if {
+              [[ ! -d "$SOCKET_ROOT" || ! -O "$SOCKET_ROOT" ||
+                 "$(realpath -e -- "$SOCKET_ROOT")" != "$SOCKET_ROOT" ||
+                 "$(stat -c %a -- "$SOCKET_ROOT")" != 700 ||
+                 ! -f "$marker" || -L "$marker" || ! -O "$marker" ||
+                 "$(stat -c %a -- "$marker")" != 600 ]] ||
+              ! SOCKET_INODE="$(stat -c '%d:%i' -- "$SOCKET_ROOT")" ||
+              [[ "$(<"$marker")" != "$STORE_JOB $SOCKET_INODE" ]]
+            } 2>/dev/null; then
+              echo "::error::refusing cleanup of unowned disposable PostgreSQL socket directory" >&2
+              rc=1
+            elif ! rm -rf -- "$SOCKET_ROOT" >/dev/null 2>&1 || [ -e "$SOCKET_ROOT" ] || [ -L "$SOCKET_ROOT" ]; then
+              echo "::error::owned disposable PostgreSQL socket directory could not be removed" >&2
+              rc=1
+            fi
+          fi
+          exit "$rc"
 
       - name: Fail the check on a red verdict
         if: always()
@@ -1669,7 +2840,39 @@ jobs:
         run: |
           set -uo pipefail
           if [ "${RC:-}" != "0" ]; then
-            echo "::error title=graph-admission::the admission gate returned ${RC:-<no verdict>} — see the job summary and the graph-admission-result artefact"
+            echo "::error title=graph-admission::the admission gate returned ${RC:-<no verdict>} — see the job summary and the retained graph-admission-result evidence"
             exit 1
           fi
           echo "graph-admission: admitted"
+
+      - name: Remove graph-admission runner temp
+        if: always()
+        continue-on-error: true
+        shell: bash
+        env:
+          EXPECTED_RUNNER_TEMP: ${{ runner.temp }}
+        run: |
+          set -uo pipefail
+          # Refuse non-canonical paths, including symlinks anywhere in either path.
+          is_real_directory() {
+            local resolved
+            [[ "$1" == /* && "$1" != / && -d "$1" ]] &&
+              IFS= read -r -d '' resolved < <(realpath -ez -- "$1") &&
+              [[ "$resolved" == "$1" ]]
+          }
+          if [[ "${RUNNER_TEMP:-}" != "${EXPECTED_RUNNER_TEMP:-}" ]] ||
+             ! is_real_directory "${RUNNER_TEMP:-}"; then
+            echo "::error::RUNNER_TEMP must be the runner's canonical absolute temp directory"
+            exit 2
+          fi
+          ROOT="$RUNNER_TEMP/graph-admission"
+          if [[ ! -L "$ROOT" && ! -e "$ROOT" ]]; then
+            exit 0
+          fi
+          if ! is_real_directory "$ROOT"; then
+            echo "::error::graph-admission must be a real private directory inside RUNNER_TEMP"
+            exit 2
+          fi
+          if ! rm -rf -- "$ROOT"; then
+            echo "::warning::could not remove graph-admission runner temp"
+          fi

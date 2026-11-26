@@ -24,14 +24,19 @@ Receipt sources (both supported, both reported):
     a) files in the pull-request head tree matching `--receipt-glob` (default the caller's
        `receipts/graph/**` and `receipts/**/change-admission-*.json`);
     b) a fenced ```json block in the PR body whose `schema` starts with `ChangeAdmissionReceipt`.
-    The PR body is read from a FILE (the workflow passes it through an environment variable and a
-    file, never through a shell interpolation) — a PR body is attacker-controlled text.
+    The PR body is read from a FILE (`--pr-body-file`). The reusable workflow writes that file from
+    `$GITHUB_EVENT_PATH` and never places body bytes in an environment variable or argv payload —
+    a large body previously crashed the job with E2BIG / "Argument list too long". A PR body is
+    attacker-controlled text. Until every caller pins a program SHA that includes the event-file
+    path, the interim workaround remains valid: commit the CAR in-tree under `receipts/graph/` and
+    keep the PR body short (the gate accepts a receipt in the head tree).
 
 stdlib only (Python 3.12), deterministic, no network.
 """
 from __future__ import annotations
 
 import argparse
+import contextlib
 import fnmatch
 import hashlib
 import importlib.util
@@ -53,15 +58,21 @@ BUNDLE_FILES = [
     # The finished-stage publisher is part of the pinned Program bundle so external callers
     # can run the same producer without a Program checkout in their workspace.
     "tools/ci/stage_userpath.py",
+    # DEC-AUP-0191: host/job-log evidence retention replaces actions/upload-artifact in the
+    # reusable workflow; callers need the same script inside the signed bundle.
+    "tools/ci/retain_evidence.py",
     "governance/decisions/DEC-AUP-0167.md",
     "tools/graph/full_suite_ci.py",
     "tools/graph/shell_source.py",
     "tools/graph/shell_workflow.py",
+    # build_graph.py imports go_source at module scope for the bounded Go extractor.
+    "tools/graph/go_source.py",
     "tools/graph/admit_change.py",
     # The StageEvidence validator reads this committed contract relative to the bundle root.
     # Without it, a vendored admission tool cannot validate the explicit finished-stage input.
     "contracts/graph-verified-change/stage-evidence.v1.json",
     "tools/graph/schema_check.py",
+    "tools/graph/receipt_data.py",  # native verifier/gate dependency; genuine source bytes travel with bundle
     "tools/graph/build_graph.py",
     # build_graph.py imports this at module scope to add declared source-input edges.
     # Keep the parser beside the builder in every exported caller bundle.
@@ -111,6 +122,11 @@ BUNDLE_FILES = [
     # Found by importing every bundled module from a directory that contains nothing else — a
     # static import scan missed it, and so did testing one entry point by hand.
     "tools/graph/canary_evidence.py",
+    "tools/graph/environment_obligations.py",
+    "tools/graph/environment_obligations.cjs",
+    "tools/graph/package.json",
+    "tools/graph/pnpm-lock.yaml",
+    "tools/graph/tsconfig.json",
     "tools/graph/process_observation.py",
     # AUP-GRAPH-006:gate2b — the SSHSIG/Ed25519 verifier. It must travel with the bundle: the gate
     # verifies the bundle's signature before trusting anything in it, and a verifier the caller does
@@ -568,8 +584,21 @@ def changed_files(repo: Path, base: str, head: str) -> list[str]:
     return [l for l in out.splitlines() if l]
 
 
+def _dependency_manifest_predicate():
+    """The single definition lives in schema_check (same bundle directory); load it by exact sibling path."""
+    path = Path(__file__).resolve().with_name("schema_check.py")
+    spec = importlib.util.spec_from_file_location("_ci_gate_dep_manifest_schema_check", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("schema_check.py is not loadable beside ci_gate.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.is_python_dependency_manifest
+
+
 def is_doc_only(paths: list[str], globs: list[str]) -> bool:
-    return bool(paths) and all(any(fnmatch.fnmatch(p, g) for g in globs) for p in paths)
+    # DEC-AUP-0188: a dependency manifest is measured by the fallback suite; no doc glob may reclassify it.
+    manifest = _dependency_manifest_predicate()
+    return bool(paths) and all(any(fnmatch.fnmatch(p, g) for g in globs) and not manifest(p) for p in paths)
 
 
 def receipts_from_body(body: str, workdir: Path) -> list[Path]:
@@ -877,7 +906,8 @@ def _argv_uses_pinned_interpreter(argv: object, interpreter: object) -> bool:
 def validate_current_source_cli_outcome(outcome: object, root: Path, repo: Path, repo_name: str,
                                         base: str, head: str, candidate_tree: str,
                                         program_source: dict, tools_root: Path,
-                                        required: bool) -> tuple[dict | None, list[str]]:
+                                        required: bool, *, candidate_canary: str | None = None,
+                                        ) -> tuple[dict | None, list[str]]:
     """Validate fresh same-run candidate CLI captures; never interpret them as admission."""
     if outcome is None:
         return None, (["required current-source CLI outcome is missing"] if required else [])
@@ -939,6 +969,13 @@ def validate_current_source_cli_outcome(outcome: object, root: Path, repo: Path,
         expected_argv["verify"].extend(["--empty-impact-explanation", str(explanation_path)])
     if repo_name == "Arcanada-one/auth-arcana":
         expected_argv["verify"].extend(["--root-typecheck-ci-root", str(candidate_root / "ci-typecheck")])
+    if candidate_canary:
+        import canary_evidence
+        try:
+            canary_evidence.validate_candidate_canary(repo, head, candidate_canary)
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+            problems.append("current-source candidate canary refused: " + str(exc))
+        expected_argv["verify"].extend([f"--canary={candidate_canary}", "--require-committed-canary-v2"])
     resolved_outputs = {}
     for name, row in command_by_id.items():
         if (set(row) != {"id", "argv", "cwd", "pid", "start_utc", "end_utc", "exit_code",
@@ -1116,7 +1153,8 @@ def validate_stage_userpath_result(result_path: str | None, result_root: str | N
                                    outer_exit: int | None = None,
                                    candidate_outcome_required: bool = False,
                                    tools_root: Path | None = None,
-                                   trusted_bundle: dict | None = None) -> tuple[dict, list[str]]:
+                                   trusted_bundle: dict | None = None,
+                                   candidate_canary: str | None = None) -> tuple[dict, list[str]]:
     """Validate the actual Program-stage runner output without treating its fixture gate as candidate admission."""
     if not result_path:
         return {}, (["required ProgramStageUserpath/v1 result is missing"] if required else [])
@@ -1283,7 +1321,7 @@ def validate_stage_userpath_result(result_path: str | None, result_root: str | N
     candidate_outcome, candidate_outcome_problems = validate_current_source_cli_outcome(
         doc.get("candidate_cli_outcome"), root, repo, repo_name, base, head,
         actual_candidate_tree, program_source, effective_tools_root or repo,
-        candidate_outcome_required)
+        candidate_outcome_required, candidate_canary=candidate_canary)
     problems.extend(candidate_outcome_problems)
 
     fixture = doc.get("fixture")
@@ -1468,6 +1506,8 @@ def validate_stage_userpath_result(result_path: str | None, result_root: str | N
                             "--tools-root", str(effective_tools_root)]
     if candidate_outcome_required:
         expected_runner_argv.extend(["--candidate-root", str(root / "current-candidate")])
+    if candidate_canary:
+        expected_runner_argv.append(f"--candidate-canary={candidate_canary}")
     runner_argv = invocation.get("argv") if isinstance(invocation, dict) else None
     if (not isinstance(invocation, dict) or invocation.get("cwd") != str(repo.resolve())
             or not _argv_uses_pinned_interpreter(runner_argv, doc.get("interpreter"))
@@ -1491,6 +1531,7 @@ def validate_stage_userpath_result(result_path: str | None, result_root: str | N
 
 CALLER_DEPENDENCY_SETUP_SCHEMA = "CallerDependencySetup/v1"
 CALLER_DEPENDENCY_SETUP_POLICY = "pnpm-frozen-web-typecheck/v1"
+CALLER_API_DEPENDENCY_SETUP_POLICY = "pnpm-frozen-api-prisma-typecheck/v1"
 CALLER_DEPENDENCY_SETUP_REPOSITORY = "Arcanada-one/muneral"
 # Exact Node versions the MUN dependency-setup profiles (web typecheck and full suite) admit. An exact list, never
 # a range: 26.13.0 is what Arcanada-one/muneral pins in package.json engines.node, .nvmrc and ci.yml (muneral#362).
@@ -1503,6 +1544,9 @@ CALLER_DEPENDENCY_SETUP_FILES = (
     "apps/web/package.json",
     "packages/types/package.json",
     ".arcana/derived-artefacts.v1.json",
+)
+CALLER_DEPENDENCY_SETUP_PRISMA_INPUTS = (
+    "apps/api/package.json", "apps/api/prisma/schema.prisma", "prisma.config.ts",
 )
 
 # A separate, source-bound setup profile for the canonical MUN full suite. Keep the
@@ -1559,7 +1603,11 @@ def validate_candidate_dependency_setup(manifest: dict, repo_path: str | Path,
 
     The manifest is caller-supplied data, never a command source. This function checks its exact
     policy, subject, range, package scope and seven Git/blob/content pins, then returns only the
-    fixed pnpm operations supported by this profile. Its JSON shape is exactly
+    fixed pnpm operations supported by this profile: frozen install with scripts disabled,
+    the @muneral/types build, and root Prisma client generation. Generation explicitly selects
+    the qualified Muneral config and schema, with a fixed dummy DATABASE_URL scoped to that step.
+    Without generation, the frozen install leaves @prisma/client ungenerated for the API typecheck.
+    The manifest never supplies commands or environment values. Its JSON shape is exactly
     {schema, policy, repository, base, head, working_directory, scope, files}; each files value is
     {blob_oid, sha256, bytes}. The workflow is responsible for executing those literal operations
     after this function succeeds.
@@ -1590,6 +1638,28 @@ def validate_candidate_dependency_setup(manifest: dict, repo_path: str | Path,
     _candidate_setup_git(repo, "merge-base", "--is-ancestor", base, head)
     if actual_head != head:
         raise ValueError("candidate workspace HEAD differs from the dependency setup subject")
+
+    # Auth's fixed setup refuses changes to its Prisma config/schema. Apply that same source
+    # binding here: these are generator inputs even though the caller manifest does not supply argv.
+    for relative in CALLER_DEPENDENCY_SETUP_PRISMA_INPUTS:
+        try:
+            base_oid = _candidate_setup_git(repo, "rev-parse", "--verify", f"{base}:{relative}").decode().strip()
+            head_oid = _candidate_setup_git(repo, "rev-parse", "--verify", f"{head}:{relative}").decode().strip()
+            path = repo
+            parts = Path(relative).parts
+            for component in parts[:-1]:
+                path /= component
+                if not stat.S_ISDIR(path.lstat().st_mode):
+                    raise ValueError("Prisma generation input has an unsafe parent path")
+            path /= parts[-1]
+            if not stat.S_ISREG(path.lstat().st_mode):
+                raise ValueError("Prisma generation input is not a regular file")
+            working_oid = git_blob_oid_of_bytes(path.read_bytes())
+            _candidate_setup_git(repo, "diff", "--quiet", head, "--", relative)
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            raise ValueError(f"Prisma generation input is unavailable or changed: {relative}") from exc
+        if base_oid != head_oid or working_oid != head_oid:
+            raise ValueError(f"Prisma generation input is unavailable or changed: {relative}")
 
     file_pins = manifest.get("files")
     if not isinstance(file_pins, dict) or set(file_pins) != set(CALLER_DEPENDENCY_SETUP_FILES):
@@ -1691,9 +1761,50 @@ def validate_candidate_dependency_setup(manifest: dict, repo_path: str | Path,
         "package_manager": root_package["packageManager"],
         "node_version": root_package["engines"]["node"],
         "files": checked_files,
+        # `--ignore-scripts` skips Prisma postinstall. Match lint-and-test: build @muneral/types
+        # first, then generate the API client using the qualified config and schema.
+        # This placeholder is scoped to the generation step and is never persisted to GITHUB_ENV.
         "argv": [["pnpm", "install", "--frozen-lockfile", "--ignore-scripts",
                   "--ignore-pnpmfile"],
-                 ["pnpm", "--filter", "@muneral/types", "build"]],
+                 ["pnpm", "--filter", "@muneral/types", "build"],
+                 ["pnpm", "exec", "prisma", "generate", "--config", "prisma.config.ts",
+                  "--schema", "apps/api/prisma/schema.prisma"]],
+        "step_env": [{}, {}, {"CHECKPOINT_DISABLE": "1",
+                             "DATABASE_URL": "postgresql://dummy:dummy@localhost:5432/dummy"}],
+    }
+
+
+def validate_candidate_api_dependency_setup(manifest: dict, repo_path: str | Path,
+                                            repository: str, base: str, head: str) -> dict:
+    """Return the fixed dependency setup plan for apps/api.
+
+    The manifest contains only the existing exact subject and source pins. Reuse the validated
+    MUN workspace/lockfile/Prisma-input contract, changing only the scope label. API and web use
+    the same fixed operations: frozen install, the pure `tsc` shared-types build, and pinned
+    Prisma generation with a step-local dummy DATABASE_URL. Caller fields never supply commands
+    or environment values.
+    """
+    if not isinstance(manifest, dict):
+        raise ValueError("dependency setup manifest must be an object")
+    if set(manifest) != {"schema", "policy", "repository", "base", "head",
+                        "working_directory", "scope", "files"}:
+        raise ValueError("dependency setup fields are missing or unsupported")
+    if manifest.get("schema") != CALLER_DEPENDENCY_SETUP_SCHEMA:
+        raise ValueError("dependency setup schema is unsupported")
+    if manifest.get("policy") != CALLER_API_DEPENDENCY_SETUP_POLICY:
+        raise ValueError("dependency setup policy is unsupported")
+    if manifest.get("scope") != "apps/api":
+        raise ValueError("dependency setup package scope is unsupported")
+
+    # The shared validator proves the exact repository, range, source pins, pure tsc build script,
+    # workspace and unchanged Prisma generator inputs. Translate only the fixed scope labels.
+    shared_manifest = {**manifest, "policy": CALLER_DEPENDENCY_SETUP_POLICY, "scope": "apps/web"}
+    shared_plan = validate_candidate_dependency_setup(
+        shared_manifest, repo_path, repository, base, head)
+    return {
+        **shared_plan,
+        "policy": CALLER_API_DEPENDENCY_SETUP_POLICY,
+        "scope": "apps/api",
     }
 
 
@@ -1704,8 +1815,12 @@ def cmd_candidate_dependency_setup_plan(a) -> int:
         if not raw:
             raise ValueError("dependency setup manifest is absent")
         manifest = _strict_json_object(raw, "dependency setup manifest")
-        plan = validate_candidate_dependency_setup(
-            manifest, a.repo, a.repository, a.base, a.head)
+        if manifest.get("policy") == CALLER_API_DEPENDENCY_SETUP_POLICY:
+            plan = validate_candidate_api_dependency_setup(
+                manifest, a.repo, a.repository, a.base, a.head)
+        else:
+            plan = validate_candidate_dependency_setup(
+                manifest, a.repo, a.repository, a.base, a.head)
     except (OSError, ValueError) as exc:
         print(f"CANDIDATE_DEPENDENCY_SETUP_REFUSED: {exc}", file=sys.stderr)
         return 2
@@ -1891,10 +2006,58 @@ AUTH_DEPENDENCY_SETUP_UNCHANGED = (
     "vendor/arcanada-access-contracts-dac7c5ede606698b10c2c5edd0c07ff21a798f83.tgz",
 )
 AUTH_DEPENDENCY_SETUP_REPO = "Arcanada-one/auth-arcana"
-AUTH_DEPENDENCY_SETUP_NODE_VERSIONS = ("24.22.1", "24.22.2")
+AUTH_DEPENDENCY_SETUP_NODE_VERSIONS = ("24.22.1", "24.22.2", "24.22.3")
+# DEC-AUP-0190: .nvmrc is the one file of AUTH_DEPENDENCY_SETUP_UNCHANGED a candidate range may change,
+# and only UPWARD between two exact members of AUTH_DEPENDENCY_SETUP_NODE_VERSIONS (see _auth_exact_node_pin).
+# The tuple is therefore ordered oldest to newest; append a newer version, never insert or reorder.
+AUTH_DEPENDENCY_SETUP_NODE_PIN_FILE = ".nvmrc"
+# DEC-AUP-0192 Clause A: ordered oldest→newest commit40 pins for Auth network-exposure reusable workflow.
+# Includes the measured #350 base uses SHA, the measured #350 base datarim_ref SHA (pre-sync), and the head / v4.12.9 SHA.
+AUTH_DEPENDENCY_SETUP_NETWORK_EXPOSURE_PINS = (
+    "37a98c9e5b1b8e0abda4153a36b2e3c85ec8868c",  # measured auth-arcana #350 base uses (PR #246)
+    "af8e0ec6f4cf8cb2547eb2805a220fc4ce829de3",  # measured auth-arcana #350 base datarim_ref
+    "2ef3dc606919c1b82c5fb440b49519f7f2a1e293",  # measured auth-arcana #350 head / v4.12.9
+)
+AUTH_DEPENDENCY_SETUP_NETWORK_EXPOSURE_USES = (
+    "Arcanada-one/datarim/.github/workflows/network-exposure-lint.yml@"
+)
+# DEC-AUP-0192 Clause B and DEC-AUP-0200: root package.json keys that may move upward between exact
+# allowlisted specifiers. DEC-AUP-0200 appends one measured rung for Nodemailer and TypeScript ESLint.
+# Paths are (section, key). Never widen beyond this map.
+AUTH_DEPENDENCY_SETUP_NPM_PIN_LADDERS = {
+    ("dependencies", "nodemailer"): ("10.4.0", "10.5.0", "10.6.0", "10.6.1"),
+    ("devDependencies", "@typescript-eslint/eslint-plugin"): ("^8.72.1", "^8.72.2", "^8.73.0"),
+    ("devDependencies", "@typescript-eslint/parser"): ("^8.72.1", "^8.72.2", "^8.73.0"),
+    ("devDependencies", "prettier"): ("^3.9.10", "^3.10.1"),
+}
 AUTH_DEPENDENCY_SETUP_VITE_VERSIONS = ("6.4.4", "6.4.5")
+# Frozen Auth account-SPA lock closure. Keep each importer specifier paired with
+# its exact lock version; do not admit a cross-product of ranges and versions.
+AUTH_DEPENDENCY_SETUP_VITEST_LOCK_VARIANTS = (
+    ("^4.1.11", "4.1.11"),
+    (">=4.1.12 <5", "4.1.12"),
+)
 AUTH_DEPENDENCY_SETUP_PNPM = "10.30.3"
 AUTH_DEPENDENCY_SETUP_REGISTRY = "https://registry.npmjs.org/"
+# DEC-AUP-0194 Clause D: max number of pnpm-workspace.yaml overrides entries that may change or be added.
+AUTH_DEPENDENCY_SETUP_OVERRIDES_MAX_CHANGED = 32
+# The Auth setup policy may accept this one explicit lifecycle approval map transition.
+# The workspace file must otherwise remain byte-semantically identical; package, lock,
+# workflow, and frozen dependency closure checks still apply.
+AUTH_DEPENDENCY_SETUP_ALLOW_BUILDS_BASE = {
+    "@nestjs/core": "set this to true or false",
+    "@prisma/engines": "set this to true or false",
+    "@swc/core": "set this to true or false",
+    "esbuild": "set this to true or false",
+    "prisma": "set this to true or false",
+}
+AUTH_DEPENDENCY_SETUP_ALLOW_BUILDS_CANDIDATE = {
+    "@nestjs/core": "false",
+    "@prisma/engines": "true",
+    "@swc/core": "true",
+    "esbuild": "true",
+    "prisma": "true",
+}
 # Qualified action pins for the Auth CI closure (DEC-AUP-0187 follow-up). The older pins stay valid;
 # the newer ones are ADDITIONAL. Keep identical to AUTH_QUALIFIED_*_PINS in full_suite_ci.py
 # (a unit test asserts equality). Each entry is the full commit of the named release tag.
@@ -1908,7 +2071,8 @@ AUTH_QUALIFIED_NODE_SETUP_PINS = (
 )
 
 
-def _candidate_setup_blob(repo: Path, revision: str, relative: str) -> tuple[str, bytes]:
+def _candidate_setup_blob(repo: Path, revision: str, relative: str, *,
+                          regular_modes: tuple[str, ...] = ("100644",)) -> tuple[str, bytes]:
     row = _candidate_setup_git(repo, "ls-tree", "-z", "--full-tree", revision, "--", relative)
     rows = [item for item in row.split(b"\0") if item]
     if len(rows) != 1 or b"\t" not in rows[0]:
@@ -1919,13 +2083,14 @@ def _candidate_setup_blob(repo: Path, revision: str, relative: str) -> tuple[str
         path_text = recorded.decode("utf-8")
     except (UnicodeError, ValueError) as exc:
         raise ValueError(f"Auth dependency source tree row is malformed: {relative}") from exc
-    if path_text != relative or mode != "100644" or kind != "blob":
+    if path_text != relative or mode not in regular_modes or kind != "blob":
         raise ValueError(f"Auth dependency source is not a regular committed file: {relative}")
     raw = _candidate_setup_git(repo, "show", f"{revision}:{relative}")
     return oid, raw
 
 
-def _candidate_setup_blob_oid(repo: Path, revision: str, relative: str) -> str:
+def _candidate_setup_blob_oid(repo: Path, revision: str, relative: str, *,
+                              regular_modes: tuple[str, ...] = ("100644",)) -> str:
     """Read only tree metadata, suitable for config files whose contents must stay private."""
     row = _candidate_setup_git(repo, "ls-tree", "-z", "--full-tree", revision, "--", relative)
     rows = [item for item in row.split(b"\0") if item]
@@ -1937,9 +2102,743 @@ def _candidate_setup_blob_oid(repo: Path, revision: str, relative: str) -> str:
         path_text = recorded.decode("utf-8")
     except (UnicodeError, ValueError) as exc:
         raise ValueError(f"Auth dependency source tree row is malformed: {relative}") from exc
-    if path_text != relative or mode != "100644" or kind != "blob":
+    if path_text != relative or mode not in regular_modes or kind != "blob":
         raise ValueError(f"Auth dependency source is not a regular committed file: {relative}")
     return oid
+
+
+def _auth_exact_node_pin(raw: bytes) -> int | None:
+    """Return the position in AUTH_DEPENDENCY_SETUP_NODE_VERSIONS of the version a .nvmrc names, only
+    when its bytes are exactly the version or the version plus one newline. Anything else (extra text,
+    whitespace, a range, a prefix, an empty file) is None."""
+    for position, version in enumerate(AUTH_DEPENDENCY_SETUP_NODE_VERSIONS):
+        if raw in (version.encode("ascii"), version.encode("ascii") + b"\n"):
+            return position
+    return None
+
+
+def _auth_node_pin_moves_up(base_raw: bytes, head_raw: bytes) -> bool:
+    """True only when both .nvmrc byte strings are exact allowlisted pins and the head pin is strictly
+    newer than the base pin (a downgrade or a byte-only rewrite of the same version is not an upgrade)."""
+    base_pos, head_pos = _auth_exact_node_pin(base_raw), _auth_exact_node_pin(head_raw)
+    return base_pos is not None and head_pos is not None and head_pos > base_pos
+
+
+_AUTH_NE_USES_RE = re.compile(
+    rb"(?m)^([ \t]*uses:[ \t]*"
+    + re.escape(AUTH_DEPENDENCY_SETUP_NETWORK_EXPOSURE_USES.encode("ascii"))
+    + rb")([0-9a-f]{40})([ \t]*(?:#[^\n]*)?)$"
+)
+_AUTH_NE_REF_RE = re.compile(
+    rb"(?m)^([ \t]*datarim_ref:[ \t]*')([0-9a-f]{40})('[ \t]*)$"
+)
+
+
+def _auth_network_exposure_pins(raw: bytes) -> tuple[str, str] | None:
+    """Return (uses_sha, datarim_ref_sha) when ci.yml carries exactly one of each pin site."""
+    uses = _AUTH_NE_USES_RE.findall(raw)
+    refs = _AUTH_NE_REF_RE.findall(raw)
+    if len(uses) != 1 or len(refs) != 1:
+        return None
+    return uses[0][1].decode("ascii"), refs[0][1].decode("ascii")
+
+
+def _auth_network_exposure_normalized(raw: bytes) -> bytes | None:
+    """Erase the two pin sites (and the uses-line comment) so any other ci.yml hunk is visible."""
+    if _auth_network_exposure_pins(raw) is None:
+        return None
+    out = _AUTH_NE_USES_RE.sub(rb"\1<PIN>\3", raw)
+    # Drop trailing comment variance on the uses line after pin erasure.
+    out = re.sub(rb"(?m)^([ \t]*uses:[ \t]*"
+                 + re.escape(AUTH_DEPENDENCY_SETUP_NETWORK_EXPOSURE_USES.encode("ascii"))
+                 + rb"<PIN>)[ \t]*#[^\n]*$", rb"\1", out)
+    out = _AUTH_NE_REF_RE.sub(rb"\1<PIN>\3", out)
+    return out
+
+
+def _auth_network_exposure_pin_moves_up(base_raw: bytes, head_raw: bytes) -> bool:
+    """True only when the ci.yml diff is confined to the network-exposure uses/datarim_ref pins,
+    head pins are identical and allowlisted, each base pin is allowlisted, and both move strictly up."""
+    base_pins = _auth_network_exposure_pins(base_raw)
+    head_pins = _auth_network_exposure_pins(head_raw)
+    if base_pins is None or head_pins is None:
+        return False
+    if _auth_network_exposure_normalized(base_raw) != _auth_network_exposure_normalized(head_raw):
+        return False
+    base_uses, base_ref = base_pins
+    head_uses, head_ref = head_pins
+    if head_uses != head_ref:
+        return False
+    allow = AUTH_DEPENDENCY_SETUP_NETWORK_EXPOSURE_PINS
+    try:
+        base_uses_i = allow.index(base_uses)
+        base_ref_i = allow.index(base_ref)
+        head_i = allow.index(head_uses)
+    except ValueError:
+        return False
+    return head_i > base_uses_i and head_i > base_ref_i
+
+
+_AUTH_UPLOAD_ARTIFACT_USES_RE = re.compile(
+    rb"^[ \t]*uses:[ \t]*actions/upload-artifact@[0-9a-f]{40}\b", re.M)
+_AUTH_CONTINUE_ON_ERROR_TRUE_RE = re.compile(
+    rb"^[ \t]*continue-on-error:[ \t]*true\b", re.M | re.I)
+_AUTH_CONTINUE_ON_ERROR_LINE_RE = re.compile(
+    rb"^[ \t]*continue-on-error:[ \t]*\S+[ \t]*$", re.M | re.I)
+_AUTH_DOWNLOAD_ARTIFACT_USES_RE = re.compile(
+    rb"uses:[ \t]*actions/download-artifact@", re.M)
+
+
+def _auth_line_indent(line: bytes) -> int:
+    return len(line) - len(line.lstrip(b" \t"))
+
+
+def _auth_iter_upload_artifact_steps(raw: bytes):
+    """Yield (start, end, artifact_name_bytes) for each actions/upload-artifact step block."""
+    lines = raw.splitlines(keepends=True)
+    uses_idxs = [i for i, line in enumerate(lines) if _AUTH_UPLOAD_ARTIFACT_USES_RE.match(line)]
+    for uses_i in uses_idxs:
+        uses_indent = _auth_line_indent(lines[uses_i])
+        start = uses_i
+        while start > 0:
+            prev = lines[start - 1]
+            if re.match(rb"^[ \t]*-[ \t]", prev) and _auth_line_indent(prev) <= uses_indent:
+                start -= 1
+                break
+            start -= 1
+        step_indent = _auth_line_indent(lines[start])
+        end = uses_i + 1
+        while end < len(lines):
+            line = lines[end]
+            if line.strip() == b"":
+                end += 1
+                continue
+            if _auth_line_indent(line) <= step_indent:
+                break
+            end += 1
+        block = b"".join(lines[start:end])
+        art_name = None
+        with_m = re.search(rb"(?ms)^[ \t]*with:[ \t]*\n(.*)$", block)
+        if with_m:
+            name_m = re.search(rb"(?m)^[ \t]*name:[ \t]*(\S[^\n]*?)\s*$", with_m.group(1))
+            if name_m:
+                art_name = name_m.group(1).strip()
+        yield start, end, art_name
+
+
+def _auth_strip_upload_artifact_steps(raw: bytes) -> tuple[bytes, tuple[bytes, ...]]:
+    """Return (raw with every upload-artifact step removed, deleted artifact name templates)."""
+    lines = raw.splitlines(keepends=True)
+    steps = list(_auth_iter_upload_artifact_steps(raw))
+    if not steps:
+        return raw, ()
+    names = []
+    for start, end, art_name in reversed(steps):
+        if art_name:
+            names.append(art_name)
+        del lines[start:end]
+    names.reverse()
+    stripped = b"".join(lines)
+    if stripped.endswith(b"\n\n") and not raw.endswith(b"\n\n"):
+        stripped = stripped[:-1]
+    return stripped, tuple(names)
+
+
+def _auth_head_workflow_texts(repo: Path, head: str) -> dict[str, bytes]:
+    listed = _candidate_setup_git(
+        repo, "ls-tree", "-r", "--name-only", head, "--", ".github/workflows"
+    ).decode().splitlines()
+    out = {}
+    for relative in listed:
+        if not (relative.endswith(".yml") or relative.endswith(".yaml")):
+            continue
+        out[relative] = _candidate_setup_blob(repo, head, relative)[1]
+    return out
+
+
+def _auth_artifact_name_still_consumed(workflows: dict[str, bytes], art_name: bytes) -> str | None:
+    """Return a short refuse reason when a deleted artifact name is still downloaded or gated."""
+    for relative, raw in workflows.items():
+        if art_name in raw and _AUTH_DOWNLOAD_ARTIFACT_USES_RE.search(raw):
+            return f"download still references deleted artifact name in {relative}"
+        if art_name in raw and relative.endswith(("graph-admission.yml", "graph-admission-call.yml")):
+            return f"graph-admission gate still references deleted artifact name in {relative}"
+        if art_name in raw and b"download-artifact" in raw:
+            return f"workflow still downloads deleted artifact name in {relative}"
+    return None
+
+
+def _auth_continue_on_error_true_present(workflows: dict[str, bytes]) -> str | None:
+    for relative, raw in workflows.items():
+        if _AUTH_CONTINUE_ON_ERROR_TRUE_RE.search(raw):
+            return relative
+    return None
+
+
+def _auth_continue_on_error_added(base_raw: bytes, head_raw: bytes) -> bool:
+    """True when head introduces any continue-on-error line absent from base (ruling d)."""
+    base_lines = set(_AUTH_CONTINUE_ON_ERROR_LINE_RE.findall(base_raw))
+    head_lines = _AUTH_CONTINUE_ON_ERROR_LINE_RE.findall(head_raw)
+    return any(line not in base_lines for line in head_lines)
+
+
+def _auth_upload_artifact_deletion_admits(base_raw: bytes, head_raw: bytes,
+                                         repo: Path, head: str) -> bool:
+    """DEC-AUP-0193 Clause C: admit ci.yml when the only non-pin delta is deleting
+    actions/upload-artifact steps, with mechanical rulings (a)(b)(d).
+
+    (c) quota evidence is documentary in DEC-AUP-0193.md (not enforced here).
+    """
+    stripped_base, deleted_names = _auth_strip_upload_artifact_steps(base_raw)
+    if not deleted_names:
+        return False
+    stripped_head, head_remaining = _auth_strip_upload_artifact_steps(head_raw)
+    if head_remaining:
+        return False
+    if stripped_base == head_raw:
+        pass
+    elif _auth_network_exposure_pin_moves_up(stripped_base, head_raw):
+        pass
+    else:
+        return False
+    if _auth_continue_on_error_added(base_raw, head_raw):
+        return False
+    workflows = _auth_head_workflow_texts(repo, head)
+    checked = workflows.get(".github/workflows/ci.yml")
+    if checked is not None and checked != head_raw:
+        return False
+    if _auth_continue_on_error_true_present(workflows) is not None:
+        return False
+    for art_name in deleted_names:
+        if _auth_artifact_name_still_consumed(workflows, art_name) is not None:
+            return False
+        for relative, raw in workflows.items():
+            if art_name not in raw:
+                continue
+            if relative == ".github/workflows/ci.yml":
+                continue
+            return False
+    return True
+
+
+
+# DEC-AUP-0195 Clause E (option S2): in the existing account-spa job, ci.yml may replace the
+# actions/upload-artifact step with one final step that pushes the exact built tarball to GHCR, and the
+# job gains packages: write. Everything else in ci.yml stays unchanged.
+AUTH_SPA_PUSH_JOB = "account-spa"
+AUTH_SPA_PUSH_IF = "github.event_name == 'push' && github.ref == 'refs/heads/main'"
+AUTH_SPA_PUSH_JOB_PERMISSIONS = {"contents": "read", "packages": "write"}
+AUTH_SPA_PUSH_STEP_KEYS = frozenset({"name", "id", "if", "env", "run"})
+# The WHOLE run of the push step must be exactly one call of THE ONE reviewed script, with no arguments:
+# no newline, no `;` `&&` `||` `|` `$(` backtick or redirect, no path-qualified tool, and no other script
+# path (the step holds packages: write + GITHUB_TOKEN, so a PR must not be able to point it elsewhere).
+# The install/build denylist below is only a second tripwire. Changing the pinned path needs a new decision.
+AUTH_SPA_PUSH_SCRIPT = "scripts/publish-spa-to-registry.sh"
+# The push step's `env` is pinned to this exact map (the step holds packages: write + GITHUB_TOKEN, and any
+# other key can change how bash or the loader runs the pinned script: BASH_ENV, LD_PRELOAD, PATH, NODE_OPTIONS...).
+# The step has no `shell`, `working-directory` or `with` (not in AUTH_SPA_PUSH_STEP_KEYS); job-level and workflow-level
+# `env` / `defaults` must stay identical to base (the job envelope and every top-level key are compared with base).
+AUTH_SPA_PUSH_ENV = {
+    "GHCR_TOKEN": "${{ secrets.GITHUB_TOKEN }}",
+    "RELEASE_SHA": "${{ github.sha }}",
+    "CI_RUN_ID": "${{ github.run_id }}",
+}
+_AUTH_SPA_PUSH_NAME_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9 ,._()/:-]*")
+_AUTH_SPA_PUSH_RUN_RE = re.compile(
+    r"bash " + re.escape(AUTH_SPA_PUSH_SCRIPT))
+_AUTH_PUBLISH_UPLOAD_RE = re.compile(r"actions/upload-artifact@[0-9a-f]{40}")
+# Any credential-shaped word. In the push step only secrets.GITHUB_TOKEN / github.token may appear.
+_AUTH_PUBLISH_TOKEN_RE = re.compile(r"(?i)secrets\b|github\.token|token|passw")
+_AUTH_PUBLISH_SECRET_REF_RE = re.compile(r"secrets\.([A-Za-z0-9_]+)")
+# Install / build tools. The push step packages bytes that the job already built.
+_AUTH_PUBLISH_BUILD_RE = re.compile(
+    r"(?i)(?<![\w./-])(pnpm|npm|npx|yarn|corepack|pip3?|pipx|apt(-get)?|brew|cargo|make|wget|"
+    r"tsc|vite|vitest|node-gyp|prisma|setup-node|buildx)(?![\w-])"
+    r"|docker\s+(build|buildx|compose)|\bgo\s+(build|install|get)\b|\|\s*(ba|z)?sh\b")
+
+
+def _auth_load_workflow_yaml(raw: bytes) -> dict:
+    """Parse a workflow with BaseLoader (strings only); refuse aliases/anchors/tags/duplicate keys."""
+    import yaml
+
+    text = raw.decode("utf-8")
+    for token in yaml.scan(text):
+        if isinstance(token, (yaml.tokens.AliasToken, yaml.tokens.AnchorToken,
+                              yaml.tokens.TagToken, yaml.tokens.DirectiveToken)):
+            raise ValueError("Auth workflow YAML aliases/anchors/tags/directives unsupported")
+
+    class UniqueLoader(yaml.BaseLoader):
+        pass
+
+    def mapping(loader, node):
+        result = {}
+        for key_node, value_node in node.value:
+            key = loader.construct_object(key_node)
+            if key == "<<" or key in result:
+                raise ValueError("Auth workflow YAML has a merge or duplicate mapping key")
+            result[key] = loader.construct_object(value_node)
+        return result
+
+    UniqueLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, mapping)
+    doc = yaml.load(text, Loader=UniqueLoader)
+    if not isinstance(doc, dict):
+        raise ValueError("Auth workflow YAML root must be a mapping")
+    return doc
+
+
+# DEC-AUP-0195 F1 identity step names: after the artifact removal the image / SPA identity is carried by
+# the NAME of one final no-op step. The name of a step of a completed job cannot be rewritten by another
+# run's token (a check-run annotation might be), so the deploy reads the identity from the step name.
+AUTH_IDENTITY_JOB = "publish-image"
+_AUTH_STEP_REF = r"\$\{\{ steps\.([A-Za-z0-9_-]+)\.outputs\.([A-Za-z0-9_-]+) \}\}"
+_AUTH_IMAGE_IDENTITY_NAME_RE = re.compile(
+    r"auth-image-identity release_sha=\$\{\{ github\.sha \}\} image_digest=" + _AUTH_STEP_REF)
+_AUTH_SPA_IDENTITY_NAME_RE = re.compile(
+    r"auth-spa-identity release_sha=\$\{\{ github\.sha \}\} tarball_digest=sha256:" + _AUTH_STEP_REF
+    + r" artifact_sha256=" + _AUTH_STEP_REF)
+_AUTH_STEP_ID_RE = re.compile(r"[A-Za-z0-9_-]+")
+
+
+def _auth_identity_step_ok(step, name_re, prior_steps, allowed_if=None) -> bool:
+    """One final no-op step whose name is the identity line. Keys name/run, plus an exact `if` that is
+    required where the job needs one (account-spa) and forbidden elsewhere; run is exactly `true`; the name may use only github.sha and outputs of
+    steps that come before it in the same job."""
+    if not isinstance(step, dict) or not set(step) <= {"name", "run", "if"}:
+        return False
+    if allowed_if is None:
+        if "if" in step:
+            return False
+    elif step.get("if") != allowed_if:  # required, and exactly this expression
+        return False
+    name, run = step.get("name"), step.get("run")
+    if not isinstance(name, str) or not isinstance(run, str) or run.strip() != "true":
+        return False
+    match = name_re.fullmatch(name)
+    if not match:
+        return False
+    ids = {s.get("id") for s in prior_steps if isinstance(s, dict)}
+    return all(ref in ids for ref in match.groups()[0::2])
+
+
+def _auth_spa_push_step_ok(step) -> bool:
+    """Conditions on the push step: main-push only, token only here, no build path, has an id."""
+    if not isinstance(step, dict) or not set(step) <= AUTH_SPA_PUSH_STEP_KEYS:
+        return False
+    if not isinstance(step.get("id"), str) or not _AUTH_STEP_ID_RE.fullmatch(step["id"]):
+        return False
+    if step.get("if") != AUTH_SPA_PUSH_IF or "continue-on-error" in json.dumps(step):
+        return False
+    run = step.get("run")
+    if (not isinstance(run, str) or _AUTH_PUBLISH_BUILD_RE.search(run)
+            or not _AUTH_SPA_PUSH_RUN_RE.fullmatch(run.rstrip("\n"))):
+        return False
+    if step.get("env") != AUTH_SPA_PUSH_ENV:  # exact key/value map, required
+        return False
+    name = step.get("name")  # no expression in the name (a secret there would show in the jobs API)
+    if name is not None and (not isinstance(name, str) or not _AUTH_SPA_PUSH_NAME_RE.fullmatch(name)):
+        return False
+    # Only the workflow's own GITHUB_TOKEN: no PAT, no site key, no other secret.
+    refs = _AUTH_PUBLISH_SECRET_REF_RE.findall(json.dumps(step))
+    return all(ref == "GITHUB_TOKEN" for ref in refs)
+
+
+def _auth_spa_job_delta_ok(base_job, head_job) -> bool:
+    """account-spa: trailing upload step replaced by the push step; job gains packages: write."""
+    if not isinstance(base_job, dict) or not isinstance(head_job, dict):
+        return False
+    # Job envelope: identical to base except the job-level permissions block gained by this clause.
+    if base_job.get("permissions") not in (None, {"contents": "read"}):
+        return False
+    if head_job.get("permissions") != AUTH_SPA_PUSH_JOB_PERMISSIONS:
+        return False
+    strip = lambda job: {k: v for k, v in job.items() if k not in ("permissions", "steps")}
+    if strip(base_job) != strip(head_job):
+        return False
+    base_steps, head_steps = base_job.get("steps"), head_job.get("steps")
+    if (not isinstance(base_steps, list) or not isinstance(head_steps, list) or not base_steps
+            or len(head_steps) != len(base_steps) + 1):  # upload -> push, plus the identity step
+        return False
+    uploads = [i for i, s in enumerate(base_steps)
+               if isinstance(s, dict) and _AUTH_PUBLISH_UPLOAD_RE.fullmatch(str(s.get("uses", "")))]
+    if uploads != [len(base_steps) - 1]:  # exactly one upload step, and it is the last step
+        return False
+    if head_steps[:-2] != base_steps[:-1]:  # every other step identical to base
+        return False
+    return (_auth_spa_push_step_ok(head_steps[-2])
+            and _auth_identity_step_ok(head_steps[-1], _AUTH_SPA_IDENTITY_NAME_RE,
+                                       head_steps[:-1], AUTH_SPA_PUSH_IF))
+
+
+def _auth_is_upload_step(step) -> bool:
+    return isinstance(step, dict) and bool(_AUTH_PUBLISH_UPLOAD_RE.fullmatch(str(step.get("uses", ""))))
+
+
+def _auth_identity_job_delta_ok(base_job, head_job) -> bool:
+    """publish-image: base minus its actions/upload-artifact steps (DEC-AUP-0193 deletion, which the
+    #358 range carries with this clause), plus at most one added final identity step."""
+    if not isinstance(base_job, dict) or not isinstance(head_job, dict):
+        return False
+    if ({k: v for k, v in base_job.items() if k != "steps"}
+            != {k: v for k, v in head_job.items() if k != "steps"}):
+        return False
+    base_steps, head_steps = base_job.get("steps"), head_job.get("steps")
+    if not isinstance(base_steps, list) or not isinstance(head_steps, list):
+        return False
+    kept = [s for s in base_steps if not _auth_is_upload_step(s)]
+    for prior in (kept, base_steps):  # uploads deleted (the #358 range) or kept
+        if head_steps == prior:
+            return True
+        if len(head_steps) == len(prior) + 1 and head_steps[:-1] == prior:
+            return _auth_identity_step_ok(head_steps[-1], _AUTH_IMAGE_IDENTITY_NAME_RE, prior)
+    return False
+
+
+def _auth_deleted_upload_names(base_job, head_job) -> list[bytes]:
+    """Artifact names (utf-8) of the base job's upload-artifact steps that the head job no longer has."""
+    head_steps = (head_job or {}).get("steps") or []
+    names = []
+    for step in (base_job or {}).get("steps") or []:
+        if _auth_is_upload_step(step) and step not in head_steps:
+            name = (step.get("with") or {}).get("name")
+            if isinstance(name, str) and name:
+                names.append(name.encode())
+    return names
+
+
+def _auth_spa_push_step_admits(base_raw: bytes, head_raw: bytes, repo: Path, head: str) -> bool:
+    """DEC-AUP-0195 Clause E (S2 + F1): admit ci.yml when the only delta is (i) in account-spa, its
+    trailing upload-artifact step replaced by one main-push-only GHCR push step ending in an
+    identity step, plus job-scoped packages: write, and/or (ii) in publish-image, one added final
+    identity step. Either delta alone or both."""
+    try:
+        base_doc = _auth_load_workflow_yaml(base_raw)
+        head_doc = _auth_load_workflow_yaml(head_raw)
+    except Exception:
+        return False
+    if {k: v for k, v in base_doc.items() if k != "jobs"} != {
+            k: v for k, v in head_doc.items() if k != "jobs"}:
+        return False
+    base_jobs, head_jobs = base_doc.get("jobs"), head_doc.get("jobs")
+    if (not isinstance(base_jobs, dict) or not isinstance(head_jobs, dict)
+            or list(base_jobs) != list(head_jobs)):
+        return False
+    changeable = (AUTH_SPA_PUSH_JOB, AUTH_IDENTITY_JOB)
+    if any(head_jobs[k] != v for k, v in base_jobs.items() if k not in changeable):
+        return False
+    spa_changed = base_jobs.get(AUTH_SPA_PUSH_JOB) != head_jobs.get(AUTH_SPA_PUSH_JOB)
+    img_changed = base_jobs.get(AUTH_IDENTITY_JOB) != head_jobs.get(AUTH_IDENTITY_JOB)
+    if not (spa_changed or img_changed):
+        return False
+    if spa_changed and not _auth_spa_job_delta_ok(
+            base_jobs.get(AUTH_SPA_PUSH_JOB), head_jobs.get(AUTH_SPA_PUSH_JOB)):
+        return False
+    if img_changed and not _auth_identity_job_delta_ok(
+            base_jobs.get(AUTH_IDENTITY_JOB), head_jobs.get(AUTH_IDENTITY_JOB)):
+        return False
+    if _auth_continue_on_error_added(base_raw, head_raw):
+        return False
+    workflows = _auth_head_workflow_texts(repo, head)
+    if _auth_continue_on_error_true_present(workflows) is not None:
+        return False
+    # DEC-AUP-0193 rulings (a)/(b) for every upload this clause deletes or replaces: no head workflow
+    # may still download or name the deleted artifact (the deploy workflows move to the new identity).
+    deleted = []
+    if spa_changed:
+        deleted += _auth_deleted_upload_names(base_jobs.get(AUTH_SPA_PUSH_JOB), head_jobs.get(AUTH_SPA_PUSH_JOB))
+    if img_changed:
+        deleted += _auth_deleted_upload_names(base_jobs.get(AUTH_IDENTITY_JOB), head_jobs.get(AUTH_IDENTITY_JOB))
+    for art_name in deleted:
+        if _auth_artifact_name_still_consumed(workflows, art_name) is not None:
+            return False
+        if any(art_name in raw for relative, raw in workflows.items()
+               if relative != ".github/workflows/ci.yml"):
+            return False
+    return True
+
+
+_AUTH_DEPLOY_TEST_COMMAND = (
+    "node --test scripts/deploy/resolve-observe-mode.test.mjs"
+    " scripts/deploy/pick-last-deploy-sha.test.mjs"
+)
+_AUTH_DEPLOY_TEST_PATH = re.compile(r"scripts/deploy/[A-Za-z0-9._-]+\.test\.mjs")
+
+
+def _auth_deploy_test_list_append_admits(base_raw: bytes, head_raw: bytes,
+                                        repo: Path, head: str) -> bool:
+    """DEC-AUP-0202: append regular tracked deploy tests to the one Auth lint-test invocation."""
+    try:
+        base_doc = _auth_load_workflow_yaml(base_raw)
+        head_doc = _auth_load_workflow_yaml(head_raw)
+    except Exception:
+        return False
+    try:
+        base_steps = base_doc["jobs"]["lint-test"]["steps"]
+        head_steps = head_doc["jobs"]["lint-test"]["steps"]
+        if not isinstance(base_steps, list) or not isinstance(head_steps, list):
+            return False
+        matched = [(index, step["run"]) for index, step in enumerate(base_steps)
+                   if isinstance(step, dict) and set(step) == {"run"}
+                   and isinstance(step["run"], str)
+                   and (step["run"] == _AUTH_DEPLOY_TEST_COMMAND
+                        or step["run"].startswith(_AUTH_DEPLOY_TEST_COMMAND + " "))]
+        if len(matched) != 1:
+            return False
+        index, base_run = matched[0]
+        head_run = head_steps[index]["run"]
+        if not isinstance(head_run, str) or not head_run.startswith(base_run + " "):
+            return False
+        appended = head_run[len(base_run) + 1:].split(" ")
+        existing = base_run.split(" ")[2:]
+        paths = existing + appended
+        if len(paths) != len(set(paths)) or not all(_AUTH_DEPLOY_TEST_PATH.fullmatch(p) for p in paths):
+            return False
+
+        head_steps[index]["run"] = base_run
+        if head_doc != base_doc:
+            return False
+        base_line = b"      - run: " + base_run.encode("ascii")
+        matches = list(re.finditer(rb"(?m)^" + re.escape(base_line) + rb"(?=\r?$)", base_raw))
+        if len(matches) != 1:
+            return False
+        end = matches[0].end()
+        suffix = head_run[len(base_run):].encode("ascii")
+        if head_raw != base_raw[:end] + suffix + base_raw[end:]:
+            return False
+        for path in appended:
+            _candidate_setup_blob_oid(repo, head, path, regular_modes=("100644", "100755"))
+    except (IndexError, KeyError, TypeError, ValueError):
+        return False
+    return True
+
+
+def _auth_npm_section_key(pkg: dict, section: str, key: str):
+    block = pkg.get(section)
+    if not isinstance(block, dict):
+        return None
+    return block.get(key)
+
+
+def _auth_npm_strip_ladder_keys(pkg: dict) -> dict:
+    """Return a deep-ish copy of package.json with DEC-AUP-0192 ladder keys removed for equality."""
+    out = json.loads(json.dumps(pkg))
+    for section, key in AUTH_DEPENDENCY_SETUP_NPM_PIN_LADDERS:
+        block = out.get(section)
+        if isinstance(block, dict) and key in block:
+            del block[key]
+            if not block:
+                del out[section]
+    return out
+
+
+def _auth_npm_pin_moves_up(base_raw: bytes, head_raw: bytes) -> bool:
+    """True only when root package.json differs solely by upward moves of listed npm specifier ladders."""
+    try:
+        base_pkg = json.loads(base_raw.decode("utf-8"))
+        head_pkg = json.loads(head_raw.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError, TypeError):
+        return False
+    if not isinstance(base_pkg, dict) or not isinstance(head_pkg, dict):
+        return False
+    if _auth_npm_strip_ladder_keys(base_pkg) != _auth_npm_strip_ladder_keys(head_pkg):
+        return False
+    moved = False
+    for (section, key), ladder in AUTH_DEPENDENCY_SETUP_NPM_PIN_LADDERS.items():
+        base_val = _auth_npm_section_key(base_pkg, section, key)
+        head_val = _auth_npm_section_key(head_pkg, section, key)
+        if base_val == head_val:
+            if base_val is None:
+                continue
+            if base_val not in ladder:
+                return False
+            continue
+        if base_val not in ladder or head_val not in ladder:
+            return False
+        if ladder.index(head_val) <= ladder.index(base_val):
+            return False
+        moved = True
+    return moved
+
+
+# DEC-AUP-0194 Clause D: pnpm-workspace.yaml overrides may raise/add with major ceilings.
+_AUTH_OVERRIDE_PKG_NAME = (
+    r"(?:@[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*"
+    r"|[A-Za-z0-9][A-Za-z0-9._-]*)"
+)
+_AUTH_OVERRIDE_KEY_RE = re.compile(
+    rf"^{_AUTH_OVERRIDE_PKG_NAME}"
+    rf"(?:@[^:\s\"'>]+)?"
+    rf"(?:>{_AUTH_OVERRIDE_PKG_NAME}(?:@[^:\s\"'>]+)?)*$"
+)
+_AUTH_OVERRIDE_CEILING_FULL_RE = re.compile(
+    r"^>=(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*) <(0|[1-9]\d*)$"
+)
+_AUTH_OVERRIDE_CEILING_MAJOR_RE = re.compile(
+    r"^>=(0|[1-9]\d*) <(0|[1-9]\d*)$"
+)
+_AUTH_OVERRIDE_FLOOR_ONLY_RE = re.compile(
+    r"^>=(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$"
+)
+_AUTH_OVERRIDE_EXACT_RE = re.compile(
+    r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$"
+)
+_AUTH_OVERRIDE_CARET_TILDE_RE = re.compile(
+    r"^[\^~](0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$"
+)
+
+
+def _auth_load_workspace_yaml(raw: bytes) -> dict:
+    """Parse pnpm-workspace.yaml with BaseLoader; refuse aliases/anchors/tags/directives/duplicate keys."""
+    import yaml
+
+    text = raw.decode("utf-8")
+    for token in yaml.scan(text):
+        if isinstance(token, (yaml.tokens.AliasToken, yaml.tokens.AnchorToken,
+                              yaml.tokens.TagToken, yaml.tokens.DirectiveToken)):
+            raise ValueError("Auth workspace YAML aliases/anchors/tags/directives unsupported")
+
+    class UniqueLoader(yaml.BaseLoader):
+        pass
+
+    def mapping(loader, node):
+        result = {}
+        for key_node, value_node in node.value:
+            key = loader.construct_object(key_node)
+            if key in result:
+                raise ValueError("Auth workspace YAML contains a duplicate mapping key")
+            result[key] = loader.construct_object(value_node)
+        return result
+
+    UniqueLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, mapping)
+    doc = yaml.load(text, Loader=UniqueLoader)
+    if not isinstance(doc, dict):
+        raise ValueError("Auth workspace YAML root must be a mapping")
+    return doc
+
+
+def _auth_override_forbidden_value(value: str) -> bool:
+    """True when an override value uses a disallowed protocol, placeholder, or pnpm/link form."""
+    if not isinstance(value, str) or not value.strip():
+        return True
+    lowered = value.strip().lower()
+    if lowered.startswith(("link:", "file:", "npm:", "git:", "git+", "http://", "https://", "ssh://")):
+        return True
+    if "$" in value or lowered.startswith("pnpm") or "pnpm:" in lowered:
+        return True
+    return False
+
+
+def _auth_parse_ceiling_override(value: str) -> tuple[int, int, int] | None:
+    """Return the floor triple when value is exactly '>=M.m.p <C' or '>=M <C' with C == floor major + 1."""
+    m = _AUTH_OVERRIDE_CEILING_FULL_RE.fullmatch(value)
+    if m:
+        maj, minor, patch, ceil = (int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4)))
+        if ceil != maj + 1:
+            return None
+        return (maj, minor, patch)
+    m2 = _AUTH_OVERRIDE_CEILING_MAJOR_RE.fullmatch(value)
+    if m2:
+        maj, ceil = int(m2.group(1)), int(m2.group(2))
+        if ceil != maj + 1:
+            return None
+        return (maj, 0, 0)
+    return None
+
+
+def _auth_override_comparable_floor(value: str) -> tuple[int, int, int] | None:
+    """Extract a comparable semver floor from a base override value (ceiling, floor-only, exact, ^/~)."""
+    ceiling = _auth_parse_ceiling_override(value)
+    if ceiling is not None:
+        return ceiling
+    for pattern in (_AUTH_OVERRIDE_FLOOR_ONLY_RE, _AUTH_OVERRIDE_EXACT_RE, _AUTH_OVERRIDE_CARET_TILDE_RE):
+        m = pattern.fullmatch(value)
+        if m:
+            return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    return None
+
+
+def _auth_semver_tuple_cmp(left: tuple[int, int, int], right: tuple[int, int, int]) -> int:
+    if left < right:
+        return -1
+    if left > right:
+        return 1
+    return 0
+
+
+def _auth_workspace_overrides_raise_admits(base_raw: bytes, head_raw: bytes) -> bool:
+    """DEC-AUP-0194 Clause D: admit pnpm-workspace.yaml when only overrides raise/add with major ceilings.
+
+    Base and head YAML must be identical except the top-level overrides mapping. No override may be
+    removed. Each changed or added value must be exactly '>=M.m.p <C' (or '>=M <C') with C = floor
+    major + 1; a changed entry's floor must be >= the base floor. At most
+    AUTH_DEPENDENCY_SETUP_OVERRIDES_MAX_CHANGED entries may change. Lock/CI closure checks still run.
+    """
+    try:
+        base_doc = _auth_load_workspace_yaml(base_raw)
+        head_doc = _auth_load_workspace_yaml(head_raw)
+    except Exception:
+        return False
+
+    base_overrides = base_doc.get("overrides")
+    head_overrides = head_doc.get("overrides")
+    if not isinstance(head_overrides, dict):
+        return False
+    if base_overrides is None:
+        base_overrides = {}
+    if not isinstance(base_overrides, dict):
+        return False
+
+    base_rest = {key: value for key, value in base_doc.items() if key != "overrides"}
+    head_rest = {key: value for key, value in head_doc.items() if key != "overrides"}
+    if base_rest != head_rest:
+        return False
+
+    for key in base_overrides:
+        if key not in head_overrides:
+            return False
+
+    changed = 0
+    for key, head_val in head_overrides.items():
+        if not isinstance(key, str) or not _AUTH_OVERRIDE_KEY_RE.fullmatch(key):
+            return False
+        if not isinstance(head_val, str):
+            return False
+        base_val = base_overrides.get(key)
+        if base_val == head_val:
+            continue
+        changed += 1
+        if changed > AUTH_DEPENDENCY_SETUP_OVERRIDES_MAX_CHANGED:
+            return False
+        if _auth_override_forbidden_value(head_val):
+            return False
+        head_floor = _auth_parse_ceiling_override(head_val)
+        if head_floor is None:
+            return False
+        if base_val is not None:
+            if not isinstance(base_val, str):
+                return False
+            base_floor = _auth_override_comparable_floor(base_val)
+            if base_floor is None:
+                return False
+            if _auth_semver_tuple_cmp(head_floor, base_floor) < 0:
+                return False
+    return changed > 0
+
+
+def _auth_workspace_allow_builds_only_admits(base_raw: bytes, head_raw: bytes) -> bool:
+    """Admit only the fixed Auth allowBuilds placeholder-to-boolean transition."""
+    try:
+        base_doc = _auth_load_workspace_yaml(base_raw)
+        head_doc = _auth_load_workspace_yaml(head_raw)
+    except Exception:
+        return False
+    base_builds = base_doc.get("allowBuilds")
+    head_builds = head_doc.get("allowBuilds")
+    if base_builds != AUTH_DEPENDENCY_SETUP_ALLOW_BUILDS_BASE:
+        return False
+    if head_builds != AUTH_DEPENDENCY_SETUP_ALLOW_BUILDS_CANDIDATE:
+        return False
+    return ({key: value for key, value in base_doc.items() if key != "allowBuilds"}
+            == {key: value for key, value in head_doc.items() if key != "allowBuilds"})
 
 
 def validate_candidate_auth_dependency_setup(repo_path: str | Path, repository: str,
@@ -1982,6 +2881,42 @@ def validate_candidate_auth_dependency_setup(repo_path: str | Path, repository: 
                 raise ValueError("Auth project npm configuration is not a regular committed file")
             _candidate_setup_git(repo, "diff", "--quiet", head, "--", relative)
         if base_oid != head_oid:
+            base_raw = (_candidate_setup_blob(repo, base, relative)[1]
+                        if relative != ".npmrc" else b"")
+            if (relative == AUTH_DEPENDENCY_SETUP_NODE_PIN_FILE
+                    and _auth_node_pin_moves_up(base_raw, source[relative])):
+                # DEC-AUP-0190: allowlisted Node pin to a newer allowlisted Node pin. Skips only this
+                # oid comparison; the head pin is still checked against the allowlist further below.
+                continue
+            if (relative == ".github/workflows/ci.yml"
+                    and _auth_network_exposure_pin_moves_up(base_raw, source[relative])):
+                # DEC-AUP-0192 Clause A: network-exposure uses/datarim_ref pins move upward only.
+                continue
+            if (relative == ".github/workflows/ci.yml"
+                    and _auth_upload_artifact_deletion_admits(
+                        base_raw, source[relative], repo, head)):
+                # DEC-AUP-0193 Clause C: delete actions/upload-artifact steps only.
+                continue
+            if (relative == ".github/workflows/ci.yml"
+                    and _auth_spa_push_step_admits(base_raw, source[relative], repo, head)):
+                # DEC-AUP-0195 Clause E (S2): account-spa upload step replaced by a main-push-only GHCR push step.
+                continue
+            if (relative == ".github/workflows/ci.yml"
+                    and _auth_deploy_test_list_append_admits(base_raw, source[relative], repo, head)):
+                # DEC-AUP-0202: append test paths to the exact lint-test deploy-test command only.
+                continue
+            if (relative == "package.json"
+                    and _auth_npm_pin_moves_up(base_raw, source[relative])):
+                # DEC-AUP-0192 Clause B: listed root package.json specifier ladders move upward only.
+                continue
+            if (relative == "pnpm-workspace.yaml"
+                    and _auth_workspace_overrides_raise_admits(base_raw, source[relative])):
+                # DEC-AUP-0194 Clause D: raise/add overrides with major ceilings only.
+                continue
+            if (relative == "pnpm-workspace.yaml"
+                    and _auth_workspace_allow_builds_only_admits(base_raw, source[relative])):
+                # Exact allowBuilds transition only; all dependency closure checks below remain.
+                continue
             raise ValueError(f"Auth dependency policy source changed in candidate range: {relative}")
 
     try:
@@ -2018,18 +2953,25 @@ def validate_candidate_auth_dependency_setup(repo_path: str | Path, repository: 
     lock_dependencies = {
         "@testing-library/jest-dom": ("^6.6.3", "6.9.1"),
         "vite": (">=6.4.3 <7", AUTH_DEPENDENCY_SETUP_VITE_VERSIONS),
-        "vitest": ("^4.1.11", "4.1.11"),
+        # Auth #362 moves only this importer to the explicitly paired 4.1.12
+        # frozen closure; the original 4.1.11 pair remains accepted.
+        "vitest": AUTH_DEPENDENCY_SETUP_VITEST_LOCK_VARIANTS,
     }
     lock_inputs_match = bool(importer_text)
-    for package, (specifier, locked_versions) in lock_dependencies.items():
-        if isinstance(locked_versions, str):
-            locked_versions = (locked_versions,)
+    for package, expected in lock_dependencies.items():
         pattern = (r"(?m)^      '?" + re.escape(package) + r"'?:\n"
                    r"        specifier: ([^\n]+)\n        version: ([^\n(]+)")
         match = re.search(pattern, importer_text)
         recorded_specifier = match.group(1).strip("'\"") if match else None
-        lock_inputs_match = lock_inputs_match and bool(
-            match and recorded_specifier == specifier and match.group(2) in locked_versions)
+        if package == "vitest":
+            pair_matches = (recorded_specifier, match.group(2)) in expected if match else False
+        else:
+            specifier, locked_versions = expected
+            if isinstance(locked_versions, str):
+                locked_versions = (locked_versions,)
+            pair_matches = bool(match and recorded_specifier == specifier
+                                and match.group(2) in locked_versions)
+        lock_inputs_match = lock_inputs_match and pair_matches
     if (not re.search(r"(?m)^lockfileVersion:\s*['\"]?9\.0['\"]?\s*$", lock)
             or not re.search(r"(?m)^\s+-\s+account-spa\s*$", workspace)
             or allowed_builds not in workspace
@@ -2072,6 +3014,689 @@ def cmd_candidate_auth_dependency_setup_plan(a) -> int:
         plan = validate_candidate_auth_dependency_setup(a.repo, a.repository, a.base, a.head)
     except (OSError, ValueError) as exc:
         print(f"CANDIDATE_AUTH_DEPENDENCY_SETUP_REFUSED: {exc}", file=sys.stderr)
+        return 2
+    print(json.dumps(plan, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+# DEC-AUP-0203. Qualify the complete frozen closure rather than interpreting
+# user-provided version ranges. Changes must use the correlated blob sets
+# from #312 or #337. Ordinary source changes may keep the exact base closure.
+# The lock digest binds importers, resolutions and integrity
+# values, including transitive snapshot entries that did not change.
+MC_DEPENDENCY_SETUP_REPO = "Arcanada-one/model-connector"
+MC_DEPENDENCY_SETUP_POLICY = "mc-pnpm-frozen-root-watcher-sdk/v1"
+MC_DEPENDENCY_SETUP_BASE = {
+    ".arcana/verify.json": "df4023a824ffde8454c9b8c30c8d37bcb926ef214084af24bcf2c3e9d696dedd",
+    "packages/sdk-python/pyproject.toml": "53613bd90252e5fa2085ef5657cce5afbb21dc24232a5dc452efaa867cf88404",
+    "scripts/graph-full-suite-isolated.sh": "27acd459e88334ac0f6064c9c2ae6f5a675bfb3b0c80da9dc85f057b07115706",
+    "scripts/graph-parity-setup.sh": "b8e16dea1315e196dbfb9040ee1704009ccf06e04f91f8be81430a9268ef16c1",
+    "package.json": "7821a80c1ec4977034eae0370fce21b5bc29f091a62ce8f78b50586336a14bd9",
+    "watcher/package.json": "6f3a7310e57569a90ac0493456e7d22f00997b4df4df0157ddfc1e77f74090c8",
+    "packages/sdk-ts/package.json": "1bbba8df5e0a4b86cb747187736a62f45438c35fa38a45f9555fd87f8e276247",
+    "pnpm-workspace.yaml": "8cdd31ee7bdef698d730c22dc1486c744bace6dcee3e77765a3a02dafeded4f5",
+    "pnpm-lock.yaml": "241f510dca4cd25e6940466239d0f518e79355806f34ebb4e2c16075d1cb8d9a",
+    ".github/workflows/ci.yml": "915cfeec3ad3028db848b49444a1863f9de907a9927430b89fcf943273e2ec97",
+    "prisma.config.ts": "2de1571ecd48fe867030407de8261fffc2c5b668e981e2bf138b8aac5b0ee5a5",
+    "prisma/schema.prisma": "dcf2a0094645f1cd67fa32e831b12b182debb4bdeaec37077a3250ac2c6590a7",
+}
+MC_DEPENDENCY_SETUP_MANIFESTS = ("package.json", "watcher/package.json")
+MC_DEPENDENCY_SETUP_TARGETS = {
+    (
+        "7baafd090fa8a5fa9fae99aada2f7cfe03e746b2e4956e00c402473e17fe7a04",
+        "5b16b57c28a66ad4fa300996202f4572889002fb18793d75e64e274a95b1d874",
+    ): "0dc664051285f21c6d40f6e40bcd2f902a8dc6799707f272074a1ae9ed81700a",
+    (
+        "af98058dee17340f8d2250b87dbdfb7bb2a45e6314e5ea4d54ab9252cbddb8cd",
+        "6f3a7310e57569a90ac0493456e7d22f00997b4df4df0157ddfc1e77f74090c8",
+    ): "711d6b5e84ace35a7139afaafd11eedf1ab56093a363d913dcdf8e4a74ccff6d",
+}
+MC_DEPENDENCY_SETUP_LOCK = "pnpm-lock.yaml"
+MC_DEPENDENCY_SETUP_EXECUTABLES = ("scripts/graph-full-suite-isolated.sh", "scripts/graph-parity-setup.sh")
+MC_DEPENDENCY_SETUP_BATCH_PATHS = (
+    "CHANGELOG.md", "watcher/test/ops-alert.integration.spec.ts", "watcher/test/windowed-error-rate.spec.ts",
+)
+MC_DEPENDENCY_SETUP_PRISMA_TREE = "a9e52464cb6fa4450ec2a7197e585fe158f84d64"
+MC_DEPENDENCY_SETUP_ABSENT = (".npmrc", ".pnpmfile.cjs", "pnpmfile.cjs", ".env", "node_modules")
+MC_DEPENDENCY_SETUP_OUTPUTS = ("node_modules", "watcher/node_modules", "packages/sdk-ts/node_modules")
+MC_DEPENDENCY_SETUP_ARGV = (
+    ("pnpm", "install", "--frozen-lockfile", "--ignore-scripts", "--ignore-pnpmfile",
+     "--registry=https://registry.npmjs.org/"),
+    ("./node_modules/.bin/prisma", "generate", "--config", "prisma.config.ts"),
+)
+
+
+def _mc_dependency_directory(root: Path, parts: tuple[str, ...]) -> int:
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    fd = os.open(root, flags)
+    try:
+        for part in parts:
+            child = os.open(part, flags, dir_fd=fd)
+            os.close(fd)
+            fd = child
+        return fd
+    except OSError:
+        os.close(fd)
+        raise
+
+
+def _mc_dependency_worktree_file(repo: Path, relative: str, raw: bytes) -> bytes:
+    parts = Path(relative).parts
+    try:
+        parent = _mc_dependency_directory(repo, parts[:-1])
+    except OSError as exc:
+        raise ValueError(f"MC dependency checkout has a non-directory ancestor: {relative}") from exc
+    try:
+        fd = os.open(parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+        try:
+            if relative == "prisma.config.ts":
+                return _mc_dependency_prisma_file(fd, b"100644", raw)
+            info = os.fstat(fd)
+            if stat.S_ISREG(info.st_mode) and info.st_size == len(raw):
+                with os.fdopen(fd, "rb", closefd=False) as stream:
+                    checked = stream.read(len(raw) + 1)
+                if checked == raw:
+                    return checked
+        finally:
+            os.close(fd)
+    except OSError as exc:
+        raise ValueError(f"MC dependency checkout differs from its committed file: {relative}") from exc
+    finally:
+        os.close(parent)
+    raise ValueError(f"MC dependency checkout differs from its committed file: {relative}")
+
+
+def _mc_dependency_prisma_file(fd: int, mode: bytes, raw: bytes) -> bytes:
+    info = os.fstat(fd)
+    if not stat.S_ISREG(info.st_mode):
+        raise ValueError("MC Prisma checkout entry is unsafe or unavailable")
+    if bool(info.st_mode & stat.S_IXUSR) != (mode == b"100755"):
+        raise ValueError("MC Prisma checkout executable mode differs from the pinned tree")
+    with os.fdopen(fd, "rb", closefd=False) as stream:
+        checked = stream.read(len(raw) + 1) if info.st_size == len(raw) else None
+    if checked != raw:
+        raise ValueError("MC Prisma checkout bytes differ from the pinned tree")
+    return checked
+
+
+def _mc_dependency_prisma_worktree(repo: Path, snapshot: Path | None = None, *,
+                                  root: Path | None = None) -> None:
+    """Compare the complete on-disk Prisma directory with the pinned Git objects."""
+    def compare(name, mode: bytes, oid: str, parent_fd=None, copy_to=None) -> None:
+        directory = mode == b"040000"
+        flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK
+        if directory:
+            flags |= os.O_DIRECTORY
+        try:
+            fd = os.open(name, flags, dir_fd=parent_fd)
+        except OSError as exc:
+            raise ValueError("MC Prisma checkout entry is unsafe or unavailable") from exc
+        try:
+            if directory:
+                rows = _candidate_setup_git(repo, "--no-replace-objects", "ls-tree", "-z", oid)
+                expected = {}
+                for row in rows.split(b"\0")[:-1]:
+                    metadata, raw_name = row.split(b"\t", 1)
+                    entry_mode, kind, entry_oid = metadata.split()
+                    if (entry_mode, kind) not in {(b"040000", b"tree"), (b"100644", b"blob"), (b"100755", b"blob")}:
+                        raise ValueError("MC pinned Prisma tree contains an unsupported entry type")
+                    expected[os.fsdecode(raw_name)] = (entry_mode, entry_oid.decode("ascii"))
+                if set(os.listdir(fd)) != set(expected):
+                    raise ValueError("MC Prisma checkout inventory differs from the pinned tree")
+                if copy_to is not None:
+                    copy_to.mkdir(mode=0o700)
+                for child, (entry_mode, entry_oid) in expected.items():
+                    compare(child, entry_mode, entry_oid, fd,
+                            copy_to / child if copy_to is not None else None)
+            else:
+                raw = _candidate_setup_git(repo, "--no-replace-objects", "cat-file", "blob", oid)
+                checked = _mc_dependency_prisma_file(fd, mode, raw)
+                if copy_to is not None:
+                    copy_to.write_bytes(checked)
+                    copy_to.chmod(0o500 if mode == b"100755" else 0o400)
+        finally:
+            os.close(fd)
+
+    compare((root or repo) / "prisma", b"040000", MC_DEPENDENCY_SETUP_PRISMA_TREE,
+            copy_to=snapshot / "prisma" if snapshot is not None else None)
+
+
+def _mc_dependency_prisma_tree(repo: Path, base: str, head: str, snapshot: Path | None = None) -> None:
+    if any(_candidate_setup_git(repo, "rev-parse", f"{revision}:prisma").decode().strip()
+           != MC_DEPENDENCY_SETUP_PRISMA_TREE for revision in (base, head)):
+        raise ValueError("MC dependency setup requires the qualified Prisma tree")
+    _mc_dependency_prisma_worktree(repo, snapshot)
+
+
+def _mc_dependency_workspace(repo: Path, *revisions: str, installed: bool = False) -> None:
+    # Workspace globs are fixed by the pinned pnpm-workspace.yaml. Reject
+    # newly discovered projects and local package-manager configuration.
+    directories = [repo, repo / "watcher"]
+    packages = repo / "packages"
+    if not stat.S_ISDIR(packages.lstat().st_mode):
+        raise ValueError("MC packages directory is not regular")
+    for child in packages.iterdir():
+        if child.is_symlink():
+            raise ValueError("MC workspace package directory is a symlink")
+        if not child.is_dir():
+            continue
+        directories.append(child)
+        if (child / "package.json").exists() or (child / "package.json").is_symlink():
+            if child.name != "sdk-ts":
+                raise ValueError("MC workspace has an unqualified package")
+    for directory in directories:
+        for name in MC_DEPENDENCY_SETUP_ABSENT:
+            path = directory / name
+            relative = str(path.relative_to(repo))
+            if installed and relative in MC_DEPENDENCY_SETUP_OUTPUTS:
+                if not stat.S_ISDIR(path.lstat().st_mode):
+                    raise ValueError(f"MC snapshot dependency directory is unsafe: {relative}")
+                continue
+            if (path.exists() or path.is_symlink()
+                    or any(_candidate_setup_git(repo, "ls-tree", "-z", revision, "--", relative)
+                           for revision in revisions)):
+                raise ValueError(f"MC dependency setup forbids local configuration: {relative}")
+
+
+def _mc_dependency_subject(repo_path: str | Path, repository: str, base: str, head: str) -> Path:
+    if repository != MC_DEPENDENCY_SETUP_REPO:
+        raise ValueError("MC dependency setup repository is unsupported")
+    if (not re.fullmatch(r"[0-9a-f]{40}", base)
+            or not re.fullmatch(r"[0-9a-f]{40}", head) or base == head):
+        raise ValueError("MC dependency setup range is malformed")
+    repo = Path(repo_path).resolve(strict=True)
+    actual_head = _candidate_setup_git(repo, "rev-parse", "--verify", "HEAD^{commit}").decode().strip()
+    if actual_head != head:
+        raise ValueError("MC dependency setup subject differs from checked-out head")
+    _candidate_setup_git(repo, "merge-base", "--is-ancestor", base, head)
+    return repo
+
+
+def validate_candidate_mc_dependency_setup(repo_path: str | Path, repository: str,
+                                          base: str, head: str, *, snapshot: Path | None = None) -> dict:
+    """Validate exact Model Connector dependency inputs and return fixed, non-executing setup argv."""
+    repo = _mc_dependency_subject(repo_path, repository, base, head)
+
+    checked = {}
+    closure_inputs = (*MC_DEPENDENCY_SETUP_MANIFESTS, MC_DEPENDENCY_SETUP_LOCK)
+    same_closure = True
+    for relative, expected in MC_DEPENDENCY_SETUP_BASE.items():
+        modes = ("100755",) if relative in MC_DEPENDENCY_SETUP_EXECUTABLES else ("100644",)
+        _, before = _candidate_setup_blob(repo, base, relative, regular_modes=modes)
+        if hashlib.sha256(before).hexdigest() != expected:
+            raise ValueError(f"MC dependency base is unqualified: {relative}")
+        oid, raw = _candidate_setup_blob(repo, head, relative, regular_modes=modes)
+        checked_bytes = _mc_dependency_worktree_file(repo, relative, raw)
+        if snapshot is not None and relative != "prisma/schema.prisma":
+            path = snapshot / relative
+            path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            path.write_bytes(checked_bytes)
+            path.chmod(0o500 if modes == ("100755",) else 0o400)
+            checked_bytes = _mc_dependency_worktree_file(snapshot, relative, raw)
+        digest = hashlib.sha256(checked_bytes).hexdigest()
+        unchanged = checked_bytes == before
+        if relative in closure_inputs:
+            same_closure &= unchanged
+        elif not unchanged:
+            raise ValueError(f"MC dependency setup requires unchanged source: {relative}")
+        checked[relative] = {"blob_oid": oid, "sha256": digest, "bytes": len(raw)}
+
+    _mc_dependency_prisma_tree(repo, base, head, snapshot)
+    _mc_dependency_workspace(repo, base, head)
+    if snapshot is not None:
+        _mc_dependency_workspace(snapshot)
+        _mc_dependency_prisma_worktree(repo, root=snapshot)
+    # Only a byte-identical closure with all common checks satisfied may
+    # bypass the dependency-batch path filter.
+    if not same_closure:
+        target = tuple(checked[path]["sha256"] for path in MC_DEPENDENCY_SETUP_MANIFESTS)
+        base_target = tuple(MC_DEPENDENCY_SETUP_BASE[path] for path in MC_DEPENDENCY_SETUP_MANIFESTS)
+        if target == base_target:
+            raise ValueError("MC dependency lockfile does not match the qualified frozen closure")
+        expected_lock = MC_DEPENDENCY_SETUP_TARGETS.get(target)
+        if expected_lock is None:
+            raise ValueError("MC dependency manifest transition is unqualified")
+        if checked[MC_DEPENDENCY_SETUP_LOCK]["sha256"] != expected_lock:
+            raise ValueError("MC dependency lockfile does not match the qualified frozen closure")
+
+        allowed_paths = set(MC_DEPENDENCY_SETUP_BASE)
+        watcher = "watcher/package.json"
+        if checked[watcher]["sha256"] != MC_DEPENDENCY_SETUP_BASE[watcher]:
+            allowed_paths.update(MC_DEPENDENCY_SETUP_BATCH_PATHS)
+        diff = _candidate_setup_git(repo, "diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", base, head)
+        changed = set(diff.decode().rstrip("\0").split("\0"))
+        if any(path not in allowed_paths and not path.startswith("prisma/") for path in changed):
+            raise ValueError("MC dependency range has unqualified changed paths")
+    return {
+        "schema": "ModelConnectorCallerDependencySetupPlan/v1",
+        "policy": MC_DEPENDENCY_SETUP_POLICY,
+        "repository": repository,
+        "base": base,
+        "head": head,
+        "working_directory": ".",
+        "node_version": "22.23.4",
+        "pnpm_version": "10.30.3",
+        "files": checked,
+        "setup_argv": [list(argv) for argv in MC_DEPENDENCY_SETUP_ARGV],
+        "execution": "not_performed",
+    }
+
+
+def _mc_dependency_snapshot_path(repo: Path, value: str) -> Path:
+    snapshot = Path(value)
+    if not snapshot.is_absolute() or snapshot.parent.resolve(strict=True) != snapshot.parent:
+        raise ValueError("MC dependency snapshot needs a canonical absolute parent")
+    if snapshot.is_relative_to(repo) or snapshot.name in {"", ".", ".."}:
+        raise ValueError("MC dependency snapshot must be outside the checkout")
+    return snapshot
+
+
+def _mc_dependency_publish(snapshot: Path, repo: Path) -> None:
+    # Downstream verification still runs in the checkout. Move the finished
+    # pnpm trees together, preserving their relative workspace links.
+    with contextlib.ExitStack() as stack:
+        moves = []
+        for relative in MC_DEPENDENCY_SETUP_OUTPUTS:
+            parts = Path(relative).parts
+            source = _mc_dependency_directory(snapshot, parts[:-1])
+            stack.callback(os.close, source)
+            target = _mc_dependency_directory(repo, parts[:-1])
+            stack.callback(os.close, target)
+            name = parts[-1]
+            if not stat.S_ISDIR(os.stat(name, dir_fd=source, follow_symlinks=False).st_mode):
+                raise ValueError(f"MC snapshot dependency directory is unsafe: {relative}")
+            try:
+                os.stat(name, dir_fd=target, follow_symlinks=False)
+            except FileNotFoundError:
+                moves.append((name, source, target))
+            else:
+                raise ValueError(f"MC output destination already exists: {relative}")
+        for name, source, target in moves:
+            os.rename(name, name, src_dir_fd=source, dst_dir_fd=target)
+
+
+def cmd_candidate_mc_dependency_setup_plan(a) -> int:
+    try:
+        snapshot = None
+        if getattr(a, "snapshot", None):
+            snapshot = _mc_dependency_snapshot_path(Path(a.repo).resolve(strict=True), a.snapshot)
+            snapshot.mkdir(mode=0o700)
+        try:
+            plan = validate_candidate_mc_dependency_setup(
+                a.repo, a.repository, a.base, a.head, snapshot=snapshot)
+        except (OSError, ValueError):
+            if snapshot is not None:
+                shutil.rmtree(snapshot)
+            raise
+    except (OSError, ValueError) as exc:
+        print(f"CANDIDATE_MC_DEPENDENCY_SETUP_REFUSED: {exc}", file=sys.stderr)
+        return 2
+    print(json.dumps(plan, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+def cmd_candidate_mc_dependency_snapshot_verify(a) -> int:
+    """Verify the job-owned snapshot before each consumer, or hand off its outputs after use."""
+    try:
+        repo = _mc_dependency_subject(a.repo, a.repository, a.base, a.head)
+        snapshot = _mc_dependency_snapshot_path(repo, a.snapshot)
+        info = snapshot.lstat()
+        if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid() or info.st_mode & 0o077:
+            raise ValueError("MC dependency snapshot directory is not private")
+        plan = _strict_json_object(Path(a.plan).read_text(encoding="utf-8"), "MC dependency plan")
+        if (plan.get("policy"), plan.get("repository"), plan.get("base"), plan.get("head")) != (
+                MC_DEPENDENCY_SETUP_POLICY, a.repository, a.base, a.head):
+            raise ValueError("MC dependency snapshot plan does not match the checked range")
+        files = plan.get("files")
+        if not isinstance(files, dict) or set(files) != set(MC_DEPENDENCY_SETUP_BASE):
+            raise ValueError("MC dependency snapshot plan is incomplete")
+        for relative, item in files.items():
+            modes = ("100755",) if relative in MC_DEPENDENCY_SETUP_EXECUTABLES else ("100644",)
+            oid, raw = _candidate_setup_blob(repo, a.head, relative, regular_modes=modes)
+            if item != {"blob_oid": oid, "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw)}:
+                raise ValueError(f"MC dependency snapshot plan does not match the pinned blob: {relative}")
+            _mc_dependency_worktree_file(snapshot, relative, raw)
+        _mc_dependency_prisma_worktree(repo, root=snapshot)
+        _mc_dependency_workspace(snapshot, installed=a.phase in ("generate", "publish"))
+        if a.phase == "generate":
+            bin_dir = _mc_dependency_directory(snapshot, ("node_modules", ".bin"))
+            try:
+                launcher = os.stat("prisma", dir_fd=bin_dir, follow_symlinks=False)
+                if not stat.S_ISREG(launcher.st_mode) or not launcher.st_mode & stat.S_IXUSR:
+                    raise ValueError("MC snapshot Prisma launcher is unsafe")
+            finally:
+                os.close(bin_dir)
+        if a.phase == "publish":
+            _mc_dependency_publish(snapshot, repo)
+    except (OSError, ValueError) as exc:
+        print(f"CANDIDATE_MC_DEPENDENCY_SETUP_REFUSED: {exc}", file=sys.stderr)
+        return 2
+    return 0
+
+
+# Talomnia backend has no caller dependency-setup input. This separate profile is selected only
+# for that exact repository and recognizes its checked-in root NestJS / Prisma CI closure
+# (talomnia-backend#66: CURRENT_CANDIDATE_PRODUCER_FAILED without app node_modules).
+TALO_DEPENDENCY_SETUP_POLICY = "talo-pnpm-frozen-root/v1"
+TALO_DEPENDENCY_SETUP_FILES = (
+    ".github/workflows/ci.yml", "package.json", "pnpm-lock.yaml",
+    "pnpm-workspace.yaml", "prisma.config.ts", "prisma/schema.prisma",
+)
+# CI install shape stays fixed across Nest/lock bumps; package.json and the lock may change.
+TALO_DEPENDENCY_SETUP_UNCHANGED = (".github/workflows/ci.yml",)
+TALO_DEPENDENCY_SETUP_REPO = "Arcanada-one/talomnia-backend"
+# Exact Node versions the graph-admission prepare step installs. engines.node on the caller may
+# stay ">=22.23.4"; the plan always emits one exact member of this tuple (never a range).
+TALO_DEPENDENCY_SETUP_NODE_VERSIONS = ("22.23.4",)
+TALO_DEPENDENCY_SETUP_ENGINES_NODE = ">=22.23.4"
+TALO_DEPENDENCY_SETUP_PNPM = "11.20.0"
+TALO_DEPENDENCY_SETUP_REGISTRY = "https://registry.npmjs.org/"
+# Qualified action pins currently declared in talomnia-backend .github/workflows/ci.yml.
+TALO_QUALIFIED_PNPM_SETUP_PINS = (
+    "pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda",  # v4.1.0
+    "pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320",  # v5.0.0, talomnia-backend main eee7c465
+)
+TALO_QUALIFIED_NODE_SETUP_PINS = (
+    "actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af",  # v4.1.0
+    "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",  # v4.4.0, talomnia-backend main eee7c465
+)
+
+
+class _TaloBlockScalar:
+    """Opaque `|` / `>` block-scalar content: never read as a workflow fact."""
+
+
+_TALO_YAML_KEY = re.compile(r"([A-Za-z_][A-Za-z0-9_-]*):(?: (.*))?$")
+_TALO_YAML_BLOCK = re.compile(r"[|>](?:[+-]?[1-9]?|[1-9][+-])$")
+_TALO_TOP_KEYS = frozenset({"name", "on", "permissions", "concurrency", "jobs"})
+_TALO_BUILD_KEYS = frozenset({"runs-on", "steps"})
+_TALO_STEP_KEYS = frozenset({"name", "uses", "with", "run"})
+_TALO_RUNS_ON = "[self-hosted, Linux, X64, ci-general]"
+_TALO_ON = {"push": None, "pull_request": None}
+_TALO_PERMISSIONS = {"contents": "read"}
+_TALO_REQUIRED_RUNS = ("pnpm install --frozen-lockfile", "pnpm typecheck", "pnpm build",
+                       "pnpm test")
+
+
+def _talo_yaml_refuse(lineno: int, why: str):
+    raise ValueError(f"Talo CI source does not declare the fixed root dependency closure "
+                     f"(unsupported workflow grammar at line {lineno}: {why})")
+
+
+def _talo_yaml_value(text: str, lineno: int):
+    """One-line scalar with an optional trailing comment. Quotes count only at value start."""
+    if text.startswith(("'", '"')):
+        quote = text[0]
+        close = text.find(quote, 1)
+        while quote == "'" and close != -1 and text[close + 1:close + 2] == "'":
+            close = text.find(quote, close + 2)
+        if close == -1:
+            _talo_yaml_refuse(lineno, "unterminated quoted scalar")
+        rest = text[close + 1:]
+        if rest.strip() and not re.match(r"\s+#", rest):
+            _talo_yaml_refuse(lineno, "content after a quoted scalar")
+        inner = text[1:close]
+        if quote == '"' and "\\" in inner:
+            _talo_yaml_refuse(lineno, "escape in a double-quoted scalar")
+        return inner.replace("''", "'") if quote == "'" else inner
+    value = re.split(r"\s#", text, maxsplit=1)[0].rstrip()
+    if value.startswith(("&", "*", "!", "%", "@", "`", "{", "?", "|", ">", "- ", "#")) or value == "-":
+        _talo_yaml_refuse(lineno, f"unsupported scalar form {value[:1]!r}")
+    if value.startswith("[") and not value.endswith("]"):
+        _talo_yaml_refuse(lineno, "multi-line flow sequence")
+    return value
+
+
+def _talo_yaml_tokens(workflow: str) -> list:
+    """Tokens (indent, kind, key, value, lineno) of a strict block-YAML subset.
+
+    Positive grammar: `key:`, `key: scalar`, `- key: ...`, `- scalar`, blank and comment lines,
+    and `|`/`>` block scalars kept opaque. Anything else (tabs, anchors, aliases, tags, flow
+    mappings, multi-line plain or quoted scalars, document markers) refuses.
+    """
+    for offset, char in enumerate(workflow):
+        code = ord(char)
+        if ((code < 0x20 and char != "\n") or code == 0x7F or 0x80 <= code <= 0x9F
+                or code in (0x2028, 0x2029, 0xFEFF)):
+            # YAML also breaks lines at \r, NEL, LS and PS; a line scan that splits only at
+            # \n would read a key hidden after one of them as comment text.
+            _talo_yaml_refuse(workflow.count("\n", 0, offset) + 1,
+                              f"control or line-break character U+{code:04X}")
+    lines = workflow.split("\n")
+    tokens, i = [], 0
+    while i < len(lines):
+        line, lineno = lines[i], i + 1
+        i += 1
+        if "\t" in line:
+            _talo_yaml_refuse(lineno, "tab character")
+        body = line.lstrip(" ")
+        if not body or body.startswith("#"):
+            continue
+        indent = len(line) - len(body)
+        while body == "-" or body.startswith("- "):
+            tokens.append((indent, "item", None, None, lineno))
+            rest = body[1:].lstrip(" ")
+            indent += len(body) - len(rest)
+            body = rest
+            if not body:
+                break
+        if not body:
+            continue
+        match = _TALO_YAML_KEY.match(body)
+        if match is None:
+            if tokens and tokens[-1][1] == "item" and tokens[-1][0] < indent:
+                item = tokens.pop()
+                tokens.append((item[0], "item", None, _talo_yaml_value(body, lineno), lineno))
+                continue
+            _talo_yaml_refuse(lineno, "line is not a supported mapping or sequence entry")
+        key, raw = match.group(1), (match.group(2) or "").strip()
+        if raw.startswith("#"):
+            raw = ""
+        if raw and _TALO_YAML_BLOCK.match(re.split(r"\s#", raw, maxsplit=1)[0].rstrip()):
+            while i < len(lines):
+                nxt = lines[i]
+                stripped = nxt.lstrip(" ")
+                if stripped and len(nxt) - len(stripped) <= indent:
+                    break
+                if "\t" in nxt:
+                    _talo_yaml_refuse(i + 1, "tab character")
+                i += 1
+            tokens.append((indent, "key", key, _TaloBlockScalar(), lineno))
+            continue
+        tokens.append((indent, "key", key, _talo_yaml_value(raw, lineno) if raw else None, lineno))
+    return tokens
+
+
+def _talo_yaml_tree(tokens: list):
+    def block(pos, indent):
+        if tokens[pos][1] == "item":
+            return sequence(pos, indent)
+        return mapping(pos, indent)
+
+    def child(pos, indent):
+        if pos < len(tokens) and tokens[pos][0] > indent:
+            return block(pos, tokens[pos][0])
+        return None, pos
+
+    def mapping(pos, indent):
+        out = {}
+        while pos < len(tokens) and tokens[pos][0] == indent and tokens[pos][1] == "key":
+            _, _, key, value, lineno = tokens[pos]
+            if key in out:
+                _talo_yaml_refuse(lineno, f"duplicate key {key!r}")
+            pos += 1
+            if value is None:
+                value, pos = child(pos, indent)
+            out[key] = value
+        if pos < len(tokens) and tokens[pos][0] >= indent:
+            _talo_yaml_refuse(tokens[pos][4], "entry at an unexpected indentation")
+        return out, pos
+
+    def sequence(pos, indent):
+        out = []
+        while pos < len(tokens) and tokens[pos][0] == indent and tokens[pos][1] == "item":
+            value = tokens[pos][3]
+            pos += 1
+            if value is None:
+                value, pos = child(pos, indent)
+            out.append(value)
+        if pos < len(tokens) and tokens[pos][0] >= indent:
+            _talo_yaml_refuse(tokens[pos][4], "entry at an unexpected indentation")
+        return out, pos
+
+    if not tokens or tokens[0][0] != 0:
+        _talo_yaml_refuse(tokens[0][4] if tokens else 1, "document must start at column 0")
+    tree, pos = mapping(0, 0)
+    if pos != len(tokens):
+        _talo_yaml_refuse(tokens[pos][4], "trailing content")
+    return tree
+
+
+def _talo_build_job_closure_ok(workflow: str) -> bool:
+    """Facts bound to the live `jobs.build.steps` of a strictly parsed workflow.
+
+    Required runs are exact one-line `run:` values in the same job as the qualified setup
+    steps, after them; `node-version` is read from the setup-node step's own `with`. Key
+    whitelists exclude `if`, `continue-on-error`, `shell`, `defaults` and the like. Block
+    scalars are opaque, so text inside them is never a fact (review 5969140634 / D51), and
+    comments are never facts (review 5968716824 / D50).
+    """
+    tree = _talo_yaml_tree(_talo_yaml_tokens(workflow))
+    if not set(tree) <= _TALO_TOP_KEYS or not isinstance(tree.get("jobs"), dict):
+        return False
+    # The workflow must actually run on push and pull_request, and the optional top-level
+    # keys must carry the consumer's values: an invalid workflow never runs its build job.
+    if tree.get("on") != _TALO_ON or tree.get("permissions", _TALO_PERMISSIONS) != _TALO_PERMISSIONS:
+        return False
+    if not isinstance(tree.get("name", ""), str):
+        return False
+    concurrency = tree.get("concurrency", {})
+    if not (isinstance(concurrency, dict) and set(concurrency) <= {"group", "cancel-in-progress"}
+            and all(isinstance(v, str) and v for v in concurrency.values())):
+        return False
+    build = tree["jobs"].get("build")
+    if not isinstance(build, dict) or set(build) != _TALO_BUILD_KEYS:
+        return False
+    if build["runs-on"] != _TALO_RUNS_ON or not isinstance(build["steps"], list):
+        return False
+    pnpm_at, node_at, run_at = [], [], {}
+    for index, step in enumerate(build["steps"]):
+        if not isinstance(step, dict) or not set(step) <= _TALO_STEP_KEYS:
+            return False
+        if ("with" in step and "uses" not in step) or ("uses" in step and "run" in step):
+            return False
+        if "with" in step and not (isinstance(step["with"], dict) and all(
+                isinstance(v, str) for v in step["with"].values())):
+            return False
+        uses = step.get("uses")
+        if uses is not None and not isinstance(uses, str):
+            return False
+        if isinstance(uses, str) and uses.startswith("pnpm/action-setup@"):
+            if uses not in TALO_QUALIFIED_PNPM_SETUP_PINS:
+                return False
+            pnpm_at.append(index)
+        if isinstance(uses, str) and uses.startswith("actions/setup-node@"):
+            if (uses not in TALO_QUALIFIED_NODE_SETUP_PINS
+                    or step.get("with", {}).get("node-version") != "22"):
+                return False
+            node_at.append(index)
+        run = step.get("run")
+        if isinstance(run, str) and run in _TALO_REQUIRED_RUNS:
+            run_at.setdefault(run, index)
+    if not pnpm_at or not node_at or set(run_at) != set(_TALO_REQUIRED_RUNS):
+        return False
+    install = run_at["pnpm install --frozen-lockfile"]
+    return (max(pnpm_at[0], node_at[0]) < install
+            and all(run_at[c] > install for c in _TALO_REQUIRED_RUNS[1:]))
+
+
+def validate_candidate_talo_dependency_setup(repo_path: str | Path, repository: str,
+                                            base: str, head: str) -> dict:
+    """Validate exact Talomnia-backend dependency inputs and return fixed, non-executing setup argv."""
+    if repository != TALO_DEPENDENCY_SETUP_REPO:
+        raise ValueError("Talo dependency setup repository is unsupported")
+    if (not isinstance(base, str) or not re.fullmatch(r"[0-9a-f]{40}", base)
+            or not isinstance(head, str) or not re.fullmatch(r"[0-9a-f]{40}", head)
+            or base == head):
+        raise ValueError("Talo dependency setup range is malformed")
+    repo = Path(repo_path).resolve(strict=True)
+    if not repo.is_dir():
+        raise ValueError("Talo candidate workspace is unavailable")
+    actual_head = _candidate_setup_git(repo, "rev-parse", "--verify", "HEAD^{commit}").decode().strip()
+    _candidate_setup_git(repo, "cat-file", "-e", f"{base}^{{commit}}")
+    _candidate_setup_git(repo, "merge-base", "--is-ancestor", base, head)
+    if actual_head != head:
+        raise ValueError("Talo dependency setup subject differs from checked-out HEAD")
+
+    checked, source = {}, {}
+    for relative in TALO_DEPENDENCY_SETUP_FILES:
+        oid, raw = _candidate_setup_blob(repo, head, relative)
+        path = repo / relative
+        if path.is_symlink() or not path.is_file() or path.read_bytes() != raw:
+            raise ValueError(f"Talo dependency source differs from exact committed bytes: {relative}")
+        checked[relative] = {"blob_oid": oid, "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw)}
+        source[relative] = raw
+
+    for relative in TALO_DEPENDENCY_SETUP_UNCHANGED:
+        base_oid = _candidate_setup_blob(repo, base, relative)[0]
+        head_oid = checked[relative]["blob_oid"]
+        if base_oid != head_oid:
+            raise ValueError(f"Talo dependency policy source changed in candidate range: {relative}")
+
+    try:
+        root = _strict_json_object(source["package.json"].decode("utf-8"), "Talo package.json")
+    except (UnicodeError, ValueError) as exc:
+        raise ValueError("Talo dependency package inputs are malformed") from exc
+
+    engines_node = (root.get("engines") or {}).get("node")
+    if (root.get("name") != "talomnia-backend"
+            or root.get("packageManager") != f"pnpm@{TALO_DEPENDENCY_SETUP_PNPM}"
+            or engines_node not in (TALO_DEPENDENCY_SETUP_ENGINES_NODE,) + TALO_DEPENDENCY_SETUP_NODE_VERSIONS
+            or (root.get("scripts") or {}).get("test") != "vitest run"
+            or (root.get("scripts") or {}).get("postinstall") != "prisma generate"):
+        raise ValueError("Talo Node, pnpm, or root contract differs from supported source")
+
+    deps = root.get("dependencies") or {}
+    dev_deps = root.get("devDependencies") or {}
+    if ("@nestjs/common" not in deps or "@prisma/client" not in deps
+            or "prisma" not in dev_deps):
+        raise ValueError("Talo NestJS/Prisma dependency contract is incomplete")
+
+    lock = source["pnpm-lock.yaml"].decode("utf-8")
+    workspace = source["pnpm-workspace.yaml"].decode("utf-8")
+    workflow = source[".github/workflows/ci.yml"].decode("utf-8")
+    if (not re.search(r"(?m)^lockfileVersion:\s*['\"]?9\.0['\"]?\s*$", lock)
+            or "allowBuilds:" not in workspace
+            or "prisma: true" not in workspace):
+        raise ValueError("Talo workspace lockfile does not bind the supported frozen dependency closure")
+
+    if not _talo_build_job_closure_ok(workflow):
+        raise ValueError("Talo CI source does not declare the fixed root dependency closure")
+
+    return {
+        "schema": "TaloCallerDependencySetupPlan/v1",
+        "policy": TALO_DEPENDENCY_SETUP_POLICY,
+        "repository": repository, "base": base, "head": head,
+        "working_directory": ".", "scope": "root",
+        "node_version": TALO_DEPENDENCY_SETUP_NODE_VERSIONS[0],
+        "pnpm_version": TALO_DEPENDENCY_SETUP_PNPM,
+        "registry": TALO_DEPENDENCY_SETUP_REGISTRY,
+        "files": checked,
+        "setup_argv": [
+            ["pnpm", "install", "--frozen-lockfile", "--ignore-scripts", "--ignore-pnpmfile",
+             "--registry=https://registry.npmjs.org/"],
+            ["pnpm", "exec", "prisma", "generate"],
+        ],
+        "execution": "not_performed",
+    }
+
+
+def cmd_candidate_talo_dependency_setup_plan(a) -> int:
+    """Validate canonical Talomnia-backend source and emit fixed setup data; never install."""
+    try:
+        plan = validate_candidate_talo_dependency_setup(a.repo, a.repository, a.base, a.head)
+    except (OSError, ValueError) as exc:
+        print(f"CANDIDATE_TALO_DEPENDENCY_SETUP_REFUSED: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(plan, sort_keys=True, separators=(",", ":")))
     return 0
@@ -2132,6 +3757,10 @@ def cmd_run(a) -> int:
     stage_userpath_required = bool(getattr(a, "stage_userpath_required", False))
     candidate_required = bool(getattr(a, "candidate_receipt_required", False))
     candidate_source_outcome_required = bool(getattr(a, "candidate_source_outcome_required", False))
+    candidate_canary = getattr(a, "candidate_canary", None)
+    if candidate_canary and not candidate_source_outcome_required:
+        return fail("CURRENT_SOURCE_OUTCOME_CONFIGURATION_INVALID",
+                    "a candidate canary requires the same-run current-source outcome")
     if candidate_source_outcome_required and not (candidate_required and stage_userpath_required):
         return fail("CURRENT_SOURCE_OUTCOME_CONFIGURATION_INVALID",
                     "a current-source outcome requires both the explicit candidate CAR and ProgramStageUserpath routes")
@@ -2171,7 +3800,7 @@ def cmd_run(a) -> int:
             getattr(a, "stage_userpath_exit", None),
             candidate_outcome_required=candidate_source_outcome_required,
             tools_root=(repo if result["repo"] == "Arcanada-one/arcanada-universal-program" else tools),
-            trusted_bundle=man)
+            trusted_bundle=man, candidate_canary=candidate_canary)
         result["stage_userpath"] = stage_userpath
         if stage_userpath_problems:
             result["checks"].append({"code": "STAGE_USERPATH_REFUSED", "verdict": "refuse",
@@ -2515,6 +4144,8 @@ def cmd_run(a) -> int:
                 "--current-source-userpath-root", str(Path(getattr(a, "stage_userpath_root")).resolve()),
                 "--current-source-userpath-exit", str(getattr(a, "stage_userpath_exit")),
                 "--current-source-producer-exit", str(candidate_exit)]
+        if candidate_canary:
+            cmd.append(f"--candidate-canary={candidate_canary}")
         if result["repo"] != "Arcanada-one/arcanada-universal-program":
             cmd += ["--current-source-program-tools-root", str(tools),
                     "--current-source-program-ref", str(a.program_ref),
@@ -5101,6 +6732,32 @@ def main(argv=None) -> int:
     auth_dependency_setup.add_argument("--head", required=True)
     auth_dependency_setup.set_defaults(fn=cmd_candidate_auth_dependency_setup_plan)
 
+    mc_dependency_setup = sub.add_parser(
+        "candidate-mc-dependency-setup-plan",
+        help="validate Model Connector inputs and return its fixed non-executing setup plan")
+    mc_dependency_setup.add_argument("--repo", required=True)
+    mc_dependency_setup.add_argument("--repository", required=True)
+    mc_dependency_setup.add_argument("--base", required=True)
+    mc_dependency_setup.add_argument("--head", required=True)
+    mc_dependency_setup.add_argument("--snapshot")
+    mc_dependency_setup.set_defaults(fn=cmd_candidate_mc_dependency_setup_plan)
+
+    mc_snapshot = sub.add_parser(
+        "candidate-mc-dependency-snapshot-verify", help="verify MC setup custody or publish finished dependencies")
+    for argument in ("repo", "repository", "base", "head", "snapshot", "plan"):
+        mc_snapshot.add_argument(f"--{argument}", required=True)
+    mc_snapshot.add_argument("--phase", choices=("bootstrap", "install", "generate", "publish"), required=True)
+    mc_snapshot.set_defaults(fn=cmd_candidate_mc_dependency_snapshot_verify)
+
+    talo_dependency_setup = sub.add_parser(
+        "candidate-talo-dependency-setup-plan",
+        help="validate canonical Talomnia-backend inputs and return its fixed non-executing setup plan")
+    talo_dependency_setup.add_argument("--repo", required=True)
+    talo_dependency_setup.add_argument("--repository", required=True)
+    talo_dependency_setup.add_argument("--base", required=True)
+    talo_dependency_setup.add_argument("--head", required=True)
+    talo_dependency_setup.set_defaults(fn=cmd_candidate_talo_dependency_setup_plan)
+
     b = sub.add_parser("bundle", help="vendor the gate tools of a pinned program SHA into a caller repository")
     b.add_argument("--out", required=True)
     b.add_argument("--program-ref")
@@ -5134,6 +6791,7 @@ def main(argv=None) -> int:
     r.add_argument("--stage-userpath-exit", type=int,
                    help="outer process exit captured by the invoking hosted workflow")
     r.add_argument("--candidate-receipt", help="exact current-range CAR produced by the hosted candidate workflow")
+    r.add_argument("--candidate-canary", help="expected repository-relative committed CanaryResult/v2")
     r.add_argument("--candidate-receipt-exit", type=int,
                    help="captured exit from the hosted current-candidate CAR producer")
     r.add_argument("--candidate-receipt-required", action="store_true",
