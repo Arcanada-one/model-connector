@@ -60,6 +60,11 @@ on:
         required: false
         default: ''
         type: string
+      candidate_canary_path:
+        description: 'Optional repository-relative CanaryResult/v2 committed at the candidate head. Requires the same-run current-source outcome.'
+        required: false
+        default: ''
+        type: string
       stage_evidence_root:
         description: 'Root directory containing the explicit StageEvidence/v1 file and its committed run evidence.'
         required: false
@@ -2218,6 +2223,7 @@ jobs:
           VERIFIER_JOB: ${{ inputs.verifier_job }}
           VERIFIER_CONCLUSION: ${{ inputs.verifier_conclusion }}
           EMPTY_IMPACT_EXPLANATION: ${{ inputs.empty_impact_explanation }}
+          CANDIDATE_CANARY_PATH: ${{ inputs.candidate_canary_path }}
           EMPTY_IMPACT_CLAIM_FILE: ${{ steps.range.outputs.claim_file }}
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -2306,6 +2312,9 @@ jobs:
             fi
             if [ "$GITHUB_REPOSITORY" = "Arcanada-one/auth-arcana" ]; then
               VERIFY_ARGV+=(--root-typecheck-ci-root "$CANDIDATE_ROOT/ci-typecheck")
+            fi
+            if [ -n "${CANDIDATE_CANARY_PATH:-}" ]; then
+              VERIFY_ARGV+=("--canary=$CANDIDATE_CANARY_PATH" --require-committed-canary-v2)
             fi
             printf '%s\0' "${VERIFY_ARGV[@]}" > "$CANDIDATE_ROOT/verify.argv.nul"
             pwd -P > "$CANDIDATE_ROOT/verify.cwd"
@@ -2460,6 +2469,7 @@ jobs:
           CANDIDATE_ROOT: ${{ steps.candidate_capture.outputs.candidate_root || format('{0}/graph-admission/stage-userpath/current-candidate', runner.temp) }}
           CANDIDATE_SOURCE_OUTCOME_REQUIRED: ${{ inputs.candidate_source_outcome_required }}
           TOOLS_PATH: ${{ inputs.tools_path }}
+          CANDIDATE_CANARY_PATH: ${{ inputs.candidate_canary_path }}
         run: |
           set -uo pipefail
           set +e
@@ -2473,6 +2483,9 @@ jobs:
           ARGS=()
           if [ "$CANDIDATE_SOURCE_OUTCOME_REQUIRED" = "true" ]; then
             ARGS+=(--candidate-root "$CANDIDATE_ROOT")
+          fi
+          if [ -n "${CANDIDATE_CANARY_PATH:-}" ]; then
+            ARGS+=("--candidate-canary=$CANDIDATE_CANARY_PATH")
           fi
           python3 "$GRAPH_TOOLS_ROOT/tools/ci/stage_userpath.py" \
             --repo "$GITHUB_WORKSPACE" \
@@ -2626,6 +2639,7 @@ jobs:
           STAGE_EVIDENCE_REQUIRED: ${{ inputs.stage_evidence_required }}
           CURRENT_EVALUATOR_RUN_ID: ${{ github.run_id }}
           CURRENT_EVALUATOR_ATTEMPT: ${{ github.run_attempt }}
+          CANDIDATE_CANARY_PATH: ${{ inputs.candidate_canary_path }}
           CURRENT_EVALUATOR_CHECK_RUN_ID: ${{ job.check_run_id }}
           CURRENT_EVALUATOR_JOB_KEY: ${{ github.job }}
           CURRENT_EVALUATOR_REPOSITORY: ${{ github.repository }}
@@ -2672,6 +2686,9 @@ jobs:
           if [ -n "${STAGE_EVIDENCE_PATH:-}" ]; then ARGS+=(--stage-evidence "$STAGE_EVIDENCE_PATH"); fi
           if [ -n "${STAGE_EVIDENCE_ROOT:-}" ]; then ARGS+=(--stage-evidence-root "$STAGE_EVIDENCE_ROOT"); fi
           if [ "${STAGE_EVIDENCE_REQUIRED:-false}" = "true" ]; then ARGS+=(--stage-evidence-required); fi
+          if [ -n "${CANDIDATE_CANARY_PATH:-}" ]; then
+            ARGS+=("--candidate-canary=$CANDIDATE_CANARY_PATH")
+          fi
           if [ -n "${STAGE_EVIDENCE_PATH:-}" ]; then
             ARGS+=(--current-evaluator-run-id "$CURRENT_EVALUATOR_RUN_ID"
               --current-evaluator-attempt "$CURRENT_EVALUATOR_ATTEMPT"
