@@ -5,5 +5,12 @@
       "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
       "revised_prompt": "A red cube placed on a clean white background, studio lighting, high resolution"
     }
-  ]
+  ],
+  "usage": {
+    "total_tokens": 600,
+    "input_tokens": 300,
+    "output_tokens": 300,
+    "input_tokens_details": { "image_tokens": 100, "text_tokens": 200 },
+    "output_tokens_details": { "image_tokens": 300, "text_tokens": 0 }
+  }
 }

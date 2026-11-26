@@ -284,7 +284,7 @@ export const envSchema = z
     // Replicate
     REPLICATE_API_TOKEN: z.string().optional(),
 
-    // OpenAI Images (gpt-image-1)
+    // OpenAI Images (GPT Image 2.5 Sunburst)
     OPENAI_API_KEY: z.string().optional(),
     ELEVENLABS_API_KEY: z.string().min(1).optional(),
 
