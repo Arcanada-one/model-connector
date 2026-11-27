@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **npm publish-ts moves to self-hosted + `NPM_TOKEN`.** Operator decision
+  2026-11-18: Trusted Publishing / OIDC is accepted only from GitHub-hosted
+  runners, so `publish-sdks.yml` `publish-ts` now runs on
+  `[self-hosted, Linux, ci-general]` with `NODE_AUTH_TOKEN` from
+  the `npm` environment secret `NPM_TOKEN`, drops `id-token: write`, and omits
+  `--provenance` (unsupported off GitHub-hosted). Publish is limited to
+  `sdk-v*` tag pushes whose commit is an ancestor of main; manual dispatch is
+  disabled. PR dry-run is tokenless. Contract:
+  `dev-tools/publish-sdks-npm-token.test.py`.
 - **Dependencies batch replacing open PRs #301–#309.** Root: uuid ^14.0.3, @aws-sdk S3 clients ^3.1164.0, prisma stack ^7.10.1 (+ pg/@types/pg ^8.23.1), runtime misc (zod ^4.6.7, pino ^10.4.0, fastify ^5.12.8, ajv ^8.20.0, sharp ^0.35.5, @arcanada/output-guard ^0.1.5), eslint/devtools (^10.14.0 / typescript-eslint ^8.72.1, swc, prettier, vitest ^4.1.11). Watcher: pino ^10.4.0, yaml 2.9.1, zod ^4.6.7, eslint ^10.14.0 (+ typescript-eslint ^8.72.1). Watcher vitest kept at main ^4.1.11 (not the stale ^4.1.4 from #306–#309). Regenerated lockfiles. Does not close #301–#309 — Root closes after this merges.
   Also raises pnpm override `uuid` floor to `>=14.0.3` so the lockfile resolves 14.0.3, and drops two unused watcher test symbols that eslint ^10.14.0 flags.
 
