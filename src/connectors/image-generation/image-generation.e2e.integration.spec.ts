@@ -5,7 +5,8 @@
  * Requires:
  *   - Local Postgres on localhost:5434 (mc-dev-postgres container)
  *   - Local Redis on localhost:26379 (aether-redis container)
- *   - Integration API key seeded in DB (INTEGRATION_API_KEY env)
+ *   - Optional INTEGRATION_API_KEY seeded in DB; otherwise a temporary fixture
+ *     key is created in disposable Postgres and removed after the test.
  *
  * Note on Vertex billing (GD-2):
  *   Real Imagen 4 calls are skipped unless VERTEX_BILLING_ENABLED=1.
@@ -17,6 +18,8 @@
  *   In test env, we provide a mock via overrideProvider to satisfy DI.
  */
 import 'reflect-metadata';
+import { randomUUID } from 'node:crypto';
+import { hash } from 'bcryptjs';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
@@ -29,8 +32,8 @@ const shouldRun = process.env.RUN_INTEGRATION === '1';
 describe.skipIf(!shouldRun)('POST /images/generate [E2E INTEGRATION]', () => {
   let app: NestFastifyApplication;
   let prisma: PrismaService;
-
-  const apiKey = process.env.INTEGRATION_API_KEY ?? '<MODEL_CONNECTOR_API_KEY>';
+  let apiKey = process.env.INTEGRATION_API_KEY;
+  const generatedRequestIds: string[] = [];
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -50,9 +53,31 @@ describe.skipIf(!shouldRun)('POST /images/generate [E2E INTEGRATION]', () => {
     await app.getHttpAdapter().getInstance().ready();
 
     prisma = app.get(PrismaService);
+
+    // When no pre-seeded key is supplied, use a real, short-lived row in the
+    // explicitly owned disposable Postgres fixture. Persistent local databases
+    // must supply their own seeded test key instead.
+    if (!apiKey) {
+      if (process.env.MC_FULL_SUITE_APP_E2E !== '1') {
+        throw new Error('INTEGRATION_API_KEY must be seeded outside the owned disposable fixture');
+      }
+      apiKey = `mc-image-e2e-${randomUUID()}`;
+      await prisma.apiKey.create({
+        data: {
+          name: `mc-image-e2e-${randomUUID()}`,
+          keyHash: await hash(apiKey, 4),
+        },
+      });
+    }
   }, 30_000);
 
   afterAll(async () => {
+    if (prisma && generatedRequestIds.length) {
+      await prisma.imageJob.deleteMany({
+        where: { imageGenerationId: { in: generatedRequestIds } },
+      });
+      await prisma.imageGeneration.deleteMany({ where: { id: { in: generatedRequestIds } } });
+    }
     await app?.close();
   });
 
@@ -98,7 +123,7 @@ describe.skipIf(!shouldRun)('POST /images/generate [E2E INTEGRATION]', () => {
     console.log('[INT] Validation error on missing prompt:', response.statusCode, 'OK');
   });
 
-  it('accepts valid request with real API key and returns structured response', async () => {
+  it('accepts a valid API key and returns a structured provider result or refusal', async () => {
     // With billing not enabled: Vertex call fails with HTTP 403 → ProviderNotProvisionedError
     // OR: all providers unprovisioned → service throws aggregate error
     // Either way, we verify: auth passes, request parsed, error is not 401/403.
@@ -137,6 +162,7 @@ describe.skipIf(!shouldRun)('POST /images/generate [E2E INTEGRATION]', () => {
       // Verify ImageGeneration row was inserted
       // (cold INSERT smoke per memory feedback_orm_path_still_needs_smoke)
       const requestId = body.requestId as string;
+      generatedRequestIds.push(requestId);
       const record = await prisma.imageGeneration.findFirst({
         where: { id: requestId },
       });

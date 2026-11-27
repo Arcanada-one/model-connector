@@ -47,15 +47,20 @@ execution evidence refuse success. Other template paths retain their obligations
 there is no template-prefix exclusion. A passing rendered scaffold is source
 verification, not provider-adoption or runtime authority.
 
-The seven real external provider/auth/storage/image arms, eight disposable
-PostgreSQL/Redis integration members and unconditional app E2E skip stay held as
-`not_measured` before child spawn. New integration members are held by default.
-No environment opt-in, inherited service URL or caller flag grants access. Children
-receive the existing clean private environment, and local tool checks are read-only.
-The existing Compose regression renders disposable configuration only; it does not
-start or stop containers. Ordinary group success never implies complete root FULL.
-SAME Program executes the changed-source root only after exact source review and
-trusted adoption; focused dispatcher fixtures are not a root product-suite result.
+Live-credential image-generation integration members stay held as
+`held_live_opt_in` before child spawn (visible in the execution document). They are
+never silently dropped from membership. An owned `FullSuiteDisposableGrant/v1`
+file (mode 0600 under `RUNNER_TEMP` / `XDG_RUNTIME_DIR`, path in
+`MC_FULL_SUITE_GRANT`) may authorize TCP Postgres/Redis disposable-store members
+and Nest `app-e2e` only; ambient environment flags and inherited service URLs never
+grant access. The owned bench unix-socket fixture stays
+`held_owned_bench_fixture` until the grant also supplies that socket and the native
+UNIT TEST binary. Children still receive a clean private environment plus only
+allowlisted grant keys. The existing Compose regression renders disposable
+configuration only; it does not start or stop containers. Ordinary group success
+never implies complete root FULL. SAME Program executes the changed-source root
+only after exact source review and trusted adoption; focused dispatcher fixtures
+are not a root product-suite result.
 
 Python SDK executes complete maintained pytest collection and then its actual
 tests, matching file membership and each JUnit testcase identity. TypeScript SDK
