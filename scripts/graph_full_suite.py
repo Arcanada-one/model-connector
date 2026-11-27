@@ -1,8 +1,9 @@
 """Maintain complete source membership and honest per-suite results, without grants.
 
-Root's real external arms, disposable-store authority and skipped app E2E remain
-unmeasured. No environment flag changes that disposition. The other declarations
-exercise their complete existing offline/owned-loopback contracts, not production.
+Root's real external arms and disposable-store authority remain unmeasured. AppE2E
+runs only with explicit disposable service endpoints; the existing unauthenticated
+denial assertion is retained as its real_disposable PASS_RED control. The other
+declarations exercise their complete existing offline/owned-loopback contracts.
 """
 from pathlib import Path
 import hashlib
@@ -29,6 +30,7 @@ OFFLINE_INTEGRATION = frozenset({
     'src/openai-compat/openai-compat.failover.integration.spec.ts',
     'src/speech/stt/stt-pilot.integration.spec.ts',
 })
+APP_E2E_ENV = ('DATABASE_URL', 'REDIS_HOST', 'REDIS_PORT')
 
 
 class Refusal(Exception):
@@ -165,6 +167,17 @@ def clean_environment(scratch, unit_root):
     return env
 
 
+def app_e2e_environment(base, source=None):
+    """Add only disposable service endpoints to the AppE2E child environment."""
+    source = os.environ if source is None else source
+    missing = [name for name in APP_E2E_ENV if not source.get(name)]
+    if missing:
+        return None, 'missing AppE2E service endpoint names: ' + ', '.join(missing)
+    return ({**base, **{name: source[name] for name in APP_E2E_ENV},
+             'NODE_ENV': 'test', 'PROVIDER_ACCESS': 'deepseek:none',
+             'STT_PROVIDER_GROQ_ENABLED': 'false'}, None)
+
+
 def execute(argv, cwd, env, deadline, scratch, name):
     """Bound only owned child process groups; retain raw exit124 and private logs."""
     remaining = deadline - time.monotonic()
@@ -219,6 +232,66 @@ def vitest_counts(document, expected, root):
             or document.get('numFailedTests') != counts['failed']):
         raise Refusal('inconsistent or empty assertion counts')
     return counts
+
+
+def app_e2e_counts(document, expected, root):
+    counts = vitest_counts(document, expected, root)
+    if counts['skipped']:
+        raise Refusal('AppE2E contained skipped assertions')
+    return counts
+
+
+def app_e2e_control(document):
+    """Retain the existing unauthenticated /execute denial as AppE2E's PASS_RED control."""
+    tests = [case for result in document.get('testResults', [])
+             for case in result.get('assertionResults', [])]
+    expected = 'POST /execute without auth should return 401'
+    if not any(case.get('title') == expected and case.get('status') == 'passed' for case in tests):
+        raise Refusal('AppE2E PASS_RED unauthenticated /execute control missing or not passed')
+    return {'result': 'PASS_RED', 'test': expected, 'expected_status': 401}
+
+
+def app_e2e_failure_details(document):
+    """Return bounded test names and error messages without exposing environment values."""
+    details = []
+    seen = set()
+
+    def safe_message(value):
+        message = str(value or '').strip()
+        # Keep the assertion/bootstrap error, not the stack's source excerpts or local paths.
+        message = re.split(r'\n\s*(?:❯|at )', message, maxsplit=1)[0].strip()
+        message = re.sub(r'(://[^/\s:@]+):[^@\s/]+@', r'\1:[REDACTED]@', message)
+        message = re.sub(r'(?i)\b(bearer|basic|token)(\s+)[A-Za-z0-9._~+/=-]{8,}',
+                         r'\1\2[REDACTED]', message)
+        message = re.sub(r'(?i)\b((?:[a-z0-9_]*_)?(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|'
+                         r'authorization|credentials?|cookie|session|key)["\']?\s*[:=]\s*)(["\']?)[^\s"\',;}]+',
+                         r'\1\2[REDACTED]', message)
+        message = re.sub(r'\b(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{16,}|'
+                         r'glpat-[A-Za-z0-9_-]{16,}|sk-[A-Za-z0-9_-]{16,}|AKIA[0-9A-Z]{16})\b',
+                         '[REDACTED]', message)
+        return message[:1200] or 'Vitest reported a failure without an error message'
+
+    for result in document.get('testResults', []):
+        if not isinstance(result, dict):
+            continue
+        file_name = Path(str(result.get('name') or 'AppE2E suite')).name
+        failures = [case for case in result.get('assertionResults', [])
+                    if isinstance(case, dict) and case.get('status') in ('failed', 'error')]
+        for case in failures:
+            name = case.get('fullName') or case.get('title') or file_name
+            messages = case.get('failureMessages') or [case.get('message') or result.get('message')]
+            message = safe_message(next((m for m in messages if m), ''))
+            key = (str(name), message)
+            if key not in seen:
+                details.append({'test': str(name)[:300], 'message': message})
+                seen.add(key)
+        if not failures and result.get('status') in ('failed', 'error'):
+            message = safe_message(result.get('failureMessage') or result.get('message'))
+            key = (file_name, message)
+            if key not in seen:
+                details.append({'test': file_name, 'message': message})
+                seen.add(key)
+    return details[:20]
 
 
 def pytest_counts(collection, xml, expected, unit):
@@ -434,7 +507,7 @@ def run_root_suites(root, suites, scratch, executor=execute):
     env = clean_environment(scratch, root)
     deadline = time.monotonic() + 900
     results = []
-    def run(argv, members, name, parser):
+    def run(argv, members, name, parser, child_env=env, parse_failed=False):
         required = [argv[0]]
         if members == ['deploy/compose-network.test.sh']:
             required.append('docker')  # Compose config only, never start or stop.
@@ -444,27 +517,75 @@ def run_root_suites(root, suites, scratch, executor=execute):
         if missing:
             return {'argv': argv, 'members': members, 'verdict': 'not_measured',
                     'exit_code': 127, 'reason': 'missing local runner: ' + ', '.join(missing)}
-        result = executor(argv, root, env, deadline, scratch, name)
+        result = executor(argv, root, child_env, deadline, scratch, name)
         raw = result.pop('output')
         code = result['exit_code']
         result.update(members=members, raw_log=str(scratch / (name + '.log')),
                       verdict='not_measured' if code in (124, 127) else 'failed' if code else 'verified')
-        if not code:
+        if not code or parse_failed:
             try:
                 counts = parser(raw)
-            except (Refusal, ValueError, KeyError, OSError):
-                result.update(verdict='not_measured', reason='missing or invalid exact execution evidence')
+            except Refusal as error:
+                if not code:
+                    result.update(verdict='not_measured', reason=str(error))
+            except (ValueError, KeyError, OSError):
+                if not code:
+                    result.update(verdict='not_measured', reason='missing or invalid exact execution evidence')
             else:
                 result['counts'] = counts
-                if counts and (counts['failed'] or counts['skipped'] or not counts['passed']):
-                    result['verdict'] = 'failed' if counts['failed'] else 'not_measured'
+                if code or (counts and (counts['failed'] or counts['skipped'] or not counts['passed'])):
+                    result['verdict'] = 'failed' if code or counts['failed'] else 'not_measured'
         return result
     for index, suite in enumerate(suites):
         name, members = suite['suite'], suite['members']
         row = {'suite': name, 'members': members, 'executions': []}
         if name == 'maintained-app-e2e':
-            row.update(verdict='not_measured', reason='unconditional AppE2E skip; no execution grant',
-                       held_members=members)
+            app_env, reason = app_e2e_environment(env)
+            if reason:
+                row.update(verdict='not_measured', reason=reason, held_members=members)
+            else:
+                report = scratch / 'app-e2e.json'
+                selected = members
+                argv = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.e2e.config.ts',
+                        '--reporter=json', '--outputFile=' + str(report), *selected]
+                result = run(argv, selected, 'root-' + str(index),
+                    lambda raw: app_e2e_counts(json.loads(report.read_text()), selected, root),
+                    child_env=app_env, parse_failed=True)
+                if result['verdict'] in ('verified', 'failed'):
+                    try:
+                        document = json.loads(report.read_text())
+                    except (ValueError, OSError):
+                        document = None
+                    if document is None:
+                        if result['verdict'] == 'failed':
+                            result['control'] = {'result': 'FAIL_RED',
+                                                 'test': 'POST /execute without auth should return 401',
+                                                 'expected_status': 401}
+                            result['control_reason'] = 'Vitest JSON report missing or invalid'
+                        else:
+                            result.update(verdict='not_measured',
+                                          reason='missing or invalid exact execution evidence')
+                    else:
+                        try:
+                            result['control'] = app_e2e_control(document)
+                        except (Refusal, ValueError, KeyError, OSError) as error:
+                            if result['verdict'] == 'failed':
+                                result['control'] = {'result': 'FAIL_RED',
+                                                     'test': 'POST /execute without auth should return 401',
+                                                     'expected_status': 401}
+                                result['control_reason'] = str(error)
+                            else:
+                                result.update(verdict='not_measured', reason=str(error))
+                        if result['verdict'] == 'failed':
+                            details = app_e2e_failure_details(document)
+                            result['failure_details'] = details
+                            if details:
+                                for detail in details:
+                                    print(f"AppE2E test failed: {detail['test']}: {detail['message']}", flush=True)
+                            else:
+                                print('AppE2E failed; Vitest JSON has no test-level failure details.', flush=True)
+                row['executions'].append(result)
+                row['verdict'] = result['verdict']
         elif name == 'maintained-authored-template':
             rendered = render_authored_template(root, scratch, members, env)
             target, config = rendered.pop('target'), rendered.pop('config')
@@ -523,8 +644,8 @@ def run_root_suites(root, suites, scratch, executor=execute):
 # KCP-0027 arm evidence (FullSuiteArmEvidence/v1). The arm set and each slot are declared in
 # .arcana/verify.json deployables["."].full_test_arms; the gate recomputes the verdict from the BASE
 # definition, so nothing here is a verdict. Only arms that actually executed carry counts. Held arms
-# (real disposable stores, real providers, the unconditional AppE2E skip) are listed in `not_run`
-# and keep the whole root suite not_measured. No environment flag changes that disposition.
+# (real disposable stores and real providers) are listed in `not_run` and keep the whole
+# root suite not_measured. AppE2E is measured only when its explicit service endpoints are present.
 ARMS_SCHEMA = 'FullSuiteArmEvidence/v1'
 ARM_DEFINITION_PATH = '.arcana/verify.json'
 HELD_STORE_PREFIXES = ('src/auth/', 'src/bench-reservation/', 'src/billing/')
@@ -566,7 +687,18 @@ def build_arms(root, results, head):
         name = row['suite']
         executions = row.get('executions', [])
         if name == 'maintained-app-e2e':
-            not_run.add('app-e2e')
+            if not executions or any(e.get('verdict') not in ('verified', 'failed') for e in executions):
+                not_run.add('app-e2e')
+                continue
+            counts = sum_counts(executions)
+            if counts is None:
+                not_run.add('app-e2e')
+                continue
+            arms.append({'name': 'app-e2e', 'backend': 'real_disposable', 'counts': counts,
+                         'head': head, 'control': executions[0].get('control', {'result': 'FAIL_RED'}),
+                         'verdict': 'failed' if counts['failed'] or any(
+                             e.get('verdict') == 'failed' for e in executions) else 'passed'})
+            ran.add('app-e2e')
             continue
         if name == 'maintained-integration':
             arm_name = 'integration-offline-contracts'

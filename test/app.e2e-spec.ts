@@ -3,9 +3,9 @@ import { Test } from '@nestjs/testing';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from '../src/app.module';
 
-// E2E tests require Redis + PostgreSQL — skip in CI without infra
+// E2E tests require Redis + PostgreSQL — the AppE2E CI job provides disposable services
 // Run locally with: DATABASE_URL=... REDIS_HOST=... pnpm test:e2e
-describe.skip('App E2E (requires infra)', () => {
+describe('App E2E (requires infra)', () => {
   let app: NestFastifyApplication;
 
   beforeAll(async () => {

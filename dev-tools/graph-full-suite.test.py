@@ -475,6 +475,86 @@ class Controls(unittest.TestCase):
         self.assertEqual(report['exit_code'], 127)
         self.assertEqual(len(list(temp.glob('mc-full-*/*.log'))), 1)
 
+    def test_app_e2e_environment_is_allowlisted_and_requires_all_service_endpoints(self):
+        base = {'HOME': '/private/home', 'TMPDIR': '/private/tmp', 'CI': '1'}
+        source = {'DATABASE_URL': 'postgresql://test:test@127.0.0.1:55432/db',
+                  'REDIS_HOST': '127.0.0.1', 'REDIS_PORT': '56379',
+                  'PROVIDER_API_KEY': 'must-not-pass', 'NODE_OPTIONS': 'must-not-pass',
+                  'PROVIDER_ACCESS': 'deepseek:use',
+                  'STT_PROVIDER_GROQ_ENABLED': 'true'}
+        child_env, reason = subject.app_e2e_environment(base, source)
+        self.assertIsNone(reason)
+        self.assertEqual(child_env['DATABASE_URL'], source['DATABASE_URL'])
+        self.assertEqual(child_env['REDIS_HOST'], '127.0.0.1')
+        self.assertEqual(child_env['REDIS_PORT'], '56379')
+        self.assertEqual(child_env['NODE_ENV'], 'test')
+        self.assertEqual(child_env['PROVIDER_ACCESS'], 'deepseek:none')
+        self.assertEqual(child_env['STT_PROVIDER_GROQ_ENABLED'], 'false')
+        self.assertNotIn('PROVIDER_API_KEY', child_env)
+        self.assertNotIn('NODE_OPTIONS', child_env)
+        self.assertNotIn('STT_PROVIDER_GROQ_ENABLED', base)
+        missing_env, missing_reason = subject.app_e2e_environment(base, {'DATABASE_URL': 'hidden'})
+        self.assertIsNone(missing_env)
+        self.assertEqual(missing_reason, 'missing AppE2E service endpoint names: REDIS_HOST, REDIS_PORT')
+        self.assertNotIn('hidden', missing_reason)
+
+    def test_app_e2e_rejects_skipped_assertions(self):
+        doc = {'numTotalTests': 3, 'numPassedTests': 2, 'numFailedTests': 0,
+               'testResults': [{'name': str(self.root / 'test/app.e2e-spec.ts'),
+                                'assertionResults': [{'status': 'passed'}, {'status': 'pending'},
+                                                     {'status': 'passed'}]}]}
+        with self.assertRaisesRegex(subject.Refusal, 'AppE2E contained skipped assertions'):
+            subject.app_e2e_counts(doc, ['test/app.e2e-spec.ts'], self.root)
+
+    def test_app_e2e_negative_auth_control_is_retained_and_required(self):
+        expected = 'POST /execute without auth should return 401'
+        document = {'testResults': [{'assertionResults': [
+            {'title': expected, 'status': 'passed'},
+            {'title': 'GET /health should be public and return ok', 'status': 'passed'}]}]}
+        self.assertEqual(subject.app_e2e_control(document), {
+            'result': 'PASS_RED', 'test': expected, 'expected_status': 401})
+        document['testResults'][0]['assertionResults'][0]['status'] = 'pending'
+        with self.assertRaisesRegex(subject.Refusal, 'PASS_RED unauthenticated /execute control'):
+            subject.app_e2e_control(document)
+
+    def test_app_e2e_failure_details_name_failed_tests_and_redact_values(self):
+        document = {'testResults': [
+            {'name': str(self.root / 'test/app.e2e-spec.ts'), 'assertionResults': [
+                {'title': 'GET /health should be public and return ok', 'status': 'failed',
+                 'failureMessages': ['Error: connect failed for postgresql://test:fixture-pass@127.0.0.1/db\n'
+                                     '    ❯ test/app.e2e-spec.ts:20:11']},
+                {'title': 'GET /health/ready should be public', 'status': 'passed'}]},
+            {'name': str(self.root / 'test/app.e2e-spec.ts'), 'status': 'failed',
+             'message': 'Error: invalid API_KEY=fixture-secret\n    at bootstrap'}]}
+        details = subject.app_e2e_failure_details(document)
+        self.assertEqual([row['test'] for row in details], [
+            'GET /health should be public and return ok', 'app.e2e-spec.ts'])
+        joined = '\n'.join(row['message'] for row in details)
+        self.assertIn('connect failed', joined)
+        self.assertIn('[REDACTED]', joined)
+        self.assertNotIn('fixture-pass', joined)
+        self.assertNotIn('fixture-secret', joined)
+        self.assertNotIn('at bootstrap', joined)
+
+    def test_app_e2e_ci_uploads_json_report_for_three_days(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text()
+        job = workflow.split('  app-e2e-full-suite:', 1)[1].split('\n  # ARC-CI digest-promotion', 1)[0]
+        self.assertIn('name: Upload AppE2E JSON report', job)
+        self.assertIn('if: always()', job)
+        self.assertIn('actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02', job)
+        self.assertIn('retention-days: 3', job)
+        self.assertIn('if-no-files-found: error', job)
+        self.assertIn('model-connector-app-e2e-${{ github.run_id }}-${{ github.run_attempt }}.json', job)
+
+    def test_app_e2e_postgres_healthcheck_uses_configured_user_and_database(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text()
+        job = workflow.split('  app-e2e-full-suite:', 1)[1].split('\n  # ARC-CI digest-promotion', 1)[0]
+        postgres = job.split('      postgres:', 1)[1].split('      redis:', 1)[0]
+        self.assertIn('POSTGRES_USER: test', postgres)
+        self.assertIn('POSTGRES_DB: connector_test', postgres)
+        self.assertIn('--health-cmd "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"', postgres)
+        self.assertNotIn('--health-cmd pg_isready\n', postgres)
+
     def root_dispatch_fixture(self, members):
         for member in members:
             p = self.root / member
@@ -489,41 +569,67 @@ class Controls(unittest.TestCase):
         def child(argv, cwd, env, deadline, scratch, name):
             calls.append(argv)
             self.assertNotIn('PROVIDER_API_KEY', env)
-            self.assertNotIn('DATABASE_URL', env)
             self.assertNotIn('NODE_OPTIONS', env)
+            if 'test/app.e2e-spec.ts' in argv:
+                self.assertEqual(env['DATABASE_URL'], 'postgresql://test:test@127.0.0.1:55432/db')
+                self.assertEqual(env['REDIS_HOST'], '127.0.0.1')
+                self.assertEqual(env['REDIS_PORT'], '56379')
+                self.assertEqual(env['NODE_ENV'], 'test')
+                self.assertEqual(env['STT_PROVIDER_GROQ_ENABLED'], 'false')
+            else:
+                self.assertNotIn('DATABASE_URL', env)
+                self.assertNotIn('REDIS_HOST', env)
+                self.assertNotIn('REDIS_PORT', env)
+                self.assertNotIn('STT_PROVIDER_GROQ_ENABLED', env)
             if argv[0] == 'pnpm':
                 output = next(a.split('=', 1)[1] for a in argv if a.startswith('--outputFile='))
                 members = [a for a in argv[argv.index('--outputFile=' + output) + 1:]
                            if not a.startswith('-')]
-                document = {'numTotalTests': len(members),
-                            'numPassedTests': len(members) if status == 'passed' else 0,
+                total = 3 if 'test/app.e2e-spec.ts' in members else len(members)
+                document = {'numTotalTests': total,
+                            'numPassedTests': total if status == 'passed' else 0,
                             'numFailedTests': 0,
-                            'testResults': [{'name': str(self.root / m),
-                                             'assertionResults': [{'status': status}]} for m in members]}
+                            'testResults': [
+                                {'name': str(self.root / m),
+                                 'assertionResults': (
+                                     [{'title': 'GET /health should be public and return ok', 'status': status},
+                                      {'title': 'GET /health/ready should be public', 'status': status},
+                                      {'title': 'POST /execute without auth should return 401', 'status': status}]
+                                     if m == 'test/app.e2e-spec.ts' else [{'status': status}])}
+                                for m in members]}
                 if missing:
                     document['testResults'] = []
                 Path(output).write_text(json.dumps(document))
             return {'argv': argv, 'exit_code': 0, 'output': '', 'duration_s': 0}
         return child
 
-    def test_root_dispatches_exact_local_members_and_retains_live_and_app(self):
+    def test_root_dispatches_app_e2e_with_scoped_service_env_and_retains_live_members(self):
         offline = sorted(subject.OFFLINE_INTEGRATION)[0]
         members = ['src/a.spec.ts', offline, 'src/auth/live.integration.spec.ts',
+                   'src/connectors/image-generation/provider.integration.spec.ts',
                    'test/app.e2e-spec.ts', 'scripts/control.test.sh']
         suites = self.root_dispatch_fixture(members)
         calls = []
         with patch.object(subject.shutil, 'which', return_value='/fixture/runner'), patch.dict(os.environ, {
-                'PROVIDER_API_KEY': 'sentinel-secret', 'DATABASE_URL': 'sentinel-secret',
+                'PROVIDER_API_KEY': 'sentinel-secret',
+                'DATABASE_URL': 'postgresql://test:test@127.0.0.1:55432/db',
+                'REDIS_HOST': '127.0.0.1', 'REDIS_PORT': '56379',
                 'MC_ALLOW_LIVE': '1', 'NODE_OPTIONS': 'sentinel-secret'}):
             result = subject.run_root_suites(self.root, suites, self.root, self.root_child(calls))
-        self.assertEqual(len(calls), 3)
+        self.assertEqual(len(calls), 4)
         full_vitest_calls = [args for args in calls if args[0] == 'pnpm' and '--maxWorkers=4' in args]
         self.assertEqual(len(full_vitest_calls), 1)
+        app_calls = [args for args in calls if 'test/app.e2e-spec.ts' in args]
+        self.assertEqual(len(app_calls), 1)
+        self.assertIn('--config', app_calls[0])
+        self.assertEqual(app_calls[0][app_calls[0].index('--config') + 1], 'vitest.e2e.config.ts')
         self.assertEqual(sorted(n for r in result for n in r['members']), sorted(members))
         held = [n for r in result for n in r.get('held_members', [])]
-        self.assertEqual(set(held), {'src/auth/live.integration.spec.ts', 'test/app.e2e-spec.ts'})
-        self.assertFalse(any('live.integration.spec.ts' in a or 'app.e2e-spec.ts' in a for args in calls for a in args))
-        self.assertEqual([r['verdict'] for r in result], ['not_measured', 'not_measured', 'verified', 'verified'])
+        self.assertEqual(set(held), {'src/auth/live.integration.spec.ts',
+                                     'src/connectors/image-generation/provider.integration.spec.ts'})
+        self.assertFalse(any('live.integration.spec.ts' in a or 'provider.integration.spec.ts' in a
+                             for args in calls for a in args))
+        self.assertEqual([r['verdict'] for r in result], ['verified', 'not_measured', 'verified', 'verified'])
         self.assertEqual(subject.execution_code(result), 127)
 
     def test_root_missing_runner_refuses_before_spawn(self):
@@ -661,6 +767,32 @@ class ArmEvidence(unittest.TestCase):
         for arm in arms['arms']:
             self.assertEqual((arm['backend'], arm['head']), ('stub', head))
         self.assertEqual(len(arms['definition']['sha256']), 64)
+
+    def test_executed_app_e2e_is_a_real_disposable_arm_and_skips_remain_not_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, head = self.repo(tmp)
+            results = self.results()
+            results[0] = {'suite': 'maintained-app-e2e', 'members': ['test/app.e2e-spec.ts'],
+                          'executions': [{'verdict': 'verified',
+                                          'counts': {'passed': 3, 'failed': 0, 'skipped': 0},
+                                          'control': {'result': 'PASS_RED'}}]}
+            arms = subject.build_arms(root, results, head)
+        self.assertNotIn('app-e2e', arms['not_run'])
+        self.assertEqual(arms['not_run'], ['integration-disposable-store', 'integration-external-provider'])
+        app = next(row for row in arms['arms'] if row['name'] == 'app-e2e')
+        self.assertEqual(app, {'name': 'app-e2e', 'backend': 'real_disposable',
+                               'counts': {'total': 3, 'passed': 3, 'failed': 0, 'skipped': 0},
+                               'head': head, 'control': {'result': 'PASS_RED'},
+                               'verdict': 'passed'})
+        with tempfile.TemporaryDirectory() as tmp:
+            root, head = self.repo(tmp)
+            results = self.results()
+            results[0] = {'suite': 'maintained-app-e2e', 'members': ['test/app.e2e-spec.ts'],
+                          'executions': [{'verdict': 'not_measured', 'exit_code': 0,
+                                          'reason': 'AppE2E contained skipped assertions'}]}
+            arms = subject.build_arms(root, results, head)
+        self.assertIn('app-e2e', arms['not_run'])
+        self.assertNotIn('app-e2e', {row['name'] for row in arms['arms']})
 
     def test_unexecuted_or_skipped_or_unclassified_never_becomes_an_executed_arm(self):
         with tempfile.TemporaryDirectory() as tmp:
