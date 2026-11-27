@@ -16,9 +16,24 @@ import subprocess
 import sys
 import tempfile
 import time
+from urllib.parse import urlsplit
 import xml.etree.ElementTree as ET
 
 AUTHORED_TEMPLATE = 'templates/api-connector-scaffold/{{name}}.connector.spec.ts'
+BILLING3A_OPT_IN = 'src/bench-reservation/journal-bridge.billing3a.integration.spec.ts'
+DISPOSABLE_STORE_PROFILE = 'model-connector-disposable-store-v1'
+DISPOSABLE_STORE_INTEGRATION = frozenset({
+    'src/auth/rate-limit.integration.spec.ts',
+    'src/bench-reservation/postgres.integration.spec.ts',
+    'src/billing/billing.integration.spec.ts',
+    'src/billing/cache-invoice.integration.spec.ts',
+    'src/billing/gift.integration.spec.ts',
+    'src/billing/hold.integration.spec.ts',
+    'src/billing/idempotency.integration.spec.ts',
+    'src/billing/metering.integration.spec.ts',
+    'src/billing/payment.integration.spec.ts',
+    'src/billing/reconciler.integration.spec.ts',
+})
 
 UNITS = ('.', 'packages/sdk-python', 'packages/sdk-ts', 'watcher')
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +41,7 @@ ENV_FILES = ('.env', '.env.local', '.env.integration', '.env.test')
 # Reviewed existing fake-connector/MSW contracts, never a provider/storage grant.
 OFFLINE_INTEGRATION = frozenset({
     'src/connectors/cascade/cascade-router.fallback.integration.spec.ts',
+    'src/connectors/image-generation/image-router.fallback.integration.spec.ts',
     'src/openai-compat/openai-compat.failover.integration.spec.ts',
     'src/speech/stt/stt-pilot.integration.spec.ts',
 })
@@ -64,6 +80,10 @@ def check_context(root, unit, cwd):
 
 def test_member(name):
     if name.startswith(('receipts/', 'node_modules/', '.arcana/')):
+        return False
+    # This cross-repository source-snapshot check is intentionally invoked only
+    # by test:billing3a-journal; it is not a root full-suite member.
+    if name == BILLING3A_OPT_IN:
         return False
     return (bool(re.search(r'\.(?:spec|test)\.(?:ts|mjs|sh|bats|py)$', name))
             or name.endswith('.e2e-spec.ts') or name.endswith('.bats')
@@ -153,7 +173,51 @@ def plan(unit, members):
     return suites
 
 
-def clean_environment(scratch, unit_root):
+def disposable_store_environment(scratch):
+    """Accept only the fixed Program candidate profile and its loopback test services."""
+    profile = os.environ.get('GRAPH_DISPOSABLE_STORE_PROFILE')
+    if not profile:
+        return None
+    if profile != DISPOSABLE_STORE_PROFILE or os.environ.get('GITHUB_REPOSITORY') != 'Arcanada-one/model-connector':
+        raise Refusal('disposable-store profile is not bound to Model Connector')
+    job_identity = [os.environ.get(key, '') for key in
+                    ('GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GRAPH_CHECK_RUN_ID')]
+    if any(not re.fullmatch(r'[0-9]+', value) for value in job_identity):
+        raise Refusal('disposable-store job identity is invalid')
+    job = '-'.join(job_identity)
+    url = os.environ.get('DATABASE_URL', '')
+    postgres = re.fullmatch(r'postgresql://test:test@127\.0\.0\.1:([0-9]{1,5})/connector_test', url)
+    if not postgres or not 1 <= int(postgres[1]) <= 65535:
+        raise Refusal('disposable PostgreSQL URL is outside the fixed loopback profile')
+    redis_host = os.environ.get('REDIS_HOST')
+    redis_port = os.environ.get('REDIS_PORT', '')
+    prefix = os.environ.get('REDIS_PREFIX', '')
+    if redis_host != '127.0.0.1' or not re.fullmatch(r'[0-9]{1,5}', redis_port) or not 1 <= int(redis_port) <= 65535:
+        raise Refusal('disposable Redis endpoint is outside the fixed loopback profile')
+    if prefix != f'mc-ga-{job}:':
+        raise Refusal('disposable Redis prefix is not job-bound')
+    runner_temp = os.environ.get('RUNNER_TEMP', '')
+    socket = os.environ.get('BENCH_OWNED_TEST_PG_SOCKET', '')
+    if not runner_temp.startswith('/') or socket != f'{runner_temp}/mc-owned-postgres-{job}/socket':
+        raise Refusal('owned PostgreSQL socket path differs from the fixed profile')
+    try:
+        direct = os.path.realpath(socket, strict=True) == socket and Path(socket).is_dir()
+    except OSError as exc:
+        raise Refusal('owned PostgreSQL socket path is absent or indirect') from exc
+    if not direct:
+        raise Refusal('owned PostgreSQL socket path is absent or indirect')
+    return {
+        'GRAPH_DISPOSABLE_STORE_PROFILE': DISPOSABLE_STORE_PROFILE,
+        'DATABASE_URL': url,
+        'REDIS_HOST': redis_host,
+        'REDIS_PORT': redis_port,
+        'REDIS_PREFIX': prefix,
+        'BENCH_OWNED_TEST_PG_SOCKET': socket,
+        'RUN_INTEGRATION': '1',
+    }
+
+
+def clean_environment(scratch, unit_root, disposable_store=None):
     # No inherited tokens, flags, URLs, NODE_OPTIONS, PYTHONPATH or agent hooks.
     env = {'PATH': os.environ.get('PATH', os.defpath), 'HOME': str(scratch / 'home'),
            'TMPDIR': str(scratch), 'CI': '1', 'NO_COLOR': '1', 'FORCE_COLOR': '0',
@@ -161,6 +225,8 @@ def clean_environment(scratch, unit_root):
            'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1'}
     if any(not Path(part).is_absolute() for part in env['PATH'].split(os.pathsep)):
         raise Refusal('relative PATH entry')
+    if disposable_store:
+        env.update(disposable_store)
     (scratch / 'home').mkdir(mode=0o700)
     return env
 
@@ -418,6 +484,27 @@ def render_authored_template(root, scratch, members, env=None):
             'target': target, 'config': config}
 
 
+def self_test_control(root, scratch, executor, deadline, members, env, name, service):
+    report = scratch / (name + '.json')
+    argv = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.integration.config.ts',
+            '--reporter=json', '--outputFile=' + str(report), *members]
+    result = executor(argv, root, env, deadline, scratch, name)
+    code = result['exit_code']
+    counts = None
+    if report.is_file():
+        try:
+            document = json.loads(report.read_text())
+            # Failed Vitest runs set success=false. The negative control expects that,
+            # while retaining the exact assertion identities and the failed count.
+            document['success'] = True
+            counts = vitest_counts(document, members, root)
+        except (Refusal, ValueError, KeyError, OSError):
+            counts = None
+    red = code != 0 and counts is not None and counts['failed'] > 0 and counts['skipped'] == 0
+    return {'service': service, 'result': 'PASS_RED' if red else 'NOT_RED',
+            'exit_code': code, 'counts': counts}
+
+
 def run_root_suites(root, suites, scratch, executor=execute):
     """Dispatch ordinary local groups; preserve every held member without spawning it."""
     members = [n for suite in suites for n in suite['members']]
@@ -431,7 +518,12 @@ def run_root_suites(root, suites, scratch, executor=execute):
             checked_file(root, member)
             if suite['suite'] == 'maintained-regression':
                 root_regression_command(root, member)
-    env = clean_environment(scratch, root)
+    store_env = disposable_store_environment(scratch)
+    if store_env:
+        missing = sorted(DISPOSABLE_STORE_INTEGRATION - set(members))
+        if missing:
+            raise Refusal('disposable-store profile is missing fixed integration members')
+    env = clean_environment(scratch, root, store_env)
     deadline = time.monotonic() + 900
     results = []
     def run(argv, members, name, parser):
@@ -484,7 +576,8 @@ def run_root_suites(root, suites, scratch, executor=execute):
             row['verdict'] = result['verdict']
         elif name in ('maintained-vitest', 'maintained-integration'):
             selected = members if name == 'maintained-vitest' else [n for n in members if n in OFFLINE_INTEGRATION]
-            held = [n for n in members if n not in selected]
+            store_members = sorted(set(members) & DISPOSABLE_STORE_INTEGRATION) if name == 'maintained-integration' and store_env else []
+            held = [n for n in members if n not in selected and n not in store_members]
             if held:
                 row.update(held_members=held, reason='real provider/auth/storage arms or disposable DB/Redis authority unresolved')
             if selected:
@@ -503,6 +596,40 @@ def run_root_suites(root, suites, scratch, executor=execute):
                     lambda raw: vitest_counts(json.loads(report.read_text()), selected, root)))
             row['verdict'] = ('failed' if any(r['verdict'] == 'failed' for r in row['executions']) else
                               'not_measured' if held or not row['executions'] or any(r['verdict'] != 'verified' for r in row['executions']) else 'verified')
+            if store_members:
+                store_row = {'suite': 'maintained-integration-disposable-store',
+                             'members': store_members, 'executions': []}
+                migration = run(['pnpm', 'exec', 'prisma', 'migrate', 'deploy'], [],
+                                'disposable-store-migrations', lambda raw: {'passed': 1, 'failed': 0, 'skipped': 0})
+                if migration['verdict'] == 'verified':
+                    # Negative controls prove the named local Postgres and Redis services are
+                    # required by the fixed store profile. Control failures are expected only
+                    # when Vitest reports actual failed tests (never skips or an absent report).
+                    controls = []
+                    pg_control_env = dict(env, DATABASE_URL=env['DATABASE_URL'].replace(
+                        urlsplit(env['DATABASE_URL']).netloc, 'test:test@127.0.0.1:1'))
+                    controls.append(self_test_control(root, scratch, executor, deadline,
+                        ['src/billing/hold.integration.spec.ts'], pg_control_env,
+                        'disposable-store-control-postgres', 'postgres'))
+                    redis_control_env = dict(env, REDIS_PORT='1')
+                    controls.append(self_test_control(root, scratch, executor, deadline,
+                        ['src/auth/rate-limit.integration.spec.ts'], redis_control_env,
+                        'disposable-store-control-redis', 'redis'))
+                    store_row['controls'] = controls
+                    if all(control['result'] == 'PASS_RED' for control in controls):
+                        report = scratch / 'disposable-store.json'
+                        argv = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.integration.config.ts',
+                                '--reporter=json', '--outputFile=' + str(report), *store_members]
+                        store_run = run(argv, store_members, 'disposable-store',
+                            lambda raw: vitest_counts(json.loads(report.read_text()), store_members, root))
+                        store_row['executions'].append(store_run)
+                        store_row.update(verdict=store_run['verdict'], control={'result': 'PASS_RED'})
+                    else:
+                        store_row.update(verdict='not_measured', reason='negative service control did not produce retained failing-test evidence')
+                else:
+                    store_row['executions'].append(migration)
+                    store_row.update(verdict=migration['verdict'], reason='disposable Prisma migrations did not complete')
+                results.append(store_row)
         elif name == 'maintained-regression':
             for offset, member in enumerate(members):
                 argv, kind = root_regression_command(root, member)
@@ -568,7 +695,9 @@ def build_arms(root, results, head):
         if name == 'maintained-app-e2e':
             not_run.add('app-e2e')
             continue
-        if name == 'maintained-integration':
+        if name == 'maintained-integration-disposable-store':
+            arm_name = 'integration-disposable-store'
+        elif name == 'maintained-integration':
             arm_name = 'integration-offline-contracts'
         else:
             arm_name = ARM_OF_SUITE[name]
@@ -583,8 +712,12 @@ def build_arms(root, results, head):
         if counts is None:
             not_run.add(arm_name)
             continue
-        arms.append({'name': arm_name, 'backend': 'stub', 'counts': counts, 'head': head,
-                     'verdict': 'failed' if counts['failed'] else 'passed'})
+        backend = 'real_disposable' if name == 'maintained-integration-disposable-store' else 'stub'
+        arm = {'name': arm_name, 'backend': backend, 'counts': counts, 'head': head,
+               'verdict': 'failed' if counts['failed'] else 'passed'}
+        if backend == 'real_disposable':
+            arm['control'] = row.get('control')
+        arms.append(arm)
         ran.add(arm_name)
     return {'schema': ARMS_SCHEMA, 'head': head,
             'definition': {'path': ARM_DEFINITION_PATH, 'sha256': hashlib.sha256(raw).hexdigest()},
@@ -622,9 +755,8 @@ def main():
                 'membership': rows, 'suite_plan': suites, 'results': [],
                 'runtime_authorized': False, 'knowledge_admitted': False}
     if unit == '.':
-        document['remaining'] = ['seven real external provider/auth/storage/image arms',
-                                 'unconditional AppE2E skip',
-                                 'broader disposable DB/Redis executor and namespace authority']
+        document['remaining'] = ['integration-external-provider arm not_run',
+                                 'app-e2e arm not_run']
     try:
         document['results'] = (run_root_suites(ROOT, suites, scratch) if unit == '.' else
                                run_suites(ROOT, unit, suites, scratch))

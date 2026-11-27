@@ -1,5 +1,7 @@
 """Focused orchestration controls only, never the four complete product suites."""
 from pathlib import Path
+import ast
+import hashlib
 import importlib.util
 import json
 import os
@@ -8,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import textwrap
 import time
 import unittest
 from unittest.mock import patch
@@ -526,6 +529,76 @@ class Controls(unittest.TestCase):
         self.assertEqual([r['verdict'] for r in result], ['not_measured', 'not_measured', 'verified', 'verified'])
         self.assertEqual(subject.execution_code(result), 127)
 
+    def test_disposable_store_profile_runs_only_fixed_members_with_red_controls(self):
+        members = sorted(subject.DISPOSABLE_STORE_INTEGRATION) + [
+            sorted(subject.OFFLINE_INTEGRATION)[0],
+            'src/connectors/image-generation/provider.integration.spec.ts',
+            'test/app.e2e-spec.ts']
+        suites = self.root_dispatch_fixture(members)
+        with tempfile.TemporaryDirectory() as directory:
+            scratch = Path(directory)
+            runner_temp = scratch / 'runner'
+            socket = runner_temp / 'mc-owned-postgres-123-1-456/socket'
+            socket.mkdir(parents=True)
+            env = {'GITHUB_REPOSITORY': 'Arcanada-one/model-connector',
+                   'GRAPH_DISPOSABLE_STORE_PROFILE': subject.DISPOSABLE_STORE_PROFILE,
+                   'DATABASE_URL': 'postgresql://test:test@127.0.0.1:55432/connector_test',
+                   'REDIS_HOST': '127.0.0.1', 'REDIS_PORT': '56379',
+                   'REDIS_PREFIX': 'mc-ga-123-1-456:', 'RUNNER_TEMP': str(runner_temp),
+                   'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1', 'GRAPH_CHECK_RUN_ID': '456',
+                   'BENCH_OWNED_TEST_PG_SOCKET': str(socket)}
+            calls = []
+            def child(argv, cwd, child_env, deadline, private, name):
+                calls.append((argv, child_env.copy(), name))
+                if name.startswith('disposable-store-control-'):
+                    spec_name = argv[-1]
+                    report = {'success': False, 'numTotalTests': 1, 'numPassedTests': 0,
+                              'numFailedTests': 1, 'testResults': [{'name': str(self.root / spec_name),
+                                  'assertionResults': [{'status': 'failed'}]}]}
+                    Path(argv[argv.index('--reporter=json') + 1].split('=', 1)[1]).write_text(json.dumps(report))
+                    return {'argv': argv, 'exit_code': 1, 'output': '', 'duration_s': 0}
+                if argv[0] == 'pnpm' and 'migrate' in argv:
+                    return {'argv': argv, 'exit_code': 0, 'output': '', 'duration_s': 0}
+                selected = [a for a in argv[argv.index('--reporter=json') + 1:]
+                            if not a.startswith('--')]
+                report = {'success': True, 'numTotalTests': len(selected),
+                          'numPassedTests': len(selected), 'numFailedTests': 0,
+                          'testResults': [{'name': str(self.root / name),
+                              'assertionResults': [{'status': 'passed'}]} for name in selected]}
+                Path(argv[argv.index('--reporter=json') + 1].split('=', 1)[1]).write_text(json.dumps(report))
+                return {'argv': argv, 'exit_code': 0, 'output': '', 'duration_s': 0}
+            with patch.dict(os.environ, env, clear=True), patch.object(subject.shutil, 'which', return_value='/fixture/pnpm'):
+                rows = subject.run_root_suites(self.root, suites, scratch, child)
+        store = next(row for row in rows if row['suite'] == 'maintained-integration-disposable-store')
+        self.assertEqual(store['verdict'], 'verified')
+        self.assertEqual(store['control'], {'result': 'PASS_RED'})
+        self.assertEqual([c['result'] for c in store['controls']], ['PASS_RED', 'PASS_RED'])
+        self.assertEqual(set(store['members']), subject.DISPOSABLE_STORE_INTEGRATION)
+        self.assertTrue(all('DATABASE_URL' in child_env for _, child_env, _ in calls))
+        self.assertFalse(any('provider.integration.spec.ts' in arg for args, _, _ in calls for arg in args))
+        self.assertEqual(subject.execution_code(rows), 127)
+
+    def test_disposable_store_profile_validation_is_exact_and_fail_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runner_temp = Path(directory) / 'runner'
+            socket = runner_temp / 'mc-owned-postgres-123-1-456/socket'
+            socket.mkdir(parents=True)
+            env = {'GITHUB_REPOSITORY': 'Arcanada-one/model-connector',
+                   'GRAPH_DISPOSABLE_STORE_PROFILE': subject.DISPOSABLE_STORE_PROFILE,
+                   'DATABASE_URL': 'postgresql://test:test@127.0.0.1:55432/connector_test',
+                   'REDIS_HOST': '127.0.0.1', 'REDIS_PORT': '56379',
+                   'REDIS_PREFIX': 'mc-ga-123-1-456:', 'RUNNER_TEMP': str(runner_temp),
+                   'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1', 'GRAPH_CHECK_RUN_ID': '456',
+                   'BENCH_OWNED_TEST_PG_SOCKET': str(socket)}
+            with patch.dict(os.environ, env, clear=True):
+                accepted = subject.disposable_store_environment(Path(directory))
+            self.assertEqual(accepted['RUN_INTEGRATION'], '1')
+            for key, value in [('GITHUB_REPOSITORY', 'Arcanada-one/other'),
+                               ('REDIS_PREFIX', 'foreign:')]:
+                mutated = dict(env, **{key: value})
+                with patch.dict(os.environ, mutated, clear=True), self.assertRaises(subject.Refusal):
+                    subject.disposable_store_environment(Path(directory))
+
     def test_root_missing_runner_refuses_before_spawn(self):
         suites = self.root_dispatch_fixture(['src/a.spec.ts'])
         with patch.object(subject.shutil, 'which', return_value=None):
@@ -639,8 +712,9 @@ class ArmEvidence(unittest.TestCase):
             {'suite': 'maintained-app-e2e', 'verdict': 'not_measured', 'held_members': ['test/app.e2e-spec.ts']},
             {'suite': 'maintained-authored-template', 'executions': [dict(ok)]},
             {'suite': 'maintained-integration', 'executions': [dict(ok)],
-             'held_members': ['src/billing/hold.integration.spec.ts',
-                              'src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts']},
+             'held_members': ['src/connectors/image-generation/vertex/vertex-auth.service.integration.spec.ts']},
+            {'suite': 'maintained-integration-disposable-store', 'executions': [dict(ok)],
+             'control': {'result': 'PASS_RED'}},
             {'suite': 'maintained-regression',
              'executions': [dict(ok), {'verdict': 'verified', 'counts': None}]},
             {'suite': 'maintained-vitest', 'executions': [dict(ok)]},
@@ -651,23 +725,27 @@ class ArmEvidence(unittest.TestCase):
             root, head = self.repo(tmp)
             arms = subject.build_arms(root, self.results(), head)
         self.assertEqual(set(arms), {'schema', 'head', 'definition', 'arms', 'not_run'})
-        self.assertEqual(arms['not_run'], ['app-e2e', 'integration-disposable-store',
-                                           'integration-external-provider'])
+        self.assertEqual(arms['not_run'], ['app-e2e', 'integration-external-provider'])
         by_name = {a['name']: a for a in arms['arms']}
         self.assertEqual(set(by_name), {'authored-template', 'integration-offline-contracts',
-                                        'regression', 'vitest-default'})
+                                        'integration-disposable-store', 'regression', 'vitest-default'})
         # An exit-status validator counts as exactly one passed check; nothing is invented beyond that.
         self.assertEqual(by_name['regression']['counts'], {'total': 4, 'passed': 4, 'failed': 0, 'skipped': 0})
         for arm in arms['arms']:
-            self.assertEqual((arm['backend'], arm['head']), ('stub', head))
+            self.assertEqual(arm['head'], head)
+            if arm['name'] == 'integration-disposable-store':
+                self.assertEqual(arm['backend'], 'real_disposable')
+                self.assertEqual(arm['control'], {'result': 'PASS_RED'})
+            else:
+                self.assertEqual(arm['backend'], 'stub')
         self.assertEqual(len(arms['definition']['sha256']), 64)
 
     def test_unexecuted_or_skipped_or_unclassified_never_becomes_an_executed_arm(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, head = self.repo(tmp)
             results = self.results()
-            results[4] = {'suite': 'maintained-vitest', 'executions': [{'verdict': 'not_measured', 'exit_code': 127}]}
-            results[3]['held_members'] = ['deploy/x.sh']
+            results[5] = {'suite': 'maintained-vitest', 'executions': [{'verdict': 'not_measured', 'exit_code': 127}]}
+            results[4]['held_members'] = ['deploy/x.sh']
             arms = subject.build_arms(root, results, head)
             self.assertNotIn('vitest-default', {a['name'] for a in arms['arms']})
             self.assertNotIn('regression', {a['name'] for a in arms['arms']})
@@ -686,6 +764,112 @@ class ArmEvidence(unittest.TestCase):
             'authored-template': 'stub_ok', 'regression': 'stub_ok',
             'integration-disposable-store': 'real_disposable',
             'integration-external-provider': 'real_external', 'app-e2e': 'real_disposable'})
+
+
+class ProgramDisposableStoreContract(unittest.TestCase):
+    PROGRAM_WORKFLOW_BLOB = '00201ab5d083b199caccd94afeca945322275b12'
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory(prefix='program-store-contract-')
+        self.addCleanup(temp.cleanup)
+        self.runner_temp = Path(temp.name).resolve()
+        fixture_path = ROOT / 'dev-tools/fixtures/program-disposable-store-contract.json'
+        self.fixture = json.loads(fixture_path.read_text(encoding='utf-8'))
+        self.assertEqual(self.PROGRAM_WORKFLOW_BLOB, self.fixture['program_workflow_blob'])
+        wrapper = (ROOT / 'scripts/graph-full-suite-isolated.sh').read_text(encoding='utf-8')
+        self.bash_block = wrapper[wrapper.index('disposable_store_env=()\n'):wrapper.index('\nset +e\nenv -i')]
+        self.environment = {'PATH': os.defpath, 'RUNNER_TEMP': str(self.runner_temp), **self.fixture['job']}
+        self.binding = {
+            key: value.replace('${RUNNER_TEMP}', str(self.runner_temp))
+            for key, value in self.fixture['binding'].items()
+        }
+
+    def verified_program_workflow(self, source):
+        raw = source.read_bytes()
+        blob = hashlib.sha1(f'blob {len(raw)}\0'.encode() + raw).hexdigest()
+        self.assertEqual(self.PROGRAM_WORKFLOW_BLOB, blob,
+                         'Program workflow differs from the pinned blob; the signed caller refresh is required')
+        return raw
+
+    def producer_binding(self, raw, stub_source):
+        step = raw.decode().split('        id: candidate_disposable_stores\n', 1)[1]
+        setup = textwrap.dedent(step.split('        run: |\n', 1)[1].split('\n      - name:', 1)[0])
+        # Extract the committed Program Docker stub without importing its test harness.
+        tree = ast.parse(stub_source.read_text(encoding='utf-8'))
+        fixture = next(node for node in tree.body
+                       if isinstance(node, ast.ClassDef) and node.name == 'CandidateDisposableStores')
+        stub = next(node for node in ast.walk(fixture) if isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute) and node.func.attr == 'write_text'
+                    and isinstance(node.func.value, ast.Name) and node.func.value.id == 'docker')
+        docker = self.runner_temp / 'docker'
+        docker.write_text(textwrap.dedent(ast.literal_eval(stub.args[0].args[0])), encoding='utf-8')
+        docker.chmod(0o700)
+        capture = self.runner_temp / 'graph-admission/stage-userpath/run.fixture'
+        capture.mkdir(parents=True, mode=0o700)
+        env = {**self.environment, 'PATH': str(self.runner_temp) + os.pathsep + os.defpath,
+               'RANGE_BASE': self.fixture['candidate_base'], 'CAPTURE_ROOT': str(capture),
+               'GITHUB_OUTPUT': str(self.runner_temp / 'setup-output')}
+        run = subprocess.run(['/bin/bash', '-e', '-o', 'pipefail'], input=setup, cwd=ROOT,
+                             env=env, text=True, capture_output=True, timeout=20)
+        self.assertEqual(0, run.returncode, run.stderr)
+        data = (self.runner_temp / 'graph-admission/run.fixture.stores').read_bytes().split(b'\0')
+        self.assertEqual(b'', data.pop())
+        self.assertEqual(len(self.binding), len(data))
+        return dict(zip(self.binding, (field.decode() for field in data), strict=True))
+
+    def bash_environment(self, env):
+        header = "set -euo pipefail\nset -- .\nrefuse() { printf '%s\\n' \"$1\" >&2; exit 1; }\n"
+        emit = """printf '%s\\0' "${disposable_store_env[@]}"
+"""
+        return subprocess.run(['/bin/bash', '-e', '-o', 'pipefail'], input=header + self.bash_block + emit,
+                              cwd=ROOT, env=env, text=True, capture_output=True, timeout=10)
+
+    def test_pinned_program_binding_accepts_and_refuses_job_drift(self):
+        source = os.environ.get('MC_TEST_PINNED_PROGRAM_WORKFLOW')
+        stub = os.environ.get('MC_TEST_PINNED_PROGRAM_DOCKER_TEST')
+        self.assertEqual(bool(source), bool(stub))
+        workflow = Path(source) if source else ROOT / '.github/workflows/graph-admission.yml'
+        raw = self.verified_program_workflow(workflow)
+        if stub:
+            actual = self.producer_binding(raw, Path(stub))
+            self.assertEqual(self.binding, actual)
+        else:
+            # The signed caller refresh supplies the exact producer bytes to public CI.
+            # Verify those bytes before using the recorded non-secret binding transcript.
+            actual = self.binding
+            Path(actual['BENCH_OWNED_TEST_PG_SOCKET']).mkdir(parents=True)
+        env = {**self.environment, **actual}
+        positive = self.bash_environment(env)
+        self.assertEqual(0, positive.returncode, positive.stderr)
+        forwarded = dict(item.split('=', 1) for item in positive.stdout.split('\0') if item)
+        self.assertEqual({key: value for key, value in env.items() if key != 'PATH'}, forwarded)
+        # Revalidate both directly and after Bash's env -i allowlist boundary.
+        for values in (env, forwarded):
+            with patch.dict(os.environ, values, clear=True):
+                accepted = subject.disposable_store_environment(self.runner_temp)
+            self.assertEqual({**actual, 'RUN_INTEGRATION': '1'}, accepted)
+
+        old_socket = self.runner_temp / 'graph-admission/mc-owned-postgres/socket'
+        old_socket.mkdir(parents=True)
+        foreign_socket = self.runner_temp / 'mc-owned-postgres-123-2-457/socket'
+        foreign_socket.mkdir(parents=True)
+        cases = [
+            ('old prefix', {'REDIS_PREFIX': 'mc-ga-123-2:'}, 'prefix is not job-bound'),
+            ('old socket', {'BENCH_OWNED_TEST_PG_SOCKET': str(old_socket)}, 'owned PostgreSQL socket path'),
+            ('foreign check run', {'REDIS_PREFIX': 'mc-ga-123-2-457:',
+                                   'BENCH_OWNED_TEST_PG_SOCKET': str(foreign_socket)}, 'prefix is not job-bound'),
+            ('foreign socket alone', {'BENCH_OWNED_TEST_PG_SOCKET': str(foreign_socket)}, 'owned PostgreSQL socket path'),
+            ('absent check ID', {'GRAPH_CHECK_RUN_ID': ''}, 'job identity is invalid'),
+            ('unknown profile', {'GRAPH_DISPOSABLE_STORE_PROFILE': 'invalid'}, 'profile is not bound'),
+        ]
+        for name, mutation, reason in cases:
+            with self.subTest(name=name):
+                mutated = {**env, **mutation}
+                refused = self.bash_environment(mutated)
+                self.assertEqual(1, refused.returncode, refused.stderr)
+                self.assertIn(reason, refused.stderr)
+                with patch.dict(os.environ, mutated, clear=True), self.assertRaisesRegex(subject.Refusal, reason):
+                    subject.disposable_store_environment(self.runner_temp)
 
 
 if __name__ == '__main__':

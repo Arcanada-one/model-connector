@@ -13,6 +13,7 @@
     "../test/provider-profiles/boundary-http.spec.ts",
     "../test/watcher/*.spec.ts",
     "../vitest.config.ts",
+    "../vitest.integration.config.ts",
     "../vitest.bench-reservation.config.ts",
     "../scripts/vault-provider-keys.mjs",
     "../scripts/vault-provider-keys.spec.mjs",
