@@ -37,9 +37,8 @@ Semantics (the graph SELECTS verification, it never replaces it — consilium 20
               never written (the pilot clone stays untouched)
 Exit codes: 0 draft admitted · 1 draft paused_safe / refused · 2 refusal (impact refusal, STALE_GRAPH, …) · 3 draft
 computed with EMPTY_IMPACT_REQUIRES_EXPLANATION raised by impact0.
-stdlib only; Python ≥ 3.10. tsc / prisma / jest / vitest are the repository's own binaries (node_modules/.bin), pytest
-is the deployable's or the repository's virtualenv (.venv/bin) before the host's; all found through --tsc/--prisma, the
-profile, or discovery; an absent tool yields not_measured, never verified.
+stdlib only; Python ≥ 3.10. TypeScript uses the qualified setup binding. Prisma, Jest and Vitest use project
+discovery, and pytest prefers the project virtualenv. An absent tool yields not_measured, never verified.
 """
 from __future__ import annotations
 
@@ -119,8 +118,7 @@ def compiler_sdk_type_check_args(tsc=None):
     if not selection:
         return []
     compiler, root = selection
-    # The project's locked compiler still wins discovery; do not mix that
-    # compiler with external ambient types from a fallback SDK.
+    # Apply the declared type roots only to the byte-bound compiler.
     if tsc is not None and Path(tsc).resolve() != Path(compiler).resolve():
         return []
     return ["--typeRoots", root]
@@ -1580,24 +1578,58 @@ def load_profile(a, repo_top: Path) -> tuple[dict, str]:
     return {"schema": "VerifyProfile/v1", "deployables": {}, "auto": True}, "(auto-detected)"
 
 
+def _qualified_tsc() -> Path | None:
+    """Resolve the compiler through the workflow's published setup binding."""
+    runner_temp = Path(os.environ.get("RUNNER_TEMP", ""))
+    if not runner_temp.is_absolute():
+        return None
+    try:
+        runner_temp = runner_temp.resolve(strict=True)
+        tools_modules = HERE / "node_modules"
+        if tools_modules.is_symlink():
+            # graph-admission.yml creates this link only after refusing a
+            # pre-existing tools/node_modules and publishes .bin after qualifying.
+            modules = tools_modules.resolve(strict=True)
+            install = modules.parent
+            if (install.parent != runner_temp or modules.name != "node_modules"
+                    or not re.fullmatch(r"aup-graph-tsc\.[A-Za-z0-9]{6}", install.name)
+                    or str(modules / ".bin") not in os.get_exec_path()):
+                return None
+        else:
+            # ci.yml explicitly passes the separately qualified self-check compiler.
+            modules = runner_temp / "aup-graph-selftest-compiler" / "node_modules"
+            if os.environ.get("GRAPH_SELFTEST_TSC") != str(modules / ".bin" / "tsc"):
+                return None
+        compiler = modules / "typescript" / "bin" / "tsc"
+        if (compiler.resolve(strict=True) == compiler and compiler.is_file()
+                and os.access(compiler, os.X_OK)
+                and (modules / ".bin" / "tsc").resolve(strict=True) == compiler):
+            return compiler
+    except (OSError, RuntimeError, ValueError):
+        return None
+    return None
+
+
 def find_bin(name: str, explicit: str | None, exec_root: Path, repo_top: Path, deployable_dirs: list[str]) -> str | None:
-    # A project compiler is part of its locked dependency graph. --tsc is only
-    # a fallback; preserve explicit-first behavior for every other tool.
-    if explicit and name != "tsc":
-        return explicit if Path(explicit).is_file() else None
-    # Compare project depth across both trees before falling back to ancestors;
-    # an export may link root dependencies without linking a deeper project.
     if name == "tsc":
-        candidates = ((base, d) for d in dict.fromkeys(deployable_dirs + [""])
-                      for base in (exec_root, repo_top))
-    else:
-        candidates = ((base, d) for base in (exec_root, repo_top) for d in [""] + deployable_dirs)
-    for base, d in candidates:
-        p = base / d / "node_modules" / ".bin" / name
-        if p.is_file():
-            return str(p)
+        compiler = _qualified_tsc()
+        if compiler is None:
+            return None
+        try:
+            if any(compiler.is_relative_to(root.resolve()) for root in (exec_root, repo_top)):
+                return None
+            if explicit and Path(explicit).resolve(strict=True) != compiler:
+                return None
+        except (OSError, RuntimeError, ValueError):
+            return None
+        return str(compiler)
     if explicit:
         return explicit if Path(explicit).is_file() else None
+    for base in (exec_root, repo_top):
+        for d in [""] + deployable_dirs:
+            p = base / d / "node_modules" / ".bin" / name
+            if p.is_file():
+                return str(p)
     return shutil.which(name)
 
 
@@ -1605,7 +1637,7 @@ def config_dirs(dep: str, cfg: str) -> list[str]:
     """A2-446: the directories of a tsconfig's own project, nearest first, strictly below `dep`.
 
     `contracts/http/tsconfig.json` under deployable `.` gives `["contracts/http", "contracts"]`; a
-    config at the deployable's root, or a synthetic one, gives `[]` (find_bin already searches `dep`).
+    config at the deployable's root, or a synthetic one, gives `[]`.
     """
     if cfg.startswith("synthetic:"):
         return []
@@ -1823,7 +1855,7 @@ class Verify:
             for d in sorted(self.tree_head.paths):
                 if re.match(r"^packages/[^/]+/tsconfig\.json$", d):
                     pdir = dest / os.path.dirname(d)
-                    tsc = find_bin("tsc", self.a.tsc, dest, self.scope_root, [os.path.dirname(d)])
+                    tsc = find_bin("tsc", self.a.tsc, dest, self.top, [])
                     if tsc:
                         rc, out, secs = run_cmd([tsc, "-p", "tsconfig.json", *compiler_sdk_type_check_args(tsc)], pdir)
                         built.append(f"{os.path.dirname(d)} (tsc exit {rc}, {secs}s)")
@@ -2320,10 +2352,9 @@ class Verify:
             else:
                 gen = self.generated_tsconfig(dep, cfg)
                 vid = "v-type-check-" + re.sub(r"[^a-z0-9]+", "-", (dep + "-" + os.path.basename(cfg).replace(".json", "")).lower()).strip("-")
-            # The nearest config project owns its compiler before ancestors and fallback.
-            tsc = find_bin("tsc", self.a.tsc, root, getattr(self, "scope_root", self.top), config_dirs(dep, cfg) + [dep])
+            tsc = find_bin("tsc", self.a.tsc, root, self.top, [])
             if not tsc:
-                self.record(vid, "type_check", f"tsc -p {gen} (tsc not found)", eids, 127, "tsc binary not found (node_modules/.bin/tsc, --tsc, PATH)",
+                self.record(vid, "type_check", f"tsc -p {gen} (tsc not found)", eids, 127, "qualified TypeScript compiler unavailable",
                             started, 0.0, "not_measured: tsc unavailable", {e: ("not_measured", "tsc unavailable on this host") for e in eids})
                 continue
             # Explicit nonincremental standalone projects retain their declared mode.
@@ -3100,7 +3131,8 @@ class Verify:
         out = {"declared_sources": sources, "declared_count": len(declared), "new": new, "frozen": frozen,
                "vendored_not_attributed": list(vendored_report.values()),
                "environment_obligations": environment_obligations.for_verifier(
-                   self, ents, find_bin, deployable_of, is_test_path) if not sources else {}}
+                   self, ents, find_bin,
+                   deployable_of, is_test_path) if not sources else {}}
         failed = sum(1 for v in verdicts.values() if v[0] == "failed")
         self.record("v-config-schema", "config_schema", "verify.py config_schema: keys read at head ⊆ declared keys", ents, 1 if failed else 0, out,
                     started, round(time.monotonic() - t0, 2),
@@ -4824,7 +4856,7 @@ def selftest(a) -> int:
           "contract" in hints["implements_contract"] and "type-check" in hints["imports"] and "schema" in hints["maps_model"] and "config" in hints["reads_config"])
 
     scratch = fresh_scratch(work)
-    tsc = a.tsc or find_bin("tsc", None, scratch, scratch, [])
+    tsc = find_bin("tsc", a.tsc, scratch, scratch, [])
     prisma = a.prisma or find_bin("prisma", None, scratch, scratch, [])
     limitations = ["Historical unbound canary assertions are negative controls, not measured fault-kill calibration. Committed-source HTTP/consumer regressions run separately within this selftest."]
     if not tsc:
@@ -5381,7 +5413,7 @@ def main(argv=None) -> int:
     ap.add_argument("--disable-rule", default="", help="mutation battery only: internal rules " + ",".join(RULES))
     ap.add_argument("--profile", help="VerifyProfile/v1 (default <repo>/.arcana/verify.json or auto-detection)")
     ap.add_argument("--baseline", help="FitnessBaseline/v1 (default <repo>/.arcana/fitness-baseline.json, then the program registry, then auto-freeze at base; 'auto' forces the freeze at base)")
-    ap.add_argument("--tsc")
+    ap.add_argument("--tsc", help="Require this executable to match the qualified setup compiler")
     compiler_sdk_arguments(ap)
     ap.add_argument("--prisma")
     ap.add_argument("--workdir", help="scratch directory for exports / generated tsconfigs")

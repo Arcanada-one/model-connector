@@ -1461,7 +1461,7 @@ jobs:
           PY
 
       - name: Prepare canonical Scrutator contract verifier dependencies
-        if: github.repository == 'Arcanada-one/scrutator' && steps.self_update_classifier.outputs.case == 'gate_self_update'
+        if: github.repository == 'Arcanada-one/scrutator' && (inputs.candidate_receipt_required || steps.self_update_classifier.outputs.case == 'gate_self_update')
         env:
           RANGE_BASE: ${{ steps.range.outputs.base }}
           RANGE_HEAD: ${{ steps.range.outputs.head }}
@@ -2151,12 +2151,17 @@ jobs:
         if: steps.candidate_disposable_stores.outcome == 'success'
         env:
           CAPTURE_ROOT: ${{ steps.candidate_capture.outputs.stage_root }}
+          GRAPH_CHECK_RUN_ID: ${{ job.check_run_id }}
         run: |
           set -euo pipefail
           [[ -d "$CAPTURE_ROOT" && -O "$CAPTURE_ROOT" && "$(realpath -e -- "$CAPTURE_ROOT")" == "$CAPTURE_ROOT" ]]
           [[ "${CAPTURE_ROOT%/*}" == "$RUNNER_TEMP/graph-admission/stage-userpath" && "${CAPTURE_ROOT##*/}" == run.* ]]
           loader="$RUNNER_TEMP/graph-admission/${CAPTURE_ROOT##*/}.producer-env"
-          (umask 077; set -C; cat > "$loader" <<'BASH_ENV_LOADER'
+          # The loader runs in a later step without this step's env, so the check run id is
+          # written into it as a literal. Only digits may become loader source.
+          [[ "$GRAPH_CHECK_RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::job check run id is missing or invalid" >&2; exit 2; }
+          (umask 077; set -C; {
+          cat <<'BASH_ENV_LOADER_HEAD'
           # These step-local keys identify the exact candidate producer. If it was skipped,
           # an always() step must not load any store values.
           if [[ ! -v EMPTY_IMPACT_CLAIM_FILE || ! -v RANGE_BASE_BRANCH || ! -v CANDIDATE_ROOT ]]; then
@@ -2171,7 +2176,9 @@ jobs:
             echo "::error::could not disarm the disposable-store producer environment" >&2
             exit 2
           fi
-          GRAPH_CHECK_RUN_ID='${{ job.check_run_id }}'
+          BASH_ENV_LOADER_HEAD
+          printf "GRAPH_CHECK_RUN_ID='%s'\n" "$GRAPH_CHECK_RUN_ID"
+          cat <<'BASH_ENV_LOADER'
           binding="${RUNNER_TEMP:?}/graph-admission/${capture##*/}.stores"
           if [[ ! -f "$binding" || -L "$binding" || ! -O "$binding" || "$(unset GH_TOKEN; stat -c %a -- "$binding")" != 600 ]] ||
              ! mapfile -d '' -t store < "$binding" || [ "${#store[@]}" -ne 6 ]; then
@@ -2203,7 +2210,7 @@ jobs:
             BENCH_OWNED_TEST_PG_SOCKET="${store[5]}"
           export CANDIDATE_ROOT="$capture/current-candidate"
           BASH_ENV_LOADER
-          )
+          } > "$loader")
           printf 'BASH_ENV=%s\n' "$loader" >> "$GITHUB_ENV"
 
       - name: Produce the exact current Program candidate CAR

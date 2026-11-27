@@ -3021,7 +3021,9 @@ def cmd_candidate_auth_dependency_setup_plan(a) -> int:
 
 # DEC-AUP-0203. Qualify the complete frozen closure rather than interpreting
 # user-provided version ranges. Changes must use the correlated blob sets
-# from #312 or #337. Ordinary source changes may keep the exact base closure.
+# from #312 or #337, or a reviewed range below. Ordinary source changes may keep
+# the exact closure of any qualified base. The closure digests in
+# MC_DEPENDENCY_SETUP_BASE are the anchor; the other entries pin every base.
 # The lock digest binds importers, resolutions and integrity
 # values, including transitive snapshot entries that did not change.
 MC_DEPENDENCY_SETUP_REPO = "Arcanada-one/model-connector"
@@ -3052,23 +3054,25 @@ MC_DEPENDENCY_SETUP_TARGETS = {
     ): "711d6b5e84ace35a7139afaafd11eedf1ab56093a363d913dcdf8e4a74ccff6d",
 }
 MC_DEPENDENCY_SETUP_LOCK = "pnpm-lock.yaml"
-# DEC-AUP-0208 stage 2. Scope MC #341 to the post-#312 base and its reviewed tree.
-# These pins do not qualify that base for the legacy transitions or identity route.
-MC_DEPENDENCY_SETUP_REVIEWED_RANGES = {
-    "d9fcf32591f485c50cadd6426dd6ec72b62299ba": {
+# DEC-AUP-0208 stage 2. Scope MC #341 to the post-#312 closure and reviewed diff.
+# base_closure only selects where the transition may start; it qualifies nothing by
+# itself. Legacy transitions start only at the anchor closure. The reviewed target
+# becomes a qualified base once base_closure is itself qualified.
+MC_DEPENDENCY_SETUP_REVIEWED_RANGES = (
+    {
         "base_closure": (
             "7baafd090fa8a5fa9fae99aada2f7cfe03e746b2e4956e00c402473e17fe7a04",
             "5b16b57c28a66ad4fa300996202f4572889002fb18793d75e64e274a95b1d874",
             "0dc664051285f21c6d40f6e40bcd2f902a8dc6799707f272074a1ae9ed81700a",
         ),
-        "head_tree": "757892ba0affac7179a8ca33958fc9e737be9a89",
+        "head_projection": "c5814489a0fac75a727e407706b10a3995ee9270f6fa4f3560738aa98706d1b4",
         "manifest_pair": (
             "4eeddb8d5b8204341cb7f2b23984af3dc7c0243314a4fab66d8d5bcfd38d4ec5",
             "5b16b57c28a66ad4fa300996202f4572889002fb18793d75e64e274a95b1d874",
         ),
         "lock": "bce3c01f0de7dbbdf49d2ca596b99a78df25a0bf66e67992aac02e7a17c8f046",
     },
-}
+)
 MC_DEPENDENCY_SETUP_EXECUTABLES = ("scripts/graph-full-suite-isolated.sh", "scripts/graph-parity-setup.sh")
 MC_DEPENDENCY_SETUP_BATCH_PATHS = (
     "CHANGELOG.md", "watcher/test/ops-alert.integration.spec.ts", "watcher/test/windowed-error-rate.spec.ts",
@@ -3229,6 +3233,45 @@ def _mc_dependency_subject(repo_path: str | Path, repository: str, base: str, he
     return repo
 
 
+def _mc_dependency_projection_rows(repo: Path, base: str, head: str) -> list[tuple[bytes, bytes, bytes]]:
+    diff = _candidate_setup_git(repo, "--no-replace-objects", "diff", "--raw", "--no-abbrev",
+                                "--no-renames", "--no-ext-diff", "--ignore-submodules=none",
+                                "-z", base, head, "--")
+    fields = diff.split(b"\0")
+    if fields[-1] != b"" or len(fields) % 2 != 1:
+        raise ValueError("MC dependency range has invalid raw diff records")
+    rows = []
+    for metadata, path in zip(fields[:-1:2], fields[1:-1:2], strict=True):
+        if (path.startswith(b".github/graph-admission/")
+                or path == b".github/workflows/graph-admission-call.yml"):
+            continue
+        _, mode, _, oid, _ = metadata.split()
+        rows.append((path, mode, oid))
+    return sorted(rows)
+
+
+def _mc_dependency_head_projection(rows: list[tuple[bytes, bytes, bytes]]) -> str:
+    # NUL-terminated fields preserve arbitrary Git path bytes and delimit each triple.
+    return hashlib.sha256(b"".join(b"\0".join(row) + b"\0" for row in rows)).hexdigest()
+
+
+def _mc_dependency_anchor_closure() -> tuple[str, ...]:
+    return tuple(MC_DEPENDENCY_SETUP_BASE[path]
+                 for path in (*MC_DEPENDENCY_SETUP_MANIFESTS, MC_DEPENDENCY_SETUP_LOCK))
+
+
+def _mc_dependency_qualified_closures() -> frozenset[tuple[str, ...]]:
+    """Closures a base may carry: the anchor and every reviewed transition result reachable from it."""
+    qualified = {_mc_dependency_anchor_closure()}
+    qualified.update((*manifests, lock) for manifests, lock in MC_DEPENDENCY_SETUP_TARGETS.items())
+    while True:
+        reached = {(*entry["manifest_pair"], entry["lock"]) for entry in MC_DEPENDENCY_SETUP_REVIEWED_RANGES
+                   if entry["base_closure"] in qualified} - qualified
+        if not reached:
+            return frozenset(qualified)
+        qualified |= reached
+
+
 def validate_candidate_mc_dependency_setup(repo_path: str | Path, repository: str,
                                           base: str, head: str, *, snapshot: Path | None = None) -> dict:
     """Validate exact Model Connector dependency inputs and return fixed, non-executing setup argv."""
@@ -3236,14 +3279,24 @@ def validate_candidate_mc_dependency_setup(repo_path: str | Path, repository: st
 
     checked = {}
     closure_inputs = (*MC_DEPENDENCY_SETUP_MANIFESTS, MC_DEPENDENCY_SETUP_LOCK)
-    reviewed_range = MC_DEPENDENCY_SETUP_REVIEWED_RANGES.get(base)
+    base_closure = {
+        path: _candidate_setup_blob(repo, base, path, regular_modes=("100644",))[1]
+        for path in closure_inputs
+    }
+    base_digests = tuple(hashlib.sha256(base_closure[path]).hexdigest() for path in closure_inputs)
+    reviewed_ranges = [entry for entry in MC_DEPENDENCY_SETUP_REVIEWED_RANGES
+                       if entry["base_closure"] == base_digests]
     base_pins = MC_DEPENDENCY_SETUP_BASE
-    if reviewed_range is not None:
-        base_pins = {**base_pins, **dict(zip(closure_inputs, reviewed_range["base_closure"], strict=True))}
+    # An unknown closure keeps the anchor pins, so the loop below refuses it.
+    if base_digests in _mc_dependency_qualified_closures():
+        base_pins = {**base_pins, **dict(zip(closure_inputs, base_digests, strict=True))}
     same_closure = True
     for relative, expected in base_pins.items():
         modes = ("100755",) if relative in MC_DEPENDENCY_SETUP_EXECUTABLES else ("100644",)
-        _, before = _candidate_setup_blob(repo, base, relative, regular_modes=modes)
+        if relative in base_closure:
+            before = base_closure[relative]
+        else:
+            _, before = _candidate_setup_blob(repo, base, relative, regular_modes=modes)
         if hashlib.sha256(before).hexdigest() != expected:
             raise ValueError(f"MC dependency base is unqualified: {relative}")
         oid, raw = _candidate_setup_blob(repo, head, relative, regular_modes=modes)
@@ -3269,32 +3322,41 @@ def validate_candidate_mc_dependency_setup(repo_path: str | Path, repository: st
         _mc_dependency_prisma_worktree(repo, root=snapshot)
     # Only a byte-identical closure with all common checks satisfied may
     # bypass the dependency-batch path filter.
-    if reviewed_range is not None or not same_closure:
+    if not same_closure:
         target = tuple(checked[path]["sha256"] for path in MC_DEPENDENCY_SETUP_MANIFESTS)
         base_target = tuple(base_pins[path] for path in MC_DEPENDENCY_SETUP_MANIFESTS)
+        lock = checked[MC_DEPENDENCY_SETUP_LOCK]["sha256"]
         if target == base_target:
             raise ValueError("MC dependency lockfile does not match the qualified frozen closure")
-        if reviewed_range is not None:
-            expected_lock = reviewed_range["lock"] if target == reviewed_range["manifest_pair"] else None
-        else:
-            expected_lock = MC_DEPENDENCY_SETUP_TARGETS.get(target)
-        if expected_lock is None:
-            raise ValueError("MC dependency manifest transition is unqualified")
-        if checked[MC_DEPENDENCY_SETUP_LOCK]["sha256"] != expected_lock:
-            raise ValueError("MC dependency lockfile does not match the qualified frozen closure")
-        if reviewed_range is not None:
-            head_tree = _candidate_setup_git(repo, "--no-replace-objects", "rev-parse",
-                                             f"{head}^{{tree}}").decode().strip()
-            if head_tree != reviewed_range["head_tree"]:
+        if reviewed_ranges:
+            manifest_matches = [entry for entry in reviewed_ranges if entry["manifest_pair"] == target]
+            if not manifest_matches:
+                raise ValueError("MC dependency manifest transition is unqualified")
+            lock_matches = [entry for entry in manifest_matches if entry["lock"] == lock]
+            if not lock_matches:
+                raise ValueError("MC dependency lockfile does not match the qualified frozen closure")
+            rows = _mc_dependency_projection_rows(repo, base, head)
+            projection = _mc_dependency_head_projection(rows)
+            if not any(entry["head_projection"] == projection for entry in lock_matches):
                 raise ValueError("MC dependency range does not match the reviewed projected tree")
+            changed = {path for path, _, _ in rows}
+        else:
+            expected_lock = (MC_DEPENDENCY_SETUP_TARGETS.get(target)
+                             if base_digests == _mc_dependency_anchor_closure() else None)
+            if expected_lock is None:
+                raise ValueError("MC dependency manifest transition is unqualified")
+            if lock != expected_lock:
+                raise ValueError("MC dependency lockfile does not match the qualified frozen closure")
+            diff = _candidate_setup_git(repo, "diff", "--no-ext-diff", "--no-renames", "--name-only", "-z",
+                                        base, head)
+            changed = set(diff.split(b"\0")[:-1])
 
         allowed_paths = set(base_pins)
         watcher = "watcher/package.json"
         if checked[watcher]["sha256"] != base_pins[watcher]:
             allowed_paths.update(MC_DEPENDENCY_SETUP_BATCH_PATHS)
-        diff = _candidate_setup_git(repo, "diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", base, head)
-        changed = set(diff.decode().rstrip("\0").split("\0"))
-        if any(path not in allowed_paths and not path.startswith("prisma/") for path in changed):
+        allowed_path_bytes = {path.encode() for path in allowed_paths}
+        if any(path not in allowed_path_bytes and not path.startswith(b"prisma/") for path in changed):
             raise ValueError("MC dependency range has unqualified changed paths")
     return {
         "schema": "ModelConnectorCallerDependencySetupPlan/v1",
